@@ -9,21 +9,21 @@ Web Assembly.
 This is a Vuejs project, which can generate a fully static webpage with webpack.
 
 ## Build setup using Docker
-Make sure docker is installed, then generate the docker image:
+Make sure docker is installed, then:
 
-$ make setup
+``` bash
+# generate the docker image
+make setup
 
-and run the development version
+# and run the development version
+make dev
 
-$ make dev
+# compile a production version of the site with minification
+make build
 
-to compile a production version of the site with minification
-
-$ make build
-
-and finally to host it on a test server (http://localhost:8000)
-
-$ make start
+# and finally to host it on a test server (http://localhost:8000)
+make start
+```
 
 ## Build Setup without Docker
 
