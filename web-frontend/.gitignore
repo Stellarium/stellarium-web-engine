@@ -1,0 +1,15 @@
+# dependencies
+node_modules
+
+# build files
+dist
+
+# logs
+npm-debug.log
+
+# Qt creator stuff
+stellarium-web.config
+stellarium-web.files
+stellarium-web.creator
+stellarium-web.includes
+stellarium-web.creator.user

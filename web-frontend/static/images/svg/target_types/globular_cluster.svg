@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="svg4355" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <circle id="path4860" cx="12" cy="12" r="3" fill="#fff"/>
+ <ellipse id="path4862" rx="1.5" ry="1.5" cy="8" cx="12" fill="#fff"/>
+ <use id="use4864" xlink:href="#path4862" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4866" xlink:href="#use4864" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4868" xlink:href="#use4866" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4870" xlink:href="#use4868" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4872" xlink:href="#use4870" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4874" xlink:href="#use4872" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4876" xlink:href="#use4874" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <circle id="path4878" cx="15.757" transform="rotate(23.199)" cy=".30260" r="1" fill="#fff"/>
+ <use id="use4880" xlink:href="#path4878" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4882" xlink:href="#use4880" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4884" xlink:href="#use4882" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4886" xlink:href="#use4884" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4888" xlink:href="#use4886" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4890" xlink:href="#use4888" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4892" xlink:href="#use4890" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <circle id="path4894" cx="12" cy="5.5" r=".5001" fill="#fff"/>
+ <use id="use4896" xlink:href="#path4894" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4898" xlink:href="#use4896" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4900" xlink:href="#use4898" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4902" xlink:href="#use4900" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4904" xlink:href="#use4902" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4906" xlink:href="#use4904" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4908" xlink:href="#use4906" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <circle id="path4910" cx="14.697" transform="rotate(15)" cy=".48528" r=".5001" fill="#fff"/>
+ <use id="use4912" xlink:href="#path4910" transform="rotate(15,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4914" xlink:href="#use4912" transform="rotate(15,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4916" xlink:href="#use4914" transform="rotate(15,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4918" xlink:href="#use4916" transform="rotate(15,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4920" xlink:href="#use4918" transform="rotate(15,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4922" xlink:href="#use4920" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4924" xlink:href="#use4922" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4926" xlink:href="#use4924" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4928" xlink:href="#use4926" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4930" xlink:href="#use4928" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4932" xlink:href="#use4930" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4934" xlink:href="#use4932" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4936" xlink:href="#use4934" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4938" xlink:href="#use4936" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4940" xlink:href="#use4938" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4942" xlink:href="#use4940" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4944" xlink:href="#use4942" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4946" xlink:href="#use4944" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4948" xlink:href="#use4946" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4950" xlink:href="#use4948" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4952" xlink:href="#use4950" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4954" xlink:href="#use4952" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4956" xlink:href="#use4954" transform="rotate(15 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <ellipse id="ellipse4958" rx="1.5" ry="1.5" cy="9.5" cx="13" fill="#fff"/>
+ <use id="use4960" xlink:href="#ellipse4958" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4962" xlink:href="#use4960" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4964" xlink:href="#use4962" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4966" xlink:href="#use4964" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4968" xlink:href="#use4966" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4970" xlink:href="#use4968" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use4972" xlink:href="#use4970" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <ellipse id="path4974" rx=".40963" transform="matrix(.99013 -.14013 .14018 .99013 0 0)" ry=".40956" cy="3.6618" cx="11.601" fill="#fff"/>
+ <use id="use5074" xlink:href="#path4974" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5076" xlink:href="#use5074" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5078" xlink:href="#use5076" transform="rotate(-20 12 12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5080" xlink:href="#use5078" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5082" xlink:href="#use5080" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5084" xlink:href="#use5082" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5086" xlink:href="#use5084" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5088" xlink:href="#use5086" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5090" xlink:href="#use5088" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5092" xlink:href="#use5090" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5094" xlink:href="#use5092" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5096" xlink:href="#use5094" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5098" xlink:href="#use5096" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5100" xlink:href="#use5098" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5102" xlink:href="#use5100" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5104" xlink:href="#use5102" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5106" xlink:href="#use5104" transform="rotate(-20,12,12)" height="100%" width="100%" y="0" x="0"/>
+</svg>

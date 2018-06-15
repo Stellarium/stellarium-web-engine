@@ -1,0 +1,64 @@
+// Stellarium Web - Copyright (c) 2018 - Noctua Software Ltd
+//
+// This program is licensed under the terms of the GNU AGPL v3, or
+// alternatively under a commercial licence.
+//
+// The terms of the AGPL v3 license can be found in the main directory of this
+// repository.
+
+<template>
+  <div id="toolbar-image">
+    <v-toolbar class="transparent" dense dark>
+      <v-toolbar-side-icon @click.native.stop="toggleNavigationDrawer" />
+      <img class="hidden-xs-only" id="stellarium-web-toolbar-logo" src="/static/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
+      <span class="tbtitle hidden-sm-and-down">Stellarium<sup>Web</sup></span>
+      <v-spacer></v-spacer>
+      <target-search></target-search>
+      <v-spacer></v-spacer>
+      <div class="subheader grey--text hidden-sm-and-down">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
+    </v-toolbar>
+  </div>
+</template>
+
+<script>
+
+import TargetSearch from '@/components/target-search'
+
+export default {
+  data: function () {
+    return {
+    }
+  },
+
+  methods: {
+    toggleNavigationDrawer: function () {
+      this.$store.commit('toggleBool', 'showNavigationDrawer')
+    }
+  },
+  components: { TargetSearch }
+}
+</script>
+
+<style>
+#toolbar-image {
+  background: url("/static/images/header.png") center;
+  background-position-x: 55px;
+  background-position-y: 0px;
+  height: 48px;
+  z-index: 1;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+}
+
+#stellarium-web-toolbar-logo {
+  margin-right: 10px;
+  margin-left: 30px;
+}
+
+.tbtitle {
+  font-size: 20px;
+  font-weight: 500;
+}
+</style>
