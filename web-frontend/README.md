@@ -4,6 +4,8 @@ A light version of Stellarium running in the browser. It is mostly Graphical
 User Interface for Stellarium Web Engine, a light C sky display engine, compiled into
 Web Assembly.
 
+[stellarium-web.org](https://stellarium-web.org)
+
 This is a Vuejs project, which can generate a fully static webpage with webpack.
 
 ## Build setup using Docker
