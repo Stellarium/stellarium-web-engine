@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="svg4355" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1">
+ <rect id="rect5693" height="1.5" width="3" y="2.5" x="7" fill="#fff"/>
+ <path id="rect5695" d="m5 5h4v16.544l-6-0.044v-6.7941z" fill="#fff"/>
+ <path id="path5704" d="m7.5 2.5h2" stroke="#fff" stroke-linecap="round" stroke-width="1px" fill="none"/>
+ <path id="path5710" d="m3.5 21.5h5" stroke="#fff" stroke-linecap="round" stroke-width="1px" fill="none"/>
+ <path id="path5714" d="m9 14v-8" stroke="#fff" stroke-linecap="round" stroke-width="2" fill="none"/>
+ <rect id="rect5716" height="8" width="2" y="5" x="11" fill="#fff"/>
+ <rect id="rect5718" transform="scale(-1,1)" height="1.5" width="3" y="2.5" x="-17" fill="#fff"/>
+ <path id="path5720" d="m19 5h-4v16.544l6-0.044v-6.7941z" fill="#fff"/>
+ <path id="path5722" d="m16.5 2.5h-2" stroke="#fff" stroke-linecap="round" stroke-width="1px" fill="none"/>
+ <path id="path5724" d="m20.5 21.5h-5" stroke="#fff" stroke-linecap="round" stroke-width="1px" fill="none"/>
+ <path id="path5726" d="m15 14v-8" stroke="#fff" stroke-linecap="round" stroke-width="2" fill="none"/>
+</svg>

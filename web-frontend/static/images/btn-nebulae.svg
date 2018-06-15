@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="svg4355" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22.499999 22.499999" height="24" width="24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <g id="layer2" transform="translate(0,-105.5)">
+  <path id="path4967" d="m7.5 108.31c7.5 4.6875 0.9375 7.5 0.9375 7.5l5.625 5.625s7.5-13.125-6.5625-13.125z" fill-rule="evenodd" stroke="#fff" stroke-width=".93750" fill="#fff"/>
+  <use id="use4564" xlink:href="#path4967" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0"/>
+  <use id="use4566" xlink:href="#use4564" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0"/>
+  <use id="use4568" xlink:href="#use4566" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0"/>
+  <use id="use4570" xlink:href="#use4568" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0"/>
+  <use id="use4572" xlink:href="#use4570" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0"/>
+ </g>
+</svg>

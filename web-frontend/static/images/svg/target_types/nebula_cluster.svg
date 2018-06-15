@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="svg4355" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <rect id="rect5249" stroke-linejoin="round" rx="2" ry="2" height="18" width="18" stroke="#fff" stroke-linecap="round" y="3" x="3" stroke-width="2" fill="none"/>
+ <circle id="circle5255" stroke-linejoin="round" stroke-linecap="round" stroke="#fff" cy="6.5" cx="12" r="1" fill="#fff"/>
+ <use id="use5293" xlink:href="#circle5255" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5295" xlink:href="#use5293" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5297" xlink:href="#use5295" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5299" xlink:href="#use5297" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5301" xlink:href="#use5299" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5303" xlink:href="#use5301" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+ <use id="use5305" xlink:href="#use5303" transform="rotate(45,12,12)" height="100%" width="100%" y="0" x="0"/>
+</svg>

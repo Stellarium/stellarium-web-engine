@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="svg4355" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22.499999 22.499999" height="24" width="24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <g id="layer2" transform="translate(0,-105.5)">
+  <g id="g4572" transform="matrix(.55287 0 0 .54533 2.2599 49.917)">
+   <path id="path4967" d="m7.5 108.31c7.5 4.6875 0.9375 7.5 0.9375 7.5l5.625 5.625s7.5-13.125-6.5625-13.125z" fill-rule="evenodd" stroke="#fff" stroke-width="1.7074" fill="#fff"/>
+   <use id="use4564" xlink:href="#path4967" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0" stroke-width="1.8212"/>
+   <use id="use4566" xlink:href="#use4564" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0" stroke-width="1.8212"/>
+   <use id="use4568" xlink:href="#use4566" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0" stroke-width="1.8212"/>
+   <use id="use4570" xlink:href="#use4568" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0" stroke-width="1.8212"/>
+   <use id="use4572" xlink:href="#use4570" transform="rotate(60,11.25,116.75)" height="100%" width="100%" y="0" x="0" stroke-width="1.8212"/>
+  </g>
+  <ellipse id="path4588" rx="5.8143" ry="1.729" transform="matrix(.71725 -.69682 .83728 .54677 0 0)" cy="100.47" cx="-95.173" fill="#fff"/>
+  <path id="path4590" transform="matrix(.82612 0 0 .75657 .87518 31.558)" fill="#fff" d="m7.9029 121.66-0.89056 0.35701-0.55988 0.77915-0.88216-0.37727-0.94684 0.15505-0.35701-0.89056-0.77916-0.55988 0.37728-0.88216-0.15505-0.94684 0.89056-0.35701 0.55988-0.77916 0.88216 0.37728 0.94684-0.15506 0.35701 0.89056 0.77916 0.55988-0.37728 0.88216z"/>
+ </g>
+</svg>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="svg4355" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24" width="24" version="1.1">
+ <circle id="path5144" cx="4" cy="20" r="2" fill="#fff"/>
+ <circle id="circle5146" cy="4" cx="20" r="1" fill="#fff"/>
+ <path id="path5148" d="m6 18 12-12" stroke="#fff" stroke-dasharray="1, 1" fill="none"/>
+ <path id="path4566" fill="#fff" d="m17.243 11-1.273 1.273 0.03 1.727h-1.8l-1.2 1.243-1.273-1.273-1.727 0.03v-1.8l-1.2426-1.2 1.2726-1.2728-0.03-1.7272h1.8l1.2-1.2426 1.273 1.2728 1.727-0.0302v1.8z"/>
+</svg>
