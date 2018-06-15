@@ -1,0 +1,285 @@
+/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+ *
+ * This program is licensed under the terms of the GNU AGPL v3, or
+ * alternatively under a commercial licence.
+ *
+ * The terms of the AGPL v3 license can be found in the main directory of this
+ * repository.
+ */
+
+#include "swe.h"
+
+static bool g_debug = false;
+
+#define REND(rend, f, ...) do { \
+        if ((rend)->f) (rend)->f((rend), ##__VA_ARGS__); \
+    } while (0)
+
+int paint_prepare(const painter_t *painter, int w, int h)
+{
+    utarray_clear(core->rend_points);
+    REND(painter->rend, prepare, w, h);
+    return 0;
+}
+
+int paint_finish(const painter_t *painter)
+{
+    REND(painter->rend, finish);
+    return 0;
+}
+
+int paint_points(const painter_t *painter, int n, const point_t *points,
+                 int frame)
+{
+    REND(painter->rend, points, painter, frame, n, points);
+    return 0;
+}
+
+int paint_planet(const painter_t *painter, const double pos[3],
+                 double size, const double color[3],
+                 double shadow_brightness,
+                 const char *id)
+{
+    double view_mat[4][4];
+    REND(painter->rend, planet, pos, size, color,
+         *painter->light_dir, shadow_brightness,
+         view_mat, painter->proj);
+
+    // Add the point in the global list.
+    // XXX: maybe we should do all the projections in the painter.
+    double p[3];
+    point_t point;
+    mat4_mul_vec3(view_mat, pos, p);
+    project(painter->proj, 0, 2, p, p);
+    point = (point_t) {
+        .pos = {
+            (+p[0] + 1) / 2 * core->win_size[0],
+            (-p[1] + 1) / 2 * core->win_size[1],
+        },
+        .size = tan(size / 2) / painter->proj->scaling[0] * core->win_size[0],
+    };
+    strcpy(point.id, id);
+    utarray_push_back(core->rend_points, &point);
+
+    return 0;
+}
+
+static int paint_quad_visitor(int step, qtree_node_t *node,
+                              const double uv[4][2], const double pos[4][4],
+                              const painter_t *painter,
+                              void *user,
+                              int s[2])
+{
+    texture_t *tex = USER_GET(user, 0);
+    texture_t *normalmap_tex = USER_GET(user, 1);
+    projection_t *tex_proj = USER_GET(user, 2);
+    int frame = *(int*)USER_GET(user, 3);
+    int grid_size = *(int*)USER_GET(user, 4);
+
+    if (step == 0) {
+        if ((1 << node->level) > grid_size) return 0;
+        return 2;
+    }
+    if (step == 1) return 2;
+    REND(painter->rend, quad, painter, frame,
+                        tex, normalmap_tex, uv,
+                        grid_size >> node->level,
+                        tex_proj);
+
+    // For testing.  Render lines around the quad.
+    if (g_debug) {
+        double lines[2][4];
+        const int idx[4][2] = {{0, 1}, {1, 3}, {3, 2}, {2, 0}};
+        int i;
+        for (i = 0; i < 4; i++) {
+            vec2_copy(uv[idx[i][0]], lines[0]);
+            vec2_copy(uv[idx[i][1]], lines[1]);
+            REND(painter->rend, line, painter, frame, lines, 32, tex_proj);
+        }
+    }
+
+    return 0;
+}
+
+int paint_quad(const painter_t *painter,
+               int frame,
+               texture_t *tex,
+               texture_t *normalmap_tex,
+               const double uv[4][2],
+               const projection_t *tex_proj,
+               int grid_size)
+{
+    // The OBSERVED frame (azalt) is left handed, so if we didn't specify
+    // the uv values, we use inverted uv so that things work by default.
+    const double UV1[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    const double UV2[4][2] = {{1, 0}, {0, 0}, {1, 1}, {0, 1}};
+    qtree_node_t nodes[128];
+    if (tex && !texture_load(tex, NULL)) return 0;
+    if (painter->color[3] == 0.0) return 0;
+    if (!uv) uv = frame == FRAME_OBSERVED ? UV2 : UV1;
+    traverse_surface(nodes, ARRAY_SIZE(nodes), uv, tex_proj,
+                     painter, frame, 0,
+                     USER_PASS(tex, normalmap_tex, tex_proj,
+                               &frame, &grid_size),
+                     paint_quad_visitor);
+    return 0;
+}
+
+// Estimate the number of pixels covered by a quad.
+double paint_quad_area(const painter_t *painter,
+                       const double uv[4][2],
+                       const projection_t *proj)
+{
+    const double DEFAULT_UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    double p[4][4] = {};
+    double u[2], v[2];
+    int i;
+    uv = uv ?: DEFAULT_UV;
+    double view_mat[4][4];
+
+    // Clipping space coordinates.
+    for (i = 0; i < 4; i++) {
+        vec4_set(p[i], uv[i][0], uv[i][1], 0, 1);
+        project(proj, PROJ_BACKWARD, 4, p[i], p[i]);
+        mat4_mul_vec3(view_mat, p[i], p[i]);
+        project(painter->proj, 0, 4, p[i], p[i]);
+    }
+    if (is_clipped(4, p)) return NAN;
+    // Screen coordinates.
+    for (i = 0; i < 4; i++) {
+        vec2_mul(1.0 / p[i][3], p[i], p[i]);
+        p[i][0] = (p[i][0] + 1.0) * painter->fb_size[0] / 2;
+        p[i][1] = (p[i][1] + 1.0) * painter->fb_size[1] / 2;
+    }
+    // Return the cross product.
+    vec2_sub(p[1], p[0], u);
+    vec2_sub(p[2], p[0], v);
+    return fabs(u[0] * v[1] - u[1] * v[0]);
+}
+
+int paint_text_size(const painter_t *painter, const char *text, double size,
+                    int out[2])
+{
+    REND(painter->rend, text, text, NULL, size, NULL, out);
+    return 0;
+}
+
+int paint_text(const painter_t *painter, const char *text,
+               const double pos[2], double size,
+               const double color[4])
+{
+    REND(painter->rend, text, text, pos, size, color, NULL);
+    return 0;
+}
+
+int paint_texture(const painter_t *painter,
+                  texture_t *tex,
+                  double uv[4][2],
+                  const double pos[2],
+                  double size,
+                  const double color[4],
+                  double angle)
+{
+    double c[4];
+    if (!texture_load(tex, NULL)) return 0;
+    vec4_emul(painter->color, color, c);
+    REND(painter->rend, texture, tex, uv, pos, size, c, angle);
+    return 0;
+}
+
+static int paint_line(const painter_t *painter,
+                      int frame,
+                      double line[2][4], const projection_t *line_proj,
+                      int split,
+                      int intersect_discontinuity_mode)
+{
+    int mode = intersect_discontinuity_mode;
+    int r, i;
+    double view_pos[2][4];
+
+    if (mode > 0 && painter->proj->intersect_discontinuity) {
+        for (i = 0; i < 2; i++) {
+            if (line_proj)
+                project(line_proj, PROJ_BACKWARD, 4, line[i], view_pos[i]);
+            else
+                memcpy(view_pos[i], line[i], sizeof(view_pos[i]));
+        }
+        r = painter->proj->intersect_discontinuity(
+                            painter->proj, view_pos[0], view_pos[1]);
+        if (r & PROJ_INTERSECT_DISCONTINUITY) {
+            return r;
+        }
+    }
+
+    REND(painter->rend, line, painter, frame, line, split, line_proj);
+    return 0;
+}
+
+int paint_lines(const painter_t *painter,
+                int frame,
+                int nb, double (*lines)[4],
+                const projection_t *line_proj,
+                int split,
+                int intersect_discontinuity_mode)
+{
+    int i, ret = 0;
+    assert(nb % 2 == 0);
+    // XXX: we should check for discontinutiy before we cann paint_line.
+    // So that we don't abort in the middle of the rendering.
+    for (i = 0; i < nb; i += 2)
+        ret |= paint_line(painter, frame, lines ? (void*)lines[i] : NULL,
+                          line_proj, split, intersect_discontinuity_mode);
+    return ret;
+}
+
+void paint_debug(bool value)
+{
+    g_debug = value;
+}
+
+bool painter_is_tile_clipped(const painter_t *painter, int frame,
+                             int order, int pix, bool outside)
+{
+    double quad[4][4] = { {0, 0, 1, 1},
+                          {1, 0, 1, 1},
+                          {0, 1, 1, 1},
+                          {1, 1, 1, 1} };
+    double mat3[3][3];
+    int i;
+
+    healpix_get_mat3(1 << order, pix, mat3);
+    for (i = 0; i < 4; i++) {
+        mat3_mul_vec3(mat3, quad[i], quad[i]);
+        healpix_xy2vec(quad[i], quad[i]);
+        mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
+        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0,
+                            quad[i], quad[i]);
+        project(painter->proj, 0, 4, quad[i], quad[i]);
+    }
+    return is_clipped(4, quad);
+}
+
+/* Draw the contour lines of a shape.
+ * The shape is defined by the parametric function `proj`, that maps:
+ * (u, v) -> (x, y, z) for u and v in the range [0, 1].
+ *
+ * borders_mask is a 4 bits mask to decide what side of the uv rect has to be
+ * rendered (should be all set for a rect).
+ */
+int paint_quad_contour(const painter_t *painter, int frame,
+                       const projection_t *proj,
+                       int split, int borders_mask)
+{
+    const double lines[4][2][4] = {
+        {{0, 0}, {1, 0}},
+        {{1, 0}, {1, 1}},
+        {{1, 1}, {0, 1}},
+        {{0, 1}, {0, 0}}
+    };
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (!((1 << i) & borders_mask)) continue;
+        paint_line(painter, frame, lines[i], proj, split, 0);
+    }
+    return 0;
+}

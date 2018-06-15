@@ -1,0 +1,264 @@
+
+@import "../node_modules/pikaday/scss/pikaday.scss";
+
+
+@mixin overflow {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+$base-color: #0084c8;
+$dark-color: darken($base-color, 10%);
+$padding: 8px;
+
+$text-color: #0e232e;
+$title-color: grey;
+$section-color: #D3D3D3;
+$section-title-color: white;
+$checkbox-color: #fafafa;
+$checkbox-mark-color: #99a1a7;
+
+#ephemeride, .ephemeride {
+
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: normal;
+    line-height: 1.42857;
+    color: $text-color;
+
+    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: inherit; }
+
+    a {
+        text-decoration: none;
+    }
+    .line button {
+        width: 100%;
+    }
+
+    canvas {
+        border-radius: 4px;
+    }
+
+    .section.box {
+        background-color: $section-color;
+        border-radius: 4px;
+    }
+
+    .section .title {
+        background-color: $title-color;
+        border-radius: 4px;
+        a {
+            height: 100%;
+            padding-bottom: 3px;
+        }
+    }
+    .section.title {
+        display: block;
+        width: 100%;
+        padding-left: 4px;
+        color: $section-title-color;
+    }
+
+    .section.closed::after {
+        content: "+";
+        float: right;
+        padding-right: 10px;
+    }
+    .section.opened::after {
+        content: "-";
+        float: right;
+        padding-right: 10px;
+    }
+    .section.box .line:last-child {
+        padding-bottom: 4px;
+    }
+
+    .line {
+        margin-bottom: 4px;
+        margin-top: 4px;
+        padding-left: 4px;
+        padding-right: 4px;
+        overflow: hidden;
+    }
+
+    .label {
+        @include overflow;
+        float: left;
+        padding-left: 4px;
+    }
+    .input {
+        width: auto;
+        float: right;
+        padding-left: 10px;
+    }
+
+    span.checkbox {
+        float: right;
+    }
+
+    input {
+        float: right;
+        width: 130px;
+        padding-left: 6px;
+
+        border-radius: 4px;
+        border: 1px solid #CCC;
+    }
+
+    // Nicer looking checkboxes:
+    input[type='checkbox'] {
+        display: none;
+    }
+
+    input[type='checkbox'] + label {
+        background-color: $checkbox-color;
+        border: 1px solid #cacece;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px -15px 10px -12px rgba(0,0,0,0.05);
+        padding: 9px;
+        border-radius: 3px;
+        display: inline-block;
+        position: relative;
+    }
+
+    input[type='checkbox'] + label:active, input[type='checkbox']:checked + label:active {
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px 1px 3px rgba(0,0,0,0.1);
+    }
+
+    input[type='checkbox']:checked + label {
+        background-color: $checkbox-color;
+        border: 1px solid #adb8c0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px -15px 10px -12px rgba(0,0,0,0.05), inset 15px 10px -12px rgba(255,255,255,0.1);
+        color: $checkbox-mark-color;
+    }
+
+    input[type='checkbox']:checked + label:after {
+        content: '\2714';
+        font-size: 14px;
+        position: absolute;
+        top: 0px;
+        left: 3px;
+        color: $checkbox-mark-color;
+    }
+
+    .tabs {
+        overflow: hidden;
+
+        .headers {
+            // overflow: hidden;
+            float: left;
+            width: 120px;
+            margin-right: 10px;
+            .line {
+                position: relative;
+            }
+            div.tab {
+                width: 100%;
+                padding: 2px;
+                padding-right: $padding;
+                padding-left: $padding;
+                border: 0;
+                background-color: $dark-color;
+                transition: background-color 0.1s ease;
+                color: $text-color;
+                cursor: pointer;
+                position: relative;
+            }
+            div.tab:hover {
+                color: darken($text-color, 50%);
+            }
+            div.tab.opened {
+                background-color: $base-color;
+            }
+            div.tab.opened::after {
+                content: "";
+                width: 0;
+                height: 0;
+                right: -10px;
+                border-top: 10px solid transparent;
+                border-bottom: 10px solid transparent;
+                border-left: 10px solid $base-color;
+                position: absolute;
+            }
+        }
+        > .content {
+            float: left;
+            overflow: hidden;
+            background-color: $base-color;
+            border-radius: 4px;
+
+            .header {
+                overflow: hidden;
+                h2 {
+                    float: left;
+                    margin: 0;
+                    margin-left: 6px;
+                    font-size: 1.2em;
+                }
+                button {
+                    float: right;
+                    margin-top: 4px;
+                    background-color: transparent;
+                    border: 0;
+                }
+                button:after {
+                    content: "\f00d";
+                    font-family: FontAwesome;
+                }
+            }
+        }
+    }
+
+    .card {
+        overflow: hidden;
+        border: 2px solid transparent;
+        border-radius: 6px;
+        background-color: $dark-color;
+        background-clip: padding-box;
+        cursor: pointer;
+    }
+
+}
+
+.eph.typeahead {
+    margin-top: 2px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    float: left;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    list-style: none;
+    background-color: white;
+    border: 1px solid #CCC;
+}
+
+.eph.typeahead li {
+    line-height: 20px;
+}
+
+.eph.typeahead a {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 20px;
+    color: #333;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.eph.typeahead .active > a {
+    color: white;
+    text-decoration: none;
+    background-color: #0081C2;
+    outline: 0;
+}
+
+.eph.typeahead.hidden {
+    display: none;
+}

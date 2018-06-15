@@ -1,0 +1,233 @@
+/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+ *
+ * This program is licensed under the terms of the GNU AGPL v3, or
+ * alternatively under a commercial licence.
+ *
+ * The terms of the AGPL v3 license can be found in the main directory of this
+ * repository.
+ */
+
+#ifndef PAINTER_H
+#define PAINTER_H
+
+#include "projection.h"
+
+typedef struct observer observer_t;
+typedef struct renderer renderer_t;
+typedef struct painter painter_t;
+typedef struct point point_t;
+typedef struct texture texture_t;
+
+struct renderer
+{
+    void (*prepare)(renderer_t *rend, int w, int h);
+    void (*finish)(renderer_t *rend);
+
+    void (*points)(renderer_t           *rend,
+                   const painter_t      *painter,
+                   int                  frame,
+                   int                  n,
+                   const point_t        *points);
+
+    // XXX: deprecated.
+    void (*planet)(renderer_t           *rend,
+                   const double         pos[3],
+                   double               size,
+                   const double         color[4],
+                   const double         light_dir[3],
+                   double               shadow_brightness,
+                   double               view_mat[4][4],
+                   const projection_t   *proj);
+
+    void (*quad)(renderer_t          *rend,
+                 const painter_t     *painter,
+                 int                 frame,
+                 texture_t           *tex,
+                 texture_t           *normalmap,
+                 double              uv[4][2],
+                 int                 grid_size,
+                 const projection_t  *tex_proj);
+
+    void (*texture)(renderer_t       *rend,
+                    const texture_t  *tex,
+                    double           uv[4][2],
+                    const double     pos[2],
+                    double           size,
+                    const double     color[4],
+                    double           angle);
+
+    void (*text)(renderer_t      *rend,
+                 const char      *text,
+                 const double    pos[2],
+                 double          size,
+                 const double    color[4],
+                 int             tex_size[2]    // Output, can be NULL.
+                 );
+
+    void (*line)(renderer_t           *rend,
+                 const painter_t      *painter,
+                 int                  frame,
+                 double               line[2][4],
+                 int                  nb_segs,
+                 const projection_t   *line_proj);
+};
+
+renderer_t* render_gl_create(void);
+renderer_t* render_svg_create(const char *out);
+
+
+struct point
+{
+    double  pos[4];
+    double  size;       // Angular diameter (rad)
+    double  color[4];
+    char    id[128];    // Obj id.  If set then the point is kept in a list
+                        // for fast lookup of mouse pointing position.
+};
+
+// Painter flags
+enum {
+    PAINTER_ADD                 = 1 << 0, // Use addition blending.
+    PAINTER_QUAD_CUT_INV        = 1 << 1, // Toast quad diagonal direction.
+    PAINTER_HIDE_BELOW_HORIZON  = 1 << 2,
+    PAINTER_FAST_MODE           = 1 << 3,
+    PAINTER_PLANET_SHADER       = 1 << 4,
+};
+
+struct painter
+{
+    renderer_t      *rend;          // The render used.
+    const observer_t *obs;
+
+    // Optional tranf matrix applied to the coordinates.
+    // For example to set the planet position in the hips rendering.
+    double          (*transform)[4][4];
+
+    projection_t    *proj;          // Project from view to NDC.
+
+    double          color[4];       // Global color.
+    int             fb_size[2];     // Size of the render buffer.
+                                    // rendered.
+    int             flags;
+
+    double          mag_max;        // Max visual magnitude.
+    double          label_mag_max;  // After this mag, don't show the labels.
+    double          hint_mag_max;   // After this mag, don't show the hints.
+
+    double          lines_width;
+    double          lines_stripes;
+    double          points_smoothness;
+
+    double          (*light_dir)[3];    // For planet rendering.
+    double          (*light_emit)[3];
+};
+
+int paint_prepare(const painter_t *painter, int w, int h);
+int paint_finish(const painter_t *painter);
+int paint_points(const painter_t *painter, int n, const point_t *points,
+                 int frame);
+
+int paint_planet(const painter_t *painter, const double pos[3],
+                 double size, const double color[3],
+                 double shadow_brightness,
+                 const char *id);
+
+/* Function: paint_quad
+ *
+ * Render a quad mapped into the 3d sphere
+ *
+ * The shape of the quad is defined by the projection `proj` called backward,
+ * that is, a mapping of (u, v) => (x, y, z).  If unspecified, u and v range
+ * from 0 to 1.
+ *
+ * Parameters:
+ *  tex           - Optional texture.
+ *  normalmap_tex - Normal map texture (NULL for no normal map).
+ *  uv            - Tex UV coordinates (NULL for default to whole texture).
+ *  proj          - Projection from sphere to uv (used backward).
+ *  frame         - Referential frame of the inputs (<FRAME> values).
+ *  grid_size     - how many sub vertices we use.
+ */
+int paint_quad(const painter_t *painter,
+               int frame,
+               texture_t *tex,
+               texture_t *normalmap_tex,
+               const double uv[4][2],
+               const projection_t *proj,
+               int grid_size);
+
+// Estimate the number of pixels covered by a quad.
+double paint_quad_area(const painter_t *painter,
+                       const double uv[4][2],
+                       const projection_t *proj);
+
+/* Function: paint_quad_contour
+ *
+ * Draw the contour lines of a shape.
+ * The shape is defined by the parametric function `proj`, that maps:
+ * (u, v) -> (x, y, z) for u and v in the range [0, 1].
+ *
+ * border_mask is a 4 bits mask to decide what side of the uv rect has to be
+ * rendered (should be all set for a rect).
+ */
+int paint_quad_contour(const painter_t *painter, int frame,
+                       const projection_t *proj,
+                       int split, int border_mask);
+
+/*
+ * discontinuity_mode:
+ *      0: Do not check.
+ *      1: Check and abort if intersect.
+ *      2: Check and only fix if simple (we can split the projection).
+ */
+int paint_lines(const painter_t *painter,
+                int frame,
+                int nb, double (*lines)[4],
+                const projection_t *line_proj,
+                int split,
+                int discontinuity_mode);
+
+int paint_text_size(const painter_t *painter, const char *text, double size,
+                    int out[2]);
+
+// Pos in NDC coordinates (-1 to 1)
+// size in inch ??
+int paint_text(const painter_t *painter,
+               const char *text, const double pos[2],
+               double size, const double color[4]);
+
+// Pos in NDC coordinates (-1 to 1)
+// size in inch ?
+int paint_texture(const painter_t *painter,
+                  texture_t *tex,
+                  double uv[4][2],
+                  const double pos[2],
+                  double size,
+                  const double color[4],
+                  double angle);
+
+// Set painter debug mode on or off.
+void paint_debug(bool value);
+
+// Function: painter_is_tile_clipped
+//
+// Convenience function that checks if a healpix tile is not visible.
+//
+// Parameters:
+//  painter   - The painter.
+//  frame     - One of the <FRAME> enum frame.
+//  order     - Healpix order.
+//  pix       - Healpix pix.
+//  outside   - Set whether the tile is an outside (planet) tile.
+//
+// Returns:
+//  True if the tile is clipped, false otherwise.
+//
+//  A clipped tile is guarantied to be not visible, but it is not guarantied
+//  that a non visible tile is clipped.  So this function can return false
+//  even though a tile is not actually visible.
+bool painter_is_tile_clipped(const painter_t *painter, int frame,
+                             int order, int pix,
+                             bool outside);
+
+#endif // PAINTER_H

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<title>Stellarium Web Engine Test Page</title>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script src="static/js/polyfill.js"></script>
+<script src="static/js/stellarium-web-engine.js"></script>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+
+<style>
+  html, body { height: 100%; }
+  .semi-transparent {filter: opacity(0.5);}
+  /* XXX: those probably don't work with IE < 11 ! */
+  .click-through { pointer-events: none; }
+  .get-click { pointer-events: all; }
+</style>
+
+<div id="stel" class="w-100 h-100">
+  <div id="stel-view-div" class="position-relative w-100 h-100">
+    <div id="stel-canvas-div" class="position-absolute w-100 h-100">
+      <canvas id="stel-canvas" class="w-100 h-100"></canvas>
+    </div>
+
+    <div id="gui" class="w-100 h-100 position-relative click-through">
+      <div id="bottom-bar"
+           class="position-absolute d-flex justify-content-center w-100 get-click"
+           style="bottom: 0;">
+        <stel-button label="Constellations"
+                    img="static/imgs/symbols/btn-cst-lines.svg"
+                    :obj="stel.core.constellations.lines"
+                    attr="visible">
+        </stel-button>
+        <stel-button label="Atmosphere"
+                    img="static/imgs/symbols/btn-atmosphere.svg"
+                    :obj="stel.core.atmosphere"
+                    attr="visible">
+        </stel-button>
+        <stel-button label="Landscape"
+                    img="static/imgs/symbols/btn-landscape.svg"
+                    :obj="stel.core.landscape"
+                    attr="visible">
+        </stel-button>
+        <stel-button label="Azimuthal Grid"
+                    img="static/imgs/symbols/btn-azimuthal-grid.svg"
+                    :obj="stel.core.lines.azimuthal"
+                    attr="visible">
+        </stel-button>
+        <stel-button label="Equatorial Grid"
+                    img="static/imgs/symbols/btn-equatorial-grid.svg"
+                    :obj="stel.core.lines.equatorial"
+                    attr="visible">
+        </stel-button>
+        <stel-button label="Nebulae"
+                    img="static/imgs/symbols/btn-nebulae.svg"
+                    :obj="stel.core.dsos"
+                    attr="visible">
+        </stel-button>
+        <stel-button label="DSS"
+                    img="static/imgs/symbols/btn-nebulae.svg"
+                    :obj="stel.core.dss"
+                    attr="visible">
+        </stel-button>
+      </div>
+
+      <pre id="right-bar get-click"
+           class="position-absolute text-danger"
+           style="right: 0; font-size: 0.5rem;">
+          {{JSON.stringify(stel.getTree(), null, 2)}}
+      </pre>
+
+      <div id="left-bar" class="position-absolute d-flex flex-column get-click">
+
+        <form class="form-inline bg-info">
+          <label class="mr-sm-2">UTC MJD</label>
+          <input type="number" class="form-control"
+                 v-model.number="stel.observer.utc">
+          <span> FPS: {{stel.core.fps.toFixed(0)}}</span>
+        </form>
+
+        <stel-photoitem url="http://nova.astrometry.net/image/4227430"
+                       name="test1"
+                       thumbnail="http://nova.astrometry.net/image/4227432"
+                       calibration-url="http://nova.astrometry.net/api/jobs/2349589/calibration">
+        </stel-photoitem>
+
+        <stel-photoitem url="http://nova.astrometry.net/image/3860203"
+                       name="test2"
+                       thumbnail="http://nova.astrometry.net/image/3860205"
+                       calibration-url="http://nova.astrometry.net/api/jobs/2190664/calibration">
+        </stel-photoitem>
+
+        <test-shapes></test-shapes>
+
+        <button class="btn btn-primary" v-on:click="testAddStar">
+            Test add star
+        </button>
+        <button class="btn btn-primary" v-on:click="testAddDSO">
+            Test add DSO
+        </button>
+        <button class="btn btn-primary" v-on:click="testAddAsteroid">
+            Test add Asteroid
+        </button>
+        <button class="btn btn-primary" v-on:click="lockToSelection">
+            Lock to selection
+        </button>
+
+        <stel-progressbars :bars="stel.core.progressbars"></stel-progressbars>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="text/x-template" id="stel-icon-button-template">
+  <a style="cursor: pointer;" @click="clicked"
+     :class="{'semi-transparent': !active}">
+    <i class="material-icons">{{icon}}</i>
+  </a>
+</script>
+<script>
+  Vue.component('stel-icon-button', {
+    template: '#stel-icon-button-template',
+    props: ['icon', 'active'],
+    methods: {
+      clicked: function() {this.$emit('click')}
+    }
+  })
+</script>
+
+<script type="text/x-template" id="stel-button-template">
+  <div class="stel-button" :class="{'semi-transparent': !value}"
+       style="width:5rem; height:5rem;">
+    <a v-on:click='clicked'>
+      <img :src="img" class="w-100 h-100"/>
+    </a>
+  </div>
+</script>
+
+<script type="text/x-template" id="stel-photoitem-template">
+  <div class="stel-photoitem card" style="width: 8rem;">
+    <img :src="thumbnail" class="card-img-top">
+    <div class="card-body p-0">
+      <p class="card-text mb-0">{{name}}</p>
+      <stel-icon-button icon="remove_red_eye" :active="visible"
+                       @click="toggleVisible"></stel-icon-button>
+      <stel-icon-button icon="format_shapes" :active="obj && obj.render_shape"
+                       @click="toggleShape"></stel-icon-button>
+    </div>
+  </div>
+</script>
+
+<script>
+  Vue.component('stel-photoitem', {
+    template: '#stel-photoitem-template',
+    props: ['url', 'thumbnail', 'calibrationUrl', 'name'],
+    data: function() {
+      return {
+        obj: null,
+        layer: stel.createLayer({z: 7, visible: true}),
+      }
+    },
+    computed: {
+      visible: function() { return this.obj && this.obj.visible },
+    },
+    watch: {
+      visible: function(val) {
+        if (val) {
+          this.obj.update()
+            stel.core.lookat(this.obj.azalt)
+        }
+      }
+    },
+    methods: {
+      toggleVisible: function() {
+        var that = this
+          if (!this.obj) {
+            $.ajax({
+              url: this.calibrationUrl,
+              dataType: "json"
+            }).done(function(data) {
+              that.obj = that.layer.add('photo', {
+                url: that.url,
+                calibration: data,
+                visible: true,
+              })
+            })
+            if (!this.obj) return;
+          } else {
+            this.obj.visible = !this.obj.visible
+          }
+      },
+      toggleShape: function() {
+        if (!this.obj) return
+        this.obj.render_shape = !this.obj.render_shape
+      }
+    }
+  })
+</script>
+
+<script type="text/x-template" id="stel-progressbars-template">
+  <div>
+    <p>BARS:</p>
+    <div class="progress" style="height: 20px;" v-for="bar in bars">
+      <div class="progress-bar text-nowrap" role="progressbar"
+           :style="'width: ' + bar.value * 100 / bar.total + '%;'"
+           aria-valuemin="0"
+           :aria-valuenow="bar.value"
+           :aria-valuemax="bar.total">
+        {{bar.label}}
+      </div>
+    </div>
+  </div>
+</script>
+<script>
+  Vue.component('stel-progressbars', {
+    template: '#stel-progressbars-template',
+    props: ['bars']
+  })
+</script>
+
+<script type="text/x-template" id="test-shapes-template">
+  <div class="test-shapes">
+    <p>Shapes:</p>
+    <ul>
+      <stel-shape v-for="shape in shapes" :obj="shape" :key="shape.id">
+      </stel-shape>
+    </ul>
+    <button class="btn btn-primary" v-on:click="add('rect')">New rect</button>
+    <button class="btn btn-primary" v-on:click="add('circle')">New circle</button>
+  </div>
+</script>
+
+<script type="text/x-template" id="stel-shape-template">
+  <div class="stel-shape">
+    <div class="form-group"> w
+      <input type="number" :value="Math.round(obj.size[0] * stel.R2D)"
+             @input="obj.size = [$event.target.value * stel.D2R, obj.size[1]]">
+    </div>
+    <div class="form-group"> h
+      <input type="number" :value="Math.round(obj.size[1] * stel.R2D)"
+             @input="obj.size = [obj.size[0], $event.target.value * stel.D2R]">
+    </div>
+    <div class="form-group"> pos.x
+      <input type="number" :value="obj.pos[0] * 100"
+             @input="obj.pos = setPosV(obj.pos, $event.target.value, 0)">
+    </div>
+    <div class="form-group"> pos.y
+      <input type="number" :value="obj.pos[1] * 100"
+             @input="obj.pos = setPosV(obj.pos, $event.target.value, 1)">
+    </div>
+    <div class="form-group"> pos.z
+      <input type="number" :value="obj.pos[2] * 100"
+             @input="obj.pos = setPosV(obj.pos, $event.target.value, 2)">
+    </div>
+    <div class="form-group"> orientation
+      <input type="number" :value="Math.round(obj.orientation * stel.R2D)"
+             @input="obj.orientation = $event.target.value * stel.D2R">
+    </div>
+    <div class="form-group"> alpha
+      <input type="number" :value="Math.round(obj.color[3] * 100)"
+             @input="obj.color = setAlpha(obj.color, $event.target.value)">
+    </div>
+  </div>
+</script>
+
+<script>
+  var stel = StelWebEngine({
+    wasmFile: "static/js/stellarium-web-engine.wasm",
+    canvas: document.getElementById('stel-canvas'),
+    onReady: function() {
+      var app = new Vue({
+        el: '#gui',
+        data: { stel: stel },
+        methods: {
+          testAddStar: function() { testAddStar(this.stel) },
+          testAddDSO: function() { testAddDSO(this.stel) },
+          testAddAsteroid: function() { testAddAsteroid(this.stel) },
+          lockToSelection: function() {
+            stel.core.lock = stel.core.selection
+            // Smooth move to selection.
+            if (stel.core.lock) {
+                stel.core.lock.update()
+                stel.core.lookat(stel.core.lock.azalt, 1.0, 20 * stel.D2R);
+            }
+          }
+        }
+      })
+      // Force ui update when there is any change.
+      stel.change(function(obj, attr) {
+        if (attr !== "hovered")
+          app.stel = Object.assign(Object.create(stel), {}, stel)
+      })
+    }
+  });
+
+  var testAddStar = function(stel) {
+    console.log("Add a fake star near polaris")
+    var layer = stel.createLayer({z: 7, visible: true})
+    var star = stel.createObj('star', {
+      id: 'my star',
+      model_data: {
+        ra: 0,
+        de: 90,
+        vmag: 0,
+      }
+    })
+    star.update()
+    layer.add(star)
+    stel.core.selection = star
+    stel.core.lookat(star.azalt) // XXX: use radec instead?
+  }
+
+  var testAddDSO = function(stel) {
+    console.log("Add a fake DSO near polaris")
+    var layer = stel.createLayer({z: 7, visible: true})
+    var dso = stel.createObj('dso', {
+      id: 'my dso',
+      model_data: {
+        ra: 0,
+        de: 89,
+        vmag: 0,
+        dimx: 60,
+        dimy: 60,
+      }
+    })
+    dso.update()
+    layer.add(dso)
+    stel.core.selection = dso
+    stel.core.lookat(dso.azalt) // XXX: use radec instead?
+  }
+
+  var testAddAsteroid = function(stel) {
+    console.log('Add a fake asteroid next to Ceres')
+    var layer = stel.createLayer({z: 7, visible: true})
+    var asteroid = stel.createObj('minor_planet', {
+      id: '60000002f4b1c3ff',
+      model_data: {
+        Node: 80.30888, a: 2.7674094, e: 0.0756074, G: 0.12,
+        Last_obs: 2017-11-04, rms: 0.6, H: 3.34, Peri: 73.02367,
+        Perihelion_dist: 2.5581728, M: 309.49412, Hex_flags: "0000",
+        Tp: 2458236.41089, n: 0.21408881, Semilatus_rectum: 1.3757948,
+        i: 10.59322, Epoch: 2458000.0, Orbital_period: 4.6037329, U: "0",
+        Synodic_period: 1.27749, Aphelion_dist: 2.976646
+      },
+      search_names: ["(1)CERES", "CERES", "A899OF", "1943XB"],
+      names: ["(1) Ceres (Fake)", "Ceres", "A899 OF", "1943 XB"],
+      interest: 0.6,
+      types: ["MBA", "MPl", "SSO"]
+    })
+    asteroid.update()
+    layer.add(asteroid)
+    stel.core.selection = asteroid
+    stel.core.lookat(asteroid.azalt) // XXX: use radec instead?
+  }
+
+  Vue.component('stel-button', {
+    template: '#stel-button-template',
+    props: ['label', 'img', 'obj', 'attr'],
+    computed: {
+      value: function() {
+        return this.obj[this.attr]
+      }
+    },
+    methods: {
+      clicked: function() {
+        this.obj[this.attr] = !this.obj[this.attr];
+      }
+    }
+  })
+
+  Vue.component('test-shapes', {
+    template: '#test-shapes-template',
+    data: function() {
+      return {
+        layer: stel.createLayer({z: 41, visible: true}),
+        shapes: []
+      }
+    },
+    methods: {
+      add: function(type) {
+        var shape = this.layer.add(type, {
+          size: [20 * stel.D2R, 20 * stel.D2R],
+          frame: stel.FRAME_ICRS
+        })
+        this.shapes.push(shape)
+      }
+    }
+  })
+
+  Vue.component('stel-shape', {
+    template: '#stel-shape-template',
+    props: ['obj'],
+    data: function() {
+      return {
+        stel: stel
+      }
+    },
+    methods: {
+      setAlpha: function(v, a) {
+        v[3] = a / 100.0;
+        return v;
+      },
+      setPosV: function(pos, v, i) {
+        pos[i] = v / 100.0;
+        return pos;
+      }
+    }
+  })
+
+</script>
+
+<!-- For touch event debug simulation -->
+<script src="static/js/touch-emulator.js"></script>
+<script>
+  $(function() {
+    TouchEmulator();
+  });
+</script>
