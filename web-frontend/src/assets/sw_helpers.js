@@ -625,6 +625,11 @@ export const swh = {
     }
     loc['publicData'] = {'shortName': 'Near Lat ' + pos.lat.toFixed(1) + '° Lon ' + pos.lng.toFixed(1) + '°', 'lat': Math.round(loc.lat * 10) / 10, 'lng': Math.round(loc.lng * 10) / 10, 'alt': loc.alt, 'country': ''}
     return new Promise((resolve, reject) => {
+      window.gm_authFailure = function () {
+        // This happens when the map API is not usable for some reasons
+        console.log('Google maps service failed to geocode, fallback to just position')
+        resolve(loc)
+      }
       geocoder.geocode({ 'location': {lat: pos.lat, lng: pos.lng} }, function (results, status) {
         if (status === 'OK') {
           if (results.length > 0) {
