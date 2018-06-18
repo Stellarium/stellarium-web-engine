@@ -12,7 +12,7 @@
     <v-card-title><div class="headline">About</div></v-card-title>
     <v-card-text>
       <p>Welcome to Stellarium Web, a free open source planetarium running in your web browser.
-      This page is sill in beta, please report any bugs or ask questions to <a href="contact@noctua-software.com">contact@noctua-software.com</a>.</p>
+      This page is sill in beta, please report any bugs or ask questions to <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a> or on our <a href="https://github.com/Stellarium/stellarium-web" target="_blank">Github page</a>.</p>
       <p>If you want to get notified when we add new features (only for important news: no spam!) you can subscribe to our mailing list:</p>
       <p>By subscribing to this mailing list, you agree with our <a v-on:click.stop="$store.state.showPrivacyDialog = true">Privacy Policy</a></p>
       <v-layout row justify-space-around>
