@@ -17,7 +17,7 @@
 
     <p>We ensure that we use your information in accordance with all applicable laws concerning the protection of personal information.</p>
 
-    <p>If you have any questions at any time about data privacy at Noctua Software, please contact us at <a href="contact@noctua-software.com">contact@noctua-software.com</a></p>
+    <p>If you have any questions at any time about data privacy at Noctua Software, please contact us at <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a></p>
 
     <h3>1. Who we are</h3>
     <p>Noctua Software Ltd is a Hong Kong based company created in 2011 by two of the main developpers of the famous open source software Stellarium.
@@ -54,7 +54,7 @@
 
     <p>As the information we collect about you will be stored on our IT infrastructure, it may also be shared with our data processors who provide email, relationship management, anonymous analytics, document management, and storage services to us.</p>
 
-    <p>If you want to understand more about why we collect your data, please contact us at <a href="contact@noctua-software.com">contact@noctua-software.com</a></p>
+    <p>If you want to understand more about why we collect your data, please contact us at <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a></p>
 
     <h3>3. How we collect and store that information</h3>
     <p>We take appropriate technical and organisational measures to ensure that the information disclosed to us is kept secure, accurate, and up to date, and that it is kept only for as long as is necessary for the purposes for which it is used.</p>
@@ -86,7 +86,7 @@
     <h3>7. How long we keep your information for</h3>
     <p>We keep your information for no longer than is necessary for our purposes. What is necessary will depend on the reason for which the information was collected.</p>
 
-    <p>If you have any questions about how long we keep your information, contact us at <a href="contact@noctua-software.com">contact@noctua-software.com</a></p>
+    <p>If you have any questions about how long we keep your information, contact us at <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a></p>
 
     <h3>8. Your rights</h3>
     <p><strong>Right of access</strong> — you have a right to ask us to confirm whether we are processing information about you, and to request access to this information.</p>
@@ -106,9 +106,9 @@
       </ul>
     </p>
 
-    <p>You can always unsubscribe from any mailing list you are included on, ask us to delete or anonymize your forum posts, and ask us to delete any comments on our blog. You can do so by contacting us at <a href="contact@noctua-software.com">contact@noctua-software.com</a>.</p>
+    <p>You can always unsubscribe from any mailing list you are included on, ask us to delete or anonymize your forum posts, and ask us to delete any comments on our blog. You can do so by contacting us at <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a>.</p>
 
-    <p>We may ask for your help in locating specific information, e.g. on forum postings and confirming your identity. If you would like to exercise any of your rights, please let us know by writing to <a href="contact@noctua-software.com">contact@noctua-software.com</a>. We will act in accordance with your instructions as soon as reasonably possible, and there will be no charge.</p>
+    <p>We may ask for your help in locating specific information, e.g. on forum postings and confirming your identity. If you would like to exercise any of your rights, please let us know by writing to <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a>. We will act in accordance with your instructions as soon as reasonably possible, and there will be no charge.</p>
 
     <h3>9. Information about cookies</h3>
     <p>The Stellarium Web website, like most websites, uses small text files called cookies. This note provides information on what cookies are, which cookies we uses, and how they can be controlled.</p>
@@ -124,7 +124,7 @@
 <!--  <li>Targeting cookies. These cookies record your visit to our website, the pages you have visited, and the links you have followed. We will use this information to make our website and the advertising displayed on it more relevant to your interests. We may also share this information with third parties for this purpose.</li> -->
     </ul>
 
-    <p>For more information about the individual cookies we use, you can contact us at <a href="contact@noctua-software.com">contact@noctua-software.com</a>.</p>
+    <p>For more information about the individual cookies we use, you can contact us at <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a>.</p>
 
     <p>Please note that third parties (including, for example, <!-- advertising networks and --> providers of external services like web traffic analysis services) may also use cookies, over which we have no control. These cookies are likely to be analytical/performance cookies <!-- or targeting --> cookies.</p>
 
@@ -137,7 +137,7 @@
     <p>Any changes we may make to our privacy policy in the future will be posted here and, where appropriate, sent to you by email. Please check the website regularly to see any updates or changes to our privacy policy. By continuing to use our website, you will be deemed to have accepted such changes.</p>
 
     <h3>11. How to contact us about your data</h3>
-    <p>Data rights are human rights and we are determined to fairly and fully honour yours. You can unsubscribe at any time or just get in touch with any questions, comments, or instructions regarding your information by writing to <a href="contact@noctua-software.com">contact@noctua-software.com</a> or writing to: <i>Noctua Software Ltd, Unit 1109, 11/F., Kowloon Centre, 33 Ashley Road, Tsimshatsui, Kowloon, HongKong</i></p>
+    <p>Data rights are human rights and we are determined to fairly and fully honour yours. You can unsubscribe at any time or just get in touch with any questions, comments, or instructions regarding your information by writing to <a href="mailto:contact@noctua-software.com">contact@noctua-software.com</a> or writing to: <i>Noctua Software Ltd, Unit 1109, 11/F., Kowloon Centre, 33 Ashley Road, Tsimshatsui, Kowloon, HongKong</i></p>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer><v-btn class="blue--text darken-1" flat @click.native="$store.state.showPrivacyDialog = false">Close</v-btn>
