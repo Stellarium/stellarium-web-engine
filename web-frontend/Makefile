@@ -16,7 +16,7 @@ dev:
 	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" stellarium-web-dev yarn run dev
 
 build:
-	docker run -it -v "$(PWD):/app" stellarium-web-dev yarn run build
+	docker run -it -v "$(PWD):/app" -e CDN_ENV="$(CDN_ENV)" stellarium-web-dev yarn run build
 
 start:
 	cd dist && python -m SimpleHTTPServer
