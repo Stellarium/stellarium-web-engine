@@ -55,7 +55,7 @@ module.exports = {
     // Paths
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
+    assetsPublicPath: process.env.CDN_ENV ? process.env.CDN_ENV : '/',
 
     /**
      * Source Maps
