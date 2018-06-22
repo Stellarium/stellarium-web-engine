@@ -110,7 +110,7 @@ if target_os == 'js':
 
     flags = [
              '-s', 'MODULARIZE=1', '-s', 'EXPORT_NAME=StelWebEngine',
-             '-s', 'TOTAL_MEMORY=268435456', # 256M
+             '-s', 'ALLOW_MEMORY_GROWTH=1',
              '--pre-js', 'src/js/pre.js',
              '--pre-js', 'src/js/obj.js',
              '--pre-js', 'src/js/canvas.js',
