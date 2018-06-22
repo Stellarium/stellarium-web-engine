@@ -117,7 +117,7 @@ if target_os == 'js':
              '--llvm-lto', '3',
              '-s', 'STRICT=1',
              '-s', 'RESERVED_FUNCTION_POINTERS=5',
-             '-Os',
+             '-O3',
              '-s', 'USE_WEBGL2=1',
              '-s', 'NO_EXIT_RUNTIME=1',
              '-s', '"EXPORTED_FUNCTIONS=[]"',
