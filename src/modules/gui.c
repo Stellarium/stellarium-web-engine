@@ -332,6 +332,9 @@ static void info_widget(obj_t *obj)
     sprintf(buf, "%s/%s", format_dangle(buf1, az), format_dangle(buf2, alt));
     gui_label("AZ/AL", buf);
 
+    find_constellation_at(obj->pos.pvg[0], buf);
+    gui_label("CST", buf);
+
     if (obj_has_attr(obj, "phase")) {
         obj_get_attr(obj, "phase", "f", &v);
         if (!isnan(v)) {

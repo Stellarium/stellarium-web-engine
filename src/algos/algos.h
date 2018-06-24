@@ -129,3 +129,16 @@ void refraction(const double v[3], double refa, double refb, double out[3]);
  * ftp://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
  */
 int l12(double tt1, double tt2, int ks, double pv[2][3]);
+
+/*
+ * Find which constellation a point is located in.
+ *
+ * Parameters:
+ *   pos    - A cartesian position in ICRS.
+ *   id     - Get the name of the constellation.
+ *
+ * Returns:
+ *   The index of the constellation.
+ *
+ */
+int find_constellation_at(const double pos[3], char id[4]);
