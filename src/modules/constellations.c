@@ -262,6 +262,7 @@ static void proj_backward(const projection_t *proj, int flags,
     double uv[3] = {v[0], v[1], 1.0};
     mat3_mul_vec3(proj->mat3, uv, out);
     vec3_normalize(out, out);
+    out[3] = 0;
 }
 
 static int render_img(const constellation_t *con, const painter_t *painter)
