@@ -228,6 +228,7 @@ static int render_bounds(const constellation_t *con,
     };
 
     painter.color[3] *= cons->bounds_visible.value;
+    painter.lines_stripes = 10.0;
     if (!painter.color[3]) return 0;
     info = con->info;
     if (!info) return 0;
