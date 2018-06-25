@@ -177,6 +177,7 @@ static void menu_main(void *user)
         {"core.milkyway",  "Milkyway", "btn_landscape"},
         {"core.constellations.lines", "Cst Lines", "btn_cst_lines"},
         {"core.constellations.images", "Cst Art", NULL},
+        {"core.constellations.bounds", "Cst Bounds", NULL},
         {"core.dsos", "DSO", NULL},
         {"core.dss",  "DSS", NULL},
     };

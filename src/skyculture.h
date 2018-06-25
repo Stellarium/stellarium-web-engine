@@ -28,6 +28,8 @@ typedef struct constellation_infos
     char name[128];
     int  lines[64][2]; // star HD number.
     int  nb_lines;
+    double bounds[64][2]; // Ra/dec B1875 boundaries polygon.
+    int nb_bounds;
 } constellation_infos_t;
 
 /*

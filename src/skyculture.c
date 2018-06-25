@@ -12,6 +12,7 @@
 // Defined in skyculture.inl
 static const char *NAMES;
 static const char *CONSTELLATIONS;
+static const char *BOUNDARIES;
 
 typedef struct star_name star_name_t;
 struct star_name
@@ -110,6 +111,45 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
     free(data);
 }
 
+static constellation_infos_t *get_constellation(
+        skyculture_t *cult, const char *id)
+{
+    int i;
+    for (i = 0; i < cult->nb_constellations; i++) {
+        if (strcasecmp(cult->constellations[i].id, id) == 0)
+            return &cult->constellations[i];
+    }
+    return NULL;
+}
+
+static void parse_bounds(skyculture_t *cult, const char *bounds)
+{
+    constellation_infos_t *info = NULL;
+    const char *line;
+    char buf[8] = {}, cst[8] = {};
+    float ra, dec;
+    const int MAX_BOUNDS = ARRAY_SIZE(info->bounds);
+
+    for (line = bounds; *line; line = strchr(line, '\n') + 1) {
+        sscanf(line, "%f %f %s", &ra, &dec, buf);
+        if (strcmp(cst, buf) != 0) {
+            memcpy(cst, buf, sizeof(cst));
+            info = get_constellation(cult, cst);
+            if (info) {
+                info->nb_bounds = 0;
+            }
+        }
+        if (!info) continue;
+        if (info->nb_bounds >= MAX_BOUNDS) {
+            LOG_E("Too many bounds in constellation %s", cst);
+            continue;
+        }
+        info->bounds[info->nb_bounds][0] = ra * 15 * DD2R;
+        info->bounds[info->nb_bounds][1] = dec * DD2R;
+        info->nb_bounds++;
+    }
+}
+
 skyculture_t *skyculture_create(void)
 {
     char id[64];
@@ -117,6 +157,7 @@ skyculture_t *skyculture_create(void)
     skyculture_t *cult = calloc(1, sizeof(*cult));
     parse_names(cult, NAMES);
     parse_constellations(cult, CONSTELLATIONS);
+    parse_bounds(cult, BOUNDARIES);
 
     // Register all the names.
     HASH_ITER(hh, cult->star_names, star_name, tmp) {
