@@ -644,7 +644,7 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
             GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
             break;
         case GL_RGB:
-            if (color[3] == 1.0) {
+            if (color[3] == 1.0 && !args->stripes) {
                 GL(glDisable(GL_BLEND));
             } else {
                 GL(glEnable(GL_BLEND));
