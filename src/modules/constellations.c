@@ -283,41 +283,41 @@ static int render_img(const constellation_t *con, const painter_t *painter)
     return 0;
 }
 
-static void on_constellation(int index, const char *id, const char *name,
-                             int nb_lines, int (*lines)[2], void *user)
-{
-    constellations_t *conss = user;
-    constellation_t *cons;
-    char star_id[128];
-    char buff[32];
-    int i;
-
-    sprintf(buff, "CST %s", id);
-    str_to_upper(buff, buff);
-    cons = (void*)obj_create("constellation", buff, (obj_t*)conss, NULL);
-    cons->name = strdup(name);
-    cons->count = nb_lines * 2;
-    cons->stars = calloc(nb_lines * 2, sizeof(*cons->stars));
-    for (i = 0; i < nb_lines * 2; i++) {
-        assert(lines[i / 2][i % 2] != 0);
-        sprintf(star_id, "HD %d", lines[i / 2][i % 2]);
-        cons->stars[i] = obj_get(NULL, star_id, 0);
-        if (!cons->stars[i])
-            LOG_D("XXXX %s: %s", id, star_id);
-    }
-    identifiers_add(cons->obj.id, "CST", id, id, id);
-    identifiers_add(cons->obj.id, "NAME", name, name, name);
-}
 
 static int constellations_init(obj_t *obj, json_value *args)
 {
     constellations_t *conss = (void*)obj;
+    constellation_t *cons;
+    const constellation_infos_t *info;
+    char star_id[128];
+    char buf[32];
+    int i;
+
     obj_add_sub(&conss->obj, "images");
     obj_add_sub(&conss->obj, "lines");
     fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->images_visible, false);
-    skyculture_iter_constellations(core->skyculture, on_constellation, conss);
+    for (info = skyculture_get_constellations(core->skyculture, NULL);
+            *info->id; info++)
+    {
+        sprintf(buf, "CST %s", info->id);
+        str_to_upper(buf, buf);
+        cons = (void*)obj_create("constellation", buf, (obj_t*)conss, NULL);
+        cons->name = strdup(info->name);
+        cons->count = info->nb_lines * 2;
+        cons->stars = calloc(info->nb_lines * 2, sizeof(*cons->stars));
+        for (i = 0; i < info->nb_lines * 2; i++) {
+            assert(info->lines[i / 2][i % 2] != 0);
+            sprintf(star_id, "HD %d", info->lines[i / 2][i % 2]);
+            cons->stars[i] = obj_get(NULL, star_id, 0);
+            if (!cons->stars[i])
+                LOG_W("Cannot find cst star: %s, %s", info->id, star_id);
+        }
+        identifiers_add(cons->obj.id, "CST", info->id, info->id, info->id);
+        identifiers_add(cons->obj.id, "NAME",
+                        info->name, info->name, info->name);
+    }
     return 0;
 }
 

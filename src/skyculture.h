@@ -19,6 +19,18 @@
 #define SKYCULTURE_H
 
 /*
+ * Type: constellation_infos_t
+ * Information about a given constellation.
+ */
+typedef struct constellation_infos
+{
+    char id[8];
+    char name[128];
+    int  lines[64][2]; // star HD number.
+    int  nb_lines;
+} constellation_infos_t;
+
+/*
  * Type: skyculture_t
  * Opaque type that represent a sky culture. */
 typedef struct skyculture skyculture_t;
@@ -52,17 +64,20 @@ const char *skyculture_get_star_name(const skyculture_t *cult, int hd);
  */
 int skyculture_search_star_name(const skyculture_t *cult, const char *name);
 
-/* Function: skyculture_iter_constellations
- * List all the constellations in a sky culture.
+
+/*
+ * Function: skyculture_get_constellations
+ * Return the list of all the constellations in a skyculture.
  *
  * Parameters:
- *  cult - A <skyculture_t> instance.
- *  f    - Callback function that will be called once per constellation,
- *  user - User value passed to the callback.
+ *   cult - A <skyculture_t> instance.
+ *   nb   - Get the number of constellations in the list.
+ *
+ * Return:
+ *   An array of all the constellation infos.  Terminated by an empty one.
  */
-void skyculture_iter_constellations(const skyculture_t *cult,
-                    void (*f)(int index, const char *id, const char *name,
-                              int nb_lines, int (*lines)[2], void *user),
-                    void *user);
+const constellation_infos_t *skyculture_get_constellations(
+        const skyculture_t *cult,
+        int *nb);
 
 #endif // SKYCULTURE_H

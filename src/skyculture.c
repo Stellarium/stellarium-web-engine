@@ -20,19 +20,11 @@ struct star_name
     char            *name;
 };
 
-typedef struct constellation
-{
-    char id[8];
-    char name[128];
-    int  lines[64][2];
-    int  nb_lines;
-} constellation_t;
-
 struct skyculture
 {
     star_name_t     *star_names;
     int             nb_constellations;
-    constellation_t *constellations;
+    constellation_infos_t *constellations;
 };
 
 static void parse_names(skyculture_t *cult, const char *names)
@@ -82,7 +74,7 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
     char *data, *line, *tmp = NULL, *tok;
     bool linked;
     int nb = 0, i, star, last_star = 0;
-    constellation_t *cons;
+    constellation_infos_t *cons;
 
     data = strdup(consts);
 
@@ -91,7 +83,7 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
     assert(nb);
 
     cult->nb_constellations = nb;
-    cult->constellations = calloc(nb, sizeof(constellation_t));
+    cult->constellations = calloc(nb + 1, sizeof(constellation_infos_t));
 
     for (i = 0, line = strtok_r(data, "\n", &tmp); line;
           line = strtok_r(NULL, "\n", &tmp), i++) {
@@ -117,36 +109,6 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
     free(data);
 }
 
-static void print_constellation(int index, const char *id, const char *name,
-                                int nb_lines, int (*lines)[2], void *user)
-{
-    int i;
-    char cst[4];
-    int bayer, n, hd;
-    int last_hd = 0;
-    const char *g;
-    static const char *GREEK =
-        "alf bet gam del eps zet eta tet iot kap lam mu  nu  xi  omi "
-        "pi  rho sig tau ups phi chi psi ome";
-    printf("%s|%-22s|", id, name);
-    for (i = 0; i < nb_lines * 2; i++) {
-        hd = lines[i / 2][i % 2];
-        if (i) {
-            if (last_hd == hd) continue;
-            printf("%c", i % 2 == 0 ? ' ' : '-');
-        }
-        bayer_get(hd, cst, &bayer, &n);
-        g = &GREEK[(bayer - 1) * 4];
-        if (bayer && strcmp(cst, id) == 0) {
-            printf("%.*s%.*d", g[2] == ' ' ? 2 : 3, g, n ? 1 : 0, n);
-        } else {
-            printf("%d", hd);
-        }
-        last_hd = hd;
-    }
-    printf("\n");
-}
-
 skyculture_t *skyculture_create(void)
 {
     char id[64];
@@ -160,10 +122,6 @@ skyculture_t *skyculture_create(void)
         sprintf(id, "HD %d", star_name->hd);
         identifiers_add(id, "NAME", star_name->name, NULL, NULL);
     }
-
-    // XXX: I keep this around for debuging.
-    if (0)
-        skyculture_iter_constellations(cult, print_constellation, NULL);
 
     return cult;
 }
@@ -186,17 +144,12 @@ int skyculture_search_star_name(const skyculture_t *cult, const char *name)
     return 0;
 }
 
-void skyculture_iter_constellations(const skyculture_t *cult,
-                    void (*f)(int index, const char *id, const char *name,
-                              int nb_lines, int (*lines)[2], void *user),
-                    void *user)
+const constellation_infos_t *skyculture_get_constellations(
+        const skyculture_t *cult,
+        int *nb)
 {
-    int i;
-    constellation_t *cons;
-    for (i = 0; i < cult->nb_constellations; i++) {
-        cons = &cult->constellations[i];
-        f(i, cons->id, cons->name, cons->nb_lines, cons->lines, user);
-    }
+    if (nb) *nb = cult->nb_constellations;
+    return cult->constellations;
 }
 
 static const char *NAMES =
