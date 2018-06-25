@@ -208,25 +208,34 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     return 0;
 }
 
+static void spherical_project(
+        const projection_t *proj, int flags, const double *v, double *out)
+{
+    eraS2c(v[0], v[1], out);
+    out[3] = 0.0; // At infinity.
+}
+
 static int render_bounds(const constellation_t *con,
                          const painter_t *painter_)
 {
     int i;
     const constellation_infos_t *info;
-    double a[2], b[2], line[2][4] = {};
+    double line[2][4] = {};
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
     painter_t painter = *painter_;
+    projection_t proj = {
+        .backward = spherical_project,
+    };
 
     painter.color[3] *= cons->bounds_visible.value;
     if (!painter.color[3]) return 0;
     info = con->info;
     if (!info) return 0;
-    for (i = 0; i < info->nb_bounds; i++) {
-        memcpy(a, info->bounds[i], sizeof(a));
-        memcpy(b, info->bounds[(i + 1) % info->nb_bounds], sizeof(b));
-        eraS2c(a[0], a[1], line[0]);
-        eraS2c(b[0], b[1], line[1]);
-        paint_lines(&painter, FRAME_ICRS, 2, line, NULL, 8, 2);
+    for (i = 0; i < info->nb_edges; i++) {
+        memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
+        memcpy(line[1], info->edges[i][1], 2 * sizeof(double));
+        if (line[1][0] < line[0][0]) line[1][0] += 2 * M_PI;
+        paint_lines(&painter, FRAME_ICRS, 2, line, &proj, 8, 2);
     }
     return 0;
 }

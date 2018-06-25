@@ -12,7 +12,7 @@
 // Defined in skyculture.inl
 static const char *NAMES;
 static const char *CONSTELLATIONS;
-static const char *BOUNDARIES;
+static const char *EDGES;
 
 typedef struct star_name star_name_t;
 struct star_name
@@ -122,31 +122,44 @@ static constellation_infos_t *get_constellation(
     return NULL;
 }
 
-static void parse_bounds(skyculture_t *cult, const char *bounds)
+static void parse_edges(skyculture_t *cult, const char *edges)
 {
     constellation_infos_t *info = NULL;
     const char *line;
-    char buf[8] = {}, cst[8] = {};
-    float ra, dec;
-    const int MAX_BOUNDS = ARRAY_SIZE(info->bounds);
+    char cst[2][8];
+    int i, ra1_h, ra1_m, ra1_s, ra2_h, ra2_m, ra2_s;
+    char dec1_sign, dec2_sign;
+    int dec1_d, dec1_m, dec1_s, dec2_d, dec2_m, dec2_s;
+    double ra1, dec1, ra2, dec2;
+    const int MAX_EDGES = ARRAY_SIZE(info->edges);
 
-    for (line = bounds; *line; line = strchr(line, '\n') + 1) {
-        sscanf(line, "%f %f %s", &ra, &dec, buf);
-        if (strcmp(cst, buf) != 0) {
-            memcpy(cst, buf, sizeof(cst));
-            info = get_constellation(cult, cst);
-            if (info) {
-                info->nb_bounds = 0;
+    for (line = edges; *line; line = strchr(line, '\n') + 1) {
+        sscanf(line, "%*s %*s"
+                     "%d:%d:%d %c%d:%d:%d "
+                     "%d:%d:%d %c%d:%d:%d "
+                     "%s %s",
+                     &ra1_h, &ra1_m, &ra1_s,
+                     &dec1_sign, &dec1_d, &dec1_m, &dec1_s,
+                     &ra2_h, &ra2_m, &ra2_s,
+                     &dec2_sign, &dec2_d, &dec2_m, &dec2_s,
+                     cst[0], cst[1]);
+        eraTf2a('+', ra1_h, ra1_m, ra1_s, &ra1);
+        eraTf2a('+', ra2_h, ra2_m, ra2_s, &ra2);
+        eraAf2a(dec1_sign, dec1_d, dec1_m, dec1_s, &dec1);
+        eraAf2a(dec2_sign, dec2_d, dec2_m, dec2_s, &dec2);
+        for (i = 0; i < 2; i++) {
+            info = get_constellation(cult, cst[i]);
+            if (!info) continue;
+            if (info->nb_edges >= MAX_EDGES) {
+                LOG_E("Too many bounds in constellation %s", cst);
+                continue;
             }
+            info->edges[info->nb_edges][0][0] = ra1;
+            info->edges[info->nb_edges][0][1] = dec1;
+            info->edges[info->nb_edges][1][0] = ra2;
+            info->edges[info->nb_edges][1][1] = dec2;
+            info->nb_edges++;
         }
-        if (!info) continue;
-        if (info->nb_bounds >= MAX_BOUNDS) {
-            LOG_E("Too many bounds in constellation %s", cst);
-            continue;
-        }
-        info->bounds[info->nb_bounds][0] = ra * 15 * DD2R;
-        info->bounds[info->nb_bounds][1] = dec * DD2R;
-        info->nb_bounds++;
     }
 }
 
@@ -157,7 +170,7 @@ skyculture_t *skyculture_create(void)
     skyculture_t *cult = calloc(1, sizeof(*cult));
     parse_names(cult, NAMES);
     parse_constellations(cult, CONSTELLATIONS);
-    parse_bounds(cult, BOUNDARIES);
+    parse_edges(cult, EDGES);
 
     // Register all the names.
     HASH_ITER(hh, cult->star_names, star_name, tmp) {
