@@ -25,7 +25,6 @@ def compute(target, o=None):
     target.compute(o)
     # Pyephem use Dublin JD, ephemeride uses Modified JD!
     mjd = o.date + 15020 - 0.5
-    print target.
     print ('        {"%s", %.4f, %.2f, %.2f,\n'
            '         %.2f, %.2f, %.2f, %.2f, %.2f, %.2f},') % (
             target.name, mjd, o.lon * R2D, o.lat * R2D,
@@ -37,3 +36,4 @@ compute(ephem.Sun())
 compute(ephem.Moon())
 compute('Polaris')
 compute(ephem.Jupiter())
+compute(ephem.Io())
