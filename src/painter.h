@@ -92,6 +92,7 @@ enum {
     PAINTER_HIDE_BELOW_HORIZON  = 1 << 2,
     PAINTER_FAST_MODE           = 1 << 3,
     PAINTER_PLANET_SHADER       = 1 << 4,
+    PAINTER_NO_CULL_FACE        = 1 << 5, // Disable face culling.
 };
 
 struct painter

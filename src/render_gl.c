@@ -697,7 +697,11 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         }
     }
 
-    GL(glEnable(GL_CULL_FACE));
+    if (args->flags & PAINTER_NO_CULL_FACE)
+        GL(glDisable(GL_CULL_FACE));
+    else
+        GL(glEnable(GL_CULL_FACE));
+
     GL(glUseProgram(prog->prog));
 
     GL(glActiveTexture(GL_TEXTURE1));
