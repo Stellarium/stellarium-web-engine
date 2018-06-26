@@ -315,6 +315,35 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     return 0;
 }
 
+static void ring_project(const projection_t *proj, int flags,
+                           const double *v, double *out)
+{
+    double theta, r, mat[3][3], p[4] = {1, 0, 0, 1};
+    theta = v[0] * 2 * M_PI;
+    r = 1.5 + v[1];
+    mat3_set_identity(mat);
+    mat3_rz(theta, mat, mat);
+    mat3_iscale(mat, r, r);
+    mat3_mul_vec3(mat, p, p);
+    vec4_copy(p, out);
+}
+
+static void render_ring(const painter_t *painter_)
+{
+    projection_t proj = {
+        .backward   = ring_project,
+    };
+    painter_t painter = *painter_;
+    painter.color[0] = 1.0;
+    painter.color[1] = 0.0;
+    painter.color[2] = 0.0;
+    painter.color[3] = 1.0;
+    painter.light_dir = NULL;
+    painter.light_emit = NULL;
+    painter.flags &= ~PAINTER_PLANET_SHADER;
+    paint_quad(&painter, FRAME_OBSERVED, NULL, NULL, NULL, &proj, 64);
+}
+
 static void planet_render_hips(const planet_t *planet,
                                double alpha,
                                const painter_t *painter)
@@ -367,6 +396,7 @@ static void planet_render_hips(const planet_t *planet,
     hips_render_traverse(planet->hips, &painter2, angle,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
+    render_ring(&painter2);
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
 }
 
