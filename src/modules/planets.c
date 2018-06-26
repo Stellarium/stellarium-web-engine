@@ -49,6 +49,7 @@ struct planet {
 
     hips_t      *hips;              // Hips survey of the planet.
     hips_t      *hips_normalmap;    // Normal map survey.
+    texture_t   *rings_tex;         // Rings texture.
 };
 
 
@@ -142,6 +143,20 @@ static const double VIS_ELEMENTS[][5] = {
     for (   p = (planet_t*)(((obj_t*)o)->children); \
             p; \
             p = (planet_t*)p->obj.next)
+
+
+/*
+ * Conveniance function to look for a planet by name
+ */
+static planet_t *planet_find(planets_t *planets, const char *name)
+{
+    planet_t *p;
+    PLANETS_ITER(planets, p) {
+        if (strcasecmp(p->name, name) == 0) return p;
+    }
+    return NULL;
+}
+
 
 static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
@@ -328,20 +343,16 @@ static void ring_project(const projection_t *proj, int flags,
     vec4_copy(p, out);
 }
 
-static void render_ring(const painter_t *painter_)
+static void render_rings(texture_t *tex, const painter_t *painter_)
 {
     projection_t proj = {
         .backward   = ring_project,
     };
     painter_t painter = *painter_;
-    painter.color[0] = 1.0;
-    painter.color[1] = 0.0;
-    painter.color[2] = 0.0;
-    painter.color[3] = 1.0;
     painter.light_dir = NULL;
     painter.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
-    paint_quad(&painter, FRAME_OBSERVED, NULL, NULL, NULL, &proj, 64);
+    paint_quad(&painter, FRAME_OBSERVED, tex, NULL, NULL, &proj, 64);
 }
 
 static void planet_render_hips(const planet_t *planet,
@@ -398,7 +409,8 @@ static void planet_render_hips(const planet_t *planet,
     hips_render_traverse(planet->hips, &painter2, angle,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
-    render_ring(&painter2);
+    if (planet->rings_tex)
+        render_rings(planet->rings_tex, &painter2);
     painter2.depth_range = NULL;
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
 }
@@ -513,18 +525,15 @@ static int on_hips(const char *url, double release_date, void *user)
     normalmap = matches[2].rm_so >= 0;
 
     // Check if the name correspond to a planet.
-    PLANETS_ITER(planets, p) {
-        if (strcasecmp(p->name, name) == 0) {
-            LOG_V("Assign hips '%s' to planet '%s'", url, name);
-            if (!normalmap) {
-                p->hips = hips_create(url, release_date);
-                hips_set_frame(p->hips, FRAME_OBSERVED);
-            }
-            else {
-                p->hips_normalmap = hips_create(url, release_date);
-                hips_set_frame(p->hips_normalmap, FRAME_OBSERVED);
-            }
-            break;
+    if ((p = planet_find(planets, name))) {
+        LOG_V("Assign hips '%s' to planet '%s'", url, name);
+        if (!normalmap) {
+            p->hips = hips_create(url, release_date);
+            hips_set_frame(p->hips, FRAME_OBSERVED);
+        }
+        else {
+            p->hips_normalmap = hips_create(url, release_date);
+            hips_set_frame(p->hips_normalmap, FRAME_OBSERVED);
         }
     }
 
@@ -662,13 +671,32 @@ static int planets_ini_handler(void* user, const char* section,
 static int planets_init(obj_t *obj, json_value *args)
 {
     planets_t *planets = (void*)obj;
-    char *data;
+    char *data, name[128];
+    const char *path;
+    int r;
+    planet_t *p;
+    regex_t reg;
+    regmatch_t matches[2];
+
     planets->hipslist_parsed = -1;
     data = asset_get_data("asset://planets.ini", NULL, NULL);
     ini_parse_string(data, planets_ini_handler, planets);
     assert(planets->sun);
     assert(planets->earth);
     assert(planets->moon);
+
+    // Add rings textures from assets.
+    regcomp(&reg, "^.*/([^/]+)_rings.png$", REG_EXTENDED);
+    ASSET_ITER("asset://textures/", path) {
+        r = regexec(&reg, path, 2, matches, 0);
+        if (r) continue;
+        sprintf(name, "%.*s", matches[1].rm_eo - matches[1].rm_so,
+                path + matches[1].rm_so);
+        p = planet_find(planets, name);
+        if (!p) continue;
+        p->rings_tex = texture_from_url(path, 0);
+    }
+
     return 0;
 }
 
