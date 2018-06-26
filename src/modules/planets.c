@@ -369,7 +369,7 @@ static void render_rings(texture_t *tex,
 
 static void planet_render_hips(const planet_t *planet,
                                double alpha,
-                               const painter_t *painter)
+                               const painter_t *painter_)
 {
     double mat[4][4];
     double pos[3];
@@ -381,11 +381,11 @@ static void planet_render_hips(const planet_t *planet,
     double light_dir[3];
     double angle = 2 * planet->radius_m / DAU / vec2_norm(planet->pvg[0]);
     int nb_tot = 0, nb_loaded = 0;
-
     planets_t *planets = (planets_t*)planet->obj.parent;
-    painter_t painter2 = *painter;
-    painter2.color[3] *= alpha;
-    painter2.flags |= PAINTER_PLANET_SHADER;
+    painter_t painter = *painter_;
+
+    painter.color[3] *= alpha;
+    painter.flags |= PAINTER_PLANET_SHADER;
 
     // To make sure the hips is aligned with the planet position, we
     // compute the position in observed frame.
@@ -414,21 +414,20 @@ static void planet_render_hips(const planet_t *planet,
         // Not sure about this.
         mat4_rx(-planet->rot.obliquity, mat, mat);
     }
-    painter2.transform = &mat;
-    painter2.light_dir = &light_dir;
+    painter.transform = &mat;
+    painter.light_dir = &light_dir;
 
-    if (planet == planets->sun) painter2.light_emit = &full_emit;
+    if (planet == planets->sun) painter.light_emit = &full_emit;
     double depth_range[2] = {dist * 0.5, dist * 2};
-    painter2.depth_range = &depth_range;
-    hips_render_traverse(planet->hips, &painter2, angle,
+    painter.depth_range = &depth_range;
+    hips_render_traverse(planet->hips, &painter, angle,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)
         render_rings(planet->rings.tex,
                      planet->rings.inner_radius / planet->radius_m,
                      planet->rings.outer_radius / planet->radius_m,
-                     &painter2);
-    painter2.depth_range = NULL;
+                     &painter);
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
 }
 
