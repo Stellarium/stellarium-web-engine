@@ -69,7 +69,6 @@ typedef struct renderer_gl {
 
     struct {
         prog_t  points;
-        prog_t  simple_planet;
         prog_t  blit_proj;
         prog_t  blit_tag;
         prog_t  planet;
@@ -234,90 +233,6 @@ static void points(renderer_t *rend_,
                   &(render_buffer_args_t) {
                       .color = painter->color,
                       .smooth = painter->points_smoothness,
-                  });
-    render_free_buffer(buffer);
-}
-
-static void compute_tangent_light_dir(
-        const double pos[3], double view_mat[4][4],
-        const projection_t *proj,
-        const double light_dir[3], double out[3])
-{
-    double p1[3], p2[3];
-    mat4_mul_vec3(view_mat, pos, p1);
-    project(proj, 0, 2, p1, p1);
-    vec3_add(pos, light_dir, p2);
-    mat4_mul_vec3(view_mat, p2, p2);
-    project(proj, 0, 2, p2, p2);
-
-    vec2_sub(p2, p1, out);
-    vec2_normalize(out, out);
-    out[2] = -vec3_dot(pos, light_dir);
-    vec2_mul(sqrt(1.0 - (out[2] * out[2])), out, out);
-    vec3_normalize(out, out);
-}
-
-static void planet(renderer_t           *rend_,
-                   const double         pos[3],
-                   double               size,
-                   const double         color[4],
-                   const double         light_dir[3],
-                   double               shadow_brightness,
-                   double               view_mat[4][4],
-                   const projection_t   *proj)
-{
-    renderer_gl_t *rend = (void*)rend_;
-    int i;
-    point_vertex_gl_t quad[4];
-    uint16_t indices[6];
-    double p[4], tang_light_dir[3];
-    buffer_t *buffer = NULL;
-    const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
-
-    compute_tangent_light_dir(pos, view_mat, proj, light_dir, tang_light_dir);
-    buffer = calloc(1, sizeof(*buffer));
-    buffer->nb_vertices = 4;
-    mat4_mul_vec3(view_mat, pos, p);
-    project(proj, 0, 4, p, p);
-
-    for (i = 0; i < 4; i++) {
-        vec4_to_float(p, quad[i].pos);
-        quad[i].shift[0] = (i % 2 - 0.5) * 2 * tan(size / 2) /
-                           proj->scaling[0];
-        quad[i].shift[1] = (i / 2 - 0.5) * 2 * tan(size / 2) /
-                           proj->scaling[1];
-        quad[i].tex_pos[0] = i % 2;
-        quad[i].tex_pos[1] = i / 2;
-        quad[i].color[0] = color[0] * 255;
-        quad[i].color[1] = color[1] * 255;
-        quad[i].color[2] = color[2] * 255;
-        quad[i].color[3] = color[3] * 255;
-    }
-    for (i = 0; i < 6; i++) {
-        indices[i] = INDICES[i];
-    }
-    buffer->mode = GL_TRIANGLES;
-    buffer->offset = sizeof(*quad);
-    buffer->offset_pos = offsetof(typeof(*quad), pos);
-    buffer->offset_tex_pos = offsetof(typeof(*quad), tex_pos);
-    buffer->offset_color = offsetof(typeof(*quad), color);
-    buffer->offset_shift = offsetof(typeof(*quad), shift);
-
-    GL(glGenBuffers(1, &buffer->array_buffer));
-    GL(glGenBuffers(1, &buffer->index_buffer));
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buffer->array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad,
-                    GL_DYNAMIC_DRAW));
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->index_buffer));
-
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(*indices),
-                    indices, GL_DYNAMIC_DRAW));
-
-    render_buffer(rend, buffer, 6, &rend->progs.simple_planet,
-                  &(render_buffer_args_t) {
-                      .color = color,
-                      .light_dir = tang_light_dir,
-                      .shadow_brightness = shadow_brightness,
                   });
     render_free_buffer(buffer);
 }
@@ -843,10 +758,6 @@ renderer_t* render_gl_create(void)
     init_prog(&rend->progs.points,
               asset_get_data("asset://shaders/points.vert", NULL, NULL),
               asset_get_data("asset://shaders/points.frag", NULL, NULL), NULL);
-    init_prog(&rend->progs.simple_planet,
-              asset_get_data("asset://shaders/simple_planet.vert", NULL, NULL),
-              asset_get_data("asset://shaders/simple_planet.frag", NULL, NULL),
-              NULL);
     init_prog(&rend->progs.blit_proj,
               asset_get_data("asset://shaders/blit.vert", NULL, NULL),
               asset_get_data("asset://shaders/blit.frag", NULL, NULL), NULL);
@@ -860,7 +771,6 @@ renderer_t* render_gl_create(void)
 
     rend->rend.prepare = prepare;
     rend->rend.points = points;
-    rend->rend.planet = planet;
     rend->rend.quad = quad;
     rend->rend.texture = texture;
     rend->rend.text = text;

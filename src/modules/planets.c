@@ -485,19 +485,13 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     mat4_mul_vec3(core->observer->ri2h, light_dir, light_dir);
     painter2.light_dir = &light_dir;
 
-    if (0) {    // 'design' style.  Disabled for the moment.
-        point_r *= 0.7;
-        paint_planet(&painter2, pos, point_r, color,
-                     planet->shadow_brightness, planet->obj.id);
-    } else {
-        point = (point_t) {
-            .pos = {pos[0], pos[1], pos[2]},
-            .size = point_r,
-            .color = {color[0], color[1], color[2], color[3]},
-        };
-        strcpy(point.id, planet->obj.id);
-        paint_points(&painter2, 1, &point, FRAME_OBSERVED);
-    }
+    point = (point_t) {
+        .pos = {pos[0], pos[1], pos[2]},
+        .size = point_r,
+        .color = {color[0], color[1], color[2], color[3]},
+    };
+    strcpy(point.id, planet->obj.id);
+    paint_points(&painter2, 1, &point, FRAME_OBSERVED);
 
 skip_point:
     if (hips_alpha > 0) {

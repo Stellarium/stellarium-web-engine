@@ -29,16 +29,6 @@ struct renderer
                    int                  n,
                    const point_t        *points);
 
-    // XXX: deprecated.
-    void (*planet)(renderer_t           *rend,
-                   const double         pos[3],
-                   double               size,
-                   const double         color[4],
-                   const double         light_dir[3],
-                   double               shadow_brightness,
-                   double               view_mat[4][4],
-                   const projection_t   *proj);
-
     void (*quad)(renderer_t          *rend,
                  const painter_t     *painter,
                  int                 frame,
@@ -128,11 +118,6 @@ int paint_prepare(const painter_t *painter, int w, int h);
 int paint_finish(const painter_t *painter);
 int paint_points(const painter_t *painter, int n, const point_t *points,
                  int frame);
-
-int paint_planet(const painter_t *painter, const double pos[3],
-                 double size, const double color[3],
-                 double shadow_brightness,
-                 const char *id);
 
 /* Function: paint_quad
  *

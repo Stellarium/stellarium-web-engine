@@ -35,35 +35,6 @@ int paint_points(const painter_t *painter, int n, const point_t *points,
     return 0;
 }
 
-int paint_planet(const painter_t *painter, const double pos[3],
-                 double size, const double color[3],
-                 double shadow_brightness,
-                 const char *id)
-{
-    double view_mat[4][4];
-    REND(painter->rend, planet, pos, size, color,
-         *painter->light_dir, shadow_brightness,
-         view_mat, painter->proj);
-
-    // Add the point in the global list.
-    // XXX: maybe we should do all the projections in the painter.
-    double p[3];
-    point_t point;
-    mat4_mul_vec3(view_mat, pos, p);
-    project(painter->proj, 0, 2, p, p);
-    point = (point_t) {
-        .pos = {
-            (+p[0] + 1) / 2 * core->win_size[0],
-            (-p[1] + 1) / 2 * core->win_size[1],
-        },
-        .size = tan(size / 2) / painter->proj->scaling[0] * core->win_size[0],
-    };
-    strcpy(point.id, id);
-    utarray_push_back(core->rend_points, &point);
-
-    return 0;
-}
-
 static int paint_quad_visitor(int step, qtree_node_t *node,
                               const double uv[4][2], const double pos[4][4],
                               const painter_t *painter,
