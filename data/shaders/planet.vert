@@ -7,7 +7,7 @@ attribute vec3 a_tangent;
 
 uniform vec4 u_color;
 
-varying vec3 v_pos;
+varying vec3 v_vpos;
 varying vec2 v_tex_pos;
 varying vec4 v_color;
 varying vec3 v_normal;
@@ -17,7 +17,7 @@ varying vec3 v_bitangent;
 void main()
 {
     gl_Position = a_pos;
-    v_pos = a_vpos.xyz;
+    v_vpos = a_vpos.xyz;
     v_tex_pos = a_tex_pos;
     v_color = vec4(a_color, 1.0) * u_color;
 

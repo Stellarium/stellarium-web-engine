@@ -40,7 +40,7 @@ typedef struct {
     GLuint u_mv_l;
     GLuint u_stripes_l;
 
-    GLuint u_light_dir_l;
+    GLuint u_sun_l;
     GLuint u_light_emit_l;
     GLuint u_shadow_brightness_l; // For planets.
 } prog_t;
@@ -87,7 +87,7 @@ typedef struct render_buffer_args {
     const texture_t *normalmap;
     const double (*mv)[4][4];
     double smooth;
-    const double *light_dir;
+    const double *sun;
     const double *light_emit;
     double shadow_brightness;
     int flags;
@@ -268,7 +268,7 @@ static void quad(renderer_t          *rend_,
     uint16_t *indices;
     double p[4], normal[4], tangent[4], z;
     bool quad_cut_inv = painter->flags & PAINTER_QUAD_CUT_INV;
-    const double *depth_range = *painter->depth_range;
+    const double *depth_range = (const double*)painter->depth_range;
 
     // Positions of the triangles for both regular and inverted triangles.
     const int INDICES[2][6][2] = {
@@ -362,7 +362,7 @@ static void quad(renderer_t          *rend_,
                       .tex = tex,
                       .normalmap = normalmap,
                       .mv = &mv,
-                      .light_dir = (double*)painter->light_dir,
+                      .sun = (double*)painter->sun,
                       .light_emit = (double*)painter->light_emit,
                       .depth_range = painter->depth_range,
                       .flags = painter->flags
@@ -555,8 +555,8 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
     float mvf[16];
     const double white[4] = {1, 1, 1, 1};
     const double *color = args->color ?: white;
-    const double *light_dir = args->light_dir;
-    const double *light_emit = args->light_dir;
+    const double *sun = args->sun;
+    const double *light_emit = args->light_emit;
 
     if (args->tex) {
         GL(glActiveTexture(GL_TEXTURE0));
@@ -634,9 +634,8 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
 
     GL(glUniform1f(prog->u_smooth_l, args->smooth));
     GL(glUniform4f(prog->u_color_l, color[0], color[1], color[2], color[3]));
-    if (light_dir) {
-        GL(glUniform3f(prog->u_light_dir_l,
-                       light_dir[0], light_dir[1], light_dir[2]));
+    if (sun) {
+        GL(glUniform4f(prog->u_sun_l, sun[0], sun[1], sun[2], sun[3]));
     }
     if (light_emit) {
         GL(glUniform3f(prog->u_light_emit_l,
@@ -718,7 +717,7 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_has_normal_tex);
     UNIFORM(u_color);
     UNIFORM(u_smooth);
-    UNIFORM(u_light_dir);
+    UNIFORM(u_sun);
     UNIFORM(u_light_emit);
     UNIFORM(u_shadow_brightness);
     UNIFORM(u_mv);

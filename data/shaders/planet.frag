@@ -6,12 +6,13 @@ precision mediump float;
 
 uniform sampler2D u_tex;
 uniform sampler2D u_normal_tex;
-uniform vec3 u_light_dir;
 uniform vec3 u_light_emit;
 uniform mat4 u_mv;
 uniform int u_has_normal_tex;
 
-varying vec3 v_pos;
+uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
+
+varying vec3 v_vpos;
 varying vec2 v_tex_pos;
 varying vec4 v_color;
 varying vec3 v_normal;
@@ -44,6 +45,7 @@ float oren_nayar_diffuse(
 
 void main()
 {
+    vec3 light_dir = normalize(u_sun.xyz - v_vpos);
     // Compute N in view space
     vec3 n = v_normal;
     if (u_has_normal_tex != 0) {
@@ -55,14 +57,14 @@ void main()
     n = normalize((u_mv * vec4(n, 0.0)).xyz);
     gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;
 #ifndef NO_OREN_NAYAR
-    float power = oren_nayar_diffuse(u_light_dir,
-                                     normalize(-v_pos),
+    float power = oren_nayar_diffuse(light_dir,
+                                     normalize(-v_vpos),
                                      n,
                                      0.9, 0.12);
     gl_FragColor.rgb *= power;
 #else
     vec3 light = vec3(0.0, 0.0, 0.0);
-    light += max(0.0, dot(n, u_light_dir));
+    light += max(0.0, dot(n, light_dir));
     light += u_light_emit;
     gl_FragColor.rgb *= light;
 #endif

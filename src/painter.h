@@ -109,7 +109,8 @@ struct painter
     double          lines_stripes;
     double          points_smoothness;
 
-    double          (*light_dir)[3];    // For planet rendering.
+    // For planet rendering.
+    double          (*sun)[4]; // pos + radius.
     double          (*light_emit)[3];
     double          (*depth_range)[2]; // If set use depth test.
 };

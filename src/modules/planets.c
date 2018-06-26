@@ -360,7 +360,6 @@ static void render_rings(texture_t *tex,
     painter_t painter = *painter_;
     const double radii[2] = {inner_radius, outer_radius};
     proj.user = radii;
-    painter.light_dir = NULL;
     painter.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_NO_CULL_FACE;
@@ -377,11 +376,12 @@ static void planet_render_hips(const planet_t *planet,
     double dist = vec3_norm(planet->pvg[0]);
     double full_emit[3] = {1.0, 1.0, 1.0};
     double rot;
-    double light_dir[3];
     double angle = 2 * planet->radius_m / DAU / vec2_norm(planet->pvg[0]);
     int nb_tot = 0, nb_loaded = 0;
+    double sun_pos[4] = {0, 0, 0, 1};
     planets_t *planets = (planets_t*)planet->obj.parent;
     painter_t painter = *painter_;
+    double depth_range[2];
 
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
@@ -393,11 +393,12 @@ static void planet_render_hips(const planet_t *planet,
     mat4_itranslate(mat, pos[0] * dist, pos[1] * dist, pos[2] * dist);
     mat4_iscale(mat, radius, radius, radius);
 
-    // Compute sun light direction.
-    vec3_mul(-1, planet->pvh[0], light_dir);
-    vec3_normalize(light_dir, light_dir);
-    mat4_mul_vec3_dir(core->observer->ri2h, light_dir, light_dir);
-    mat4_mul_vec3_dir(core->observer->ro2v, light_dir, light_dir);
+    // Compute sun position.
+    vec3_copy(planets->sun->obj.pos.pvg[0], sun_pos);
+    convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0,
+                        sun_pos, sun_pos);
+    sun_pos[3] = planets->sun->radius_m / DAU;
+    painter.sun = &sun_pos;
 
     // Apply the rotation.  We have to change the light direction accordingly.
     // XXX: it's not very clear why we need to flip the y axis, this is
@@ -413,14 +414,14 @@ static void planet_render_hips(const planet_t *planet,
         mat4_rx(-planet->rot.obliquity, mat, mat);
     }
     painter.transform = &mat;
-    painter.light_dir = &light_dir;
 
     if (planet == planets->sun) painter.light_emit = &full_emit;
 
     // XXX: for the moment we only use depth if the planet has a ring,
     // to prevent having to clean the depth buffer.
     if (planet->rings.tex) {
-        double depth_range[2] = {dist * 0.5, dist * 2};
+        depth_range[0] = dist * 0.5;
+        depth_range[1] = dist * 2;
         painter.depth_range = &depth_range;
     }
 
@@ -437,7 +438,7 @@ static void planet_render_hips(const planet_t *planet,
 
 static void planet_render(const planet_t *planet, const painter_t *painter)
 {
-    double pos[3], light_dir[3], vpos[3];
+    double pos[3], vpos[3];
     double label_color[4] = RGBA(124, 124, 255, 255);
     double color[4];
     double mag;              // Observed magnitude at this fov.
@@ -479,11 +480,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
     color[3] *= point_luminance * (1.0 - hips_alpha);
     if (color[3] == 0) goto skip_point;
-
-    vec3_mul(-1, planet->pvh[0], light_dir);
-    vec3_normalize(light_dir, light_dir);
-    mat4_mul_vec3(core->observer->ri2h, light_dir, light_dir);
-    painter2.light_dir = &light_dir;
 
     point = (point_t) {
         .pos = {pos[0], pos[1], pos[2]},

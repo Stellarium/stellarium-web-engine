@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[2091] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[2175] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -93,12 +93,13 @@ static const unsigned char DATA_data_shaders_planet_frag[2091] __attribute__((al
     "\n"
     "uniform sampler2D u_tex;\n"
     "uniform sampler2D u_normal_tex;\n"
-    "uniform vec3 u_light_dir;\n"
     "uniform vec3 u_light_emit;\n"
     "uniform mat4 u_mv;\n"
     "uniform int u_has_normal_tex;\n"
     "\n"
-    "varying vec3 v_pos;\n"
+    "uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).\n"
+    "\n"
+    "varying vec3 v_vpos;\n"
     "varying vec2 v_tex_pos;\n"
     "varying vec4 v_color;\n"
     "varying vec3 v_normal;\n"
@@ -131,6 +132,7 @@ static const unsigned char DATA_data_shaders_planet_frag[2091] __attribute__((al
     "\n"
     "void main()\n"
     "{\n"
+    "    vec3 light_dir = normalize(u_sun.xyz - v_vpos);\n"
     "    // Compute N in view space\n"
     "    vec3 n = v_normal;\n"
     "    if (u_has_normal_tex != 0) {\n"
@@ -142,14 +144,14 @@ static const unsigned char DATA_data_shaders_planet_frag[2091] __attribute__((al
     "    n = normalize((u_mv * vec4(n, 0.0)).xyz);\n"
     "    gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;\n"
     "#ifndef NO_OREN_NAYAR\n"
-    "    float power = oren_nayar_diffuse(u_light_dir,\n"
-    "                                     normalize(-v_pos),\n"
+    "    float power = oren_nayar_diffuse(light_dir,\n"
+    "                                     normalize(-v_vpos),\n"
     "                                     n,\n"
     "                                     0.9, 0.12);\n"
     "    gl_FragColor.rgb *= power;\n"
     "#else\n"
     "    vec3 light = vec3(0.0, 0.0, 0.0);\n"
-    "    light += max(0.0, dot(n, u_light_dir));\n"
+    "    light += max(0.0, dot(n, light_dir));\n"
     "    light += u_light_emit;\n"
     "    gl_FragColor.rgb *= light;\n"
     "#endif\n"
@@ -158,7 +160,7 @@ static const unsigned char DATA_data_shaders_planet_frag[2091] __attribute__((al
 
 ASSET_REGISTER(data_shaders_planet_frag, "shaders/planet.frag", DATA_data_shaders_planet_frag, false)
 
-static const unsigned char DATA_data_shaders_planet_vert[718] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_vert[720] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec4 a_vpos;\n"
     "attribute vec2 a_tex_pos;\n"
@@ -168,7 +170,7 @@ static const unsigned char DATA_data_shaders_planet_vert[718] __attribute__((ali
     "\n"
     "uniform vec4 u_color;\n"
     "\n"
-    "varying vec3 v_pos;\n"
+    "varying vec3 v_vpos;\n"
     "varying vec2 v_tex_pos;\n"
     "varying vec4 v_color;\n"
     "varying vec3 v_normal;\n"
@@ -178,7 +180,7 @@ static const unsigned char DATA_data_shaders_planet_vert[718] __attribute__((ali
     "void main()\n"
     "{\n"
     "    gl_Position = a_pos;\n"
-    "    v_pos = a_vpos.xyz;\n"
+    "    v_vpos = a_vpos.xyz;\n"
     "    v_tex_pos = a_tex_pos;\n"
     "    v_color = vec4(a_color, 1.0) * u_color;\n"
     "\n"
