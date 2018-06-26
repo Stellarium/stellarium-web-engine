@@ -517,9 +517,7 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
 {
     const planet_t *pa = (const planet_t*)a;
     const planet_t *pb = (const planet_t*)b;
-    double da = eraPm((double*)pa->pvg[0]);
-    double db = eraPm((double*)pb->pvg[0]);
-    return (da < db) ? -1 : (db > da) ? +1 : 0;
+    return cmp(eraPm(pb->pvg[0]), eraPm(pa->pvg[0]));
 }
 
 static int on_hips(const char *url, double release_date, void *user)
@@ -569,7 +567,6 @@ static int planets_update(obj_t *obj, const observer_t *obs, double dt)
                 "https://data.stellarium.org/surveys/hipslist",
                 on_hips, planets);
     }
-
 
     // Sort all the planets by distance to the observer.
     obj_update(&planets->earth->obj, obs, dt);
