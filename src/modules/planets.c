@@ -32,6 +32,7 @@ struct planet {
     double      shadow_brightness; // in [0-1].
     int         ss_index;  // For Mercury to Neptune.
     int         jupmoon;   // Jupiter moon index.
+    bool        sun;       // Set to true only for sun.
 
     // Precomputed values.
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
@@ -366,10 +367,64 @@ static void render_rings(texture_t *tex,
     paint_quad(&painter, FRAME_OBSERVED, tex, NULL, NULL, &proj, 64);
 }
 
+/*
+ * Test if a planet A could cast shadow on a planet B.
+ */
+static bool could_cast_shadow(const planet_t *a, const planet_t *b)
+{
+    // Not sure about this algo, I took it pretty as it is from Stellarium.
+    const double SUN_RADIUS = 695508000.0 / DAU;
+    double pp[3];
+    double shadow_dist, d, penumbra_r;
+    // For the moment we only consider the Jupiter moons.
+    if (!a->jupmoon || b->ss_index != JUPITER) return false;
+    if (vec3_norm2(a->hpos) > vec3_norm2(b->hpos)) return false;
+    vec3_normalize(a->hpos, pp);
+    shadow_dist = vec3_dot(pp, b->hpos);
+    d = vec2_norm(a->hpos) / (a->radius_m / DAU / SUN_RADIUS + 1.0);
+    penumbra_r = (shadow_dist - d) / d * SUN_RADIUS;
+    vec3_mul(shadow_dist, pp, pp);
+    vec3_sub(pp, b->hpos, pp);
+    return (vec3_norm(pp) < penumbra_r + b->radius_m / DAU);
+}
+
+/*
+ * Compute the list of potential shadow spheres that should be considered
+ * when rendering a planet.
+ *
+ * The returned spheres are xyz = position (in view frame) and w = radius (AU).
+ * Return the number of candidates.
+ */
+static int get_shadow_candidates(const planet_t *planet, int nb_max,
+                                 double (*spheres)[4])
+{
+    int nb = 0;
+    planets_t *planets = (planets_t*)planet->obj.parent;
+    planet_t *other;
+
+    if (planet->sun) return 0;
+    // For the moment we only consider the Jupiter moons.
+    if (planet->ss_index != JUPITER) return 0;
+
+    PLANETS_ITER(planets, other) {
+        if (could_cast_shadow(other, planet)) {
+            if (nb >= nb_max) break;
+            vec3_copy(other->obj.pos.pvg[0], spheres[nb]);
+            spheres[nb][3] = 1.0;
+            convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0,
+                    spheres[nb], spheres[nb]);
+            spheres[nb][3] = other->radius_m / DAU;
+            nb++;
+        }
+    }
+    return nb;
+}
+
 static void planet_render_hips(const planet_t *planet,
                                double alpha,
                                const painter_t *painter_)
 {
+    // XXX: cleanup this function.  It is getting too big.
     double mat[4][4];
     double pos[3];
     double radius = planet->radius_m / DAU;
@@ -382,6 +437,11 @@ static void planet_render_hips(const planet_t *planet,
     planets_t *planets = (planets_t*)planet->obj.parent;
     painter_t painter = *painter_;
     double depth_range[2];
+    double shadow_spheres[4][4];
+
+    painter.shadow_spheres_nb =
+        get_shadow_candidates(planet, 4, shadow_spheres);
+    painter.shadow_spheres = shadow_spheres;
 
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
@@ -617,7 +677,10 @@ static int planets_ini_handler(void* user, const char* section,
         identifiers_add(id, "NAME", name, NULL, NULL);
         planet->name = strdup(name);
         planet->obj.nsid = compute_nsid(name);
-        if (strcmp(id, "SUN") == 0) planets->sun = planet;
+        if (strcmp(id, "SUN") == 0) {
+            planets->sun = planet;
+            planet->sun = true;
+        }
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
         if (strcmp(id, "MOON") == 0) planets->moon = planet;
 
