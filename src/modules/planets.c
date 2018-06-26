@@ -411,6 +411,8 @@ static void planet_render_hips(const planet_t *planet,
     } else {
         mat4_invert(core->observer->re2h, rh2e);
         mat4_mul(mat, core->observer->re2h, mat);
+        // Not sure about this.
+        mat4_rx(-planet->rot.obliquity, mat, mat);
     }
     painter2.transform = &mat;
     painter2.light_dir = &light_dir;
