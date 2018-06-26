@@ -93,6 +93,7 @@ typedef struct render_buffer_args {
     double shadow_brightness;
     int flags;
     double stripes; // Number of stripes for lines (0 for no stripes).
+    const double (*depth_range)[2];
 } render_buffer_args_t;
 
 static void render_buffer(renderer_gl_t *rend,
@@ -150,7 +151,7 @@ static void prepare(renderer_t *rend_, int w, int h)
     }
 
     GL(glClearColor(0.0, 0.0, 0.0, 1.0));
-    GL(glClear(GL_COLOR_BUFFER_BIT));
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     GL(glViewport(0, 0, w, h));
     rend->fb_size[0] = w;
     rend->fb_size[1] = h;
@@ -350,8 +351,9 @@ static void quad(renderer_t          *rend_,
     buffer_t *buffer;
     vertex_gl_t *grid;
     uint16_t *indices;
-    double p[4], normal[4], tangent[4];
+    double p[4], normal[4], tangent[4], z;
     bool quad_cut_inv = painter->flags & PAINTER_QUAD_CUT_INV;
+    const double *depth_range = *painter->depth_range;
 
     // Positions of the triangles for both regular and inverted triangles.
     const int INDICES[2][6][2] = {
@@ -390,9 +392,14 @@ static void quad(renderer_t          *rend_,
         vec3_to_float(normal, grid[i * n + j].normal);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
-
+        z = p[2];
         vec4_to_float(p, grid[i * n + j].vpos);
         project(painter->proj, 0, 4, p, p);
+        // For simplicity the projection doesn't take into account the depth
+        // range, so we apply it manually after if needed.
+        if (depth_range) {
+            p[2] = (-z - depth_range[0]) / (depth_range[1] - depth_range[0]);
+        }
         vec4_to_float(p, grid[i * n + j].pos);
         memcpy(grid[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
     }
@@ -442,6 +449,7 @@ static void quad(renderer_t          *rend_,
                       .mv = &mv,
                       .light_dir = *painter->light_dir,
                       .light_emit = *painter->light_emit,
+                      .depth_range = painter->depth_range,
                       .flags = painter->flags
                   });
     render_free_buffer(buffer);
@@ -670,6 +678,11 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
     } else {
         GL(glEnable(GL_BLEND));
         GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    }
+    if (args->depth_range) {
+        GL(glEnable(GL_DEPTH_TEST));
+    } else {
+        GL(glDisable(GL_DEPTH_TEST));
     }
 
     if (args->flags & PAINTER_ADD) {

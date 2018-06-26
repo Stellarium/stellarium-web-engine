@@ -120,6 +120,7 @@ struct painter
 
     double          (*light_dir)[3];    // For planet rendering.
     double          (*light_emit)[3];
+    double          (*depth_range)[2]; // If set use depth test.
 };
 
 int paint_prepare(const painter_t *painter, int w, int h);

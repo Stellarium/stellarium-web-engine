@@ -393,10 +393,13 @@ static void planet_render_hips(const planet_t *planet,
     painter2.light_dir = &light_dir;
 
     if (planet == planets->sun) painter2.light_emit = &full_emit;
+    double depth_range[2] = {dist * 0.5, dist * 2};
+    painter2.depth_range = &depth_range;
     hips_render_traverse(planet->hips, &painter2, angle,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     render_ring(&painter2);
+    painter2.depth_range = NULL;
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
 }
 
