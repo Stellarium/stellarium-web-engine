@@ -418,8 +418,14 @@ static void planet_render_hips(const planet_t *planet,
     painter.light_dir = &light_dir;
 
     if (planet == planets->sun) painter.light_emit = &full_emit;
-    double depth_range[2] = {dist * 0.5, dist * 2};
-    painter.depth_range = &depth_range;
+
+    // XXX: for the moment we only use depth if the planet has a ring,
+    // to prevent having to clean the depth buffer.
+    if (planet->rings.tex) {
+        double depth_range[2] = {dist * 0.5, dist * 2};
+        painter.depth_range = &depth_range;
+    }
+
     hips_render_traverse(planet->hips, &painter, angle,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
