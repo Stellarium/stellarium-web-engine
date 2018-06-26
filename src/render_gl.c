@@ -362,8 +362,8 @@ static void quad(renderer_t          *rend_,
                       .tex = tex,
                       .normalmap = normalmap,
                       .mv = &mv,
-                      .light_dir = *painter->light_dir,
-                      .light_emit = *painter->light_emit,
+                      .light_dir = (double*)painter->light_dir,
+                      .light_emit = (double*)painter->light_emit,
                       .depth_range = painter->depth_range,
                       .flags = painter->flags
                   });
