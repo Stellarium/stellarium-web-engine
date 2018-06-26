@@ -376,7 +376,6 @@ static void planet_render_hips(const planet_t *planet,
     double radius = planet->radius_m / DAU;
     double dist = vec3_norm(planet->pvg[0]);
     double full_emit[3] = {1.0, 1.0, 1.0};
-    double rh2e[4][4];
     double rot;
     double light_dir[3];
     double angle = 2 * planet->radius_m / DAU / vec2_norm(planet->pvg[0]);
@@ -409,7 +408,6 @@ static void planet_render_hips(const planet_t *planet,
         rot += planet->rot.offset;
         mat4_rz(rot, mat, mat);
     } else {
-        mat4_invert(core->observer->re2h, rh2e);
         mat4_mul(mat, core->observer->re2h, mat);
         // Not sure about this.
         mat4_rx(-planet->rot.obliquity, mat, mat);
