@@ -90,7 +90,8 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter)
     if (mw->visible.value == 0.0) return 0;
 
     if (!mw->tex) {
-        mw->tex = texture_from_url("asset://milkyway.jpg", 0);
+        mw->tex = texture_from_url("asset://textures/milkyway.jpg", 0);
+        assert(mw->tex);
     }
     painter2 = *painter;
     vec3_mul(alpha, painter2.color, painter2.color);

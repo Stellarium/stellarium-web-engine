@@ -139,7 +139,8 @@ static int landscape_render(const obj_t *obj, const painter_t *painter)
 
     if (ls->visible.value == 0.0) return 0;
     if (!ls->fog) {
-        ls->fog = texture_from_url("asset://fog.png", 0);
+        ls->fog = texture_from_url("asset://textures/fog.png", 0);
+        assert(ls->fog);
     }
 
     brightness = get_global_brightness();

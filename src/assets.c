@@ -124,10 +124,9 @@ const char *asset_iter_(const char *base, void **i)
 
 #include "assets/cities.txt.inl"
 #include "assets/font.inl"
-#include "assets/fog.png.inl"
-#include "assets/milkyway.jpg.inl"
 #include "assets/mpcorb.dat.inl"
 #include "assets/planets.ini.inl"
 #include "assets/shaders.inl"
 #include "assets/stars.inl"
 #include "assets/symbols.png.inl"
+#include "assets/textures.inl"
