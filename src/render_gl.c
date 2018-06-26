@@ -40,9 +40,12 @@ typedef struct {
     GLuint u_mv_l;
     GLuint u_stripes_l;
 
+    // For planets.
     GLuint u_sun_l;
     GLuint u_light_emit_l;
-    GLuint u_shadow_brightness_l; // For planets.
+    GLuint u_shadow_brightness_l;
+    GLuint u_shadow_spheres_nb_l;
+    GLuint u_shadow_spheres_l;
 } prog_t;
 
 // The buffer struct contains the opengl arrays used for a render call,
@@ -81,6 +84,7 @@ typedef struct renderer_gl {
 } renderer_gl_t;
 
 // Hold all the possible attributes for the render_buffer function.
+// XXX: we should probably just pass the painter!
 typedef struct render_buffer_args {
     const double *color;
     const texture_t *tex;
@@ -93,6 +97,8 @@ typedef struct render_buffer_args {
     int flags;
     double stripes; // Number of stripes for lines (0 for no stripes).
     const double (*depth_range)[2];
+    int shadow_spheres_nb;
+    double (*shadow_spheres)[4];
 } render_buffer_args_t;
 
 static void render_buffer(renderer_gl_t *rend,
@@ -365,6 +371,8 @@ static void quad(renderer_t          *rend_,
                       .sun = (double*)painter->sun,
                       .light_emit = (double*)painter->light_emit,
                       .depth_range = painter->depth_range,
+                      .shadow_spheres_nb = painter->shadow_spheres_nb,
+                      .shadow_spheres = painter->shadow_spheres,
                       .flags = painter->flags
                   });
     render_free_buffer(buffer);
@@ -552,7 +560,7 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
                           const prog_t *prog,
                           const render_buffer_args_t *args)
 {
-    float mvf[16];
+    float mf[16];
     const double white[4] = {1, 1, 1, 1};
     const double *color = args->color ?: white;
     const double *sun = args->sun;
@@ -646,11 +654,18 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
     GL(glUniform1f(prog->u_shadow_brightness_l, args->shadow_brightness));
 
     if (args->mv && prog->u_mv_l != -1) {
-        mat4_to_float(*args->mv, mvf);
-        GL(glUniformMatrix4fv(prog->u_mv_l, 1, 0, mvf));
+        mat4_to_float(*args->mv, mf);
+        GL(glUniformMatrix4fv(prog->u_mv_l, 1, 0, mf));
     }
     if (prog->u_stripes_l != -1)
         GL(glUniform1f(prog->u_stripes_l, args->stripes));
+
+    if (prog->u_shadow_spheres_nb_l != -1)
+        GL(glUniform1i(prog->u_shadow_spheres_nb_l, args->shadow_spheres_nb));
+    if (args->shadow_spheres && prog->u_shadow_spheres_l != -1) {
+        mat4_to_float(args->shadow_spheres, mf);
+        GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0, mf));
+    }
 
     GL(glBindBuffer(GL_ARRAY_BUFFER, buff->array_buffer));
 
@@ -720,6 +735,8 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_sun);
     UNIFORM(u_light_emit);
     UNIFORM(u_shadow_brightness);
+    UNIFORM(u_shadow_spheres_nb);
+    UNIFORM(u_shadow_spheres);
     UNIFORM(u_mv);
     UNIFORM(u_stripes);
     ATTRIB(a_pos);

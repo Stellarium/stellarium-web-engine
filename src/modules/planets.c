@@ -498,7 +498,7 @@ static void planet_render_hips(const planet_t *planet,
 
 static void planet_render(const planet_t *planet, const painter_t *painter)
 {
-    double pos[3], vpos[3];
+    double pos[4], vpos[3];
     double label_color[4] = RGBA(124, 124, 255, 255);
     double color[4];
     double mag;              // Observed magnitude at this fov.

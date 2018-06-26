@@ -11,6 +11,9 @@ uniform mat4 u_mv;
 uniform int u_has_normal_tex;
 
 uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
+// Up to four spheres for illumination ray tracing.
+uniform int u_shadow_spheres_nb;
+uniform highp mat4 u_shadow_spheres;
 
 varying vec3 v_vpos;
 varying vec2 v_tex_pos;
@@ -43,6 +46,56 @@ float oren_nayar_diffuse(
     return max(0.0, NdotL) * (A + B * max(0.0, gamma) * C) * scale;
 }
 
+/*
+ * Compute the illumination if we only consider a single sphere in the scene.
+ * Parameters:
+ *   p       - The surface point where we compute the illumination.
+ *   sphere  - A sphere: xyz -> pos, w -> radius.
+ *   sun_pos - Position of the sun.
+ *   sun_r   - Precomputed sun angular radius from the given point.
+ */
+float illumination_sphere(vec3 p, vec4 sphere, vec3 sun_pos, float sun_r)
+{
+    // Sphere angular radius as viewed from the point.
+    float sph_r = asin(sphere.w / length(sphere.xyz - p));
+    // Angle <sun, pos, sphere>
+    float d = acos(min(1.0, dot(normalize(sun_pos - p),
+                                normalize(sphere.xyz - p))));
+
+    if (d >= sun_r + sph_r) return 1.0; // Outside of shadow.
+    if (d <= sph_r - sun_r) return 0.0; // Umbra.
+    if (d <= sun_r - sph_r) // Penumbra completely inside.
+        return 1.0 - sph_r * sph_r / (sun_r * sun_r);
+
+    // Penumbra partially inside.
+    // I took this from Stellarium, even though I am not sure how it works.
+    mediump float x = (sun_r * sun_r + d * d - sph_r * sph_r) / (2.0 * d);
+    mediump float alpha = acos(x / sun_r);
+    mediump float beta = acos((d - x) / sph_r);
+    mediump float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
+    mediump float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
+    mediump float AS = sun_r * sun_r * 2.0 * 1.57079633;
+    return 1.0 - (AR + Ar) / AS;
+}
+
+/*
+ * Compute the illumination at a given point.
+ * Parameters:
+ *   p       - The surface point where we compute the illumination.
+ */
+float illumination(vec3 p)
+{
+    mediump float ret = 1.0;
+    highp float sun_r = asin(u_sun.w / length(u_sun.xyz - p));
+    for (int i = 0; i < 4; ++i) {
+        if (u_shadow_spheres_nb > i) {
+            highp vec4 sphere = u_shadow_spheres[i];
+            ret = min(ret, illumination_sphere(p, sphere, u_sun.xyz, sun_r));
+        }
+    }
+    return ret;
+}
+
 void main()
 {
     vec3 light_dir = normalize(u_sun.xyz - v_vpos);
@@ -61,6 +114,7 @@ void main()
                                      normalize(-v_vpos),
                                      n,
                                      0.9, 0.12);
+    power *= illumination(v_vpos);
     gl_FragColor.rgb *= power;
 #else
     vec3 light = vec3(0.0, 0.0, 0.0);
