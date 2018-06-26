@@ -457,7 +457,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     mag = core_get_observed_mag(planet->obj.vmag);
     if (mag > painter->mag_max) return;
     core_get_point_for_mag(mag, &point_r, &point_luminance);
-    r = 2 * planet->radius_m / DAU / vec2_norm(planet->pvg[0]);
+    r = 2 * planet->radius_m / DAU / vec3_norm(planet->pvg[0]);
 
     // First approximation, to skip non visible planets.
     // XXX: we need to compute the max visible fov (for the moment I
