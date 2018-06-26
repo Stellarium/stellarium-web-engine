@@ -47,9 +47,15 @@ struct planet {
         double offset;
     } rot;
 
+    // Rings attributes.
+    struct {
+        double inner_radius; // (meter)
+        double outer_radius; // (meter)
+        texture_t *tex;
+    } rings;
+
     hips_t      *hips;              // Hips survey of the planet.
     hips_t      *hips_normalmap;    // Normal map survey.
-    texture_t   *rings_tex;         // Rings texture.
 };
 
 
@@ -333,9 +339,10 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
 static void ring_project(const projection_t *proj, int flags,
                            const double *v, double *out)
 {
+    const double *radii = proj->user;
     double theta, r, mat[3][3], p[4] = {1, 0, 0, 1};
     theta = v[0] * 2 * M_PI;
-    r = 1.5 + v[1];
+    r = mix(radii[0], radii[1], v[1]);
     mat3_set_identity(mat);
     mat3_rz(theta, mat, mat);
     mat3_iscale(mat, r, r);
@@ -343,12 +350,16 @@ static void ring_project(const projection_t *proj, int flags,
     vec4_copy(p, out);
 }
 
-static void render_rings(texture_t *tex, const painter_t *painter_)
+static void render_rings(texture_t *tex,
+                         double inner_radius, double outer_radius,
+                         const painter_t *painter_)
 {
     projection_t proj = {
         .backward   = ring_project,
     };
     painter_t painter = *painter_;
+    const double radii[2] = {inner_radius, outer_radius};
+    proj.user = radii;
     painter.light_dir = NULL;
     painter.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
@@ -409,8 +420,11 @@ static void planet_render_hips(const planet_t *planet,
     hips_render_traverse(planet->hips, &painter2, angle,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
-    if (planet->rings_tex)
-        render_rings(planet->rings_tex, &painter2);
+    if (planet->rings.tex)
+        render_rings(planet->rings.tex,
+                     planet->rings.inner_radius / planet->radius_m,
+                     planet->rings.outer_radius / planet->radius_m,
+                     &painter2);
     painter2.depth_range = NULL;
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
 }
@@ -664,6 +678,14 @@ static int planets_ini_handler(void* user, const char* section,
         sscanf(value, "%f", &v);
         planet->rot.offset = v * DD2R;
     }
+    if (strcmp(attr, "rings_inner_radius") == 0) {
+        sscanf(value, "%f km", &v);
+        planet->rings.inner_radius = v * 1000;
+    }
+    if (strcmp(attr, "rings_outer_radius") == 0) {
+        sscanf(value, "%f km", &v);
+        planet->rings.outer_radius = v * 1000;
+    }
 
     return 0;
 }
@@ -694,7 +716,7 @@ static int planets_init(obj_t *obj, json_value *args)
                 path + matches[1].rm_so);
         p = planet_find(planets, name);
         if (!p) continue;
-        p->rings_tex = texture_from_url(path, 0);
+        p->rings.tex = texture_from_url(path, 0);
     }
 
     return 0;
