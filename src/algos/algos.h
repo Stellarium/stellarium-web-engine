@@ -142,3 +142,32 @@ int l12(double tt1, double tt2, int ks, double pv[2][3]);
  *
  */
 int find_constellation_at(const double pos[3], char id[4]);
+
+/*
+ * Compute kepler element.
+ *
+ * Parameters:
+ *   mjd    - Time of the position (MJD).
+ *   pos    - Get the result of the computation.
+ *   k_jd   - date (MJD).
+ *   k_in   - inclination (rad).
+ *   k_om   - Longitude of the Ascending Node (rad).
+ *   k_w    - Argument of Perihelion (rad).
+ *   k_a    - Mean distance (Semi major axis).
+ *   k_n    - Daily motion (rad/day).
+ *   k_ec   - Eccentricity.
+ *   k_ma   - Mean Anomaly (rad).
+ *   k_omd  - variation of om in time (rad/day).
+ *   k_wd   - variation of w in time (rad/day).
+ */
+int kepler_solve(double mjd, double pos[3],
+                 double k_jd,      // date (MJD).
+                 double k_in,      // inclination (rad).
+                 double k_om,      // Longitude of the Ascending Node (rad).
+                 double k_w,       // Argument of Perihelion (rad).
+                 double k_a,       // Mean distance (Semi major axis).
+                 double k_n,       // Daily motion (rad/day).
+                 double k_ec,      // Eccentricity.
+                 double k_ma,      // Mean Anomaly (rad).
+                 double k_omd,     // variation of om in time (rad/day).
+                 double k_wd);     // variation of w in time (rad/day).

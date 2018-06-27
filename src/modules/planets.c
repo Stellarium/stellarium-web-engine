@@ -46,6 +46,23 @@ struct planet {
         double offset;
     } rot;
 
+    // Orbit elements.
+    struct {
+        int type; // 0: special, 1: kepler.
+        union {
+            struct {
+                double jd;      // date (MJD).
+                double in;      // inclination (rad).
+                double om;      // Longitude of the Ascending Node (rad).
+                double w;       // Argument of Perihelion (rad).
+                double a;       // Mean distance (Semi major axis) (AU).
+                double n;       // Daily motion (rad/day).
+                double ec;      // Eccentricity.
+                double ma;      // Mean Anomaly (rad).
+            } kepler;
+        };
+    } orbit;
+
     // Rings attributes.
     struct {
         double inner_radius; // (meter)
@@ -170,7 +187,14 @@ static const double VIS_ELEMENTS[][5] = {
 
 static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    // XXX: cleanup this function!
+
+
+    /**************************************************************
+     * XXX:                                                       *
+     * XXX: Cleanup this function!!!                              *
+     * XXX:                                                       *
+     **************************************************************/
+
 
     planet_t *planet = (planet_t*)obj;
     const double *vis;  // Visual element of planet.
@@ -286,6 +310,44 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
                 2.0 * planet->radius_m / 1000.0 / 1329.0);
         planet->obj.vmag = mag + 5 * log10(rho * rp);
     }
+
+    // Kepler orbit planets.
+    if (planet->orbit.type == 1) {
+        obj_update(&planet->parent->obj, obs, 0);
+        double p[3];
+        kepler_solve(obs->tt, p,
+                planet->orbit.kepler.jd,
+                planet->orbit.kepler.in,
+                planet->orbit.kepler.om,
+                planet->orbit.kepler.w,
+                planet->orbit.kepler.a,
+                planet->orbit.kepler.n,
+                planet->orbit.kepler.ec,
+                planet->orbit.kepler.ma,
+                0.0, 0.0);
+        // Ecliptic -> Equatorial.
+        double obl;
+        double rmatecl[3][3];
+        obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
+        eraIr(rmatecl);
+        eraRx(-obl, rmatecl);
+        eraRxp(rmatecl, p, p);
+
+        // Add parent position.
+        vec3_add(p, planet->parent->pvg[0], planet->pvg[0]);
+
+        // Heliocentric position.
+        eraPpp(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
+
+        // Compute visual magnitude.
+        // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
+        rho = vec3_norm(planet->pvh[0]);
+        rp = vec3_norm(planet->pvg[0]);
+        double mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
+                2.0 * planet->radius_m / 1000.0 / 1329.0);
+        planet->obj.vmag = mag + 5 * log10(rho * rp);
+    }
+
     mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
 
     // Adjust vmag for saturn.
@@ -680,6 +742,32 @@ static uint64_t compute_nsid(const char *name)
     return (1ULL << 63) | (201326592ULL << 35) | (crc & 0xffffffff);
 }
 
+// Parse an orbit line as returned by HORIZONS online service.
+static int parse_orbit(planet_t *p, const char *v)
+{
+    int r;
+    double mjd, ec, qr, in, om, w, tp, n, ma, ta, a, ad, pr;
+    if (!str_startswith(v, "horizons:")) return 0;
+    r = sscanf(v, "horizons:%lf, A.D. %*s %*s "
+               "%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf",
+               &mjd, &ec, &qr, &in, &om, &w, &tp, &n, &ma, &ta, &a, &ad, &pr);
+    LOG_D("XXX %d", r);
+    if (r != 13) {
+        LOG_E("Cannot parse orbit line '%s'", v);
+        return -1;
+    }
+    p->orbit.type = 1;
+    p->orbit.kepler.jd = mjd;
+    p->orbit.kepler.in = in * DD2R;
+    p->orbit.kepler.om = om * DD2R;
+    p->orbit.kepler.w = w * DD2R;
+    p->orbit.kepler.a = a * (1000.0 / DAU);
+    p->orbit.kepler.n = n * DD2R * 60 * 60 * 24;
+    p->orbit.kepler.ec = ec;
+    p->orbit.kepler.ma = ma * DD2R;
+    return 0;
+}
+
 // Parse the planet data.
 static int planets_ini_handler(void* user, const char* section,
                                const char* attr, const char* value)
@@ -749,6 +837,9 @@ static int planets_ini_handler(void* user, const char* section,
     if (strcmp(attr, "rings_outer_radius") == 0) {
         sscanf(value, "%f km", &v);
         planet->rings.outer_radius = v * 1000;
+    }
+    if (strcmp(attr, "orbit") == 0) {
+        parse_orbit(planet, value);
     }
 
     return 0;

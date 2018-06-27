@@ -45,6 +45,10 @@
 #endif
 
 
+// Ini config.
+#define INI_MAX_LINE 512
+
+
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 

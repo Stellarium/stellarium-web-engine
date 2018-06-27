@@ -1,0 +1,136 @@
+#!/usr/bin/python
+
+# Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+#
+# This program is licensed under the terms of the GNU AGPL v3, or
+# alternatively under a commercial licence.
+#
+# The terms of the AGPL v3 license can be found in the main directory of this
+# repository.
+
+# This script queries NASA JPL HORIZONS service using the batch interface to
+# update the solar system planet info in data/planets.ini.
+
+import ConfigParser
+import math
+import os
+import requests
+import re
+import sys
+import time
+
+
+if os.path.dirname(__file__) != "./tools":
+    print "Should be run from root directory"
+    sys.exit(-1)
+
+
+def get_all():
+    """Get the list of major objects."""
+    ret = []
+    res = requests.get('https://ssd.jpl.nasa.gov/horizons_batch.cgi',
+                       params={'batch':1, 'command':"'*'"})
+    for line in res.text.splitlines():
+        m = re.match(r'^ +(\d+)  (.+?)  +(.+?)  +(.+?) *$', line)
+        if not m: continue
+        id = int(m.group(1))
+        name = m.group(2).strip()
+        if not name or id < 10 or id > 999: continue
+        ret.append((id, name))
+    return ret
+
+def parse_value(s):
+    m = re.search(r'[\d+-][\d\.]+', s)
+    if m: return float(m.group())
+
+def parse_geophysical_data(txt):
+    """Parse the physical info from the text
+
+    Return a dic of key values.
+
+    Unfortunately HORIZONS doesn't allow to get those in an computer friendly
+    format, so we have to use some heuristics to get the values.
+    """
+    ret = {}
+    state = 0
+    for line in txt.splitlines():
+        if (    'PHYSICAL DATA' in line or
+                'SATELLITE PHYSICAL PROPERTIES' in line):
+            state = 1
+            continue
+        if state != 1: continue
+        if '*******' in line: break
+        for key, v in re.findall(r'([^=]+)= *([\d+-~][^=]+)', line):
+            if  (   'Mean radius (km)' in key or
+                    'Radius (km)' in key or
+                    'Equat. radius' in key):
+                ret['radius'] = '%g km' % parse_value(v)
+    return ret
+
+
+def parse_orbital_data(txt):
+    """Parse the orbital data line
+
+    Return a dict of values to be added to the ini file.
+    """
+
+    # Here are the values we get from HORIZONS.
+    # For simplicity for the moment we just add them all as a single value
+    # in the ini file.
+
+    # JDTDB  Julian Day Number, Barycentric Dynamical Time
+    # EC     Eccentricity, e
+    # QR     Periapsis distance, q (km)
+    # IN     Inclination w.r.t XY-plane, i (degrees)
+    # OM     Longitude of Ascending Node, OMEGA, (degrees)
+    # W      Argument of Perifocus, w (degrees)
+    # Tp     Time of periapsis (Julian Day Number)
+    # N      Mean motion, n (degrees/sec)
+    # MA     Mean anomaly, M (degrees)
+    # TA     True anomaly, nu (degrees)
+    # A      Semi-major axis, a (km)
+    # AD     Apoapsis distance (km)
+    # PR     Sidereal orbit period (sec)
+
+    ret = {}
+    line = re.search(r'^\$\$SOE\n(.*)\n\$\$EOE', txt, re.MULTILINE).group(1)
+    return dict(orbit='horizons:%s' % line)
+
+
+config = ConfigParser.SafeConfigParser()
+config.read('./data/planets.ini')
+
+for id, name in get_all():
+    if id == 10: continue # skip sun.
+    if id / 100 == 3: continue  # skip Moon, L1, L2, L4, L4, L5, Earth
+    if id % 100 == 99: parent = 10 # Planet
+    if id % 100 != 99: parent = id / 100 * 100 + 99 # Moon
+
+    section = name.lower()
+    # For the moment we only update the planets we already have!
+    if not config.has_section(section): continue
+
+    print 'process %s (%d)' % (name, id)
+    center = '500@%d' % parent # Center of parent body.
+    now = time.time() / 86400.0 + 2440587.5 - 2400000.5
+    # Truncate to the day, so that we can run the script several times
+    # and the values won't change.
+    now = math.floor(now)
+
+    res = requests.get('https://ssd.jpl.nasa.gov/horizons_batch.cgi',
+            params=dict(
+                batch=1, command=id, csv_format='yes',
+                table_type='elements', center=center,
+                tlist=now,
+            ))
+    data = dict(horizons_id=str(id))
+    data.update(parse_geophysical_data(res.text))
+    # Only update horizons orbits.
+    if config.get(section, 'orbit').startswith('horizons:'):
+        data.update(parse_orbital_data(res.text))
+
+    for key, value in data.items():
+        config.set(section, key, value)
+
+print 'Update planets.ini'
+config.write(open('./data/planets.ini', 'w'))

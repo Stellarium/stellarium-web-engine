@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_planets_ini[2138] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_planets_ini[2580] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = SUN\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -141,6 +141,14 @@ static const unsigned char DATA_data_planets_ini[2138] __attribute__((aligned(4)
     "albedo = 0.20\n"
     "horizons_id = 504\n"
     "orbit = l12:4\n"
+    "\n"
+    "[himalia]\n"
+    "type = MOO\n"
+    "parent = jupiter\n"
+    "orbit = horizons:2458296.500000000, A.D. 2018-Jun-27 00:00:00.0000,  1.542438273432903E-01,  9.678996626140846E+06,  3.019007340274115E+01,  4.521759813133567E+01,  1.717640122109900E+01,  2.458281653392489E+06,  1.665751135278834E-05,  2.136737086531817E+01,  2.917642945418399E+01,  1.144419271069220E+07,  1.320938879524354E+07,  2.161187180819413E+07,\n"
+    "albedo = 0.03\n"
+    "horizons_id = 506\n"
+    "radius = 85 km\n"
     "\n"
     "";
 
