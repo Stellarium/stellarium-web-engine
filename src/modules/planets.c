@@ -30,9 +30,7 @@ struct planet {
     double      albedo;
     double      color[4];
     double      shadow_brightness; // in [0-1].
-    int         ss_index;  // For Mercury to Neptune.
-    int         jupmoon;   // Jupiter moon index.
-    bool        sun;       // Set to true only for sun.
+    int         id; // Uniq id number, as defined in JPL HORIZONS.
 
     // Precomputed values.
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
@@ -118,8 +116,26 @@ static obj_klass_t planets_klass = {
     .render_order = 30,
 };
 
+/*
+ * List of known bodies id.
+ * We use them to quickly test for a given planet.  They follow the ids
+ * used by JPL HORIZONS service.
+ */
 enum {
-    SUN, MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE
+    SUN = 10,
+    MERCURY = 199,
+    VENUS = 299,
+    MOON = 301,
+    EARTH = 399,
+    MARS = 499,
+    IO = 501,
+    EUROPA = 502,
+    GANYMEDE = 503,
+    CALLISTO = 504,
+    JUPITER = 599,
+    SATURN = 699,
+    URANUS = 799,
+    NEPTUNE = 899,
 };
 
 /* visual elements of planets
@@ -167,6 +183,8 @@ static planet_t *planet_find(planets_t *planets, const char *name)
 
 static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    // XXX: cleanup this function!
+
     planet_t *planet = (planet_t*)obj;
     const double *vis;  // Visual element of planet.
     double i;   // Phase angle.
@@ -185,7 +203,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     // XXX: we could use an approximation at the beginning, and only compute
     // the exact pos if needed.
     obj->pos.unit = 1.0; // AU.
-    if (planet == earth) {
+    if (planet->id == EARTH) {
         // Heliocentric position of the earth (AU)
         eraCpv(obs->earth_pvh, planet->pvh);
         eraZpv(planet->pvg);
@@ -193,13 +211,13 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
         mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
         planet->phase = NAN;
     }
-    if (planet == planets->sun) {
+    if (planet->id == SUN) {
         eraZpv(planet->pvh);
         eraSxpv(-1, obs->earth_pvh, planet->pvg);
         planet->phase = NAN;
     }
 
-    if (planet == planets->moon) {
+    if (planet->id == MOON) {
         double lambda, beta, dist;
         double rmatecl[3][3], rmatp[3][3];
         double obl;
@@ -234,8 +252,17 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
         planet->pvh[1][2] = NAN;
     }
 
-    if (planet->ss_index) {
-        eraPlan94(DJM0, obs->tt, planet->ss_index, planet->pvh);
+    // Solar system planet: use PLAN94 model.
+    if (    planet->id == MERCURY ||
+            planet->id == VENUS ||
+            planet->id == MARS ||
+            planet->id == JUPITER ||
+            planet->id == SATURN ||
+            planet->id == URANUS ||
+            planet->id == NEPTUNE)
+    {
+        int n = (planet->id - MERCURY) / 100 + 1;
+        eraPlan94(DJM0, obs->tt, n, planet->pvh);
         eraPvmpv(planet->pvh, obs->earth_pvh, planet->pvg);
         i = eraSepp(planet->pvh[0], planet->pvg[0]);
         planet->phase = 0.5 * cos(i) + 0.5;
@@ -243,18 +270,23 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
         i *= DR2D / 100;
         rho = vec3_norm(planet->pvh[0]);
         rp = vec3_norm(planet->pvg[0]);
-        vis = VIS_ELEMENTS[planet->ss_index];
+        vis = VIS_ELEMENTS[n];
         planet->obj.vmag = vis[1] + 5 * log10(rho * rp) +
                            i * (vis[2] + i * (vis[3] + i * vis[4]));
     }
 
-    if (planet->jupmoon) {
+    // Galilean moons: Use L12.
+    if (    planet->id == IO ||
+            planet->id == EUROPA ||
+            planet->id == GANYMEDE ||
+            planet->id == CALLISTO)
+    {
         double pvj[2][3];
         double mag;
         planet_t *jupiter;
         jupiter = planet_get(planets, "jupiter");
         obj_update(&jupiter->obj, obs, 0);
-        l12(DJM0, obs->tt, planet->jupmoon, pvj);
+        l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
         vec3_add(pvj[0], jupiter->pvg[0], planet->pvg[0]);
         vec3_add(pvj[1], jupiter->pvg[1], planet->pvg[1]);
         vec3_add(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
@@ -270,7 +302,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
 
     // Adjust vmag for saturn.
-    if (planet->ss_index == SATURN) {
+    if (planet->id == SATURN) {
         double hlon, hlat;
         double earth_hlon, earth_hlat;
         double et, st, set;
@@ -376,8 +408,8 @@ static bool could_cast_shadow(const planet_t *a, const planet_t *b)
     const double SUN_RADIUS = 695508000.0 / DAU;
     double pp[3];
     double shadow_dist, d, penumbra_r;
-    // For the moment we only consider the Jupiter moons.
-    if (!a->jupmoon || b->ss_index != JUPITER) return false;
+    // For the moment we only consider the Jupiter major moons.
+    if (b->id != JUPITER || a->id < IO || a->id > CALLISTO) return false;
     if (vec3_norm2(a->hpos) > vec3_norm2(b->hpos)) return false;
     vec3_normalize(a->hpos, pp);
     shadow_dist = vec3_dot(pp, b->hpos);
@@ -402,9 +434,9 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
     planets_t *planets = (planets_t*)planet->obj.parent;
     planet_t *other;
 
-    if (planet->sun) return 0;
+    if (planet->id == SUN) return 0;
     // For the moment we only consider the Jupiter moons.
-    if (planet->ss_index != JUPITER) return 0;
+    if (planet->id != JUPITER) return 0;
 
     PLANETS_ITER(planets, other) {
         if (could_cast_shadow(other, planet)) {
@@ -511,7 +543,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     point_t point;
     const double hips_k = 2.0; // How soon we switch to the hips survey.
 
-    if (planet->ss_index == EARTH) return;
+    if (planet->id == EARTH) return;
 
     eraS2c(planet->obj.pos.az, planet->obj.pos.alt, pos);
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
@@ -624,7 +656,7 @@ static int planets_update(obj_t *obj, const observer_t *obs, double dt)
     // Sort all the planets by distance to the observer.
     obj_update(&planets->earth->obj, obs, dt);
     PLANETS_ITER(planets, p) {
-        if (p->ss_index != EARTH)
+        if (p->id != EARTH)
             obj_update((obj_t*)p, obs, dt);
     }
     DL_SORT(obj->children, sort_cmp);
@@ -677,26 +709,12 @@ static int planets_ini_handler(void* user, const char* section,
         identifiers_add(id, "NAME", name, NULL, NULL);
         planet->name = strdup(name);
         planet->obj.nsid = compute_nsid(name);
-        if (strcmp(id, "SUN") == 0) {
-            planets->sun = planet;
-            planet->sun = true;
-        }
+        if (strcmp(id, "SUN") == 0) planets->sun = planet;
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
         if (strcmp(id, "MOON") == 0) planets->moon = planet;
-
-        if (strcmp(id, "MERCURY") == 0) planet->ss_index = 1;
-        if (strcmp(id, "VENUS") == 0) planet->ss_index = 2;
-        if (strcmp(id, "EARTH") == 0) planet->ss_index = 3;
-        if (strcmp(id, "MARS") == 0) planet->ss_index = 4;
-        if (strcmp(id, "JUPITER") == 0) planet->ss_index = 5;
-        if (strcmp(id, "SATURN") == 0) planet->ss_index = 6;
-        if (strcmp(id, "URANUS") == 0) planet->ss_index = 7;
-        if (strcmp(id, "NEPTUNE") == 0) planet->ss_index = 8;
-
-        if (strcmp(id, "IO") == 0) planet->jupmoon = 1;
-        if (strcmp(id, "EUROPA") == 0) planet->jupmoon = 2;
-        if (strcmp(id, "GANYMEDE") == 0) planet->jupmoon = 3;
-        if (strcmp(id, "CALLISTO") == 0) planet->jupmoon = 4;
+    }
+    if (strcmp(attr, "horizons_id") == 0) {
+        sscanf(value, "%d", &planet->id);
     }
     if (strcmp(attr, "type") == 0) {
         strncpy(planet->obj.type, value, 4);
