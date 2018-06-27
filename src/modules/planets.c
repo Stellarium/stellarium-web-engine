@@ -96,7 +96,7 @@ typedef struct planets {
     int         hipslist_parsed;
 } planets_t;
 
-static planet_t *planet_get(planets_t *planets, const char *name);
+static planet_t *planet_get_by_name(planets_t *planets, const char *name);
 static int planets_init(obj_t *obj, json_value *args);
 static int planets_update(obj_t *obj, const observer_t *obs, double dt);
 static int planets_render(const obj_t *obj, const painter_t *painter);
@@ -166,19 +166,6 @@ static const double VIS_ELEMENTS[][5] = {
     for (   p = (planet_t*)(((obj_t*)o)->children); \
             p; \
             p = (planet_t*)p->obj.next)
-
-
-/*
- * Conveniance function to look for a planet by name
- */
-static planet_t *planet_find(planets_t *planets, const char *name)
-{
-    planet_t *p;
-    PLANETS_ITER(planets, p) {
-        if (strcasecmp(p->name, name) == 0) return p;
-    }
-    return NULL;
-}
 
 
 static int planet_update(obj_t *obj, const observer_t *obs, double dt)
@@ -284,7 +271,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
         double pvj[2][3];
         double mag;
         planet_t *jupiter;
-        jupiter = planet_get(planets, "jupiter");
+        jupiter = planet_get_by_name(planets, "jupiter");
         obj_update(&jupiter->obj, obs, 0);
         l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
         vec3_add(pvj[0], jupiter->pvg[0], planet->pvg[0]);
@@ -625,7 +612,7 @@ static int on_hips(const char *url, double release_date, void *user)
     normalmap = matches[2].rm_so >= 0;
 
     // Check if the name correspond to a planet.
-    if ((p = planet_find(planets, name))) {
+    if ((p = planet_get_by_name(planets, name))) {
         LOG_V("Assign hips '%s' to planet '%s'", url, name);
         if (!normalmap) {
             p->hips = hips_create(url, release_date);
@@ -674,7 +661,10 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static planet_t *planet_get(planets_t *planets, const char *name)
+/*
+ * Conveniance function to look for a planet by name
+ */
+static planet_t *planet_get_by_name(planets_t *planets, const char *name)
 {
     planet_t *planet;
     char id[64];
@@ -724,7 +714,7 @@ static int planets_ini_handler(void* user, const char* section,
         planet->radius_m = v * 1000;
     }
     if (strcmp(attr, "parent") == 0) {
-        planet->parent = planet_get(planets, value);
+        planet->parent = planet_get_by_name(planets, value);
         assert(planet->parent);
     }
     if (strcmp(attr, "vmag") == 0) {
@@ -788,7 +778,7 @@ static int planets_init(obj_t *obj, json_value *args)
         if (r) continue;
         sprintf(name, "%.*s", matches[1].rm_eo - matches[1].rm_so,
                 path + matches[1].rm_so);
-        p = planet_find(planets, name);
+        p = planet_get_by_name(planets, name);
         if (!p) continue;
         p->rings.tex = texture_from_url(path, 0);
     }
