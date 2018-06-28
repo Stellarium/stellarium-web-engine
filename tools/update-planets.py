@@ -39,9 +39,6 @@ def get_all():
         ret.append((id, name))
     return ret
 
-def parse_value(s):
-    m = re.search(r'[\d+-][\d\.]+', s)
-    if m: return float(m.group())
 
 def parse_geophysical_data(txt):
     """Parse the physical info from the text
@@ -52,19 +49,11 @@ def parse_geophysical_data(txt):
     format, so we have to use some heuristics to get the values.
     """
     ret = {}
-    state = 0
-    for line in txt.splitlines():
-        if (    'PHYSICAL DATA' in line or
-                'SATELLITE PHYSICAL PROPERTIES' in line):
-            state = 1
-            continue
-        if state != 1: continue
-        if '*******' in line: break
-        for key, v in re.findall(r'([^=]+)= *([\d+-~][^=]+)', line):
-            if  (   'Mean radius (km)' in key or
-                    'Radius (km)' in key or
-                    'Equat. radius' in key):
-                ret['radius'] = '%g km' % parse_value(v)
+    flags = re.IGNORECASE | re.MULTILINE
+    for v in re.findall(r'radius.*?=\s*([\d.]+)', txt, flags):
+        ret['radius'] = '%g km' % float(v)
+    for v in re.findall(r'albedo\s*?=\s*([\d.]+)', txt, flags):
+        ret['albedo'] = '%g' % float(v)
     return ret
 
 
@@ -100,16 +89,16 @@ def parse_orbital_data(txt):
 config = ConfigParser.SafeConfigParser()
 config.read('./data/planets.ini')
 
-for id, name in get_all():
+
+all_bodies = get_all()
+
+for id, name in all_bodies:
     if id == 10: continue # skip sun.
     if id / 100 == 3: continue  # skip Moon, L1, L2, L4, L4, L5, Earth
     if id % 100 == 99: parent = 10 # Planet
     if id % 100 != 99: parent = id / 100 * 100 + 99 # Moon
 
     section = name.lower()
-    # For the moment we only update the planets we already have!
-    if not config.has_section(section): continue
-
     print 'process %s (%d)' % (name, id)
     center = '500@%d' % parent # Center of parent body.
     now = time.time() / 86400.0 + 2440587.5 - 2400000.5
@@ -123,11 +112,22 @@ for id, name in get_all():
                 table_type='elements', center=center,
                 tlist=now,
             ))
+
     data = dict(horizons_id=str(id))
     data.update(parse_geophysical_data(res.text))
+
     # Only update horizons orbits.
-    if config.get(section, 'orbit').startswith('horizons:'):
+    if      not config.has_section(section) or \
+            not config.has_option(section, 'orbit') or \
+            config.get(section, 'orbit').startswith('horizons:'):
         data.update(parse_orbital_data(res.text))
+    data['parent'] = [x for x in all_bodies if x[0] == parent][0][1].lower()
+    data['type'] = 'PLA'
+
+    print ', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
+                    for k, v in data.items())
+    if not 'albedo' in data or not 'radius' in data: continue
+    if not config.has_section(section): config.add_section(section)
 
     for key, value in data.items():
         config.set(section, key, value)
