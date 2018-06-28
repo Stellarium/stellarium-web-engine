@@ -49,7 +49,11 @@ sgp4_elsetrec_t *sgp4_twoline2rv(
     return (sgp4_elsetrec*)ret;
 }
 
-bool sgp4(sgp4_elsetrec_t *satrec, double tsince, double r[3], double v[3])
+bool sgp4(sgp4_elsetrec_t *satrec, double tt_mjd, double r[3], double v[3])
 {
+    double tsince;
+    elsetrec *elrec = (elsetrec*)satrec;
+    tsince = tt_mjd - (elrec->jdsatepoch - 2400000.5 + elrec->jdsatepochF);
+    tsince *= 24 * 60; // Put in min.
     return SGP4Funcs::sgp4(*((elsetrec*)satrec), tsince, r, v);
 }
