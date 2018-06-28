@@ -526,8 +526,8 @@ const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr_name)
         sub = obj->id;
         obj = obj->parent;
     }
-    ASSERT(obj->klass->attributes, "type '%s' has no attributes",
-           obj->klass->id);
+    ASSERT(obj->klass->attributes, "type '%s' has no attributes '%s'",
+           obj->klass->id, attr_name);
     for (i = 0; ; i++) {
         attr = &obj->klass->attributes[i];
         if (!attr->name) return NULL;
