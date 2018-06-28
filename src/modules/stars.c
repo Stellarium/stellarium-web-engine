@@ -152,6 +152,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
 
+    // XXX: Use convert_coordinates instead!
     eraAtciq(s->ra, s->de, s->pra, s->pde, s->plx, 0,
             &core->observer->astrom, &ri, &di);
     eraAtioq(ri, di, &core->observer->astrom,
