@@ -122,7 +122,7 @@ static bool load_data(satellites_t *sats)
 {
     int size, code, nb;
     char *data;
-    const char *URL = "https://celestrak.com/NORAD/elements/visual.txt";
+    const char *URL = "https://data.stellarium.org/norad/visual.txt";
     if (sats->loaded) return true;
 
     // First try from cache.
