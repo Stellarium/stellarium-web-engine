@@ -101,6 +101,9 @@ void sys_log(const char *msg);
 double sys_get_unix_time(void);
 int sys_get_utc_offset(void);
 
+int sys_storage_store(const char *db, const char *name, void *buf, int size);
+void *sys_storage_load(const char *db, const char *name, int *size,
+                       int *error);
 
 /*
  * Function: swe_gen_doc
