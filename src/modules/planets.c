@@ -751,7 +751,6 @@ static int parse_orbit(planet_t *p, const char *v)
     r = sscanf(v, "horizons:%lf, A.D. %*s %*s "
                "%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf",
                &mjd, &ec, &qr, &in, &om, &w, &tp, &n, &ma, &ta, &a, &ad, &pr);
-    LOG_D("XXX %d", r);
     if (r != 13) {
         LOG_E("Cannot parse orbit line '%s'", v);
         return -1;
