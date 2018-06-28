@@ -148,7 +148,7 @@ obj_t *obj_create_str(const char *type, const char *id, obj_t *parent,
                       const char *args);
 
 #define OBJ_ITER(obj, child, klass_) \
-    for (child = (void*)((obj)->children); child; \
+    for (child = (void*)(((obj_t*)obj)->children); child; \
                         child = (void*)(((obj_t*)child)->next)) \
         if ((uintptr_t)(klass_) == (uintptr_t)NULL || \
                 ((obj_t*)child)->klass == klass_)
