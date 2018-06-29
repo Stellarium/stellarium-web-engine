@@ -98,9 +98,15 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 
     while (*data) {
         line1 = data;
-        line2 = strchr(line1, '\n') + 1;
-        line3 = strchr(line2, '\n') + 1;
-        data  = strchr(line3, '\n') + 1;
+        line2 = strchr(line1, '\n');
+        if (!line2) goto error;
+        line2 += 1;
+        line3 = strchr(line2, '\n');
+        if (!line3) goto error;
+        line3 += 1;
+        data  = strchr(line3, '\n');
+        if (!data) break;
+        data += 1;
 
         sprintf(id, "SAT %.6s", line2);
         sat = (satellite_t*)obj_create("satellite", id, (obj_t*)sats, NULL);
@@ -115,6 +121,9 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 
         nb++;
     }
+    return nb;
+error:
+    LOG_E("Cannot parse TLE file");
     return nb;
 }
 
