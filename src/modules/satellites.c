@@ -121,25 +121,15 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 static bool load_data(satellites_t *sats)
 {
     int size, code, nb;
-    char *data;
+    const char *data;
     const char *URL = "https://data.stellarium.org/norad/visual.txt";
     if (sats->loaded) return true;
-
-    // First try from cache.
-    data = sys_storage_load("satellites", "visual.txt", &size, &code);
-    if (data) {
-        sats->loaded = true;
-        nb = parse_tle_file(sats, data);
-        LOG_D("Parsed %d satellites", nb);
-        free(data);
-        return true;
-    }
-
-    // Not in cache yet, load it online.
-    data = (char*)asset_get_data(URL, &size, &code);
+    data = asset_get_data(URL, &size, &code);
     if (!data) return false;
-    sys_storage_store("satellites", "visual.txt", data, size);
-    return false;
+    nb = parse_tle_file(sats, data);
+    LOG_D("Parsed %d satellites", nb);
+    sats->loaded = true;
+    return true;
 }
 
 static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
