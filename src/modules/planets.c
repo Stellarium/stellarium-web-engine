@@ -775,6 +775,7 @@ static int planets_ini_handler(void* user, const char* section,
     planet_t *planet;
     char id[64], name[64];
     float v;
+
     str_to_upper(section, id);
     HASH_FIND_STR(planets->planets, id, planet);
     if (!planet) {
@@ -818,7 +819,7 @@ static int planets_ini_handler(void* user, const char* section,
         planet->albedo = v;
     }
     if (strcmp(attr, "rot_obliquity") == 0) {
-        sscanf(value, "%f", &v);
+        if (sscanf(value, "%f deg", &v) != 1) goto error;
         planet->rot.obliquity = v * DD2R;
     }
     if (strcmp(attr, "rot_period") == 0) {
@@ -842,6 +843,11 @@ static int planets_ini_handler(void* user, const char* section,
     }
 
     return 0;
+
+error:
+    LOG_W("Cannot parse planet attribute: [%s] %s = %s",
+          section, attr, value);
+    return -1;
 }
 
 static int planets_init(obj_t *obj, json_value *args)

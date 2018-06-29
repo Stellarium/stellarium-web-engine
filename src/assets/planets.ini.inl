@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_planets_ini[24739] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_planets_ini[24747] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = SUN\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -69,7 +69,7 @@ static const unsigned char DATA_data_planets_ini[24739] __attribute__((aligned(4
     "shadow_brightness = 0.3,\n"
     "rings_inner_radius = 74510 km\n"
     "rings_outer_radius = 140390 km\n"
-    "rot_obliquity = 26.73\n"
+    "rot_obliquity = 26.73 deg\n"
     "horizons_id = 699\n"
     "orbit = plan94:6\n"
     "albedo = 0.47\n"
@@ -111,7 +111,7 @@ static const unsigned char DATA_data_planets_ini[24739] __attribute__((aligned(4
     "radius = 1738 km\n"
     "vmag = -12.5\n"
     "shadow_brightness = 0.1\n"
-    "rot_obliquity = 1.5424\n"
+    "rot_obliquity = 1.5424 deg\n"
     "rot_period = 27.321661\n"
     "rot_offset = 38\n"
     "horizons_id = 301\n"
