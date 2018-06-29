@@ -107,7 +107,6 @@ typedef struct planets {
     planet_t    *planets; // The map of all the planets.
     planet_t    *sun;
     planet_t    *earth;
-    planet_t    *moon;
 
     // Status of the hipslist parsing.
     int         hipslist_parsed;
@@ -791,7 +790,6 @@ static int planets_ini_handler(void* user, const char* section,
         planet->obj.nsid = compute_nsid(name);
         if (strcmp(id, "SUN") == 0) planets->sun = planet;
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
-        if (strcmp(id, "MOON") == 0) planets->moon = planet;
     }
     if (strcmp(attr, "horizons_id") == 0) {
         sscanf(value, "%d", &planet->id);
@@ -868,7 +866,6 @@ static int planets_init(obj_t *obj, json_value *args)
     ini_parse_string(data, planets_ini_handler, planets);
     assert(planets->sun);
     assert(planets->earth);
-    assert(planets->moon);
 
     // Add rings textures from assets.
     regcomp(&reg, "^.*/([^/]+)_rings.png$", REG_EXTENDED);
