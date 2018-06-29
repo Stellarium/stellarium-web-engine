@@ -58,11 +58,26 @@ void request_delete(request_t *req)
     free(req);
 }
 
+static bool is_str(const request_t *req)
+{
+    return str_endswith(req->url, ".txt");
+}
+
 static void onload(unsigned int _, void *arg, void *data, unsigned int size)
 {
+    char *tmp;
     request_t *req = arg;
     req->handle = 0;
     req->status_code = 200; // XXX: get proper code.
+
+    // For NULL terminated string for txt requests.
+    if (is_str(req) && ((char*)data)[size] != 0) {
+        tmp = data;
+        data = calloc(1, size + 1);
+        memcpy(data, tmp, size);
+        free(tmp);
+    }
+
     req->data = data;
     req->size = size;
     req->done = true;
