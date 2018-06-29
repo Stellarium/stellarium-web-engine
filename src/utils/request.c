@@ -52,6 +52,7 @@ struct request
 
     struct curl_slist *headers;
     char        *etag;
+    double      expiration;     // Unix time expiration date.
 };
 
 static const char *request_get_file(request_t *req, int *status_code);
@@ -126,6 +127,7 @@ request_t *request_create(const char *url)
 {
     char *local_path, *info_path;
     char etag[128];
+    double expiration;
     FILE *file;
     int r;
     request_t *req = calloc(1, sizeof(*req));
@@ -149,10 +151,19 @@ request_t *request_create(const char *url)
     if (file_exists(local_path) && file_exists(info_path)) {
         file = fopen(info_path, "r");
         r = fscanf(file, "etag: %s\n", etag);
-        (void)r;
-        req->etag = strdup(etag);
+        if (r == 1) req->etag = strdup(etag);
+        r = fscanf(file, "expiration: %lf\n", &expiration);
+        if (r == 1) req->expiration = expiration;
         fclose(file);
+
+        // If the cached version is not expired yet just use it.
+        if (req->expiration && req->expiration > get_unix_time()) {
+            req->local_path = strdup(local_path);
+            req->status_code = 200;
+            req->done = true;
+        }
     }
+
     free(local_path);
     free(info_path);
     return req;
@@ -172,7 +183,8 @@ void request_delete(request_t *req)
     free(req);
 }
 
-static void save_cache(const char *url, const char *path, const char *etag)
+static void save_cache(const char *url, const char *path, const char *etag,
+                       double expiration)
 {
     char *info_path;
     FILE *file;
@@ -181,6 +193,7 @@ static void save_cache(const char *url, const char *path, const char *etag)
     if (r == -1) LOG_E("Error");
     file = fopen(info_path, "w");
     fprintf(file, "etag: %s\n", etag);
+    fprintf(file, "expiration: %.0f\n", expiration);
     fclose(file);
     free(info_path);
 }
@@ -199,6 +212,7 @@ static bool header_find(const char *header, const char *re,
         len = matches[1].rm_eo - matches[1].rm_so;
         if (len < buf_size) {
             strncpy(buf, header + matches[1].rm_so, len);
+            buf[len] = '\0';
             ret = true;
         }
     }
@@ -209,7 +223,7 @@ static bool header_find(const char *header, const char *re,
 
 static void on_done(request_t *req)
 {
-    char etag[128] = {};
+    char buf[128] = {};
     const char *header;
     const char *path;
 
@@ -223,14 +237,19 @@ static void on_done(request_t *req)
 
     if (req->status_code / 100 != 2) goto end;
 
+    // Parse header for cache control.
     header = utstring_body(&req->header_buf);
-    header_find(header, "ETag: \"(.+)\"\r\n", etag, sizeof(etag));
-    if (etag[0]) {
-        // Make sure we save it to file.
-        path = request_get_file(req, NULL);
+    if (header_find(header, "ETag: \"(.+)\"\r\n", buf, sizeof(buf))) {
         free(req->etag);
-        req->etag = strdup(etag);
-        save_cache(req->url, path, req->etag);
+        req->etag = strdup(buf);
+    }
+    if (header_find(header, "Cache-Control: max-age=([0-9]+)\r\n",
+                    buf, sizeof(buf))) {
+        req->expiration = get_unix_time() + atof(buf);
+    }
+    if (req->etag && req->expiration) {
+        path = request_get_file(req, NULL);
+        save_cache(req->url, path, req->etag, req->expiration);
     }
 
 end:
