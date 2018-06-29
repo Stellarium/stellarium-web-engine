@@ -41,8 +41,8 @@ struct planet {
 
     // Rotation elements
     struct {
-        double obliquity;
-        double period;
+        double obliquity;   // (rad)
+        double period;      // (day)
         double offset;
     } rot;
 
@@ -546,13 +546,15 @@ static void planet_render_hips(const planet_t *planet,
     // related to the fact that the horizontal coordinates are left handed!
     if (planet->parent == planets->earth) {
         mat4_mul(mat, core->observer->ri2h, mat);
-        rot = core->observer->tt / planet->rot.period * 2 * M_PI;
-        rot += planet->rot.offset;
-        mat4_rz(rot, mat, mat);
     } else {
         mat4_mul(mat, core->observer->re2h, mat);
         // Not sure about this.
         mat4_rx(-planet->rot.obliquity, mat, mat);
+    }
+    if (planet->rot.period) {
+        rot = core->observer->tt / planet->rot.period * 2 * M_PI;
+        rot += planet->rot.offset;
+        mat4_rz(rot, mat, mat);
     }
     painter.transform = &mat;
 
@@ -773,7 +775,7 @@ static int planets_ini_handler(void* user, const char* section,
 {
     planets_t *planets = user;
     planet_t *planet;
-    char id[64], name[64];
+    char id[64], name[64], unit[32];
     float v;
 
     str_to_upper(section, id);
@@ -823,7 +825,8 @@ static int planets_ini_handler(void* user, const char* section,
         planet->rot.obliquity = v * DD2R;
     }
     if (strcmp(attr, "rot_period") == 0) {
-        sscanf(value, "%f", &v);
+        if (sscanf(value, "%f %s", &v, unit) != 2) goto error;
+        if (strcmp(unit, "h") == 0) v /= 24.0;
         planet->rot.period = v;
     }
     if (strcmp(attr, "rot_offset") == 0) {
