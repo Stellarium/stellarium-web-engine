@@ -828,10 +828,11 @@ void stars_generate_survey(const char *bsc_path, const char *hip_path,
     (void)err;
     gzFile file;
 
+    assert(bsc_path);
+    assert(hip_path);
+
     eph_file_start(stars_per_tile);
 
-
-    if (!bsc_path) goto no_bsc;
     file = gzopen(bsc_path, "rb");
     assert(file);
     for (i = 0; ; i++) {
@@ -854,9 +855,7 @@ void stars_generate_survey(const char *bsc_path, const char *hip_path,
         eph_file_add("STAR", vmag, pos, 1, buffer, 36, id);
     }
     gzclose(file);
-no_bsc:
 
-    if (!hip_path) goto no_hip;
     file = gzopen(hip_path, "rb");
     assert(file);
 
@@ -881,8 +880,6 @@ no_bsc:
         eph_file_add("STAR", vmag, pos, 1, buffer, 36, id);
     }
     gzclose(file);
-
-no_hip:
     eph_file_save(out);
 }
 
