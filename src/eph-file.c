@@ -356,9 +356,9 @@ void eph_file_save(const char *path)
     // For each entry, try to add to the lowest tile that is not already full.
     for (e = g_file.entries; e != NULL; e = e->hh.next) {
         for (order = 0; ;order++) {
-            // grid_get_tile(pos.level, e->pos, &pos.x, &pos.y);
             eraC2s(e->pos, &theta, &phi);
-            healpix_ang2pix(1 << order, theta, phi, &pix);
+            phi = M_PI / 2.0 - phi; // Colatitude.
+            healpix_ang2pix(1 << order, phi, theta, &pix);
             nuniq = pix + 4 * (1L << (2 * order));
             HASH_FIND(hh, g_file.tiles, &nuniq, sizeof(nuniq), tile);
             if (!tile) {
