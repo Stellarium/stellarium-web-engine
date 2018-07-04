@@ -261,6 +261,20 @@ static int del_tile(void *data)
     return 0;
 }
 
+// In place shuffle of the data bytes for optimized compression.
+static void shuffle_bytes(uint8_t *data, int nb, int size)
+{
+    int i, j;
+    uint8_t *buf = calloc(nb, size);
+    memcpy(buf, data, nb * size);
+    for (j = 0; j < size; j++) {
+        for (i = 0; i < nb; i++) {
+            data[j * nb + i] = buf[i * size + j];
+        }
+    }
+    free(buf);
+}
+
 static int on_file_tile_loaded(int version, int order, int pix,
                                int size, void *data, void *user)
 {
@@ -284,6 +298,10 @@ static int on_file_tile_loaded(int version, int order, int pix,
     tile->stars = calloc(tile->nb, sizeof(*tile->stars));
     cache_add(stars->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->stars), del_tile);
+
+    // Unshuffle the data.
+    shuffle_bytes(data, 4 * 9, tile->nb);
+
     for (i = 0; i < tile->nb; i++) {
         d = &tile->stars[i];
         binunpack(data + i * 4 * 9, "iifffffff",
@@ -301,20 +319,6 @@ static int on_file_tile_loaded(int version, int order, int pix,
         tile->mag_max = max(tile->mag_max, vmag);
     }
     return 0;
-}
-
-// In place shuffle of the data bytes for optimized compression.
-static void shuffle_bytes(uint8_t *data, int nb, int size)
-{
-    int i, j;
-    uint8_t *buf = calloc(nb, size);
-    memcpy(buf, data, nb * size);
-    for (j = 0; j < size; j++) {
-        for (i = 0; i < nb; i++) {
-            data[j * nb + i] = buf[i * size + j];
-        }
-    }
-    free(buf);
 }
 
 static int on_gaia_tile_loaded(int version, int order, int pix,
@@ -785,6 +789,18 @@ static void get_star_color(const char sp, double out[3])
     out[2] = b / 255.0;
 }
 
+// Zero out bits from a float value.
+static float float_trunc(float x, int zerobits)
+{
+    // A float is represented in binary like this:
+    // seeeeeeeefffffffffffffffffffffff
+    uint32_t mask = -(1L << zerobits);
+    uint32_t floatbits = (*((uint32_t*)(&x)));
+    floatbits &= mask;
+    x = *((float*)(&floatbits));
+    return x;
+}
+
 void stars_generate_survey(const char *bsc_path, const char *hip_path,
                            const char *out)
 {
@@ -849,6 +865,12 @@ void stars_generate_survey(const char *bsc_path, const char *hip_path,
         err = eraTf2a('+', ra_hour, ra_min, ra_sec, &ra);
         assert(!err);
         eraS2c(ra, de, pos);
+
+        vmag = float_trunc(vmag, 16);
+        ra = float_trunc(ra, 8);
+        de = float_trunc(de, 8);
+        plx = float_trunc(plx, 16);
+        bv = float_trunc(bv, 16);
         binpack(buffer, "iifffffff",
                 hd, (int)sp, vmag, ra, de, plx, 0.0, 0.0, bv);
         make_id(id, "HD", hd);
@@ -872,7 +894,11 @@ void stars_generate_survey(const char *bsc_path, const char *hip_path,
         eraS2c(ra, de, pos);
         plx /= 1000.0;
         sp = 0;
-
+        vmag = float_trunc(vmag, 16);
+        ra = float_trunc(ra, 8);
+        de = float_trunc(de, 8);
+        plx = float_trunc(plx, 16);
+        bv = float_trunc(bv, 16);
         binpack(buffer, "iifffffff",
                 hd, (int)sp, vmag, ra, de, plx, 0.0, 0.0, bv);
         if (hd != -1) make_id(id, "HD", hd);

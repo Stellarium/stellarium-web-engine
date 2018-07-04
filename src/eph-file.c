@@ -336,6 +336,20 @@ static const char *get_tile_path(const char *base, int order, int pix)
     return path;
 }
 
+// In place shuffle of the data bytes for optimized compression.
+static void shuffle_bytes(uint8_t *data, int nb, int size)
+{
+    int i, j;
+    uint8_t *buf = calloc(nb, size);
+    memcpy(buf, data, nb * size);
+    for (j = 0; j < size; j++) {
+        for (i = 0; i < nb; i++) {
+            data[j * nb + i] = buf[i * size + j];
+        }
+    }
+    free(buf);
+}
+
 void eph_file_save(const char *path)
 {
     entry_t *e, *etmp;
@@ -384,6 +398,7 @@ void eph_file_save(const char *path)
         fwrite("EPHE", 4, 1, file);
         WRITE(file, FILE_VERSION, int32_t);
 
+        shuffle_bytes((uint8_t*)tile->data, tile->nb, g_file.data_size);
         comp_size = compressBound(tile->nb * g_file.data_size);
         buf = calloc(1, comp_size);
         compress(buf, &comp_size, tile->data, g_file.data_size * tile->nb);
