@@ -795,9 +795,10 @@ static float float_trunc(float x, int zerobits)
     // A float is represented in binary like this:
     // seeeeeeeefffffffffffffffffffffff
     uint32_t mask = -(1L << zerobits);
-    uint32_t floatbits = (*((uint32_t*)(&x)));
+    uint32_t floatbits;
+    memcpy(&floatbits, &x, 4);
     floatbits &= mask;
-    x = *((float*)(&floatbits));
+    memcpy(&x, &floatbits, 4);
     return x;
 }
 
