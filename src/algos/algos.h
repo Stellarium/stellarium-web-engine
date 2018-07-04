@@ -29,7 +29,15 @@ void healpix_pix2vec(int nside, int pix, double out[3]);
 /* Convert healpix nest index to polar angle. */
 void healpix_pix2ang(int nside, int pix, double *theta, double *phi);
 
-/* Convert polar angle to healpix next index */
+/* Convert polar angle to healpix next index
+ *
+ * Parameters:
+ *   nside  - Nside parameter of the healpix map.
+ *   theta  - Colatitude in radians measured southward from north pole in
+ *            [0, π].
+ *   phi    - Longitude in radians, measured eastward in [0, 2π].
+ *   pix    - Pix index output.
+ */
 void healpix_ang2pix(int nside, double theta, double phi, int *pix);
 
 /* Compute moon position.

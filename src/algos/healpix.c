@@ -7,6 +7,7 @@
  * repository.
  */
 
+#include <assert.h>
 #include <math.h>
 
 // Some of the code comes from the official healpix C implementation.
@@ -195,5 +196,6 @@ static int ang2pix_nest_z_phi (long nside_, double z, double phi)
 
 void healpix_ang2pix(int nside, double theta, double phi, int *pix)
 {
+    assert(theta >= 0 && theta <= M_PI);
     *pix = ang2pix_nest_z_phi(nside, cos(theta), phi);
 }
