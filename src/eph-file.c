@@ -343,7 +343,6 @@ void eph_file_save(const char *path)
     int data_size, order, pix;
     double theta, phi;
     uint64_t nuniq;
-    bool singlefile;
     const char *tilepath;
     uint8_t *buf;
     unsigned long comp_size;
@@ -351,7 +350,6 @@ void eph_file_save(const char *path)
     FILE *file = NULL;
     chunk_t c;
 
-    singlefile = str_endswith(path, ".eph");
     assert(g_file.entries);
     data_size = g_file.data_size;
     HASH_SORT(g_file.entries, sort_cmp);
@@ -377,22 +375,14 @@ void eph_file_save(const char *path)
         }
     }
 
-    // Save the file to disk.
-    if (singlefile) {
-        file = fopen(path, "wb");
+    HASH_ITER(hh, g_file.tiles, tile, tmp) {
+        order = log2(tile->nuniq / 4) / 2;
+        pix = tile->nuniq - 4 * (1L << (2 * order));
+        assert(pix >= 0);
+        tilepath = get_tile_path(path, order, pix);
+        file = fopen(tilepath, "wb");
         fwrite("EPHE", 4, 1, file);
         WRITE(file, FILE_VERSION, int32_t);
-    }
-    HASH_ITER(hh, g_file.tiles, tile, tmp) {
-        if (!singlefile) {
-            order = log2(tile->nuniq / 4) / 2;
-            pix = tile->nuniq - 4 * (1L << (2 * order));
-            assert(pix >= 0);
-            tilepath = get_tile_path(path, order, pix);
-            file = fopen(tilepath, "wb");
-            fwrite("EPHE", 4, 1, file);
-            WRITE(file, FILE_VERSION, int32_t);
-        }
 
         comp_size = compressBound(tile->nb * g_file.data_size);
         buf = calloc(1, comp_size);
@@ -411,22 +401,16 @@ void eph_file_save(const char *path)
         HASH_DELETE(hh, g_file.tiles, tile);
         free(tile->data);
         free(tile);
-
-        if (!singlefile) fclose(file);
+        fclose(file);
     }
     if (g_file.names_chunk.length) {
-        if (!singlefile) {
-            sprintf(namespath, "%s/names.eph", path);
-            file = fopen(namespath, "wb");
-            fwrite("EPHE", 4, 1, file);
-            WRITE(file, FILE_VERSION, int32_t);
-        }
+        sprintf(namespath, "%s/names.eph", path);
+        file = fopen(namespath, "wb");
+        fwrite("EPHE", 4, 1, file);
+        WRITE(file, FILE_VERSION, int32_t);
         chunk_write_finish(&g_file.names_chunk, file);
-        if (!singlefile) fclose(file);
-    }
-
-    if (singlefile)
         fclose(file);
+    }
 
     HASH_ITER(hh, g_file.entries, e, etmp) {
         HASH_DELETE(hh, g_file.entries, e);
