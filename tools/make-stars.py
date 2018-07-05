@@ -126,7 +126,7 @@ for line in gzip.open(hip_file):
     if hd is None: continue
     if hd in stars: continue
     hip = parse(line, 9, 14, type=int, required=True)
-    vmag = parse(line, 42, 46, zerobits=16)
+    vmag = parse(line, 42, 46, zerobits=16, required=True)
     ra = parse(line, 52, 63, zerobits=8)
     de = parse(line, 65, 76, zerobits=8)
     if ra is None or de is None: continue
