@@ -823,8 +823,8 @@ void stars_generate_survey(const char *bsc_path, const char *hip_path,
     const catalog_t HIP_CAT[] = {
         {  9,  14, "I6",    "HIP"},
         { 42,  46, "F5.2",  "vmag", '?'},
-        { 52,  63, "F12.8", "RAdeg", '?'},
-        { 65,  76, "F12.8", "DEdeg", '?'},
+        { 52,  63, "F12.8", "RAdeg", '?', .default_f = NAN},
+        { 65,  76, "F12.8", "DEdeg", '?', .default_f = NAN},
         { 80,  86, "F7.2",  "Plx",   '?'},
         { 88,  95, "F8.2",  "pmRA",  '?'},
         { 97, 104, "F8.2",  "pmDE",  '?'},
@@ -887,6 +887,7 @@ void stars_generate_survey(const char *bsc_path, const char *hip_path,
         catalog_parse_line(HIP_CAT, line, i, &hip, &vmag, &ra, &de, &plx,
                            NULL, NULL, &bv, &hd, NULL);
         if (hd == -1) continue;
+        if (isnan(ra) || isnan(de)) continue;
         CHECK(!isnan(vmag));
         CHECK(ra >= 0 && ra <= 360);
         CHECK(de >= -180 && de <= 180);
