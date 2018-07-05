@@ -89,8 +89,6 @@ typedef struct {
     chunk_t     names_chunk;
 } file_t;
 
-static file_t g_file = {};
-
 void eph_file_register_tile_type(const char type[4],
         int (*f)(int version, int order, int pix,
                   int size, void *data, void *user))
@@ -107,11 +105,6 @@ void eph_file_register_tile_type(const char type[4],
 
 #define CHUNK_BUFF_SIZE (1 << 20) // 1 MiB max buffer size!
 
-#define WRITE(file, v, type) ({ \
-        type v_ = (type)v; \
-        CHECK(fwrite((char*)&(v_), sizeof(v_), 1, file) == 1); \
-    })
-
 #define READ(data, size, type) ({ \
         type v_; \
         CHECK(size >= sizeof(type)); \
@@ -120,33 +113,6 @@ void eph_file_register_tile_type(const char type[4],
         data += sizeof(type); \
         v_; \
     })
-
-static void chunk_write_start(chunk_t *c, const char *type)
-{
-    memset(c, 0, sizeof(*c));
-    memcpy(c->type, type, 4);
-    c->buffer = calloc(1, CHUNK_BUFF_SIZE);
-}
-
-static void chunk_write(chunk_t *c, const char *data, int size)
-{
-    assert(c->length + size < CHUNK_BUFF_SIZE);
-    memcpy(c->buffer + c->length, data, size);
-    c->length += size;
-}
-
-static void chunk_write_finish(chunk_t *c, FILE *out)
-{
-    fwrite(c->type, 4, 1, out);
-    WRITE(out, c->length, int32_t);
-    fwrite(c->buffer, c->length, 1, out);
-    WRITE(out, 0, int32_t);    // CRC XXX: todo.
-    free(c->buffer);
-    c->buffer = NULL;
-}
-
-#define CHUNK_WRITE(chunk, v, type) ({ \
-        type v_ = (type)v; chunk_write(chunk, (char*)&(v_), sizeof(v_)); })
 
 static bool chunk_read_start(chunk_t *c, const void **data, int *data_size)
 {
@@ -177,9 +143,6 @@ static void chunk_read(chunk_t *c, const void **data, int *data_size,
     *data += size;
     *data_size -= size;
 }
-
-#define CHUNK_WRITE(chunk, v, type) ({ \
-        type v_ = (type)v; chunk_write(chunk, (char*)&(v_), sizeof(v_)); })
 
 #define CHUNK_READ(chunk, data, data_size, type) ({ \
         type v_; \
@@ -260,177 +223,4 @@ int eph_load(const void *data, int data_size, void *user)
         free(chunk_data);
     }
     return 0;
-}
-
-void eph_file_start(int nb_per_tile)
-{
-    assert(!g_file.entries);
-    g_file.nb_per_tile = nb_per_tile;
-}
-
-int eph_file_add(const char type[4], double vmag, const double pos[3],
-                  int version, const void *data, int size, const char *id)
-{
-    entry_t *e;
-    assert(id);
-    assert(size <= ARRAY_SIZE(e->data));
-
-    HASH_FIND_STR(g_file.entries, id, e);
-    if (e) return 1; // Duplicate.
-
-    e = calloc(1, sizeof(*e));
-
-    e->vmag = vmag;
-    vec3_copy(pos, e->pos);
-    strcpy(e->id, id);
-    memcpy(e->data, data, size);
-    HASH_ADD_STR(g_file.entries, id, e);
-
-    g_file.data_size = g_file.data_size ?: size;
-    g_file.version = g_file.version ?: version;
-    memcpy(g_file.type, type, 4);
-    assert(g_file.data_size == size);
-    assert(g_file.version == version);
-    return 0;
-}
-
-static int striped_len(const char *str)
-{
-    int ret;
-    ret = strlen(str);
-    while (ret && str[ret - 1] == ' ') ret--;
-    return ret;
-}
-
-void eph_file_add_name(const char *id, const char *name)
-{
-
-    chunk_t *c = &g_file.names_chunk;
-    if (!c->buffer) chunk_write_start(c, "NAME");
-    CHUNK_WRITE(c, strlen(id), int32_t);
-    chunk_write(c, id, strlen(id));
-    CHUNK_WRITE(c, striped_len(name), int32_t);
-    chunk_write(c, name, striped_len(name));
-}
-
-static int sort_cmp(const void *_a, const void *_b)
-{
-    const entry_t *a, *b;
-    a = _a;
-    b = _b;
-    return cmp(a->vmag, b->vmag);
-}
-
-static const char *get_tile_path(const char *base, int order, int pix)
-{
-    static char path[1024]; // XXX: no overflow check.
-    int dir = (pix / 10000) * 10000;
-    // Since mkdir doesn't work with deep path, we have to do it step by
-    // step.
-    mkdir(base, 0777);
-    sprintf(path, "%s/Norder%d", base, order);
-    mkdir(path, 0777);
-    sprintf(path, "%s/Norder%d/Dir%d", base, order, dir);
-    mkdir(path, 0777);
-    sprintf(path, "%s/Norder%d/Dir%d/Npix%d.eph", base, order, dir, pix);
-    return path;
-}
-
-// In place shuffle of the data bytes for optimized compression.
-static void shuffle_bytes(uint8_t *data, int nb, int size)
-{
-    int i, j;
-    uint8_t *buf = calloc(nb, size);
-    memcpy(buf, data, nb * size);
-    for (j = 0; j < size; j++) {
-        for (i = 0; i < nb; i++) {
-            data[j * nb + i] = buf[i * size + j];
-        }
-    }
-    free(buf);
-}
-
-void eph_file_save(const char *path)
-{
-    entry_t *e, *etmp;
-    tile_t *tile, *tmp;
-    int data_size, order, pix;
-    double theta, phi;
-    uint64_t nuniq;
-    const char *tilepath;
-    uint8_t *buf;
-    unsigned long comp_size;
-    char namespath[1024];
-    FILE *file = NULL;
-    chunk_t c;
-
-    assert(g_file.entries);
-    data_size = g_file.data_size;
-    HASH_SORT(g_file.entries, sort_cmp);
-    // For each entry, try to add to the lowest tile that is not already full.
-    for (e = g_file.entries; e != NULL; e = e->hh.next) {
-        for (order = 0; ;order++) {
-            eraC2s(e->pos, &theta, &phi);
-            phi = M_PI / 2.0 - phi; // Colatitude.
-            healpix_ang2pix(1 << order, phi, theta, &pix);
-            nuniq = pix + 4 * (1L << (2 * order));
-            HASH_FIND(hh, g_file.tiles, &nuniq, sizeof(nuniq), tile);
-            if (!tile) {
-                tile = calloc(1, sizeof(*tile));
-                tile->nuniq = nuniq;
-                tile->data = calloc(g_file.nb_per_tile, data_size);
-                HASH_ADD(hh, g_file.tiles, nuniq, sizeof(nuniq), tile);
-            }
-            if (tile->nb < g_file.nb_per_tile) {
-                memcpy(tile->data + tile->nb * data_size, e->data, data_size);
-                tile->nb++;
-                break;
-            } // Otherwise, try higher levels.
-        }
-    }
-
-    HASH_ITER(hh, g_file.tiles, tile, tmp) {
-        order = log2(tile->nuniq / 4) / 2;
-        pix = tile->nuniq - 4 * (1L << (2 * order));
-        assert(pix >= 0);
-        tilepath = get_tile_path(path, order, pix);
-        file = fopen(tilepath, "wb");
-        fwrite("EPHE", 4, 1, file);
-        WRITE(file, FILE_VERSION, int32_t);
-
-        shuffle_bytes((uint8_t*)tile->data, tile->nb, g_file.data_size);
-        comp_size = compressBound(tile->nb * g_file.data_size);
-        buf = calloc(1, comp_size);
-        compress(buf, &comp_size, tile->data, g_file.data_size * tile->nb);
-
-        chunk_write_start(&c, g_file.type);
-        CHUNK_WRITE(&c, g_file.version, int32_t);
-        CHUNK_WRITE(&c, tile->nuniq, uint64_t);
-        CHUNK_WRITE(&c, tile->nb * g_file.data_size, int32_t);
-        CHUNK_WRITE(&c, comp_size, int32_t);
-        chunk_write(&c, (const char*)buf, comp_size);
-
-        free(buf);
-
-        chunk_write_finish(&c, file);
-        HASH_DELETE(hh, g_file.tiles, tile);
-        free(tile->data);
-        free(tile);
-        fclose(file);
-    }
-    if (g_file.names_chunk.length) {
-        sprintf(namespath, "%s/names.eph", path);
-        file = fopen(namespath, "wb");
-        fwrite("EPHE", 4, 1, file);
-        WRITE(file, FILE_VERSION, int32_t);
-        chunk_write_finish(&g_file.names_chunk, file);
-        fclose(file);
-    }
-
-    HASH_ITER(hh, g_file.entries, e, etmp) {
-        HASH_DELETE(hh, g_file.entries, e);
-        free(e);
-    }
-
-    memset(&g_file, 0, sizeof(g_file));
 }

@@ -26,7 +26,6 @@ typedef struct
 {
     bool run_tests;
     char *tests_filter;
-    bool gen_stars;
     bool calendar;
     bool dump;
     bool gen_doc;
@@ -47,8 +46,6 @@ static struct argp_option options[] = {
     {"run-tests", OPT_RUN_TESTS, "filter", OPTION_ARG_OPTIONAL,
                                                     "Run the unit tests" },
 #endif
-    {"gen-stars", 's', NULL, 0, "generate stars file"},
-    {"gen-nebulae", 'n', NULL, 0, "generate nebuale file"},
     {"calendar", 'c', NULL, 0, "print events calendar"},
     {"dump", 'd', NULL, 0, "dump catalog file as json"},
     {"gen-doc", OPT_GEN_DOC, NULL, 0, "print doc for the defined classes"},
@@ -71,9 +68,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
     case 'c':
         args->calendar = true;
         break;
-    case 's':
-        args->gen_stars = true;
-        break;
     case 'd':
         args->dump = true;
         break;
@@ -92,10 +86,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
 static struct argp argp = { options, parse_opt, args_doc, doc };
 #endif
-
-// XXX: cleanup those: should be something more generic.
-void stars_generate_survey(const char *bsc_path, const char *hip_path,
-                           const char *out);
 
 static void run_main_loop(void (*func)(void));
 static void loop_function(void);
@@ -170,14 +160,6 @@ int main(int argc, char **argv)
 #if !DEFINED(NO_ARGP)
     argp_parse (&argp, argc, argv, 0, 0, &args);
 #endif
-    if (args.gen_stars) {
-        if (!args.args[2]) {
-            LOG_E("gen-stars BSC_INPUT HIP_INPUT OUTPUT");
-            return -1;
-        }
-        stars_generate_survey(args.args[0], args.args[1], args.args[2]);
-        return 0;
-    }
     if (args.calendar) {
         calendar_print();
         return 0;

@@ -30,6 +30,16 @@ import zipfile
 import zlib
 import PIL.Image
 
+# Generate some of the data to be bundled in the sources.
+# I guess we should split this in separate scripts for each type of data.
+# For the moment this generates:
+#
+# - The cities list.
+# - The font.
+# - The symbols.
+# - Some minor planet sources.
+
+
 if os.path.dirname(__file__) != "./tools":
     print "Should be run from root directory"
     sys.exit(-1)
@@ -63,13 +73,6 @@ def check_uptodate(src, dst):
 
 create_dir('data-src')
 requests_cache.install_cache('data-src/cache')
-
-def make_stars():
-    hip = download("http://cdsarc.u-strasbg.fr/ftp/pub/cats/I/239/hip_main.dat.gz",
-                   md5="7b50b051364b3f846ba8d6cdf81a4fcb")
-    bsc = download("http://cdsarc.u-strasbg.fr/ftp/pub/cats/V/50/catalog.gz",
-                   md5="2f0662e53aa4e563acb8b2705f45c1a3")
-    subprocess.call(["./stellarium-web-engine", "-s", bsc, hip, "data/stars"])
 
 def make_cities():
     out = codecs.open('data/cities.txt', "w", "utf-8")
@@ -166,7 +169,6 @@ def make_mpc():
         print >>out, line.rstrip()
     out.close()
 
-make_stars()
 make_cities()
 make_font()
 make_symbols()
