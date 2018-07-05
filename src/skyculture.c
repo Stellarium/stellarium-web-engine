@@ -9,11 +9,6 @@
 
 #include "swe.h"
 
-// Defined in skyculture.inl
-static const char *NAMES;
-static const char *CONSTELLATIONS;
-static const char *EDGES;
-
 typedef struct star_name star_name_t;
 struct star_name
 {
@@ -37,8 +32,11 @@ static void parse_names(skyculture_t *cult, const char *names)
     data = strdup(names);
     for (line = strtok_r(data, "\n", &tmp); line;
           line = strtok_r(NULL, "\n", &tmp)) {
+        if (str_startswith(line, "//")) continue;
         star_name = calloc(1, sizeof(*star_name));
-        sscanf(strtok(line, " "), "%d", &star_name->hd);
+        if (sscanf(strtok(line, " "), "%d", &star_name->hd) != 1) {
+            LOG_W("Cannot parse star name: '%s'", line);
+        }
         star_name->name = strdup(strtok(NULL, "\n"));
         HASH_ADD_INT(cult->star_names, hd, star_name);
     }
@@ -166,11 +164,24 @@ static void parse_edges(skyculture_t *cult, const char *edges)
 skyculture_t *skyculture_create(void)
 {
     char id[64];
+    const char *names, *constellations, *edges;
     star_name_t *star_name, *tmp;
     skyculture_t *cult = calloc(1, sizeof(*cult));
-    parse_names(cult, NAMES);
-    parse_constellations(cult, CONSTELLATIONS);
-    parse_edges(cult, EDGES);
+
+    names = asset_get_data(
+            "asset://skycultures/western/names.txt", NULL, NULL);
+    constellations = asset_get_data(
+            "asset://skycultures/western/constellations.txt", NULL, NULL);
+    edges = asset_get_data(
+            "asset://skycultures/western/edges.txt", NULL, NULL);
+
+    assert(names);
+    assert(constellations);
+    assert(edges);
+
+    parse_names(cult, names);
+    parse_constellations(cult, constellations);
+    parse_edges(cult, edges);
 
     // Register all the names.
     HASH_ITER(hh, cult->star_names, star_name, tmp) {
@@ -206,5 +217,3 @@ const constellation_infos_t *skyculture_get_constellations(
     if (nb) *nb = cult->nb_constellations;
     return cult->constellations;
 }
-
-#include "skyculture.inl"

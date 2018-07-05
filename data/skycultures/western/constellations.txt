@@ -1,0 +1,88 @@
+Aql|Aquila                |bet-alf-gam alf-del-eta tet-eta del-zet-eps del-lam
+And|Andromeda             |alf-del-bet gam1-bet-mu-nu
+Scl|Sculptor              |bet-alf-gam-bet
+Ara|Ara                   |tet-alf-zet-eta-del-gam-bet-tet
+Lib|Libra                 |tet-gam-bet-alf2-sig-gam
+Cet|Cetus                 |xi1-xi2 tau-bet-iot bet-eta-tet-zet-rho-eps-pi-sig-tau 14386-eps 14386-del-gam-alf-lam-mu-xi2-nu-gam
+Ari|Aries                 |17573-alf-bet-gam2
+Sct|Scutum                |bet-173819-175156-gam-alf-bet
+Pyx|Pyxis                 |bet-alf-gam
+Boo|Bootes                |zet-alf-eps-del-bet-gam-rho-alf-eta-ups
+Cae|Caelum                |del-alf-bet
+Cha|Chamaeleon            |alf-gam-bet
+Cnc|Cancer                |iot-gam-chi gam-del-bet del-alf
+Cap|Capricornus           |alf2-bet-tet-iot-gam-del iot-zet-tet bet-psi tet-ome
+Car|Carina                |bet-ome-tet-93070-96918-94510-90853-89388-iot 74375-eps-alf 79351-iot 79351-74375 alf-47670 eps-66811
+Cas|Cassiopeia            |eps-del-gam-alf-bet
+Cen|Centaurus             |alf1-bet-eps-zet-ups1-mu-nu-117440-iot nu-tet mu-eta-kap zet-gam-sig-del-100673-lam
+Cep|Cepheus               |zet-iot-bet-alf-zet iot-gam-bet
+Com|Coma Berenices        |alf-bet-gam
+CVn|Canes Venatici        |bet-alf2
+Aur|Auriga                |tet-bet-alf-zet-iot 35497-iot 35497-tet
+Col|Columba               |del-kap-gam-bet-eta bet-alf-eps
+Cir|Circinus              |alf-gam alf-bet
+Crt|Crater                |alf-bet-gam-del-alf del-eps-tet-eta-zet-gam
+CrA|Corona Australis      |lam-175362-eps-gam-alf-bet-del-zet-175219 lam-170642
+CrB|Corona Borealis       |tet-bet-alf-gam-del-eps-iot
+Crv|Corvus                |eta-del-gam-eps-alf eps-bet-del
+Cru|Crux                  |gam-alf1 bet-del
+Cyg|Cygnus                |kap-iot2-del-gam-alf gam-eps-zet-mu1 gam-eta-bet1
+Del|Delphinus             |eps-bet-alf-gam2-del-bet
+Dor|Dorado                |del-40409-bet-del bet-alf-gam
+Dra|Draco                 |xi-gam-bet-nu2-xi-del-eps-chi-zet-eta-tet-iot-alf-kap-lam
+Nor|Norma                 |kap-gam2-eps-eta-gam2 eta-kap
+Eri|Eridanus              |alf-chi-phi-kap-16754-iot-tet1-20794-24071-24160-ups4-28028-ups2-tau6-tau5-tau4-tau3-tau1-eta-zet-eps-del-nu-mu-ome-bet-lam-29503
+Sge|Sagitta               |bet-del-alf del-gam-eta
+For|Fornax                |bet-alf
+Gem|Gemini                |gam-zet-del-lam-xi del-ups-kap ups-bet ups-iot-tau-alf tau-tet tau-eps-nu eps-mu-eta-41116
+Cam|Camelopardalis        |21291-24479-alf 21291-gam-alf gam-33564
+CMa|Canis Major           |tet-gam-iot-alf-omi2-del-ome-eta eps-sig-del sig-50896-nu2-xi2 nu2-bet nu2-alf eps-kap zet-eps iot-tet
+UMa|Ursa Major            |eta-zet-eps-del-alf-bet-gam-del gam-chi-psi-lam psi-mu bet-phi-tet-kap tet-iot phi-ups-omi-81937-alf
+Gru|Grus                  |tet-del1-alf-bet-iot-tet bet-zet bet-eps alf-lam-gam
+Her|Hercules              |iot-tet-rho-156729-pi-eta-sig-tau-chi eta-zet-bet-gam zet-eps-lam-del mu-xi-omi xi-mu eps-pi
+Hor|Horologium            |alf-zet-mu
+Hya|Hydra                 |eta-sig-del-eps-rho-eta rho-zet-tet-tau2-tau1-alf-ups1-lam-mu-nu-xi-bet-psi-gam
+Hyi|Hydrus                |bet-gam-eps-del-alf
+Ind|Indus                 |tet-alf-bet-tet
+Lac|Lacerta               |211388-213420-213310-212593-bet-alf-213310
+Mon|Monoceros             |gam-bet-del-eps-42111 del-zet-alf
+Lep|Lepus                 |tet-eta-zet-alf-mu alf-del-gam-bet-eps alf-bet mu-lam mu-kap eps-mu kap-iot lam-nu
+Leo|Leo                   |bet-tet-alf-eta-gam1-del-bet gam1-zet-mu-eps del-tet
+Lup|Lupus                 |chi-144415-eta-chi eta-gam-del-phi1 del-bet gam-ome-zet-alf zet-rho alf-tau2 alf-bet
+Lyn|Lynx                  |alf-80081-77912-76943-70272-58142-50522-43378
+Lyr|Lyra                  |alf-zet1-bet-gam-del2-zet1
+Ant|Antlia                |alf-eta
+Mic|Microscopium          |eps-gam-alf
+Mus|Musca                 |bet-lam-gam-alf-bet
+Oct|Octans                |nu-bet-del-nu
+Aps|Apus                  |alf-gam-bet
+Oph|Ophiuchus             |alf-bet eta-bet alf-kap-eps-zet-eta-158643
+Ori|Orion                 |zet-eps-del 41040-xi-nu-chi1 xi-mu-alf-zet-kap-bet-del-gam-lam-alf gam-pi3-pi4-31139-pi6 pi3-pi2-pi1 nu-mu
+Pav|Pavo                  |alf-gam-bet-del-alf del-eps-zet-kap-del kap-lam-xi-pi-lam pi-eta
+Peg|Pegasus               |gam-alf bet-eta-pi1 bet-mu-lam-iot-kap alf-xi-zet-tet-eps 358-bet 358-gam bet-alf
+Pic|Pictor                |alf-gam-bet
+Per|Perseus               |omi-zet-xi-eps-del-alf-gam-eta alf-bet-rho-17584
+Equ|Equuleus              |gam-del-bet-alf-gam
+CMi|Canis Minor           |alf-bet
+LMi|Leo Minor             |94264-bet-87696-82635 87696-94264
+Vul|Vulpecula             |alf-189849
+UMi|Ursa Minor            |alf-del-eps-zet-eta-gam-bet-zet
+Phe|Phoenix               |zet-bet-kap-zet bet-del-psi-bet-gam-kap-alf-eps-kap
+Psc|Pisces                |sig-phi sig-ups-phi-eta-omi-alf-xi-nu-mu-eps-4627-1635-ome-iot-lam-kap-gam-tet-iot
+PsA|Piscis Austrinus      |alf-eps-eta-tet-tau-bet-del
+Vol|Volans                |zet-gam2-eps-zet eps-del eps-bet-alf-eps
+Pup|Puppis                |rho-63660-pi-nu-tau-sig-zet-rho
+Ret|Reticulum             |alf-eps-del-bet-alf
+Sgr|Sagittarius           |del-lam eta-eps-gam2-161592 gam2-del-eps-zet-phi-del phi-lam-mu zet-tau-sig-phi sig-xi2-omi-180540-rho1 tau-184552-189763-tet1-iot-alf iot-bet2
+Sco|Scorpius              |lam-kap-iot1-tet-eta-zet1-mu1-eps-tau-alf-del alf-pi alf-bet1
+Ser|Serpens               |mu-eps-alf-del-bet-gam-kap-bet tet1-eta-omi-xi-nu
+Sex|Sextans               |bet-alf
+Men|Mensa                 |gam-mu
+Tau|Taurus                |bet-tau-eps alf-zet gam-del1 gam-lam-omi alf-eps alf-tet2-gam eps-del3-del1-23850
+Tel|Telescopium           |zet-alf
+Tuc|Tucana                |alf-gam-zet gam-bet1
+Tri|Triangulum            |13869-bet-alf-13869
+TrA|Triangulum Australe   |alf-gam-bet-alf
+Aqr|Aquarius              |bet-alf-gam-zet1-eta-lam-psi1-220321 alf-tet-iot tet-sig-tau2-del-218594 eps-bet
+Vir|Virgo                 |nu-107070-gam-alf-kap-iot-mu alf-zet-tau-130109 zet-del-eps del-gam
+Vel|Vela                  |gam2-74195-del-kap-phi-mu-92139-88955-psi-lam-gam2
