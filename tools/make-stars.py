@@ -117,7 +117,7 @@ for line in gzip.open(bsc_file):
     bv = parse(line, 110, 114, default=0.0, zerobits=16)
     plx = parse(line, 162, 166, default=0.0, zerobits=16)
     sp = parse(line, 130, 130, type=str)
-    stars[hd] = Star(hd=hd, hip=None, vmag=vmag,
+    stars[hd] = Star(hd=hd, hip=0, vmag=vmag,
                      ra=ra, de=de, plx=plx, bv=bv, sp=ord(sp))
 
 
@@ -157,6 +157,7 @@ out_dir = './data/stars/'
 ensure_dir(out_dir)
 
 for nuniq, stars in tiles.items():
+    stars = sorted(stars, key=lambda x: x.hip * 1000000 + x.hd)
     order = int(log(nuniq / 4, 2) / 2);
     pix = nuniq - 4 * (1 << (2 * order));
     path = '%s/Norder%d/Dir%d/Npix%d.eph' % (
@@ -164,17 +165,17 @@ for nuniq, stars in tiles.items():
     ensure_dir(path)
     data = ''
     for s in stars:
-        line = struct.pack('iifffffff',
-                s.hd, s.sp, s.vmag, s.ra, s.de, s.plx, 0.0, 0.0, s.bv)
+        line = struct.pack('iiifffffff',
+                s.hip, s.hd, s.sp, s.vmag, s.ra, s.de, s.plx, 0.0, 0.0, s.bv)
         data += line
-    data = shuffle_bytes(data, 9 * 4)
+    data = shuffle_bytes(data, 10 * 4)
     comp_data = zlib.compress(data)
 
     ret = 'EPHE'
     ret += struct.pack('I', 2) # File version
 
     chunk = ''
-    chunk += struct.pack('I', 1) # Star tile Version
+    chunk += struct.pack('I', 2) # Star tile Version
     chunk += struct.pack('Q', nuniq)
     chunk += struct.pack('I', len(data))
     chunk += struct.pack('I', len(comp_data))

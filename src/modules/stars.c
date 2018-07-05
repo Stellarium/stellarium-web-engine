@@ -20,6 +20,7 @@ static const double GAIA_MIN_MAG = 8.0;
 typedef struct stars stars_t;
 typedef struct {
     uint64_t gaia;  // Gaia source id (0 if none)
+    int     hip;    // HIP number.
     int     hd;     // HD number.
     char    sp;
     float   vmag;
@@ -285,7 +286,7 @@ static int on_file_tile_loaded(int version, int order, int pix,
     star_data_t *d;
     double vmag, ra, de, pra, pde, plx, bv;
 
-    assert(size % (4 * 9) == 0);
+    assert(size % (4 * 10) == 0);
     tile = cache_get(stars->tiles, &pos, sizeof(pos));
     assert(!tile);
 
@@ -294,18 +295,19 @@ static int on_file_tile_loaded(int version, int order, int pix,
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
-    tile->nb = size / (4 * 9);
+    tile->nb = size / (4 * 10);
     tile->stars = calloc(tile->nb, sizeof(*tile->stars));
     cache_add(stars->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->stars), del_tile);
 
     // Unshuffle the data.
-    shuffle_bytes(data, 4 * 9, tile->nb);
+    shuffle_bytes(data, 4 * 10, tile->nb);
 
     for (i = 0; i < tile->nb; i++) {
         d = &tile->stars[i];
-        binunpack(data + i * 4 * 9, "iifffffff",
-                  &d->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde, &bv);
+        binunpack(data + i * 4 * 10, "iiifffffff",
+                  &d->hip, &d->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
+                  &bv);
         d->sp = sp;
         d->vmag = vmag;
         d->ra = ra;
