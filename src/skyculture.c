@@ -10,17 +10,8 @@
 #include "swe.h"
 #include <regex.h>
 
-typedef struct star_name star_name_t;
-struct star_name
-{
-    UT_hash_handle  hh;
-    int             hd;
-    char            *name;
-};
-
 struct skyculture
 {
-    star_name_t     *star_names;
     int             nb_constellations;
     constellation_infos_t *constellations;
 };
@@ -48,8 +39,7 @@ static bool iter_lines(const char **str, char *line, int size)
 
 static void parse_names(skyculture_t *cult, const char *names)
 {
-    char line[512];
-    star_name_t *star_name;
+    char line[512], id[32], name[128];
     regex_t     reg;
     regmatch_t m[4];
     int r, hd;
@@ -61,13 +51,12 @@ static void parse_names(skyculture_t *cult, const char *names)
         if (r) goto error;
         if (strncmp(line + m[1].rm_so, "HIP", 3) == 0)
             continue; // Not supported yet.
-        star_name = calloc(1, sizeof(*star_name));
+        sprintf(name, "%*s", m[3].rm_eo - m[3].rm_so, line + m[3].rm_so);
         if (strncmp(line + m[1].rm_so, "HD", 2) == 0) {
             hd = strtoul(line + m[2].rm_so, NULL, 10);
-            star_name->hd = hd;
+            sprintf(id, "HD %d", hd);
+            identifiers_add(id, "NAME", name, NULL, NULL);
         }
-        star_name->name = strndup(line + m[3].rm_so, m[3].rm_eo - m[3].rm_so);
-        HASH_ADD_INT(cult->star_names, hd, star_name);
         continue;
 error:
         LOG_W("Cannot parse star name: %s", line);
@@ -195,9 +184,8 @@ static void parse_edges(skyculture_t *cult, const char *edges)
 
 skyculture_t *skyculture_create(const char *uri)
 {
-    char id[64], path[1024];
+    char path[1024];
     const char *names, *constellations, *edges;
-    star_name_t *star_name, *tmp;
     skyculture_t *cult = calloc(1, sizeof(*cult));
 
     sprintf(path, "%s/%s", uri, "names.txt");
@@ -214,13 +202,6 @@ skyculture_t *skyculture_create(const char *uri)
     parse_names(cult, names);
     parse_constellations(cult, constellations);
     parse_edges(cult, edges);
-
-    // Register all the names.
-    HASH_ITER(hh, cult->star_names, star_name, tmp) {
-        sprintf(id, "HD %d", star_name->hd);
-        identifiers_add(id, "NAME", star_name->name, NULL, NULL);
-    }
-
     return cult;
 }
 
