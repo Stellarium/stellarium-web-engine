@@ -14,6 +14,7 @@ struct skyculture
 {
     char            *uri;
     int             nb_constellations;
+    char            *(*names)[2]; // [ID, Name].  NULL terminated.
     constellation_infos_t *constellations;
 };
 
@@ -38,15 +39,21 @@ static bool iter_lines(const char **str, char *line, int size)
     return true;
 }
 
-static void parse_names(skyculture_t *cult, const char *names)
+// Return a pointer to an array of 2 pointers to char !
+static int skyculture_parse_names(const char *data, char *(*names)[2])
 {
     char line[512], id[32], name[128];
+    const char *tmp;
     regex_t reg;
     regmatch_t m[4];
-    int r, hd, hip;
+    int r, i = 0, hd, hip, nb = 0;
+
+    // Count the number of lines in the file.
+    for (tmp = data; *tmp; tmp = strchr(tmp, '\n') + 1) nb++;
+    if (!names) return nb;
 
     regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
-    while (iter_lines(&names, line, sizeof(line))) {
+    while (iter_lines(&data, line, sizeof(line))) {
         if (str_startswith(line, "#")) continue;
         r = regexec(&reg, line, 4, m, 0);
         if (r) goto error;
@@ -60,12 +67,17 @@ static void parse_names(skyculture_t *cult, const char *names)
             hip = strtoul(line + m[2].rm_so, NULL, 10);
             sprintf(id, "HIP %d", hip);
         }
-        if (*id) identifiers_add(id, "NAME", name, NULL, NULL);
+        if (*id) {
+            names[i][0] = strdup(id);
+            names[i][1] = strdup(name);
+            i++;
+        }
         continue;
 error:
         LOG_W("Cannot parse star name: %s", line);
     }
     regfree(&reg);
+    return nb;
 }
 
 static void trim_right_spaces(char *s)
@@ -194,10 +206,19 @@ static constellation_infos_t *skyculture_parse_constellations(
 skyculture_t *skyculture_create(const char *uri)
 {
     char path[1024];
-    const char *constellations, *edges;
+    int nb;
+    const char *constellations, *edges, *names;
     skyculture_t *cult = calloc(1, sizeof(*cult));
 
     cult->uri = strdup(uri);
+
+    sprintf(path, "%s/%s", cult->uri, "names.txt");
+    names = asset_get_data(path , NULL, NULL);
+    assert(names);
+    nb = skyculture_parse_names(names, NULL);
+    cult->names = calloc(nb + 1, sizeof(*cult->names));
+    skyculture_parse_names(names, cult->names);
+
     sprintf(path, "%s/%s", uri, "constellations.txt");
     constellations = asset_get_data(path, NULL, NULL);
     sprintf(path, "%s/%s", uri, "edges.txt");
@@ -206,6 +227,7 @@ skyculture_t *skyculture_create(const char *uri)
 
     cult->constellations = skyculture_parse_constellations(
             constellations, edges, &cult->nb_constellations);
+
     return cult;
 }
 
@@ -219,17 +241,17 @@ const constellation_infos_t *skyculture_get_constellations(
 
 void skyculture_activate(skyculture_t *cult)
 {
-    char path[1024], id[32];
-    const char *names;
+    char id[32];
     int i;
     json_value *args;
     constellation_infos_t *cst;
     obj_t *constellations;
 
-    sprintf(path, "%s/%s", cult->uri, "names.txt");
-    names = asset_get_data(path , NULL, NULL);
-    assert(names);
-    parse_names(cult, names);
+    // Add all the names.
+    for (i = 0; cult->names[i][0]; i++) {
+        identifiers_add(cult->names[i][0], "NAME", cult->names[i][1],
+                        NULL, NULL);
+    }
 
     // Create all the constellations object.
     constellations = obj_get(NULL, "constellations", 0);
