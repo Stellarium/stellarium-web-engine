@@ -130,7 +130,6 @@ struct core
 {
     obj_t           obj;
     observer_t      *observer;
-    skyculture_t    *skyculture;
     double          fov;
     // Global timezone setting for rendering times, independent of the city.
     const char      timezone[64];

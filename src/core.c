@@ -523,9 +523,6 @@ void core_init(void)
     }
     DL_SORT(core->obj.children, modules_sort_cmp);
 
-    core->skyculture = skyculture_create("asset://skycultures/western");
-    skyculture_activate(core->skyculture);
-
     static UT_icd point_icd = {sizeof(point_t), NULL, NULL, NULL};
     utarray_new(core->rend_points, &point_icd);
     progressbar_add_listener(on_progressbar);

@@ -10,9 +10,10 @@
 /*
  * File: Skyculture
  *
- * Functions to get stars name and constellation lines from a given
- * star culture.  For the moment we only support western names and
- * constellations
+ * Some basic functions to parse skyculture data files.
+ * Still experimental, probably going to change.
+ *
+ * The actual skyculture struct is in src/modules/skycultures.c
  */
 
 #ifndef SKYCULTURE_H
@@ -32,20 +33,18 @@ typedef struct constellation_infos
     int nb_edges;
 } constellation_infos_t;
 
-/*
- * Type: skyculture_t
- * Opaque type that represent a sky culture. */
-typedef struct skyculture skyculture_t;
 
 /*
- * Function: skyculture_create
- * Create a new <skyculture_t> instance.
- *
- * Parameters:
- *   uri    - Path to the skyculture directory.
+ * Function: skyculture_parse_names
+ * Parse a skyculture star names file.
  */
-skyculture_t *skyculture_create(const char *uri);
+int skyculture_parse_names(const char *data, char *(*names)[2]);
 
-void skyculture_activate(skyculture_t *cult);
+/*
+ * Function: skyculture_parse_constellations
+ * Parse a skyculture constellation file.
+ */
+constellation_infos_t *skyculture_parse_constellations(
+        const char *consts, const char *edges, int *nb);
 
 #endif // SKYCULTURE_H

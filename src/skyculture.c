@@ -10,14 +10,6 @@
 #include "swe.h"
 #include <regex.h>
 
-struct skyculture
-{
-    char            *uri;
-    int             nb_constellations;
-    char            *(*names)[2]; // [ID, Name].  NULL terminated.
-    constellation_infos_t *constellations;
-};
-
 /*
  * Function that iters a txt buffer line by line, taking care of the case
  * when the file doesn't end with a \n.
@@ -39,8 +31,7 @@ static bool iter_lines(const char **str, char *line, int size)
     return true;
 }
 
-// Return a pointer to an array of 2 pointers to char !
-static int skyculture_parse_names(const char *data, char *(*names)[2])
+int skyculture_parse_names(const char *data, char *(*names)[2])
 {
     char line[512], id[32], name[128];
     const char *tmp;
@@ -159,7 +150,7 @@ static void parse_edges(const char *edges, constellation_infos_t *csts)
 }
 
 
-static constellation_infos_t *skyculture_parse_constellations(
+constellation_infos_t *skyculture_parse_constellations(
         const char *consts, const char *edges, int *nb_cst)
 {
     char *data, *line, *tmp = NULL, *tok;
@@ -201,60 +192,4 @@ static constellation_infos_t *skyculture_parse_constellations(
 
     if (edges) parse_edges(edges, ret);
     return ret;
-}
-
-skyculture_t *skyculture_create(const char *uri)
-{
-    char path[1024];
-    int nb;
-    const char *constellations, *edges, *names;
-    skyculture_t *cult = calloc(1, sizeof(*cult));
-
-    cult->uri = strdup(uri);
-
-    sprintf(path, "%s/%s", cult->uri, "names.txt");
-    names = asset_get_data(path , NULL, NULL);
-    assert(names);
-    nb = skyculture_parse_names(names, NULL);
-    cult->names = calloc(nb + 1, sizeof(*cult->names));
-    skyculture_parse_names(names, cult->names);
-
-    sprintf(path, "%s/%s", uri, "constellations.txt");
-    constellations = asset_get_data(path, NULL, NULL);
-    sprintf(path, "%s/%s", uri, "edges.txt");
-    edges = asset_get_data(path, NULL, NULL);
-    assert(constellations);
-
-    cult->constellations = skyculture_parse_constellations(
-            constellations, edges, &cult->nb_constellations);
-
-    return cult;
-}
-
-
-void skyculture_activate(skyculture_t *cult)
-{
-    char id[32];
-    int i;
-    json_value *args;
-    constellation_infos_t *cst;
-    obj_t *constellations;
-
-    // Add all the names.
-    for (i = 0; cult->names[i][0]; i++) {
-        identifiers_add(cult->names[i][0], "NAME", cult->names[i][1],
-                        NULL, NULL);
-    }
-
-    // Create all the constellations object.
-    constellations = obj_get(NULL, "constellations", 0);
-    assert(constellations);
-    for (i = 0; i < cult->nb_constellations; i++) {
-        cst = &cult->constellations[i];
-        args = json_object_new(0);
-        json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
-        sprintf(id, "CST %s", cst->id);
-        obj_create("constellation", id, constellations, args);
-        json_value_free(args);
-    }
 }
