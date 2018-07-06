@@ -94,60 +94,18 @@ static int parse_star(const char *cst, const char *tok)
     return hd;
 }
 
-static void parse_constellations(skyculture_t *cult, const char *consts)
-{
-    char *data, *line, *tmp = NULL, *tok;
-    bool linked;
-    int nb = 0, i = 0, star, last_star = 0;
-    constellation_infos_t *cons;
-
-    data = strdup(consts);
-
-    // Count the number of lines in the file.
-    for (line = data; *line; line = strchr(line, '\n') + 1) nb++;
-    assert(nb);
-
-    cult->nb_constellations = nb;
-    cult->constellations = calloc(nb + 1, sizeof(constellation_infos_t));
-
-    for (line = strtok_r(data, "\n", &tmp); line;
-          line = strtok_r(NULL, "\n", &tmp)) {
-        if (*line == '#') continue;
-        cons = &cult->constellations[i];
-        strcpy(cons->id, strtok(line, "|"));
-        strcpy(cons->name, strtok(NULL, "|"));
-        trim_right_spaces(cons->name);
-        nb = 0;
-        while ((tok = strtok(NULL, " -"))) {
-            // Check if the last separator was a '-'.
-            linked = consts[tok - 1 - data] == '-';
-            if (linked) assert(last_star);
-            star = parse_star(cons->id, tok);
-            if (linked) {
-                cons->lines[nb][0] = last_star;
-                cons->lines[nb][1] = star;
-                nb++;
-            }
-            last_star = star;
-        }
-        cons->nb_lines = nb;
-        i++;
-    }
-    free(data);
-}
-
 static constellation_infos_t *get_constellation(
-        skyculture_t *cult, const char *id)
+        constellation_infos_t *csts, const char *id)
 {
     int i;
-    for (i = 0; i < cult->nb_constellations; i++) {
-        if (strcasecmp(cult->constellations[i].id, id) == 0)
-            return &cult->constellations[i];
+    for (i = 0; *(csts[i].id); i++) {
+        if (strcasecmp(csts[i].id, id) == 0)
+            return &csts[i];
     }
     return NULL;
 }
 
-static void parse_edges(skyculture_t *cult, const char *edges)
+static void parse_edges(const char *edges, constellation_infos_t *csts)
 {
     constellation_infos_t *info = NULL;
     const char *line;
@@ -173,7 +131,7 @@ static void parse_edges(skyculture_t *cult, const char *edges)
         eraAf2a(dec1_sign, dec1_d, dec1_m, dec1_s, &dec1);
         eraAf2a(dec2_sign, dec2_d, dec2_m, dec2_s, &dec2);
         for (i = 0; i < 2; i++) {
-            info = get_constellation(cult, cst[i]);
+            info = get_constellation(csts, cst[i]);
             if (!info) continue;
             if (info->nb_edges >= MAX_EDGES) {
                 LOG_E("Too many bounds in constellation %s", cst);
@@ -186,6 +144,51 @@ static void parse_edges(skyculture_t *cult, const char *edges)
             info->nb_edges++;
         }
     }
+}
+
+
+static constellation_infos_t *skyculture_parse_constellations(
+        const char *consts, const char *edges, int *nb_cst)
+{
+    char *data, *line, *tmp = NULL, *tok;
+    bool linked;
+    int i = 0, star, last_star = 0, nb = 0;
+    constellation_infos_t *ret, *cons;
+
+    data = strdup(consts);
+
+    // Count the number of lines in the file.
+    for (line = data; *line; line = strchr(line, '\n') + 1) nb++;
+
+    *nb_cst = nb;
+    ret = calloc(nb + 1, sizeof(*ret));
+    for (line = strtok_r(data, "\n", &tmp); line;
+          line = strtok_r(NULL, "\n", &tmp)) {
+        if (*line == '#') continue;
+        cons = &ret[i];
+        strcpy(cons->id, strtok(line, "|"));
+        strcpy(cons->name, strtok(NULL, "|"));
+        trim_right_spaces(cons->name);
+        nb = 0;
+        while ((tok = strtok(NULL, " -"))) {
+            // Check if the last separator was a '-'.
+            linked = consts[tok - 1 - data] == '-';
+            if (linked) assert(last_star);
+            star = parse_star(cons->id, tok);
+            if (linked) {
+                cons->lines[nb][0] = last_star;
+                cons->lines[nb][1] = star;
+                nb++;
+            }
+            last_star = star;
+        }
+        cons->nb_lines = nb;
+        i++;
+    }
+    free(data);
+
+    if (edges) parse_edges(edges, ret);
+    return ret;
 }
 
 skyculture_t *skyculture_create(const char *uri)
@@ -201,8 +204,8 @@ skyculture_t *skyculture_create(const char *uri)
     edges = asset_get_data(path, NULL, NULL);
     assert(constellations);
 
-    parse_constellations(cult, constellations);
-    if (edges) parse_edges(cult, edges);
+    cult->constellations = skyculture_parse_constellations(
+            constellations, edges, &cult->nb_constellations);
     return cult;
 }
 
