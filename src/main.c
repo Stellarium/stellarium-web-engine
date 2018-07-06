@@ -143,7 +143,7 @@ static void add_constellation_images(void)
         id = json_get_attr_s(v, "id");
         sprintf(buf, "CST %s", id);
         cons = obj_get(NULL, buf, 0);
-        assert(cons);
+        if (!cons) continue;
         json_object_push(v, "base_path", json_string_new(base_path));
         obj_call_json(cons, "set_image", v);
     }
