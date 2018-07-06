@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include <regex.h>
 
 typedef struct star_name star_name_t;
 struct star_name
@@ -24,23 +25,54 @@ struct skyculture
     constellation_infos_t *constellations;
 };
 
+/*
+ * Function that iters a txt buffer line by line, taking care of the case
+ * when the file doesn't end with a \n.
+ *
+ * XXX: is there a simpler way to do that??
+ */
+static bool iter_lines(const char **str, char *line, int size)
+{
+    const char *end;
+    int len;
+    if (!**str) return false;
+    end = strchrnul(*str, '\n');
+    len = end - *str;
+    if (len >= size) len = size - 1;
+    strncpy(line, *str, len);
+    line[len] = '\0';
+    *str = end;
+    if (**str == '\n') (*str)++;
+    return true;
+}
+
 static void parse_names(skyculture_t *cult, const char *names)
 {
-    char *data, *line, *tmp = NULL;
+    char line[512];
     star_name_t *star_name;
+    regex_t     reg;
+    regmatch_t m[4];
+    int r, hd;
 
-    data = strdup(names);
-    for (line = strtok_r(data, "\n", &tmp); line;
-          line = strtok_r(NULL, "\n", &tmp)) {
-        if (str_startswith(line, "//")) continue;
+    regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
+    while (iter_lines(&names, line, sizeof(line))) {
+        if (str_startswith(line, "#")) continue;
+        r = regexec(&reg, line, 4, m, 0);
+        if (r) goto error;
+        if (strncmp(line + m[1].rm_so, "HIP", 3) == 0)
+            continue; // Not supported yet.
         star_name = calloc(1, sizeof(*star_name));
-        if (sscanf(strtok(line, " "), "%d", &star_name->hd) != 1) {
-            LOG_W("Cannot parse star name: '%s'", line);
+        if (strncmp(line + m[1].rm_so, "HD", 2) == 0) {
+            hd = strtoul(line + m[2].rm_so, NULL, 10);
+            star_name->hd = hd;
         }
-        star_name->name = strdup(strtok(NULL, "\n"));
+        star_name->name = strndup(line + m[3].rm_so, m[3].rm_eo - m[3].rm_so);
         HASH_ADD_INT(cult->star_names, hd, star_name);
+        continue;
+error:
+        LOG_W("Cannot parse star name: %s", line);
     }
-    free(data);
+    regfree(&reg);
 }
 
 static void trim_right_spaces(char *s)

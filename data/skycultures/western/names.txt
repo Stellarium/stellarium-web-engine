@@ -1,96 +1,96 @@
-358 Alpheratz
-432 Caph
-886 Algenib
-2261 Ankaa
-3712 Shedir
-4128 Diphda
-// HIP 3829 Van Maanen 2
-6860 Mirach
-10144 Achernar
-12533 Almaak
-12929 Hamal
-14386 Mira
-8890 Polaris
-18622 Acamar
-18884 Menkar
-19356 Algol
-20902 Mirphak
-23630 Alcyone
-23862 Pleione
-25025 Zaurak
-29139 Aldebaran
-33793 Kapteyn's star
-34085 Rigel
-34029 Capella
-35468 Bellatrix
-35497 Alnath
-36079 Nihal
-36486 Mintaka
-36673 Arneb
-37128 Alnilam
-37742 Alnitak
-38771 Saiph
-39801 Betelgeuse
-44179 Red Rectangle
-45348 Canopus
-47105 Alhena
-48915 Sirius
-52089 Adhara
-// HIP 36208 Luyten's star
-60179 Castor
-61421 Procyon
-62509 Pollux
-81797 Alphard
-87901 Regulus
-89484 Algieba
-95418 Merak
-95689 Dubhe
-102647 Denebola
-103095 Groombridge 1830
-103287 Phad
-106591 Megrez
-108248 Acrux
-// HIP 60936 3C 273
-112185 Alioth
-112413 Cor Caroli
-113226 Vindemiatrix
-116656 Mizar
-116658 Spica
-116842 Alcor
-120315 Alkaid
-122451 Agena
-122451 Hadar
-123299 Thuban
-124897 Arcturus
-// HIP 70890 Proxima
-128620 Rigil Kent
-129988 Izar
-131873 Kocab
-139006 Alphekka
-140573 Unukalhai
-148478 Antares
-156014 Rasalgethi
-158926 Shaula
-159561 Rasalhague
-164058 Etamin
-// HIP 87937 Barnard's star
-169022 Kaus Australis
-172167 Vega
-174638 Sheliak
-175191 Nunki
-183912 Albireo
-184738 Campbell's star
-186791 Tarazed
-187642 Altair
-188512 Alshain
-226868 Cyg X-1
-197345 Deneb
-203280 Alderamin
-206778 Enif
-209750 Sadalmelik
-209952 Alnair
-239960 Kruger 60
-215441 Babcock's star
-216956 Fomalhaut
-217906 Scheat
-218045 Markab
+HD 358 |  Alpheratz
+HD 432 | Caph
+HD 886 | Algenib
+HD 2261 | Ankaa
+HD 3712 | Shedir
+HD 4128 | Diphda
+HIP 3829 | Van Maanen 2
+HD 6860 | Mirach
+HD 10144 | Achernar
+HD 12533 | Almaak
+HD 12929 | Hamal
+HD 14386 | Mira
+HD 8890 | Polaris
+HD 18622 | Acamar
+HD 18884 | Menkar
+HD 19356 | Algol
+HD 20902 | Mirphak
+HD 23630 | Alcyone
+HD 23862 | Pleione
+HD 25025 | Zaurak
+HD 29139 | Aldebaran
+HD 33793 | Kapteyn's star
+HD 34085 | Rigel
+HD 34029 | Capella
+HD 35468 | Bellatrix
+HD 35497 | Alnath
+HD 36079 | Nihal
+HD 36486 | Mintaka
+HD 36673 | Arneb
+HD 37128 | Alnilam
+HD 37742 | Alnitak
+HD 38771 | Saiph
+HD 39801 | Betelgeuse
+HD 44179 | Red Rectangle
+HD 45348 | Canopus
+HD 47105 | Alhena
+HD 48915 | Sirius
+HD 52089 | Adhara
+HIP 36208 | Luyten's star
+HD 60179 | Castor
+HD 61421 | Procyon
+HD 62509 | Pollux
+HD 81797 | Alphard
+HD 87901 | Regulus
+HD 89484 | Algieba
+HD 95418 | Merak
+HD 95689 | Dubhe
+HD 102647 | Denebola
+HD 103095 | Groombridge 1830
+HD 103287 | Phad
+HD 106591 | Megrez
+HD 108248 | Acrux
+HIP 60936 | 3C 273
+HD 112185 | Alioth
+HD 112413 | Cor Caroli
+HD 113226 | Vindemiatrix
+HD 116656 | Mizar
+HD 116658 | Spica
+HD 116842 | Alcor
+HD 120315 | Alkaid
+HD 122451 | Agena
+HD 122451 | Hadar
+HD 123299 | Thuban
+HD 124897 | Arcturus
+HIP 70890 | Proxima
+HD 128620 | Rigil Kent
+HD 129988 | Izar
+HD 131873 | Kocab
+HD 139006 | Alphekka
+HD 140573 | Unukalhai
+HD 148478 | Antares
+HD 156014 | Rasalgethi
+HD 158926 | Shaula
+HD 159561 | Rasalhague
+HD 164058 | Etamin
+HIP 87937 | Barnard's star
+HD 169022 | Kaus Australis
+HD 172167 | Vega
+HD 174638 | Sheliak
+HD 175191 | Nunki
+HD 183912 | Albireo
+HD 184738 | Campbell's star
+HD 186791 | Tarazed
+HD 187642 | Altair
+HD 188512 | Alshain
+HD 226868 | Cyg X-1
+HD 197345 | Deneb
+HD 203280 | Alderamin
+HD 206778 | Enif
+HD 209750 | Sadalmelik
+HD 209952 | Alnair
+HD 239960 | Kruger 60
+HD 215441 | Babcock's star
+HD 216956 | Fomalhaut
+HD 217906 | Scheat
+HD 218045 | Markab
