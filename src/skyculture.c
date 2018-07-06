@@ -231,13 +231,6 @@ skyculture_t *skyculture_create(const char *uri)
     return cult;
 }
 
-const constellation_infos_t *skyculture_get_constellations(
-        const skyculture_t *cult,
-        int *nb)
-{
-    if (nb) *nb = cult->nb_constellations;
-    return cult->constellations;
-}
 
 void skyculture_activate(skyculture_t *cult)
 {

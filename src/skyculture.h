@@ -48,19 +48,4 @@ skyculture_t *skyculture_create(const char *uri);
 
 void skyculture_activate(skyculture_t *cult);
 
-/*
- * Function: skyculture_get_constellations
- * Return the list of all the constellations in a skyculture.
- *
- * Parameters:
- *   cult - A <skyculture_t> instance.
- *   nb   - Get the number of constellations in the list.
- *
- * Return:
- *   An array of all the constellation infos.  Terminated by an empty one.
- */
-const constellation_infos_t *skyculture_get_constellations(
-        const skyculture_t *cult,
-        int *nb);
-
 #endif // SKYCULTURE_H
