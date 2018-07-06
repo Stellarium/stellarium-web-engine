@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include "ini.h"
 
 /*
  * Module that handles the skycultures list.
@@ -21,6 +22,10 @@
 typedef struct skyculture {
     obj_t           obj;
     char            *uri;
+    struct  {
+        char        *name;
+        char        *author;
+    } info;
     int             nb_constellations;
     char            *(*names)[2]; // [ID, Name].  NULL terminated.
     constellation_infos_t *constellations;
@@ -79,17 +84,34 @@ void skyculture_activate(skyculture_t *cult)
     }
 }
 
-static int skycultures_init(obj_t *obj, json_value *args)
+static int info_ini_handler(void* user, const char* section,
+                            const char* attr, const char* value)
 {
-    // For the moment we manually create and activate the western culture.
+    skyculture_t *cult = user;
+    if (strcmp(section, "info") == 0) {
+        if (strcmp(attr, "name") == 0)
+            cult->info.name = strdup(value);
+        if (strcmp(attr, "author") == 0)
+            cult->info.author = strdup(value);
+    }
+    return 0;
+}
+
+static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri)
+{
     skyculture_t *cult;
     char path[1024];
-    const char *constellations, *edges, *names;
+    const char *info, *constellations, *edges, *names;
     int nb;
-    const char *uri = "asset://skycultures/western";
 
-    cult = (void*)obj_create("skyculture", "CULTURE western", obj, NULL);
+    cult = (void*)obj_create("skyculture", NULL, (obj_t*)cults, NULL);
     cult->uri = strdup(uri);
+
+    sprintf(path, "%s/%s", cult->uri, "info.ini");
+    info = asset_get_data(path, NULL, NULL);
+    assert(info);
+    ini_parse_string(info, info_ini_handler, cult);
+    asprintf(&cult->obj.id, "CULT %s", cult->info.name);
 
     sprintf(path, "%s/%s", cult->uri, "names.txt");
     names = asset_get_data(path , NULL, NULL);
@@ -106,9 +128,28 @@ static int skycultures_init(obj_t *obj, json_value *args)
 
     cult->constellations = skyculture_parse_constellations(
             constellations, edges, &cult->nb_constellations);
+    return cult;
+}
 
-    skyculture_activate(cult);
+static int skycultures_init(obj_t *obj, json_value *args)
+{
+    skycultures_t *cults = (void*)obj;
+    skyculture_t *cult, *western = NULL;
+    const char *path;
+    char uri[512];
 
+    // Load bundled skycultures.
+    // At least the western skyculture should be bundled.
+    // TODO: would be better to have a function to iter assets directory.
+    ASSET_ITER("asset://skycultures/", path) {
+        if (!str_endswith(path, "/info.ini")) continue;
+        strcpy(uri, path);
+        *strrchr(uri, '/') = '\0';
+        cult = add_from_uri(cults, uri);
+        if (strcmp(cult->info.name, "Western") == 0) western = cult;
+    }
+    assert(western);
+    skyculture_activate(western);
     return 0;
 }
 

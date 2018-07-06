@@ -881,6 +881,14 @@ static const unsigned char DATA_data_skycultures_western_edges_txt[44575] __attr
 
 ASSET_REGISTER(data_skycultures_western_edges_txt, "skycultures/western/edges.txt", DATA_data_skycultures_western_edges_txt, false)
 
+static const unsigned char DATA_data_skycultures_western_info_ini[50] __attribute__((aligned(4))) =
+    "[info]\n"
+    "name = Western\n"
+    "author = Stellarium's team\n"
+    "";
+
+ASSET_REGISTER(data_skycultures_western_info_ini, "skycultures/western/info.ini", DATA_data_skycultures_western_info_ini, false)
+
 static const unsigned char DATA_data_skycultures_western_names_txt[1890] __attribute__((aligned(4))) =
     "HD 358 |  Alpheratz\n"
     "HD 432 | Caph\n"
