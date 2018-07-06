@@ -750,12 +750,15 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
                            "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
                            "υ", "φ", "χ", "ψ", "ω"};
     int bayer, bayer_n;
-    const char *name;
-    char tmp[8];
+    const char *name = NULL;
+    char tmp[8], id[32];
     double label_color[4] = {1, 1, 1, 0.5};
 
     bayer_get(s->hd, NULL, &bayer, &bayer_n);
-    name = skyculture_get_star_name(core->skyculture, s->hd);
+    if (s->hd) {
+        make_id(id, "HD", s->hd);
+        name = identifiers_get(id, "NAME");
+    }
     if (bayer == 0 && !name) return;
     if (name) {
         labels_add(name, pos, size, 13, label_color, ANCHOR_AROUND, -vmag);
