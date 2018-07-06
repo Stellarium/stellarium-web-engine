@@ -42,21 +42,24 @@ static void parse_names(skyculture_t *cult, const char *names)
     char line[512], id[32], name[128];
     regex_t     reg;
     regmatch_t m[4];
-    int r, hd;
+    int r, hd, hip;
 
     regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
     while (iter_lines(&names, line, sizeof(line))) {
         if (str_startswith(line, "#")) continue;
         r = regexec(&reg, line, 4, m, 0);
         if (r) goto error;
-        if (strncmp(line + m[1].rm_so, "HIP", 3) == 0)
-            continue; // Not supported yet.
         sprintf(name, "%*s", m[3].rm_eo - m[3].rm_so, line + m[3].rm_so);
+        *id = '\0';
         if (strncmp(line + m[1].rm_so, "HD", 2) == 0) {
             hd = strtoul(line + m[2].rm_so, NULL, 10);
             sprintf(id, "HD %d", hd);
-            identifiers_add(id, "NAME", name, NULL, NULL);
         }
+        if (strncmp(line + m[1].rm_so, "HIP", 3) == 0) {
+            hip = strtoul(line + m[2].rm_so, NULL, 10);
+            sprintf(id, "HIP %d", hip);
+        }
+        if (*id) identifiers_add(id, "NAME", name, NULL, NULL);
         continue;
 error:
         LOG_W("Cannot parse star name: %s", line);
