@@ -224,24 +224,6 @@ skyculture_t *skyculture_create(const char *uri)
     return cult;
 }
 
-const char *skyculture_get_star_name(const skyculture_t *cult, int hd)
-{
-    star_name_t *star_name;
-    HASH_FIND_INT(cult->star_names, &hd, star_name);
-    return star_name ? star_name->name : NULL;
-}
-
-int skyculture_search_star_name(const skyculture_t *cult, const char *name)
-{
-    star_name_t *star_name, *tmp;
-    HASH_ITER(hh, cult->star_names, star_name, tmp) {
-        if (strcasecmp(star_name->name, name) == 0) {
-            return star_name->hd;
-        }
-    }
-    return 0;
-}
-
 const constellation_infos_t *skyculture_get_constellations(
         const skyculture_t *cult,
         int *nb)

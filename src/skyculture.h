@@ -46,17 +46,6 @@ typedef struct skyculture skyculture_t;
  */
 skyculture_t *skyculture_create(const char *uri);
 
-/* Function: skyculture_get_star_name
- * Get the name of a given star from its HD number.
- *
- * Parameters:
- *  cult - A <skyculture_t> instance.
- *  hd   - A star Henry Draper catalog number.
- *
- * Return:
- *  The name of the star, or NULL if it is not found.
- */
-const char *skyculture_get_star_name(const skyculture_t *cult, int hd);
 
 /* Function: skyculture_search_star_name
  * Search for a star with a given name.
