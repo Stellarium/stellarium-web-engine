@@ -46,6 +46,8 @@ typedef struct skyculture skyculture_t;
  */
 skyculture_t *skyculture_create(const char *uri);
 
+void skyculture_activate(skyculture_t *cult);
+
 /*
  * Function: skyculture_get_constellations
  * Return the list of all the constellations in a skyculture.

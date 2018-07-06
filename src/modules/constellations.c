@@ -11,15 +11,17 @@
 
 static int constellations_init(obj_t *obj, json_value *args);
 static int constellations_update(obj_t *obj, const observer_t *obs, double dt);
+static int constellations_render(const obj_t *obj, const painter_t *painter);
+
+static int constellation_init(obj_t *obj, json_value *args);
 static int constellation_render(const obj_t *obj, const painter_t *painter);
 static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
 static json_value *constellation_set_image(
         obj_t *obj, const attribute_t *attr, const json_value *args);
-static int constellations_render(const obj_t *obj, const painter_t *painter);
 
 typedef struct constellation {
     obj_t       obj;
-    const constellation_infos_t *info;
+    constellation_infos_t info;
     char        *name;
     int         count;
     obj_t       **stars;
@@ -31,6 +33,7 @@ typedef struct constellation {
 static obj_klass_t constellation_klass = {
     .id         = "constellation",
     .size       = sizeof(constellation_t),
+    .init       = constellation_init,
     .update     = constellation_update,
     .render     = constellation_render,
     .attributes = (attribute_t[]) {
@@ -85,6 +88,35 @@ static obj_klass_t constellations_klass = {
         {}
     },
 };
+
+static int constellation_init(obj_t *obj, json_value *args)
+{
+    int i;
+    constellation_t *cons = (constellation_t *)obj;
+    constellation_infos_t *info;
+    char star_id[128];
+
+    // For the moment, since we create the constellation from within C
+    // only, we pass the info as a pointer to the structure!
+    info = (void*)(intptr_t)json_get_attr_i(args, "info_ptr", 0);
+    if (!info) return 0;
+
+    cons->info = *info;
+    cons->name = strdup(info->name);
+    cons->count = info->nb_lines * 2;
+    cons->stars = calloc(info->nb_lines * 2, sizeof(*cons->stars));
+    for (i = 0; i < info->nb_lines * 2; i++) {
+        assert(info->lines[i / 2][i % 2] != 0);
+        sprintf(star_id, "HD %d", info->lines[i / 2][i % 2]);
+        cons->stars[i] = obj_get(NULL, star_id, 0);
+        if (!cons->stars[i])
+            LOG_W("Cannot find cst star: %s, %s", info->id, star_id);
+    }
+    identifiers_add(cons->obj.id, "CST", info->id, info->id, info->id);
+    identifiers_add(cons->obj.id, "NAME",
+            info->name, info->name, info->name);
+    return 0;
+}
 
 // Still experimental.
 static int parse_anchors(const char *str, double mat[3][3])
@@ -230,7 +262,7 @@ static int render_bounds(const constellation_t *con,
     painter.color[3] *= cons->bounds_visible.value;
     painter.lines_stripes = 10.0;
     if (!painter.color[3]) return 0;
-    info = con->info;
+    info = &con->info;
     if (!info) return 0;
     for (i = 0; i < info->nb_edges; i++) {
         memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
@@ -326,12 +358,6 @@ static int render_img(const constellation_t *con, const painter_t *painter)
 static int constellations_init(obj_t *obj, json_value *args)
 {
     constellations_t *conss = (void*)obj;
-    constellation_t *cons;
-    const constellation_infos_t *info;
-    char star_id[128];
-    char buf[32];
-    int i;
-
     obj_add_sub(&conss->obj, "images");
     obj_add_sub(&conss->obj, "lines");
     obj_add_sub(&conss->obj, "bounds");
@@ -339,27 +365,6 @@ static int constellations_init(obj_t *obj, json_value *args)
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->images_visible, false);
     fader_init(&conss->bounds_visible, false);
-    for (info = skyculture_get_constellations(core->skyculture, NULL);
-            *info->id; info++)
-    {
-        sprintf(buf, "CST %s", info->id);
-        str_to_upper(buf, buf);
-        cons = (void*)obj_create("constellation", buf, (obj_t*)conss, NULL);
-        cons->info = info;
-        cons->name = strdup(info->name);
-        cons->count = info->nb_lines * 2;
-        cons->stars = calloc(info->nb_lines * 2, sizeof(*cons->stars));
-        for (i = 0; i < info->nb_lines * 2; i++) {
-            assert(info->lines[i / 2][i % 2] != 0);
-            sprintf(star_id, "HD %d", info->lines[i / 2][i % 2]);
-            cons->stars[i] = obj_get(NULL, star_id, 0);
-            if (!cons->stars[i])
-                LOG_W("Cannot find cst star: %s, %s", info->id, star_id);
-        }
-        identifiers_add(cons->obj.id, "CST", info->id, info->id, info->id);
-        identifiers_add(cons->obj.id, "NAME",
-                        info->name, info->name, info->name);
-    }
     return 0;
 }
 

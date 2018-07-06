@@ -497,7 +497,6 @@ void core_init(void)
     obj_add_sub(&core->obj, "hints");
     core->hints_mag_max = NAN;
 
-    core->skyculture = skyculture_create("asset://skycultures/western");
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
 
@@ -523,6 +522,9 @@ void core_init(void)
         obj_create(module->id, module->id, (obj_t*)core, NULL);
     }
     DL_SORT(core->obj.children, modules_sort_cmp);
+
+    core->skyculture = skyculture_create("asset://skycultures/western");
+    skyculture_activate(core->skyculture);
 
     static UT_icd point_icd = {sizeof(point_t), NULL, NULL, NULL};
     utarray_new(core->rend_points, &point_icd);

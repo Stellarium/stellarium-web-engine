@@ -12,6 +12,7 @@
 
 struct skyculture
 {
+    char            *uri;
     int             nb_constellations;
     constellation_infos_t *constellations;
 };
@@ -190,20 +191,16 @@ static void parse_edges(skyculture_t *cult, const char *edges)
 skyculture_t *skyculture_create(const char *uri)
 {
     char path[1024];
-    const char *names, *constellations, *edges;
+    const char *constellations, *edges;
     skyculture_t *cult = calloc(1, sizeof(*cult));
 
-    sprintf(path, "%s/%s", uri, "names.txt");
-    names = asset_get_data(path , NULL, NULL);
+    cult->uri = strdup(uri);
     sprintf(path, "%s/%s", uri, "constellations.txt");
     constellations = asset_get_data(path, NULL, NULL);
     sprintf(path, "%s/%s", uri, "edges.txt");
     edges = asset_get_data(path, NULL, NULL);
-
-    assert(names);
     assert(constellations);
 
-    parse_names(cult, names);
     parse_constellations(cult, constellations);
     if (edges) parse_edges(cult, edges);
     return cult;
@@ -215,4 +212,31 @@ const constellation_infos_t *skyculture_get_constellations(
 {
     if (nb) *nb = cult->nb_constellations;
     return cult->constellations;
+}
+
+void skyculture_activate(skyculture_t *cult)
+{
+    char path[1024], id[32];
+    const char *names;
+    int i;
+    json_value *args;
+    constellation_infos_t *cst;
+    obj_t *constellations;
+
+    sprintf(path, "%s/%s", cult->uri, "names.txt");
+    names = asset_get_data(path , NULL, NULL);
+    assert(names);
+    parse_names(cult, names);
+
+    // Create all the constellations object.
+    constellations = obj_get(NULL, "constellations", 0);
+    assert(constellations);
+    for (i = 0; i < cult->nb_constellations; i++) {
+        cst = &cult->constellations[i];
+        args = json_object_new(0);
+        json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
+        sprintf(id, "CST %s", cst->id);
+        obj_create("constellation", id, constellations, args);
+        json_value_free(args);
+    }
 }
