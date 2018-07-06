@@ -97,7 +97,7 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
 {
     char *data, *line, *tmp = NULL, *tok;
     bool linked;
-    int nb = 0, i, star, last_star = 0;
+    int nb = 0, i = 0, star, last_star = 0;
     constellation_infos_t *cons;
 
     data = strdup(consts);
@@ -109,8 +109,9 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
     cult->nb_constellations = nb;
     cult->constellations = calloc(nb + 1, sizeof(constellation_infos_t));
 
-    for (i = 0, line = strtok_r(data, "\n", &tmp); line;
-          line = strtok_r(NULL, "\n", &tmp), i++) {
+    for (line = strtok_r(data, "\n", &tmp); line;
+          line = strtok_r(NULL, "\n", &tmp)) {
+        if (*line == '#') continue;
         cons = &cult->constellations[i];
         strcpy(cons->id, strtok(line, "|"));
         strcpy(cons->name, strtok(NULL, "|"));
@@ -129,6 +130,7 @@ static void parse_constellations(skyculture_t *cult, const char *consts)
             last_star = star;
         }
         cons->nb_lines = nb;
+        i++;
     }
     free(data);
 }
@@ -200,11 +202,10 @@ skyculture_t *skyculture_create(const char *uri)
 
     assert(names);
     assert(constellations);
-    assert(edges);
 
     parse_names(cult, names);
     parse_constellations(cult, constellations);
-    parse_edges(cult, edges);
+    if (edges) parse_edges(cult, edges);
     return cult;
 }
 
