@@ -40,7 +40,7 @@ static bool iter_lines(const char **str, char *line, int size)
 static void parse_names(skyculture_t *cult, const char *names)
 {
     char line[512], id[32], name[128];
-    regex_t     reg;
+    regex_t reg;
     regmatch_t m[4];
     int r, hd, hip;
 
