@@ -42,7 +42,8 @@ double json_get_attr_f(json_value *val, const char *attr, double default_value)
     return default_value;
 }
 
-int json_get_attr_i(json_value *val, const char *attr, int default_value)
+int64_t json_get_attr_i(json_value *val, const char *attr,
+                        int64_t default_value)
 {
     json_value *v;
     v = json_get_attr(val, attr, json_integer);
