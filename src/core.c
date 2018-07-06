@@ -497,7 +497,7 @@ void core_init(void)
     obj_add_sub(&core->obj, "hints");
     core->hints_mag_max = NAN;
 
-    core->skyculture = skyculture_create();
+    core->skyculture = skyculture_create("asset://skycultures/western");
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
 

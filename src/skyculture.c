@@ -193,19 +193,19 @@ static void parse_edges(skyculture_t *cult, const char *edges)
     }
 }
 
-skyculture_t *skyculture_create(void)
+skyculture_t *skyculture_create(const char *uri)
 {
-    char id[64];
+    char id[64], path[1024];
     const char *names, *constellations, *edges;
     star_name_t *star_name, *tmp;
     skyculture_t *cult = calloc(1, sizeof(*cult));
 
-    names = asset_get_data(
-            "asset://skycultures/western/names.txt", NULL, NULL);
-    constellations = asset_get_data(
-            "asset://skycultures/western/constellations.txt", NULL, NULL);
-    edges = asset_get_data(
-            "asset://skycultures/western/edges.txt", NULL, NULL);
+    sprintf(path, "%s/%s", uri, "names.txt");
+    names = asset_get_data(path , NULL, NULL);
+    sprintf(path, "%s/%s", uri, "constellations.txt");
+    constellations = asset_get_data(path, NULL, NULL);
+    sprintf(path, "%s/%s", uri, "edges.txt");
+    edges = asset_get_data(path, NULL, NULL);
 
     assert(names);
     assert(constellations);

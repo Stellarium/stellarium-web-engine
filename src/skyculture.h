@@ -37,9 +37,14 @@ typedef struct constellation_infos
  * Opaque type that represent a sky culture. */
 typedef struct skyculture skyculture_t;
 
-/* Function: skyculture_create
- * Create a new <skyculture_t> instance.  */
-skyculture_t *skyculture_create(void);
+/*
+ * Function: skyculture_create
+ * Create a new <skyculture_t> instance.
+ *
+ * Parameters:
+ *   uri    - Path to the skyculture directory.
+ */
+skyculture_t *skyculture_create(const char *uri);
 
 /* Function: skyculture_get_star_name
  * Get the name of a given star from its HD number.
