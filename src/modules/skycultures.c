@@ -29,12 +29,21 @@ typedef struct skyculture {
     int             nb_constellations;
     char            *(*names)[2]; // [ID, Name].  NULL terminated.
     constellation_infos_t *constellations;
+    bool            active;
 } skyculture_t;
+
+static void skyculture_on_active_changed(
+        obj_t *obj, const attribute_t *attr);
 
 static obj_klass_t skyculture_klass = {
     .id     = "skyculture",
     .size   = sizeof(skyculture_t),
     .flags  = 0,
+    .attributes = (attribute_t[]) {
+        PROPERTY("active", "b", MEMBER(skyculture_t, active),
+                 .on_changed = skyculture_on_active_changed),
+        {}
+    },
 };
 
 OBJ_REGISTER(skyculture_klass)
@@ -45,19 +54,21 @@ typedef struct skycultures_t {
 } skycultures_t;
 
 static int skycultures_init(obj_t *obj, json_value *args);
+static void skycultures_gui(obj_t *obj, int location);
 
 static obj_klass_t skycultures_klass = {
     .id             = "skycultures",
     .size           = sizeof(skycultures_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init           = skycultures_init,
+    .gui            = skycultures_gui,
     .create_order   = 30, // After constellations.
 };
 
 OBJ_REGISTER(skycultures_klass)
 
 
-void skyculture_activate(skyculture_t *cult)
+static void skyculture_activate(skyculture_t *cult)
 {
     char id[32];
     int i;
@@ -81,6 +92,18 @@ void skyculture_activate(skyculture_t *cult)
         sprintf(id, "CST %s", cst->id);
         obj_create("constellation", id, constellations, args);
         json_value_free(args);
+    }
+}
+
+static void skyculture_deactivate(skyculture_t *cult)
+{
+    obj_t *constellations, *cst, *tmp;
+    // Remove all the constellation objects.
+    constellations = obj_get(NULL, "constellations", 0);
+    assert(constellations);
+    DL_FOREACH_SAFE(constellations->children, cst, tmp) {
+        if (str_startswith(cst->id, "CST "))
+            obj_remove(constellations, cst);
     }
 }
 
@@ -131,6 +154,23 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri)
     return cult;
 }
 
+static void skyculture_on_active_changed(
+        obj_t *obj, const attribute_t *attr)
+{
+    skyculture_t *cult = (void*)obj, *other;
+
+    // Deactivate the others.
+    if (cult->active) {
+        OBJ_ITER(cult->obj.parent, other, &skyculture_klass) {
+            if (other == cult) continue;
+            obj_set_attr((obj_t*)other, "active", "b", false);
+        }
+    }
+
+    if (cult->active) skyculture_activate(cult);
+    else skyculture_deactivate(cult);
+}
+
 static int skycultures_init(obj_t *obj, json_value *args)
 {
     skycultures_t *cults = (void*)obj;
@@ -149,7 +189,21 @@ static int skycultures_init(obj_t *obj, json_value *args)
         if (strcmp(cult->info.name, "Western") == 0) western = cult;
     }
     assert(western);
-    skyculture_activate(western);
+    obj_set_attr((obj_t*)western, "active", "b", true);
     return 0;
 }
 
+static void skycultures_gui(obj_t *obj, int location)
+{
+    skyculture_t *cult;
+    if (!DEFINED(SWE_GUI)) return;
+    if (gui_tab("Skycultures")) {
+        OBJ_ITER(obj, cult, &skyculture_klass) {
+            gui_item(&(gui_item_t){
+                    .label = cult->info.name,
+                    .obj = (obj_t*)cult,
+                    .attr = "active"});
+        }
+        gui_tab_end();
+    }
+}
