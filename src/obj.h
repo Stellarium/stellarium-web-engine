@@ -155,6 +155,10 @@ obj_t *obj_create_str(const char *type, const char *id, obj_t *parent,
 
 // Add an object as a child of an other one.
 void obj_add(obj_t *parent, obj_t *child);
+
+// Add an object from a parent.
+void obj_remove(obj_t *parent, obj_t *child);
+
 void obj_delete(obj_t *obj);
 // Create a clone of the object.  Fails if the object doesn't support
 // cloning.

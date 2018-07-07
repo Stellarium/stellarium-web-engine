@@ -164,6 +164,16 @@ void obj_add(obj_t *parent, obj_t *child)
     DL_APPEND(parent->children, child);
 }
 
+EMSCRIPTEN_KEEPALIVE
+void obj_remove(obj_t *parent, obj_t *child)
+{
+    assert(child->parent == parent);
+    assert(parent);
+    child->parent = NULL;
+    DL_DELETE(parent->children, child);
+    obj_delete(child);
+}
+
 /**** Support for obj_sub type ******************************************/
 // An sub obj is a light obj that uses its parent call method.
 // It is useful for example to support constellations.images.VISIBLE
