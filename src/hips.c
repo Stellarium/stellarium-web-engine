@@ -54,7 +54,7 @@ cache_t *g_cache = NULL;
 
 struct hips {
     char        *url;
-    const char  *ext; // jpg or png.
+    const char  *ext; // jpg, png, or webp.
     double      release_date; // release date as jd value.
     int         error; // Set if an error occurred.
     char        *label; // Short label used in the progressbar.
@@ -143,6 +143,7 @@ static int property_handler(void* user, const char* section,
     if (strcmp(name, "hips_tile_format") == 0) {
         if (strcmp(value, "jpeg") == 0) hips->ext = "jpg";
         if (strcmp(value, "png") == 0) hips->ext = "png";
+        if (strcmp(value, "webp") == 0) hips->ext = "webp";
     }
     return 0;
 }
