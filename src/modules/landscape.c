@@ -46,7 +46,9 @@ static int landscape_init(obj_t *obj, json_value *args)
     landscape_t *ls = (void*)obj;
     fader_init(&ls->visible, true);
     // XXX: this should be taken from the hipslist.
-    ls->hips = hips_create("https://data.stellarium.org/surveys/guereins", 0);
+    // XXX: I use guereins2 as a temporary survey, since the original
+    // is only in png, while this one is using wepb.
+    ls->hips = hips_create("https://data.stellarium.org/surveys/guereins2", 0);
     hips_set_label(ls->hips, "Landscape");
     hips_set_frame(ls->hips, FRAME_OBSERVED);
     vec4_set(ls->color, 1.0, 1.0, 1.0, 1.0);
