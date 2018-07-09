@@ -81,6 +81,7 @@ sources += (glob.glob('ext_src/webp/src/dec/*.c') +
             glob.glob('ext_src/webp/src/mux/*.c') +
             glob.glob('ext_src/webp/src/utils/*.c'))
 env.Append(CPPPATH=['ext_src/webp'])
+env.Append(CPPPATH=['ext_src/webp/src'])
 
 if not emscripten:
     sources += glob.glob('ext_src/imgui/*.cpp')
