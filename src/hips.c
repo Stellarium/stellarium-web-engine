@@ -511,7 +511,7 @@ int hips_render_traverse(
     pix_per_rad = painter->fb_size[0] / atan(painter->proj->scaling[0]) / 2;
     px = pix_per_rad * angle;
     w = hips->tile_width ?: 256;
-    render_order = ceil(log2(px / (4.0 * sqrt(2.0) * w)));
+    render_order = round(log2(px / (4.0 * sqrt(2.0) * w)));
     render_order = max(render_order, 1);
     render_order = clamp(render_order, hips->order_min, hips->order);
     // XXX: would be nice to have a non callback API for hips_traverse!
