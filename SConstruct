@@ -73,6 +73,15 @@ env.Append(CFLAGS=['-DHAVE_UNISTD_H'])
 sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
 
+# Add webp
+sources += (glob.glob('ext_src/webp/src/dec/*.c') +
+            glob.glob('ext_src/webp/src/dsp/*.c') +
+            glob.glob('ext_src/webp/src/demux/*.c') +
+            glob.glob('ext_src/webp/src/enc/*.c') +
+            glob.glob('ext_src/webp/src/mux/*.c') +
+            glob.glob('ext_src/webp/src/utils/*.c'))
+env.Append(CPPPATH=['ext_src/webp'])
+
 if not emscripten:
     sources += glob.glob('ext_src/imgui/*.cpp')
     env.Append(CPPPATH=['ext_src/imgui'])
