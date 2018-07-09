@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "webp/decode.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -98,6 +99,11 @@ uint8_t *img_read(const char *path, int *w, int *h, int *bpp)
 uint8_t *img_read_from_mem(const void *data, int size,
                            int *w, int *h, int *bpp)
 {
+    // Check for webp image first since stb doesn't support it.
+    if (WebPGetInfo(data, size, NULL, NULL)) {
+        *bpp = 4;
+        return WebPDecodeRGBA(data, size, w, h);
+    }
     return stbi_load_from_memory(data, size, w, h, bpp, *bpp);
 }
 
