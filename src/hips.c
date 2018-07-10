@@ -141,9 +141,9 @@ static int property_handler(void* user, const char* section,
     if (strcmp(name, "hips_release_date") == 0)
         hips->release_date = parse_release_date(value);
     if (strcmp(name, "hips_tile_format") == 0) {
-        if (strcmp(value, "jpeg") == 0) hips->ext = "jpg";
-        if (strcmp(value, "png") == 0) hips->ext = "png";
-        if (strcmp(value, "webp") == 0) hips->ext = "webp";
+             if (strstr(value, "webp")) hips->ext = "webp";
+        else if (strstr(value, "jpeg")) hips->ext = "jpg";
+        else if (strstr(value, "png"))  hips->ext = "png";
     }
     return 0;
 }
