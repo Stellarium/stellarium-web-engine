@@ -35,6 +35,7 @@ typedef struct {
     GLuint u_tex_l;
     GLuint u_normal_tex_l;
     GLuint u_has_normal_tex_l;
+    GLuint u_material_l;
     GLuint u_color_l;
     GLuint u_smooth_l;
     GLuint u_mv_l;
@@ -646,11 +647,16 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
     if (sun) {
         GL(glUniform4f(prog->u_sun_l, sun[0], sun[1], sun[2], sun[3]));
     }
+    // For the moment we automatically assign generic diffuse material (1) to
+    // light emiting surfaces, and Oren Nayar (0) to the other.
+    // This only affect planets shader.
     if (light_emit) {
         GL(glUniform3f(prog->u_light_emit_l,
                        light_emit[0], light_emit[1], light_emit[2]));
+        GL(glUniform1i(prog->u_material_l, 1));
     } else {
         GL(glUniform3f(prog->u_light_emit_l, 0, 0, 0));
+        GL(glUniform1i(prog->u_material_l, 0));
     }
     GL(glUniform1f(prog->u_shadow_brightness_l, args->shadow_brightness));
 
@@ -731,6 +737,7 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_tex);
     UNIFORM(u_normal_tex);
     UNIFORM(u_has_normal_tex);
+    UNIFORM(u_material);
     UNIFORM(u_color);
     UNIFORM(u_smooth);
     UNIFORM(u_sun);

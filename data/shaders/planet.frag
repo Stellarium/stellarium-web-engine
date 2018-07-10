@@ -9,6 +9,7 @@ uniform sampler2D u_normal_tex;
 uniform vec3 u_light_emit;
 uniform mat4 u_mv;  // Model view matrix.
 uniform int u_has_normal_tex;
+uniform int u_material; // 0: Oren Nayar, 1: generic
 
 uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
 // Up to four spheres for illumination ray tracing.
@@ -109,17 +110,17 @@ void main()
     }
     n = normalize((u_mv * vec4(n, 0.0)).xyz);
     gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;
-#ifndef NO_OREN_NAYAR
-    float power = oren_nayar_diffuse(light_dir,
-                                     normalize(-v_vpos),
-                                     n,
-                                     0.9, 0.12);
-    power *= illumination(v_vpos);
-    gl_FragColor.rgb *= power;
-#else
-    vec3 light = vec3(0.0, 0.0, 0.0);
-    light += max(0.0, dot(n, light_dir));
-    light += u_light_emit;
-    gl_FragColor.rgb *= light;
-#endif
+    if (u_material == 0) { // oren_nayar.
+        float power = oren_nayar_diffuse(light_dir,
+                                         normalize(-v_vpos),
+                                         n,
+                                         0.9, 0.12);
+        power *= illumination(v_vpos);
+        gl_FragColor.rgb *= power;
+    } else if (u_material == 1) { // basic
+        vec3 light = vec3(0.0, 0.0, 0.0);
+        light += max(0.0, dot(n, light_dir));
+        light += u_light_emit;
+        gl_FragColor.rgb *= light;
+    }
 }

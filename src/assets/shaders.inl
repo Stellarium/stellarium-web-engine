@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[4315] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[4464] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -96,6 +96,7 @@ static const unsigned char DATA_data_shaders_planet_frag[4315] __attribute__((al
     "uniform vec3 u_light_emit;\n"
     "uniform mat4 u_mv;  // Model view matrix.\n"
     "uniform int u_has_normal_tex;\n"
+    "uniform int u_material; // 0: Oren Nayar, 1: generic\n"
     "\n"
     "uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).\n"
     "// Up to four spheres for illumination ray tracing.\n"
@@ -196,19 +197,19 @@ static const unsigned char DATA_data_shaders_planet_frag[4315] __attribute__((al
     "    }\n"
     "    n = normalize((u_mv * vec4(n, 0.0)).xyz);\n"
     "    gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;\n"
-    "#ifndef NO_OREN_NAYAR\n"
-    "    float power = oren_nayar_diffuse(light_dir,\n"
-    "                                     normalize(-v_vpos),\n"
-    "                                     n,\n"
-    "                                     0.9, 0.12);\n"
-    "    power *= illumination(v_vpos);\n"
-    "    gl_FragColor.rgb *= power;\n"
-    "#else\n"
-    "    vec3 light = vec3(0.0, 0.0, 0.0);\n"
-    "    light += max(0.0, dot(n, light_dir));\n"
-    "    light += u_light_emit;\n"
-    "    gl_FragColor.rgb *= light;\n"
-    "#endif\n"
+    "    if (u_material == 0) { // oren_nayar.\n"
+    "        float power = oren_nayar_diffuse(light_dir,\n"
+    "                                         normalize(-v_vpos),\n"
+    "                                         n,\n"
+    "                                         0.9, 0.12);\n"
+    "        power *= illumination(v_vpos);\n"
+    "        gl_FragColor.rgb *= power;\n"
+    "    } else if (u_material == 1) { // basic\n"
+    "        vec3 light = vec3(0.0, 0.0, 0.0);\n"
+    "        light += max(0.0, dot(n, light_dir));\n"
+    "        light += u_light_emit;\n"
+    "        gl_FragColor.rgb *= light;\n"
+    "    }\n"
     "}\n"
     "";
 

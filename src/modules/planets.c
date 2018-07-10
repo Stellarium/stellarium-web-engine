@@ -556,7 +556,9 @@ static void planet_render_hips(const planet_t *planet,
     }
     painter.transform = &mat;
 
-    if (planet == planets->sun) painter.light_emit = &full_emit;
+    if (planet->id == SUN) {
+        painter.light_emit = &full_emit;
+    }
 
     // XXX: for the moment we only use depth if the planet has a ring,
     // to prevent having to clean the depth buffer.
