@@ -506,9 +506,9 @@ static void planet_render_hips(const planet_t *planet,
 {
     // XXX: cleanup this function.  It is getting too big.
     double mat[4][4];
-    double pos[3];
+    double pos[4];
     double radius = planet->radius_m / DAU;
-    double dist = vec3_norm(planet->pvg[0]);
+    double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
     double rot;
     double angle = 2 * planet->radius_m / DAU / vec2_norm(planet->pvg[0]);
@@ -528,9 +528,11 @@ static void planet_render_hips(const planet_t *planet,
 
     // To make sure the hips is aligned with the planet position, we
     // compute the position in observed frame.
-    eraS2c(planet->obj.pos.az, planet->obj.pos.alt, pos);
+    vec3_copy(planet->obj.pos.pvg[0], pos);
+    pos[3] = 1;
+    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
     mat4_set_identity(mat);
-    mat4_itranslate(mat, pos[0] * dist, pos[1] * dist, pos[2] * dist);
+    mat4_itranslate(mat, pos[0], pos[1], pos[2]);
     mat4_iscale(mat, radius, radius, radius);
 
     // Compute sun position.
@@ -562,6 +564,7 @@ static void planet_render_hips(const planet_t *planet,
     // XXX: for the moment we only use depth if the planet has a ring,
     // to prevent having to clean the depth buffer.
     if (planet->rings.tex) {
+        dist = vec3_norm(planet->pvg[0]);
         depth_range[0] = dist * 0.5;
         depth_range[1] = dist * 2;
         painter.depth_range = &depth_range;
