@@ -596,6 +596,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     const double hips_k = 2.0; // How soon we switch to the hips survey.
 
     if (planet->id == EARTH) return;
+    if (planet->obj.vmag > painter->mag_max) return;
 
     vec3_copy(planet->obj.pos.pvg[0], pos);
     pos[3] = 1;
@@ -604,7 +605,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
         return;
 
     mag = core_get_observed_mag(planet->obj.vmag);
-    if (mag > painter->mag_max) return;
     core_get_point_for_mag(mag, &point_r, &point_luminance);
     r = 2 * planet->radius_m / DAU / vec3_norm(planet->pvg[0]);
 
