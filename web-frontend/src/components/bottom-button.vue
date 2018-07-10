@@ -21,6 +21,7 @@
     height: 3rem;
     position: relative;
     display: inline-block;
+    user-select: none;
   }
   .bottom-button img {
     width: 100%;
