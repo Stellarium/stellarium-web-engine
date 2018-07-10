@@ -359,6 +359,31 @@ int obj_render(const obj_t *obj, const painter_t *painter);
  */
 int obj_update(obj_t *obj, observer_t *obs, double dt);
 
+
+/*
+ * Function: obj_get_pos_icrs
+ * Conveniance function that updates an object and return its ICRS
+ * position.
+ *
+ * Parameters:
+ *   obj - An object.
+ *   obs - An observer.
+ *   pos - Get the ICRS position in homogeneous coordinates (xyzw, AU).
+ */
+void obj_get_pos_icrs(obj_t *obj, observer_t *obs, double pos[4]);
+
+/*
+ * Function: obj_get_pos_observed
+ * Conveniance function that updates an object and return its observed
+ * position (az/alt frame, but as a cartesian vector).
+ *
+ * Parameters:
+ *   obj - An object.
+ *   obs - An observer.
+ *   pos - Get the observed position in homogeneous coordinates (xyzw, AU).
+ */
+void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
+
 /*
  * Function: obj_get_name
  * Return the given name for an object.

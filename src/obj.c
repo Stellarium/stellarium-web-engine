@@ -819,6 +819,24 @@ obj_klass_t *obj_get_all_klasses(void)
     return g_klasses;
 }
 
+void obj_get_pos_icrs(obj_t *obj, observer_t *obs, double pos[4])
+{
+    double p[4];
+    obj_update(obj, obs, 0);
+    assert(obj->pos.unit == INFINITY || obj->pos.unit == 1.0);
+    vec3_copy(obj->pos.pvg[0], p);
+    p[3] = (obj->pos.unit == INFINITY) ? 0.0 : 1.0;
+    vec4_copy(p, pos);
+}
+
+void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])
+{
+    double p[4];
+    obj_get_pos_icrs(obj, obs, p);
+    convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
+    vec4_copy(p, pos);
+}
+
 /******** TESTS ***********************************************************/
 
 #if COMPILE_TESTS
