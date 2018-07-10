@@ -96,11 +96,11 @@ static double get_global_brightness(void)
     // I use the algo from stellarium, even though I don't really understand
     // it.
     obj_t *sun;
-    double sun_pos[3];
+    double sun_pos[4];
     double sin_sun_angle;
     double brightness = 0.0;
     sun = obj_get(&core->obj, "SUN", 0);
-    eraS2c(sun->pos.az, sun->pos.alt, sun_pos);
+    obj_get_pos_observed(sun, core->observer, sun_pos);
     vec3_normalize(sun_pos, sun_pos);
     sin_sun_angle = sin(min(M_PI/ 2, asin(sun_pos[2]) + 8. * DD2R));
     if(sin_sun_angle > -0.1 / 1.5 )

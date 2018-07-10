@@ -185,7 +185,7 @@ static bool constellation_is_visible(const painter_t *painter,
     pos = calloc(con->count, sizeof(*pos));
     for (i = 0; i < con->count; i++) {
         s = con->stars[i];
-        eraS2c(s->pos.az, s->pos.alt, pos[i]);
+        obj_get_pos_observed(s, painter->obs, pos[i]);
         mat4_mul_vec3(painter->obs->ro2v, pos[i], pos[i]);
         project(painter->proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,

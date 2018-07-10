@@ -32,15 +32,13 @@ OBJ_REGISTER(pointer_klass)
 static int pointer_render(const obj_t *obj, const painter_t *painter)
 {
     int i;
-    double pos[3], pos2d[2];
+    double pos[4], pos2d[2];
     double mag, size, luminance, angle, radius = NAN;
     double color[4] = {0.34, 0.59, 1.0, 0.9};
     obj_t *selection = core->selection;
     if (!selection) return 0;
-    obj_update(selection, core->observer, 0);
-    eraS2c(selection->pos.az, selection->pos.alt, pos);
+    obj_get_pos_observed(selection, painter->obs, pos);
     mat4_mul_vec3(painter->obs->ro2v, pos, pos);
-
     if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos2d))
         return 0;
 

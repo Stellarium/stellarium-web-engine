@@ -541,7 +541,7 @@ void core_release(void)
 
 static int core_update_direction(double dt)
 {
-    double v[3] = {1, 0, 0}, q[4], t;
+    double v[4] = {1, 0, 0, 0}, q[4], t;
 
     if (core->target.speed) {
         core->target.t += dt / core->target.speed;
@@ -568,8 +568,7 @@ static int core_update_direction(double dt)
     }
 
     if (core->target.lock && !core->target.t) {
-        obj_update(core->target.lock, core->observer, 0);
-        eraS2c(core->target.lock->pos.az, core->target.lock->pos.alt, v);
+        obj_get_pos_observed(core->target.lock, core->observer, v);
         obj_call(&core->obj, "lookat", "v3f", v, 0.0);
     }
 

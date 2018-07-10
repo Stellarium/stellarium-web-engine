@@ -324,16 +324,15 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[3], mag, size, luminance;
+    double pos[4], mag, size, luminance;
     double label_color[4] = RGBA(255, 124, 124, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
 
     if (mplanet->obj.vmag > painter->mag_max) return 0;
-    eraS2c(obj->pos.az, obj->pos.alt, pos);
+    obj_get_pos_observed(obj, painter->obs, pos);
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
-
     vec3_normalize(pos, pos);
     mag = core_get_observed_mag(mplanet->obj.vmag);
     core_get_point_for_mag(mag, &size, &luminance);

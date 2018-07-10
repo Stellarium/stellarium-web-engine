@@ -208,14 +208,14 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun;
-    double sun_pos[3];
+    double sun_pos[4];
     render_data_t data;
     const double T = 5.0;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get(&core->obj, "SUN", 0);
     assert(sun);
-    eraS2c(sun->pos.az, sun->pos.alt, sun_pos);
+    obj_get_pos_observed(sun, painter->obs, sun_pos);
     vec3_normalize(sun_pos, sun_pos);
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, T);
