@@ -24,6 +24,7 @@ static void update_matrices(observer_t *obs)
     double ri2e[3][3];  // Equatorial J2000 (ICRS) to ecliptic.
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRS).
     double re2h[3][3];  // Ecliptic to horizontal.
+    double re2v[3][3];  // Ecliptic to view.
 
     mat3_set_identity(ro2v);
     // r2gl changes the coordinate from z up to y up orthonomal.
@@ -61,6 +62,7 @@ static void update_matrices(observer_t *obs)
     // Ecliptic to horizontal.
     mat3_copy(ri2h, re2h);
     mat3_rx(eraObl80(DJM0, obs->ut1), re2h, re2h);
+    mat3_mul(ro2v, re2h, re2v);
 
     // Convert all to 4x4 matrices.
     mat3_to_mat4(ro2v, obs->ro2v);
@@ -70,6 +72,7 @@ static void update_matrices(observer_t *obs)
     mat3_to_mat4(ri2e, obs->ri2e);
     mat3_to_mat4(re2i, obs->re2i);
     mat3_to_mat4(re2h, obs->re2h);
+    mat3_to_mat4(re2v, obs->re2v);
 }
 
 void observer_recompute_hash(observer_t *obs)

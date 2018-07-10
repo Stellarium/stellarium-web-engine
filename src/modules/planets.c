@@ -413,7 +413,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     if (planet->id == MOON)
         vec3_mul(1.8, painter.color, painter.color);
 
-    paint_quad(&painter, FRAME_OBSERVED, tex, normalmap, uv, &proj, split);
+    paint_quad(&painter, FRAME_VIEW, tex, normalmap, uv, &proj, split);
     return 0;
 }
 
@@ -526,11 +526,10 @@ static void planet_render_hips(const planet_t *planet,
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
 
-    // To make sure the hips is aligned with the planet position, we
-    // compute the position in observed frame.
+    // We render the hips surveys in view (OpenGL) coordinates.
     vec3_copy(planet->obj.pos.pvg[0], pos);
     pos[3] = 1;
-    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
+    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, pos, pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
     mat4_iscale(mat, radius, radius, radius);
@@ -542,13 +541,11 @@ static void planet_render_hips(const planet_t *planet,
     sun_pos[3] = planets->sun->radius_m / DAU;
     painter.sun = &sun_pos;
 
-    // Apply the rotation.  We have to change the light direction accordingly.
-    // XXX: it's not very clear why we need to flip the y axis, this is
-    // related to the fact that the horizontal coordinates are left handed!
+    // Apply the rotation.
     if (planet->parent == planets->earth) {
-        mat4_mul(mat, core->observer->ri2h, mat);
+        mat4_mul(mat, core->observer->ri2v, mat);
     } else {
-        mat4_mul(mat, core->observer->re2h, mat);
+        mat4_mul(mat, core->observer->re2v, mat);
         // Not sure about this.
         mat4_rx(-planet->rot.obliquity, mat, mat);
     }
@@ -684,11 +681,11 @@ static int on_hips(const char *url, double release_date, void *user)
         LOG_V("Assign hips '%s' to planet '%s'", url, name);
         if (!normalmap) {
             p->hips = hips_create(url, release_date);
-            hips_set_frame(p->hips, FRAME_OBSERVED);
+            hips_set_frame(p->hips, FRAME_VIEW);
         }
         else {
             p->hips_normalmap = hips_create(url, release_date);
-            hips_set_frame(p->hips_normalmap, FRAME_OBSERVED);
+            hips_set_frame(p->hips_normalmap, FRAME_VIEW);
         }
     }
 

@@ -356,8 +356,9 @@ static void quad(renderer_t          *rend_,
     free(grid);
     free(indices);
 
+    // Compute modelview matrix.
     mat4_set_identity(mv);
-    mat4_mul(mv, painter->obs->ro2v, mv);
+    if (frame == FRAME_OBSERVED) mat4_mul(mv, painter->obs->ro2v, mv);
     mat4_mul(mv, *painter->transform, mv);
 
     render_buffer(rend, buffer, grid_size * grid_size * 6,

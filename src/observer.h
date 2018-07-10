@@ -63,6 +63,7 @@ struct observer
     double ri2e[4][4];  // Equatorial J2000 (ICRS) to ecliptic.
     double re2i[4][4];  // Eclipic to Equatorial J2000 (ICRS).
     double re2h[4][4];  // Ecliptic to horizontal.
+    double re2v[4][4];  // Ecliptic to view.
 };
 
 void observer_recompute_hash(observer_t *obs);
