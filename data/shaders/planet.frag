@@ -7,7 +7,7 @@ precision mediump float;
 uniform sampler2D u_tex;
 uniform sampler2D u_normal_tex;
 uniform vec3 u_light_emit;
-uniform mat4 u_mv;
+uniform mat4 u_mv;  // Model view matrix.
 uniform int u_has_normal_tex;
 
 uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
@@ -15,10 +15,10 @@ uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
 uniform int u_shadow_spheres_nb;
 uniform highp mat4 u_shadow_spheres;
 
-varying vec3 v_vpos;
+varying vec3 v_vpos;   // Pos in view coordinates.
 varying vec2 v_tex_pos;
 varying vec4 v_color;
-varying vec3 v_normal;
+varying vec3 v_normal; // Normal in model coordinates.
 varying vec3 v_tangent;
 varying vec3 v_bitangent;
 

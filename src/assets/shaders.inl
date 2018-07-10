@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[4230] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[4315] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -94,7 +94,7 @@ static const unsigned char DATA_data_shaders_planet_frag[4230] __attribute__((al
     "uniform sampler2D u_tex;\n"
     "uniform sampler2D u_normal_tex;\n"
     "uniform vec3 u_light_emit;\n"
-    "uniform mat4 u_mv;\n"
+    "uniform mat4 u_mv;  // Model view matrix.\n"
     "uniform int u_has_normal_tex;\n"
     "\n"
     "uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).\n"
@@ -102,10 +102,10 @@ static const unsigned char DATA_data_shaders_planet_frag[4230] __attribute__((al
     "uniform int u_shadow_spheres_nb;\n"
     "uniform highp mat4 u_shadow_spheres;\n"
     "\n"
-    "varying vec3 v_vpos;\n"
+    "varying vec3 v_vpos;   // Pos in view coordinates.\n"
     "varying vec2 v_tex_pos;\n"
     "varying vec4 v_color;\n"
-    "varying vec3 v_normal;\n"
+    "varying vec3 v_normal; // Normal in model coordinates.\n"
     "varying vec3 v_tangent;\n"
     "varying vec3 v_bitangent;\n"
     "\n"
