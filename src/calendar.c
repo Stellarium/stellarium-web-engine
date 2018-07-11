@@ -124,7 +124,7 @@ static double vertical_align_event_func(const event_type_t *type,
     }
     if (i == ARRAY_SIZE(types)) return NAN;
 
-    sep = eraSepp((void*)o1->pos.pvg[0], (void*)o2->pos.pvg[0]);
+    sep = eraSepp(o1->pos.pvg[0], o2->pos.pvg[0]);
     if (sep > 5 * DD2R) return NAN;
     return eraAnpm(o1->pos.ra - o2->pos.ra);
 }
