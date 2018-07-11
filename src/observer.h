@@ -51,11 +51,11 @@ struct observer
     double earth_pvh[2][3];
 
     // Transformation matrices.
-    // h: horizontal (RA/DE, left handed, X->N, Y->E, Z->up).
-    // o: observed: horizontal with refraction (RA/DE, left handed).
+    // h: Horizontal (RA/DE, left handed, X->N, Y->E, Z->up).
+    // o: Observed: horizontal with refraction (RA/DE, left handed).
     // i: ICRS (right handed).
-    // e: equatorial (right handed).
-    // v: view (observed with view direction).
+    // e: Ecliptic (right handed).
+    // v: View (observed with view direction).
     double ro2v[4][4];  // Rotate from observed to view.
     double ri2h[4][4];  // Equatorial J2000 (ICRS) to horizontal.
     double rh2i[4][4];  // Horizontal to Equatorial J2000 (ICRS).
