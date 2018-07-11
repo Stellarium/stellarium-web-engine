@@ -54,6 +54,9 @@ def parse_geophysical_data(txt):
         ret['radius'] = '%g km' % float(v)
     for v in re.findall(r'albedo\s*?=\s*([\d.]+)', txt, flags):
         ret['albedo'] = '%g' % float(v)
+    for v in re.findall(r'Mass \(10\^(\d+) kg\s*\)\s*?=\s*([\d.]+)',
+                        txt, flags):
+        ret['mass'] = '%g kg' % (float(v[1]) * 10**int(v[0]))
     return ret
 
 
