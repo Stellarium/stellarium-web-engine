@@ -74,49 +74,25 @@ int convert_coordinates(const observer_t *obs,
 int compute_coordinates(const observer_t *obs,
                         double pv[2][3],
                         double unit,
-                        double *a_ra, double *a_dec,
+                        double *ra, double *dec,
                         double *az,   double *alt)
 {
-    double pos[3];
+    double pos[4];
     double ri, di;
-    double theta;
-    double dist;
-    double pvc[2][3];
-    double aob, zob, hob, dob, rob;
-    eraASTROM *astrom = (eraASTROM*)&obs->astrom;
-
-    eraPn(pv[0], &dist, pos);
-    eraC2s(pos, &ri, &di);
-    if (a_ra) *a_ra = eraAnp(ri);
-    if (a_dec) *a_dec = eraAnpm(di);
-
-    // Light deflection by the Sun, giving BCRS natural direction.
-    // XXX: disabled for the moment, need to do it only for objects that
-    // are behind the sun.
-    if (0)
-        eraLdsun(pos, astrom->eh, astrom->em, pos);
-    // Aberration, giving GCRS proper direction.
-    eraAb(pos, astrom->v, astrom->em, astrom->bm1, pos);
-    // Bias-precession-nutation, giving CIRS proper direction.
-    eraRxp(astrom->bpn, pos, pos);
-
-    eraC2s(pos, &ri, &di);
-
-    // Apply parallax if needed.
-    if (unit < INFINITY) {
-        eraSxp(DAU * dist, pos, pos); // Set pos in m
-        // XXX: this could be precomputed?
-        theta = eraEra00(DJM0, obs->ut1);
-        eraPvtob(obs->elong, obs->phi, 0, 0, 0, 0, theta, pvc);
-        eraPmp(pos, pvc[0], pos);
+    vec3_copy(pv[0], pos);
+    pos[3] = (unit == INFINITY) ? 0.0 : 1.0;
+    convert_coordinates(obs, FRAME_ICRS, FRAME_CIRS, 0, pos, pos);
+    if (ra || dec) {
         eraC2s(pos, &ri, &di);
+        if (ra) *ra = eraAnp(ri);
+        if (dec) *dec = eraAnpm(di);
     }
-
-    // Observed coordinates (az, alt).
-    eraAtioq(ri, di, astrom, &aob, &zob, &hob, &dob, &rob);
-    if (az) *az = aob;
-    if (alt) *alt = 90 * DD2R - zob;
-
+    convert_coordinates(obs, FRAME_CIRS, FRAME_OBSERVED, 0, pos, pos);
+    if (az || alt) {
+        eraC2s(pos, &ri, &di);
+        if (az) *az = eraAnp(ri);
+        if (alt) *alt = eraAnpm(di);
+    }
     return 0;
 }
 
