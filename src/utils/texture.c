@@ -131,7 +131,7 @@ texture_t *texture_from_url(const char *url, int flags)
     tex = calloc(1, sizeof(*tex));
     tex->url = strdup(url);
     tex->flags = flags;
-    texture_load(tex, NULL);
+    if (!(flags & TF_LAZY_LOAD)) texture_load(tex, NULL);
     return tex;
 }
 
