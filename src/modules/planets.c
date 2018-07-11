@@ -183,23 +183,152 @@ static const double VIS_ELEMENTS[][5] = {
             p; \
             p = (planet_t*)p->obj.next)
 
+static int earth_update(planet_t *planet, const observer_t *obs)
+{
+    // Heliocentric position of the earth (AU)
+    eraCpv(obs->earth_pvh, planet->pvh);
+    eraZpv(planet->pvg);
+    // Ecliptic position.
+    mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
+    planet->phase = NAN;
+    return 0;
+}
+
+static int sun_update(planet_t *planet, const observer_t *obs)
+{
+    eraZpv(planet->pvh);
+    eraSxpv(-1, obs->earth_pvh, planet->pvg);
+    planet->phase = NAN;
+    return 0;
+}
+
+static int moon_update(planet_t *planet, const observer_t *obs)
+{
+    double i;   // Phase angle.
+    double lambda, beta, dist;
+    double rmatecl[3][3], rmatp[3][3];
+    double obl;
+    double pos[3];
+    // Get ecliptic position of date.
+    moon_pos(DJM0 + obs->tt, &lambda, &beta, &dist);
+    dist *= 1000.0 / DAU; // km to AU.
+    // Convert to equatorial.
+    obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
+    eraIr(rmatecl);
+    eraRx(-obl, rmatecl);
+    eraS2p(lambda, beta, dist, pos);
+    eraRxp(rmatecl, pos, pos);
+
+    // Precess back to J2000.
+    eraPmat76(DJM0, obs->tt, rmatp);
+    eraTrxp(rmatp, pos, pos);
+    eraCp(pos, planet->pvg[0]);
+
+    // Heliocentric position.
+    eraPpp(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
+
+    i = eraSepp(planet->pvh[0], planet->pvg[0]);
+    planet->phase = 0.5 * cos(i) + 0.5;
+
+    // We don't know the speed.
+    planet->pvg[1][0] = NAN;
+    planet->pvg[1][1] = NAN;
+    planet->pvg[1][2] = NAN;
+    planet->pvh[1][0] = NAN;
+    planet->pvh[1][1] = NAN;
+    planet->pvh[1][2] = NAN;
+
+    return 0;
+}
+
+static int plan94_update(planet_t *planet, const observer_t *obs)
+{
+    const double *vis;  // Visual element of planet.
+    double rho; // Distance to Earth (AU).
+    double rp;  // Distance to Sun (AU).
+    double i;   // Phase angle.
+    int n = (planet->id - MERCURY) / 100 + 1;
+    eraPlan94(DJM0, obs->tt, n, planet->pvh);
+    eraPvmpv(planet->pvh, obs->earth_pvh, planet->pvg);
+    i = eraSepp(planet->pvh[0], planet->pvg[0]);
+    planet->phase = 0.5 * cos(i) + 0.5;
+    // Compute visual magnitude.
+    i *= DR2D / 100;
+    rho = vec3_norm(planet->pvh[0]);
+    rp = vec3_norm(planet->pvg[0]);
+    vis = VIS_ELEMENTS[n];
+    planet->obj.vmag = vis[1] + 5 * log10(rho * rp) +
+                        i * (vis[2] + i * (vis[3] + i * vis[4]));
+    return 0;
+}
+
+static int l12_update(planet_t *planet, const observer_t *obs)
+{
+    double pvj[2][3];
+    double mag;
+    double rho; // Distance to Earth (AU).
+    double rp;  // Distance to Sun (AU).
+    planet_t *jupiter = planet->parent;
+    obj_update(&jupiter->obj, obs, 0);
+    l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
+    vec3_add(pvj[0], jupiter->pvg[0], planet->pvg[0]);
+    vec3_add(pvj[1], jupiter->pvg[1], planet->pvg[1]);
+    vec3_add(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
+
+    // Compute visual magnitude.
+    // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
+    rho = vec3_norm(planet->pvh[0]);
+    rp = vec3_norm(planet->pvg[0]);
+    mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
+            2.0 * planet->radius_m / 1000.0 / 1329.0);
+    planet->obj.vmag = mag + 5 * log10(rho * rp);
+    return 0;
+}
+
+static int kepler_update(planet_t *planet, const observer_t *obs)
+{
+    double rho; // Distance to Earth (AU).
+    double rp;  // Distance to Sun (AU).
+    double p[3];
+    obj_update(&planet->parent->obj, obs, 0);
+    kepler_solve(obs->tt, p,
+            planet->orbit.kepler.jd,
+            planet->orbit.kepler.in,
+            planet->orbit.kepler.om,
+            planet->orbit.kepler.w,
+            planet->orbit.kepler.a,
+            planet->orbit.kepler.n,
+            planet->orbit.kepler.ec,
+            planet->orbit.kepler.ma,
+            0.0, 0.0);
+    // Ecliptic -> Equatorial.
+    double obl;
+    double rmatecl[3][3];
+    obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
+    eraIr(rmatecl);
+    eraRx(-obl, rmatecl);
+    eraRxp(rmatecl, p, p);
+
+    // Add parent position.
+    vec3_add(p, planet->parent->pvg[0], planet->pvg[0]);
+
+    // Heliocentric position.
+    eraPpp(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
+
+    // Compute visual magnitude.
+    // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
+    rho = vec3_norm(planet->pvh[0]);
+    rp = vec3_norm(planet->pvg[0]);
+    double mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
+            2.0 * planet->radius_m / 1000.0 / 1329.0);
+    planet->obj.vmag = mag + 5 * log10(rho * rp);
+    return 0;
+}
+
 
 static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
-
-
-    /**************************************************************
-     * XXX:                                                       *
-     * XXX: Cleanup this function!!!                              *
-     * XXX:                                                       *
-     **************************************************************/
-
-
     planet_t *planet = (planet_t*)obj;
-    const double *vis;  // Visual element of planet.
-    double i;   // Phase angle.
-    double rho; // Distance to Earth (AU).
-    double rp;  // Distance to Sun (AU).
     planets_t *planets = (planets_t*)obj->parent;
     planet_t *earth = planets->earth;
 
@@ -212,54 +341,9 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     // Compute the position of the planet.
     // XXX: we could use an approximation at the beginning, and only compute
     // the exact pos if needed.
-    if (planet->id == EARTH) {
-        // Heliocentric position of the earth (AU)
-        eraCpv(obs->earth_pvh, planet->pvh);
-        eraZpv(planet->pvg);
-        // Ecliptic position.
-        mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
-        planet->phase = NAN;
-    }
-    if (planet->id == SUN) {
-        eraZpv(planet->pvh);
-        eraSxpv(-1, obs->earth_pvh, planet->pvg);
-        planet->phase = NAN;
-    }
-
-    if (planet->id == MOON) {
-        double lambda, beta, dist;
-        double rmatecl[3][3], rmatp[3][3];
-        double obl;
-        double pos[3];
-        // Get ecliptic position of date.
-        moon_pos(DJM0 + obs->tt, &lambda, &beta, &dist);
-        dist *= 1000.0 / DAU; // km to AU.
-        // Convert to equatorial.
-        obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
-        eraIr(rmatecl);
-        eraRx(-obl, rmatecl);
-        eraS2p(lambda, beta, dist, pos);
-        eraRxp(rmatecl, pos, pos);
-
-        // Precess back to J2000.
-        eraPmat76(DJM0, obs->tt, rmatp);
-        eraTrxp(rmatp, pos, pos);
-        eraCp(pos, planet->pvg[0]);
-
-        // Heliocentric position.
-        eraPpp(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
-
-        i = eraSepp(planet->pvh[0], planet->pvg[0]);
-        planet->phase = 0.5 * cos(i) + 0.5;
-
-        // We don't know the speed.
-        planet->pvg[1][0] = NAN;
-        planet->pvg[1][1] = NAN;
-        planet->pvg[1][2] = NAN;
-        planet->pvh[1][0] = NAN;
-        planet->pvh[1][1] = NAN;
-        planet->pvh[1][2] = NAN;
-    }
+    if (planet->id == EARTH) earth_update(planet, obs);
+    if (planet->id == SUN) sun_update(planet, obs);
+    if (planet->id == MOON) moon_update(planet, obs);
 
     // Solar system planet: use PLAN94 model.
     if (    planet->id == MERCURY ||
@@ -270,18 +354,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
             planet->id == URANUS ||
             planet->id == NEPTUNE)
     {
-        int n = (planet->id - MERCURY) / 100 + 1;
-        eraPlan94(DJM0, obs->tt, n, planet->pvh);
-        eraPvmpv(planet->pvh, obs->earth_pvh, planet->pvg);
-        i = eraSepp(planet->pvh[0], planet->pvg[0]);
-        planet->phase = 0.5 * cos(i) + 0.5;
-        // Compute visual magnitude.
-        i *= DR2D / 100;
-        rho = vec3_norm(planet->pvh[0]);
-        rp = vec3_norm(planet->pvg[0]);
-        vis = VIS_ELEMENTS[n];
-        planet->obj.vmag = vis[1] + 5 * log10(rho * rp) +
-                           i * (vis[2] + i * (vis[3] + i * vis[4]));
+        plan94_update(planet, obs);
     }
 
     // Galilean moons: Use L12.
@@ -290,61 +363,11 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
             planet->id == GANYMEDE ||
             planet->id == CALLISTO)
     {
-        double pvj[2][3];
-        double mag;
-        planet_t *jupiter;
-        jupiter = planet_get_by_name(planets, "jupiter");
-        obj_update(&jupiter->obj, obs, 0);
-        l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
-        vec3_add(pvj[0], jupiter->pvg[0], planet->pvg[0]);
-        vec3_add(pvj[1], jupiter->pvg[1], planet->pvg[1]);
-        vec3_add(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
-
-        // Compute visual magnitude.
-        // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
-        rho = vec3_norm(planet->pvh[0]);
-        rp = vec3_norm(planet->pvg[0]);
-        mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
-                2.0 * planet->radius_m / 1000.0 / 1329.0);
-        planet->obj.vmag = mag + 5 * log10(rho * rp);
+        l12_update(planet, obs);
     }
 
     // Kepler orbit planets.
-    if (planet->orbit.type == 1) {
-        obj_update(&planet->parent->obj, obs, 0);
-        double p[3];
-        kepler_solve(obs->tt, p,
-                planet->orbit.kepler.jd,
-                planet->orbit.kepler.in,
-                planet->orbit.kepler.om,
-                planet->orbit.kepler.w,
-                planet->orbit.kepler.a,
-                planet->orbit.kepler.n,
-                planet->orbit.kepler.ec,
-                planet->orbit.kepler.ma,
-                0.0, 0.0);
-        // Ecliptic -> Equatorial.
-        double obl;
-        double rmatecl[3][3];
-        obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
-        eraIr(rmatecl);
-        eraRx(-obl, rmatecl);
-        eraRxp(rmatecl, p, p);
-
-        // Add parent position.
-        vec3_add(p, planet->parent->pvg[0], planet->pvg[0]);
-
-        // Heliocentric position.
-        eraPpp(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
-
-        // Compute visual magnitude.
-        // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
-        rho = vec3_norm(planet->pvh[0]);
-        rp = vec3_norm(planet->pvg[0]);
-        double mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
-                2.0 * planet->radius_m / 1000.0 / 1329.0);
-        planet->obj.vmag = mag + 5 * log10(rho * rp);
-    }
+    if (planet->orbit.type == 1) kepler_update(planet, obs);
 
     mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
 
