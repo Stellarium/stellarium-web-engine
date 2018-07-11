@@ -177,11 +177,8 @@ static int dso_update(obj_t *obj, const observer_t *obs, double dt)
 {
     dso_t *dso = (dso_t*)obj;
     eraS2c(dso->data.ra, dso->data.de, obj->pos.pvg[0]);
-    // Set speed to 0.
     obj->vmag = dso->data.vmag;
-    obj->pos.pvg[1][0] = obj->pos.pvg[1][1] = 0;
-    obj->pos.unit = INFINITY;
-    compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
+    compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
     return 0;

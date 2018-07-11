@@ -61,8 +61,7 @@ int convert_coordinates(const observer_t *obs,
 // XXX: probably need to deprecate this function, and use
 // convert_coordinates instead.
 int compute_coordinates(const observer_t *obs,
-                        double pv[2][3],
-                        double unit,
+                        const double icrs[4],
                         double *a_ra, double *a_dec,
                         double *az,   double *alt);
 

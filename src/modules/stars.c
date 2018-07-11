@@ -122,18 +122,19 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
             astrom->pmt, astrom->eb, obj->pos.pvg[0]);
 
     // Multiply by distance in AU:
+    // XXX: we can do that a single time at the star creation!
     if (star->data.plx > 0.001) {
         dist = 1.0 / (star->data.plx) * PARSEC_IN_METER / DAU;
         eraSxp(dist, obj->pos.pvg[0], obj->pos.pvg[0]);
-        obj->pos.unit = 1.0;
+        obj->pos.pvg[0][3] = 1.0;
     } else {
-        obj->pos.unit = INFINITY;
+        obj->pos.pvg[0][3] = 0.0;
     }
     obj->vmag = star->data.vmag;
     // Set speed to 0.
     obj->pos.pvg[1][0] = obj->pos.pvg[1][1] = 0;
     // Compute radec and azalt.
-    compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
+    compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
     return 0;

@@ -350,8 +350,6 @@ int obj_update(obj_t *obj, observer_t *obs, double dt)
     ret = obj->klass->update(obj, obs, dt);
     obj->observer_hash = obs->hash;
     if (ret != 0) return ret;
-    assert(obj->pos.unit == 1.0 || obj->pos.unit == INFINITY ||
-           isnan(obj->pos.unit));
     return ret;
 }
 
@@ -450,12 +448,12 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     double v[4] = {};
     if (str_equ(attr->name, "distance")) {
         return args_value("f", "dist",
-                obj->pos.unit == INFINITY || obj->pos.unit == NAN ? NAN :
+                obj->pos.pvg[0][3] == 0 ? NAN :
                 vec3_norm(obj->pos.pvg[0]));
     }
+    // XXX: not correct!  radec should be in CIRS, not ICRS!
     if (str_equ(attr->name, "radec")) {
-        vec3_copy(obj->pos.pvg[0], v);
-        v[3] = (obj->pos.unit == INFINITY) ? 0 : 1;
+        vec4_copy(obj->pos.pvg[0], v);
         return args_value("v4", "radec", v);
     }
     if (str_equ(attr->name, "azalt")) {
@@ -821,12 +819,8 @@ obj_klass_t *obj_get_all_klasses(void)
 
 void obj_get_pos_icrs(obj_t *obj, observer_t *obs, double pos[4])
 {
-    double p[4];
     obj_update(obj, obs, 0);
-    assert(obj->pos.unit == INFINITY || obj->pos.unit == 1.0);
-    vec3_copy(obj->pos.pvg[0], p);
-    p[3] = (obj->pos.unit == INFINITY) ? 0.0 : 1.0;
-    vec4_copy(p, pos);
+    vec4_copy(obj->pos.pvg[0], pos);
 }
 
 void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])

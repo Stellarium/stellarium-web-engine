@@ -92,8 +92,9 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
         cal->pixscale = pixscale / 60 / 60 * DD2R;
         cal->ra = ra * DD2R;
         cal->dec = dec * DD2R;
+        // XXX: not true: we only know the CIRS position, not the ICRS.
+        // We should convert it back!
         eraS2c(cal->ra, cal->dec, obj->pos.pvg[0]);
-        obj->pos.unit = INFINITY;
     }
 
     val = json_object_new(0);
@@ -108,7 +109,7 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
 
 static int photo_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
+    compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
     return 0;

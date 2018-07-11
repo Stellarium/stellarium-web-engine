@@ -168,13 +168,9 @@ struct obj
     // Must be up to date after a call to obj_update.
     double vmag;
     struct {
-        // equ, J2000.0, AU geocentric pos and speed.
-        double pvg[2][3];
-        // Can be set to INFINITY for stars that are too far to have a
-        // position un AU.
-        double unit;
-        double ra, dec; // ICRS.
-        double az, alt;
+        double pvg[2][4];   // ICRS pos and speed in xyzw.
+        double ra, dec;     // CIRS polar.
+        double az, alt;     // Observed polar.
     } pos;
 };
 

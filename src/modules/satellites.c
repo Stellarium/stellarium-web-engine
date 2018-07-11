@@ -176,13 +176,13 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
 
     vec3_copy(p, obj->pos.pvg[0]);
     vec3_copy(v, obj->pos.pvg[1]);
-    obj->pos.unit = 1.0; // AU.
+    obj->pos.pvg[0][3] = obj->pos.pvg[1][3] = 1.0; // AU.
 
     // For the moment we have no information about the magnitude.
     obj->vmag = 7.0;
 
     // XXX: We need to get ride of this!
-    compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
+    compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
     return 0;

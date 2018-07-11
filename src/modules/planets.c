@@ -212,7 +212,6 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     // Compute the position of the planet.
     // XXX: we could use an approximation at the beginning, and only compute
     // the exact pos if needed.
-    obj->pos.unit = 1.0; // AU.
     if (planet->id == EARTH) {
         // Heliocentric position of the earth (AU)
         eraCpv(obs->earth_pvh, planet->pvh);
@@ -367,9 +366,13 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     }
 
     planet->radius = planet->radius_m / DAU / eraPm((double*)planet->pvg[0]);
-    eraCpv(planet->pvg, obj->pos.pvg);
 
-    compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
+    vec3_copy(planet->pvg[0], obj->pos.pvg[0]);
+    vec3_copy(planet->pvg[1], obj->pos.pvg[1]);
+    obj->pos.pvg[0][3] = 1.0; // AU.
+    obj->pos.pvg[1][3] = 1.0; // AU.
+
+    compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
     return 0;

@@ -293,10 +293,8 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     mat4_mul_vec3(obs->re2i, ph, ph);
     vec3_sub(ph, obs->earth_pvh[0], pg);
     vec3_copy(pg, obj->pos.pvg[0]);
-
-    obj->pos.pvg[1][0] = obj->pos.pvg[1][1] = 0;
-    obj->pos.unit = 1.0;
-    compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
+    obj->pos.pvg[0][3] = 1.0; // AU unit.
+    compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
 
