@@ -75,8 +75,6 @@ int compute_coordinates(const observer_t *obs,
                         double pv[2][3],
                         double unit,
                         double *a_ra, double *a_dec,
-                        double *g_ra, double *g_dec,
-                        double *ra,   double *dec,
                         double *az,   double *alt)
 {
     double pos[3];
@@ -84,7 +82,6 @@ int compute_coordinates(const observer_t *obs,
     double theta;
     double dist;
     double pvc[2][3];
-    double eo = obs->eo;
     double aob, zob, hob, dob, rob;
     eraASTROM *astrom = (eraASTROM*)&obs->astrom;
 
@@ -105,9 +102,6 @@ int compute_coordinates(const observer_t *obs,
 
     eraC2s(pos, &ri, &di);
 
-    if (g_ra) *g_ra = eraAnp(ri - eo);
-    if (g_dec) *g_dec = eraAnpm(di);
-
     // Apply parallax if needed.
     if (unit < INFINITY) {
         eraSxp(DAU * dist, pos, pos); // Set pos in m
@@ -117,9 +111,6 @@ int compute_coordinates(const observer_t *obs,
         eraPmp(pos, pvc[0], pos);
         eraC2s(pos, &ri, &di);
     }
-
-    if (ra) *ra = eraAnp(ri - eo);
-    if (dec) *dec = di;
 
     // Observed coordinates (az, alt).
     eraAtioq(ri, di, astrom, &aob, &zob, &hob, &dob, &rob);

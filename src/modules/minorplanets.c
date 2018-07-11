@@ -298,7 +298,6 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     obj->pos.unit = 1.0;
     compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
                         &obj->pos.ra, &obj->pos.dec,
-                        NULL, NULL, NULL, NULL,
                         &obj->pos.az, &obj->pos.alt);
 
     // Compute vmag.

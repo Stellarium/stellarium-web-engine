@@ -64,7 +64,5 @@ int compute_coordinates(const observer_t *obs,
                         double pv[2][3],
                         double unit,
                         double *a_ra, double *a_dec,
-                        double *g_ra, double *g_dec,
-                        double *ra,   double *dec,
                         double *az,   double *alt);
 

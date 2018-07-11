@@ -235,7 +235,6 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     // Compute radec and azalt.
     compute_coordinates(obs, obj->pos.pvg, obj->pos.unit,
                         &obj->pos.ra, &obj->pos.dec,
-                        NULL, NULL, NULL, NULL,
                         &obj->pos.az, &obj->pos.alt);
     return 0;
 }
