@@ -443,7 +443,7 @@ static void render_rings(texture_t *tex,
     painter.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_NO_CULL_FACE;
-    paint_quad(&painter, FRAME_OBSERVED, tex, NULL, NULL, &proj, 64);
+    paint_quad(&painter, FRAME_VIEW, tex, NULL, NULL, &proj, 64);
 }
 
 /*
