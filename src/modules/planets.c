@@ -879,7 +879,7 @@ static int planets_init(obj_t *obj, json_value *args)
                 path + matches[1].rm_so);
         p = planet_get_by_name(planets, name);
         if (!p) continue;
-        p->rings.tex = texture_from_url(path, 0);
+        p->rings.tex = texture_from_url(path, TF_LAZY_LOAD);
     }
 
     return 0;
