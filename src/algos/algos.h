@@ -152,30 +152,36 @@ int l12(double tt1, double tt2, int ks, double pv[2][3]);
 int find_constellation_at(const double pos[3], char id[4]);
 
 /*
- * Compute kepler element.
+ * Function: orbit_compute_pv
+ * Compute position and speed from orbit elements.
  *
  * Parameters:
  *   mjd    - Time of the position (MJD).
- *   pos    - Get the result of the computation.
- *   k_jd   - date (MJD).
- *   k_in   - inclination (rad).
- *   k_om   - Longitude of the Ascending Node (rad).
- *   k_w    - Argument of Perihelion (rad).
- *   k_a    - Mean distance (Semi major axis).
- *   k_n    - Daily motion (rad/day).
- *   k_ec   - Eccentricity.
- *   k_ma   - Mean Anomaly (rad).
- *   k_omd  - variation of om in time (rad/day).
- *   k_wd   - variation of w in time (rad/day).
+ *   pos    - Get the computed position.
+ *   speed  - Get the computed speed (can be NULL).
+ *   d      - Orbit base epoch (MJD).
+ *   i      - inclination (rad).
+ *   o      - Longitude of the Ascending Node (rad).
+ *   w      - Argument of Perihelion (rad).
+ *   a      - Mean distance (Semi major axis).
+ *   n      - Daily motion (rad/day).
+ *   e      - Eccentricity.
+ *   ma     - Mean Anomaly (rad).
+ *   od     - variation of o in time (rad/day).
+ *   wd     - variation of w in time (rad/day).
+ *
+ * Return:
+ *   zero.
  */
-int kepler_solve(double mjd, double pos[3],
-                 double k_jd,      // date (MJD).
-                 double k_in,      // inclination (rad).
-                 double k_om,      // Longitude of the Ascending Node (rad).
-                 double k_w,       // Argument of Perihelion (rad).
-                 double k_a,       // Mean distance (Semi major axis).
-                 double k_n,       // Daily motion (rad/day).
-                 double k_ec,      // Eccentricity.
-                 double k_ma,      // Mean Anomaly (rad).
-                 double k_omd,     // variation of om in time (rad/day).
-                 double k_wd);     // variation of w in time (rad/day).
+int orbit_compute_pv(
+        double mjd, double pos[3], double speed[3],
+        double d,         // epoch date (MJD).
+        double i,         // inclination (rad).
+        double o,         // Longitude of the Ascending Node (rad).
+        double w,         // Argument of Perihelion (rad).
+        double a,         // Mean distance (Semi major axis).
+        double n,         // Daily motion (rad/day).
+        double e,         // Eccentricity.
+        double ma,        // Mean Anomaly (rad).
+        double od,        // variation of o in time (rad/day).
+        double wd);       // variation of w in time (rad/day).
