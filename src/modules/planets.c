@@ -290,9 +290,9 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 {
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
-    double p[3];
+    double p[3], v[3];
     obj_update(&planet->parent->obj, obs, 0);
-    orbit_compute_pv(obs->tt, p, NULL,
+    orbit_compute_pv(obs->tt, p, v,
             planet->orbit.kepler.jd,
             planet->orbit.kepler.in,
             planet->orbit.kepler.om,
@@ -309,9 +309,11 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     eraIr(rmatecl);
     eraRx(-obl, rmatecl);
     eraRxp(rmatecl, p, p);
+    eraRxp(rmatecl, v, v);
 
-    // Add parent position.
+    // Add parent position and speed.
     vec3_add(p, planet->parent->pvg[0], planet->pvg[0]);
+    vec3_add(v, planet->parent->pvg[1], planet->pvg[1]);
 
     // Heliocentric position.
     eraPpp(planet->pvg[0], obs->earth_pvh[0], planet->pvh[0]);
