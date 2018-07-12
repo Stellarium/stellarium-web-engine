@@ -645,7 +645,7 @@ static void planet_render_orbit(const planet_t *planet,
                 in, om, w, a, n, ec, ma);
 }
 
-static void planet_render(const planet_t *planet, const painter_t *painter)
+static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], vpos[3];
     double label_color[4] = RGBA(124, 124, 255, 255);
@@ -656,17 +656,17 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     double r;                // Angular diameter (rad).
     double sep;              // Angular sep to screen center.
     double hips_alpha = 0;
-    painter_t painter2 = *painter;
+    painter_t painter = *painter_;
     point_t point;
     const double hips_k = 2.0; // How soon we switch to the hips survey.
 
     if (planet->id == EARTH) return;
-    if (planet->obj.vmag > painter->mag_max) return;
+    if (planet->obj.vmag > painter.mag_max) return;
 
     vec3_copy(planet->obj.pos.pvg[0], pos);
     pos[3] = 1;
-    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
-    if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
+    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
+    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return;
 
     mag = core_get_observed_mag(planet->obj.vmag);
@@ -677,7 +677,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
     // XXX: we need to compute the max visible fov (for the moment I
     // add a factor of 1.5 to make sure).
     vec3_normalize(pos, pos);
-    mat4_mul_vec3(painter2.obs->ro2v, pos, vpos);
+    mat4_mul_vec3(painter.obs->ro2v, pos, vpos);
     sep = eraSepp(vpos, (double[]){0, 0, -1});
     if (sep - r > core->fov * 1.5)
         return;
@@ -698,17 +698,17 @@ static void planet_render(const planet_t *planet, const painter_t *painter)
         .color = {color[0], color[1], color[2], color[3]},
     };
     strcpy(point.id, planet->obj.id);
-    paint_points(&painter2, 1, &point, FRAME_OBSERVED);
+    paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
 skip_point:
     if (hips_alpha > 0) {
-        planet_render_hips(planet, hips_alpha, &painter2);
+        planet_render_hips(planet, hips_alpha, &painter);
     }
 
 
-    if (mag <= painter->label_mag_max) {
+    if (mag <= painter.label_mag_max) {
         mat4_mul_vec3(core->observer->ro2v, pos, pos);
-        if (project(painter->proj,
+        if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
                 2, pos, pos)) {
             labels_add(planet->name, pos, point_r, 16, label_color,
@@ -721,7 +721,7 @@ skip_point:
     // so that it works with any body, not just planets.  But this is
     // hard to know in advance what depth range to use.  I leave this
     // disabled until I implement a deferred renderer.
-    if ((0)) planet_render_orbit(planet, 1.0, &painter2);
+    if ((0)) planet_render_orbit(planet, 1.0, &painter);
 }
 
 static int sort_cmp(const obj_t *a, const obj_t *b)
