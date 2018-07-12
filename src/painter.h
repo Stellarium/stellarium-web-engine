@@ -221,4 +221,24 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
                              int order, int pix,
                              bool outside);
 
+/*
+ * Function: paint_orbit
+ * Draw an orbit from it's elements.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   frame      - Need to be FRAME_ICRS.
+ *   k_jd       - Orbit epoch date (MJD).
+ *   k_in       - Inclination (rad).
+ *   k_om       - Longitude of the Ascending Node (rad).
+ *   k_w        - Argument of Perihelion (rad).
+ *   k_a        - Mean distance (Semi major axis).
+ *   k_n        - Daily motion (rad/day).
+ *   k_ec       - Eccentricity.
+ *   k_ma       - Mean Anomaly (rad).
+ */
+int paint_orbit(const painter_t *painter, int frame,
+                double k_jd, double k_in, double k_om, double k_w,
+                double k_a, double k_n, double k_ec, double k_ma);
+
 #endif // PAINTER_H

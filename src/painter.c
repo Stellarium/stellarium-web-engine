@@ -254,3 +254,54 @@ int paint_quad_contour(const painter_t *painter, int frame,
     }
     return 0;
 }
+
+static void orbit_project(const projection_t *proj, int flags,
+                          const double *v, double *out)
+{
+    const double *o = proj->user;
+    double pos[4];
+    double period = 2 * M_PI / o[5]; // Period in day.
+    double mjd = o[0] + period * v[0];
+    orbit_compute_pv(mjd, pos, NULL,
+                     o[0], o[1], o[2], o[3], o[4], o[5], o[6], o[7], 0.0, 0.0);
+    vec3_copy(pos, out);
+    out[3] = 1.0; // AU.
+}
+
+/*
+ * Function: paint_orbit
+ * Draw an orbit from it's elements.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   frame      - Need to be FRAME_ICRS.
+ *   k_jd       - Orbit epoch date (MJD).
+ *   k_in       - Inclination (rad).
+ *   k_om       - Longitude of the Ascending Node (rad).
+ *   k_w        - Argument of Perihelion (rad).
+ *   k_a        - Mean distance (Semi major axis).
+ *   k_n        - Daily motion (rad/day).
+ *   k_ec       - Eccentricity.
+ *   k_ma       - Mean Anomaly (rad).
+ */
+int paint_orbit(const painter_t *painter, int frame,
+                double k_jd,      // date (MJD).
+                double k_in,      // inclination (rad).
+                double k_om,      // Longitude of the Ascending Node (rad).
+                double k_w,       // Argument of Perihelion (rad).
+                double k_a,       // Mean distance (Semi major axis).
+                double k_n,       // Daily motion (rad/day).
+                double k_ec,      // Eccentricity.
+                double k_ma)      // Mean Anomaly (rad).
+{
+    const double orbit[8] = {k_jd, k_in, k_om, k_w, k_a, k_n, k_ec, k_ma};
+    projection_t orbit_proj = {
+        .backward   = orbit_project,
+        .user       = (void*)orbit,
+    };
+    double line[2][4] = {{0}, {1}};
+    // We only support ICRS for the moment to make things simpler.
+    assert(frame == FRAME_ICRS);
+    paint_line(painter, frame, line, &orbit_proj, 128, 1);
+    return 0;
+}

@@ -512,6 +512,7 @@ static void line(renderer_t           *rend_,
     uint16_t *indices;
     n = nb_segs * 2;
     width = painter->lines_width ?: 1;
+    const double *depth_range = (const double*)painter->depth_range;
 
     buffer = calloc(1, sizeof(*buffer));
     verts = calloc(n, sizeof(*verts));
@@ -526,7 +527,13 @@ static void line(renderer_t           *rend_,
         mat4_mul_vec4(*painter->transform, pos, pos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
         pos[3] = 1.0;
+        double z = pos[2];
         project(painter->proj, 0, 4, pos, pos);
+
+        if (depth_range) {
+            pos[2] = (-z - depth_range[0]) / (depth_range[1] - depth_range[0]);
+        }
+
         vec4_to_float(pos, verts[i].pos);
         memcpy(verts[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
         indices[i] = i;
@@ -554,6 +561,7 @@ static void line(renderer_t           *rend_,
                       .color = painter->color,
                       .tex = rend->white_tex,
                       .stripes = painter->lines_stripes,
+                      .depth_range = painter->depth_range,
                   });
     render_free_buffer(buffer);
 }
