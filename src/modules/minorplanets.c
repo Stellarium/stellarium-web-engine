@@ -26,33 +26,6 @@ typedef struct orbit_t {
     double wd;   // variation of w in time.
 } orbit_t;
 
-// Compute heliocentric ecliptic position.
-static int orbit_compute(const orbit_t *orbit, double jd, double pos[3])
-{
-    double d, m, v, o, w, r;
-    // Get the number of day since element date.
-    d = jd - orbit->d;
-    // Compute the mean anomaly.
-    m = orbit->n * d + orbit->m;
-    m = fmod(m, 2 * M_PI);
-    // Compute true anomaly.
-    v = m + ((2.0 * orbit->e - pow(orbit->e, 3) / 4) * sin(m) +
-              5.0 / 4 * pow(orbit->e, 2) * sin(2 * m) +
-              13.0 / 12 * pow(orbit->e, 3) * sin(3 * m));
-    // Compute radius vector.
-    o = orbit->o + d * orbit->od;
-    w = orbit->w + d * orbit->wd;
-    r = orbit->a * (1 - pow(orbit->e, 2)) / (1 + orbit->e * cos(v));
-    // Compute position into the plane of the ecliptic.
-    pos[0] = r * (cos(o) * cos(v + w) -
-                  sin(o) * sin(v + w) * cos(orbit->i));
-    pos[1] = r * (sin(o) * cos(v + w) +
-                  cos(o) * sin(v + w) * cos(orbit->i));
-    pos[2] = r * (sin(v + w) * sin(orbit->i));
-    return 0;
-}
-
-
 // A single minor planet.
 typedef struct {
     obj_t       obj;
@@ -289,7 +262,11 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     double ph[3], pg[3];
     mplanet_t *mp = (mplanet_t*)obj;
 
-    orbit_compute(&mp->orbit, obs->ut1, ph);
+    orbit_compute_pv(obs->ut1, ph, NULL,
+            mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
+            mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
+            mp->orbit.od, mp->orbit.wd);
+
     mat4_mul_vec3(obs->re2i, ph, ph);
     vec3_sub(ph, obs->earth_pvh[0], pg);
     vec3_copy(pg, obj->pos.pvg[0]);
