@@ -477,6 +477,8 @@ static void render_rings(texture_t *tex,
 
 /*
  * Test if a planet A could cast shadow on a planet B.
+ * if a is NULL, then we return false if we know for sure that no body
+ * could cast a shadow on b.
  */
 static bool could_cast_shadow(const planet_t *a, const planet_t *b)
 {
@@ -484,8 +486,13 @@ static bool could_cast_shadow(const planet_t *a, const planet_t *b)
     const double SUN_RADIUS = 695508000.0 / DAU;
     double pp[3];
     double shadow_dist, d, penumbra_r;
-    // For the moment we only consider the Jupiter major moons.
-    if (b->id != JUPITER || a->id < IO || a->id > CALLISTO) return false;
+
+    // For the moment we only consider the Jupiter major moons or the
+    // Earth on the Moon.
+    if (a == NULL) return b->id == JUPITER || b->id == MOON;
+    if (b->id == JUPITER && (a->id < IO || a->id > CALLISTO)) return false;
+    if (b->id == MOON && a->id != EARTH) return false;
+
     if (vec3_norm2(a->hpos) > vec3_norm2(b->hpos)) return false;
     vec3_normalize(a->hpos, pp);
     shadow_dist = vec3_dot(pp, b->hpos);
@@ -510,9 +517,7 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
     planets_t *planets = (planets_t*)planet->obj.parent;
     planet_t *other;
 
-    if (planet->id == SUN) return 0;
-    // For the moment we only consider the Jupiter moons.
-    if (planet->id != JUPITER) return 0;
+    if (!could_cast_shadow(NULL, planet)) return 0;
 
     PLANETS_ITER(planets, other) {
         if (could_cast_shadow(other, planet)) {
