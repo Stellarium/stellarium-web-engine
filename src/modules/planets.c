@@ -38,6 +38,7 @@ struct planet {
     double      hpos[3];     // ecl, heliocentric pos J2000.0
     double      phase;
     double      radius;     // XXX ?
+    double      mass;       // kg (0 if unknown).
 
     // Rotation elements
     struct {
@@ -870,6 +871,9 @@ static int planets_ini_handler(void* user, const char* section,
     }
     if (strcmp(attr, "orbit") == 0) {
         parse_orbit(planet, value);
+    }
+    if (strcmp(attr, "mass") == 0) {
+        sscanf(value, "%lg kg", &planet->mass);
     }
 
     return 0;
