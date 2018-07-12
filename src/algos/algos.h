@@ -185,3 +185,31 @@ int orbit_compute_pv(
         double ma,        // Mean Anomaly (rad).
         double od,        // variation of o in time (rad/day).
         double wd);       // variation of w in time (rad/day).
+
+/*
+ * Function: orbit_elements_from_pv
+ * Compute Kepler orbit element from a body positon and speed.
+ *
+ * The unit of the position, speed and mu input should match, so for example
+ * if p and v are using AU and day, then mu should be in (AU)³(day)⁻².
+ *
+ * Parameters:
+ *   p      - Cartesian position from parent body.
+ *   v      - Cartesian speed from parent body.
+ *   mu     - Standard gravitational parameter (μ).
+ *   i      - Output inclination (rad).
+ *   o      - Output longitude of the Ascending Node (rad).
+ *   w      - Output argument of Perihelion (rad).
+ *   a      - Output mean distance (Semi major axis).
+ *   n      - Output daily motion (rad/day).
+ *   e      - Output eccentricity.
+ *   ma     - Output mean Anomaly (rad).
+ */
+int orbit_elements_from_pv(const double p[3], const double v[3], double mu,
+                           double *i,
+                           double *o,
+                           double *w,
+                           double *a,
+                           double *n,
+                           double *e,
+                           double *ma);
