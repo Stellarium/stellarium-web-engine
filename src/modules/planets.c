@@ -497,13 +497,13 @@ static bool could_cast_shadow(const planet_t *a, const planet_t *b)
     if (b->id == JUPITER && (a->id < IO || a->id > CALLISTO)) return false;
     if (b->id == MOON && a->id != EARTH) return false;
 
-    if (vec3_norm2(a->hpos) > vec3_norm2(b->hpos)) return false;
-    vec3_normalize(a->hpos, pp);
-    shadow_dist = vec3_dot(pp, b->hpos);
-    d = vec2_norm(a->hpos) / (a->radius_m / DAU / SUN_RADIUS + 1.0);
+    if (vec3_norm2(a->pvh[0]) > vec3_norm2(b->pvh[0])) return false;
+    vec3_normalize(a->pvh[0], pp);
+    shadow_dist = vec3_dot(pp, b->pvh[0]);
+    d = vec2_norm(a->pvh[0]) / (a->radius_m / DAU / SUN_RADIUS + 1.0);
     penumbra_r = (shadow_dist - d) / d * SUN_RADIUS;
     vec3_mul(shadow_dist, pp, pp);
-    vec3_sub(pp, b->hpos, pp);
+    vec3_sub(pp, b->pvh[0], pp);
     return (vec3_norm(pp) < penumbra_r + b->radius_m / DAU);
 }
 
