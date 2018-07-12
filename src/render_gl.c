@@ -34,8 +34,11 @@ typedef struct {
 
     GLuint u_tex_l;
     GLuint u_normal_tex_l;
+    GLuint u_shadow_color_tex_l;
+
     GLuint u_has_normal_tex_l;
     GLuint u_material_l;
+    GLuint u_is_moon_l;
     GLuint u_color_l;
     GLuint u_smooth_l;
     GLuint u_mv_l;
@@ -90,6 +93,7 @@ typedef struct render_buffer_args {
     const double *color;
     const texture_t *tex;
     const texture_t *normalmap;
+    const texture_t *shadow_color_tex;
     const double (*mv)[4][4];
     double smooth;
     const double *sun;
@@ -369,6 +373,7 @@ static void quad(renderer_t          *rend_,
                       .color = painter->color,
                       .tex = tex,
                       .normalmap = normalmap,
+                      .shadow_color_tex = painter->shadow_color_tex,
                       .mv = &mv,
                       .sun = (double*)painter->sun,
                       .light_emit = (double*)painter->light_emit,
@@ -646,6 +651,12 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         GL(glUniform1i(prog->u_has_normal_tex_l, 0));
     }
 
+    GL(glActiveTexture(GL_TEXTURE2));
+    if (args->shadow_color_tex && texture_load(args->shadow_color_tex, NULL))
+        GL(glBindTexture(GL_TEXTURE_2D, args->shadow_color_tex->id));
+    else
+        GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+
     GL(glBindBuffer(GL_ARRAY_BUFFER, buff->array_buffer));
     GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
                     buff->offset, (void*)(long)buff->offset_pos));
@@ -667,6 +678,7 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         GL(glUniform1i(prog->u_material_l, 0));
     }
     GL(glUniform1f(prog->u_shadow_brightness_l, args->shadow_brightness));
+    GL(glUniform1i(prog->u_is_moon_l, args->flags & PAINTER_IS_MOON ? 1 : 0));
 
     if (args->mv && prog->u_mv_l != -1) {
         mat4_to_float(*args->mv, mf);
@@ -746,6 +758,8 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_normal_tex);
     UNIFORM(u_has_normal_tex);
     UNIFORM(u_material);
+    UNIFORM(u_is_moon);
+    UNIFORM(u_shadow_color_tex);
     UNIFORM(u_color);
     UNIFORM(u_smooth);
     UNIFORM(u_sun);
@@ -767,6 +781,7 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     // Default texture locations:
     GL(glUniform1i(p->u_tex_l, 0));
     GL(glUniform1i(p->u_normal_tex_l, 1));
+    GL(glUniform1i(p->u_shadow_color_tex_l, 2));
 }
 
 static texture_t *create_white_texture(int w, int h)

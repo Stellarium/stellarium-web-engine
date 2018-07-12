@@ -109,6 +109,9 @@ typedef struct planets {
     planet_t    *sun;
     planet_t    *earth;
 
+    // Earth shadow on a lunar eclipse.
+    texture_t *earth_shadow_tex;
+
     // Status of the hipslist parsing.
     int         hipslist_parsed;
 } planets_t;
@@ -435,6 +438,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
         painter.color[3] = 1;
     }
     painter.color[3] *= fade;
+    if (planet->id == MOON) painter.flags |= PAINTER_IS_MOON;
 
     // Hardcoded increase of the luminosity of the moon for the moment!
     // This should be specified in the survey itsefl I guess.
@@ -589,9 +593,10 @@ static void planet_render_hips(const planet_t *planet,
     }
     painter.transform = &mat;
 
-    if (planet->id == SUN) {
+    if (planet->id == SUN)
         painter.light_emit = &full_emit;
-    }
+    if (planet->id == MOON)
+        painter.shadow_color_tex = planets->earth_shadow_tex;
 
     // XXX: for the moment we only use depth if the planet has a ring,
     // to prevent having to clean the depth buffer.
@@ -962,6 +967,9 @@ static int planets_init(obj_t *obj, json_value *args)
         if (!p) continue;
         p->rings.tex = texture_from_url(path, TF_LAZY_LOAD);
     }
+
+    planets->earth_shadow_tex =
+        texture_from_url("asset://textures/earth_shadow.png", TF_LAZY_LOAD);
 
     return 0;
 }

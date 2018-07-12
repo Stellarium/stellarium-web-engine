@@ -10,6 +10,8 @@ uniform vec3 u_light_emit;
 uniform mat4 u_mv;  // Model view matrix.
 uniform int u_has_normal_tex;
 uniform int u_material; // 0: Oren Nayar, 1: generic
+uniform int u_is_moon; // Set to 1 for the Moon only.
+uniform sampler2D u_shadow_color_tex; // Used for the Moon.
 
 uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
 // Up to four spheres for illumination ray tracing.
@@ -63,6 +65,17 @@ float illumination_sphere(vec3 p, vec4 sphere, vec3 sun_pos, float sun_r)
     float d = acos(min(1.0, dot(normalize(sun_pos - p),
                                 normalize(sphere.xyz - p))));
 
+    // Special case for the moon, to simulate lunar eclipses.
+    // We assume the only body that can cast shadow on the moon is the Earth.
+    if (u_is_moon == 1) {
+        if (d >= sun_r + sph_r) return 1.0; // Outside of shadow.
+        if (d <= sph_r - sun_r) return d / (sph_r - sun_r) * 0.6; // Umbra.
+        if (d <= sun_r - sph_r) // Penumbra completely inside.
+            return 1.0 - sph_r * sph_r / (sun_r * sun_r);
+        return ((d - abs(sun_r - sph_r)) /
+                (sun_r + sph_r - abs(sun_r - sph_r))) * 0.4 + 0.6;
+    }
+
     if (d >= sun_r + sph_r) return 1.0; // Outside of shadow.
     if (d <= sph_r - sun_r) return 0.0; // Umbra.
     if (d <= sun_r - sph_r) // Penumbra completely inside.
@@ -115,8 +128,17 @@ void main()
                                          normalize(-v_vpos),
                                          n,
                                          0.9, 0.12);
-        power *= illumination(v_vpos);
+        lowp float illu = illumination(v_vpos);
+        power *= illu;
         gl_FragColor.rgb *= power;
+
+        // Earth shadow effect on the moon.
+        if (u_is_moon == 1 && illu < 0.99) {
+            vec4 shadow_col = texture2D(u_shadow_color_tex, vec2(illu, 0.5));
+            gl_FragColor.rgb = mix(
+                gl_FragColor.rgb, shadow_col.rgb, shadow_col.a);
+        }
+
     } else if (u_material == 1) { // basic
         vec3 light = vec3(0.0, 0.0, 0.0);
         light += max(0.0, dot(n, light_dir));

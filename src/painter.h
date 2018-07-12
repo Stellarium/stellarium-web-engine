@@ -83,6 +83,7 @@ enum {
     PAINTER_FAST_MODE           = 1 << 3,
     PAINTER_PLANET_SHADER       = 1 << 4,
     PAINTER_NO_CULL_FACE        = 1 << 5, // Disable face culling.
+    PAINTER_IS_MOON             = 1 << 6, // Only for moon texture!
 };
 
 struct painter
@@ -116,6 +117,7 @@ struct painter
     // A list of spheres that will be used for shadow.
     int             shadow_spheres_nb;
     double          (*shadow_spheres)[4]; // pos + radius.
+    texture_t       *shadow_color_tex; // Used for lunar eclipses.
 };
 
 int paint_prepare(const painter_t *painter, int w, int h);
