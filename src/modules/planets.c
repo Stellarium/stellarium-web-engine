@@ -608,6 +608,43 @@ static void planet_render_hips(const planet_t *planet,
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
 }
 
+static void planet_render_orbit(const planet_t *planet,
+                                double alpha,
+                                const painter_t *painter_)
+{
+    painter_t painter = *painter_;
+    double pos[4], mat[4][4], p[3], v[3];
+    double dist, depth_range[2];
+    const double G = 6.674e-11;
+    const double SPD = 60 * 60 * 24;
+    // μ in (AU)³(day)⁻²
+    double mu = G * planet->parent->mass / (DAU * DAU * DAU) * SPD * SPD;
+    double in, om, w, a, n, ec, ma;
+
+    if (planet->color[3]) vec3_copy(planet->color, painter.color);
+
+    // Compute orbit elements.
+    vec3_sub(planet->obj.pos.pvg[0], planet->parent->obj.pos.pvg[0], p);
+    vec3_sub(planet->obj.pos.pvg[1], planet->parent->obj.pos.pvg[1], v);
+    orbit_elements_from_pv(p, v, mu, &in, &om, &w, &a, &n, &ec, &ma);
+
+    // Center the rendering on the parent planet.
+    vec4_copy(planet->parent->obj.pos.pvg[0], pos);
+    mat4_set_identity(mat);
+    mat4_itranslate(mat, pos[0], pos[1], pos[2]);
+    painter.transform = &mat;
+
+    // Set the depth range same as the parent!!!!
+    dist = vec3_norm(planet->parent->obj.pos.pvg[0]);
+    depth_range[0] = dist * 0.5;
+    depth_range[1] = dist * 2;
+    painter.depth_range = &depth_range;
+
+    painter.lines_width = 1.5;
+    paint_orbit(&painter, FRAME_ICRS, painter.obs->tt,
+                in, om, w, a, n, ec, ma);
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter)
 {
     double pos[4], vpos[3];
@@ -678,6 +715,13 @@ skip_point:
                        ANCHOR_AROUND, -mag);
         }
     }
+
+    // For the moment we never render the orbits!
+    // I think it would be better to render the orbit in a separate module
+    // so that it works with any body, not just planets.  But this is
+    // hard to know in advance what depth range to use.  I leave this
+    // disabled until I implement a deferred renderer.
+    if ((0)) planet_render_orbit(planet, 1.0, &painter2);
 }
 
 static int sort_cmp(const obj_t *a, const obj_t *b)
