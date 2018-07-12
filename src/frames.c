@@ -27,6 +27,12 @@ int convert_coordinates(const observer_t *obs,
 
     dist = (p[3] == 0) ? INFINITY : vec3_norm(p);
 
+    // Special case for the Earth position.
+    if (dist == 0.0) {
+        vec4_set(out, 0, 0, 0, 1);
+        return 0;
+    }
+
     // ICRS to CIRS.
     if (origin <= FRAME_ICRS && dest > FRAME_ICRS) {
         vec3_normalize(p, p);
@@ -64,6 +70,7 @@ int convert_coordinates(const observer_t *obs,
     if (origin <= FRAME_OBSERVED && dest > FRAME_OBSERVED)
         mat4_mul_vec4(obs->ro2v, p, p);
 
+    assert(!isnan(p[0] + p[1] + p[2] + p[3]));
     vec4_copy(p, out);
     return 0;
 }
