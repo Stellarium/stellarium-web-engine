@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[5436] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[5384] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -204,7 +204,6 @@ static const unsigned char DATA_data_shaders_planet_frag[5436] __attribute__((al
     "    vec3 n = v_normal;\n"
     "    if (u_has_normal_tex != 0) {\n"
     "        n = texture2D(u_normal_tex, v_tex_pos).rgb - vec3(0.5, 0.5, 0.0);\n"
-    "        n.z *= 0.2; // XXX: amplify the normal map!\n"
     "        // XXX: inverse the Y coordinates, don't know why!\n"
     "        n = normalize(+n.x * v_tangent - n.y * v_bitangent + n.z * v_normal);\n"
     "    }\n"

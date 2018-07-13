@@ -117,7 +117,6 @@ void main()
     vec3 n = v_normal;
     if (u_has_normal_tex != 0) {
         n = texture2D(u_normal_tex, v_tex_pos).rgb - vec3(0.5, 0.5, 0.0);
-        n.z *= 0.2; // XXX: amplify the normal map!
         // XXX: inverse the Y coordinates, don't know why!
         n = normalize(+n.x * v_tangent - n.y * v_bitangent + n.z * v_normal);
     }
