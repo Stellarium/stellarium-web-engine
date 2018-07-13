@@ -54,6 +54,7 @@ typedef struct {
     double PY[5];
     double kx, ky, kY;
     double ambient_lum; // Constant added to the color lum.
+    double lum_factor;  // For solar eclipse adjustement.
 } render_data_t;
 
 static double F2(const double *lam, double cos_theta,
@@ -68,12 +69,14 @@ static double F(const double *lam , double theta, double gamma)
     return F2(lam, cos(theta), gamma, cos(gamma));
 }
 
-static render_data_t prepare_render_data(const double sun_pos[3], double T)
+static render_data_t prepare_render_data(
+        const double sun_pos[3], double sun_vmag, double T)
 {
     render_data_t data;
     double thetaS;
     double X;
     double zx, zy, zY;
+    const double base_sun_vmag = -26.74;
 
     thetaS = acos(sun_pos[2]); // Zenith angle
     X = (4.0 / 9.0 - T / 120) * (M_PI - 2 * thetaS);
@@ -117,6 +120,9 @@ static render_data_t prepare_render_data(const double sun_pos[3], double T)
     // I need that.
     data.kY = zY / F(data.PY, 0, thetaS) / 30;
     data.ambient_lum = 0.02;
+    // Compute factor due to solar eclipse.
+    // I am using an ad-hoc formula to make it look OK here.
+    data.lum_factor = pow(2.512 * 0.48, base_sun_vmag - sun_vmag);
     return data;
 }
 
@@ -137,7 +143,7 @@ static void compute_point_color(const render_data_t *d,
     color[0] = F2(d->Px, cos_theta, gamma, cos_gamma) * d->kx;
     color[1] = F2(d->Py, cos_theta, gamma, cos_gamma) * d->ky;
     color[2] = F2(d->PY, cos_theta, gamma, cos_gamma) * d->kY;
-    color[2] = max(color[2], 0.0) + d->ambient_lum;
+    color[2] = max(color[2], 0.0) * d->lum_factor + d->ambient_lum;
     // Scotopic vision adjustment with blue shift (xy = 0.25, 0.25)
     // Algo inspired from Stellarium.
     if (color[2] < 3.9) {
@@ -163,7 +169,7 @@ static int render_visitor(int order, int pix, void *user)
     const double *sun_pos = USER_GET(user, 2);
     const render_data_t *data = USER_GET(user, 3);
     uint8_t *tex_data;
-    double pos[4], color[3], vmag, theta;
+    double pos[4], color[3];
     projection_t proj;
     double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     int i, j, split;
@@ -195,12 +201,6 @@ no_change:
     split = max(4, 12 >> order); // Adhoc split computation.
     paint_quad(&painter, FRAME_OBSERVED, atm->tiles[pix], NULL,
                uv, &proj, split);
-
-    // XXX: ad-hoc formula to get the visible vmag.  Need to implement
-    // something better.
-    theta = acos(sun_pos[2]) - 0.83 * DD2R; // Zenith angle of top of Sun
-    vmag = mix(-13, 0, smoothstep(85 * DD2R, 95 * DD2R, theta));
-    core_report_vmag_in_fov(vmag, 360 * DD2R, 0);
     return 0;
 }
 
@@ -208,9 +208,10 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun;
-    double sun_pos[4];
+    double sun_pos[4], vmag, theta;
     render_data_t data;
     const double T = 5.0;
+    const double base_sun_vmag = -26.74;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get(&core->obj, "SUN", 0);
@@ -218,9 +219,17 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
     obj_get_pos_observed(sun, painter->obs, sun_pos);
     vec3_normalize(sun_pos, sun_pos);
     // XXX: this could be cached!
-    data = prepare_render_data(sun_pos, T);
+    data = prepare_render_data(sun_pos, sun->vmag, T);
     hips_traverse(USER_PASS(atm, painter, sun_pos, &data), render_visitor);
     vec3_copy(sun_pos, atm->last_state.sun_pos);
+
+    // XXX: ad-hoc formula to get the visible vmag.  Need to implement
+    // something better.
+    theta = acos(sun_pos[2]) - 0.83 * DD2R; // Zenith angle of top of Sun
+    vmag = mix(-13 + (sun->vmag - base_sun_vmag) * 0.49, 0,
+               smoothstep(85 * DD2R, 95 * DD2R, theta));
+    core_report_vmag_in_fov(vmag, 360 * DD2R, 0);
+
     return 0;
 }
 
