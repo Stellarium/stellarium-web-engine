@@ -198,11 +198,64 @@ static int earth_update(planet_t *planet, const observer_t *obs)
     return 0;
 }
 
+/*
+ * Compute the illumination from the sun taking into possible eclipses.
+ */
+static double compute_sun_eclipse_factor(const planet_t *sun)
+{
+    // For the moment we assume the observer is always on Earth!
+    double sun_r;   // Sun radius as seen from observer.
+    double sph_r;   // Blocking body radius as seen from observer.
+    double sep;     // Separation angle between sun and body.
+    double sun_p[4], sph_p[4]; // Positions in observed frame.
+    planet_t *p;
+
+    sun_r = 2 * sun->radius_m / DAU / vec3_norm(sun->pvg[0]);
+    vec3_copy(sun->pvg[0], sun_p);
+    sun_p[3] = 1.0;
+    convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                        sun_p, sun_p);
+
+    PLANETS_ITER(sun->obj.parent, p) {
+        if (p->id != MOON) continue; // Only consider the Moon.
+        obj_update(&p->obj, core->observer, 0);
+        sph_r = 2 * p->radius_m / DAU / vec3_norm(p->pvg[0]);
+        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            p->obj.pos.pvg[0], sph_p);
+        sep = eraSepp(sun_p, sph_p);
+        // Compute shadow factor.
+        // XXX: this should be in algos.
+        if (sep >= sun_r + sph_r) return 1.0; // Outside of shadow.
+        if (sep <= sph_r - sun_r) return 0.0; // Umbra.
+        if (sep <= sun_r - sph_r) // Penumbra completely inside.
+            return 1.0 - sph_r * sph_r / (sun_r * sun_r);
+        // Penumbra partially inside.
+        float x = (sun_r * sun_r + sep * sep - sph_r * sph_r) / (2.0 * sep);
+        float alpha = acos(x / sun_r);
+        float beta = acos((sep - x) / sph_r);
+        float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
+        float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
+        float AS = sun_r * sun_r * 2.0 * 1.57079633;
+        return 1.0 - (AR + Ar) / AS;
+    }
+    return 1.0;
+}
+
+
 static int sun_update(planet_t *planet, const observer_t *obs)
 {
+    double eclipse_factor;
+    double dist_pc; // Distance in parsec.
     eraZpv(planet->pvh);
     eraSxpv(-1, obs->earth_pvh, planet->pvg);
     planet->phase = NAN;
+
+    // Compute the apparent magnitude for the absolute mag (V: 4.83) and
+    // observer's distance
+    dist_pc = vec3_norm(obs->earth_pvh[0]) * (M_PI / 648000);
+    eclipse_factor = max(compute_sun_eclipse_factor(planet), 0.000128);
+    planet->obj.vmag = 4.83 + 5.0 * (log10(dist_pc) - 1.0) -
+                       2.5 * (log10(eclipse_factor));
     return 0;
 }
 
