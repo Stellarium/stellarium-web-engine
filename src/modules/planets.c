@@ -201,7 +201,8 @@ static int earth_update(planet_t *planet, const observer_t *obs)
 /*
  * Compute the illumination from the sun taking into possible eclipses.
  */
-static double compute_sun_eclipse_factor(const planet_t *sun)
+static double compute_sun_eclipse_factor(const planet_t *sun,
+                                         const observer_t *obs)
 {
     // For the moment we assume the observer is always on Earth!
     double sun_r;   // Sun radius as seen from observer.
@@ -213,14 +214,13 @@ static double compute_sun_eclipse_factor(const planet_t *sun)
     sun_r = 2 * sun->radius_m / DAU / vec3_norm(sun->pvg[0]);
     vec3_copy(sun->pvg[0], sun_p);
     sun_p[3] = 1.0;
-    convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
-                        sun_p, sun_p);
+    convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, sun_p, sun_p);
 
     PLANETS_ITER(sun->obj.parent, p) {
         if (p->id != MOON) continue; // Only consider the Moon.
-        obj_update(&p->obj, core->observer, 0);
+        obj_update(&p->obj, obs, 0);
         sph_r = 2 * p->radius_m / DAU / vec3_norm(p->pvg[0]);
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+        convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
                             p->obj.pos.pvg[0], sph_p);
         sep = eraSepp(sun_p, sph_p);
         // Compute shadow factor.
@@ -253,7 +253,7 @@ static int sun_update(planet_t *planet, const observer_t *obs)
     // Compute the apparent magnitude for the absolute mag (V: 4.83) and
     // observer's distance
     dist_pc = vec3_norm(obs->earth_pvh[0]) * (M_PI / 648000);
-    eclipse_factor = max(compute_sun_eclipse_factor(planet), 0.000128);
+    eclipse_factor = max(compute_sun_eclipse_factor(planet, obs), 0.000128);
     planet->obj.vmag = 4.83 + 5.0 * (log10(dist_pc) - 1.0) -
                        2.5 * (log10(eclipse_factor));
     return 0;
