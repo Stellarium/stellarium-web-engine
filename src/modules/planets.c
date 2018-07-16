@@ -211,7 +211,7 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
     double sun_p[4], sph_p[4]; // Positions in observed frame.
     planet_t *p;
 
-    sun_r = 2 * sun->radius_m / DAU / vec3_norm(sun->pvg[0]);
+    sun_r = 2.0 * sun->radius_m / DAU / vec3_norm(sun->pvg[0]);
     vec3_copy(sun->pvg[0], sun_p);
     sun_p[3] = 1.0;
     convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, sun_p, sun_p);
@@ -230,12 +230,12 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
         if (sep <= sun_r - sph_r) // Penumbra completely inside.
             return 1.0 - sph_r * sph_r / (sun_r * sun_r);
         // Penumbra partially inside.
-        float x = (sun_r * sun_r + sep * sep - sph_r * sph_r) / (2.0 * sep);
-        float alpha = acos(x / sun_r);
-        float beta = acos((sep - x) / sph_r);
-        float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
-        float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
-        float AS = sun_r * sun_r * 2.0 * 1.57079633;
+        double x = (sun_r * sun_r + sep * sep - sph_r * sph_r) / (2.0 * sep);
+        double alpha = acos(x / sun_r);
+        double beta = acos((sep - x) / sph_r);
+        double AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
+        double Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
+        double AS = sun_r * sun_r * 2.0 * 1.57079633;
         return 1.0 - (AR + Ar) / AS;
     }
     return 1.0;
