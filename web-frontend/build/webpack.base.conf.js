@@ -110,6 +110,10 @@ module.exports = {
         }
       },
       {
+        test: /stellarium-web-engine\.js$/,
+        loader: "file-loader"
+      },
+      {
         test: /stellarium-web-engine\.wasm$/,
         loader: "file-loader"
       }

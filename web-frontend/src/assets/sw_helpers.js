@@ -12,6 +12,7 @@ import axios from 'axios'
 import scriptjs from 'scriptjs'
 import hex2dec from 'hex2dec'
 import sweWasmModule from '@/assets/js/stellarium-web-engine.wasm'
+import * as sweJsModule from '@/assets/js/stellarium-web-engine.js'
 
 var DDDate = Date
 DDDate.prototype.getJD = function () {
@@ -32,26 +33,27 @@ DDDate.prototype.setMJD = function (mjd) {
 
 export const swh = {
   initStelWebEngine: function (store, canvasElem, callBackOnDone) {
-    scriptjs(['https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'], function () {
-      import(/* webpackChunkName: "stellarium-web-engine" */ '@/assets/js/stellarium-web-engine.js').then(swe => {
-        var StelWebEngine = swe.default
-        let lstel = StelWebEngine({
-          wasmFile: sweWasmModule,
-          canvas: canvasElem,
-          res: ['http://stelladata.noctua-software.com/surveys/stars/info.json'],
-          onReady: function () {
-            store.commit('replaceStelWebEngine', lstel.getTree())
-            lstel.onValueChanged(function (path, value) {
-              let tree = store.state.stel
-              _.set(tree, path, value)
-              store.commit('replaceStelWebEngine', tree)
-            })
-            Vue.prototype.$stel = lstel
-            Vue.prototype.$selectionLayer = lstel.createLayer({id: 'slayer', z: 50, visible: true})
-            Vue.prototype.$observingLayer = lstel.createLayer({id: 'obslayer', z: 40, visible: true})
-            callBackOnDone()
-          }
-        })
+    // Didn't find a better way to load stellarium-web-engine.js..
+    // Note that "import StelWebEngine from '@/assets/js/stellarium-web-engine.js'" would work
+    // if it was an ES6 module with "export default StelWebEngine"
+    scriptjs(['https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', sweJsModule], function () {
+      // eslint-disable-next-line
+      let lstel = StelWebEngine({
+        wasmFile: sweWasmModule,
+        canvas: canvasElem,
+        res: ['http://stelladata.noctua-software.com/surveys/stars/info.json'],
+        onReady: function () {
+          store.commit('replaceStelWebEngine', lstel.getTree())
+          lstel.onValueChanged(function (path, value) {
+            let tree = store.state.stel
+            _.set(tree, path, value)
+            store.commit('replaceStelWebEngine', tree)
+          })
+          Vue.prototype.$stel = lstel
+          Vue.prototype.$selectionLayer = lstel.createLayer({id: 'slayer', z: 50, visible: true})
+          Vue.prototype.$observingLayer = lstel.createLayer({id: 'obslayer', z: 40, visible: true})
+          callBackOnDone()
+        }
       })
     })
   },
