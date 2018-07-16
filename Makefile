@@ -35,7 +35,7 @@ js-prof:
 .PHONY: setup
 
 setup: Dockerfile
-	docker build -t swe-dev .
+	docker build --no-cache -t swe-dev .
 
 dev:
 	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev

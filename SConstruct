@@ -120,6 +120,7 @@ if target_os == 'js':
 
     flags = [
              '-s', 'MODULARIZE=1', '-s', 'EXPORT_NAME=StelWebEngine',
+             '-s', 'EXPORT_ES6=1',
              '-s', 'ALLOW_MEMORY_GROWTH=1',
              '--pre-js', 'src/js/pre.js',
              '--pre-js', 'src/js/obj.js',
