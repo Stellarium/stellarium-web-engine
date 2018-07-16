@@ -204,7 +204,7 @@ Module['anpm'] = function(a) {
   return v;
 }
 
-asFrame = function(f) {
+var asFrame = function(f) {
   if (f == 'ICRS') return Module.FRAME_ICRS;
   if (f == 'CIRS') return Module.FRAME_CIRS;
   if (f == 'OBSERVED') return Module.FRAME_OBSERVED;
