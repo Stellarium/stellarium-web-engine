@@ -46,6 +46,9 @@ module.exports = {
     // Log level. Can be 'info', 'warn', 'error' or 'silent'.
     logLevel: 'info'
    })],
+  node: {
+    fs: "empty"
+  },
   output: {
     path: config.build.assetsRoot,
     filename: '[name].js',
@@ -105,6 +108,10 @@ module.exports = {
           limit: 10000,
           name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
         }
+      },
+      {
+        test: /stellarium-web-engine\.wasm$/,
+        loader: "file-loader"
       }
     ]
   }
