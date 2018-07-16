@@ -60,6 +60,8 @@ bool project(const projection_t *proj, int flags, int out_dim,
     }
     assert(proj->project);
     vec3_copy(v, p);
+    if (flags & PROJ_ALREADY_NORMALIZED)
+        assert(fabs(vec3_norm(p) - 1.0) < 0.00000001);
     proj->project(proj, flags, v, p);
 
     vec2_add(p, proj->offset, p);

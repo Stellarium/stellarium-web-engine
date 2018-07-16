@@ -187,9 +187,7 @@ static bool constellation_is_visible(const painter_t *painter,
         s = con->stars[i];
         obj_get_pos_observed(s, painter->obs, pos[i]);
         mat4_mul_vec3(painter->obs->ro2v, pos[i], pos[i]);
-        project(painter->proj,
-                PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
-                4, pos[i], pos[i]);
+        project(painter->proj, PROJ_TO_NDC_SPACE, 4, pos[i], pos[i]);
     }
     ret = !is_clipped(con->count, pos);
     free(pos);
