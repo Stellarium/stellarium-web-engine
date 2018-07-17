@@ -717,6 +717,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double point_r;          // Size (rad) and luminance if the planet is seen
     double point_luminance;  // as a point source (like a star).
     double radius;           // Planet rendered radius (AU).
+    double r_scale = 1.0;    // Artificial size scale.
     double r;                // Angular diameter (rad).
     double sep;              // Angular sep to screen center.
     double hips_alpha = 0;
@@ -741,7 +742,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // we can render it as a hips survey.
     if (planet->id == MOON) {
         hips_k = 4.0;
-        radius *= mix(1, 8, smoothstep(35 * DD2R, 220 * DD2R, core->fov));
+        r_scale = mix(1, 8, smoothstep(35 * DD2R, 220 * DD2R, core->fov));
     }
 
     r = 2.0 * radius / vec3_norm(planet->pvg[0]);
@@ -756,8 +757,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     core_report_vmag_in_fov(planet->obj.vmag, r, sep);
 
-    if (planet->hips && hips_k * r >= point_r) {
-        hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * r));
+    if (planet->hips && hips_k * r * r_scale >= point_r) {
+        hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * r * r_scale ));
     }
     vec4_copy(planet->color, color);
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
@@ -772,7 +773,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (hips_alpha > 0) {
-        planet_render_hips(planet, radius, hips_alpha, &painter);
+        planet_render_hips(planet, radius * r_scale, hips_alpha, &painter);
     }
 
 
