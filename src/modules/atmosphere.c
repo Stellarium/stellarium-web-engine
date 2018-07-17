@@ -40,7 +40,7 @@ static obj_klass_t atmosphere_klass = {
     .init = atmosphere_init,
     .render = atmosphere_render,
     .update = atmosphere_update,
-    .render_order = 10,
+    .render_order = 35,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(atmosphere_t, visible.target)),
         {}
