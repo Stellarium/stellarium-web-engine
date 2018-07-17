@@ -581,7 +581,7 @@ static int core_update(void)
     observer_update(core->observer, true);
     // XXX: Ad-hoc formula!
     r = move_toward(&core->vmag_shift,
-            max(0, -3 - core->max_vmag_in_fov * 0.75) + core->manual_vmag_shift,
+            max(0, -3 - core->max_vmag_in_fov) + core->manual_vmag_shift,
             0, 64.0, 1.0 / 60);
     core->max_vmag_in_fov = INFINITY;
     return r ? 1 : 0;
