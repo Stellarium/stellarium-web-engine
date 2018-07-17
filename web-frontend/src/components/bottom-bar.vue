@@ -60,7 +60,9 @@
 
     <v-menu :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left offset-y>
       <v-btn class="tmenubt" color="secondary" slot="activator"><v-icon class="hidden-sm-and-up">access_time</v-icon><span class="hidden-xs-only">{{ time }}</span></v-btn>
-      <v-time-picker v-model="time" dark format="24hr"></v-time-picker>
+      <v-card width="400">
+        <v-slider min="0" max="1439" style="padding: 20px; margin-top: 18px" v-model="timeMinute" :label="time"></v-slider>
+      </v-card>
     </v-menu>
 
 
@@ -111,6 +113,26 @@ export default {
         utc.local()
         let m = Moment(newValue)
         utc.year(m.year()).month(m.month()).date(m.date())
+        this.$stel.core.observer.utc = utc.toDate().getMJD()
+      }
+    },
+    timeMinute: {
+      get: function () {
+        // 0 means 12:00, 720 means midnight, 1440 (=24*60) means 12:00 the day after
+        let utc = this.utc.clone()
+        utc.local()
+        return utc.hours() < 12 ? (utc.hours() + 12) * 60 + utc.minutes() : (utc.hours() - 12) * 60 + utc.minutes()
+      },
+      set: function (newValue) {
+        let utc = this.utc.clone()
+        utc.local()
+        if (utc.hours() < 12) {
+          utc.subtract(1, 'days')
+        }
+        utc.hours(12)
+        utc.minutes(0)
+        utc.seconds(0)
+        utc.add(newValue, 'minutes')
         this.$stel.core.observer.utc = utc.toDate().getMJD()
       }
     },
