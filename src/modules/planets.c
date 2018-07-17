@@ -762,7 +762,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec4_copy(planet->color, color);
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
     color[3] *= point_luminance * (1.0 - hips_alpha);
-    if (color[3] == 0) goto skip_point;
 
     point = (point_t) {
         .pos = {pos[0], pos[1], pos[2]},
@@ -772,7 +771,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     strcpy(point.id, planet->obj.id);
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
-skip_point:
     if (hips_alpha > 0) {
         planet_render_hips(planet, radius, hips_alpha, &painter);
     }
