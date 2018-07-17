@@ -43,4 +43,4 @@ For a detailed explanation on how things work, check out the [guide](http://vuej
 ## Contributing
 
 In order for your contribution to Stellarium Web to be accepted, you have to sign the
-[Stellarium Web Contributor License Agreement (CLA)](doc/cla/sign-cla.md]).
+[Stellarium Web Contributor License Agreement (CLA)](doc/cla/sign-cla.md).
