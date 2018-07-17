@@ -591,17 +591,17 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
 }
 
 static void planet_render_hips(const planet_t *planet,
+                               double radius,
                                double alpha,
                                const painter_t *painter_)
 {
     // XXX: cleanup this function.  It is getting too big.
     double mat[4][4];
     double pos[4];
-    double radius = planet->radius_m / DAU;
     double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
     double rot;
-    double angle = 2 * planet->radius_m / DAU / vec2_norm(planet->pvg[0]);
+    double angle = 2 * radius / vec2_norm(planet->pvg[0]);
     int nb_tot = 0, nb_loaded = 0;
     double sun_pos[4] = {0, 0, 0, 1};
     planets_t *planets = (planets_t*)planet->obj.parent;
@@ -716,12 +716,13 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double mag;              // Observed magnitude at this fov.
     double point_r;          // Size (rad) and luminance if the planet is seen
     double point_luminance;  // as a point source (like a star).
+    double radius;           // Planet rendered radius (AU).
     double r;                // Angular diameter (rad).
     double sep;              // Angular sep to screen center.
     double hips_alpha = 0;
     painter_t painter = *painter_;
     point_t point;
-    const double hips_k = 2.0; // How soon we switch to the hips survey.
+    double hips_k = 2.0; // How soon we switch to the hips survey.
 
     if (planet->id == EARTH) return;
     if (planet->obj.vmag > painter.mag_max) return;
@@ -734,8 +735,16 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     mag = core_get_observed_mag(planet->obj.vmag);
     core_get_point_for_mag(mag, &point_r, &point_luminance);
-    r = 2 * planet->radius_m / DAU / vec3_norm(planet->pvg[0]);
+    radius = planet->radius_m / DAU;
 
+    // Artificially increase the moon size when we are zoomed out, so that
+    // we can render it as a hips survey.
+    if (planet->id == MOON) {
+        hips_k = 4.0;
+        radius *= mix(1, 8, smoothstep(35 * DD2R, 220 * DD2R, core->fov));
+    }
+
+    r = 2.0 * radius / vec3_norm(planet->pvg[0]);
     // First approximation, to skip non visible planets.
     // XXX: we need to compute the max visible fov (for the moment I
     // add a factor of 1.5 to make sure).
@@ -765,7 +774,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
 skip_point:
     if (hips_alpha > 0) {
-        planet_render_hips(planet, hips_alpha, &painter);
+        planet_render_hips(planet, radius, hips_alpha, &painter);
     }
 
 
