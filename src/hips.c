@@ -220,7 +220,7 @@ static texture_t *load_image(const void *data, int size, int *transparency)
     return tex;
 }
 
-static tile_t *get_tile(hips_t *hips, int order, int pix)
+static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
 {
     tile_t *tile, *parent;
     texture_t *tex = NULL;
@@ -240,10 +240,11 @@ static tile_t *get_tile(hips_t *hips, int order, int pix)
         cache_add(g_cache, url, strlen(url), tile, sizeof(*tile), del_tile);
     }
     if (tile->flags & TILE_LOADED) return tile;
+    if (flags & HIPS_FORCE_USE_ALLSKY) goto skip_load;
 
     // Skip if we know that this tile doesn't exists.
     if (order > hips->order_min) {
-        parent = get_tile(hips, order - 1, pix / 4);
+        parent = get_tile(hips, order - 1, pix / 4, flags);
         if (!(parent->flags & TILE_LOADED)) return tile;
         if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
             tile->flags |= TILE_LOADED | TILE_NO_CHILD_ALL;
@@ -272,6 +273,8 @@ static tile_t *get_tile(hips_t *hips, int order, int pix)
         tile->fader.target = true;
         if (!tex) tile->fader.value = 1;
     }
+
+skip_load:
     if (tile->flags & TILE_LOADED) return tile;
 
     // Until the tile get loaded we can try to use the allsky
@@ -331,7 +334,7 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
 // Return:
 //  The texture_t, or NULL if none is found.
 texture_t *hips_get_tile_texture(
-        hips_t *hips, int order, int pix, bool outside,
+        hips_t *hips, int order, int pix, int flags,
         const painter_t *painter,
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete)
@@ -340,6 +343,7 @@ texture_t *hips_get_tile_texture(
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
+    const bool outside = !(flags & HIPS_EXTERIOR);
     int i;
 
     if (loading_complete) *loading_complete = false;
@@ -359,7 +363,14 @@ texture_t *hips_get_tile_texture(
         return NULL;
     }
 
-    tile = get_tile(hips, order, pix);
+    tile = get_tile(hips, order, pix, flags);
+
+    // Special case if we forced to use the allsky texture.
+    if (flags & HIPS_FORCE_USE_ALLSKY && tile->tex) {
+        if (loading_complete) *loading_complete = true;
+        goto end;
+    }
+
     if (loading_complete) *loading_complete = tile->flags & TILE_LOADED;
 
     // If the tile texture is not loaded yet, we try to use a parent tile
@@ -371,25 +382,26 @@ texture_t *hips_get_tile_texture(
         get_child_uv_mat(render_tile->pos.pix % 4, mat, mat);
         if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
         render_tile = get_tile(hips, render_tile->pos.order - 1,
-                                     render_tile->pos.pix / 4);
+                                     render_tile->pos.pix / 4, flags);
     }
-    if (!render_tile->tex) return NULL;
+    tile = render_tile;
 
-    tile->fader.value = max(tile->fader.value, render_tile->fader.value);
-    fader_update(&render_tile->fader, 0.06);
+end:
+    if (!tile->tex) return NULL;
+    tile->fader.value = max(tile->fader.value, tile->fader.value);
+    fader_update(&tile->fader, 0.06);
     if (fade) *fade = tile->fader.value;
-    if (proj) projection_init_healpix(proj, 1 << render_tile->pos.order,
-                                      render_tile->pos.pix, true, outside);
+    if (proj) projection_init_healpix(proj, 1 << tile->pos.order,
+                                      tile->pos.pix, true, outside);
     if (split) *split = max(4, 12 >> order);
-    return render_tile->tex;
+    return tile->tex;
 }
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
-                          int order, int pix, void *user)
+                          int order, int pix, int flags, void *user)
 {
-    bool outside = *(bool*)USER_GET(user, 0);
-    int *nb_tot = USER_GET(user, 1);
-    int *nb_loaded = USER_GET(user, 2);
+    int *nb_tot = USER_GET(user, 0);
+    int *nb_loaded = USER_GET(user, 1);
     painter_t painter = *painter_;
     texture_t *tex;
     projection_t proj;
@@ -398,7 +410,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     double fade, uv[4][2];
 
     (*nb_tot)++;
-    tex = hips_get_tile_texture(hips, order, pix, outside, &painter,
+    tex = hips_get_tile_texture(hips, order, pix, flags, &painter,
                                 uv, &proj, &split, &fade, &loaded);
     if (loaded) (*nb_loaded)++;
     if (!tex) return 0;
@@ -410,12 +422,11 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
 
 int hips_render(hips_t *hips, const painter_t *painter, double angle)
 {
-    bool outside = angle == 2 * M_PI;
     int nb_tot = 0, nb_loaded = 0;
     if (painter->color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
     hips_render_traverse(hips, painter, angle,
-                         USER_PASS(&outside, &nb_tot, &nb_loaded),
+                         USER_PASS(&nb_tot, &nb_loaded),
                          render_visitor);
     progressbar_report(hips->url, hips->label, nb_loaded, nb_tot);
     return 0;
@@ -425,17 +436,18 @@ static int render_traverse_visitor(int order, int pix, void *user)
 {
     hips_t *hips = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
-    bool outside = *(bool*)USER_GET(user, 2);
-    int render_order = *(int*)USER_GET(user, 3);
+    int render_order = *(int*)USER_GET(user, 2);
+    int flags = *(int*)USER_GET(user, 3);
     int (*callback)(
         hips_t *hips, const painter_t *painter,
-        int order, int pix, void *user) = USER_GET(user, 4);
+        int order, int pix, int flags, void *user) = USER_GET(user, 4);
+    const bool outside = !(flags & HIPS_EXTERIOR);
     user = USER_GET(user, 5);
     // Early exit if the tile is clipped.
     if (painter_is_tile_clipped(painter, hips->frame, order, pix, outside))
         return 0;
     if (order < render_order) return 1; // Keep going.
-    callback(hips, painter, order, pix, user);
+    callback(hips, painter, order, pix, flags, user);
     return 0;
 }
 
@@ -501,21 +513,27 @@ int hips_render_traverse(
         hips_t *hips, const painter_t *painter,
         double angle, void *user,
         int (*callback)(hips_t *hips, const painter_t *painter,
-                        int order, int pix, void *user))
+                        int order, int pix, int flags, void *user))
 {
     int render_order;
     double pix_per_rad;
     double w, px; // Size in pixel of the total survey.
-    bool outside = angle == 2 * M_PI;
+    int flags = 0;
     hips_update(hips);
     // XXX: is that the proper way to compute it??
     pix_per_rad = painter->fb_size[0] / atan(painter->proj->scaling[0]) / 2;
     px = pix_per_rad * angle;
     w = hips->tile_width ?: 256;
     render_order = round(log2(px / (4.0 * sqrt(2.0) * w)));
+    if (angle < 2.0 * M_PI)
+        flags |= HIPS_EXTERIOR;
+    // For extrem low resolution force using the allsky if available so that
+    // we don't download too much data.
+    if (render_order < -5 && hips->allsky.data)
+        flags |= HIPS_FORCE_USE_ALLSKY;
     render_order = clamp(render_order, hips->order_min, hips->order);
     // XXX: would be nice to have a non callback API for hips_traverse!
-    hips_traverse(USER_PASS(hips, painter, &outside, &render_order,
+    hips_traverse(USER_PASS(hips, painter, &render_order, &flags,
                             callback, user), render_traverse_visitor);
     return 0;
 }

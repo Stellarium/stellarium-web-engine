@@ -23,6 +23,10 @@
  */
 typedef struct hips hips_t;
 
+enum {
+    HIPS_EXTERIOR               = 1 << 0,
+    HIPS_FORCE_USE_ALLSKY       = 1 << 1,
+};
 
 /*
  * Function: hips_create
@@ -76,14 +80,15 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle);
 int hips_render_traverse(hips_t *hips, const painter_t *painter,
                          double angle, void *user,
                          int callback(hips_t *hips, const painter_t *painter,
-                                      int order, int pix, void *user));
+                                      int order, int pix, int flags,
+                                      void *user));
 
 /*
  * Function: hips_get_tile_texture
  * Get the texture for a given hips tile.
  *
  * Parameters:
- *   outside - Set to true if its a sky survey.
+ *   flags   - <HIPS_FLAGS> union.
  *   uv      - The uv coordinates of the texture.
  *   proj    - An heapix projector already setup for the tile.
  *   split   - Recommended spliting of the texture when we render it.
@@ -94,7 +99,7 @@ int hips_render_traverse(hips_t *hips, const painter_t *painter,
  *   The texture_t, or NULL if none is found.
  */
 texture_t *hips_get_tile_texture(
-        hips_t *hips, int order, int pix, bool outside,
+        hips_t *hips, int order, int pix, int flags,
         const painter_t *painter,
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete);
