@@ -724,6 +724,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
     double hips_k = 2.0; // How soon we switch to the hips survey.
+    char label[256];
 
     if (planet->id == EARTH) return;
     if (planet->obj.vmag > painter.mag_max) return;
@@ -782,7 +783,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
                 2, pos, pos)) {
-            labels_add(planet->name, pos, point_r, 16, label_color,
+            if (r_scale == 1.0) strcpy(label, planet->name);
+            else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
+            labels_add(label, pos, point_r, 16, label_color,
                        ANCHOR_AROUND, -mag);
         }
     }
