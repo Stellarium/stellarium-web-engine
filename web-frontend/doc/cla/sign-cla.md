@@ -90,8 +90,8 @@ print the CLA, complete it, sign it, scan it and send it by email to
 contact@noctua-software.com.  In that case someone from the Stellarium Web team will
 make the pull request on your behalf.
 
-* Printable Stellarium Web CCLA v1.0 https://raw.githubusercontent.com/Stellarium/stellarium-web/master/doc/ccla-1.0.pdf
-* Printable Stellarium Web ICLA v1.0 https://raw.githubusercontent.com/Stellarium/stellarium-web/master/doc/icla-1.0.pdf
+* Printable Stellarium Web CCLA v1.0 https://raw.githubusercontent.com/Stellarium/stellarium-web/master/doc/cla/ccla-1.0.pdf
+* Printable Stellarium Web ICLA v1.0 https://raw.githubusercontent.com/Stellarium/stellarium-web/master/doc/cla/icla-1.0.pdf
 
 # FAQ
 
