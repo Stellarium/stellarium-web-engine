@@ -34,7 +34,7 @@ import NewsPost from './news-post.vue'
 
 export default {
   data: function () {
-    const files = require.context('markdown-with-front-matter-loader!@/assets/posts/', false, /.md$/)
+    const files = require.context('markdown-with-front-matter-loader!@/plugins/news/posts/', false, /.md$/)
     var news = []
     for (var i of files.keys()) {
       var content = files(i)
