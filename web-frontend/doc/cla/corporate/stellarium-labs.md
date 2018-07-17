@@ -6,7 +6,7 @@ I declare that I am authorized and able to make this agreement and sign this dec
 
 Signed,
 
-Fabien Chereau fabin.chereau@gmail.com https://github.com/xalioth
+Fabien Chereau fabien.chereau@gmail.com https://github.com/xalioth
 
 List of contributors:
 
