@@ -545,7 +545,7 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
 
     hips_traverse(USER_PASS(dsos, &painter, &nb_tot, &nb_loaded),
                   render_visitor);
-    progressbar_report("DSO", "DSO", nb_loaded, nb_tot);
+    progressbar_report("DSO", "DSO", nb_loaded, nb_tot, 1);
     return 0;
 }
 

@@ -162,6 +162,12 @@ static void city_widget(void)
     }
 }
 
+static void on_progressbar(void *user, const char *id, const char *label,
+                           int v, int total)
+{
+    gui_text("%s %d/%d", label, v, total);
+}
+
 static void menu_main(void *user)
 {
     int i;
@@ -236,6 +242,8 @@ static void menu_main(void *user)
     if (DEBUG && gui_tab("Debug")) {
         extern bool debug_stars_show_all;
         gui_toggle("Stars show all", &debug_stars_show_all, NULL);
+        gui_text("Progress:");
+        progressbar_list(NULL, on_progressbar);
         gui_tab_end();
     }
 

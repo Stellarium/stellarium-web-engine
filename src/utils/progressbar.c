@@ -21,23 +21,16 @@ struct bar {
     char            *label;
     int             v;
     int             total;
+
+    int             last_update;
+    int             keepalive;
 };
 
 // Global hash table of all the progress bars.
 static bar_t *g_bars = NULL;
 static void (*g_listener)(const char *id) = NULL;
+static int g_tick = 0; // Global timer.
 
-static bar_t *bar_get(const char *id)
-{
-    bar_t *bar;
-    HASH_FIND_STR(g_bars, id, bar);
-    if (!bar) {
-        bar = calloc(1, sizeof(*bar));
-        bar->id = strdup(id);
-        HASH_ADD_KEYPTR(hh, g_bars, bar->id, strlen(bar->id), bar);
-    }
-    return bar;
-}
 
 void progressbar_print_all(void)
 {
@@ -51,20 +44,51 @@ void progressbar_print_all(void)
     for (i = 0; i < n; i++) printf("\033[1A");
 }
 
-void progressbar_report(const char *id, const char *label, int v, int total)
+void progressbar_report(const char *id, const char *label, int v, int total,
+                        int keepalive)
 {
     bool changed = false;
     bar_t *bar;
-    bar = bar_get(id);
+
+    HASH_FIND_STR(g_bars, id, bar);
+
+    // If we report a finished bar that doesn't exist, don't do anything.
+    if (!bar && total == v) return;
+
+    if (!bar) {
+        bar = calloc(1, sizeof(*bar));
+        bar->id = strdup(id);
+        HASH_ADD_KEYPTR(hh, g_bars, bar->id, strlen(bar->id), bar);
+    }
+
     if (!bar->label || strcmp(bar->label, label) != 0) {
         free(bar->label);
         bar->label = strdup(label);
         changed = true;
     }
-    if (v != bar->v || total != bar->total) changed = true;
+    if (v != bar->v || total != bar->total) {
+        changed = true;
+        bar->last_update = g_tick;
+    }
     bar->v = v;
     bar->total = total;
+    bar->keepalive = keepalive;
     if (changed && g_listener) g_listener(id);
+}
+
+void progressbar_update(void)
+{
+    g_tick++;
+    bar_t *bar, *tmp;
+    HASH_ITER(hh, g_bars, bar, tmp) {
+        if (bar->keepalive && g_tick > bar->last_update + bar->keepalive) {
+            HASH_DEL(g_bars, bar);
+            g_listener(bar->id);
+            free(bar->id);
+            free(bar->label);
+            free(bar);
+        }
+    }
 }
 
 int progressbar_list(void *user, void (*callback)(void *user,

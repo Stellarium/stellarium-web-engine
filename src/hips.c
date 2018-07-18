@@ -428,7 +428,7 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle)
     hips_render_traverse(hips, painter, angle,
                          USER_PASS(&nb_tot, &nb_loaded),
                          render_visitor);
-    progressbar_report(hips->url, hips->label, nb_loaded, nb_tot);
+    progressbar_report(hips->url, hips->label, nb_loaded, nb_tot, 1);
     return 0;
 }
 

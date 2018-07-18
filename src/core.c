@@ -584,6 +584,7 @@ static int core_update(void)
             max(0, -3 - core->max_vmag_in_fov) + core->manual_vmag_shift,
             0, 64.0, 1.0 / 60);
     core->max_vmag_in_fov = INFINITY;
+    progressbar_update();
     return r ? 1 : 0;
 }
 
@@ -743,7 +744,6 @@ int core_render(int w, int h)
     paint_finish(&painter);
     if (core->fast_mode) updated = true;
     core->fast_mode = false;
-    if (DEBUG && !DEFINED(__EMSCRIPTEN__)) progressbar_print_all();
     return updated ? 1 : 0;
 }
 

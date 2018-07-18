@@ -668,7 +668,7 @@ static void planet_render_hips(const planet_t *planet,
                      planet->rings.inner_radius / planet->radius_m,
                      planet->rings.outer_radius / planet->radius_m,
                      &painter);
-    progressbar_report(planet->name, planet->name, nb_loaded, nb_tot);
+    progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, 1);
 }
 
 static void planet_render_orbit(const planet_t *planet,
