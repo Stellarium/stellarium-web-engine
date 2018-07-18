@@ -12,6 +12,7 @@ uniform int u_has_normal_tex;
 uniform int u_material; // 0: Oren Nayar, 1: generic
 uniform int u_is_moon; // Set to 1 for the Moon only.
 uniform sampler2D u_shadow_color_tex; // Used for the Moon.
+uniform float u_contrast;
 
 uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
 // Up to four spheres for illumination ray tracing.
@@ -122,6 +123,8 @@ void main()
     }
     n = normalize((u_mv * vec4(n, 0.0)).xyz);
     gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;
+    gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * u_contrast + 0.5;
+
     if (u_material == 0) { // oren_nayar.
         float power = oren_nayar_diffuse(light_dir,
                                          normalize(-v_vpos),

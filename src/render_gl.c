@@ -40,6 +40,7 @@ typedef struct {
     GLuint u_material_l;
     GLuint u_is_moon_l;
     GLuint u_color_l;
+    GLuint u_contrast_l;
     GLuint u_smooth_l;
     GLuint u_mv_l;
     GLuint u_stripes_l;
@@ -96,6 +97,7 @@ typedef struct render_buffer_args {
     const texture_t *shadow_color_tex;
     const double (*mv)[4][4];
     double smooth;
+    double contrast;
     const double *sun;
     const double *light_emit;
     double shadow_brightness;
@@ -371,6 +373,7 @@ static void quad(renderer_t          *rend_,
                      &rend->progs.planet : &rend->progs.blit_proj,
                   &(render_buffer_args_t) {
                       .color = painter->color,
+                      .contrast = painter->contrast,
                       .tex = tex,
                       .normalmap = normalmap,
                       .shadow_color_tex = painter->shadow_color_tex,
@@ -662,6 +665,7 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
                     buff->offset, (void*)(long)buff->offset_pos));
 
     GL(glUniform1f(prog->u_smooth_l, args->smooth));
+    GL(glUniform1f(prog->u_contrast_l, args->contrast));
     GL(glUniform4f(prog->u_color_l, color[0], color[1], color[2], color[3]));
     if (sun) {
         GL(glUniform4f(prog->u_sun_l, sun[0], sun[1], sun[2], sun[3]));
@@ -761,6 +765,7 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_is_moon);
     UNIFORM(u_shadow_color_tex);
     UNIFORM(u_color);
+    UNIFORM(u_contrast);
     UNIFORM(u_smooth);
     UNIFORM(u_sun);
     UNIFORM(u_light_emit);

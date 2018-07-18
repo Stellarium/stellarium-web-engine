@@ -647,6 +647,8 @@ static void planet_render_hips(const planet_t *planet,
         painter.light_emit = &full_emit;
     if (planet->id == MOON)
         painter.shadow_color_tex = planets->earth_shadow_tex;
+    // Lower current moon texture contrast.
+    if (planet->id == MOON) painter.contrast = 0.6;
 
     // XXX: for the moment we only use depth if the planet has a ring,
     // to prevent having to clean the depth buffer.

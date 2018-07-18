@@ -101,6 +101,7 @@ struct painter
     int             fb_size[2];     // Size of the render buffer.
                                     // rendered.
     int             flags;
+    double          contrast;       // Contrast effect when rendering tex.
 
     double          mag_max;        // Max visual magnitude.
     double          label_mag_max;  // After this mag, don't show the labels.
