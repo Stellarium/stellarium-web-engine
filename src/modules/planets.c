@@ -728,8 +728,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (planet->id == EARTH) return;
     if (planet->obj.vmag > painter.mag_max) return;
 
-    vec3_copy(planet->obj.pos.pvg[0], pos);
-    pos[3] = 1;
+    vec4_copy(planet->obj.pos.pvg[0], pos);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return;
