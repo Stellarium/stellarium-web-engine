@@ -43,3 +43,6 @@
 
 /* Days per Julian year */
 #define DJY     ERFA_DJY
+
+/* Reference epoch (J2000.0), Modified Julian Date */
+#define DJM00 (51544.5)

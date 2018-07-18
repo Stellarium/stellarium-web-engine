@@ -44,7 +44,7 @@ struct planet {
     struct {
         double obliquity;   // (rad)
         double period;      // (day)
-        double offset;
+        double offset;      // (rad)
     } rot;
 
     // Orbit elements.
@@ -608,6 +608,7 @@ static void planet_render_hips(const planet_t *planet,
     painter_t painter = *painter_;
     double depth_range[2];
     double shadow_spheres[4][4];
+    double epoch = DJM00; // J2000.
 
     painter.shadow_spheres_nb =
         get_shadow_candidates(planet, 4, shadow_spheres);
@@ -632,15 +633,11 @@ static void planet_render_hips(const planet_t *planet,
     painter.sun = &sun_pos;
 
     // Apply the rotation.
-    if (planet->parent == planets->earth) {
-        mat4_mul(mat, core->observer->ri2v, mat);
-    } else {
-        mat4_mul(mat, core->observer->re2v, mat);
-        // Not sure about this.
-        mat4_rx(-planet->rot.obliquity, mat, mat);
-    }
+    mat4_mul(mat, core->observer->re2v, mat);
+    mat4_rx(-planet->rot.obliquity, mat, mat);
+
     if (planet->rot.period) {
-        rot = core->observer->tt / planet->rot.period * 2 * M_PI;
+        rot = (core->observer->tt - epoch) / planet->rot.period * 2 * M_PI;
         rot += planet->rot.offset;
         mat4_rz(rot, mat, mat);
     }
