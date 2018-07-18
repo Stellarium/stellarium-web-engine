@@ -364,6 +364,7 @@ texture_t *hips_get_tile_texture(
     }
 
     tile = get_tile(hips, order, pix, flags);
+    render_tile = tile;
 
     // Special case if we forced to use the allsky texture.
     if (flags & HIPS_FORCE_USE_ALLSKY && tile->tex) {
@@ -375,7 +376,6 @@ texture_t *hips_get_tile_texture(
 
     // If the tile texture is not loaded yet, we try to use a parent tile
     // texture instead.
-    render_tile = tile;
     while ( !render_tile->tex && !(render_tile->flags & TILE_LOADED) &&
             render_tile->pos.order > hips->order_min) {
         mat3_set_identity(mat);
@@ -384,17 +384,17 @@ texture_t *hips_get_tile_texture(
         render_tile = get_tile(hips, render_tile->pos.order - 1,
                                      render_tile->pos.pix / 4, flags);
     }
-    tile = render_tile;
 
 end:
-    if (!tile->tex) return NULL;
-    tile->fader.value = max(tile->fader.value, tile->fader.value);
-    fader_update(&tile->fader, 0.06);
+    if (!render_tile->tex) return NULL;
+
+    tile->fader.value = max(tile->fader.value, render_tile->fader.value);
+    fader_update(&render_tile->fader, 0.06);
     if (fade) *fade = tile->fader.value;
-    if (proj) projection_init_healpix(proj, 1 << tile->pos.order,
-                                      tile->pos.pix, true, outside);
+    if (proj) projection_init_healpix(proj, 1 << render_tile->pos.order,
+                                      render_tile->pos.pix, true, outside);
     if (split) *split = max(4, 12 >> order);
-    return tile->tex;
+    return render_tile->tex;
 }
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
