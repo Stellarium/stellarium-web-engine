@@ -720,6 +720,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double r;                // Angular diameter (rad).
     double sep;              // Angular sep to screen center.
     double hips_alpha = 0;
+    double az, alt;
     painter_t painter = *painter_;
     point_t point;
     double hips_k = 2.0; // How soon we switch to the hips survey.
@@ -730,8 +731,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     vec4_copy(planet->obj.pos.pvg[0], pos);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
-    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
-        return;
 
     mag = core_get_observed_mag(planet->obj.vmag);
     core_get_point_for_mag(mag, &point_r, &point_luminance);
@@ -753,6 +752,12 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     sep = eraSepp(vpos, (double[]){0, 0, -1});
     if (sep - r > core->fov * 1.5)
         return;
+
+    // Remove below horizon planets (so that the names don't show up).
+    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0) {
+        eraC2s(pos, &az, &alt);
+        if (alt < -max(r * r_scale, point_r)) return;
+    }
 
     core_report_vmag_in_fov(planet->obj.vmag, r, sep);
 
