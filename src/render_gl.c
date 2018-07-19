@@ -325,12 +325,12 @@ static void quad(renderer_t          *rend_,
             grid[i * n + j].tex_pos[1] = 1.0 - grid[i * n + j].tex_pos[1];
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         vec3_copy(p, normal);
-        vec3_normalize(normal, normal);
+        mat4_mul_vec4(*painter->transform, normal, normal);
         vec3_to_float(normal, grid[i * n + j].normal);
         mat4_mul_vec4(*painter->transform, p, p);
+        vec4_to_float(p, grid[i * n + j].vpos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
         z = p[2];
-        vec4_to_float(p, grid[i * n + j].vpos);
         project(painter->proj, 0, 4, p, p);
         // For simplicity the projection doesn't take into account the depth
         // range, so we apply it manually after if needed.
@@ -375,6 +375,7 @@ static void quad(renderer_t          *rend_,
     // Compute modelview matrix.
     mat4_set_identity(mv);
     if (frame == FRAME_OBSERVED) mat4_mul(mv, painter->obs->ro2v, mv);
+    if (frame == FRAME_ICRS) mat4_mul(mv, painter->obs->ri2v, mv);
     mat4_mul(mv, *painter->transform, mv);
 
     render_buffer(rend, buffer, grid_size * grid_size * 6,

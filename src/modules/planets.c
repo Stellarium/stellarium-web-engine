@@ -467,7 +467,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     int *nb_tot = USER_GET(user, 1);
     int *nb_loaded = USER_GET(user, 2);
     painter_t painter = *painter_;
-    texture_t *tex, *normalmap = false;
+    texture_t *tex, *normalmap = NULL;
     projection_t proj;
     int split;
     double fade, uv[4][2];
@@ -498,7 +498,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     if (planet->id == MOON)
         vec3_mul(1.8, painter.color, painter.color);
 
-    paint_quad(&painter, FRAME_VIEW, tex, normalmap, uv, &proj, split);
+    paint_quad(&painter, FRAME_ICRS, tex, normalmap, uv, &proj, split);
     return 0;
 }
 
@@ -580,9 +580,6 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
         if (could_cast_shadow(other, planet)) {
             if (nb >= nb_max) break;
             vec3_copy(other->obj.pos.pvg[0], spheres[nb]);
-            spheres[nb][3] = 1.0;
-            convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0,
-                    spheres[nb], spheres[nb]);
             spheres[nb][3] = other->radius_m / DAU;
             nb++;
         }
@@ -617,22 +614,18 @@ static void planet_render_hips(const planet_t *planet,
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
 
-    // We render the hips surveys in view (OpenGL) coordinates.
     vec4_copy(planet->obj.pos.pvg[0], pos);
-    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, pos, pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
     mat4_iscale(mat, radius, radius, radius);
 
     // Compute sun position.
     vec3_copy(planets->sun->obj.pos.pvg[0], sun_pos);
-    convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0,
-                        sun_pos, sun_pos);
     sun_pos[3] = planets->sun->radius_m / DAU;
     painter.sun = &sun_pos;
 
     // Apply the rotation.
-    mat4_mul(mat, core->observer->re2v, mat);
+    mat4_mul(mat, core->observer->re2i, mat);
     mat4_rx(-planet->rot.obliquity, mat, mat);
 
     if (planet->rot.period) {
@@ -831,11 +824,11 @@ static int on_hips(const char *url, double release_date, void *user)
         LOG_V("Assign hips '%s' to planet '%s'", url, name);
         if (!normalmap) {
             p->hips = hips_create(url, release_date);
-            hips_set_frame(p->hips, FRAME_VIEW);
+            hips_set_frame(p->hips, FRAME_ICRS);
         }
         else {
             p->hips_normalmap = hips_create(url, release_date);
-            hips_set_frame(p->hips_normalmap, FRAME_VIEW);
+            hips_set_frame(p->hips_normalmap, FRAME_ICRS);
         }
     }
 

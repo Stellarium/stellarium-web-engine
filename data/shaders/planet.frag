@@ -119,9 +119,9 @@ void main()
     if (u_has_normal_tex != 0) {
         n = texture2D(u_normal_tex, v_tex_pos).rgb - vec3(0.5, 0.5, 0.0);
         // XXX: inverse the Y coordinates, don't know why!
-        n = normalize(+n.x * v_tangent - n.y * v_bitangent + n.z * v_normal);
+        n = +n.x * v_tangent - n.y * v_bitangent + n.z * v_normal;
     }
-    n = normalize((u_mv * vec4(n, 0.0)).xyz);
+    n = normalize(n);
     gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;
     gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * u_contrast + 0.5;
 

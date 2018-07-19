@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[5479] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[5444] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -206,9 +206,9 @@ static const unsigned char DATA_data_shaders_planet_frag[5479] __attribute__((al
     "    if (u_has_normal_tex != 0) {\n"
     "        n = texture2D(u_normal_tex, v_tex_pos).rgb - vec3(0.5, 0.5, 0.0);\n"
     "        // XXX: inverse the Y coordinates, don't know why!\n"
-    "        n = normalize(+n.x * v_tangent - n.y * v_bitangent + n.z * v_normal);\n"
+    "        n = +n.x * v_tangent - n.y * v_bitangent + n.z * v_normal;\n"
     "    }\n"
-    "    n = normalize((u_mv * vec4(n, 0.0)).xyz);\n"
+    "    n = normalize(n);\n"
     "    gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;\n"
     "    gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * u_contrast + 0.5;\n"
     "\n"
