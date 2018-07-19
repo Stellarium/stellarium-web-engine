@@ -38,6 +38,10 @@ target_t TARGETS[] = {
      .date = "2018-07-28 04:21:00 UTC+08",
      .location = "25.03°N 121.57°E",
      .target = "Moon"},
+    {.name = "Europa shadow on Jupiter",
+     .date = "2018-07-19 21:46:00 UTC+08",
+     .location = "25.03°N 121.57°E",
+     .target = "Jupiter"},
 };
 
 static int parse_date(const char *str, double *utc)
