@@ -618,8 +618,7 @@ static void planet_render_hips(const planet_t *planet,
     painter.flags |= PAINTER_PLANET_SHADER;
 
     // We render the hips surveys in view (OpenGL) coordinates.
-    vec3_copy(planet->obj.pos.pvg[0], pos);
-    pos[3] = 1;
+    vec4_copy(planet->obj.pos.pvg[0], pos);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, pos, pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
