@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[5444] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[5445] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -106,7 +106,7 @@ static const unsigned char DATA_data_shaders_planet_frag[5444] __attribute__((al
     "uniform int u_shadow_spheres_nb;\n"
     "uniform highp mat4 u_shadow_spheres;\n"
     "\n"
-    "varying vec3 v_vpos;   // Pos in view coordinates.\n"
+    "varying vec3 v_mpos;   // Pos in model coordinates.\n"
     "varying vec2 v_tex_pos;\n"
     "varying vec4 v_color;\n"
     "varying vec3 v_normal; // Normal in model coordinates.\n"
@@ -200,7 +200,7 @@ static const unsigned char DATA_data_shaders_planet_frag[5444] __attribute__((al
     "\n"
     "void main()\n"
     "{\n"
-    "    vec3 light_dir = normalize(u_sun.xyz - v_vpos);\n"
+    "    vec3 light_dir = normalize(u_sun.xyz - v_mpos);\n"
     "    // Compute N in view space\n"
     "    vec3 n = v_normal;\n"
     "    if (u_has_normal_tex != 0) {\n"
@@ -214,10 +214,10 @@ static const unsigned char DATA_data_shaders_planet_frag[5444] __attribute__((al
     "\n"
     "    if (u_material == 0) { // oren_nayar.\n"
     "        float power = oren_nayar_diffuse(light_dir,\n"
-    "                                         normalize(-v_vpos),\n"
+    "                                         normalize(-v_mpos),\n"
     "                                         n,\n"
     "                                         0.9, 0.12);\n"
-    "        lowp float illu = illumination(v_vpos);\n"
+    "        lowp float illu = illumination(v_mpos);\n"
     "        power *= illu;\n"
     "        gl_FragColor.rgb *= power;\n"
     "\n"
@@ -241,7 +241,7 @@ ASSET_REGISTER(data_shaders_planet_frag, "shaders/planet.frag", DATA_data_shader
 
 static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
-    "attribute vec4 a_vpos;\n"
+    "attribute vec4 a_mpos;\n"
     "attribute vec2 a_tex_pos;\n"
     "attribute vec3 a_color;\n"
     "attribute vec3 a_normal;\n"
@@ -249,7 +249,7 @@ static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((ali
     "\n"
     "uniform vec4 u_color;\n"
     "\n"
-    "varying vec3 v_vpos;\n"
+    "varying vec3 v_mpos;\n"
     "varying vec2 v_tex_pos;\n"
     "varying vec4 v_color;\n"
     "varying vec3 v_normal;\n"
@@ -259,7 +259,7 @@ static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((ali
     "void main()\n"
     "{\n"
     "    gl_Position = a_pos;\n"
-    "    v_vpos = a_vpos.xyz;\n"
+    "    v_mpos = a_mpos.xyz;\n"
     "    v_tex_pos = a_tex_pos;\n"
     "    v_color = vec4(a_color, 1.0) * u_color;\n"
     "\n"

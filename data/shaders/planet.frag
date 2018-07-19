@@ -19,7 +19,7 @@ uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
 uniform int u_shadow_spheres_nb;
 uniform highp mat4 u_shadow_spheres;
 
-varying vec3 v_vpos;   // Pos in view coordinates.
+varying vec3 v_mpos;   // Pos in model coordinates.
 varying vec2 v_tex_pos;
 varying vec4 v_color;
 varying vec3 v_normal; // Normal in model coordinates.
@@ -113,7 +113,7 @@ float illumination(vec3 p)
 
 void main()
 {
-    vec3 light_dir = normalize(u_sun.xyz - v_vpos);
+    vec3 light_dir = normalize(u_sun.xyz - v_mpos);
     // Compute N in view space
     vec3 n = v_normal;
     if (u_has_normal_tex != 0) {
@@ -127,10 +127,10 @@ void main()
 
     if (u_material == 0) { // oren_nayar.
         float power = oren_nayar_diffuse(light_dir,
-                                         normalize(-v_vpos),
+                                         normalize(-v_mpos),
                                          n,
                                          0.9, 0.12);
-        lowp float illu = illumination(v_vpos);
+        lowp float illu = illumination(v_mpos);
         power *= illu;
         gl_FragColor.rgb *= power;
 

@@ -25,7 +25,7 @@ typedef struct {
     GLuint prog;
 
     GLuint a_pos_l;
-    GLuint a_vpos_l;
+    GLuint a_mpos_l;
     GLuint a_tex_pos_l;
     GLuint a_normal_l;
     GLuint a_tangent_l;
@@ -62,7 +62,7 @@ typedef struct buffer_t {
     GLenum  mode;
     int     offset;
     int     offset_pos;
-    int     offset_vpos;
+    int     offset_mpos;
     int     offset_tex_pos;
     int     offset_normal;
     int     offset_tangent;
@@ -121,7 +121,7 @@ static void init_prog(prog_t *prog, const char *vert, const char *frag,
 // any tangent data).
 typedef struct vertex_gl {
     GLfloat pos[4]       __attribute__((aligned(4)));
-    GLfloat vpos[4]      __attribute__((aligned(4)));
+    GLfloat mpos[4]      __attribute__((aligned(4)));
     GLfloat tex_pos[2]   __attribute__((aligned(4)));
     GLubyte color[4]     __attribute__((aligned(4)));
     GLfloat normal[3]    __attribute__((aligned(4)));
@@ -328,7 +328,7 @@ static void quad(renderer_t          *rend_,
         mat4_mul_vec4(*painter->transform, normal, normal);
         vec3_to_float(normal, grid[i * n + j].normal);
         mat4_mul_vec4(*painter->transform, p, p);
-        vec4_to_float(p, grid[i * n + j].vpos);
+        vec4_to_float(p, grid[i * n + j].mpos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
         z = p[2];
         project(painter->proj, 0, 4, p, p);
@@ -352,7 +352,7 @@ static void quad(renderer_t          *rend_,
     buffer->mode = GL_TRIANGLES;
     buffer->offset = sizeof(vertex_gl_t);
     buffer->offset_pos = offsetof(vertex_gl_t, pos);
-    buffer->offset_vpos = offsetof(vertex_gl_t, vpos);
+    buffer->offset_mpos = offsetof(vertex_gl_t, mpos);
     buffer->offset_tex_pos = offsetof(vertex_gl_t, tex_pos);
     buffer->offset_color = offsetof(vertex_gl_t, color);
     buffer->offset_normal = offsetof(vertex_gl_t, normal);
@@ -736,10 +736,10 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
                buff->offset, (void*)(long)buff->offset_tangent));
         GL(glEnableVertexAttribArray(prog->a_tangent_l));
     }
-    if (prog->a_vpos_l != -1) {
-        GL(glVertexAttribPointer(prog->a_vpos_l, 4, GL_FLOAT, false,
-               buff->offset, (void*)(long)buff->offset_vpos));
-        GL(glEnableVertexAttribArray(prog->a_vpos_l));
+    if (prog->a_mpos_l != -1) {
+        GL(glVertexAttribPointer(prog->a_mpos_l, 4, GL_FLOAT, false,
+               buff->offset, (void*)(long)buff->offset_mpos));
+        GL(glEnableVertexAttribArray(prog->a_mpos_l));
     }
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buff->index_buffer));
     GL(glDrawElements(buff->mode, n, GL_UNSIGNED_SHORT, 0));
@@ -755,8 +755,8 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         GL(glDisableVertexAttribArray(prog->a_normal_l));
     if (prog->a_tangent_l != -1)
         GL(glDisableVertexAttribArray(prog->a_tangent_l));
-    if (prog->a_vpos_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_vpos_l));
+    if (prog->a_mpos_l != -1)
+        GL(glDisableVertexAttribArray(prog->a_mpos_l));
 }
 
 static void init_prog(prog_t *p, const char *vert, const char *frag,
@@ -785,7 +785,7 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_mv);
     UNIFORM(u_stripes);
     ATTRIB(a_pos);
-    ATTRIB(a_vpos);
+    ATTRIB(a_mpos);
     ATTRIB(a_tex_pos);
     ATTRIB(a_normal);
     ATTRIB(a_tangent);
