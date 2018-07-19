@@ -239,7 +239,7 @@ static const unsigned char DATA_data_shaders_planet_frag[5479] __attribute__((al
 
 ASSET_REGISTER(data_shaders_planet_frag, "shaders/planet.frag", DATA_data_shaders_planet_frag, false)
 
-static const unsigned char DATA_data_shaders_planet_vert[720] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec4 a_vpos;\n"
     "attribute vec2 a_tex_pos;\n"
@@ -263,11 +263,8 @@ static const unsigned char DATA_data_shaders_planet_vert[720] __attribute__((ali
     "    v_tex_pos = a_tex_pos;\n"
     "    v_color = vec4(a_color, 1.0) * u_color;\n"
     "\n"
-    "    // XXX: for the moment we use spherical coordinates tangent,\n"
-    "    // like in stellarium.\n"
-    "    v_normal = a_normal;\n"
-    "    v_tangent = normalize(cross(vec3(0.0, 0.0, 1.0), v_normal));\n"
-    "    // v_tangent = a_tangent;\n"
+    "    v_normal = normalize(a_normal);\n"
+    "    v_tangent = normalize(a_tangent);\n"
     "    v_bitangent = normalize(cross(v_normal, v_tangent));\n"
     "\n"
     "}\n"

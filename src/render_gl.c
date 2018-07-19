@@ -253,6 +253,9 @@ static void points(renderer_t *rend_,
 static void compute_tangent(const double uv[2], const projection_t *tex_proj,
                             double out[3])
 {
+    // XXX: this is what the algo should look like, except the normal map
+    // texture we use (for the Moon) doesn't follow the healpix projection.
+    /*
     double uv1[2], uv2[2], p1[4], p2[4], tangent[3];
     const double delta = 0.1;
     vec2_copy(uv, uv1);
@@ -262,6 +265,11 @@ static void compute_tangent(const double uv[2], const projection_t *tex_proj,
     project(tex_proj, PROJ_BACKWARD, 4, uv2, p2);
     vec3_sub(p2, p1, tangent);
     vec3_normalize(tangent, out);
+    */
+
+    double p[4] = {0};
+    project(tex_proj, PROJ_BACKWARD, 4, uv, p);
+    vec3_cross(VEC(0, 0, 1), p, out);
 }
 
 static void quad(renderer_t          *rend_,
@@ -279,7 +287,7 @@ static void quad(renderer_t          *rend_,
     buffer_t *buffer;
     vertex_gl_t *grid;
     uint16_t *indices;
-    double p[4], normal[4], tangent[4], z;
+    double p[4], normal[4] = {0}, tangent[4] = {0}, z;
     bool quad_cut_inv = painter->flags & PAINTER_QUAD_CUT_INV;
     const double *depth_range = (const double*)painter->depth_range;
 
@@ -309,6 +317,7 @@ static void quad(renderer_t          *rend_,
 
         if (normalmap) {
             compute_tangent(p, tex_proj, tangent);
+            mat4_mul_vec4(*painter->transform, tangent, tangent);
             vec3_to_float(tangent, grid[i * n + j].tangent);
         }
 

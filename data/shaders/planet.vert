@@ -21,11 +21,8 @@ void main()
     v_tex_pos = a_tex_pos;
     v_color = vec4(a_color, 1.0) * u_color;
 
-    // XXX: for the moment we use spherical coordinates tangent,
-    // like in stellarium.
-    v_normal = a_normal;
-    v_tangent = normalize(cross(vec3(0.0, 0.0, 1.0), v_normal));
-    // v_tangent = a_tangent;
+    v_normal = normalize(a_normal);
+    v_tangent = normalize(a_tangent);
     v_bitangent = normalize(cross(v_normal, v_tangent));
 
 }
