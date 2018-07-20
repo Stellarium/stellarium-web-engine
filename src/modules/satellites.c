@@ -142,6 +142,9 @@ static int parse_tle_file(satellites_t *sats, const char *data)
                 line2, line3, 'c', 'm', 'i',
                 &startmfe, &stopmfe, &deltamin);
 
+        // Register the name in the global ids db.
+        identifiers_add(id, "NAME", sat->name, NULL, NULL);
+
         nb++;
     }
     return nb;
