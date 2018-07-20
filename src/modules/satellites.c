@@ -223,6 +223,47 @@ static int satellites_render(const obj_t *obj, const painter_t *painter)
 }
 
 /*
+ * Compute the amount of light the satellite receives from the Sun, taking
+ * into account the Earth shadow.  Return a value from 0 (totally eclipsed)
+ * to 1 (totally illuminated).
+ */
+static double satellite_compute_earth_shadow(const satellite_t *sat,
+                                             const observer_t *obs)
+{
+    double e_pos[3]; // Earth position from sat.
+    double s_pos[3]; // Sun position from sat.
+    double e_r, s_r;
+    double elong;
+    const double SUN_RADIUS = 695508000; // (m).
+    const double EARTH_RADIUS = 6371000; // (m).
+
+    vec3_mul(-DAU, sat->obj.pos.pvg[0], e_pos);
+    vec3_add(obs->earth_pvh[0], sat->obj.pos.pvg[0], s_pos);
+    vec3_mul(-DAU, s_pos, s_pos);
+    elong = eraSepp(e_pos, s_pos);
+    e_r = asin(EARTH_RADIUS / vec3_norm(e_pos));
+    s_r = asin(SUN_RADIUS / vec3_norm(s_pos));
+
+    // XXX: for the moment we don't consider the different kind of shadows.
+    if (vec3_norm(s_pos) < vec3_norm(e_pos)) return 1.0;
+    if (e_r + s_r < elong) return 1.0; // No eclipse.
+    return 0.0;
+}
+
+static double satellite_compute_vmag(const satellite_t *sat,
+                                     const observer_t *obs)
+{
+    double illumination;
+    if (sat->obj.pos.alt < 0.0) return 99; // Below horizon.
+    illumination = satellite_compute_earth_shadow(sat, obs);
+    if (illumination == 0.0) {
+        // Eclipsed.
+        return 17.0;
+    }
+    return 7.0; // Default value.
+}
+
+/*
  * Update an individual satellite.
  */
 static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
@@ -238,7 +279,7 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_copy(v, obj->pos.pvg[1]);
     obj->pos.pvg[0][3] = obj->pos.pvg[1][3] = 1.0; // AU.
 
-    sat->obj.vmag = 7.0; // Default mag.
+    sat->obj.vmag = satellite_compute_vmag(sat, obs);
 
     // XXX: We need to get ride of this!
     compute_coordinates(obs, obj->pos.pvg[0],
