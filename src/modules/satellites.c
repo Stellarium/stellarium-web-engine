@@ -15,6 +15,19 @@
  */
 
 /*
+ * Type: qsmag_t
+ * Represent an entry in the qs.mag file, that contains some extra
+ * information about visible satellites.  For the moment we only use it
+ * for the vmag.
+ */
+typedef struct qsmag qsmag_t;
+struct qsmag {
+    UT_hash_handle  hh;    // For the global map.
+    int             id;
+    double          stdmag;
+};
+
+/*
  * Type: satellite_t
  * Represents an individual satellite.
  */
@@ -22,6 +35,7 @@ typedef struct satellite {
     obj_t obj;
     char name[26];
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
+    double stdmag; // Taken from the qsmag data.
 } satellite_t;
 
 static int satellite_update(obj_t *obj, const observer_t *obs, double dt);
@@ -58,6 +72,8 @@ OBJ_REGISTER(satellite_klass)
 // Module class.
 typedef struct satellites {
     obj_t   obj;
+    qsmag_t *qsmags; // Hash table id -> qsmag entry.
+    int     qsmags_status;
     bool    loaded;
 } satellites_t;
 
@@ -92,9 +108,10 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 {
     const char *line1, *line2, *line3;
     char id[16];
-    int i, nb = 0;
+    int i, nb = 0, sat_number;
     satellite_t *sat;
     double startmfe, stopmfe, deltamin;
+    qsmag_t *qsmag;
 
     while (*data) {
         line1 = data;
@@ -110,6 +127,12 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 
         sprintf(id, "SAT %.6s", line2);
         sat = (satellite_t*)obj_create("satellite", id, (obj_t*)sats, NULL);
+        sat->stdmag = NAN;
+
+        // If the sat is in the qsmag file, set its stdmag.
+        sat_number = atoi(line2 + 2);
+        HASH_FIND_INT(sats->qsmags, &sat_number, qsmag);
+        if (qsmag) sat->stdmag = qsmag->stdmag;
 
         // Copy and strip name.
         memcpy(sat->name, line1, 24);
@@ -125,6 +148,39 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 error:
     LOG_E("Cannot parse TLE file");
     return nb;
+}
+
+static bool load_qsmag(satellites_t *sats)
+{
+    int size, id;
+    double stdmag;
+    const char *comp_data;
+    const char *URL = "https://data.stellarium.org/norad/qs.mag.gz";
+    char *data, *line;
+    qsmag_t *qsmag;
+
+    if (sats->qsmags_status / 100 == 2) return true;
+    if (sats->qsmags_status) return false;
+    comp_data = asset_get_data(URL, &size, &sats->qsmags_status);
+    if (sats->qsmags_status && sats->qsmags_status / 100 != 2)
+        LOG_E("Error while loading qs.mag: %d", sats->qsmags_status);
+    if (!comp_data) return false;
+
+    // Uncompress and parse the data.
+    data = z_uncompress_gz(comp_data, size, &size);
+    for (line = data; line; line = strchr(line, '\n')) {
+        if (*line == '\n') line++;
+        if (!(*line)) break;
+        if (strlen(line) < 34 || line[34] < '0' || line[34] > '9') continue;
+        id = atoi(line);
+        stdmag = atof(line + 33);
+        qsmag = calloc(1, sizeof(*qsmag));
+        qsmag->id = id;
+        qsmag->stdmag = stdmag;
+        HASH_ADD_INT(sats->qsmags, id, qsmag);
+    }
+    free(data);
+    return true;
 }
 
 static bool load_data(satellites_t *sats)
@@ -145,6 +201,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
 {
     satellites_t *sats = (satellites_t*)obj;
     satellite_t *sat;
+    if (!load_qsmag(sats)) return 0;
     if (!load_data(sats)) return 0;
 
     OBJ_ITER(sats, sat, &satellite_klass) {
@@ -178,8 +235,7 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_copy(v, obj->pos.pvg[1]);
     obj->pos.pvg[0][3] = obj->pos.pvg[1][3] = 1.0; // AU.
 
-    // For the moment we have no information about the magnitude.
-    obj->vmag = 7.0;
+    sat->obj.vmag = 7.0; // Default mag.
 
     // XXX: We need to get ride of this!
     compute_coordinates(obs, obj->pos.pvg[0],
