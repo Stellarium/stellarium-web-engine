@@ -252,14 +252,37 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
 static double satellite_compute_vmag(const satellite_t *sat,
                                      const observer_t *obs)
 {
-    double illumination;
+    double illumination, fracil, elong, sun_pos[4], sat_pos[4], range;
+
     if (sat->obj.pos.alt < 0.0) return 99; // Below horizon.
     illumination = satellite_compute_earth_shadow(sat, obs);
     if (illumination == 0.0) {
         // Eclipsed.
         return 17.0;
     }
-    return 7.0; // Default value.
+    if (isnan(sat->stdmag)) return 7.0; // Default value.
+
+    // If we have a std mag value,
+    // We use the formula:
+    // mag = stdmag - 15.75 + 2.5 * log10 (range * range / fracil)
+    // where : stdmag = standard magnitude as defined above
+    //         range  = distance from observer to satellite, km
+    //         fracil = fraction of satellite illuminated,
+    //                  [ 0 <= fracil <= 1 ]
+    // (https://www.prismnet.com/~mmccants/tles/mccdesc.html)
+
+    // Sun position from earth, CIRS.
+    vec3_mul(-1, obs->earth_pvh[0], sun_pos);
+    sun_pos[3] = 1.0;
+    convert_coordinates(obs, FRAME_ICRS, FRAME_ICRS, 0, sun_pos, sun_pos);
+
+    vec4_copy(sat->obj.pos.pvg[0], sat_pos);
+    convert_coordinates(obs, FRAME_ICRS, FRAME_ICRS, 0, sat_pos, sat_pos);
+
+    range = vec3_norm(sat_pos) * DAU / 1000; // Distance in km.
+    elong = eraSepp(sun_pos, sat_pos);
+    fracil = 0.5 * (1. + cos(elong));
+    return sat->stdmag - 15.75 + 2.5 * log10(range * range / fracil);
 }
 
 /*
