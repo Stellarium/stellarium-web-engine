@@ -332,9 +332,9 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     mag = core_get_observed_mag(obj->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
 
-    // Render symbol if needed.
-    // XXX: for the moment this always the case!
-    if (true) {
+    // Render symbol if needed.  For the moment we always do it if the
+    // mag is lower than 7.  We probably need an option to control that.
+    if (mag < 7.0) {
         symbols_paint(&painter, "Ast", p_ndc, 12.0, label_color, 0.0);
         // Still render an invisible point for the selection.
         // XXX: should be done in symbols_paint!
