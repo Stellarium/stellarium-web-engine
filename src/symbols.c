@@ -28,6 +28,8 @@ static const struct {
     {"BNe" , 0x89ff5fff},
     {"Cl*" , 0x89ff5fff},
 
+    {"Ast", 0xff00ffff},
+
     {"btn_landscape", 0xffffffff},
     {"btn_atmosphere", 0xffffffff},
     {"btn_cst_lines", 0xffffffff},

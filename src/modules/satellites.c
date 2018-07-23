@@ -331,6 +331,16 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     if (!project(painter.proj, PROJ_TO_NDC_SPACE, 2, p, p_ndc)) return 0;
     mag = core_get_observed_mag(obj->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
+
+    // Render symbol if needed.
+    // XXX: for the moment this always the case!
+    if (true) {
+        symbols_paint(&painter, "Ast", p_ndc, 12.0, label_color, 0.0);
+        // Still render an invisible point for the selection.
+        // XXX: should be done in symbols_paint!
+        luminance = 0;
+    }
+
     point = (point_t) {
         .pos = {p[0], p[1], p[2], p[3]},
         .size = size,
@@ -341,9 +351,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     if (*sat->name && obj->vmag <= painter.label_mag_max) {
-        if (project(painter.proj, PROJ_TO_NDC_SPACE, 2, p, p)) {
-            labels_add(sat->name, p, size, 13, label_color, ANCHOR_AROUND, 0);
-        }
+        labels_add(sat->name, p_ndc, size, 13, label_color, ANCHOR_AROUND, 0);
     }
 
     return 0;
