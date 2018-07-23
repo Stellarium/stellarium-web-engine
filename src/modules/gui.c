@@ -259,8 +259,8 @@ static void menu_main(void *user)
 static void time_widget(void *user)
 {
     int iy, im, id, ihmsf[4], new_ihmsf[4], utc_offset;
-    static int r = 0;
-    double djm0, utc;
+    int r = 0;
+    double djm0, utc, new_utc;
     utc_offset = core->utc_offset / 60.;
     utc = core->observer->utc + utc_offset / 24.;
     eraD2dtf("UTC", 0, DJM0, utc, &iy, &im, &id, ihmsf);
@@ -274,10 +274,11 @@ static void time_widget(void *user)
     if (gui_int("Second", &new_ihmsf[2])) r = 1;
     if (r) {
         r = eraDtf2d("UTC", iy, im, id,
-                     new_ihmsf[0], new_ihmsf[1], new_ihmsf[2], &djm0, &utc);
+                     new_ihmsf[0], new_ihmsf[1], new_ihmsf[2], &djm0,
+                     &new_utc);
         if (r == 0) {
             obj_set_attr(&core->observer->obj, "utc", "f",
-                            djm0 - DJM0 + utc - utc_offset / 24.);
+                         djm0 - DJM0 + new_utc - utc_offset / 24.);
         } else {
             // We cannot convert to MJD.  This can happen if for example we set
             // the minutes to 60.  In that case we use the delta to the
