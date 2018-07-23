@@ -105,7 +105,7 @@ static int satellites_init(obj_t *obj, json_value *args)
  */
 static int parse_tle_file(satellites_t *sats, const char *data)
 {
-    const char *line1, *line2, *line3;
+    const char *line0, *line1, *line2;
     char id[16];
     int i, nb = 0;
     satellite_t *sat;
@@ -113,18 +113,18 @@ static int parse_tle_file(satellites_t *sats, const char *data)
     qsmag_t *qsmag;
 
     while (*data) {
-        line1 = data;
+        line0 = data;
+        line1 = strchr(line0, '\n');
+        if (!line1) goto error;
+        line1 += 1;
         line2 = strchr(line1, '\n');
         if (!line2) goto error;
         line2 += 1;
-        line3 = strchr(line2, '\n');
-        if (!line3) goto error;
-        line3 += 1;
-        data  = strchr(line3, '\n');
+        data  = strchr(line2, '\n');
         if (!data) break;
         data += 1;
 
-        sprintf(id, "SAT %.6s", line2);
+        sprintf(id, "SAT %.5s", line1 + 2);
         sat = (satellite_t*)obj_create("satellite", id, (obj_t*)sats, NULL);
         sat->stdmag = NAN;
 
@@ -134,11 +134,11 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         if (qsmag) sat->stdmag = qsmag->stdmag;
 
         // Copy and strip name.
-        memcpy(sat->name, line1, 24);
+        memcpy(sat->name, line0, 24);
         for (i = 23; sat->name[i] == ' '; i--) sat->name[i] = '\0';
 
         sat->elsetrec = sgp4_twoline2rv(
-                line2, line3, 'c', 'm', 'i',
+                line1, line2, 'c', 'm', 'i',
                 &startmfe, &stopmfe, &deltamin);
 
         // Register the name in the global ids db.
