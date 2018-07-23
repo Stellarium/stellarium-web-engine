@@ -35,6 +35,7 @@ typedef struct satellite {
     obj_t obj;
     char name[26];
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
+    int number;
     double stdmag; // Taken from the qsmag data.
 } satellite_t;
 
@@ -106,7 +107,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 {
     const char *line1, *line2, *line3;
     char id[16];
-    int i, nb = 0, sat_number;
+    int i, nb = 0;
     satellite_t *sat;
     double startmfe, stopmfe, deltamin;
     qsmag_t *qsmag;
@@ -128,8 +129,8 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         sat->stdmag = NAN;
 
         // If the sat is in the qsmag file, set its stdmag.
-        sat_number = atoi(line2 + 2);
-        HASH_FIND_INT(sats->qsmags, &sat_number, qsmag);
+        sat->number = atoi(line2 + 2);
+        HASH_FIND_INT(sats->qsmags, &sat->number, qsmag);
         if (qsmag) sat->stdmag = qsmag->stdmag;
 
         // Copy and strip name.
