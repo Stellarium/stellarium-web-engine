@@ -127,6 +127,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         sprintf(id, "NORAD %.5s", line1 + 2);
         sat = (satellite_t*)obj_create("satellite", id, (obj_t*)sats, NULL);
         sat->stdmag = NAN;
+        strcpy(sat->obj.type, "Asa"); // Otype code.
 
         // If the sat is in the qsmag file, set its stdmag.
         sat->number = atoi(line2 + 2);
