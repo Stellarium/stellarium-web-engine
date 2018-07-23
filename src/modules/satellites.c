@@ -124,7 +124,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         if (!data) break;
         data += 1;
 
-        sprintf(id, "SAT %.5s", line1 + 2);
+        sprintf(id, "NORAD %.5s", line1 + 2);
         sat = (satellite_t*)obj_create("satellite", id, (obj_t*)sats, NULL);
         sat->stdmag = NAN;
 
