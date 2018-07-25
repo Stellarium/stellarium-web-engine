@@ -42,6 +42,13 @@ target_t TARGETS[] = {
      .date = "2018-07-19 21:46:00 UTC+08",
      .location = "25.03°N 121.57°E",
      .target = "Jupiter"},
+    // Taken from:
+    //    https://www.universetoday.com/
+    //    wp-content/uploads/2014/11/gany-io20090816.gif
+    {.name = "Io shadow on Ganymede",
+     .date = "2009-08-16 16:44:00 UTC+00",
+     .location = "10.32°N 123.75°E", // Cebu, Philippines.
+     .target = "Ganymede"},
 };
 
 static int parse_date(const char *str, double *utc)
