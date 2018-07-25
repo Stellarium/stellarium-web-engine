@@ -547,8 +547,11 @@ static bool could_cast_shadow(const planet_t *a, const planet_t *b)
 
     // For the moment we only consider the Jupiter major moons or the
     // Earth on the Moon.
-    if (a == NULL) return b->id == JUPITER || b->id == MOON;
-    if (b->id == JUPITER && (a->id < IO || a->id > CALLISTO)) return false;
+    if (a == NULL)
+        return b->id == MOON || (b->id >= IO && b->id <= JUPITER);
+    if (b->id == a->id) return false; // No self shadow.
+    if ((b->id >= IO && b->id <= JUPITER) && (a->id < IO || a->id > JUPITER))
+            return false;
     if (b->id == MOON && a->id != EARTH) return false;
 
     if (vec3_norm2(a->pvh[0]) > vec3_norm2(b->pvh[0])) return false;
