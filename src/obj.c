@@ -344,10 +344,24 @@ EMSCRIPTEN_KEEPALIVE
 int obj_update(obj_t *obj, observer_t *obs, double dt)
 {
     int ret;
+    double ldt;
+    observer_t obs2;
+
     assert(!obs || obs->hash != 0);
     if (!obj->klass->update) return 0;
     observer_update(obs, true);
     ret = obj->klass->update(obj, obs, dt);
+
+    // Apply light speed correction if needed.
+    if (obj->klass->flags & OBJ_REQUIRE_LIGHT_SPEED_CORRECTION) {
+        obs2 = *obs;
+        ldt = vec3_norm(obj->pos.pvg[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
+        obs2.tt -= ldt;
+        obs2.dirty = true;
+        observer_update(&obs2, true);
+        ret = obj->klass->update(obj, &obs2, 0);
+    }
+
     obj->observer_hash = obs->hash;
     if (ret != 0) return ret;
     return ret;

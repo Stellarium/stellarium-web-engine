@@ -82,6 +82,7 @@ static obj_klass_t planet_klass = {
     .id = "planet",
     .size = sizeof(planet_t),
     .update = planet_update,
+    .flags = OBJ_REQUIRE_LIGHT_SPEED_CORRECTION,
     .attributes = (attribute_t[]) {
         PROPERTY("name"),
         PROPERTY("alt"),
