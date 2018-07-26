@@ -50,6 +50,12 @@ struct observer
     // Position and speed of the earth. equ, J2000.0, AU heliocentric.
     double earth_pvh[2][3];
 
+    // The pointed position and constellation.
+    struct {
+        double icrs[4];
+        char cst[4];
+    } pointer;
+
     // Transformation matrices.
     // h: Horizontal (RA/DE, left handed, X->N, Y->E, Z->up).
     // o: Observed: horizontal with refraction (RA/DE, left handed).

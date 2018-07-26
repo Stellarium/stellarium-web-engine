@@ -86,6 +86,7 @@ void observer_update(observer_t *obs, bool fast)
     double utc1, utc2, ut11, ut12;
     double dt, dut1 = 0;
     double pvb[2][3];
+    double p[4] = {0};
 
     if (!fast || obs->force_full_update) obs->dirty = true;
     if (obs->last_update != obs->tt) obs->dirty = true;
@@ -120,8 +121,15 @@ void observer_update(observer_t *obs, bool fast)
         eraEpv00(DJM0, obs->tt, obs->earth_pvh, pvb);
         obs->last_full_update = obs->tt;
     }
+
     obs->last_update = obs->tt;
     update_matrices(obs);
+
+    // Compute pointed at constellation.
+    eraS2c(obs->azimuth, obs->altitude, p);
+    mat4_mul_vec4(obs->rh2i, p, obs->pointer.icrs);
+    find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
+
     obs->dirty = false;
     obs->force_full_update = false;
     observer_recompute_hash(obs);

@@ -177,15 +177,16 @@ static void menu_main(void *user)
     double size[2] = {300, 0};
 
     // XXX: replace all by modules gui hook method.
-    const char *modules[][3] = {
-        {"core.atmosphere", "Atmosphere", "btn_atmosphere"},
-        {"core.landscape",  "Landscape", "btn_landscape"},
-        {"core.milkyway",  "Milkyway", "btn_landscape"},
-        {"core.constellations.lines", "Cst Lines", "btn_cst_lines"},
-        {"core.constellations.images", "Cst Art", NULL},
-        {"core.constellations.bounds", "Cst Bounds", NULL},
-        {"core.dsos", "DSO", NULL},
-        {"core.dss",  "DSS", NULL},
+    const char *modules[][4] = {
+        {"core.atmosphere", "visible", "Atmosphere", "btn_atmosphere"},
+        {"core.landscape", "visible", "Landscape", "btn_landscape"},
+        {"core.milkyway", "visible", "Milkyway", "btn_landscape"},
+        {"core.constellations.lines", "visible", "Cst Lines", "btn_cst_lines"},
+        {"core.constellations.images", "visible", "Cst Art", NULL},
+        {"core.constellations.bounds", "visible", "Cst Bounds", NULL},
+        {"core.constellations", "show_all", "Cst show all", NULL},
+        {"core.dsos", "visible", "DSO", NULL},
+        {"core.dss",  "visible", "DSS", NULL},
     };
 
     gui_panel_begin("main", pos, size);
@@ -216,10 +217,10 @@ static void menu_main(void *user)
     if (gui_tab("View")) {
         for (i = 0; i < ARRAY_SIZE(modules); i++) {
             gui_item(&(gui_item_t){
-                    .label = modules[i][1],
-                    .symbol = modules[i][2],
+                    .label = modules[i][2],
+                    .symbol = modules[i][3],
                     .obj = obj_get(NULL, modules[i][0], 0),
-                    .attr = "visible"});
+                    .attr = modules[i][1]});
         }
         gui_item(&(gui_item_t){
                 .label = "Hints max mag",
