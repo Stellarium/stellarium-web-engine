@@ -120,15 +120,20 @@ static void parse_edges(const char *edges, constellation_infos_t *csts)
     const int MAX_EDGES = ARRAY_SIZE(info->edges);
 
     for (line = edges; *line; line = strchr(line, '\n') + 1) {
-        sscanf(line, "%*s %*s"
-                     "%d:%d:%d %c%d:%d:%d "
-                     "%d:%d:%d %c%d:%d:%d "
-                     "%s %s",
-                     &ra1_h, &ra1_m, &ra1_s,
-                     &dec1_sign, &dec1_d, &dec1_m, &dec1_s,
-                     &ra2_h, &ra2_m, &ra2_s,
-                     &dec2_sign, &dec2_d, &dec2_m, &dec2_s,
-                     cst[0], cst[1]);
+        if (str_startswith(line, "//")) continue;
+        if (*line == '\n') continue;
+        if (sscanf(line, "%*s %*s"
+                         "%d:%d:%d %c%d:%d:%d "
+                         "%d:%d:%d %c%d:%d:%d "
+                         "%s %s",
+                         &ra1_h, &ra1_m, &ra1_s,
+                         &dec1_sign, &dec1_d, &dec1_m, &dec1_s,
+                         &ra2_h, &ra2_m, &ra2_s,
+                         &dec2_sign, &dec2_d, &dec2_m, &dec2_s,
+                         cst[0], cst[1]) != 16) {
+            LOG_W("Cannot parse skyculture edge line: %.16s...", line);
+            continue;
+        }
         eraTf2a('+', ra1_h, ra1_m, ra1_s, &ra1);
         eraTf2a('+', ra2_h, ra2_m, ra2_s, &ra2);
         eraAf2a(dec1_sign, dec1_d, dec1_m, dec1_s, &dec1);
