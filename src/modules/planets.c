@@ -1030,6 +1030,7 @@ static int planets_init(obj_t *obj, json_value *args)
         if (!p) continue;
         p->rings.tex = texture_from_url(path, TF_LAZY_LOAD);
     }
+    regfree(&reg);
 
     planets->earth_shadow_tex =
         texture_from_url("asset://textures/earth_shadow.png", TF_LAZY_LOAD);
