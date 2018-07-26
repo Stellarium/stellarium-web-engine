@@ -239,17 +239,19 @@ static obj_klass_t stars_klass = {
 
 static star_t *star_create(const star_data_t *data)
 {
+    char id[128];
     star_t *star;
-    star = (star_t*)obj_create("star", NULL, NULL, NULL);
+
+    if (data->hd) {
+        sprintf(id, "HD %d", data->hd);
+        identifiers_add(id, "HD", id + 3, NULL, NULL);
+    } else {
+        sprintf(id, "GAIA %" PRId64, data->gaia);
+    }
+    star = (star_t*)obj_create("star", id, NULL, NULL);
     strcpy(star->obj.type, "*");
     star->data = *data;
     star->obj.nsid = star->data.gaia;
-    if (star->data.hd) {
-        asprintf(&star->obj.id, "HD %d", star->data.hd);
-        identifiers_add(star->obj.id, "HD", star->obj.id + 3, NULL, NULL);
-    } else {
-        asprintf(&star->obj.id, "GAIA %" PRId64, star->data.gaia);
-    }
     return star;
 }
 
