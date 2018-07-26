@@ -134,6 +134,7 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri)
     info = asset_get_data(path, NULL, NULL);
     assert(info);
     ini_parse_string(info, info_ini_handler, cult);
+    free(cult->obj.id);
     asprintf(&cult->obj.id, "CULT %s", cult->info.name);
 
     sprintf(path, "%s/%s", cult->uri, "names.txt");
