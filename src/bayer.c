@@ -85,6 +85,7 @@ static void bayer_init(void)
         g_data[i].bayer_n = data[i].bayer_n;
         HASH_ADD_INT(g_entries, hd, &g_data[i]);
     }
+    free(data);
 }
 
 bool bayer_get(int hd, char cons[4], int *bayer, int *n)
