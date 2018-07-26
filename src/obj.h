@@ -284,15 +284,10 @@ void obj_add(obj_t *parent, obj_t *child);
 void obj_remove(obj_t *parent, obj_t *child);
 
 /*
- * Function: obj_delete
- * Delete an object
- *
- * I think the name should be changed to obj_release or obj_unref or
- * something like that, since the function actually decreases the
- * reference counter of the object and delete the object only if the
- * counter reaches zero.
+ * Function: obj_release
+ * Decrement object ref count and delete it if needed.
  */
-void obj_delete(obj_t *obj);
+void obj_release(obj_t *obj);
 
 /*
  * Function: obj_clone

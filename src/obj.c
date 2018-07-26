@@ -171,7 +171,7 @@ void obj_remove(obj_t *parent, obj_t *child)
     assert(parent);
     child->parent = NULL;
     DL_DELETE(parent->children, child);
-    obj_delete(child);
+    obj_release(child);
 }
 
 /**** Support for obj_sub type ******************************************/
@@ -199,7 +199,7 @@ obj_t *obj_add_sub(obj_t *parent, const char *name) {
 /***********************************************************************/
 
 EMSCRIPTEN_KEEPALIVE
-void obj_delete(obj_t *obj)
+void obj_release(obj_t *obj)
 {
     if (!obj) return;
     assert(obj->ref);
@@ -525,7 +525,7 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
             // previous value and increment the ref to the new one.
             if (attr->hint && strcmp(attr->hint, "obj") == 0) {
                 o = *(obj_t**)p;
-                obj_delete(o);
+                obj_release(o);
                 memcpy(&o, buf, 8);
                 if (o) o->ref++;
             }

@@ -430,7 +430,7 @@ int calendar_get(
 
     DL_FOREACH_SAFE(events, ev, ev_tmp) free(ev);
     for (i = 0; i < nb; i++) {
-        obj_delete(objs[i]);
+        obj_release(objs[i]);
     }
     free(objs);
     return 0;

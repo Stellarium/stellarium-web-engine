@@ -90,7 +90,7 @@ Module.afterInit(function() {
   }
 
   SweObj.prototype.destroy = function() {
-    Module._obj_delete(this.v);
+    Module._obj_release(this.v);
   }
 
   SweObj.prototype.change = function(attr, callback, context) {

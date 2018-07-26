@@ -822,7 +822,7 @@ static void test_create_from_json(void)
     obj_update(star, core->observer, 0);
     obj_get_attr(star, "vmag", "f", &vmag);
     assert(fabs(vmag - 5.153) < 0.0001);
-    obj_delete(star);
+    obj_release(star);
 }
 TEST_REGISTER(NULL, test_create_from_json, TEST_AUTO);
 

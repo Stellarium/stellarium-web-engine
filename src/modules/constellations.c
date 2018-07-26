@@ -148,7 +148,7 @@ static int parse_anchors(const char *str, double mat[3][3])
         // shouldn't change.
         obj_update(star, core->observer, 0);
         vec3_normalize(star->pos.pvg[0], pos[i]);
-        obj_delete(star);
+        obj_release(star);
     }
     // Compute the transformation matrix M from uv to ICRS:
     // M . uv = pos  =>   M = pos * inv(uv)
