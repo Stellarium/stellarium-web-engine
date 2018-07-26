@@ -420,6 +420,8 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_text("FPS: %.0f", core->prof.fps);
     gui_same_line();
     gui_text("vshift: %.1f", core->vmag_shift);
+    gui_same_line();
+    gui_text("cst: %s", core->observer->pointer.cst);
     gui_panel_end();
 
     gui_render_finish();
