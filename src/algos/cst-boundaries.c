@@ -2305,13 +2305,22 @@ static const struct cst CSTS[] = {
     }
 };
 
-// Min angular separation.
-static double sep(double x, double y)
+/*
+ * Test whether an arc of a circle contains a point.
+ * The arc is defined as the smallest one from a to b.
+ */
+static bool arc_contains(double a, double b, double x)
 {
-    double ret = fmod(x - y, 2 * M_PI);
-    if (ret < 0) ret += 2 * M_PI;
-    if (ret > M_PI) ret = 2 * M_PI - ret;
-    return ret;
+    // Arrange a, b and x so that the arc goes counter clockwise from a to b
+    // with origin at a.
+    if (fmod(b - a + 4 * M_PI, 2 * M_PI) <= M_PI) {
+        x = fmod(x - a + 4 * M_PI, 2 * M_PI);
+        b = fmod(b - a + 4 * M_PI, 2 * M_PI);
+    } else {
+        x = fmod(x - b + 4 * M_PI, 2 * M_PI);
+        b = fmod(a - b + 4 * M_PI, 2 * M_PI);
+    }
+    return x < b;
 }
 
 static bool test_cst(const struct cst *cst, double ra, double dec)
@@ -2326,12 +2335,11 @@ static bool test_cst(const struct cst *cst, double ra, double dec)
         memcpy(b, cst->points[(i + 1) % cst->n], sizeof(b));
         if (a[0] == b[0]) continue;
         if (a[1] < dec) continue;
-        if (sep(ra, a[0]) > sep(a[0], b[0])) continue;
-        if (sep(ra, b[0]) > sep(a[0], b[0])) continue;
+        if (!arc_contains(a[0], b[0], ra)) continue;
         n++;
     }
     // Special case for Ursa Minor:
-    if (n == 0 && strcmp(cst->id, "UMI") == 0) return true;
+    if (strcmp(cst->id, "UMI") == 0) n++;
     return n % 2 == 1;
 }
 
