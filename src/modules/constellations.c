@@ -249,8 +249,22 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
 static void spherical_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
+    // Rotation matrix from 1875.0 to J2000.  Computed with erfa:
+    //     eraEpb2jd(1875.0, &djm0, &djm);
+    //     eraPnm06a(djm0, djm, rnpb);
+    const double rnpb[3][3] = {
+        {0.999535, 0.027963, 0.012159},
+        {-0.027962, 0.999609, -0.000209},
+        {-0.012160, -0.000131, 0.999926},
+    };
+
     eraS2c(v[0], v[1], out);
     out[3] = 0.0; // At infinity.
+
+    // Since the edges coordinates are in B1875.0, they are not exaclty
+    // aligned with the meridians and parallels we need to apply the
+    // rotation to J2000.
+    mat3_mul_vec3(rnpb, out, out);
 }
 
 static int render_bounds(const constellation_t *con,
