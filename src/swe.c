@@ -300,6 +300,7 @@ static void test_ephemeris(void)
                     eraSepp(got.observed, expected.observed) * DR2D);
             assert(false);
         }
+        obj_release(obj);
     }
 }
 
