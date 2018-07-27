@@ -733,7 +733,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     char label[256];
 
     if (planet->id == EARTH) return;
-    if (planet->obj.vmag > painter.mag_max) return;
+    if (planet->id != MOON && planet->obj.vmag > painter.mag_max) return;
 
     vec4_copy(planet->obj.pos.pvg[0], pos);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
