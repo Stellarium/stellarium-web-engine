@@ -11,6 +11,7 @@
 
 #include "algos/algos.h"
 #include "constants.h"
+#include "utils/utils.h"
 #include "utils/vec.h"
 
 static void update_matrices(observer_t *obs)
@@ -77,8 +78,19 @@ static void update_matrices(observer_t *obs)
 
 void observer_recompute_hash(observer_t *obs)
 {
-    // XXX: do it properly!
-    obs->hash++;
+    uint64_t v = 0;
+    #define H(a) v = crc64(v, &obs->a, sizeof(obs->a))
+    H(elong);
+    H(phi);
+    H(hm);
+    H(horizon);
+    H(pressure);
+    H(refraction);
+    H(altitude);
+    H(azimuth);
+    H(tt);
+    #undef H
+    obs->hash = v;
 }
 
 void observer_update(observer_t *obs, bool fast)
