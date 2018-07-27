@@ -49,6 +49,10 @@ target_t TARGETS[] = {
      .date = "2009-08-16 16:44:00 UTC+00",
      .location = "10.32°N 123.75°E", // Cebu, Philippines.
      .target = "Ganymede"},
+    {.name = "2017 August 21 Solar eclipse",
+     .date = "2017-08-21 18:30:00 UTC+00",
+     .location = "36.17°N 86.78°W", // Nashville, USA.
+     .target = "Moon"},
 };
 
 static int parse_date(const char *str, double *utc)
