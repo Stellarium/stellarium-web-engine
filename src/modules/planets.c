@@ -221,8 +221,9 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
         if (p->id != MOON) continue; // Only consider the Moon.
         obj_update(&p->obj, obs, 0);
         sph_r = 2 * p->radius_m / DAU / vec3_norm(p->pvg[0]);
-        convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            p->obj.pos.pvg[0], sph_p);
+        vec3_copy(p->pvg[0], sph_p);
+        sph_p[3] = 1.0;
+        convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, sph_p, sph_p);
         sep = eraSepp(sun_p, sph_p);
         // Compute shadow factor.
         // XXX: this should be in algos.
@@ -578,7 +579,7 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
     PLANETS_ITER(planets, other) {
         if (could_cast_shadow(other, planet)) {
             if (nb >= nb_max) break;
-            vec3_copy(other->obj.pos.pvg[0], spheres[nb]);
+            vec3_copy(other->pvg[0], spheres[nb]);
             spheres[nb][3] = other->radius_m / DAU;
             nb++;
         }
