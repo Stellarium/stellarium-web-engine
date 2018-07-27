@@ -853,12 +853,10 @@ static int planets_update(obj_t *obj, const observer_t *obs, double dt)
                 on_hips, planets);
     }
 
-    // Sort all the planets by distance to the observer.
-    planet_update_(planets->earth, obs); // XXX: still needed?
     PLANETS_ITER(planets, p) {
-        if (p->id != EARTH)
-            obj_update((obj_t*)p, obs, dt);
+        obj_update((obj_t*)p, obs, dt);
     }
+    // Sort all the planets by distance to the observer.
     DL_SORT(obj->children, sort_cmp);
     return 0;
 }
