@@ -518,10 +518,12 @@ static void ring_project(const projection_t *proj, int flags,
     vec4_copy(p, out);
 }
 
-static void render_rings(texture_t *tex,
-                         double inner_radius, double outer_radius,
+static void render_rings(const planet_t *planet,
                          const painter_t *painter_)
 {
+    texture_t *tex = planet->rings.tex;
+    double inner_radius = planet->rings.inner_radius / planet->radius_m;
+    double outer_radius = planet->rings.outer_radius / planet->radius_m;
     projection_t proj = {
         .backward   = ring_project,
     };
@@ -660,10 +662,7 @@ static void planet_render_hips(const planet_t *planet,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)
-        render_rings(planet->rings.tex,
-                     planet->rings.inner_radius / planet->radius_m,
-                     planet->rings.outer_radius / planet->radius_m,
-                     &painter);
+        render_rings(planet, &painter);
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, 1);
 }
 
