@@ -33,6 +33,7 @@ struct planet {
     int         id; // Uniq id number, as defined in JPL HORIZONS.
 
     // Precomputed values.
+    uint64_t    observer_hash;
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      pvg[2][3];   // equ, J2000.0, AU geocentric pos and speed.
     double      hpos[3];     // ecl, heliocentric pos J2000.0
@@ -76,6 +77,7 @@ struct planet {
 };
 
 
+static int planet_update_(planet_t *planet, const observer_t *obs);
 static int planet_update(obj_t *obj, const observer_t *obs, double dt);
 
 static obj_klass_t planet_klass = {
@@ -219,7 +221,7 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
 
     PLANETS_ITER(sun->obj.parent, p) {
         if (p->id != MOON) continue; // Only consider the Moon.
-        obj_update(&p->obj, obs, 0);
+        planet_update_(p, obs);
         sph_r = 2 * p->radius_m / DAU / vec3_norm(p->pvg[0]);
         vec3_copy(p->pvg[0], sph_p);
         sph_p[3] = 1.0;
@@ -328,7 +330,7 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
     planet_t *jupiter = planet->parent;
-    obj_update(&jupiter->obj, obs, 0);
+    planet_update_(jupiter, obs);
     l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
     vec3_add(pvj[0], jupiter->pvg[0], planet->pvg[0]);
     vec3_add(pvj[1], jupiter->pvg[1], planet->pvg[1]);
@@ -349,7 +351,7 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
     double p[3], v[3];
-    obj_update(&planet->parent->obj, obs, 0);
+    planet_update_(planet->parent, obs);
     orbit_compute_pv(obs->tt, p, v,
             planet->orbit.kepler.jd,
             planet->orbit.kepler.in,
@@ -387,12 +389,10 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 }
 
 
-static int planet_update(obj_t *obj, const observer_t *obs, double dt)
+static int planet_update_(planet_t *planet, const observer_t *obs)
 {
-    planet_t *planet = (planet_t*)obj;
-
     // Skip if already up to date.
-    if (obj->observer_hash == obs->hash) return 0;
+    if (planet->observer_hash == obs->hash) return 0;
 
     // Compute the position of the planet.
     // XXX: we could use an approximation at the beginning, and only compute
@@ -445,12 +445,17 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     }
 
     planet->radius = planet->radius_m / DAU / eraPm((double*)planet->pvg[0]);
+    return 0;
+}
 
+static int planet_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    planet_t *planet = (planet_t*)obj;
+    planet_update_(planet, obs);
     vec3_copy(planet->pvg[0], obj->pos.pvg[0]);
     vec3_copy(planet->pvg[1], obj->pos.pvg[1]);
     obj->pos.pvg[0][3] = 1.0; // AU.
     obj->pos.pvg[1][3] = 1.0; // AU.
-
     compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
@@ -849,7 +854,7 @@ static int planets_update(obj_t *obj, const observer_t *obs, double dt)
     }
 
     // Sort all the planets by distance to the observer.
-    obj_update(&planets->earth->obj, obs, dt);
+    planet_update_(planets->earth, obs); // XXX: still needed?
     PLANETS_ITER(planets, p) {
         if (p->id != EARTH)
             obj_update((obj_t*)p, obs, dt);
