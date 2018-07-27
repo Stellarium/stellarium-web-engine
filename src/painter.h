@@ -82,7 +82,7 @@ enum {
     PAINTER_HIDE_BELOW_HORIZON  = 1 << 2,
     PAINTER_FAST_MODE           = 1 << 3,
     PAINTER_PLANET_SHADER       = 1 << 4,
-    PAINTER_NO_CULL_FACE        = 1 << 5, // Disable face culling.
+    PAINTER_RING_SHADER         = 1 << 5,
     PAINTER_IS_MOON             = 1 << 6, // Only for moon texture!
 };
 

@@ -84,7 +84,7 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
 
 ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[5445] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_frag[5579] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -96,7 +96,7 @@ static const unsigned char DATA_data_shaders_planet_frag[5445] __attribute__((al
     "uniform vec3 u_light_emit;\n"
     "uniform mat4 u_mv;  // Model view matrix.\n"
     "uniform int u_has_normal_tex;\n"
-    "uniform int u_material; // 0: Oren Nayar, 1: generic\n"
+    "uniform int u_material; // 0: Oren Nayar, 1: generic, 2: ring\n"
     "uniform int u_is_moon; // Set to 1 for the Moon only.\n"
     "uniform sampler2D u_shadow_color_tex; // Used for the Moon.\n"
     "uniform float u_contrast;\n"
@@ -233,6 +233,10 @@ static const unsigned char DATA_data_shaders_planet_frag[5445] __attribute__((al
     "        light += max(0.0, dot(n, light_dir));\n"
     "        light += u_light_emit;\n"
     "        gl_FragColor.rgb *= light;\n"
+    "\n"
+    "    } else if (u_material == 2) { // ring\n"
+    "        lowp float illu = illumination(v_mpos);\n"
+    "        gl_FragColor.rgb *= illu;\n"
     "    }\n"
     "}\n"
     "";

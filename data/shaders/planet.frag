@@ -9,7 +9,7 @@ uniform sampler2D u_normal_tex;
 uniform vec3 u_light_emit;
 uniform mat4 u_mv;  // Model view matrix.
 uniform int u_has_normal_tex;
-uniform int u_material; // 0: Oren Nayar, 1: generic
+uniform int u_material; // 0: Oren Nayar, 1: generic, 2: ring
 uniform int u_is_moon; // Set to 1 for the Moon only.
 uniform sampler2D u_shadow_color_tex; // Used for the Moon.
 uniform float u_contrast;
@@ -146,5 +146,9 @@ void main()
         light += max(0.0, dot(n, light_dir));
         light += u_light_emit;
         gl_FragColor.rgb *= light;
+
+    } else if (u_material == 2) { // ring
+        lowp float illu = illumination(v_mpos);
+        gl_FragColor.rgb *= illu;
     }
 }

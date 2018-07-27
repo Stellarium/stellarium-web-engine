@@ -529,10 +529,20 @@ static void render_rings(const planet_t *planet,
     };
     painter_t painter = *painter_;
     const double radii[2] = {inner_radius, outer_radius};
+
+    // Add the planet in the painter shadow candidates.
+    if (painter.shadow_spheres_nb < 4) {
+        vec3_copy(planet->pvg[0],
+                  painter.shadow_spheres[painter.shadow_spheres_nb]);
+        painter.shadow_spheres[painter.shadow_spheres_nb][3] =
+                  planet->radius_m / DAU;
+        painter.shadow_spheres_nb++;
+    }
+
     proj.user = radii;
     painter.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
-    painter.flags |= PAINTER_NO_CULL_FACE;
+    painter.flags |= PAINTER_RING_SHADER;
     paint_quad(&painter, FRAME_ICRS, tex, NULL, NULL, &proj, 64);
 }
 

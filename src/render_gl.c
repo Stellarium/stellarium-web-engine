@@ -290,6 +290,7 @@ static void quad(renderer_t          *rend_,
     double p[4], normal[4] = {0}, tangent[4] = {0}, z;
     bool quad_cut_inv = painter->flags & PAINTER_QUAD_CUT_INV;
     const double *depth_range = (const double*)painter->depth_range;
+    const prog_t *prog;
 
     // Positions of the triangles for both regular and inverted triangles.
     const int INDICES[2][6][2] = {
@@ -377,10 +378,10 @@ static void quad(renderer_t          *rend_,
     if (frame == FRAME_OBSERVED) mat4_mul(mv, painter->obs->ro2v, mv);
     if (frame == FRAME_ICRS) mat4_mul(mv, painter->obs->ri2v, mv);
     mat4_mul(mv, *painter->transform, mv);
+    prog = (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER)) ?
+                     &rend->progs.planet : &rend->progs.blit_proj;
 
-    render_buffer(rend, buffer, grid_size * grid_size * 6,
-                  (painter->flags & PAINTER_PLANET_SHADER) ?
-                     &rend->progs.planet : &rend->progs.blit_proj,
+    render_buffer(rend, buffer, grid_size * grid_size * 6, prog,
                   &(render_buffer_args_t) {
                       .color = painter->color,
                       .contrast = painter->contrast,
@@ -648,7 +649,7 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         }
     }
 
-    if (args->flags & PAINTER_NO_CULL_FACE)
+    if (args->flags & PAINTER_RING_SHADER)
         GL(glDisable(GL_CULL_FACE));
     else
         GL(glEnable(GL_CULL_FACE));
@@ -683,6 +684,7 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
     // For the moment we automatically assign generic diffuse material (1) to
     // light emiting surfaces, and Oren Nayar (0) to the other.
     // This only affect planets shader.
+    // XXX: cleanup this!
     if (light_emit) {
         GL(glUniform3f(prog->u_light_emit_l,
                        light_emit[0], light_emit[1], light_emit[2]));
@@ -691,6 +693,9 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         GL(glUniform3f(prog->u_light_emit_l, 0, 0, 0));
         GL(glUniform1i(prog->u_material_l, 0));
     }
+    if (args->flags & PAINTER_RING_SHADER)
+        GL(glUniform1i(prog->u_material_l, 2));
+
     GL(glUniform1f(prog->u_shadow_brightness_l, args->shadow_brightness));
     GL(glUniform1i(prog->u_is_moon_l, args->flags & PAINTER_IS_MOON ? 1 : 0));
 
