@@ -389,14 +389,9 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
     planet_t *planet = (planet_t*)obj;
-    planets_t *planets = (planets_t*)obj->parent;
-    planet_t *earth = planets->earth;
 
     // Skip if already up to date.
     if (obj->observer_hash == obs->hash) return 0;
-
-    // Make sure the earth is up to date
-    if (planet != planets->earth) obj_update(&earth->obj, obs, 0);
 
     // Compute the position of the planet.
     // XXX: we could use an approximation at the beginning, and only compute
@@ -442,7 +437,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
         eraC2s(planet->hpos, &hlon, &hlat);
         eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
         satrings(hlat, hlon, vec3_norm(planet->pvh[0]),
-                 earth_hlon, vec3_norm(earth->pvh[0]),
+                 earth_hlon, vec3_norm(obs->earth_pvh[0]),
                  obs->ut1 + DJM0, &et, &st);
         set = sin(fabs(et));
         planet->obj.vmag += (-2.60 + 1.25 * set) * set;
