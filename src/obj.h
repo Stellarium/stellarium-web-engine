@@ -34,13 +34,10 @@
  *
  * OBJ_IN_JSON_TREE     - The object show up in the json tree dump.
  * OBJ_MODULE           - The object is a module.
- * OBJ_REQUIRE_LIGHT_SPEED_CORRECTION - If set obj_update will recompute
- *      the position taking into account light speed correction.
  */
 enum {
     OBJ_IN_JSON_TREE = 1 << 0,
     OBJ_MODULE       = 1 << 1,
-    OBJ_REQUIRE_LIGHT_SPEED_CORRECTION = 1 << 2,
 };
 
 typedef struct _json_value json_value;

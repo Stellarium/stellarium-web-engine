@@ -36,6 +36,7 @@ struct planet {
     uint64_t    observer_hash;
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      pvg[2][3];   // equ, J2000.0, AU geocentric pos and speed.
+    double      pvgc[2][3];  // pvg corrected for light speed.
     double      hpos[3];     // ecl, heliocentric pos J2000.0
     double      phase;
     double      radius;     // XXX ?
@@ -84,7 +85,6 @@ static obj_klass_t planet_klass = {
     .id = "planet",
     .size = sizeof(planet_t),
     .update = planet_update,
-    .flags = OBJ_REQUIRE_LIGHT_SPEED_CORRECTION,
     .attributes = (attribute_t[]) {
         PROPERTY("name"),
         PROPERTY("alt"),
@@ -214,16 +214,16 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
     double sun_p[4], sph_p[4]; // Positions in observed frame.
     planet_t *p;
 
-    sun_r = 2.0 * sun->radius_m / DAU / vec3_norm(sun->pvg[0]);
-    vec3_copy(sun->pvg[0], sun_p);
+    sun_r = 2.0 * sun->radius_m / DAU / vec3_norm(sun->pvgc[0]);
+    vec3_copy(sun->pvgc[0], sun_p);
     sun_p[3] = 1.0;
     convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, sun_p, sun_p);
 
     PLANETS_ITER(sun->obj.parent, p) {
         if (p->id != MOON) continue; // Only consider the Moon.
         planet_update_(p, obs);
-        sph_r = 2 * p->radius_m / DAU / vec3_norm(p->pvg[0]);
-        vec3_copy(p->pvg[0], sph_p);
+        sph_r = 2 * p->radius_m / DAU / vec3_norm(p->pvgc[0]);
+        vec3_copy(p->pvgc[0], sph_p);
         sph_p[3] = 1.0;
         convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, sph_p, sph_p);
         sep = eraSepp(sun_p, sph_p);
@@ -391,6 +391,8 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 
 static int planet_update_(planet_t *planet, const observer_t *obs)
 {
+    double ldt;
+
     // Skip if already up to date.
     if (planet->observer_hash == obs->hash) return 0;
 
@@ -445,6 +447,15 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
     }
 
     planet->radius = planet->radius_m / DAU / eraPm((double*)planet->pvg[0]);
+
+    vec3_copy(planet->pvg[0], planet->pvgc[0]);
+    vec3_copy(planet->pvg[1], planet->pvgc[1]);
+    // Correct pvgc for light speed (if we know the speed!).
+    if (!isnan(planet->pvg[1][0])) {
+        ldt = vec3_norm(planet->pvg[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
+        vec3_addk(planet->pvg[0], planet->pvg[1], -ldt, planet->pvgc[0]);
+    }
+
     return 0;
 }
 
@@ -452,8 +463,8 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
     planet_t *planet = (planet_t*)obj;
     planet_update_(planet, obs);
-    vec3_copy(planet->pvg[0], obj->pos.pvg[0]);
-    vec3_copy(planet->pvg[1], obj->pos.pvg[1]);
+    vec3_copy(planet->pvgc[0], obj->pos.pvg[0]);
+    vec3_copy(planet->pvgc[1], obj->pos.pvg[1]);
     obj->pos.pvg[0][3] = 1.0; // AU.
     obj->pos.pvg[1][3] = 1.0; // AU.
     compute_coordinates(obs, obj->pos.pvg[0],
@@ -596,7 +607,7 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
     PLANETS_ITER(planets, other) {
         if (could_cast_shadow(other, planet)) {
             if (nb >= nb_max) break;
-            vec3_copy(other->pvg[0], spheres[nb]);
+            vec3_copy(other->pvgc[0], spheres[nb]);
             spheres[nb][3] = other->radius_m / DAU;
             nb++;
         }
