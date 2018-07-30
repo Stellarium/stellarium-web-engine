@@ -322,6 +322,8 @@ static void req_update(request_t *req)
         curl_easy_setopt(req->handle, CURLOPT_FAILONERROR, 1);
         curl_easy_setopt(req->handle, CURLOPT_PRIVATE, req);
         curl_easy_setopt(req->handle, CURLOPT_FOLLOWLOCATION, 1);
+        curl_easy_setopt(req->handle, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_easy_setopt(req->handle, CURLOPT_SSL_VERIFYHOST, 0);
         // curl_easy_setopt(req->handle, CURLOPT_VERBOSE, 1);
         if (req->etag) {
             r = asprintf(&tmp, "If-None-Match: \"%s\"", req->etag);
