@@ -38,10 +38,12 @@
 
 #define SWE_SHOW_SET_TIME 1
 
-#ifdef __EMSCRIPTEN__
-    #define SWE_GUI 0
-#else
-    #define SWE_GUI 1
+#ifndef SWE_GUI
+#   ifdef __EMSCRIPTEN__
+#      define SWE_GUI 0
+#   else
+#      define SWE_GUI 1
+#   endif
 #endif
 
 

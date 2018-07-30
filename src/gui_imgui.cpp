@@ -7,12 +7,13 @@
  * repository.
  */
 
-#ifndef __EMSCRIPTEN__
-
 extern "C" {
 #include "swe.h"
 #include "utils/gl.h"
 }
+
+#if DEFINED(SWE_GUI)
+
 #include "imgui.h"
 
 static texture_t *g_font_tex = NULL;

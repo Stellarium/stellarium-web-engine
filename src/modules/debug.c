@@ -93,6 +93,7 @@ static void show_target(const target_t *t)
 static void debug_gui(obj_t *obj, int location)
 {
     int i;
+    if (!DEFINED(SWE_GUI)) return;
     if (gui_tab("Tests")) {
         for (i = 0; i < ARRAY_SIZE(TARGETS); i++)
             show_target(&TARGETS[i]);
