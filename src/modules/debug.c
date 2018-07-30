@@ -81,6 +81,7 @@ static int parse_location(const char *str, double *lon, double *lat)
 static void show_target(const target_t *t)
 {
     double utc, lon, lat;
+    if (!DEFINED(SWE_GUI)) return;
     if (!gui_button(t->name, 0)) return;
     LOG_D("Jump to target: %s", t->name);
     parse_date(t->date, &utc);
