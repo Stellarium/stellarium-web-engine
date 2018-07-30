@@ -523,4 +523,8 @@ void obj_register_(obj_klass_t *klass);
 // Return a pointer to the registered object klasses list.
 obj_klass_t *obj_get_all_klasses(void);
 
+void obj_foreach_attr(const obj_t *obj,
+                      void *user,
+                      void (*f)(const char *attr, int is_property, void *user));
+
 #endif // OBJ_H

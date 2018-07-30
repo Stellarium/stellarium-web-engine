@@ -547,7 +547,8 @@ const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr_name)
 
 EMSCRIPTEN_KEEPALIVE
 void obj_foreach_attr(const obj_t *obj,
-                      void (*f)(const char *attr, int is_property))
+                      void *user,
+                      void (*f)(const char *attr, int is_property, void *user))
 {
     int i;
     attribute_t *attr;
@@ -557,7 +558,7 @@ void obj_foreach_attr(const obj_t *obj,
     for (i = 0; ; i++) {
         attr = &obj->klass->attributes[i];
         if (!attr->name) return;
-        f(attr->name, attr->is_prop);
+        f(attr->name, attr->is_prop, user);
     }
 }
 

@@ -39,7 +39,7 @@ Module.afterInit(function() {
     var that = this
 
     // Create all the dynamic attributes of the object.
-    var callback = Module.addFunction(function(attr, isProp) {
+    var callback = Module.addFunction(function(attr, isProp, user) {
       var name = Module.Pointer_stringify(attr);
       if (!isProp) {
         that[name] = function() {
@@ -54,7 +54,7 @@ Module.afterInit(function() {
         })
       }
     }, 'vii')
-    Module._obj_foreach_attr(this.v, callback);
+    Module._obj_foreach_attr(this.v, 0, callback);
     Module.removeFunction(callback);
 
     // Also add the children as properties
