@@ -35,6 +35,8 @@ extern "C" {
     #include "sgp4.h"
 }
 
+#include <stdlib.h>
+
 sgp4_elsetrec_t *sgp4_twoline2rv(
         const char str1_[130], const char str2_[130],
         char typerun, char typeinput, char opsmode,
