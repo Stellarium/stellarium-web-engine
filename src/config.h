@@ -12,6 +12,10 @@
  * to set configuration macros that affect external libraries.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Do not issue warnings when passing const values to non const functions.
 // This is so that we can use erfa libraries.
 #ifndef __cplusplus
@@ -54,3 +58,6 @@
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 
+#ifdef __cplusplus
+}
+#endif
