@@ -15,7 +15,7 @@ int convert_coordinates(const observer_t *obs,
                         const double v[4], double out[4])
 {
     double p[4];
-    double dist; // Distance in AU.
+    double dist = 0; // Distance in AU.
     double pvc[2][3], theta;
     const eraASTROM *astrom;
 
