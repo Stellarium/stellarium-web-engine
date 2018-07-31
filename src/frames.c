@@ -25,17 +25,18 @@ int convert_coordinates(const observer_t *obs,
     assert(v[3] == 0 || v[3] == 1);
     vec4_copy(v, p);
 
-    dist = (p[3] == 0) ? INFINITY : vec3_norm(p);
-
-    // Special case for the Earth position.
-    if (dist == 0.0) {
-        vec4_set(out, 0, 0, 0, 1);
-        return 0;
+    if (p[3] == 1) {
+        dist = vec3_norm(p);
+        // Special case for the Earth position.
+        if (dist == 0.0) {
+            vec4_set(out, 0, 0, 0, 1);
+            return 0;
+        }
     }
 
     // ICRS to CIRS.
     if (origin <= FRAME_ICRS && dest > FRAME_ICRS) {
-        vec3_normalize(p, p);
+        if (p[3] == 1) vec3_normalize(p, p);
         // Aberration, giving GCRS proper direction.
         eraAb(p, astrom->v, astrom->em, astrom->bm1, p);
         // Bias-precession-nutation, giving CIRS proper direction.
@@ -45,7 +46,7 @@ int convert_coordinates(const observer_t *obs,
         // Apply parallax due to observer location.
         // Note: this is not defined in SOFA lib, because it only applies
         // to objects that are very near the earth (mostly for the Moon).
-        if (dist < 1.0) {
+        if (p[3] == 1 && dist < 1.0) {
             eraSxp(DAU, p, p); // Set pos in m
             // XXX: this could be precomputed?
             theta = eraEra00(DJM0, obs->ut1);
@@ -58,7 +59,7 @@ int convert_coordinates(const observer_t *obs,
     // CIRS to OBSERVED.
     if (origin <= FRAME_CIRS && dest > FRAME_CIRS) {
         // Precomputed earth rotation and polar motion.
-        vec3_normalize(p, p);
+        if (p[3] == 1) vec3_normalize(p, p);
         mat4_mul_vec3(obs->ri2h, p, p);
         refraction(p, astrom->refa, astrom->refb, p);
         vec3_normalize(p, p);
