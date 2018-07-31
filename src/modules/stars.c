@@ -563,9 +563,7 @@ static int render_visitor(int order, int pix, void *user)
         // Skip if not visible.
         convert_coordinates(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0,
                             p, p);
-        if (!project(painter.proj,
-                     PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
-                     2, p, p_ndc))
+        if (!project(painter.proj, PROJ_TO_NDC_SPACE, 2, p, p_ndc))
             continue;
 
         mag = core_get_observed_mag(s->vmag);
