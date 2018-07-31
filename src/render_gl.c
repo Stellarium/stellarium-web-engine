@@ -599,29 +599,22 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         GL(glActiveTexture(GL_TEXTURE0));
         GL(glBindTexture(GL_TEXTURE_2D, args->tex->id));
         switch (args->tex->format) {
-        case GL_LUMINANCE:
-            GL(glEnable(GL_BLEND));
-            GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-            break;
         case GL_RGB:
             if (color[3] == 1.0 && !args->stripes) {
                 GL(glDisable(GL_BLEND));
             } else {
                 GL(glEnable(GL_BLEND));
-                GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+                GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                                       GL_ZERO, GL_ONE));
             }
             break;
+        case GL_LUMINANCE:
         case GL_RGBA:
-            GL(glEnable(GL_BLEND));
-            GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-            break;
         case GL_LUMINANCE_ALPHA:
-            GL(glEnable(GL_BLEND));
-            GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-            break;
         case GL_ALPHA:
             GL(glEnable(GL_BLEND));
-            GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+            GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                                   GL_ZERO, GL_ONE));
             break;
         default:
             assert(false);
@@ -629,7 +622,8 @@ static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
         }
     } else {
         GL(glEnable(GL_BLEND));
-        GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                               GL_ZERO, GL_ONE));
     }
     if (args->depth_range) {
         GL(glEnable(GL_DEPTH_TEST));
