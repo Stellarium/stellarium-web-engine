@@ -512,7 +512,7 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
             if (attr->hint && strcmp(attr->hint, "obj") == 0) {
                 o = *(obj_t**)p;
                 obj_release(o);
-                memcpy(&o, buf, 8);
+                memcpy(&o, buf, sizeof(o));
                 if (o) o->ref++;
             }
             memcpy(p, buf, attr->member.size);
