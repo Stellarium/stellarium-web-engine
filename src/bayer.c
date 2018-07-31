@@ -68,10 +68,10 @@ static entry_t *g_entries = NULL;     // Global hash.
 
 static void bayer_init(void)
 {
-    const struct {int hd; uint8_t cst, bayer, bayer_n; char pad;} *data;
+    struct {int hd; uint8_t cst, bayer, bayer_n; char pad;} *data;
     int size, nb, i;
 
-    size = ((uint32_t*)DATA)[0];
+    memcpy(&size, DATA, 4);
     data = malloc(size);
     z_uncompress(data, size, DATA + 4, ARRAY_SIZE(DATA) - 4);
 
