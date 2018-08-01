@@ -241,7 +241,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         cache_add(g_cache, url, strlen(url), tile, sizeof(*tile), del_tile);
     }
     if (tile->flags & TILE_LOADED) return tile;
-    if (flags & HIPS_FORCE_USE_ALLSKY) goto skip_load;
+    if (flags & HIPS_FORCE_USE_ALLSKY) goto after_load;
 
     // Skip if we know that this tile doesn't exists.
     if (order > hips->order_min) {
@@ -254,27 +254,30 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
     }
 
     data = asset_get_data(url, &size, &code);
-    if (data || code) {
-        if (data) {
-            tex = load_image(data, size, &transparency);
-            tile->flags |= (transparency * TILE_NO_CHILD_0);
-        }
-        if ((!data || !tex) && (code != 404))
-            LOG_W("Cannot load img %s %d", url, code);
-        if (tex) {
-            texture_delete(tile->allsky_tex);
-            tile->tex = tex;
-            cache_set_cost(g_cache, url, strlen(url),
-                           tex->tex_w * tex->tex_h * 4);
-        } else {
-            tile->flags |= TILE_NO_CHILD_ALL;
-        }
+    if (!data && !code) goto after_load; // Still loading.
+    if (code == 404) { // No tile at this level.
+        tile->flags |= TILE_NO_CHILD_ALL;
         tile->flags |= TILE_LOADED;
-        tile->fader.target = true;
-        if (!tex) tile->fader.value = 1;
+        goto after_load;
     }
+    if (!data) {
+        LOG_W("Cannot load tile at url %s (%d)", url, code);
+        goto after_load;
+    }
+    tex = load_image(data, size, &transparency);
+    tile->flags |= (transparency * TILE_NO_CHILD_0);
+    if (!tex) {
+        LOG_W("Cannot load img at url %s", url);
+        goto after_load;
+    }
+    texture_delete(tile->allsky_tex);
+    tile->allsky_tex = NULL;
+    tile->tex = tex;
+    cache_set_cost(g_cache, url, strlen(url), tex->tex_w * tex->tex_h * 4);
+    tile->flags |= TILE_LOADED;
+    tile->fader.target = true;
 
-skip_load:
+after_load:
     if (tile->flags & TILE_LOADED) return tile;
 
     // Until the tile get loaded we can try to use the allsky
