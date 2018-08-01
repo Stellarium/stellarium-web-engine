@@ -27,6 +27,8 @@ import VueCookie from 'vue-cookie'
 
 import App from './App'
 
+import Swagger from 'swagger-client'
+
 Vue.use(VueCookie)
 
 // Used to work-around a gmaps component refresh bug
@@ -93,4 +95,23 @@ new Vue({
   router,
   store,
   template: '<router-view></router-view>'
+})
+
+Swagger('http://0.0.0.0:8090/doc/openapi.json', {
+  authorizations: {
+    APIToken: 'Bearer xyz'
+  },
+  requestInterceptor: req => {
+    if (req.body && !req.headers['Content-Type']) {
+      req.headers['Content-Type'] = 'application/json'
+    }
+  }
+}).then(client => {
+  // Tags interface
+  console.log(client.apis)
+  client.apis.skysources.querySkySources({'q': 'JUP'}).then((res) => { console.log(res) })
+  client.apis.users.login({body: {email: 'test@example.com', password: 'pwd'}}).then((res) => {
+    client.authorizations.APIToken = 'Bearer ' + res.body.access_token
+    client.apis.observing.queryObservations().then((res) => { console.log(res) })
+  })
 })
