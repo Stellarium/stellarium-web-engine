@@ -51,7 +51,7 @@ typedef struct {
 } tile_t;
 
 // Gobal cache for all the tiles.
-cache_t *g_cache = NULL;
+static cache_t *g_cache = NULL;
 
 struct hips {
     char        *url;
