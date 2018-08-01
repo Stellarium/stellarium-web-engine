@@ -16,6 +16,7 @@
     "moment": "^2.22.2",
     "parse": "^1.11.1",
     "scriptjs": "^2.5.8",
+    "swagger-client": "^3.8.11",
     "vue": "^2.5.16",
     "vue-cookie": "^1.1.4",
     "vue-fullscreen": "^2.1.3",
