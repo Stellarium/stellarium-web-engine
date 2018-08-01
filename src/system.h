@@ -31,3 +31,14 @@ double sys_get_unix_time(void);
  * Return the local time UTC offset in seconds
  */
 int sys_get_utc_offset(void);
+
+/*
+ * Global structure that holds pointers to functions that allow to change
+ * the behavior of system calls.
+ */
+typedef struct {
+    void *user;
+    void (*log)(void *user, const char *msg);
+} sys_callbacks_t;
+
+extern sys_callbacks_t sys_callbacks;

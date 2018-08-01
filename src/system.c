@@ -13,10 +13,17 @@
 #include <sys/time.h>
 #include <time.h>
 
+// The global system instance.
+sys_callbacks_t sys_callbacks = {};
+
 void sys_log(const char *msg)
 {
-    printf("%s\n", msg);
-    fflush(stdout);
+    if (sys_callbacks.log) {
+        sys_callbacks.log(sys_callbacks.user, msg);
+    } else {
+        printf("%s\n", msg);
+        fflush(stdout);
+    }
 }
 
 double sys_get_unix_time(void)
