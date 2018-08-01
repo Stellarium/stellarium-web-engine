@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
     pos_t       pos;
     texture_t   *tex;
+    texture_t   *allsky_tex;
     fader_t     fader;
     int         flags;
 } tile_t;
@@ -260,9 +261,8 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         }
         if ((!data || !tex) && (code != 404))
             LOG_W("Cannot load img %s %d", url, code);
-        if (tile->tex) texture_delete(tile->tex);
-        tile->tex = NULL;
         if (tex) {
+            texture_delete(tile->allsky_tex);
             tile->tex = tex;
             cache_set_cost(g_cache, url, strlen(url),
                            tex->tex_w * tex->tex_h * 4);
@@ -284,7 +284,7 @@ skip_load:
         nbw = sqrt(12 * 1 << (2 * order));
         x = (pix % nbw) * hips->allsky.w / nbw;
         y = (pix / nbw) * hips->allsky.w / nbw;
-        tile->tex = texture_from_data(
+        tile->allsky_tex = texture_from_data(
                 hips->allsky.data, hips->allsky.w, hips->allsky.h,
                 hips->allsky.bpp,
                 x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
@@ -339,6 +339,7 @@ texture_t *hips_get_tile_texture(
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete)
 {
+    texture_t *tex;
     tile_t *tile, *render_tile;
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
@@ -367,7 +368,7 @@ texture_t *hips_get_tile_texture(
     render_tile = tile;
 
     // Special case if we forced to use the allsky texture.
-    if (flags & HIPS_FORCE_USE_ALLSKY && tile->tex) {
+    if (flags & HIPS_FORCE_USE_ALLSKY && tile->allsky_tex) {
         if (loading_complete) *loading_complete = true;
         goto end;
     }
@@ -386,7 +387,8 @@ texture_t *hips_get_tile_texture(
     }
 
 end:
-    if (!render_tile->tex) return NULL;
+    tex = render_tile->tex ?: tile->allsky_tex;
+    if (!tex) return NULL;
 
     tile->fader.value = max(tile->fader.value, render_tile->fader.value);
     fader_update(&render_tile->fader, 0.06);
@@ -394,7 +396,7 @@ end:
     if (proj) projection_init_healpix(proj, 1 << render_tile->pos.order,
                                       render_tile->pos.pix, true, outside);
     if (split) *split = max(4, 12 >> order);
-    return render_tile->tex;
+    return tex;
 }
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
