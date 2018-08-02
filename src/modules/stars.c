@@ -753,16 +753,16 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     const char *name = NULL;
     char tmp[8], id[32];
     double label_color[4] = {1, 1, 1, 0.5};
+    if (!s->hd) return;
 
-    bayer_get(s->hd, NULL, &bayer, &bayer_n);
-    if (s->hd) {
-        make_id(id, "HD", s->hd);
-        name = identifiers_get(id, "NAME");
-    }
-    if (bayer == 0 && !name) return;
+    make_id(id, "HD", s->hd);
+    name = identifiers_get(id, "NAME");
     if (name) {
         labels_add(name, pos, size, 13, label_color, ANCHOR_AROUND, -vmag);
-    } else if (bayer) {
+        return;
+    }
+    bayer_get(s->hd, NULL, &bayer, &bayer_n);
+    if (bayer) {
         sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
         labels_add(tmp, pos, size, 13, label_color, ANCHOR_AROUND, -vmag);
     }
