@@ -21,10 +21,6 @@ const createStore = () => {
     }
   }
 
-  var $parse = require('parse')
-  $parse.initialize('noctuasky')
-  $parse.serverURL = 'https://api.noctuasky.org/parse'
-
   return new Vuex.Store({
     modules: {
       plugins: {
@@ -97,19 +93,6 @@ const createStore = () => {
       },
       setSelectedObject (state, newValue) {
         state.selectedObject = newValue
-      }
-    },
-    actions: {
-      addEmailToMailingList ({ commit, state }, email) {
-        var MailingList = $parse.Object.extend('MailingList')
-        var entry = new MailingList()
-        entry.set('email', email)
-        return new Promise((resolve, reject) => {
-          entry.save(null, {
-            success: resolve(),
-            error: reject(new Error(' to save email in mailing list'))
-          })
-        })
       }
     }
   })
