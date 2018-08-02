@@ -33,12 +33,19 @@ double sys_get_unix_time(void);
 int sys_get_utc_offset(void);
 
 /*
+ * Function: sys_get_user_dir
+ * Return the user data directory.
+ */
+const char *sys_get_user_dir(void);
+
+/*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
  */
 typedef struct {
     void *user;
     void (*log)(void *user, const char *msg);
+    const char *(*get_user_dir)(void *user);
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

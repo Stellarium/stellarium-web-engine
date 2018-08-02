@@ -40,3 +40,12 @@ int sys_get_utc_offset(void)
     localtime_r(&t, &lt);
     return lt.tm_gmtoff;
 }
+
+const char *sys_get_user_dir(void)
+{
+    if (sys_callbacks.get_user_dir) {
+        return sys_callbacks.get_user_dir(sys_callbacks.user);
+    } else {
+        return ".";
+    }
+}
