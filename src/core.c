@@ -482,6 +482,7 @@ static void add_bayer_identifiers(void)
 EMSCRIPTEN_KEEPALIVE
 void core_init(void)
 {
+    char cache_dir[1024];
     obj_klass_t *module;
 
     if (core) {
@@ -490,7 +491,8 @@ void core_init(void)
         return;
     }
     texture_set_load_callback(NULL, texture_load_function);
-    request_init(".cache"); // XXX: use a proper cache directory!
+    sprintf(cache_dir, "%s/%s", sys_get_user_dir(), ".cache");
+    request_init(cache_dir);
     identifiers_init();
     add_bayer_identifiers();
 
