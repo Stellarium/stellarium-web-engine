@@ -46,6 +46,8 @@ const NoctuaSkyClient = {
           that.logout()
         })
       }
+    }, error => {
+      console.log('Could not initialize NoctuaSky Client at ' + serverUrl + ' ' + error)
     })
   },
   login: function (email, password) {
