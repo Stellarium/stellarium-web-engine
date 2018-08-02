@@ -88,7 +88,8 @@ if not emscripten:
     env.Append(CPPPATH=['ext_src/imgui'])
 
 if target_os == 'posix':
-    env.Append(LIBS=['curl', 'GL', 'm', 'z'])
+    env.Append(CCFLAGS='-DHAVE_PTHREAD')
+    env.Append(LIBS=['curl', 'GL', 'm', 'z', 'pthread'])
     env.ParseConfig('pkg-config --libs glfw3')
 
 sources = ['build/%s' % x for x in sources]

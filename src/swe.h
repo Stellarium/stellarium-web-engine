@@ -49,6 +49,7 @@
 #include "utils/utf8.h"
 #include "utils/request.h"
 #include "utils/vec.h"
+#include "utils/worker.h"
 
 #include "algos/algos.h"
 #include "args.h"
