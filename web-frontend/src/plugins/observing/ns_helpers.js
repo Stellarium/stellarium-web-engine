@@ -10,7 +10,7 @@ import mingo from 'mingo'
 import _ from 'lodash'
 import { swh } from '@/assets/sw_helpers.js'
 
-mingo.setup({key: 'objectId'})
+mingo.setup({key: 'id'})
 
 export const nsh = {
 
@@ -60,18 +60,18 @@ export const nsh = {
   },
 
   locationForId: function (context, id) {
-    return context.$store.state.plugins.observing.noctuaSky.Location.find(function (l) { return l.objectId === id })
+    return context.$store.state.plugins.observing.noctuaSky.locations.find(function (l) { return l.id === id })
   },
 
   observationForId: function (context, id) {
-    return context.$store.state.plugins.observing.noctuaSky.Observation.find(function (l) { return l.objectId === id })
+    return context.$store.state.plugins.observing.noctuaSky.observations.find(function (l) { return l.id === id })
   },
 
   getDefaultObservation: function (context) {
     return {
       target: undefined,
       mjd: context.$store.state.stel.observer.utc,
-      locationRef: context.$store.state.plugins.observing.noctuaSky.lastSavedLocationId,
+      location: context.$store.state.plugins.observing.noctuaSky.lastSavedLocationId,
       difficulty: 0,
       rating: 0,
       comment: '',

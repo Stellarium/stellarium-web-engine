@@ -11,7 +11,7 @@
     <div>{{ title }}</div>
     <v-container fluid grid-list-sm="true">
       <v-layout row wrap>
-        <v-flex xs4 v-for="(obs, index) in obsGroupData.f1" :key="obs.objectId">
+        <v-flex xs4 v-for="(obs, index) in obsGroupData.f1" :key="obs.id">
           <observation-thumbnail :obsData="obs" @thumbClicked="thumbClicked(obs)"></observation-thumbnail>
         </v-flex>
       </v-layout>
@@ -52,7 +52,7 @@ export default {
             }
           }
         }
-        var loc = nsh.locationForId(this, this.obsGroupData.f1[0].locationRef)
+        var loc = nsh.locationForId(this, this.obsGroupData.f1[0].location)
         var locName = loc ? loc.shortName : 'Unknown Location'
         return dayString + ' ' + swh.monthNames[dateMin.month()] + ', ' + humanFriendlyDaytime + ' in ' + locName
       }
