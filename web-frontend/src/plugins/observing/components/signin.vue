@@ -22,7 +22,7 @@
         <v-card>
           <v-progress-circular v-if="signInInProgress" indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 60px;"></v-progress-circular>
           <v-card-text>
-            <v-text-field :disabled="signInInProgress" name="input-login" label="User Name" v-model="userName" @input="clearSignInErrorAlert"></v-text-field>
+            <v-text-field :disabled="signInInProgress" name="input-login" label="Email" v-model="email" @input="clearSignInErrorAlert"></v-text-field>
             <v-text-field :disabled="signInInProgress" name="input-pwd" label="Password" v-model="password" type="password" @keyup.native.enter="signIn()" @input="clearSignInErrorAlert"></v-text-field>
             <v-alert error v-model="showSignInErrorAlert">{{ signInErrorAlert }}</v-alert>
             <v-layout row justify-space-around>
@@ -52,7 +52,6 @@
               <v-text-field name="input-last-name" label="Last Name" v-model="signUpLastName"></v-text-field>
             </v-layout>
             <form action="">
-            <v-text-field required name="input-login" label="User Name" autocomplete="username" v-model="signUpUserName"></v-text-field>
             <v-text-field required name="input-email" label="Email" autocomplete="email" v-model="signUpEmail" :rules="[rules.email]"></v-text-field>
             <v-text-field required name="input-pwd" label="Create password" autocomplete="new-password" v-model="signUpPassword" type="password" counter :rules="[rules.password]"></v-text-field>
             <v-text-field required name="input-pwd2" label="Confirm password" autocomplete="new-password" v-model="signUpPassword2" type="password" :rules="[rules.confirmPassword]"></v-text-field>
@@ -78,12 +77,11 @@
 export default {
   data: function () {
     return {
-      userName: '',
+      email: '',
       password: '',
       signInErrorAlert: '',
       signUpFirstName: '',
       signUpLastName: '',
-      signUpUserName: '',
       signUpPassword: '',
       signUpPassword2: '',
       signUpEmail: '',
@@ -125,7 +123,7 @@ export default {
   methods: {
     signIn: function () {
       var that = this
-      this.$store.dispatch('observing/signIn', {'userName': this.userName, 'password': this.password}).then(function (res) {
+      this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).then(function (res) {
         if (res.code) {
           that.signInErrorAlert = res.message
         }
@@ -133,7 +131,7 @@ export default {
     },
     signUp: function () {
       var that = this
-      this.$store.dispatch('observing/signUp', {'userName': this.signUpUserName, 'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).then(function (res) {
+      this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).then(function (res) {
         if (res.code) {
           that.signUpErrorAlert = res.message
         }

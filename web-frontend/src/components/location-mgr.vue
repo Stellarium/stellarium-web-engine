@@ -12,7 +12,7 @@
       <v-flex xs4 v-if="doShowMyLocation">
         <v-list two-line avatar subheader>
           <v-subheader>My Locations</v-subheader>
-          <v-list-tile avatar href="javascript:;" v-for="item in knownLocations" v-bind:key="item.objectId" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.objectId === selectedKnownLocation.objectId) ? 'background-color: #455a64' : ''">
+          <v-list-tile avatar href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
             <v-list-tile-avatar>
               <v-icon>location_on</v-icon>
             </v-list-tile-avatar>
@@ -58,7 +58,7 @@
               </v-btn>
             </v-toolbar>
             <gmap-map ref="gmapmap" :center="mapCenter" :zoom="12" :options="{mapTypeControl: false, streetViewControl: false}" style="width: 100%; height: 100%;" v-observe-visibility="visibilityChanged">
-              <gmap-marker :key="loc.objectId"
+              <gmap-marker :key="loc.id"
                   v-for="loc in knownLocations"
                   :position="{ lng: loc.lng, lat: loc.lat }"
                   :clickable="true"

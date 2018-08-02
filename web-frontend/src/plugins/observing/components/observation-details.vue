@@ -152,7 +152,7 @@
     <v-dialog lazy max-width="800" v-model="locationMenu">
       <v-card v-if="locationMenu" color="secondary" flat>
         <v-container>
-          <location-mgr showMyLocation="true" :knownLocations="$store.state.plugins.observing.noctuaSky.Location" v-on:locationSelected="setLocation"></location-mgr>
+          <location-mgr showMyLocation="true" :knownLocations="$store.state.plugins.observing.noctuaSky.locations" v-on:locationSelected="setLocation"></location-mgr>
         </v-container>
       </v-card>
     </v-dialog>
@@ -202,12 +202,12 @@ export default {
   props: ['value', 'create'],
   methods: {
     setLocation: function (loc) {
-      if (!loc.objectId) {
+      if (!loc.id) {
         var that = this
         console.log('Location is new, needs to be saved...')
-        this.$store.dispatch('observing/addLocation', loc).then((newLoc) => { that.observation.locationRef = newLoc.id; that.locationMenu = false })
+        this.$store.dispatch('observing/addLocation', loc).then((newLoc) => { that.observation.location = newLoc.id; that.locationMenu = false })
       } else {
-        this.observation.locationRef = loc.objectId
+        this.observation.location = loc.id
         this.locationMenu = false
       }
       this.setViewSettingsForObservation()
@@ -219,6 +219,9 @@ export default {
     },
     save: function () {
       var that = this
+      if (!this.observation.locationPublicData) {
+        this.observation.locationPublicData = nsh.locationForId(this, this.observation.location).publicData
+      }
       this.$store.dispatch('observing/addObservation', this.observation).then(function (res) {
         if (that.modify) {
           that.modify = false
@@ -240,8 +243,8 @@ export default {
     },
     deleteObservation: function () {
       var that = this
-      console.log('Delete ' + this.observation.objectId)
-      this.$store.dispatch('observing/deleteObservations', [this.observation.objectId]).then(function (res) { that.back() })
+      console.log('Delete ' + this.observation.id)
+      this.$store.dispatch('observing/deleteObservations', this.observation.id).then(function (res) { that.back() })
     },
     setRating: function (r) {
       this.observation.rating = r
@@ -260,8 +263,8 @@ export default {
       let obs = this.observation
       this.$stel.core.observer.utc = obs.mjd
       let loc
-      if (obs.locationRef) {
-        loc = nsh.locationForId(this, obs.locationRef)
+      if (obs.location) {
+        loc = nsh.locationForId(this, obs.location)
       } else {
         loc = this.$store.state.currentLocation
       }
@@ -338,16 +341,16 @@ export default {
       return this.observation.target ? swh.nameForSkySourceType(this.observation.target.types[0]) : 'Please select a source'
     },
     currentLocationTitle: function () {
-      if (this.observation.locationRef) {
-        let loc = nsh.locationForId(this, this.observation.locationRef)
+      if (this.observation.location) {
+        let loc = nsh.locationForId(this, this.observation.location)
         return loc ? loc.shortName : ''
       } else {
         return 'Location'
       }
     },
     currentLocationSubtitle: function () {
-      if (this.observation.locationRef) {
-        let loc = nsh.locationForId(this, this.observation.locationRef)
+      if (this.observation.location) {
+        let loc = nsh.locationForId(this, this.observation.location)
         return loc ? loc.country : ''
       } else {
         return 'Please select a location'

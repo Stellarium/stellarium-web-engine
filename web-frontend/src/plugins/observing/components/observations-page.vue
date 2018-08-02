@@ -45,7 +45,7 @@
       <div class="scroll-container">
         <v-container fluid style="height: 100%">
           <v-layout row wrap>
-            <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].objectId">
+            <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].id">
               <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
             </v-flex>
           </v-layout>
@@ -131,10 +131,10 @@ export default {
   computed: {
     observationGroups: function () {
       var aggregator = [
-        { $group: { objectId: { locationRef: '$locationRef', julian_day: { $floor: '$mjd' } }, groupDate: { min: { $min: '$mjd' }, max: { $max: '$mjd' } }, f0: { $sum: 1 }, f1: { $push: '$$ROOT' } } },
+        { $group: { id: { location: '$location', julian_day: { $floor: '$mjd' } }, groupDate: { min: { $min: '$mjd' }, max: { $max: '$mjd' } }, f0: { $sum: 1 }, f1: { $push: '$$ROOT' } } },
         { $sort: { 'groupDate.max': -1 } }
       ]
-      return nsh.mingo.aggregate(this.$store.state.plugins.observing.noctuaSky.Observation, aggregator)
+      return nsh.mingo.aggregate(this.$store.state.plugins.observing.noctuaSky.observations, aggregator)
     },
     userName: function () {
       return this.$store.state.plugins.observing.noctuaSky.userName
