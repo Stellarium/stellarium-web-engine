@@ -483,7 +483,10 @@ static bool hips_update(hips_t *hips)
     if (hips->error) return false;
     if (!hips->properties) {
         err = parse_properties(hips);
-        if (err) hips->error = err;
+        if (err) {
+            LOG_E("Cannot parse hips property file (%s)", hips->url);
+            hips->error = err;
+        }
         if (!hips->properties) return false;
         init_label(hips);
     }
