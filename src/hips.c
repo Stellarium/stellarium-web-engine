@@ -48,6 +48,17 @@ typedef struct {
     texture_t   *allsky_tex;
     fader_t     fader;
     int         flags;
+
+    // Loader to parse the image in a thread.
+    struct {
+        worker_t worker;
+        void *data;
+        int size;
+        void *img;
+        int w, h, bpp;
+        int transparency;
+    } *loader;
+
 } tile_t;
 
 // Gobal cache for all the tiles.
@@ -180,6 +191,8 @@ void get_child_uv_mat(int i, const double m[3][3], double out[3][3])
 static int del_tile(void *data)
 {
     tile_t *tile = data;
+    if (tile->loader)
+        LOG_E("Error: deleting a tile while it is loading!");
     texture_delete(tile->tex);
     free(tile);
     return 0;
@@ -199,26 +212,22 @@ static bool img_is_transparent(
     return true;
 }
 
-static texture_t *load_image(const void *data, int size, int *transparency)
+static int load_image_worker(worker_t *worker)
 {
-    texture_t *tex;
-    void *img;
-    int i, w, h, bpp = 0;
-    img = img_read_from_mem(data, size, &w, &h, &bpp);
-    if (!img) return NULL;
-    if (transparency) {
-        *transparency = 0;
-        for (i = 0; i < 4; i++) {
-            if (img_is_transparent(img, w, h, bpp,
-                        (i / 2) * w / 2, (i % 2) * h / 2,
-                        w / 2, h / 2)) {
-                *transparency |= 1 << i;
-            }
+    int i;
+    typeof(((tile_t*)0)->loader) loader = (void*)worker;
+    loader->img = img_read_from_mem(loader->data, loader->size,
+                                    &loader->w, &loader->h, &loader->bpp);
+    free(loader->data);
+    if (!loader->img) return 0;
+    for (i = 0; i < 4; i++) {
+        if (img_is_transparent(loader->img, loader->w, loader->h, loader->bpp,
+                        (i / 2) * loader->w / 2, (i % 2) * loader->h / 2,
+                        loader->w / 2, loader->h / 2)) {
+                loader->transparency |= 1 << i;
         }
     }
-    tex = texture_from_data(img, w, h, bpp, 0, 0, w, h, 0);
-    free(img);
-    return tex;
+    return 0;
 }
 
 static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
@@ -264,17 +273,37 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         LOG_W("Cannot load tile at url %s (%d)", url, code);
         goto after_load;
     }
-    tex = load_image(data, size, &transparency);
-    tile->flags |= (transparency * TILE_NO_CHILD_0);
+
+    // Parse the image data in a worker so that we don't block the ui.
+    // The texture creation is still done in the main thread because
+    // we need to use OpenGL for it.
+    if (!tile->loader) {
+        tile->loader = calloc(1, sizeof(*tile->loader));
+        worker_init(&tile->loader->worker, load_image_worker);
+        tile->loader->data = malloc(size);
+        tile->loader->size = size;
+        memcpy(tile->loader->data, data, size);
+    }
+    if (!worker_iter(&tile->loader->worker)) goto after_load;
+    if (tile->loader->img) {
+        tex = texture_from_data(tile->loader->img,
+                tile->loader->w, tile->loader->h, tile->loader->bpp,
+                0, 0, tile->loader->w, tile->loader->h, 0);
+    }
+    transparency = tile->loader->transparency;
+    free(tile->loader->img);
+    free(tile->loader);
+
+    tile->flags |= TILE_LOADED;
     if (!tex) {
         LOG_W("Cannot load img at url %s", url);
         goto after_load;
     }
+    tile->flags |= (transparency * TILE_NO_CHILD_0);
     texture_delete(tile->allsky_tex);
     tile->allsky_tex = NULL;
     tile->tex = tex;
     cache_set_cost(g_cache, url, strlen(url), tex->tex_w * tex->tex_h * 4);
-    tile->flags |= TILE_LOADED;
     tile->fader.target = true;
 
 after_load:
@@ -283,7 +312,7 @@ after_load:
     // Until the tile get loaded we can try to use the allsky
     // texture as a fallback.
     if (    !tile->tex && hips->allsky.data &&
-            order == hips->order_min) {
+            order == hips->order_min && !tile->allsky_tex) {
         nbw = sqrt(12 * 1 << (2 * order));
         x = (pix % nbw) * hips->allsky.w / nbw;
         y = (pix / nbw) * hips->allsky.w / nbw;
