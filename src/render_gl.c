@@ -300,6 +300,9 @@ static void quad(renderer_t          *rend_,
           {0, 1}, {1, 1}, {0, 0} },
     };
 
+    prog = (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER)) ?
+                     &rend->progs.planet : &rend->progs.blit_proj;
+
     tex = tex ?: rend->white_tex;
     buffer = calloc(1, sizeof(*buffer));
     n = grid_size + 1;
@@ -325,9 +328,13 @@ static void quad(renderer_t          *rend_,
         if (tex && (tex->flags & TF_FLIPPED))
             grid[i * n + j].tex_pos[1] = 1.0 - grid[i * n + j].tex_pos[1];
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
-        vec3_copy(p, normal);
-        mat4_mul_vec4(*painter->transform, normal, normal);
-        vec3_to_float(normal, grid[i * n + j].normal);
+
+        if (prog->a_normal_l != -1) {
+            vec3_copy(p, normal);
+            mat4_mul_vec4(*painter->transform, normal, normal);
+            vec3_to_float(normal, grid[i * n + j].normal);
+        }
+
         mat4_mul_vec4(*painter->transform, p, p);
         vec4_to_float(p, grid[i * n + j].mpos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
@@ -378,8 +385,6 @@ static void quad(renderer_t          *rend_,
     if (frame == FRAME_OBSERVED) mat4_mul(mv, painter->obs->ro2v, mv);
     if (frame == FRAME_ICRS) mat4_mul(mv, painter->obs->ri2v, mv);
     mat4_mul(mv, *painter->transform, mv);
-    prog = (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER)) ?
-                     &rend->progs.planet : &rend->progs.blit_proj;
 
     render_buffer(rend, buffer, grid_size * grid_size * 6, prog,
                   &(render_buffer_args_t) {
