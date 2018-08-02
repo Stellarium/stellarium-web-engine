@@ -11,7 +11,11 @@
 #include <stdbool.h>
 #include <string.h>
 
-#ifdef VEC_INLINE
+#ifndef VEC_INLINE
+#   define VEC_INLINE 1
+#endif
+
+#if VEC_INLINE
     #define DEF static inline
 #else
     #define DEF
@@ -91,7 +95,7 @@ DEF void mat3_ry(double a, double mat[3][3], double out[3][3]);
 DEF void mat3_rz(double a, double mat[3][3], double out[3][3]);
 DEF void mat3_itranslate(double m[3][3], double x, double y);
 DEF void mat3_iscale(double m[3][3], double x, double y);
-DEF bool mat3_invert(double mat[3][3], double out[3][3]);
+DEF bool mat3_invert(const double mat[3][3], double out[3][3]);
 DEF void mat3_transpose(double mat[3][3], double out[3][3]);
 DEF void mat3_to_mat4(double mat[3][3], double out[4][4]);
 DEF void mat3_to_float(double mat[3][3], float out[9]);
@@ -111,8 +115,8 @@ DEF void mat4_ry(double a, double mat[4][4], double out[4][4]);
 DEF void mat4_rz(double a, double mat[4][4], double out[4][4]);
 DEF void mat4_itranslate(double m[4][4], double x, double y, double z);
 DEF void mat4_iscale(double m[4][4], double x, double y, double z);
-DEF bool mat4_invert(double mat[4][4], double out[4][4]);
-DEF void mat4_transpose(double mat[4][4], double out[4][4]);
+DEF bool mat4_invert(const double mat[4][4], double out[4][4]);
+DEF void mat4_transpose(const double mat[4][4], double out[4][4]);
 
 DEF void quat_set_identity(double q[4]);
 DEF void quat_ineg(double q[4]);
@@ -127,7 +131,7 @@ DEF void quat_slerp(const double a[4], const double b[4], double t,
 
 #endif
 
-#if defined(VEC_INLINE) || defined(VEC_IMPLEMENTATION)
+#if VEC_INLINE || defined(VEC_IMPLEMENTATION)
 
 DEF void vec2_set(double v[2], double x, double y)
 {
@@ -627,11 +631,11 @@ DEF void mat4_iscale(double m[4][4], double x, double y, double z)
     }
 }
 
-DEF bool mat3_invert(double mat[3][3], double out[3][3])
+DEF bool mat3_invert(const double mat[3][3], double out[3][3])
 {
     double det;
     int i;
-    const double *m = (void*)mat;
+    const double *m = (const double *)mat;
     double inv[9];
 
 #define M(i, j) m[i] * m[j]
@@ -661,11 +665,11 @@ DEF bool mat3_invert(double mat[3][3], double out[3][3])
     return true;
 }
 
-DEF bool mat4_invert(double mat[4][4], double out[4][4])
+DEF bool mat4_invert(const double mat[4][4], double out[4][4])
 {
     double det;
     int i;
-    double *m = (void*)mat;
+    const double *m = (const double*)mat;
     double inv[16];
 
 #define M(i, j, k) m[i] * m[j] * m[k]
@@ -728,7 +732,7 @@ DEF void mat3_transpose(double mat[3][3], double out[3][3])
     mat3_copy(tmp, out);
 }
 
-DEF void mat4_transpose(double mat[4][4], double out[4][4])
+DEF void mat4_transpose(const double mat[4][4], double out[4][4])
 {
     double tmp[4][4];
     int i, j;

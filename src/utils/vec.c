@@ -9,7 +9,7 @@
 
 #include "vec.h"
 
-#ifndef VEC_INLINE
+#if !VEC_INLINE
     #define VEC_IMPLEMENTATION
     #include "vec.h"
 #endif
