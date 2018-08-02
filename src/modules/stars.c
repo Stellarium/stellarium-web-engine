@@ -188,7 +188,8 @@ typedef struct {
     int pix;
 } tile_pos_t;
 
-typedef struct {
+typedef struct tile tile_t;
+struct tile {
     tile_pos_t  pos;
     stars_t     *parent;
     int         flags;
@@ -196,7 +197,16 @@ typedef struct {
     double      mag_max;
     int         nb;
     star_data_t *stars;
-} tile_t;
+
+    struct {
+        worker_t worker;
+        tile_t *tile;
+        void *data;
+        int size;
+        bool is_gaia;
+    } *loader;
+
+};
 
 void stars_load(const char *path, stars_t *stars);
 static void get_star_color(const char sp, double out[3]);
@@ -259,6 +269,8 @@ static star_t *star_create(const star_data_t *data)
 static int del_tile(void *data)
 {
     tile_t *tile = data;
+    if (tile->loader)
+        LOG_E("Error: deleting a tile while it is loading!");
     free(tile->stars);
     free(tile);
     return 0;
@@ -278,74 +290,144 @@ static void shuffle_bytes(uint8_t *data, int nb, int size)
     free(buf);
 }
 
+static int load_worker(worker_t *w)
+{
+    int i, sp, r;
+    star_data_t *s;
+    double vmag, ra, de, pra, pde, plx, bv, rv;
+    typeof(((tile_t*)0)->loader) loader = (void*)w;
+    tile_t *tile = loader->tile;
+    int size = loader->is_gaia ? 32 : 40;
+
+    tile->nb = loader->size / size;
+    tile->stars = calloc(tile->nb, sizeof(*tile->stars));
+    // Unshuffle the data.
+    shuffle_bytes(loader->data, size, tile->nb);
+
+    if (!loader->is_gaia) {
+        for (i = 0; i < tile->nb; i++) {
+            s = &tile->stars[i];
+            binunpack(loader->data + i * 4 * 10, "iiifffffff",
+                      &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
+                      &bv);
+            s->sp = sp;
+            s->vmag = vmag;
+            s->ra = ra;
+            s->de = de;
+            s->pra = pra;
+            s->pde = pde;
+            s->plx = plx;
+            s->bv = bv;
+            compute_pv(ra, de, pra, pde, plx, s);
+            tile->mag_min = min(tile->mag_min, vmag);
+            tile->mag_max = max(tile->mag_max, vmag);
+        }
+    } else {
+        /* Gaia packed data:
+         *
+         * 8 bytes (uint64_t)   source_id
+         * 4 bytes (float)      GMag
+         * 4 bytes (float)      ra
+         * 4 bytes (float)      dec
+         * 4 bytes (float)      plx
+         * 4 bytes (float)      pmra
+         * 4 bytes (float)      pmdec
+         *
+         */
+        for (i = 0; i < tile->nb; i++) {
+            s = &tile->stars[i];
+            binunpack(loader->data + i * 32, "Qffffff",
+                    &s->gaia, &vmag, &ra, &de, &plx, &pra, &pde);
+
+            // I disable this part until we switch to gaia dr2, since the dr1
+            // survey seems to have some bugs in the stars locations.
+            // Once we switch to dr2 we can remore the if ((0)) and this
+            // comment.
+            if ((0))
+            if (gaia_index_to_pix(tile->pos.order, s->gaia) != tile->pos.pix) {
+                LOG_E("Wrong gaia id: order: %d, pix: %d, id: %lu, "
+                      "expected pix: %d", tile->pos.order, tile->pos.pix,
+                      s->gaia, gaia_index_to_pix(tile->pos.order, s->gaia));
+                assert(false);
+            }
+
+            // Convert to proper units.
+            ra *= DD2R;
+            de *= DD2R;
+            pra *= ERFA_DMAS2R;
+            pde *= ERFA_DMAS2R;
+            plx /= 1000.0;
+
+            // Convert values from J2015 to J2000
+            r = eraPmsafe(ra, de, pra, pde, plx, 0.0,
+                          ERFA_DJ00, 15 * ERFA_DJY, // J2015
+                          ERFA_DJ00, 0.0, // Target J2000
+                          &ra, &de, &pra, &pde, &plx, &rv);
+            if (r & ~1)
+                LOG_E("Cannot convert from J2015 to J2000: error %d", r);
+
+            s->vmag = vmag;
+            s->ra = ra;
+            s->de = de;
+            s->plx = plx;
+            s->pra = pra;
+            s->pde = pde;
+            compute_pv(ra, de, pra, pde, plx, s);
+
+            tile->mag_min = min(tile->mag_min, s->vmag);
+            tile->mag_max = max(tile->mag_max, s->vmag);
+        }
+    }
+
+    free(loader->data);
+    return 0;
+}
+
 static int on_file_tile_loaded(int version, int order, int pix,
                                int size, void *data, void *user)
 {
-    int i, sp;
+    int nb;
     tile_pos_t pos = {order, pix};
     stars_t *stars = user;
     tile_t *tile;
-    star_data_t *d;
-    double vmag, ra, de, pra, pde, plx, bv;
 
     assert(size % (4 * 10) == 0);
     tile = cache_get(stars->tiles, &pos, sizeof(pos));
     assert(!tile);
+    nb = size / (4 * 10);
 
     tile = calloc(1, sizeof(*tile));
     tile->parent = stars;
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
-    tile->nb = size / (4 * 10);
-    tile->stars = calloc(tile->nb, sizeof(*tile->stars));
     cache_add(stars->tiles, &pos, sizeof(pos), tile,
-              tile->nb * sizeof(*tile->stars), del_tile);
+              nb * sizeof(*tile->stars), del_tile);
 
-    // Unshuffle the data.
-    shuffle_bytes(data, 4 * 10, tile->nb);
+    tile->loader = calloc(1, sizeof(*tile->loader));
+    worker_init(&tile->loader->worker, load_worker);
+    tile->loader->tile = tile;
+    tile->loader->data = malloc(size);
+    memcpy(tile->loader->data, data, size);
+    tile->loader->size = size;
 
-    for (i = 0; i < tile->nb; i++) {
-        d = &tile->stars[i];
-        binunpack(data + i * 4 * 10, "iiifffffff",
-                  &d->hip, &d->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
-                  &bv);
-        d->sp = sp;
-        d->vmag = vmag;
-        d->ra = ra;
-        d->de = de;
-        d->pra = pra;
-        d->pde = pde;
-        d->plx = plx;
-        d->bv = bv;
-        compute_pv(ra, de, pra, pde, plx, d);
-        tile->mag_min = min(tile->mag_min, vmag);
-        tile->mag_max = max(tile->mag_max, vmag);
-    }
+    // For the moment we just run the loader immediately, not in a thread.
+    // This is because the non gaia stars need to be loaded at startup so that
+    // we can render the constellations!
+    tile->loader->worker.fn(&tile->loader->worker);
+    free(tile->loader);
+    tile->loader = NULL;
+
     return 0;
 }
 
 static int on_gaia_tile_loaded(int version, int order, int pix,
                                int size, void *data, void *user)
 {
-    /* Gaia packed data:
-     *
-     * 8 bytes (uint64_t)   source_id
-     * 4 bytes (float)      GMag
-     * 4 bytes (float)      ra
-     * 4 bytes (float)      dec
-     * 4 bytes (float)      plx
-     * 4 bytes (float)      pmra
-     * 4 bytes (float)      pmdec
-     *
-     */
-
-    int i, r;
-    double vmag, ra, dec, pmra, pmdec, plx, rv;
+    int nb;
     tile_pos_t pos = {order, pix};
     stars_t *stars = user;
     tile_t *tile;
-    star_data_t *d;
 
     assert(size % 32 == 0);
     tile = cache_get(stars->tiles, &pos, sizeof(pos));
@@ -356,55 +438,18 @@ static int on_gaia_tile_loaded(int version, int order, int pix,
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
-    tile->nb = size / 32;
-    tile->stars = calloc(tile->nb, sizeof(*tile->stars));
+    nb = size / 32;
     cache_add(stars->tiles, &pos, sizeof(pos), tile,
-              tile->nb * sizeof(*tile->stars), del_tile);
+              nb * sizeof(*tile->stars), del_tile);
 
-    // Unshuffle the data.
-    shuffle_bytes(data, 32, tile->nb);
+    tile->loader = calloc(1, sizeof(*tile->loader));
+    worker_init(&tile->loader->worker, load_worker);
+    tile->loader->tile = tile;
+    tile->loader->data = malloc(size);
+    memcpy(tile->loader->data, data, size);
+    tile->loader->size = size;
+    tile->loader->is_gaia = true;
 
-    for (i = 0; i < tile->nb; i++) {
-        d = &tile->stars[i];
-        binunpack(data + i * 32, "Qffffff",
-                  &d->gaia, &vmag, &ra, &dec, &plx, &pmra, &pmdec);
-
-        // I disable this part until we switch to gaia dr2, since the dr1
-        // survey seems to have some bugs in the stars locations.
-        // Once we swtich to dr2 we can remore the if ((0)) and this comment.
-        if ((0))
-        if (gaia_index_to_pix(order, d->gaia) != pix) {
-            LOG_E("Wrong gaia id: order: %d, pix: %d, id: %lu, "
-                  "expected pix: %d", order, pix, d->gaia,
-                  gaia_index_to_pix(order, d->gaia));
-            assert(false);
-        }
-
-        // Convert to proper units.
-        ra *= DD2R;
-        dec *= DD2R;
-        pmra *= ERFA_DMAS2R;
-        pmdec *= ERFA_DMAS2R;
-        plx /= 1000.0;
-
-        // Convert values from J2015 to J2000
-        r = eraPmsafe(ra, dec, pmra, pmdec, plx, 0.0,
-                      ERFA_DJ00, 15 * ERFA_DJY, // J2015
-                      ERFA_DJ00, 0.0, // Target J2000
-                      &ra, &dec, &pmra, &pmdec, &plx, &rv);
-        if (r & ~1) LOG_E("Cannot convert from J2015 to J2000: error %d", r);
-
-        d->vmag = vmag;
-        d->ra = ra;
-        d->de = dec;
-        d->plx = plx;
-        d->pra = pmra;
-        d->pde = pmdec;
-        compute_pv(ra, dec, pmra, pmdec, plx, d);
-
-        tile->mag_min = min(tile->mag_min, d->vmag);
-        tile->mag_max = max(tile->mag_max, d->vmag);
-    }
     return 0;
 }
 
@@ -458,6 +503,14 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
         if (data) {
             eph_load(data, size, stars);
         }
+    }
+    // Got a tile, but it is still loading.
+    if (tile && tile->loader) {
+        if (worker_iter(&tile->loader->worker)) {
+            free(tile->loader);
+            tile->loader = NULL;
+        }
+        return NULL;
     }
     return tile;
 }
