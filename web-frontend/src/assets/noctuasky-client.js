@@ -33,6 +33,32 @@ const NoctuaSkyClient = {
       that.locations = _.mapKeys(client.apis.locations, removeTrailingNumbers)
       that.users = _.mapKeys(client.apis.users, removeTrailingNumbers)
 
+      let clientApisSkysources = _.mapKeys(client.apis.skysources, removeTrailingNumbers)
+
+      that.skysources = {
+        query: function (str, limit, exact = null) {
+          if (limit === undefined) {
+            limit = 10
+          }
+          str = str.toUpperCase()
+          str = str.replace(/\s+/g, '')
+          return clientApisSkysources.query({q: str, limit: limit, exact: exact}).then(res => {
+            return res.body
+          }, err => {
+            throw err.response
+          })
+        },
+
+        // Get data for a SkySource from its NSID in papi service
+        get: function (nsid) {
+          return clientApisSkysources.get({nsid: nsid}).then(res => {
+            return res.body
+          }).catch(err => {
+            throw err.response
+          })
+        }
+      }
+
       let token = store.get('noctuasky_token')
       if (token) {
         console.log('Found previous token, try to re-use..')
