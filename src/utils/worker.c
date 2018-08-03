@@ -117,6 +117,15 @@ int worker_iter(worker_t *w)
     return w->state == WORKER_FINISHED;
 }
 
+bool worker_is_running(worker_t *w)
+{
+    bool ret;
+    pthread_mutex_lock(&g.rlock);
+    ret = w->state == WORKER_RUNNING;
+    pthread_mutex_unlock(&g.rlock);
+    return ret;
+}
+
 #else // No pthread, basic non threaded implementations.
 
 void worker_init(worker_t *w, int (*fn)(worker_t *w))
@@ -131,6 +140,11 @@ int worker_iter(worker_t *w)
     w->fn(w);
     w->state = 1;
     return 1;
+}
+
+bool worker_is_running(worker_t *w)
+{
+    return false;
 }
 
 #endif

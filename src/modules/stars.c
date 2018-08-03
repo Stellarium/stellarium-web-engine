@@ -269,7 +269,9 @@ static star_t *star_create(const star_data_t *data)
 static int del_tile(void *data)
 {
     tile_t *tile = data;
-    if (tile->loader) return CACHE_KEEP;
+    if (tile->loader && worker_is_running(&tile->loader->worker))
+        return CACHE_KEEP;
+    free(tile->loader);
     free(tile->stars);
     free(tile);
     return 0;
