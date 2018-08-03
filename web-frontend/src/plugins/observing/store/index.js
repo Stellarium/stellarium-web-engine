@@ -85,11 +85,11 @@ const moduleStore = {
       return NoctuaSkyClient.register(data.email, data.password, data.firstName, data.lastName).then(function (res) {
         commit('setLoginStatus', 'loggedOut')
         console.log('SignUp done')
-        return 'OK'
+        return res
       }, function (error) {
         console.log('Signup Error: ' + JSON.stringify(error))
         commit('setLoginStatus', 'loggedOut')
-        throw error.response
+        throw error
       })
     },
     signOut ({ commit, state }) {
