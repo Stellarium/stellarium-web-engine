@@ -10,7 +10,7 @@ import NoctuaSkyClient from '../noctuasky-client'
 NoctuaSkyClient.init('http://localhost:8090')
 
 var loadParseTable = function (commit, tableName) {
-  return NoctuaSkyClient[tableName].query().then(function (results) {
+  return NoctuaSkyClient[tableName].query({page_size: 100}).then(function (results) {
     return new Promise((resolve, reject) => {
       console.log('Successfully retrieved ' + results.body.length + ' ' + tableName)
       commit('setParseTable', { 'tableName': tableName, 'newValue': results.body })
@@ -18,7 +18,6 @@ var loadParseTable = function (commit, tableName) {
     })
   },
   function (error) {
-    console.log(error)
     return error.response
   })
 }
