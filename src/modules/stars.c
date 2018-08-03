@@ -289,6 +289,11 @@ static void shuffle_bytes(uint8_t *data, int nb, int size)
     free(buf);
 }
 
+static int star_data_cmp(const void *a, const void *b)
+{
+    return cmp(((const star_data_t*)a)->vmag, ((const star_data_t*)b)->vmag);
+}
+
 static int load_worker(worker_t *w)
 {
     int i, sp, r;
@@ -377,6 +382,9 @@ static int load_worker(worker_t *w)
             tile->mag_max = max(tile->mag_max, s->vmag);
         }
     }
+
+    // Sort the data by vmag, so that we can early exit during render.
+    qsort(tile->stars, tile->nb, sizeof(*tile->stars), star_data_cmp);
 
     free(loader->data);
     return 0;
@@ -601,7 +609,7 @@ static int render_visitor(int order, int pix, void *user)
     point_t *points = malloc(tile->nb * sizeof(*points));
     for (i = 0; i < tile->nb; i++) {
         s = &tile->stars[i];
-        if (!debug_show_all && s->vmag > painter.mag_max) continue;
+        if (!debug_show_all && s->vmag > painter.mag_max) break;
         if (vec3_dot(s->pos, viewport_cap) < viewport_cap[3]) continue;
 
         // Compute star observed and screen pos.
