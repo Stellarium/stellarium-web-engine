@@ -136,9 +136,14 @@ export default {
     },
     signUp: function () {
       var that = this
-      this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).then(function (res) {
-        if (res.code) {
-          that.signUpErrorAlert = res.message
+      this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).catch(function (res) {
+        if (res.body.message) {
+          that.signUpErrorAlert = res.body.message
+        } else if (res.body.errors) {
+          that.signUpErrorAlert = ''
+          for (let k in res.body.errors) {
+            that.signUpErrorAlert += k + ': ' + res.body.errors[k] + '\n'
+          }
         }
       })
     },

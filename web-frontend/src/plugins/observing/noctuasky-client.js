@@ -66,6 +66,12 @@ const NoctuaSkyClient = {
     store.remove('noctuasky_token')
     swaggerClient.authorizations.APIToken = ''
     this.currentUser = undefined
+  },
+  register: function (email, password, firstName, lastName) {
+    return this.users.add({body: {email: email, password: password, first_name: firstName, last_name: lastName}}).then((res) => {
+      console.log('NoctuaSky Register successful')
+      return res.response.body
+    })
   }
 }
 
