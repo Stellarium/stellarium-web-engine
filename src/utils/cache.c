@@ -43,7 +43,7 @@ static void cleanup(cache_t *cache)
         HASH_DEL(cache->items, item);
         cache->size -= item->cost;
         free(item);
-        return;
+        if (cache->size < cache->max_size) return;
     }
 }
 
