@@ -37,13 +37,13 @@ cache_t *cache_create(int size)
 
 static void cleanup(cache_t *cache)
 {
-    item_t *item;
-    while (cache->size >= cache->max_size) {
-        item = cache->items;
+    item_t *item, *tmp;
+    HASH_ITER(hh, cache->items, item, tmp) {
         if (item->delfunc(item->data) == CACHE_KEEP) continue;
         HASH_DEL(cache->items, item);
         cache->size -= item->cost;
         free(item);
+        return;
     }
 }
 
