@@ -269,8 +269,7 @@ static star_t *star_create(const star_data_t *data)
 static int del_tile(void *data)
 {
     tile_t *tile = data;
-    if (tile->loader)
-        LOG_E("Error: deleting a tile while it is loading!");
+    if (tile->loader) return CACHE_KEEP;
     free(tile->stars);
     free(tile);
     return 0;

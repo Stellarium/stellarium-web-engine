@@ -14,6 +14,13 @@
  */
 
 /*
+ * Enum: CACHE_KEEP
+ * The cache delete function callback can return this value to tell the
+ * cache not to delete a item yet.
+ */
+#define CACHE_KEEP 1
+
+/*
  * Type: cache_t
  * Represent a cache that can contain any kind of data.
  */

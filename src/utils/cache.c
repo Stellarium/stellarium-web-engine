@@ -40,8 +40,8 @@ static void cleanup(cache_t *cache)
     item_t *item;
     while (cache->size >= cache->max_size) {
         item = cache->items;
+        if (item->delfunc(item->data) == CACHE_KEEP) continue;
         HASH_DEL(cache->items, item);
-        item->delfunc(item->data);
         cache->size -= item->cost;
         free(item);
     }

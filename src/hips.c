@@ -191,8 +191,7 @@ void get_child_uv_mat(int i, const double m[3][3], double out[3][3])
 static int del_tile(void *data)
 {
     tile_t *tile = data;
-    if (tile->loader)
-        LOG_E("Error: deleting a tile while it is loading!");
+    if (tile->loader) return CACHE_KEEP;
     texture_delete(tile->tex);
     free(tile);
     return 0;
