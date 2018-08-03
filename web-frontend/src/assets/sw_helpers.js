@@ -14,6 +14,8 @@ import hex2dec from 'hex2dec'
 import sweWasmModule from '@/assets/js/stellarium-web-engine.wasm'
 import * as sweJsModule from '@/assets/js/stellarium-web-engine.js'
 
+import NoctuaSkyClient from '@/assets/noctuasky-client'
+
 var DDDate = Date
 DDDate.prototype.getJD = function () {
   return (this.getTime() / 86400000) + 2440587.5
@@ -37,23 +39,25 @@ export const swh = {
     // Note that "import StelWebEngine from '@/assets/js/stellarium-web-engine.js'" would work
     // if it was an ES6 module with "export default StelWebEngine"
     scriptjs(['https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', sweJsModule], function () {
-      // eslint-disable-next-line
-      let lstel = StelWebEngine({
-        wasmFile: sweWasmModule,
-        canvas: canvasElem,
-        res: ['http://stelladata.noctua-software.com/surveys/stars/info.json'],
-        onReady: function () {
-          store.commit('replaceStelWebEngine', lstel.getTree())
-          lstel.onValueChanged(function (path, value) {
-            let tree = store.state.stel
-            _.set(tree, path, value)
-            store.commit('replaceStelWebEngine', tree)
-          })
-          Vue.prototype.$stel = lstel
-          Vue.prototype.$selectionLayer = lstel.createLayer({id: 'slayer', z: 50, visible: true})
-          Vue.prototype.$observingLayer = lstel.createLayer({id: 'obslayer', z: 40, visible: true})
-          callBackOnDone()
-        }
+      NoctuaSkyClient.init('http://localhost:8090').then(res => {
+        // eslint-disable-next-line
+        let lstel = StelWebEngine({
+          wasmFile: sweWasmModule,
+          canvas: canvasElem,
+          res: ['http://stelladata.noctua-software.com/surveys/stars/info.json'],
+          onReady: function () {
+            store.commit('replaceStelWebEngine', lstel.getTree())
+            lstel.onValueChanged(function (path, value) {
+              let tree = store.state.stel
+              _.set(tree, path, value)
+              store.commit('replaceStelWebEngine', tree)
+            })
+            Vue.prototype.$stel = lstel
+            Vue.prototype.$selectionLayer = lstel.createLayer({id: 'slayer', z: 50, visible: true})
+            Vue.prototype.$observingLayer = lstel.createLayer({id: 'obslayer', z: 40, visible: true})
+            callBackOnDone()
+          }
+        })
       })
     })
   },

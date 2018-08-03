@@ -16,7 +16,7 @@ const NoctuaSkyClient = {
   currentUser: undefined,
   init: function (serverUrl) {
     let that = this
-    Swagger(serverUrl + '/doc/openapi.json', {
+    return Swagger(serverUrl + '/doc/openapi.json', {
       authorizations: {
         APIToken: ''
       },
