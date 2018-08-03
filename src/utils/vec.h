@@ -85,34 +85,41 @@ DEF void vec4_mix(const double a[4], const double b[4], double k,
 DEF void vec3_cross(const double a[3], const double b[3], double out[3]);
 DEF void vec2_rotate(double angle, const double a[2], double out[2]);
 
-DEF void mat3_copy(double src[3][3], double out[3][3]);
+DEF void mat3_copy(const double src[3][3], double out[3][3]);
 DEF void mat3_set_identity(double mat[3][3]);
-DEF void mat3_mul(double a[3][3], double b[3][3], double out[3][3]);
-DEF void mat3_mul_vec3(double mat[3][3], const double v[3], double out[3]);
-DEF void mat3_mul_vec2(double mat[3][3], const double v[2], double out[2]);
-DEF void mat3_rx(double a, double mat[3][3], double out[3][3]);
-DEF void mat3_ry(double a, double mat[3][3], double out[3][3]);
-DEF void mat3_rz(double a, double mat[3][3], double out[3][3]);
+DEF void mat3_mul(const double a[3][3], const double b[3][3],
+                  double out[3][3]);
+DEF void mat3_mul_vec3(const double mat[3][3], const double v[3],
+                       double out[3]);
+DEF void mat3_mul_vec2(const double mat[3][3], const double v[2],
+                       double out[2]);
+DEF void mat3_rx(double a, const double mat[3][3], double out[3][3]);
+DEF void mat3_ry(double a, const double mat[3][3], double out[3][3]);
+DEF void mat3_rz(double a, const double mat[3][3], double out[3][3]);
 DEF void mat3_itranslate(double m[3][3], double x, double y);
 DEF void mat3_iscale(double m[3][3], double x, double y);
 DEF bool mat3_invert(const double mat[3][3], double out[3][3]);
-DEF void mat3_transpose(double mat[3][3], double out[3][3]);
-DEF void mat3_to_mat4(double mat[3][3], double out[4][4]);
-DEF void mat3_to_float(double mat[3][3], float out[9]);
-DEF void mat3_to_float4(double mat[3][3], float out[16]);
+DEF void mat3_transpose(const double mat[3][3], double out[3][3]);
+DEF void mat3_to_mat4(const double mat[3][3], double out[4][4]);
+DEF void mat3_to_float(const double mat[3][3], float out[9]);
+DEF void mat3_to_float4(const double mat[3][3], float out[16]);
 
-DEF void mat4_mul_vec4(double mat[4][4], const double v[4], double out[4]);
-DEF void mat4_mul_vec3(double mat[4][4], const double v[3], double out[3]);
-DEF void mat4_mul_vec3_dir(double mat[4][4], const double v[3], double out[3]);
-DEF void mat4_copy(double src[4][4], double out[4][4]);
+DEF void mat4_mul_vec4(const double mat[4][4], const double v[4],
+                       double out[4]);
+DEF void mat4_mul_vec3(const double mat[4][4], const double v[3],
+                       double out[3]);
+DEF void mat4_mul_vec3_dir(const double mat[4][4], const double v[3],
+                           double out[3]);
+DEF void mat4_copy(const double src[4][4], double out[4][4]);
 DEF void mat4_perspective(double mat[4][4], double fovy, double aspect,
                           double nearval, double farval);
-DEF void mat4_to_float(double mat[4][4], float out[16]);
+DEF void mat4_to_float(const double mat[4][4], float out[16]);
 DEF void mat4_set_identity(double mat[4][4]);
-DEF void mat4_mul(double a[4][4], double b[4][4], double out[4][4]);
-DEF void mat4_rx(double a, double mat[4][4], double out[4][4]);
-DEF void mat4_ry(double a, double mat[4][4], double out[4][4]);
-DEF void mat4_rz(double a, double mat[4][4], double out[4][4]);
+DEF void mat4_mul(const double a[4][4], const double b[4][4],
+                  double out[4][4]);
+DEF void mat4_rx(double a, const double mat[4][4], double out[4][4]);
+DEF void mat4_ry(double a, const double mat[4][4], double out[4][4]);
+DEF void mat4_rz(double a, const double mat[4][4], double out[4][4]);
 DEF void mat4_itranslate(double m[4][4], double x, double y, double z);
 DEF void mat4_iscale(double m[4][4], double x, double y, double z);
 DEF bool mat4_invert(const double mat[4][4], double out[4][4]);
@@ -376,7 +383,7 @@ DEF void vec2_rotate(double angle, const double a[2], double out[2])
     out[1] = y;
 }
 
-DEF void mat3_to_mat4(double mat[3][3], double out[4][4])
+DEF void mat3_to_mat4(const double mat[3][3], double out[4][4])
 {
     int i, j;
     memset(out, 0, 16 * sizeof(double));
@@ -385,7 +392,8 @@ DEF void mat3_to_mat4(double mat[3][3], double out[4][4])
     out[3][3] = 1.0;
 }
 
-DEF void mat3_mul_vec3(double mat[3][3], const double v[3], double out[3])
+DEF void mat3_mul_vec3(const double mat[3][3], const double v[3],
+                       double out[3])
 {
     double x = v[0];
     double y = v[1];
@@ -395,7 +403,8 @@ DEF void mat3_mul_vec3(double mat[3][3], const double v[3], double out[3])
     out[2] = x * mat[0][2] + y * mat[1][2] + z * mat[2][2];
 }
 
-DEF void mat3_mul_vec2(double mat[3][3], const double v[2], double out[2])
+DEF void mat3_mul_vec2(const double mat[3][3], const double v[2],
+                       double out[2])
 {
     double tmp[3] = {v[0], v[1], 1.0};
     double ret[3];
@@ -403,7 +412,8 @@ DEF void mat3_mul_vec2(double mat[3][3], const double v[2], double out[2])
     vec2_copy(ret, out);
 }
 
-DEF void mat4_mul_vec4(double mat[4][4], const double v[4], double out[4])
+DEF void mat4_mul_vec4(const double mat[4][4], const double v[4],
+                       double out[4])
 {
     double ret[4] = {};
     int i, j;
@@ -415,7 +425,8 @@ DEF void mat4_mul_vec4(double mat[4][4], const double v[4], double out[4])
     vec4_copy(ret, out);
 }
 
-DEF void mat4_mul_vec3(double mat[4][4], const double v[3], double out[3])
+DEF void mat4_mul_vec3(const double mat[4][4], const double v[3],
+                       double out[3])
 {
     double tmp[4] = {v[0], v[1], v[2], 1.0};
     double ret[4];
@@ -423,7 +434,8 @@ DEF void mat4_mul_vec3(double mat[4][4], const double v[3], double out[3])
     vec3_copy(ret, out);
 }
 
-DEF void mat4_mul_vec3_dir(double mat[4][4], const double v[3], double out[3])
+DEF void mat4_mul_vec3_dir(const double mat[4][4], const double v[3],
+                           double out[3])
 {
     double tmp[4] = {v[0], v[1], v[2], 0.0};
     double ret[4];
@@ -432,12 +444,12 @@ DEF void mat4_mul_vec3_dir(double mat[4][4], const double v[3], double out[3])
 }
 
 
-DEF void mat3_copy(double src[3][3], double out[3][3])
+DEF void mat3_copy(const double src[3][3], double out[3][3])
 {
     memcpy(out, src, 3 * 3 * sizeof(src[0][0]));
 }
 
-DEF void mat4_copy(double src[4][4], double out[4][4])
+DEF void mat4_copy(const double src[4][4], double out[4][4])
 {
     memcpy(out, src, 4 * 4 * sizeof(src[0][0]));
 }
@@ -456,14 +468,14 @@ DEF void mat4_perspective(double mat[4][4], double fovy, double aspect,
     mat4_copy(ret, mat);
 }
 
-DEF void mat3_to_float(double mat[3][3], float out[9])
+DEF void mat3_to_float(const double mat[3][3], float out[9])
 {
     int i, j;
     for (i = 0; i < 3; i++) for (j = 0; j < 3; j++)
         out[i * 3 + j] = mat[i][j];
 }
 
-DEF void mat3_to_float4(double mat[3][3], float out[16])
+DEF void mat3_to_float4(const double mat[3][3], float out[16])
 {
     int i, j;
     memset(out, 0, 16 * sizeof(float));
@@ -472,7 +484,7 @@ DEF void mat3_to_float4(double mat[3][3], float out[16])
         out[i * 4 + j] = mat[i][j];
 }
 
-DEF void mat4_to_float(double mat[4][4], float out[16])
+DEF void mat4_to_float(const double mat[4][4], float out[16])
 {
     int i, j;
     for (i = 0; i < 4; i++) for (j = 0; j < 4; j++)
@@ -492,7 +504,8 @@ DEF void mat4_set_identity(double mat[4][4])
     memcpy(mat, mat4_identity, sizeof(mat4_identity));
 }
 
-DEF void mat3_mul(double a[3][3], double b[3][3], double out[3][3])
+DEF void mat3_mul(const double a[3][3], const double b[3][3],
+                  double out[3][3])
 {
     int i, j, k;
     double ret[3][3] = {{0}};
@@ -506,7 +519,8 @@ DEF void mat3_mul(double a[3][3], double b[3][3], double out[3][3])
     mat3_copy(ret, out);
 }
 
-DEF void mat4_mul(double a[4][4], double b[4][4], double out[4][4])
+DEF void mat4_mul(const double a[4][4], const double b[4][4],
+                  double out[4][4])
 {
     int i, j, k;
     double ret[4][4] = {{0}};
@@ -520,7 +534,7 @@ DEF void mat4_mul(double a[4][4], double b[4][4], double out[4][4])
     mat4_copy(ret, out);
 }
 
-DEF void mat3_rx(double a, double mat[3][3], double out[3][3])
+DEF void mat3_rx(double a, const double mat[3][3], double out[3][3])
 {
     double tmp[3][3];
     double s = sin(a);
@@ -533,7 +547,7 @@ DEF void mat3_rx(double a, double mat[3][3], double out[3][3])
     mat3_mul(mat, tmp, out);
 }
 
-DEF void mat3_ry(double a, double mat[3][3], double out[3][3])
+DEF void mat3_ry(double a, const double mat[3][3], double out[3][3])
 {
     double tmp[3][3];
     double s = sin(a);
@@ -546,7 +560,7 @@ DEF void mat3_ry(double a, double mat[3][3], double out[3][3])
     mat3_mul(mat, tmp, out);
 }
 
-DEF void mat3_rz(double a, double mat[3][3], double out[3][3])
+DEF void mat3_rz(double a, const double mat[3][3], double out[3][3])
 {
     double tmp[3][3];
     double s = sin(a);
@@ -559,7 +573,7 @@ DEF void mat3_rz(double a, double mat[3][3], double out[3][3])
     mat3_mul(mat, tmp, out);
 }
 
-DEF void mat4_rx(double a, double mat[4][4], double out[4][4])
+DEF void mat4_rx(double a, const double mat[4][4], double out[4][4])
 {
     double tmp[4][4];
     double s = sin(a);
@@ -572,7 +586,7 @@ DEF void mat4_rx(double a, double mat[4][4], double out[4][4])
     mat4_mul(mat, tmp, out);
 }
 
-DEF void mat4_ry(double a, double mat[4][4], double out[4][4])
+DEF void mat4_ry(double a, const double mat[4][4], double out[4][4])
 {
     double tmp[4][4];
     double s = sin(a);
@@ -585,7 +599,7 @@ DEF void mat4_ry(double a, double mat[4][4], double out[4][4])
     mat4_mul(mat, tmp, out);
 }
 
-DEF void mat4_rz(double a, double mat[4][4], double out[4][4])
+DEF void mat4_rz(double a, const double mat[4][4], double out[4][4])
 {
     double tmp[4][4];
     double s = sin(a);
@@ -720,7 +734,7 @@ DEF bool mat4_invert(const double mat[4][4], double out[4][4])
     return true;
 }
 
-DEF void mat3_transpose(double mat[3][3], double out[3][3])
+DEF void mat3_transpose(const double mat[3][3], double out[3][3])
 {
     double tmp[3][3];
     int i, j;
