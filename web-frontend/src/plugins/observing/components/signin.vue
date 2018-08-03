@@ -123,9 +123,14 @@ export default {
   methods: {
     signIn: function () {
       var that = this
-      this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).then(function (res) {
-        if (res.code) {
-          that.signInErrorAlert = res.message
+      this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).catch(function (res) {
+        if (res.body.message) {
+          that.signInErrorAlert = res.body.message
+        } else if (res.body.errors) {
+          that.signInErrorAlert = ''
+          for (let k in res.body.errors) {
+            that.signInErrorAlert += k + ': ' + res.body.errors[k] + '\n'
+          }
         }
       })
     },

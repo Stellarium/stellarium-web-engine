@@ -77,7 +77,7 @@ const moduleStore = {
       }, function (error) {
         console.log('Signin Error: ' + JSON.stringify(error))
         commit('setLoginStatus', 'loggedOut')
-        return error.response
+        throw error.response
       })
     },
     signUp ({ dispatch, commit, state }, data) {
