@@ -75,12 +75,11 @@ const moduleStore = {
       }, function (error) {
         console.log('Signin Error: ' + JSON.stringify(error))
         commit('setLoginStatus', 'loggedOut')
-        throw error.response
+        throw error
       })
     },
     signUp ({ dispatch, commit, state }, data) {
       commit('setLoginStatus', 'signInInProgress')
-      console.log(data)
       return NoctuaSkyClient.register(data.email, data.password, data.firstName, data.lastName).then(function (res) {
         commit('setLoginStatus', 'loggedOut')
         console.log('SignUp done')

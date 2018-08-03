@@ -124,25 +124,27 @@ export default {
     signIn: function () {
       var that = this
       this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).catch(function (res) {
-        if (res.body.message) {
-          that.signInErrorAlert = res.body.message
-        } else if (res.body.errors) {
+        if (res.message) {
+          that.signInErrorAlert = res.message
+        } else if (res.errors) {
           that.signInErrorAlert = ''
-          for (let k in res.body.errors) {
-            that.signInErrorAlert += k + ': ' + res.body.errors[k] + '\n'
+          for (let k in res.errors) {
+            that.signInErrorAlert += k + ': ' + res.errors[k] + '\n'
           }
         }
       })
     },
     signUp: function () {
       var that = this
-      this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).catch(function (res) {
-        if (res.body.message) {
-          that.signUpErrorAlert = res.body.message
-        } else if (res.body.errors) {
+      this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).then(res => {
+        that.showSigninTab()
+      }).catch(function (res) {
+        if (res.message) {
+          that.signUpErrorAlert = res.message
+        } else if (res.errors) {
           that.signUpErrorAlert = ''
-          for (let k in res.body.errors) {
-            that.signUpErrorAlert += k + ': ' + res.body.errors[k] + '\n'
+          for (let k in res.errors) {
+            that.signUpErrorAlert += k + ': ' + res.errors[k] + '\n'
           }
         }
       })
