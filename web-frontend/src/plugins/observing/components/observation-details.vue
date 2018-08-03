@@ -286,7 +286,7 @@ export default {
       let expandedObservingSetup = nsh.fullEquipmentInstanceState(obs.observingSetup)
       let fp = expandedObservingSetup.footprint({ra: 0, de: 0})
       let fov = fp[2] * Math.PI / 180.0
-      this.$stel.core.lock = undefined
+      this.$stel.core.lock = 0
       this.$stel.core.lookat(azalt, 1.0, fov * 1.5)
       var shapeParams = {
         pos: [-azalt[0], -azalt[1], -azalt[2]],
