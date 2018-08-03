@@ -57,6 +57,7 @@
 
 import Moment from 'moment'
 import { swh } from '@/assets/sw_helpers.js'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data: function () {
@@ -239,8 +240,7 @@ export default {
         nsid = swh.nsidDecimalToHex(s)
       }
       if (nsid) {
-        swh.skySourceGet(nsid).then(results => {
-          var res = JSON.parse(JSON.stringify(results))
+        NoctuaSkyClient.skysources.get(nsid).then(res => {
           this.$store.commit('setSelectedObject', res)
         }, reason => {
           let obj = this.$stel.core.selection
@@ -273,9 +273,8 @@ export default {
       if (obj.type.v === 'MPl') {
         s = '(' + obj.id.replace(/^0+/, '') + ') ' + obj.name
       }
-      swh.skySourceSearch(s, 1, true).then(results => {
-        var res = JSON.parse(JSON.stringify(results))
-        if (results.length === 0) {
+      NoctuaSkyClient.skysources.query(s, 1, true).then(res => {
+        if (res.length === 0) {
           console.log("Couldn't find object in onlineDB: " + s)
           this.$store.commit('setSelectedObject', undefined)
           return

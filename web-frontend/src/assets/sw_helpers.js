@@ -525,27 +525,6 @@ export const swh = {
     return hex2dec.decToHex(nsidDecimal).substr(2)
   },
 
-  // Search in papi service
-  skySourceSearch: function (str, limit, exact = false) {
-    if (limit === undefined) {
-      limit = 10
-    }
-    str = str.toUpperCase()
-    str = str.replace(/\s+/g, '')
-    return axios.get('https://papi.noctuasky.org/skysource?q=' + str + '&limit=' + limit + (exact ? '&exact' : ''))
-      .then(response => {
-        return response.data
-      })
-  },
-
-  // Get data for a SkySource from its NSID in papi service
-  skySourceGet: function (nsid) {
-    return axios.get('https://papi.noctuasky.org/skysource/' + nsid)
-      .then(response => {
-        return response.data
-      })
-  },
-
   // Get data for a SkySource from wikipedia
   getSkySourceSummaryFromWikipedia: function (ss) {
     let title

@@ -26,6 +26,7 @@
 <script>
 import { swh } from '@/assets/sw_helpers.js'
 import _ from 'lodash'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data: function () {
@@ -71,14 +72,13 @@ export default {
         return
       }
       this.lastQuery = str
-      swh.skySourceSearch(str, 10).then(results => {
+      NoctuaSkyClient.skysources.query(str, 10).then(results => {
         if (str !== that.lastQuery) {
           console.log('Cancelled query: ' + str)
           return
         }
-        var res = JSON.parse(JSON.stringify(results))
-        that.autoCompleteChoices = res
-      })
+        that.autoCompleteChoices = results
+      }, err => { console.log(err) })
     }, 200),
     nameForSkySource: function (s) {
       let cn = swh.cleanupOneSkySourceName(s.match)
