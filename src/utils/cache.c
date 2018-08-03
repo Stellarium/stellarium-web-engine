@@ -50,16 +50,17 @@ static void cleanup(cache_t *cache)
 void cache_add(cache_t *cache, const void *key, int len, void *data,
                int cost, int (*delfunc)(void *data))
 {
-    item_t *item = calloc(1, sizeof(*item));
+    item_t *item;
     assert(len <= sizeof(item->key));
+    cache->size += cost;
+    if (cache->size >= cache->max_size) cleanup(cache);
+    item = calloc(1, sizeof(*item));
     memcpy(item->key, key, len);
     item->data = data;
     item->cost = cost;
     item->last_used = cache->clock++;
     item->delfunc = delfunc;
     HASH_ADD(hh, cache->items, key, len, item);
-    cache->size += cost;
-    if (cache->size >= cache->max_size) cleanup(cache);
 }
 
 void *cache_get(cache_t *cache, const void *key, int keylen)
