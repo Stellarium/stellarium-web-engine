@@ -6,8 +6,7 @@
 // The terms of the AGPL v3 license can be found in the main directory of this
 // repository.
 
-import NoctuaSkyClient from '../noctuasky-client'
-NoctuaSkyClient.init('http://localhost:8090')
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 var loadParseTable = function (commit, tableName) {
   return NoctuaSkyClient[tableName].query({page_size: 100}).then(function (results) {
