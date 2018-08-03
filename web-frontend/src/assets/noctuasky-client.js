@@ -45,7 +45,7 @@ const NoctuaSkyClient = {
           return clientApisSkysources.query({q: str, limit: limit, exact: exact}).then(res => {
             return res.body
           }, err => {
-            throw err.response
+            throw err.response.body
           })
         },
 
@@ -53,8 +53,8 @@ const NoctuaSkyClient = {
         get: function (nsid) {
           return clientApisSkysources.get({nsid: nsid}).then(res => {
             return res.body
-          }).catch(err => {
-            throw err.response
+          }, err => {
+            throw err.response.body
           })
         }
       }
@@ -84,7 +84,9 @@ const NoctuaSkyClient = {
       store.set('noctuasky_token', swaggerClient.authorizations.APIToken)
       delete that.currentUser.access_token
       console.log('NoctuaSky Login successful')
-      return {code: res.status, user: that.currentUser}
+      return res.body
+    }, err => {
+      throw err.response.body
     })
   },
   logout: function () {
@@ -95,7 +97,9 @@ const NoctuaSkyClient = {
   register: function (email, password, firstName, lastName) {
     return this.users.add({body: {email: email, password: password, first_name: firstName, last_name: lastName}}).then((res) => {
       console.log('NoctuaSky Register successful')
-      return res.response
+      return res.body
+    }, err => {
+      throw err.response.body
     })
   }
 }
