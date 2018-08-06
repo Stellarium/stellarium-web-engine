@@ -72,6 +72,7 @@ typedef struct buffer_t {
 
 enum {
     ITEM_LINES = 1,
+    ITEM_POINTS,
 };
 
 typedef struct item item_t;
@@ -90,6 +91,10 @@ struct item
             double width;
             double stripes;
         } lines;
+
+        struct {
+            double smooth;
+        } points;
     };
 
     item_t *next, *prev;
@@ -100,6 +105,13 @@ typedef struct {
     float tex_pos[2]    __attribute__((aligned(4)));
     uint8_t color[4]    __attribute__((aligned(4)));
 } lines_buf_t;
+
+typedef struct {
+    float pos[4]        __attribute__((aligned(4)));
+    float tex_pos[2]    __attribute__((aligned(4)));
+    float shift[2]      __attribute__((aligned(4)));
+    uint8_t color[4]    __attribute__((aligned(4)));
+} points_buf_t;
 
 typedef struct renderer_gl {
     renderer_t  rend;
@@ -214,6 +226,8 @@ static void finish(renderer_t *rend_)
     rend_flush(rend);
 }
 
+static item_t *get_item(renderer_gl_t *rend, int type, int nb);
+
 static void points(renderer_t *rend_,
                    const painter_t *painter,
                    int frame,
@@ -221,34 +235,45 @@ static void points(renderer_t *rend_,
                    const point_t *points)
 {
     renderer_gl_t *rend = (void*)rend_;
-    int i, j;
-    point_vertex_gl_t (*quads)[4];
+    item_t *item;
+    points_buf_t *buf;
     uint16_t *indices;
-    point_t p;
-    buffer_t *buffer = NULL;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
     const double *s = painter->proj->scaling;
+    int i, j, idx, ofs;
+    point_t p;
 
-    quads = calloc(n, sizeof(*quads));
-    indices = calloc(n * 6, sizeof(*indices));
-    buffer = calloc(1, sizeof(*buffer));
-    buffer->nb_vertices = n * 4;
+    if (!(item = get_item(rend, ITEM_POINTS, n * 6))) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_POINTS;
+        item->capacity = 1024 * 6;
+        item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
+        item->indices = calloc(item->capacity, sizeof(*indices));
+        vec4_copy(painter->color, item->color);
+        item->points.smooth = painter->points_smoothness;
+        DL_APPEND(rend->items, item);
+    }
+
+    buf = item->buf + item->buf_size;
+    indices = item->indices + item->nb;
+    ofs = item->buf_size / sizeof(*buf);
+
     for (i = 0; i < n; i++) {
         p = points[i];
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p.pos, p.pos);
         project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
         for (j = 0; j < 4; j++) {
-            quads[i][j].pos[3] = 1;
-            vec3_to_float(p.pos, quads[i][j].pos);
-            quads[i][j].shift[0] = (j % 2 - 0.5) * 2 * tan(p.size / 2) / s[0];
-            quads[i][j].shift[1] = (j / 2 - 0.5) * 2 * tan(p.size / 2) / s[1];
-
-            quads[i][j].tex_pos[0] = j % 2;
-            quads[i][j].tex_pos[1] = j / 2;
-            quads[i][j].color[0] = p.color[0] * 255;
-            quads[i][j].color[1] = p.color[1] * 255;
-            quads[i][j].color[2] = p.color[2] * 255;
-            quads[i][j].color[3] = p.color[3] * 255;
+            idx = i * 4 + j;
+            buf[idx].pos[3] = 1;
+            vec3_to_float(p.pos, buf[i * 4 + j].pos);
+            buf[idx].shift[0] = (j % 2 - 0.5) * 2 * tan(p.size / 2) / s[0];
+            buf[idx].shift[1] = (j / 2 - 0.5) * 2 * tan(p.size / 2) / s[1];
+            buf[idx].tex_pos[0] = j % 2;
+            buf[idx].tex_pos[1] = j / 2;
+            buf[idx].color[0] = p.color[0] * 255;
+            buf[idx].color[1] = p.color[1] * 255;
+            buf[idx].color[2] = p.color[2] * 255;
+            buf[idx].color[3] = p.color[3] * 255;
         }
         // Add the point int the global list of rendered points.
         // XXX: could be done in the painter.
@@ -261,34 +286,12 @@ static void points(renderer_t *rend_,
     }
     for (i = 0; i < n; i++) {
         for (j = 0; j < 6; j++) {
-            indices[i * 6 + j] = INDICES[j] + i * 4;
+            indices[i * 6 + j] = ofs + INDICES[j] + i * 4;
         }
     }
-    buffer->mode = GL_TRIANGLES;
-    buffer->offset = sizeof(**quads);
-    buffer->offset_pos = offsetof(typeof(**quads), pos);
-    buffer->offset_tex_pos = offsetof(typeof(**quads), tex_pos);
-    buffer->offset_color = offsetof(typeof(**quads), color);
-    buffer->offset_shift = offsetof(typeof(**quads), shift);
 
-    GL(glGenBuffers(1, &buffer->array_buffer));
-    GL(glGenBuffers(1, &buffer->index_buffer));
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buffer->array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, n * sizeof(*quads), quads,
-                    GL_DYNAMIC_DRAW));
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->index_buffer));
-
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, n * 6 * sizeof(*indices),
-                    indices, GL_DYNAMIC_DRAW));
-    free(quads);
-    free(indices);
-
-    render_buffer(rend, buffer, 6 * n, &rend->progs.points,
-                  &(render_buffer_args_t) {
-                      .color = painter->color,
-                      .smooth = painter->points_smoothness,
-                  });
-    render_free_buffer(buffer);
+    item->buf_size += n * 4 * sizeof(points_buf_t);
+    item->nb += n * 6;
 }
 
 static void compute_tangent(const double uv[2], const projection_t *tex_proj,
@@ -564,6 +567,73 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     texture2(rend, tex, uv, verts, color);
 }
 
+static void item_points_render(renderer_gl_t *rend, const item_t *item)
+{
+    prog_t *prog;
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+
+    prog = &rend->progs.points;
+    GL(glUseProgram(prog->prog));
+
+    GL(glEnable(GL_CULL_FACE));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                           GL_ZERO, GL_ONE));
+    GL(glDisable(GL_DEPTH_TEST));
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->nb * sizeof(*item->indices),
+                    item->indices, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
+                    GL_DYNAMIC_DRAW));
+
+    GL(glUniform4f(prog->u_color_l, item->color[0],
+                                    item->color[1],
+                                    item->color[2],
+                                    item->color[3]));
+    GL(glUniform1f(prog->u_smooth_l, item->points.smooth));
+
+    GL(glEnableVertexAttribArray(prog->a_pos_l));
+    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
+                    sizeof(points_buf_t),
+                    (void*)(long)offsetof(points_buf_t, pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+                    sizeof(points_buf_t),
+                    (void*)(long)offsetof(points_buf_t, tex_pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_color_l));
+    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+                    sizeof(points_buf_t),
+                    (void*)(long)offsetof(points_buf_t, color)));
+
+    GL(glEnableVertexAttribArray(prog->a_shift_l));
+    GL(glVertexAttribPointer(prog->a_shift_l, 2, GL_FLOAT, false,
+                    sizeof(points_buf_t),
+                    (void*)(long)offsetof(points_buf_t, shift)));
+
+    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
+
+    GL(glDisableVertexAttribArray(prog->a_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_color_l));
+    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_shift_l));
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
+
 static void item_lines_render(renderer_gl_t *rend, const item_t *item)
 {
     prog_t *prog;
@@ -631,6 +701,7 @@ static void rend_flush(renderer_gl_t *rend)
     item_t *item, *tmp;
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
+        if (item->type == ITEM_POINTS) item_points_render(rend, item);
         DL_DELETE(rend->items, item);
         free(item->indices);
         free(item->buf);
