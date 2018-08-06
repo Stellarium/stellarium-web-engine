@@ -73,6 +73,7 @@ typedef struct buffer_t {
 enum {
     ITEM_LINES = 1,
     ITEM_POINTS,
+    ITEM_TEXTURE,
 };
 
 typedef struct item item_t;
@@ -85,6 +86,7 @@ struct item
     int         buf_size;
     int         nb;
     int         capacity;
+    const texture_t *tex;
 
     union {
         struct {
@@ -112,6 +114,12 @@ typedef struct {
     float shift[2]      __attribute__((aligned(4)));
     uint8_t color[4]    __attribute__((aligned(4)));
 } points_buf_t;
+
+typedef struct {
+    float pos[2]        __attribute__((aligned(4)));
+    float tex_pos[2]    __attribute__((aligned(4)));
+    uint8_t color[4]    __attribute__((aligned(4)));
+} texture_buf_t;
 
 typedef struct renderer_gl {
     renderer_t  rend;
@@ -454,46 +462,45 @@ static void texture2(renderer_gl_t *rend, const texture_t *tex,
                      double uv[4][2], double pos[4][2],
                      const double color[4])
 {
-    int i;
-    vertex_gl_t quad[4];
-    buffer_t *buffer;
+    int i, ofs;
+    item_t *item;
+    texture_buf_t *buf;
+    uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
 
-    buffer = calloc(1, sizeof(*buffer));
-    buffer->nb_vertices = 4;
-
-    for (i = 0; i < 4; i++) {
-        vec2_to_float(pos[i], quad[i].pos);
-        quad[i].pos[2] = 0;
-        quad[i].pos[3] = 1;
-        vec2_to_float(uv[i], quad[i].tex_pos);
-        quad[i].color[0] = 255;
-        quad[i].color[1] = 255;
-        quad[i].color[2] = 255;
-        quad[i].color[3] = 255;
+    if (!(item = get_item(rend, ITEM_TEXTURE, 6))) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_TEXTURE;
+        item->capacity = 6;
+        item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
+        item->indices = calloc(item->capacity, sizeof(*indices));
+        item->tex = tex;
+        vec4_copy(color, item->color);
+        DL_APPEND(rend->items, item);
     }
 
-    buffer->mode = GL_TRIANGLES;
-    buffer->offset = sizeof(vertex_gl_t);
-    buffer->offset_pos = offsetof(vertex_gl_t, pos);
-    buffer->offset_tex_pos = offsetof(vertex_gl_t, tex_pos);
-    buffer->offset_color = offsetof(vertex_gl_t, color);
+    buf = item->buf + item->buf_size;
+    indices = item->indices + item->nb;
+    ofs = item->buf_size / sizeof(*buf);
 
-    GL(glGenBuffers(1, &buffer->array_buffer));
-    GL(glGenBuffers(1, &buffer->index_buffer));
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buffer->array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_DYNAMIC_DRAW));
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->index_buffer));
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(INDICES), INDICES,
-                    GL_DYNAMIC_DRAW));
+    for (i = 0; i < 4; i++) {
+        vec2_to_float(pos[i], buf[i].pos);
+        vec2_to_float(uv[i], buf[i].tex_pos);
+        buf[i].color[0] = 255;
+        buf[i].color[1] = 255;
+        buf[i].color[2] = 255;
+        buf[i].color[3] = 255;
+    }
+    for (i = 0; i < 6; i++) {
+        indices[i] = ofs + INDICES[i];
+    }
 
-    render_buffer(rend, buffer, 6,
-                  &rend->progs.blit_tag,
-                  &(render_buffer_args_t) {
-                      .color = color,
-                      .tex = tex,
-                  });
-    render_free_buffer(buffer);
+    item->buf_size += 4 * sizeof(texture_buf_t);
+    item->nb += 6;
+
+    // Since for the moment textures are not created on the fly, we have
+    // to render them immediately.
+    rend_flush(rend);
 }
 
 static void texture(renderer_t *rend_,
@@ -691,6 +698,68 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+static void item_texture_render(renderer_gl_t *rend, const item_t *item)
+{
+    prog_t *prog;
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+
+    prog = &rend->progs.blit_tag;
+    GL(glUseProgram(prog->prog));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
+    GL(glEnable(GL_CULL_FACE));
+
+    if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
+        GL(glDisable(GL_BLEND));
+    } else {
+        GL(glEnable(GL_BLEND));
+        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                               GL_ZERO, GL_ONE));
+    }
+    GL(glDisable(GL_DEPTH_TEST));
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->nb * sizeof(*item->indices),
+                    item->indices, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
+                    GL_DYNAMIC_DRAW));
+
+    GL(glUniform4f(prog->u_color_l, item->color[0],
+                                    item->color[1],
+                                    item->color[2],
+                                    item->color[3]));
+
+    GL(glEnableVertexAttribArray(prog->a_pos_l));
+    GL(glVertexAttribPointer(prog->a_pos_l, 2, GL_FLOAT, false,
+                    sizeof(texture_buf_t),
+                    (void*)(long)offsetof(texture_buf_t, pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+                    sizeof(texture_buf_t),
+                    (void*)(long)offsetof(texture_buf_t, tex_pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_color_l));
+    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+                    sizeof(texture_buf_t),
+                    (void*)(long)offsetof(texture_buf_t, color)));
+
+    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
+
+    GL(glDisableVertexAttribArray(prog->a_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_color_l));
+    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
 
 static void rend_flush(renderer_gl_t *rend)
 {
@@ -698,6 +767,7 @@ static void rend_flush(renderer_gl_t *rend)
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
+        if (item->type == ITEM_TEXTURE) item_texture_render(rend, item);
         DL_DELETE(rend->items, item);
         free(item->indices);
         free(item->buf);
