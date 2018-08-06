@@ -88,6 +88,7 @@ struct item
     int         nb;
     int         capacity;
     const texture_t *tex;
+    int         flags;
 
     union {
         struct {
@@ -492,6 +493,7 @@ static void quad(renderer_t          *rend_,
     item->indices = calloc(item->capacity, sizeof(*indices));
     item->tex = tex;
     vec4_copy(painter->color, item->color);
+    item->flags = painter->flags;
 
     vec2_sub(uv[1], uv[0], duvx);
     vec2_sub(uv[2], uv[0], duvy);
@@ -855,6 +857,19 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
                                GL_ZERO, GL_ONE));
     }
     GL(glDisable(GL_DEPTH_TEST));
+
+    if (item->flags & PAINTER_ADD) {
+        GL(glEnable(GL_BLEND));
+        if (color_is_white(item->color))
+            GL(glBlendFunc(GL_ONE, GL_ONE));
+        else {
+            GL(glBlendFunc(GL_CONSTANT_COLOR, GL_ONE));
+            GL(glBlendColor(item->color[0] * item->color[3],
+                            item->color[1] * item->color[3],
+                            item->color[2] * item->color[3],
+                            item->color[3]));
+        }
+    }
 
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
