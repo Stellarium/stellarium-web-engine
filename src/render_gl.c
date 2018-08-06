@@ -577,10 +577,6 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     GL(glUseProgram(prog->prog));
 
     GL(glEnable(GL_CULL_FACE));
-
-    GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
-
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                            GL_ZERO, GL_ONE));
