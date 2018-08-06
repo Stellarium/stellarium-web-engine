@@ -401,8 +401,10 @@ static int on_file_tile_loaded(int version, int order, int pix,
     tile_t *tile;
 
     assert(size % (4 * 10) == 0);
-    tile = cache_get(stars->tiles, &pos, sizeof(pos));
-    assert(!tile);
+    if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
+        LOG_W("Trying to load a tile already present!");
+        return -1;
+    }
     nb = size / (4 * 10);
 
     tile = calloc(1, sizeof(*tile));
@@ -439,7 +441,10 @@ static int on_gaia_tile_loaded(int version, int order, int pix,
     tile_t *tile;
 
     assert(size % 32 == 0);
-    tile = cache_get(stars->tiles, &pos, sizeof(pos));
+    if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
+        LOG_W("Trying to load a tile already present!");
+        return -1;
+    }
     assert(!tile);
 
     tile = calloc(1, sizeof(*tile));
