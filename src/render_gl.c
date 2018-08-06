@@ -75,6 +75,7 @@ enum {
     ITEM_POINTS,
     ITEM_ALPHA_TEXTURE,
     ITEM_TEXTURE,
+    ITEM_PLANET,
 };
 
 typedef struct item item_t;
@@ -99,6 +100,18 @@ struct item
         struct {
             double smooth;
         } points;
+
+        struct {
+            double contrast;
+            const texture_t *normalmap;
+            texture_t *shadow_color_tex;
+            double mv[4][4];
+            double sun[4]; // pos + radius.
+            double light_emit[3];
+            int    shadow_spheres_nb;
+            double shadow_spheres[4][4]; // (pos + radius) * 4
+            int    material;
+        } planet;
     };
 
     item_t *next, *prev;
@@ -122,6 +135,15 @@ typedef struct {
     float tex_pos[2]    __attribute__((aligned(4)));
     uint8_t color[4]    __attribute__((aligned(4)));
 } texture_buf_t;
+
+typedef struct {
+    float   pos[4]      __attribute__((aligned(4)));
+    float   mpos[4]     __attribute__((aligned(4)));
+    float   tex_pos[2]  __attribute__((aligned(4)));
+    uint8_t color[4]    __attribute__((aligned(4)));
+    float   normal[3]   __attribute__((aligned(4)));
+    float   tangent[3]  __attribute__((aligned(4)));
+} planet_buf_t;
 
 typedef struct renderer_gl {
     renderer_t  rend;
@@ -164,11 +186,6 @@ typedef struct render_buffer_args {
 } render_buffer_args_t;
 
 
-static void render_buffer(renderer_gl_t *rend,
-                          const buffer_t *buff, int n,
-                          const prog_t *prog,
-                          const render_buffer_args_t *args);
-
 static void init_prog(prog_t *prog, const char *vert, const char *frag,
                       const char *include);
 
@@ -194,14 +211,6 @@ typedef struct {
 static bool color_is_white(const double c[4])
 {
     return c[0] == 1.0 && c[1] == 1.0 && c[2] == 1.0 && c[3] == 1.0;
-}
-
-static void render_free_buffer(void *ptr)
-{
-    buffer_t *buffer = ptr;
-    GL(glDeleteBuffers(1, &buffer->array_buffer));
-    GL(glDeleteBuffers(1, &buffer->index_buffer));
-    free(ptr);
 }
 
 static void prepare(renderer_t *rend_, int w, int h)
@@ -346,54 +355,85 @@ static void quad_planet(
                  const projection_t  *tex_proj)
 {
     renderer_gl_t *rend = (void*)rend_;
+    item_t *item;
+    planet_buf_t *buf;
     int n, i, j, k;
-    double duvx[2], duvy[2], mv[4][4];
-    buffer_t *buffer;
-    vertex_gl_t *grid;
+    double duvx[2], duvy[2];
     uint16_t *indices;
     double p[4], normal[4] = {0}, tangent[4] = {0}, z;
     const double *depth_range = (const double*)painter->depth_range;
-    const prog_t *prog;
 
     // Positions of the triangles in the quads.
     const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
                                 {1, 1}, {1, 0}, {0, 1} };
 
-    prog = &rend->progs.planet;
     tex = tex ?: rend->white_tex;
-    buffer = calloc(1, sizeof(*buffer));
     n = grid_size + 1;
-    buffer->nb_vertices = n * n;
-    grid = calloc(n * n, sizeof(*grid));
-    indices = calloc(grid_size * grid_size * 6, sizeof(*indices));
+
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_PLANET;
+    item->capacity = n * n * 6;
+    item->buf = calloc(n * n, sizeof(*buf));
+    item->indices = calloc(item->capacity, sizeof(*indices));
+    item->tex = tex;
+    vec4_copy(painter->color, item->color);
+    item->flags = painter->flags;
+    item->planet.normalmap = normalmap;
+    item->planet.shadow_color_tex = painter->shadow_color_tex;
+    item->planet.contrast = painter->contrast;
+    item->planet.shadow_spheres_nb = painter->shadow_spheres_nb;
+    if (painter->shadow_spheres_nb)
+        memcpy(item->planet.shadow_spheres, painter->shadow_spheres,
+               painter->shadow_spheres_nb * sizeof(*painter->shadow_spheres));
+    vec4_copy(*painter->sun, item->planet.sun);
+    if (painter->light_emit)
+        vec3_copy(*painter->light_emit, item->planet.light_emit);
+
+    // Compute modelview matrix.
+    mat4_set_identity(item->planet.mv);
+    if (frame == FRAME_OBSERVED)
+        mat4_mul(item->planet.mv, painter->obs->ro2v, item->planet.mv);
+    if (frame == FRAME_ICRS)
+        mat4_mul(item->planet.mv, painter->obs->ri2v, item->planet.mv);
+    mat4_mul(item->planet.mv, *painter->transform, item->planet.mv);
+
+    // Set material
+    if (painter->light_emit)
+        item->planet.material = 1; // Generic
+    else
+        item->planet.material = 0; // Oren Nayar
+    if (painter->flags & PAINTER_RING_SHADER)
+        item->planet.material = 2; // Ring
+
     vec2_sub(uv[1], uv[0], duvx);
     vec2_sub(uv[2], uv[0], duvy);
+    buf = item->buf;
+    indices = item->indices;
 
-    for (i = 0; i < n; i++) for (j = 0; j < n; j++) {
+    for (i = 0; i < n; i++)
+    for (j = 0; j < n; j++) {
         vec4_set(p, uv[0][0], uv[0][1], 0, 1);
         vec2_addk(p, duvx, (double)j / grid_size, p);
         vec2_addk(p, duvy, (double)i / grid_size, p);
-        grid[i * n + j].tex_pos[0] = p[0] * tex->w / tex->tex_w;
-        grid[i * n + j].tex_pos[1] = p[1] * tex->h / tex->tex_h;
+        buf[i * n + j].tex_pos[0] = p[0] * tex->w / tex->tex_w;
+        buf[i * n + j].tex_pos[1] = p[1] * tex->h / tex->tex_h;
 
         if (normalmap) {
             compute_tangent(p, tex_proj, tangent);
             mat4_mul_vec4(*painter->transform, tangent, tangent);
-            vec3_to_float(tangent, grid[i * n + j].tangent);
+            vec3_to_float(tangent, buf[i * n + j].tangent);
         }
 
         if (tex->flags & TF_FLIPPED)
-            grid[i * n + j].tex_pos[1] = 1.0 - grid[i * n + j].tex_pos[1];
+            buf[i * n + j].tex_pos[1] = 1.0 - buf[i * n + j].tex_pos[1];
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
 
-        if (prog->a_normal_l != -1) {
-            vec3_copy(p, normal);
-            mat4_mul_vec4(*painter->transform, normal, normal);
-            vec3_to_float(normal, grid[i * n + j].normal);
-        }
+        vec3_copy(p, normal);
+        mat4_mul_vec4(*painter->transform, normal, normal);
+        vec3_to_float(normal, buf[i * n + j].normal);
 
         mat4_mul_vec4(*painter->transform, p, p);
-        vec4_to_float(p, grid[i * n + j].mpos);
+        vec4_to_float(p, buf[i * n + j].mpos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
         z = p[2];
         project(painter->proj, 0, 4, p, p);
@@ -402,62 +442,26 @@ static void quad_planet(
         if (depth_range) {
             p[2] = (-z - depth_range[0]) / (depth_range[1] - depth_range[0]);
         }
-        vec4_to_float(p, grid[i * n + j].pos);
-        memcpy(grid[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
+        vec4_to_float(p, buf[i * n + j].pos);
+        memcpy(buf[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
     }
 
-    for (i = 0; i < grid_size; i++) for (j = 0; j < grid_size; j++) {
+    for (i = 0; i < grid_size; i++)
+    for (j = 0; j < grid_size; j++) {
         for (k = 0; k < 6; k++) {
             indices[(i * grid_size + j) * 6 + k] =
                 (INDICES[k][1] + i) * n + (INDICES[k][0] + j);
         }
     }
 
-    buffer->mode = GL_TRIANGLES;
-    buffer->offset = sizeof(vertex_gl_t);
-    buffer->offset_pos = offsetof(vertex_gl_t, pos);
-    buffer->offset_mpos = offsetof(vertex_gl_t, mpos);
-    buffer->offset_tex_pos = offsetof(vertex_gl_t, tex_pos);
-    buffer->offset_color = offsetof(vertex_gl_t, color);
-    buffer->offset_normal = offsetof(vertex_gl_t, normal);
-    buffer->offset_tangent = offsetof(vertex_gl_t, tangent);
+    item->buf_size += n * n * sizeof(*buf);
+    item->nb += grid_size * grid_size * 6;
 
-    GL(glGenBuffers(1, &buffer->array_buffer));
-    GL(glGenBuffers(1, &buffer->index_buffer));
+    DL_APPEND(rend->items, item);
 
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buffer->array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, n * n * sizeof(*grid), grid,
-                    GL_STATIC_DRAW));
-
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->index_buffer));
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    grid_size * grid_size * 6 * sizeof(*indices), indices,
-                    GL_STATIC_DRAW));
-    free(grid);
-    free(indices);
-
-    // Compute modelview matrix.
-    mat4_set_identity(mv);
-    if (frame == FRAME_OBSERVED) mat4_mul(mv, painter->obs->ro2v, mv);
-    if (frame == FRAME_ICRS) mat4_mul(mv, painter->obs->ri2v, mv);
-    mat4_mul(mv, *painter->transform, mv);
-
-    render_buffer(rend, buffer, grid_size * grid_size * 6, prog,
-                  &(render_buffer_args_t) {
-                      .color = painter->color,
-                      .contrast = painter->contrast,
-                      .tex = tex,
-                      .normalmap = normalmap,
-                      .shadow_color_tex = painter->shadow_color_tex,
-                      .mv = &mv,
-                      .sun = (double*)painter->sun,
-                      .light_emit = (double*)painter->light_emit,
-                      .depth_range = painter->depth_range,
-                      .shadow_spheres_nb = painter->shadow_spheres_nb,
-                      .shadow_spheres = painter->shadow_spheres,
-                      .flags = painter->flags
-                  });
-    render_free_buffer(buffer);
+    // Since for the moment textures are not created on the fly, we have
+    // to render them immediately.
+    rend_flush(rend);
 }
 
 static void quad(renderer_t          *rend_,
@@ -912,6 +916,127 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+static void item_planet_render(renderer_gl_t *rend, const item_t *item)
+{
+    prog_t *prog;
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+    float mf[16];
+
+    prog = &rend->progs.planet;
+    GL(glUseProgram(prog->prog));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
+
+    GL(glActiveTexture(GL_TEXTURE1));
+    if (item->planet.normalmap) {
+        GL(glBindTexture(GL_TEXTURE_2D, item->planet.normalmap->id));
+        GL(glUniform1i(prog->u_has_normal_tex_l, 1));
+    } else {
+        GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+        GL(glUniform1i(prog->u_has_normal_tex_l, 0));
+    }
+
+    GL(glActiveTexture(GL_TEXTURE2));
+    if (item->planet.shadow_color_tex &&
+            texture_load(item->planet.shadow_color_tex, NULL))
+        GL(glBindTexture(GL_TEXTURE_2D, item->planet.shadow_color_tex->id));
+    else
+        GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+
+    if (item->flags & PAINTER_RING_SHADER)
+        GL(glDisable(GL_CULL_FACE));
+    else
+        GL(glEnable(GL_CULL_FACE));
+
+    if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
+        GL(glDisable(GL_BLEND));
+    } else {
+        GL(glEnable(GL_BLEND));
+        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                               GL_ZERO, GL_ONE));
+    }
+    GL(glDisable(GL_DEPTH_TEST));
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->nb * sizeof(*item->indices),
+                    item->indices, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
+                    GL_DYNAMIC_DRAW));
+
+    // Set all uniforms.
+    GL(glUniform4f(prog->u_color_l, item->color[0],
+                                    item->color[1],
+                                    item->color[2],
+                                    item->color[3]));
+    GL(glUniform1f(prog->u_contrast_l, item->planet.contrast));
+    GL(glUniform4f(prog->u_sun_l, item->planet.sun[0],
+                                  item->planet.sun[1],
+                                  item->planet.sun[2],
+                                  item->planet.sun[3]));
+    GL(glUniform3f(prog->u_light_emit_l,
+                   item->planet.light_emit[0],
+                   item->planet.light_emit[1],
+                   item->planet.light_emit[2]));
+    GL(glUniform1i(prog->u_material_l, item->planet.material));
+    GL(glUniform1i(prog->u_is_moon_l, item->flags & PAINTER_IS_MOON ? 1 : 0));
+    mat4_to_float(item->planet.mv, mf);
+    GL(glUniformMatrix4fv(prog->u_mv_l, 1, 0, mf));
+    GL(glUniform1i(prog->u_shadow_spheres_nb_l,
+                   item->planet.shadow_spheres_nb));
+    mat4_to_float(item->planet.shadow_spheres, mf);
+    GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0, mf));
+
+    // Set array positions.
+    GL(glEnableVertexAttribArray(prog->a_pos_l));
+    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
+                    sizeof(planet_buf_t),
+                    (void*)(long)offsetof(planet_buf_t, pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_mpos_l));
+    GL(glVertexAttribPointer(prog->a_mpos_l, 4, GL_FLOAT, false,
+                    sizeof(planet_buf_t),
+                    (void*)(long)offsetof(planet_buf_t, mpos)));
+
+    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+                    sizeof(planet_buf_t),
+                    (void*)(long)offsetof(planet_buf_t, tex_pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_color_l));
+    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+                    sizeof(planet_buf_t),
+                    (void*)(long)offsetof(planet_buf_t, color)));
+
+    GL(glEnableVertexAttribArray(prog->a_normal_l));
+    GL(glVertexAttribPointer(prog->a_normal_l, 3, GL_FLOAT, false,
+                    sizeof(planet_buf_t),
+                    (void*)(long)offsetof(planet_buf_t, normal)));
+
+    GL(glEnableVertexAttribArray(prog->a_tangent_l));
+    GL(glVertexAttribPointer(prog->a_tangent_l, 3, GL_FLOAT, false,
+                    sizeof(planet_buf_t),
+                    (void*)(long)offsetof(planet_buf_t, tangent)));
+
+    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
+
+    GL(glDisableVertexAttribArray(prog->a_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_mpos_l));
+    GL(glDisableVertexAttribArray(prog->a_color_l));
+    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_normal_l));
+    GL(glDisableVertexAttribArray(prog->a_tangent_l));
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
+
 static void rend_flush(renderer_gl_t *rend)
 {
     item_t *item, *tmp;
@@ -922,6 +1047,7 @@ static void rend_flush(renderer_gl_t *rend)
             item_alpha_texture_render(rend, item);
         if (item->type == ITEM_TEXTURE)
             item_texture_render(rend, item);
+        if (item->type == ITEM_PLANET) item_planet_render(rend, item);
         DL_DELETE(rend->items, item);
         free(item->indices);
         free(item->buf);
@@ -996,179 +1122,6 @@ static void line(renderer_t           *rend_,
     }
     item->buf_size += (nb_segs + 1) * sizeof(lines_buf_t);
     item->nb += nb_segs * 2;
-}
-
-static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
-                          const prog_t *prog,
-                          const render_buffer_args_t *args)
-{
-    float mf[16];
-    const double white[4] = {1, 1, 1, 1};
-    const double *color = args->color ?: white;
-    const double *sun = args->sun;
-    const double *light_emit = args->light_emit;
-
-    if (args->tex) {
-        GL(glActiveTexture(GL_TEXTURE0));
-        GL(glBindTexture(GL_TEXTURE_2D, args->tex->id));
-        switch (args->tex->format) {
-        case GL_RGB:
-            if (color[3] == 1.0 && !args->stripes) {
-                GL(glDisable(GL_BLEND));
-            } else {
-                GL(glEnable(GL_BLEND));
-                GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                                       GL_ZERO, GL_ONE));
-            }
-            break;
-        case GL_LUMINANCE:
-        case GL_RGBA:
-        case GL_LUMINANCE_ALPHA:
-        case GL_ALPHA:
-            GL(glEnable(GL_BLEND));
-            GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                                   GL_ZERO, GL_ONE));
-            break;
-        default:
-            assert(false);
-            break;
-        }
-    } else {
-        GL(glEnable(GL_BLEND));
-        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                               GL_ZERO, GL_ONE));
-    }
-    if (args->depth_range) {
-        GL(glEnable(GL_DEPTH_TEST));
-    } else {
-        GL(glDisable(GL_DEPTH_TEST));
-    }
-
-    if (args->flags & PAINTER_ADD) {
-        GL(glEnable(GL_BLEND));
-        if (color_is_white(color))
-            GL(glBlendFunc(GL_ONE, GL_ONE));
-        else {
-            GL(glBlendFunc(GL_CONSTANT_COLOR, GL_ONE));
-            GL(glBlendColor(color[0] * color[3],
-                            color[1] * color[3],
-                            color[2] * color[3], color[3]));
-        }
-    }
-
-    if (args->flags & PAINTER_RING_SHADER)
-        GL(glDisable(GL_CULL_FACE));
-    else
-        GL(glEnable(GL_CULL_FACE));
-
-    GL(glUseProgram(prog->prog));
-
-    GL(glActiveTexture(GL_TEXTURE1));
-    if (args->normalmap) {
-        GL(glBindTexture(GL_TEXTURE_2D, args->normalmap->id));
-        GL(glUniform1i(prog->u_has_normal_tex_l, 1));
-    } else {
-        GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
-        GL(glUniform1i(prog->u_has_normal_tex_l, 0));
-    }
-
-    GL(glActiveTexture(GL_TEXTURE2));
-    if (args->shadow_color_tex && texture_load(args->shadow_color_tex, NULL))
-        GL(glBindTexture(GL_TEXTURE_2D, args->shadow_color_tex->id));
-    else
-        GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
-
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buff->array_buffer));
-    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
-                    buff->offset, (void*)(long)buff->offset_pos));
-
-    GL(glUniform1f(prog->u_smooth_l, args->smooth));
-    GL(glUniform1f(prog->u_contrast_l, args->contrast));
-    GL(glUniform4f(prog->u_color_l, color[0], color[1], color[2], color[3]));
-    if (sun) {
-        GL(glUniform4f(prog->u_sun_l, sun[0], sun[1], sun[2], sun[3]));
-    }
-    // For the moment we automatically assign generic diffuse material (1) to
-    // light emiting surfaces, and Oren Nayar (0) to the other.
-    // This only affect planets shader.
-    // XXX: cleanup this!
-    if (light_emit) {
-        GL(glUniform3f(prog->u_light_emit_l,
-                       light_emit[0], light_emit[1], light_emit[2]));
-        GL(glUniform1i(prog->u_material_l, 1));
-    } else {
-        GL(glUniform3f(prog->u_light_emit_l, 0, 0, 0));
-        GL(glUniform1i(prog->u_material_l, 0));
-    }
-    if (args->flags & PAINTER_RING_SHADER)
-        GL(glUniform1i(prog->u_material_l, 2));
-
-    GL(glUniform1f(prog->u_shadow_brightness_l, args->shadow_brightness));
-    GL(glUniform1i(prog->u_is_moon_l, args->flags & PAINTER_IS_MOON ? 1 : 0));
-
-    if (args->mv && prog->u_mv_l != -1) {
-        mat4_to_float(*args->mv, mf);
-        GL(glUniformMatrix4fv(prog->u_mv_l, 1, 0, mf));
-    }
-    if (prog->u_stripes_l != -1)
-        GL(glUniform1f(prog->u_stripes_l, args->stripes));
-
-    if (prog->u_shadow_spheres_nb_l != -1)
-        GL(glUniform1i(prog->u_shadow_spheres_nb_l, args->shadow_spheres_nb));
-    if (args->shadow_spheres && prog->u_shadow_spheres_l != -1) {
-        mat4_to_float(args->shadow_spheres, mf);
-        GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0, mf));
-    }
-
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buff->array_buffer));
-
-    GL(glEnableVertexAttribArray(prog->a_pos_l));
-    if (prog->a_tex_pos_l != -1) {
-        GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
-               buff->offset, (void*)(long)buff->offset_tex_pos));
-        GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
-    }
-    if (prog->a_color_l != -1) {
-        GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
-                buff->offset, (void*)(long)buff->offset_color));
-        GL(glEnableVertexAttribArray(prog->a_color_l));
-    }
-    if (prog->a_shift_l != -1) {
-        GL(glVertexAttribPointer(prog->a_shift_l, 2, GL_FLOAT, false,
-                buff->offset, (void*)(long)buff->offset_shift));
-        GL(glEnableVertexAttribArray(prog->a_shift_l));
-    }
-    if (prog->a_normal_l != -1) {
-        GL(glVertexAttribPointer(prog->a_normal_l, 3, GL_FLOAT, false,
-               buff->offset, (void*)(long)buff->offset_normal));
-        GL(glEnableVertexAttribArray(prog->a_normal_l));
-    }
-    if (prog->a_tangent_l != -1) {
-        GL(glVertexAttribPointer(prog->a_tangent_l, 3, GL_FLOAT, false,
-               buff->offset, (void*)(long)buff->offset_tangent));
-        GL(glEnableVertexAttribArray(prog->a_tangent_l));
-    }
-    if (prog->a_mpos_l != -1) {
-        GL(glVertexAttribPointer(prog->a_mpos_l, 4, GL_FLOAT, false,
-               buff->offset, (void*)(long)buff->offset_mpos));
-        GL(glEnableVertexAttribArray(prog->a_mpos_l));
-    }
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buff->index_buffer));
-    GL(glDrawElements(buff->mode, n, GL_UNSIGNED_SHORT, 0));
-
-    GL(glDisableVertexAttribArray(prog->a_pos_l));
-    if (prog->a_tex_pos_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
-    if (prog->a_color_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_color_l));
-    if (prog->a_shift_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_shift_l));
-    if (prog->a_normal_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_normal_l));
-    if (prog->a_tangent_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_tangent_l));
-    if (prog->a_mpos_l != -1)
-        GL(glDisableVertexAttribArray(prog->a_mpos_l));
 }
 
 static void init_prog(prog_t *p, const char *vert, const char *frag,
