@@ -108,6 +108,30 @@ typedef struct render_buffer_args {
     double (*shadow_spheres)[4];
 } render_buffer_args_t;
 
+
+typedef struct item item_t;
+struct item
+{
+    double      color[4];
+    uint16_t    *indices;
+    void        *buf;
+    int         buf_size;
+    int         nb;
+
+    union {
+        struct {
+            double width;
+            double stripes;
+        } lines;
+    };
+};
+
+typedef struct {
+    float pos[4]        __attribute__((aligned(4)));
+    float tex_pos[2]    __attribute__((aligned(4)));
+    uint8_t color[4]    __attribute__((aligned(4)));
+} lines_buf_t;
+
 static void render_buffer(renderer_gl_t *rend,
                           const buffer_t *buff, int n,
                           const prog_t *prog,
@@ -521,6 +545,67 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     texture2(rend, tex, uv, verts, color);
 }
 
+static void item_lines_render(renderer_gl_t *rend, const item_t *item)
+{
+    prog_t *prog;
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+
+    prog = &rend->progs.blit_proj;
+    GL(glUseProgram(prog->prog));
+
+    GL(glEnable(GL_CULL_FACE));
+    GL(glLineWidth(item->lines.width));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                           GL_ZERO, GL_ONE));
+    GL(glDisable(GL_DEPTH_TEST));
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->nb * sizeof(*item->indices),
+                    item->indices, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
+                    GL_DYNAMIC_DRAW));
+
+    GL(glUniform4f(prog->u_color_l, item->color[0],
+                                    item->color[1],
+                                    item->color[2],
+                                    item->color[3]));
+
+    GL(glEnableVertexAttribArray(prog->a_pos_l));
+    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
+                    sizeof(lines_buf_t),
+                    (void*)(long)offsetof(lines_buf_t, pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, true,
+                    sizeof(lines_buf_t),
+                    (void*)(long)offsetof(lines_buf_t, tex_pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_color_l));
+    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+                    sizeof(lines_buf_t),
+                    (void*)(long)offsetof(lines_buf_t, color)));
+
+    GL(glDrawElements(GL_LINES, item->nb, GL_UNSIGNED_SHORT, 0));
+
+    GL(glDisableVertexAttribArray(prog->a_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_color_l));
+    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
+
 static void line(renderer_t           *rend_,
                  const painter_t      *painter,
                  int                  frame,
@@ -528,66 +613,49 @@ static void line(renderer_t           *rend_,
                  int                  nb_segs,
                  const projection_t   *line_proj)
 {
+    int i;
     renderer_gl_t *rend = (void*)rend_;
-    int i, n;
-    double k, pos[4], width;
-    vertex_gl_t *verts;
-    buffer_t *buffer;
-    uint16_t *indices;
-    n = nb_segs * 2;
-    width = painter->lines_width ?: 1;
+    item_t *item;
+    double k, pos[4], z;
     const double *depth_range = (const double*)painter->depth_range;
+    lines_buf_t *buf;
 
-    buffer = calloc(1, sizeof(*buffer));
-    verts = calloc(n, sizeof(*verts));
-    indices = calloc(n, sizeof(*indices));
-    buffer->nb_vertices = n;
-    for (i = 0; i < n; i++) {
-        k = ((i / 2) + (i % 2)) / (double)nb_segs;
-        verts[i].tex_pos[0] = k;
+    item = calloc(1, sizeof(*item));
+    item->buf_size = (nb_segs + 1) * sizeof(lines_buf_t);
+    item->buf = calloc(1, item->buf_size);
+    item->nb = nb_segs * 2;
+    item->indices = calloc(item->nb, sizeof(*item->indices));
+    item->lines.width = painter->lines_width ?: 1;
+    vec4_copy(painter->color, item->color);
+    buf = item->buf;
+
+    for (i = 0; i < nb_segs + 1; i++) {
+        k = i / (double)nb_segs;
+        buf[i].tex_pos[0] = k;
         vec4_mix(line[0], line[1], k, pos);
         if (line_proj)
             project(line_proj, PROJ_BACKWARD, 4, pos, pos);
         mat4_mul_vec4(*painter->transform, pos, pos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
         pos[3] = 1.0;
-        double z = pos[2];
+        z = pos[2];
         project(painter->proj, 0, 4, pos, pos);
-
         if (depth_range) {
             pos[2] = (-z - depth_range[0]) / (depth_range[1] - depth_range[0]);
         }
-
-        vec4_to_float(pos, verts[i].pos);
-        memcpy(verts[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
-        indices[i] = i;
+        vec4_to_float(pos, buf[i].pos);
+        memcpy(buf[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
+        if (i < nb_segs) {
+            item->indices[i * 2 + 0] = i;
+            item->indices[i * 2 + 1] = i + 1;
+        }
     }
-    buffer->mode = GL_LINES;
-    buffer->offset = sizeof(vertex_gl_t);
-    buffer->offset_tex_pos = offsetof(vertex_gl_t, tex_pos);
-    buffer->offset_pos = offsetof(vertex_gl_t, pos);
-    buffer->offset_color = offsetof(vertex_gl_t, color);
-    GL(glGenBuffers(1, &buffer->array_buffer));
-    GL(glGenBuffers(1, &buffer->index_buffer));
-    GL(glBindBuffer(GL_ARRAY_BUFFER, buffer->array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, n * sizeof(*verts), verts,
-                    GL_STATIC_DRAW));
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->index_buffer));
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    n * sizeof(*indices), indices,
-                    GL_STATIC_DRAW));
-    free(verts);
-    free(indices);
-    GL(glLineWidth(width));
-    render_buffer(rend, buffer, n,
-                  &rend->progs.blit_proj,
-                  &(render_buffer_args_t) {
-                      .color = painter->color,
-                      .tex = rend->white_tex,
-                      .stripes = painter->lines_stripes,
-                      .depth_range = painter->depth_range,
-                  });
-    render_free_buffer(buffer);
+
+    item_lines_render(rend, item);
+
+    free(item->indices);
+    free(item->buf);
+    free(item);
 }
 
 static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
