@@ -74,6 +74,7 @@ enum {
     ITEM_LINES = 1,
     ITEM_POINTS,
     ITEM_ALPHA_TEXTURE,
+    ITEM_TEXTURE,
 };
 
 typedef struct item item_t;
@@ -331,7 +332,10 @@ static void compute_tangent(const double uv[2], const projection_t *tex_proj,
 }
 
 static item_t *get_item(renderer_gl_t *rend, int type, int nb);
-static void quad(renderer_t          *rend_,
+
+
+static void quad_planet(
+                 renderer_t          *rend_,
                  const painter_t     *painter,
                  int                 frame,
                  texture_t           *tex,
@@ -351,7 +355,6 @@ static void quad(renderer_t          *rend_,
     const double *depth_range = (const double*)painter->depth_range;
     const prog_t *prog;
 
-    get_item(rend, 0, 0); // Force flush.
     // Positions of the triangles for both regular and inverted triangles.
     const int INDICES[2][6][2] = {
         { {0, 0}, {0, 1}, {1, 0},
@@ -360,9 +363,7 @@ static void quad(renderer_t          *rend_,
           {0, 1}, {1, 1}, {0, 0} },
     };
 
-    prog = (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER)) ?
-                     &rend->progs.planet : &rend->progs.blit_proj;
-
+    prog = &rend->progs.planet;
     tex = tex ?: rend->white_tex;
     buffer = calloc(1, sizeof(*buffer));
     n = grid_size + 1;
@@ -462,6 +463,82 @@ static void quad(renderer_t          *rend_,
                       .flags = painter->flags
                   });
     render_free_buffer(buffer);
+}
+
+static void quad(renderer_t          *rend_,
+                 const painter_t     *painter,
+                 int                 frame,
+                 texture_t           *tex,
+                 texture_t           *normalmap,
+                 double              uv[4][2],
+                 int                 grid_size,
+                 const projection_t  *tex_proj)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    item_t *item;
+    texture_buf_t *buf;
+    uint16_t *indices;
+    int n, i, j, k;
+    const int INDICES[6][2] = {
+        {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
+    double p[4], duvx[2], duvy[2];
+
+    // Special case for planet shader.
+    if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
+        return quad_planet(rend_, painter, frame, tex, normalmap,
+                           uv, grid_size, tex_proj);
+
+    if (!tex) tex = rend->white_tex;
+    n = grid_size + 1;
+
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_TEXTURE;
+    item->capacity = n * n * 6;
+    item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
+    item->indices = calloc(item->capacity, sizeof(*indices));
+    item->tex = tex;
+    vec4_copy(painter->color, item->color);
+
+    vec2_sub(uv[1], uv[0], duvx);
+    vec2_sub(uv[2], uv[0], duvy);
+
+    buf = item->buf;
+    indices = item->indices;
+
+    for (i = 0; i < n; i++)
+    for (j = 0; j < n; j++) {
+        vec4_set(p, uv[0][0], uv[0][1], 0, 1);
+        vec2_addk(p, duvx, (double)j / grid_size, p);
+        vec2_addk(p, duvy, (double)i / grid_size, p);
+        buf[i * n + j].tex_pos[0] = p[0] * tex->w / tex->tex_w;
+        buf[i * n + j].tex_pos[1] = p[1] * tex->h / tex->tex_h;
+        if (tex->flags & TF_FLIPPED)
+            buf[i * n + j].tex_pos[1] = 1.0 - buf[i * n + j].tex_pos[1];
+
+        project(tex_proj, PROJ_BACKWARD, 4, p, p);
+        mat4_mul_vec4(*painter->transform, p, p);
+        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
+        project(painter->proj, 0, 4, p, p);
+        vec2_to_float(p, buf[i * n + j].pos);
+        memcpy(buf[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
+    }
+
+    for (i = 0; i < grid_size; i++)
+    for (j = 0; j < grid_size; j++) {
+        for (k = 0; k < 6; k++) {
+            indices[(i * grid_size + j) * 6 + k] =
+                (INDICES[k][1] + i) * n + (INDICES[k][0] + j);
+        }
+    }
+
+    item->buf_size += n * n * sizeof(texture_buf_t);
+    item->nb += grid_size * grid_size * 6;
+
+    DL_APPEND(rend->items, item);
+
+    // Since for the moment textures are not created on the fly, we have
+    // to render them immediately.
+    rend_flush(rend);
 }
 
 static void texture2(renderer_gl_t *rend, const texture_t *tex,
@@ -763,6 +840,69 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+static void item_texture_render(renderer_gl_t *rend, const item_t *item)
+{
+    prog_t *prog;
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+
+    prog = &rend->progs.blit_proj;
+    GL(glUseProgram(prog->prog));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
+    GL(glEnable(GL_CULL_FACE));
+
+    if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
+        GL(glDisable(GL_BLEND));
+    } else {
+        GL(glEnable(GL_BLEND));
+        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                               GL_ZERO, GL_ONE));
+    }
+    GL(glDisable(GL_DEPTH_TEST));
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->nb * sizeof(*item->indices),
+                    item->indices, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
+                    GL_DYNAMIC_DRAW));
+
+    GL(glUniform4f(prog->u_color_l, item->color[0],
+                                    item->color[1],
+                                    item->color[2],
+                                    item->color[3]));
+
+    GL(glEnableVertexAttribArray(prog->a_pos_l));
+    GL(glVertexAttribPointer(prog->a_pos_l, 2, GL_FLOAT, false,
+                    sizeof(texture_buf_t),
+                    (void*)(long)offsetof(texture_buf_t, pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+                    sizeof(texture_buf_t),
+                    (void*)(long)offsetof(texture_buf_t, tex_pos)));
+
+    GL(glEnableVertexAttribArray(prog->a_color_l));
+    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+                    sizeof(texture_buf_t),
+                    (void*)(long)offsetof(texture_buf_t, color)));
+
+    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
+
+    GL(glDisableVertexAttribArray(prog->a_pos_l));
+    GL(glDisableVertexAttribArray(prog->a_color_l));
+    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
+
 static void rend_flush(renderer_gl_t *rend)
 {
     item_t *item, *tmp;
@@ -771,6 +911,8 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
         if (item->type == ITEM_ALPHA_TEXTURE)
             item_alpha_texture_render(rend, item);
+        if (item->type == ITEM_TEXTURE)
+            item_texture_render(rend, item);
         DL_DELETE(rend->items, item);
         free(item->indices);
         free(item->buf);
