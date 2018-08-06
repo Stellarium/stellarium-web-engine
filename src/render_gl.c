@@ -489,7 +489,7 @@ static void quad(renderer_t          *rend_,
     item = calloc(1, sizeof(*item));
     item->type = ITEM_TEXTURE;
     item->capacity = n * n * 6;
-    item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
+    item->buf = calloc(n * n, sizeof(*buf));
     item->indices = calloc(item->capacity, sizeof(*indices));
     item->tex = tex;
     vec4_copy(painter->color, item->color);
