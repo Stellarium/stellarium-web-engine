@@ -249,12 +249,18 @@ static void points(renderer_t *rend_,
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
     const double *s = painter->proj->scaling;
     int i, j, idx, ofs;
+    const int MAX_POINTS = 4096;
     point_t p;
+
+    if (n > MAX_POINTS) {
+        LOG_E("Try to render more than %d points: %d", MAX_POINTS, n);
+        n = MAX_POINTS;
+    }
 
     if (!(item = get_item(rend, ITEM_POINTS, n * 6))) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
-        item->capacity = 1024 * 6;
+        item->capacity = MAX_POINTS * 6;
         item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
         item->indices = calloc(item->capacity, sizeof(*indices));
         vec4_copy(painter->color, item->color);
