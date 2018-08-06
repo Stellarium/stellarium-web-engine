@@ -351,17 +351,12 @@ static void quad_planet(
     vertex_gl_t *grid;
     uint16_t *indices;
     double p[4], normal[4] = {0}, tangent[4] = {0}, z;
-    bool quad_cut_inv = painter->flags & PAINTER_QUAD_CUT_INV;
     const double *depth_range = (const double*)painter->depth_range;
     const prog_t *prog;
 
-    // Positions of the triangles for both regular and inverted triangles.
-    const int INDICES[2][6][2] = {
-        { {0, 0}, {0, 1}, {1, 0},
-          {1, 1}, {1, 0}, {0, 1} },
-        { {1, 0}, {0, 0}, {1, 1},
-          {0, 1}, {1, 1}, {0, 0} },
-    };
+    // Positions of the triangles in the quads.
+    const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
+                                {1, 1}, {1, 0}, {0, 1} };
 
     prog = &rend->progs.planet;
     tex = tex ?: rend->white_tex;
@@ -386,7 +381,7 @@ static void quad_planet(
             vec3_to_float(tangent, grid[i * n + j].tangent);
         }
 
-        if (tex && (tex->flags & TF_FLIPPED))
+        if (tex->flags & TF_FLIPPED)
             grid[i * n + j].tex_pos[1] = 1.0 - grid[i * n + j].tex_pos[1];
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
 
@@ -413,8 +408,7 @@ static void quad_planet(
     for (i = 0; i < grid_size; i++) for (j = 0; j < grid_size; j++) {
         for (k = 0; k < 6; k++) {
             indices[(i * grid_size + j) * 6 + k] =
-                (INDICES[quad_cut_inv ? 1 : 0][k][1] + i) * n +
-                (INDICES[quad_cut_inv ? 1 : 0][k][0] + j);
+                (INDICES[k][1] + i) * n + (INDICES[k][0] + j);
         }
     }
 

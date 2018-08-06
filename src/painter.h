@@ -78,7 +78,6 @@ struct point
 // Painter flags
 enum {
     PAINTER_ADD                 = 1 << 0, // Use addition blending.
-    PAINTER_QUAD_CUT_INV        = 1 << 1, // Toast quad diagonal direction.
     PAINTER_HIDE_BELOW_HORIZON  = 1 << 2,
     PAINTER_FAST_MODE           = 1 << 3,
     PAINTER_PLANET_SHADER       = 1 << 4,
