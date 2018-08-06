@@ -73,7 +73,7 @@ typedef struct buffer_t {
 enum {
     ITEM_LINES = 1,
     ITEM_POINTS,
-    ITEM_TEXTURE,
+    ITEM_ALPHA_TEXTURE,
 };
 
 typedef struct item item_t;
@@ -474,9 +474,9 @@ static void texture2(renderer_gl_t *rend, const texture_t *tex,
     uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
 
-    if (!(item = get_item(rend, ITEM_TEXTURE, 6))) {
+    if (!(item = get_item(rend, ITEM_ALPHA_TEXTURE, 6))) {
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_TEXTURE;
+        item->type = ITEM_ALPHA_TEXTURE;
         item->capacity = 6;
         item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
         item->indices = calloc(item->capacity, sizeof(*indices));
@@ -704,7 +704,7 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
-static void item_texture_render(renderer_gl_t *rend, const item_t *item)
+static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
 {
     prog_t *prog;
     GLuint  array_buffer;
@@ -717,13 +717,9 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
     GL(glEnable(GL_CULL_FACE));
 
-    if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
-        GL(glDisable(GL_BLEND));
-    } else {
-        GL(glEnable(GL_BLEND));
-        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                               GL_ZERO, GL_ONE));
-    }
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                           GL_ZERO, GL_ONE));
     GL(glDisable(GL_DEPTH_TEST));
 
     GL(glGenBuffers(1, &index_buffer));
@@ -773,7 +769,8 @@ static void rend_flush(renderer_gl_t *rend)
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
-        if (item->type == ITEM_TEXTURE) item_texture_render(rend, item);
+        if (item->type == ITEM_ALPHA_TEXTURE)
+            item_alpha_texture_render(rend, item);
         DL_DELETE(rend->items, item);
         free(item->indices);
         free(item->buf);
