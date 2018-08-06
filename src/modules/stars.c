@@ -204,6 +204,7 @@ struct tile {
         void *data;
         int size;
         bool is_gaia;
+        int data_version;
     } *loader;
 
 };
@@ -333,11 +334,11 @@ static int load_worker(worker_t *w)
          *
          * 8 bytes (uint64_t)   source_id
          * 4 bytes (float)      GMag
-         * 4 bytes (float)      ra
-         * 4 bytes (float)      dec
-         * 4 bytes (float)      plx
-         * 4 bytes (float)      pmra
-         * 4 bytes (float)      pmdec
+         * 4 bytes (float)      ra   (rad)
+         * 4 bytes (float)      dec  (rad)
+         * 4 bytes (float)      plx  (arcsec)
+         * 4 bytes (float)      pra  (rad/year)
+         * 4 bytes (float)      pdec (rad/year)
          *
          */
         for (i = 0; i < tile->nb; i++) {
@@ -357,20 +358,23 @@ static int load_worker(worker_t *w)
                 assert(false);
             }
 
-            // Convert to proper units.
-            ra *= DD2R;
-            de *= DD2R;
-            pra *= ERFA_DMAS2R;
-            pde *= ERFA_DMAS2R;
-            plx /= 1000.0;
+            // To remove once we totally switch to version 2 of gaia tiles.
+            if (loader->data_version == 1) {
+                // Convert to proper units.
+                ra *= DD2R;
+                de *= DD2R;
+                pra *= ERFA_DMAS2R;
+                pde *= ERFA_DMAS2R;
+                plx /= 1000.0;
 
-            // Convert values from J2015 to J2000
-            r = eraPmsafe(ra, de, pra, pde, plx, 0.0,
-                          ERFA_DJ00, 15 * ERFA_DJY, // J2015
-                          ERFA_DJ00, 0.0, // Target J2000
-                          &ra, &de, &pra, &pde, &plx, &rv);
-            if (r & ~1)
-                LOG_E("Cannot convert from J2015 to J2000: error %d", r);
+                // Convert values from J2015 to J2000
+                r = eraPmsafe(ra, de, pra, pde, plx, 0.0,
+                              ERFA_DJ00, 15 * ERFA_DJY, // J2015
+                              ERFA_DJ00, 0.0, // Target J2000
+                              &ra, &de, &pra, &pde, &plx, &rv);
+                if (r & ~1)
+                    LOG_E("Cannot convert from J2015 to J2000: error %d", r);
+            }
 
             s->vmag = vmag;
             s->ra = ra;
@@ -460,6 +464,7 @@ static int on_gaia_tile_loaded(int version, int order, int pix,
     worker_init(&tile->loader->worker, load_worker);
     tile->loader->tile = tile;
     tile->loader->data = malloc(size);
+    tile->loader->data_version = version;
     memcpy(tile->loader->data, data, size);
     tile->loader->size = size;
     tile->loader->is_gaia = true;
