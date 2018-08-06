@@ -165,48 +165,9 @@ typedef struct renderer_gl {
     item_t  *items;
 } renderer_gl_t;
 
-// Hold all the possible attributes for the render_buffer function.
-// XXX: we should probably just pass the painter!
-typedef struct render_buffer_args {
-    const double *color;
-    const texture_t *tex;
-    const texture_t *normalmap;
-    const texture_t *shadow_color_tex;
-    const double (*mv)[4][4];
-    double smooth;
-    double contrast;
-    const double *sun;
-    const double *light_emit;
-    double shadow_brightness;
-    int flags;
-    double stripes; // Number of stripes for lines (0 for no stripes).
-    const double (*depth_range)[2];
-    int shadow_spheres_nb;
-    double (*shadow_spheres)[4];
-} render_buffer_args_t;
-
 
 static void init_prog(prog_t *prog, const char *vert, const char *frag,
                       const char *include);
-
-// XXX: we shouldn't use a struct for the vertex buffers, since the
-// arrays used depend of the call (for example we might not want to have
-// any tangent data).
-typedef struct vertex_gl {
-    GLfloat pos[4]       __attribute__((aligned(4)));
-    GLfloat mpos[4]      __attribute__((aligned(4)));
-    GLfloat tex_pos[2]   __attribute__((aligned(4)));
-    GLubyte color[4]     __attribute__((aligned(4)));
-    GLfloat normal[3]    __attribute__((aligned(4)));
-    GLfloat tangent[3]   __attribute__((aligned(4)));
-} vertex_gl_t;
-
-typedef struct {
-    GLfloat pos[4]       __attribute__((aligned(4)));
-    GLfloat tex_pos[2]   __attribute__((aligned(4)));
-    GLfloat shift[2]     __attribute__((aligned(4)));
-    GLubyte color[4]     __attribute__((aligned(4)));
-} point_vertex_gl_t;
 
 static bool color_is_white(const double c[4])
 {
