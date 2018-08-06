@@ -70,6 +70,37 @@ typedef struct buffer_t {
     int     offset_shift;
 } buffer_t;
 
+enum {
+    ITEM_LINES = 1,
+};
+
+typedef struct item item_t;
+struct item
+{
+    int type;
+    double      color[4];
+    uint16_t    *indices;
+    void        *buf;
+    int         buf_size;
+    int         nb;
+    int         capacity;
+
+    union {
+        struct {
+            double width;
+            double stripes;
+        } lines;
+    };
+
+    item_t *next, *prev;
+};
+
+typedef struct {
+    float pos[4]        __attribute__((aligned(4)));
+    float tex_pos[2]    __attribute__((aligned(4)));
+    uint8_t color[4]    __attribute__((aligned(4)));
+} lines_buf_t;
+
 typedef struct renderer_gl {
     renderer_t  rend;
 
@@ -86,6 +117,8 @@ typedef struct renderer_gl {
 
     texture_t   *white_tex;
     tex_cache_t *tex_cache;
+
+    item_t  *items;
 } renderer_gl_t;
 
 // Hold all the possible attributes for the render_buffer function.
@@ -108,29 +141,6 @@ typedef struct render_buffer_args {
     double (*shadow_spheres)[4];
 } render_buffer_args_t;
 
-
-typedef struct item item_t;
-struct item
-{
-    double      color[4];
-    uint16_t    *indices;
-    void        *buf;
-    int         buf_size;
-    int         nb;
-
-    union {
-        struct {
-            double width;
-            double stripes;
-        } lines;
-    };
-};
-
-typedef struct {
-    float pos[4]        __attribute__((aligned(4)));
-    float tex_pos[2]    __attribute__((aligned(4)));
-    uint8_t color[4]    __attribute__((aligned(4)));
-} lines_buf_t;
 
 static void render_buffer(renderer_gl_t *rend,
                           const buffer_t *buff, int n,
@@ -195,6 +205,13 @@ static void prepare(renderer_t *rend_, int w, int h)
     DL_FOREACH(rend->tex_cache, ctex)
         ctex->in_use = false;
 
+}
+
+static void rend_flush(renderer_gl_t *rend);
+static void finish(renderer_t *rend_)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    rend_flush(rend);
 }
 
 static void points(renderer_t *rend_,
@@ -296,6 +313,7 @@ static void compute_tangent(const double uv[2], const projection_t *tex_proj,
     vec3_cross(VEC(0, 0, 1), p, out);
 }
 
+static item_t *get_item(renderer_gl_t *rend, int type, int nb);
 static void quad(renderer_t          *rend_,
                  const painter_t     *painter,
                  int                 frame,
@@ -316,6 +334,7 @@ static void quad(renderer_t          *rend_,
     const double *depth_range = (const double*)painter->depth_range;
     const prog_t *prog;
 
+    get_item(rend, 0, 0); // Force flush.
     // Positions of the triangles for both regular and inverted triangles.
     const int INDICES[2][6][2] = {
         { {0, 0}, {0, 1}, {1, 0},
@@ -606,6 +625,32 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+
+static void rend_flush(renderer_gl_t *rend)
+{
+    item_t *item, *tmp;
+    DL_FOREACH_SAFE(rend->items, item, tmp) {
+        if (item->type == ITEM_LINES) item_lines_render(rend, item);
+        DL_DELETE(rend->items, item);
+        free(item->indices);
+        free(item->buf);
+        free(item);
+    }
+}
+
+static item_t *get_item(renderer_gl_t *rend, int type, int nb)
+{
+    item_t *item;
+    item = rend->items ? rend->items->prev : NULL;
+    if (item && item->type == type && item->capacity > item->nb + nb)
+        return item;
+    // Since we don't use items for everything yet, we have to flush
+    // as soon as we can't reuse an item, otherwise we won't render in
+    // order.
+    rend_flush(rend);
+    return NULL;
+}
+
 static void line(renderer_t           *rend_,
                  const painter_t      *painter,
                  int                  frame,
@@ -613,21 +658,29 @@ static void line(renderer_t           *rend_,
                  int                  nb_segs,
                  const projection_t   *line_proj)
 {
-    int i;
+    int i, ofs;
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     double k, pos[4], z;
     const double *depth_range = (const double*)painter->depth_range;
     lines_buf_t *buf;
+    uint16_t *indices;
 
-    item = calloc(1, sizeof(*item));
-    item->buf_size = (nb_segs + 1) * sizeof(lines_buf_t);
-    item->buf = calloc(1, item->buf_size);
-    item->nb = nb_segs * 2;
-    item->indices = calloc(item->nb, sizeof(*item->indices));
-    item->lines.width = painter->lines_width ?: 1;
-    vec4_copy(painter->color, item->color);
-    buf = item->buf;
+    // Try to use the last pushed item.
+    if (!(item = get_item(rend, ITEM_LINES, nb_segs * 2))) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_LINES;
+        item->capacity = 1024;
+        item->buf = calloc(item->capacity, sizeof(*buf));
+        item->indices = calloc(item->capacity, sizeof(*indices));
+        item->lines.width = painter->lines_width ?: 1;
+        vec4_copy(painter->color, item->color);
+        DL_APPEND(rend->items, item);
+    }
+
+    buf = item->buf + item->buf_size;
+    indices = item->indices + item->nb;
+    ofs = item->buf_size / sizeof(*buf);
 
     for (i = 0; i < nb_segs + 1; i++) {
         k = i / (double)nb_segs;
@@ -646,16 +699,12 @@ static void line(renderer_t           *rend_,
         vec4_to_float(pos, buf[i].pos);
         memcpy(buf[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
         if (i < nb_segs) {
-            item->indices[i * 2 + 0] = i;
-            item->indices[i * 2 + 1] = i + 1;
+            indices[i * 2 + 0] = ofs + i;
+            indices[i * 2 + 1] = ofs + i + 1;
         }
     }
-
-    item_lines_render(rend, item);
-
-    free(item->indices);
-    free(item->buf);
-    free(item);
+    item->buf_size += (nb_segs + 1) * sizeof(lines_buf_t);
+    item->nb += nb_segs * 2;
 }
 
 static void render_buffer(renderer_gl_t *rend, const buffer_t *buff, int n,
@@ -904,6 +953,7 @@ renderer_t* render_gl_create(void)
               asset_get_data("asset://shaders/planet.frag", NULL, NULL), NULL);
 
     rend->rend.prepare = prepare;
+    rend->rend.finish = finish;
     rend->rend.points = points;
     rend->rend.quad = quad;
     rend->rend.texture = texture;
