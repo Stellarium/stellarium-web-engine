@@ -10,7 +10,7 @@
   <div id="toolbar-image">
     <v-toolbar class="transparent" dense dark>
       <v-toolbar-side-icon @click.native.stop="toggleNavigationDrawer" />
-      <img class="hidden-xs-only" id="stellarium-web-toolbar-logo" src="/static/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
+      <img class="tbtitle hidden-xs-only" id="stellarium-web-toolbar-logo" src="/static/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
       <span class="tbtitle hidden-sm-and-down">Stellarium<sup>Web</sup></span>
       <v-spacer></v-spacer>
       <target-search></target-search>
@@ -60,5 +60,6 @@ export default {
 .tbtitle {
   font-size: 20px;
   font-weight: 500;
+  user-select: none;
 }
 </style>
