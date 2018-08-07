@@ -493,7 +493,7 @@ static int stars_init(obj_t *obj, json_value *args)
     regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    asprintf(&stars->survey, "https://data.stellarium.org/surveys/gaia_dr2");
+    asprintf(&stars->survey, "https://data.stellarium.org/surveys/gaia_dr2_v2");
     return 0;
 }
 
