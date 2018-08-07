@@ -387,7 +387,8 @@ static obj_t *get_obj_at(double x, double y, double max_dist)
         }
     }
     if (!best) return NULL;
-    return obj_get(NULL, best->id, 0);
+    return best->nsid ? obj_get_by_nsid(NULL, best->nsid) :
+                        obj_get(NULL, best->id, 0);
 }
 
 static int core_click(const gesture_t *g, void *user)

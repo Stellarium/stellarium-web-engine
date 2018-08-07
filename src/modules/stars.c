@@ -650,7 +650,7 @@ static int render_visitor(int order, int pix, void *user)
         if (s->hd)
             make_id(points[n].id, "HD", s->hd);
         else
-            make_id(points[n].id, "GAIA", s->gaia);
+            points[n].nsid = s->gaia;
         n++;
         if (s->vmag <= painter.label_mag_max)
             star_render_name(&painter, s, p_ndc, size, mag);

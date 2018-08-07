@@ -10,6 +10,8 @@
 #ifndef PAINTER_H
 #define PAINTER_H
 
+#include <stdint.h>
+
 #include "projection.h"
 
 typedef struct observer observer_t;
@@ -74,6 +76,7 @@ struct point
     double  color[4];
     char    id[128];    // Obj id.  If set then the point is kept in a list
                         // for fast lookup of mouse pointing position.
+    uint64_t nsid;      // Used instead of id if set.
 };
 
 // Painter flags
