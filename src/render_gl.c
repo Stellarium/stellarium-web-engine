@@ -1015,10 +1015,6 @@ static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex)
     if (    item && item->type == type && item->capacity > item->nb + nb &&
             item->tex == tex)
         return item;
-    // Since we don't use items for everything yet, we have to flush
-    // as soon as we can't reuse an item, otherwise we won't render in
-    // order.
-    rend_flush(rend);
     return NULL;
 }
 
