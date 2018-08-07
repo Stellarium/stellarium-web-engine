@@ -915,6 +915,19 @@ double core_get_observed_mag(double vmag)
 }
 
 /*
+ * Fast pow approximation from Martin Ankerl.
+ */
+inline double fast_pow(double a, double b) {
+    union {
+        double d;
+        int x[2];
+    } u = { a };
+    u.x[1] = (int)(b * (u.x[1] - 1072632447) + 1072632447);
+    u.x[0] = 0;
+    return u.d;
+}
+
+/*
  * Function: get_radius_for_mag
  * Compute the rendered radius for a given magnitude.
  */
@@ -926,7 +939,7 @@ static double get_radius_for_mag(double mag)
 
     r = -r0 / mi * mag + r0;
     if (r <= 0.0) return 0.0;
-    r *= pow(smoothstep(0.0, r0, r), core->contrast);
+    r *= fast_pow(smoothstep(0.0, r0, r), core->contrast);
     return r;
 }
 
