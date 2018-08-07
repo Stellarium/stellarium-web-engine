@@ -22,6 +22,7 @@ struct renderer
 {
     void (*prepare)(renderer_t *rend, int w, int h);
     void (*finish)(renderer_t *rend);
+    void (*flush)(renderer_t *rend);
 
     void (*points)(renderer_t           *rend,
                    const painter_t      *painter,
@@ -122,6 +123,7 @@ struct painter
 
 int paint_prepare(const painter_t *painter, int w, int h);
 int paint_finish(const painter_t *painter);
+int paint_flush(const painter_t *painter);
 int paint_points(const painter_t *painter, int n, const point_t *points,
                  int frame);
 

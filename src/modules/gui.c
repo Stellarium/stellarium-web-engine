@@ -387,6 +387,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
         gui_init(gui);
         gui->initialized = true;
     }
+    paint_flush(painter);
     gui_render_prepare();
     double pos[2] = {0, 0};
     double size[2] = {300, 0};

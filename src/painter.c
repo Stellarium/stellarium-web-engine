@@ -28,6 +28,12 @@ int paint_finish(const painter_t *painter)
     return 0;
 }
 
+int paint_flush(const painter_t *painter)
+{
+    REND(painter->rend, flush);
+    return 0;
+}
+
 int paint_points(const painter_t *painter, int n, const point_t *points,
                  int frame)
 {

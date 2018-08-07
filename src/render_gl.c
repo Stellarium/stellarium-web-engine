@@ -206,6 +206,12 @@ static void finish(renderer_t *rend_)
     rend_flush(rend);
 }
 
+static void flush(renderer_t *rend_)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    rend_flush(rend);
+}
+
 static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex);
 
 static void points(renderer_t *rend_,
@@ -506,7 +512,10 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
 
-    if (!(item = get_item(rend, ITEM_ALPHA_TEXTURE, 6, tex))) {
+    item = get_item(rend, ITEM_ALPHA_TEXTURE, 6, tex);
+    if (item && !vec4_equal(item->color, color)) item = NULL;
+
+    if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_ALPHA_TEXTURE;
         item->capacity = 6 * 64;
@@ -1148,6 +1157,7 @@ renderer_t* render_gl_create(void)
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
+    rend->rend.flush = flush;
     rend->rend.points = points;
     rend->rend.quad = quad;
     rend->rend.texture = texture;
