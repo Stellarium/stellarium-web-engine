@@ -9,7 +9,7 @@
 <template>
   <div>
     <div class="tfaders" v-for="bar in progressBars" v-bind:key="bar.id">
-        <transition name="fade">
+      <transition name="fade">
         <div class="tfader" v-if="bar.value != bar.total">
           <span class="caption" style="top: -4px; position: relative;">{{ bar.label }}</span>
           <v-progress-circular :rotate="-90" size=18 :value="bar.value / bar.total * 100"></v-progress-circular>
@@ -38,7 +38,8 @@ export default {
 <style>
 .tfaders {
   text-align: right;
-  opacity: 0.5
+  opacity: 0.5;
+  user-select: none;
 }
 
 .fade-enter-active, .fade-leave-active {

@@ -15,7 +15,7 @@
       <v-spacer></v-spacer>
       <target-search></target-search>
       <v-spacer></v-spacer>
-      <div class="subheader grey--text hidden-sm-and-down">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
+      <div class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
     </v-toolbar>
   </div>
 </template>
