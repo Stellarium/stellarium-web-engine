@@ -149,7 +149,6 @@ struct core
 
     renderer_t      *rend;
     int             proj;
-    double          view_shift[2];
     double          win_size[2];
     obj_t           *selection;
     obj_t           *hovered;

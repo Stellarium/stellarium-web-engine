@@ -48,11 +48,8 @@ bool project(const projection_t *proj, int flags, int out_dim,
     double p[4] = {0, 0, 0, 1};
     bool visible;
 
-    // In case we forgot to init the proj to 0.
-    assert(!isnan(proj->offset[0]));
-
     if (flags & PROJ_BACKWARD) {
-        vec2_sub(v, proj->offset, p);
+        vec2_copy(v, p);
         assert(proj->backward);
         assert(out_dim == 4);
         proj->backward(proj, flags, p, out);
@@ -64,7 +61,6 @@ bool project(const projection_t *proj, int flags, int out_dim,
         assert(fabs(vec3_norm(p) - 1.0) < 0.00000001);
     proj->project(proj, flags, v, p);
 
-    vec2_add(p, proj->offset, p);
     if (!(flags & PROJ_TO_NDC_SPACE)) {
         memcpy(out, p, out_dim * sizeof(double));
         return true;

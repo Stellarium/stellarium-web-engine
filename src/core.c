@@ -708,7 +708,6 @@ int core_render(int w, int h)
 
     projection_init(&proj, core->proj, core->fov, (float)w / h);
 
-    vec2_copy(core->view_shift, proj.offset);
     painter_t painter = {
         .rend = core->rend,
         .obs = core->observer,

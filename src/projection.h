@@ -62,8 +62,6 @@ struct projection
     // or into the sphere at infinity.
     bool   at_infinity;
 
-    double offset[2];
-
     union {
         int shift;              // Only used by the mercator projection.
         struct {
