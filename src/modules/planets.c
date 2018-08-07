@@ -684,7 +684,7 @@ static void planet_render_hips(const planet_t *planet,
                          on_render_tile);
     if (planet->rings.tex)
         render_rings(planet, &painter);
-    progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, 1);
+    progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 
 static void planet_render_orbit(const planet_t *planet,

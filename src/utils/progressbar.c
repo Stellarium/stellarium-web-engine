@@ -49,6 +49,8 @@ void progressbar_report(const char *id, const char *label, int v, int total,
 {
     bool changed = false;
     bar_t *bar;
+    // Default value of about 0.5 sec at 60 fps.
+    if (keepalive == -1) keepalive = 30;
 
     HASH_FIND_STR(g_bars, id, bar);
 
@@ -61,15 +63,15 @@ void progressbar_report(const char *id, const char *label, int v, int total,
         HASH_ADD_KEYPTR(hh, g_bars, bar->id, strlen(bar->id), bar);
     }
 
-    if (!bar->label || strcmp(bar->label, label) != 0) {
+    if (label && (!bar->label || strcmp(bar->label, label) != 0)) {
         free(bar->label);
         bar->label = strdup(label);
         changed = true;
     }
     if (v != bar->v || total != bar->total) {
         changed = true;
-        bar->last_update = g_tick;
     }
+    if (v != total) bar->last_update = g_tick;
     bar->v = v;
     bar->total = total;
     bar->keepalive = keepalive;
@@ -78,7 +80,6 @@ void progressbar_report(const char *id, const char *label, int v, int total,
 
 void progressbar_update(void)
 {
-    g_tick++;
     bar_t *bar, *tmp;
     HASH_ITER(hh, g_bars, bar, tmp) {
         if (bar->keepalive && g_tick > bar->last_update + bar->keepalive) {
@@ -89,6 +90,7 @@ void progressbar_update(void)
             free(bar);
         }
     }
+    g_tick++;
 }
 
 int progressbar_list(void *user, void (*callback)(void *user,

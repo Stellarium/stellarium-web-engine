@@ -679,7 +679,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
     if (!stars->visible) return 0;
     hips_traverse(USER_PASS(stars, &painter, &nb_tot, &nb_loaded),
                   render_visitor);
-    progressbar_report("stars", "Stars", nb_loaded, nb_tot, 1);
+    progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);
     return 0;
 }
 

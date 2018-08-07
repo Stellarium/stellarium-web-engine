@@ -21,6 +21,7 @@
  *    v         - Current progress value.
  *    total     - Progress total.
  *    keepalive - How many iterations until we remove the progressbar.
+ *                if set to -1, we use a default value.
  */
 void progressbar_report(const char *id, const char *label, int v, int total,
                         int keepalive);
