@@ -243,7 +243,7 @@ static const unsigned char DATA_data_shaders_planet_frag[5579] __attribute__((al
 
 ASSET_REGISTER(data_shaders_planet_frag, "shaders/planet.frag", DATA_data_shaders_planet_frag, false)
 
-static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_shaders_planet_vert[726] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec4 a_mpos;\n"
     "attribute vec2 a_tex_pos;\n"
@@ -252,6 +252,7 @@ static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((ali
     "attribute vec3 a_tangent;\n"
     "\n"
     "uniform vec4 u_color;\n"
+    "uniform vec2 u_depth_range;\n"
     "\n"
     "varying vec3 v_mpos;\n"
     "varying vec2 v_tex_pos;\n"
@@ -263,6 +264,8 @@ static const unsigned char DATA_data_shaders_planet_vert[582] __attribute__((ali
     "void main()\n"
     "{\n"
     "    gl_Position = a_pos;\n"
+    "    gl_Position.z = (gl_Position.z - u_depth_range[0]) /\n"
+    "                    (u_depth_range[1] - u_depth_range[0]);\n"
     "    v_mpos = a_mpos.xyz;\n"
     "    v_tex_pos = a_tex_pos;\n"
     "    v_color = vec4(a_color, 1.0) * u_color;\n"

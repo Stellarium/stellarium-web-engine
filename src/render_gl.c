@@ -10,6 +10,8 @@
 #include "swe.h"
 #include "utils/gl.h"
 
+#include <float.h>
+
 // We keep all the text textures in a cache so that we don't have to recreate
 // them each time.
 typedef struct tex_cache tex_cache_t;
@@ -44,6 +46,7 @@ typedef struct {
     GLuint u_smooth_l;
     GLuint u_mv_l;
     GLuint u_stripes_l;
+    GLuint u_depth_range_l;
 
     // For planets.
     GLuint u_sun_l;
@@ -90,6 +93,7 @@ struct item
     int         capacity;
     texture_t   *tex;
     int         flags;
+    double      depth_range[2];
 
     union {
         struct {
@@ -158,6 +162,7 @@ typedef struct renderer_gl {
     } progs;
 
     int     projection_type;    // The current shader projection.
+    double  depth_range[2];
 
     texture_t   *white_tex;
     tex_cache_t *tex_cache;
@@ -328,7 +333,6 @@ static void quad_planet(
     double duvx[2], duvy[2];
     uint16_t *indices;
     double p[4], normal[4] = {0}, tangent[4] = {0}, z;
-    const double *depth_range = (const double*)painter->depth_range;
 
     // Positions of the triangles in the quads.
     const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
@@ -405,10 +409,9 @@ static void quad_planet(
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
         z = p[2];
         project(painter->proj, 0, 4, p, p);
-        // For simplicity the projection doesn't take into account the depth
-        // range, so we apply it manually after if needed.
-        if (depth_range) {
-            p[2] = (-z - depth_range[0]) / (depth_range[1] - depth_range[0]);
+        if (painter->depth_range) {
+            vec2_copy(*painter->depth_range, item->depth_range);
+            p[2] = -z;
         }
         vec4_to_float(p, buf[i * n + j].pos);
         memcpy(buf[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
@@ -919,7 +922,10 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
         GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                                GL_ZERO, GL_ONE));
     }
-    GL(glDisable(GL_DEPTH_TEST));
+    if (item->depth_range[0] || item->depth_range[1])
+        GL(glEnable(GL_DEPTH_TEST));
+    else
+        GL(glDisable(GL_DEPTH_TEST));
 
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
@@ -954,6 +960,9 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
                    item->planet.shadow_spheres_nb));
     mat4_to_float(item->planet.shadow_spheres, mf);
     GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0, mf));
+
+    GL(glUniform2f(prog->u_depth_range_l,
+                   rend->depth_range[0], rend->depth_range[1]));
 
     // Set array positions.
     GL(glEnableVertexAttribArray(prog->a_pos_l));
@@ -1002,6 +1011,23 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 static void rend_flush(renderer_gl_t *rend)
 {
     item_t *item, *tmp;
+
+    // Compute depth range.
+    rend->depth_range[0] = DBL_MAX;
+    rend->depth_range[1] = DBL_MIN;
+    DL_FOREACH(rend->items, item) {
+        if (item->depth_range[0] || item->depth_range[1]) {
+            rend->depth_range[0] = min(rend->depth_range[0],
+                                       item->depth_range[0]);
+            rend->depth_range[1] = max(rend->depth_range[1],
+                                       item->depth_range[1]);
+        }
+    }
+    if (rend->depth_range[0] == DBL_MAX) {
+        rend->depth_range[0] = 0;
+        rend->depth_range[1] = 1;
+    }
+
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
@@ -1038,8 +1064,7 @@ static void line(renderer_t           *rend_,
     int i, ofs;
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    double k, pos[4], z;
-    const double *depth_range = (const double*)painter->depth_range;
+    double k, pos[4];
     lines_buf_t *buf;
     uint16_t *indices;
 
@@ -1068,11 +1093,7 @@ static void line(renderer_t           *rend_,
         mat4_mul_vec4(*painter->transform, pos, pos);
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
         pos[3] = 1.0;
-        z = pos[2];
         project(painter->proj, 0, 4, pos, pos);
-        if (depth_range) {
-            pos[2] = (-z - depth_range[0]) / (depth_range[1] - depth_range[0]);
-        }
         vec4_to_float(pos, buf[i].pos);
         memcpy(buf[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
         if (i < nb_segs) {
@@ -1109,6 +1130,7 @@ static void init_prog(prog_t *p, const char *vert, const char *frag,
     UNIFORM(u_shadow_spheres);
     UNIFORM(u_mv);
     UNIFORM(u_stripes);
+    UNIFORM(u_depth_range);
     ATTRIB(a_pos);
     ATTRIB(a_mpos);
     ATTRIB(a_tex_pos);

@@ -6,6 +6,7 @@ attribute vec3 a_normal;
 attribute vec3 a_tangent;
 
 uniform vec4 u_color;
+uniform vec2 u_depth_range;
 
 varying vec3 v_mpos;
 varying vec2 v_tex_pos;
@@ -17,6 +18,8 @@ varying vec3 v_bitangent;
 void main()
 {
     gl_Position = a_pos;
+    gl_Position.z = (gl_Position.z - u_depth_range[0]) /
+                    (u_depth_range[1] - u_depth_range[0]);
     v_mpos = a_mpos.xyz;
     v_tex_pos = a_tex_pos;
     v_color = vec4(a_color, 1.0) * u_color;
