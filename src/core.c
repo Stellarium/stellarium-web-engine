@@ -323,8 +323,8 @@ static int modules_sort_cmp(void *a, void *b)
 
 static void core_windows_to_ndc(const double p[2], double out[2])
 {
-    out[0] = p[0] / core->win_size[0] * 2 - 1;
-    out[1] = -1 * (p[1] / core->win_size[1] * 2 - 1);
+    out[0] = p[0] * core->win_pixels_scale / core->win_size[0] * 2 - 1;
+    out[1] = -1 * (p[1] * core->win_pixels_scale / core->win_size[1] * 2 - 1);
 }
 
 static int core_update(void);
@@ -394,7 +394,9 @@ static obj_t *get_obj_at(double x, double y, double max_dist)
 static int core_click(const gesture_t *g, void *user)
 {
     obj_t *obj;
-    obj = get_obj_at(g->pos[0], g->pos[1], 18);
+    obj = get_obj_at(g->pos[0] * core->win_pixels_scale,
+                     g->pos[1] * core->win_pixels_scale,
+                     18 * core->win_pixels_scale);
     obj_set_attr(&core->obj, "selection", "p", obj);
     obj_release(obj);
     return 0;
