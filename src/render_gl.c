@@ -88,7 +88,7 @@ struct item
     int         buf_size;
     int         nb;
     int         capacity;
-    const texture_t *tex;
+    texture_t   *tex;
     int         flags;
 
     union {
@@ -206,7 +206,7 @@ static void finish(renderer_t *rend_)
     rend_flush(rend);
 }
 
-static item_t *get_item(renderer_gl_t *rend, int type, int nb);
+static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex);
 
 static void points(renderer_t *rend_,
                    const painter_t *painter,
@@ -229,7 +229,7 @@ static void points(renderer_t *rend_,
         n = MAX_POINTS;
     }
 
-    if (!(item = get_item(rend, ITEM_POINTS, n * 6))) {
+    if (!(item = get_item(rend, ITEM_POINTS, n * 6, NULL))) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
         item->capacity = MAX_POINTS * 6;
@@ -302,7 +302,7 @@ static void compute_tangent(const double uv[2], const projection_t *tex_proj,
     vec3_cross(VEC(0, 0, 1), p, out);
 }
 
-static item_t *get_item(renderer_gl_t *rend, int type, int nb);
+static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex);
 
 
 static void quad_planet(
@@ -337,6 +337,7 @@ static void quad_planet(
     item->buf = calloc(n * n, sizeof(*buf));
     item->indices = calloc(item->capacity, sizeof(*indices));
     item->tex = tex;
+    item->tex->ref++;
     vec4_copy(painter->color, item->color);
     item->flags = painter->flags;
     item->planet.normalmap = normalmap;
@@ -419,10 +420,6 @@ static void quad_planet(
     item->nb += grid_size * grid_size * 6;
 
     DL_APPEND(rend->items, item);
-
-    // Since for the moment textures are not created on the fly, we have
-    // to render them immediately.
-    rend_flush(rend);
 }
 
 static void quad(renderer_t          *rend_,
@@ -457,6 +454,7 @@ static void quad(renderer_t          *rend_,
     item->buf = calloc(n * n, sizeof(*buf));
     item->indices = calloc(item->capacity, sizeof(*indices));
     item->tex = tex;
+    item->tex->ref++;
     vec4_copy(painter->color, item->color);
     item->flags = painter->flags;
 
@@ -496,13 +494,9 @@ static void quad(renderer_t          *rend_,
     item->nb += grid_size * grid_size * 6;
 
     DL_APPEND(rend->items, item);
-
-    // Since for the moment textures are not created on the fly, we have
-    // to render them immediately.
-    rend_flush(rend);
 }
 
-static void texture2(renderer_gl_t *rend, const texture_t *tex,
+static void texture2(renderer_gl_t *rend, texture_t *tex,
                      double uv[4][2], double pos[4][2],
                      const double color[4])
 {
@@ -512,13 +506,14 @@ static void texture2(renderer_gl_t *rend, const texture_t *tex,
     uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
 
-    if (!(item = get_item(rend, ITEM_ALPHA_TEXTURE, 6))) {
+    if (!(item = get_item(rend, ITEM_ALPHA_TEXTURE, 6, tex))) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_ALPHA_TEXTURE;
-        item->capacity = 6;
+        item->capacity = 6 * 64;
         item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
         item->indices = calloc(item->capacity, sizeof(*indices));
         item->tex = tex;
+        item->tex->ref++;
         vec4_copy(color, item->color);
         DL_APPEND(rend->items, item);
     }
@@ -541,10 +536,6 @@ static void texture2(renderer_gl_t *rend, const texture_t *tex,
 
     item->buf_size += 4 * sizeof(texture_buf_t);
     item->nb += 6;
-
-    // Since for the moment textures are not created on the fly, we have
-    // to render them immediately.
-    rend_flush(rend);
 }
 
 static void texture(renderer_t *rend_,
@@ -1010,17 +1001,19 @@ static void rend_flush(renderer_gl_t *rend)
             item_texture_render(rend, item);
         if (item->type == ITEM_PLANET) item_planet_render(rend, item);
         DL_DELETE(rend->items, item);
+        texture_release(item->tex);
         free(item->indices);
         free(item->buf);
         free(item);
     }
 }
 
-static item_t *get_item(renderer_gl_t *rend, int type, int nb)
+static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex)
 {
     item_t *item;
     item = rend->items ? rend->items->prev : NULL;
-    if (item && item->type == type && item->capacity > item->nb + nb)
+    if (    item && item->type == type && item->capacity > item->nb + nb &&
+            item->tex == tex)
         return item;
     // Since we don't use items for everything yet, we have to flush
     // as soon as we can't reuse an item, otherwise we won't render in
@@ -1045,7 +1038,7 @@ static void line(renderer_t           *rend_,
     uint16_t *indices;
 
     // Try to use the last pushed item.
-    if (!(item = get_item(rend, ITEM_LINES, nb_segs * 2))) {
+    if (!(item = get_item(rend, ITEM_LINES, nb_segs * 2, NULL))) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_LINES;
         item->capacity = 1024;
