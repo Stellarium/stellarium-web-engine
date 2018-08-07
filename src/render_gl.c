@@ -583,6 +583,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     tex_cache_t *ctex;
     texture_t *tex;
 
+    size *= core->win_pixels_scale;
     DL_FOREACH(rend->tex_cache, ctex) {
         if (ctex->size == size && strcmp(ctex->text, text) == 0) break;
     }

@@ -150,6 +150,7 @@ struct core
     renderer_t      *rend;
     int             proj;
     double          win_size[2];
+    double          win_pixels_scale;
     obj_t           *selection;
     obj_t           *hovered;
     bool            fast_mode; // Render as fast as possible.

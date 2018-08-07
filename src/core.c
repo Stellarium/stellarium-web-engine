@@ -499,6 +499,7 @@ void core_init(void)
 
     font_init(asset_get_data("asset://font/DejaVuSans-small.ttf", NULL, NULL));
     core = (core_t*)obj_create("core", "core", NULL, NULL);
+    core->win_pixels_scale = 1.0;
     obj_add_sub(&core->obj, "hints");
     core->hints_mag_max = NAN;
 
