@@ -543,7 +543,7 @@ static void render_rings(const planet_t *planet,
 
     // Add the planet in the painter shadow candidates.
     if (painter.shadow_spheres_nb < 4) {
-        vec3_copy(planet->pvg[0],
+        vec3_copy(planet->pvgc[0],
                   painter.shadow_spheres[painter.shadow_spheres_nb]);
         painter.shadow_spheres[painter.shadow_spheres_nb][3] =
                   planet->radius_m / DAU;
