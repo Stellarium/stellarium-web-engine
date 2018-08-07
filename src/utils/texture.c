@@ -85,6 +85,7 @@ texture_t *texture_create(int w, int h, int bpp)
 {
     texture_t *tex;
     tex = calloc(1, sizeof(*tex));
+    tex->ref = 1;
     tex->tex_w = next_pow2(w);
     tex->tex_h = next_pow2(h);
     tex->w = w;
@@ -94,9 +95,11 @@ texture_t *texture_create(int w, int h, int bpp)
     return tex;
 }
 
-void texture_delete(texture_t *tex)
+void texture_release(texture_t *tex)
 {
     if (!tex) return;
+    tex->ref--;
+    if (tex->ref) return;
     free(tex->url);
     GL(glDeleteTextures(1, &tex->id));
     free(tex);
@@ -110,6 +113,7 @@ texture_t *texture_from_data(const void *data, int img_w, int img_h, int bpp,
 
     assert(x >= 0 && x + w <= img_w && y >= 0 && y + h <= img_h);
     tex = calloc(1, sizeof(*tex));
+    tex->ref = 1;
     tex->flags = flags;
     GL(glGenTextures(1, &tex->id));
 
@@ -129,6 +133,7 @@ texture_t *texture_from_url(const char *url, int flags)
 {
     texture_t *tex;
     tex = calloc(1, sizeof(*tex));
+    tex->ref = 1;
     tex->url = strdup(url);
     tex->flags = flags;
     if (!(flags & TF_LAZY_LOAD)) texture_load(tex, NULL);

@@ -67,7 +67,7 @@ static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
     photo_t *photo = (void*)obj;
     char url[1024];
     if (args->u.array.length) {
-        texture_delete(photo->img);
+        texture_release(photo->img);
         args_get(args, NULL, 1, "s", NULL, &url);
         photo->img = texture_from_url(url, 0);
     }

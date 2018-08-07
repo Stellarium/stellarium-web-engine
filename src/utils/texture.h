@@ -28,6 +28,7 @@ enum {
  *
  * Attributes:
  *   id     - OpenGL texture id.
+ *   ref    - For ref counting.
  *   w      - Width of the texture.
  *   h      - Height of the texture.
  *   tex_w  - Internal width of the texture.
@@ -38,6 +39,7 @@ enum {
  */
 typedef struct texture {
     uint32_t        id;
+    int             ref;
     int             w, h, tex_w, tex_h;
     int             format;
     int             flags;
@@ -68,4 +70,4 @@ texture_t *texture_from_data(const void *data, int img_w, int img_h, int bpp,
 texture_t *texture_from_url(const char *url, int flags);
 bool texture_load(texture_t *tex, int *code);
 void texture_set_data(texture_t *tex, const void *data, int w, int h, int bpp);
-void texture_delete(texture_t *tex);
+void texture_release(texture_t *tex);

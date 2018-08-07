@@ -182,7 +182,7 @@ static void prepare(renderer_t *rend_, int w, int h)
     DL_FOREACH_SAFE(rend->tex_cache, ctex, tmp) {
         if (!ctex->in_use) {
             DL_DELETE(rend->tex_cache, ctex);
-            texture_delete(ctex->tex);
+            texture_release(ctex->tex);
             free(ctex->text);
             free(ctex);
         }

@@ -193,7 +193,7 @@ static int del_tile(void *data)
     tile_t *tile = data;
     if (tile->loader && worker_is_running(&tile->loader->worker))
         return CACHE_KEEP;
-    texture_delete(tile->tex);
+    texture_release(tile->tex);
     free(tile);
     return 0;
 }
@@ -300,7 +300,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         goto after_load;
     }
     tile->flags |= (transparency * TILE_NO_CHILD_0);
-    texture_delete(tile->allsky_tex);
+    texture_release(tile->allsky_tex);
     tile->allsky_tex = NULL;
     tile->tex = tex;
     cache_set_cost(g_cache, url, strlen(url), tex->tex_w * tex->tex_h * 4);
