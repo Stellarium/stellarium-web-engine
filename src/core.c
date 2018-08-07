@@ -917,7 +917,8 @@ double core_get_observed_mag(double vmag)
 /*
  * Fast pow approximation from Martin Ankerl.
  */
-inline double fast_pow(double a, double b) {
+static inline double fast_pow(double a, double b)
+{
     union {
         double d;
         int x[2];
