@@ -53,7 +53,7 @@
                </div>
               </div>
               <v-spacer></v-spacer>
-              <v-btn icon class="black--text" @click.native.stop="myPositionClicked()">
+              <v-btn icon class="black--text" @click.native.stop="centerOnRealPosition()">
                 <v-icon>my_location</v-icon>
               </v-btn>
             </v-toolbar>
@@ -66,9 +66,9 @@
                   @click="selectKnownLocation(loc)"
                   :draggable="!pickLocationMode && selectedKnownLocation && selectedKnownLocation === loc" @dragend="dragEnd"
                 ></gmap-marker>
-              <gmap-circle v-if="autoDetectLocation"
-                :center="{ lng: autoDetectLocation.lng, lat: autoDetectLocation.lat }"
-                :radius="autoDetectLocation.accuracy"
+              <gmap-circle v-if="startLocation"
+                :center="{ lng: startLocation.lng, lat: startLocation.lat }"
+                :radius="startLocation.accuracy"
                 :options="{
                   strokeColor: '#0000FF',
                   strokeOpacity: 0.5,
@@ -98,7 +98,7 @@ export default {
       mapCenter: {lat: 43.6, lng: 1.4333}
     }
   },
-  props: ['showMyLocation', 'knownLocations'],
+  props: ['showMyLocation', 'knownLocations', 'startLocation', 'realLocation'],
   computed: {
     doShowMyLocation: function () {
       return this.showMyLocation === undefined ? false : this.showMyLocation
@@ -111,16 +111,18 @@ export default {
     },
     locationForDetail: function () {
       if (this.pickLocationMode && this.pickLocation === undefined) {
-        return this.autoDetectLocation
+        return this.startLocation
       }
       return this.pickLocationMode ? this.pickLocation : this.selectedKnownLocation
-    },
-    autoDetectLocation: function () {
-      return this.$store.state.useAutoLocation ? this.$store.state.autoDetectedLocation : this.$store.state.currentLocation
+    }
+  },
+  watch: {
+    startLocation: function () {
+      this.setPickLocation(this.startLocation)
     }
   },
   mounted: function () {
-    this.myPositionClicked()
+    this.setPickLocation(this.startLocation)
   },
   methods: {
     // Workaround a map refresh bug..
@@ -151,21 +153,24 @@ export default {
       swh.geoCodePosition(pos).then((p) => { that.pickLocation = p })
       this.setPickLocationMode()
     },
-    myPositionClicked: function () {
-      if (this.autoDetectLocation.accuracy < 100) {
+    setPickLocation: function (loc) {
+      if (loc.accuracy < 100) {
         for (let l of this.knownLocations) {
-          let d = swh.getDistanceFromLatLonInM(l.lat, l.lng, this.autoDetectLocation.lat, this.autoDetectLocation.lng)
+          let d = swh.getDistanceFromLatLonInM(l.lat, l.lng, loc.lat, loc.lng)
           if (d < 100) {
             this.selectKnownLocation(l)
             return
           }
         }
       }
-      var pos = { lat: this.autoDetectLocation.lat, lng: this.autoDetectLocation.lng }
+      var pos = { lat: loc.lat, lng: loc.lng }
       this.mapCenter = pos
-      pos.accuracy = 0
-      var that = this
-      swh.geoCodePosition(pos).then((p) => { that.pickLocation = p; that.setPickLocationMode() })
+      this.pickLocation = loc
+      this.setPickLocationMode()
+    },
+    // Called when the user clicks on the small cross button
+    centerOnRealPosition: function () {
+      this.setPickLocation(this.realLocation)
     },
     dragEnd: function (newPos) {
       var that = this

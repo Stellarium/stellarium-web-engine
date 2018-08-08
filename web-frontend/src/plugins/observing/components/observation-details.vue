@@ -152,7 +152,7 @@
     <v-dialog lazy max-width="800" v-model="locationMenu">
       <v-card v-if="locationMenu" color="secondary" flat>
         <v-container>
-          <location-mgr showMyLocation="true" :knownLocations="$store.state.plugins.observing.noctuaSky.locations" v-on:locationSelected="setLocation"></location-mgr>
+          <location-mgr showMyLocation="true" :knownLocations="$store.state.plugins.observing.noctuaSky.locations" v-on:locationSelected="setLocation" :startLocation="$store.state.currentLocation" :realLocation="$store.state.autoDetectedLocation"></location-mgr>
         </v-container>
       </v-card>
     </v-dialog>
