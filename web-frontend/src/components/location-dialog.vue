@@ -12,7 +12,7 @@
     <v-card color="secondary" flat>
       <v-switch label="Use Autolocation" v-model="useAutoLocation" dark></v-switch>
     </v-card>
-    <location-mgr v-on:locationSelected="setLocation" :knownLocations="[]"></location-mgr>
+    <location-mgr v-on:locationSelected="setLocation" :knownLocations="[]" :startLocation="$store.state.currentLocation" :realLocation="$store.state.autoDetectedLocation"></location-mgr>
   </v-container>
 </v-dialog>
 </template>
