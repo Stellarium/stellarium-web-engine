@@ -68,6 +68,23 @@
       </v-container>
     </v-tab-item>
 
+    <v-tab-item key="2" style="height: 100%">
+      <v-container fluid style="height: 100%">
+        <v-layout row justify-space-around style="margin-top: calc(100vh /2 - 150px); margin-bottom: 20px">
+          <h4 class="white--text">Thanks for Signin In to NoctuaSky.com!</h4>
+        </v-layout>
+        <v-card>
+          <v-card-text>
+            <p>Before you can continue, you need to confirm that your email is valid.</p>
+            <p>We have just sent you a message containing a confirmation link that you need to click.</p>
+          </v-card-text>
+        </v-card>
+        <v-layout row justify-space-around style="margin-top: 30px">
+          <p><v-btn flat small @click.stop.native="showSigninTab()">OK, get me to SignIn</v-btn></p>
+        </v-layout>
+      </v-container>
+    </v-tab-item>
+
   </v-tabs-items>
 </div>
 </template>
@@ -137,7 +154,7 @@ export default {
     signUp: function () {
       var that = this
       this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).then(res => {
-        that.showSigninTab()
+        that.showWaitConfirmationEmailTab()
       }).catch(function (res) {
         if (res.message) {
           that.signUpErrorAlert = res.message
@@ -148,6 +165,11 @@ export default {
           }
         }
       })
+    },
+    showWaitConfirmationEmailTab: function () {
+      this.email = this.signUpEmail
+      this.password = this.signUpPassword
+      this.active = '2'
     },
     showSignupTab: function () {
       this.active = '1'
