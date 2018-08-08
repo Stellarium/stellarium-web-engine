@@ -39,7 +39,7 @@ export const swh = {
     // Note that "import StelWebEngine from '@/assets/js/stellarium-web-engine.js'" would work
     // if it was an ES6 module with "export default StelWebEngine"
     scriptjs(['https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js', sweJsModule], function () {
-      NoctuaSkyClient.init('http://localhost:8090').then(res => {
+      NoctuaSkyClient.init(process.env.NOCTUASKY_API_SERVER).then(res => {
         // eslint-disable-next-line
         let lstel = StelWebEngine({
           wasmFile: sweWasmModule,
