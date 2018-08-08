@@ -236,13 +236,26 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
 {
     char buff[32];
     double pos[2];
-    double a, color[4];
+    double a, color[4], label_angle;
     char s;
     int h[4];
-    double n[2];
+    double uw[2], n[2];
+    int size[2];
 
-    vec2_normalize(u, n);
+    // Line direction vector in windows coordinates.
+    uw[0] = u[0] * core->win_size[0];
+    uw[1] = u[1] * core->win_size[1];
+
+    vec2_normalize(uw, n);
     if (fabs(vec2_dot(n, v)) < 0.5) return;
+
+    if (vec2_dot(n, v) < 0) {
+        vec2_mul(-1, uw, uw);
+        vec2_mul(-1, n, n);
+    }
+
+    label_angle = atan2(uw[1], uw[0]);
+    if (fabs(label_angle) > M_PI / 2) label_angle += M_PI;
 
     if (i == 0) a = mix(-90, +90 , uv[1]) * DD2R;
     else        a = mix(  0, +360, uv[0]) * DD2R;
@@ -263,10 +276,23 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
         else
             sprintf(buff, "%c%dh%2dm%2ds", s, h[0], h[1], h[2]);
     }
-    vec2_addk(p, v, 0.05, pos);
+
+    // Need to be careful how we compute the position since the input
+    // and labels_add positions are in NDC coordinates, but it's more natural
+    // to do the computations in screen coordinates.
+    paint_text_size(painter, buff, 13, size);
+    vec2_normalize(uw, n);
+    pos[0] = p[0] * core->win_size[0] + n[0] * size[0];
+    pos[1] = p[1] * core->win_size[1] + n[1] * size[0];
+    pos[0] += fabs(v[1]) * size[1] * 1.5;
+    pos[1] += fabs(v[0]) * size[1] * 1.5;
+    pos[0] /= core->win_size[0];
+    pos[1] /= core->win_size[1];
+
     vec4_copy(painter->color, color);
     color[3] = 1.0;
-    labels_add(buff, pos, 0, 13, color, 0, ANCHOR_FIXED, 0);
+    labels_add(buff, pos, 0, 13, color, label_angle,
+               ANCHOR_FIXED | ANCHOR_CENTER, 0);
 }
 
 int on_quad(int step, qtree_node_t *node,
