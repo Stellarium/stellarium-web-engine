@@ -32,3 +32,16 @@ const void *asset_get_data(const char *url, int *size, int *code);
 #define ASSET_ITER(base_, path_) \
     for (void *i_ = NULL; (path_ = asset_iter_(base_, &i_)); )
 const char *asset_iter_(const char *base, void **i);
+
+/*
+ * Function: asset_set_proxy
+ * Set an alias url for an online directory.
+ *
+ * Any subsequent call to asset_get_data taking as input an url starting
+ * with the base url, will first attempt to retrieve the data using the
+ * alias url.
+ *
+ * This allows to bundle some data in the app, while still accessing it
+ * as if it was online.
+ */
+void asset_set_alias(const char *base_url, const char *alias);
