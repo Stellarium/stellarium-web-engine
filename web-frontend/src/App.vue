@@ -107,12 +107,6 @@ export default {
       this.$cookie.set('cookieAccepted', 'y', { expires: '2Y' })
       this.snackbar = false
     },
-    autoLocation: function () {
-      var that = this
-      swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
-        that.$store.commit('setAutoDetectedLocation', loc)
-      }, (error) => { console.log(error) })
-    },
     setTimeAfterSunSet: function () {
       // Look for the next time starting from now on when the night Sky is visible
       // i.e. when sun is more than 10 degree below horizon.
@@ -134,6 +128,24 @@ export default {
         d.add(5, 'minutes')
       }
       this.$stel.core.observer.utc = d.toDate().getMJD()
+    },
+    setStateFromQueryArgs: function () {
+      // Set the core's state from URL query arguments such
+      // as date, location, view direction & fov
+      var that = this
+      let d = new Date()
+      if (this.$route.query.date) {
+        d = new Moment(this.$route.query.date).toDate()
+        this.startTimeIsSet = true
+      }
+      this.$stel.core.observer.utc = d.getMJD()
+
+      if (this.$route.query.lng && this.$route.query.lat) {
+        let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.alt ? Number(this.$route.query.alt) : 0, accuracy: 1}
+        swh.geoCodePosition(pos).then((loc) => {
+          that.$store.commit('setCurrentLocation', loc)
+        }, (error) => { console.log(error) })
+      }
     }
   },
   computed: {
@@ -164,6 +176,10 @@ export default {
         this.startTimeIsSet = true
         this.setTimeAfterSunSet()
       }
+    },
+    '$route': function () {
+      // react to route changes...
+      this.setStateFromQueryArgs()
     }
   },
   mounted: function () {
@@ -173,8 +189,11 @@ export default {
     // in the $store.stel object in a reactive way (useful for vue components).
     // To modify the state of the StelWebEngine, it's enough to call/set values directly on the $stel object
     swh.initStelWebEngine(this.$store, this.$refs.stelCanvas, function () {
-      that.$stel.core.observer.utc = new Date().getMJD()
-      that.autoLocation()
+      // Start auto location detection (even if we don't use it)
+      swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
+        that.$store.commit('setAutoDetectedLocation', loc)
+      }, (error) => { console.log(error) })
+      that.setStateFromQueryArgs()
       that.guiComponent = 'Gui'
     })
   }
