@@ -21,6 +21,7 @@ enum {
     SK_INFO           = 1 << 0,
     SK_NAMES          = 1 << 1,
     SK_CONSTELLATIONS = 1 << 2,
+    SK_IMGS           = 1 << 3,
 };
 
 /*
@@ -37,6 +38,7 @@ typedef struct skyculture {
     int             nb_constellations;
     char            *(*names)[2]; // [ID, Name].  NULL terminated.
     constellation_infos_t *constellations;
+    json_value      *imgs;
     bool            active;
     int             parsed; // union of SK_ enum for each parsed file.
 } skyculture_t;
@@ -87,7 +89,7 @@ static void skyculture_activate(skyculture_t *cult)
     int i;
     json_value *args;
     constellation_infos_t *cst;
-    obj_t *constellations;
+    obj_t *constellations, *cons;
 
     // Add all the names.
     for (i = 0; cult->names[i][0]; i++) {
@@ -100,11 +102,24 @@ static void skyculture_activate(skyculture_t *cult)
     assert(constellations);
     for (i = 0; i < cult->nb_constellations; i++) {
         cst = &cult->constellations[i];
+        sprintf(id, "CST %s", cst->id);
+        cons = obj_get(constellations, id, 0);
+        if (cons) continue;
         args = json_object_new(0);
         json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
-        sprintf(id, "CST %s", cst->id);
         obj_create("constellation", id, constellations, args);
         json_value_free(args);
+    }
+
+    // Add the images.
+    if (cult->imgs) {
+        for (i = 0; i < cult->imgs->u.array.length; i++) {
+            args = cult->imgs->u.array.values[i];
+            sprintf(id, "CST %s", json_get_attr_s(args, "id"));
+            cons = obj_get(constellations, id, 0);
+            if (!cons) continue;
+            obj_call_json(cons, "set_image", args);
+        }
     }
 }
 
@@ -159,12 +174,33 @@ static void skyculture_on_active_changed(
     else skyculture_deactivate(cult);
 }
 
+static json_value *parse_imgs(const char *data, const char *uri)
+{
+    int i;
+    char base_path[1024];
+    json_value *value, *v;
+    json_settings settings = {};
+    settings.value_extra = json_builder_extra;
+    value = json_parse_ex(&settings, data, strlen(data), NULL);
+
+    // Add the base_path attribute needed by the constellation add_img
+    // function.
+    // XXX: It would probably be better to add it in the activate function
+    //      instead.
+    sprintf(base_path, "%s/imgs", uri);
+    for (i = 0; i < value->u.array.length; i++) {
+        v = value->u.array.values[i];
+        json_object_push(v, "base_path", json_string_new(base_path));
+    }
+    return value;
+}
+
 static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
-    const char *info, *constellations, *edges, *names;
+    const char *info, *constellations, *edges, *names, *imgs;
     char path[1024];
-    int nb;
+    int nb, code;
 
     if (!(cult->parsed & SK_INFO)) {
         sprintf(path, "%s/%s", cult->uri, "info.ini");
@@ -196,6 +232,15 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         cult->constellations = skyculture_parse_constellations(
                 constellations, edges, &cult->nb_constellations);
         cult->parsed |= SK_CONSTELLATIONS;
+    }
+
+    if (!(cult->parsed & SK_IMGS)) {
+        sprintf(path, "%s/%s", cult->uri, "imgs/index.json");
+        imgs = asset_get_data(path, NULL, &code);
+        if (code) cult->parsed |= SK_IMGS;
+        if (!imgs) return 0;
+        cult->imgs = parse_imgs(imgs, cult->uri);
+        if (cult->active) skyculture_activate(cult);
     }
 
     return 0;

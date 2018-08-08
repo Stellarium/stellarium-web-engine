@@ -123,33 +123,6 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     core_on_zoom(pow(ZOOM_FACTOR, yoffset), xpos, ypos);
 }
 
-static void add_constellation_images(void)
-{
-    int i;
-    obj_t *cons;
-    json_value *value, *v;
-    json_settings settings = {};
-    char buf[64];
-    const char *id;
-    const char *base_path = "html/res/constellations";
-    const char *data = asset_get_data(
-            "html/res/constellations/index.json", NULL, NULL);
-
-    assert(data);
-    settings.value_extra = json_builder_extra;
-    value = json_parse_ex(&settings, data, strlen(data), NULL);
-    for (i = 0; i < value->u.array.length; i++) {
-        v = value->u.array.values[i];
-        id = json_get_attr_s(v, "id");
-        sprintf(buf, "CST %s", id);
-        cons = obj_get(NULL, buf, 0);
-        if (!cons) continue;
-        json_object_push(v, "base_path", json_string_new(base_path));
-        obj_call_json(cons, "set_image", v);
-    }
-    json_value_free(value);
-}
-
 int main(int argc, char **argv)
 {
     int w = 800, h = 600;
@@ -200,7 +173,6 @@ int main(int argc, char **argv)
         tests_run("auto"); // Run all the automatic tests.
         core_init();       // Reinit the core to default.
     }
-    add_constellation_images();
 
     run_main_loop(loop_function);
     core_release();
