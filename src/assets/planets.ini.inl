@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_planets_ini[25523] __attribute__((aligned(4))) =
+static const unsigned char DATA_data_planets_ini[25547] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = SUN\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -81,6 +81,7 @@ static const unsigned char DATA_data_planets_ini[25523] __attribute__((aligned(4
     "orbit = plan94:6\n"
     "albedo = 0.47\n"
     "mass = 5.68319e+26 kg\n"
+    "rot_period = 10.65622 h\n"
     "\n"
     "[uranus]\n"
     "type = PLA\n"
