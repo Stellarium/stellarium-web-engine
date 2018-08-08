@@ -199,6 +199,7 @@ static bool constellation_is_visible(const painter_t *painter,
     return ret;
 }
 
+static int render_lines(const constellation_t *con, const painter_t *painter);
 static int render_img(const constellation_t *con, const painter_t *painter);
 
 // Make a line shorter so that we don't hide the star.
@@ -297,26 +298,47 @@ static int render_bounds(const constellation_t *con,
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
     const constellation_t *con = (const constellation_t*)obj;
-    const constellations_t *cons = (const constellations_t*)obj->parent;
-    double (*lines)[4];
-    double lines_color[4];
-    double pos[3] = {0, 0, 0};
-    double mag[2], radius[2];
-    painter_t painter = *_painter, painter_l;
-    int i;
+    painter_t painter = *_painter;
 
     painter.color[3] *= con->visible.value;
     if (painter.color[3] == 0.0) return 0;
     if (!constellation_is_visible(&painter, con))
         return 0;
-    painter_l = painter;
-    painter_l.color[3] *= cons->lines_visible.value * con->visible.value;;
-    if (painter_l.color[3] == 0.0) return 0;
+
+    render_lines(con, &painter);
+    render_img(con, &painter);
+    render_bounds(con, &painter);
+
+    return 0;
+}
+
+// Project from uv to the sphere.
+static void proj_backward(const projection_t *proj, int flags,
+                          const double *v, double *out)
+{
+    double uv[3] = {v[0], v[1], 1.0};
+    mat3_mul_vec3(proj->mat3, uv, out);
+    vec3_normalize(out, out);
+    out[3] = 0;
+}
+
+static int render_lines(const constellation_t *con, const painter_t *_painter)
+{
+    painter_t painter = *_painter;
+    int i;
+    double (*lines)[4];
+    double lines_color[4];
+    double pos[3] = {0, 0, 0};
+    double mag[2], radius[2];
+    const constellations_t *cons = (const constellations_t*)con->obj.parent;
+
+    painter.color[3] *= con->visible.value * cons->lines_visible.value;
+    if (painter.color[3] == 0.0) return 0;
     hex_to_rgba(0x6096C280, lines_color);
-    painter_l.lines_width = clamp(1.0 / (core->fov / (90 * DD2R)), 1.0, 16.0);
+    painter.lines_width = clamp(1.0 / (core->fov / (90 * DD2R)), 1.0, 16.0);
     // Refraction already taken into account from stars position.
-    vec4_emul(lines_color, painter_l.color, painter_l.color);
-    // XXX: we should avoid this calloc.
+    vec4_emul(lines_color, painter.color, painter.color);
+
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
         eraS2c(con->stars[i]->pos.az, con->stars[i]->pos.alt, lines[i]);
@@ -334,10 +356,8 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
     }
 
     vec3_normalize(pos, pos); // Middle pos.
-    paint_lines(&painter_l, FRAME_OBSERVED, con->count, lines, NULL, 8, 2);
+    paint_lines(&painter, FRAME_OBSERVED, con->count, lines, NULL, 8, 2);
     free(lines);
-    render_img(con, &painter);
-    render_bounds(con, &painter);
 
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
@@ -348,16 +368,6 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
         labels_add(con->name, pos, 0, 16, lines_color, ANCHOR_CENTER, 0);
     }
     return 0;
-}
-
-// Project from uv to the sphere.
-static void proj_backward(const projection_t *proj, int flags,
-                          const double *v, double *out)
-{
-    double uv[3] = {v[0], v[1], 1.0};
-    mat3_mul_vec3(proj->mat3, uv, out);
-    vec3_normalize(out, out);
-    out[3] = 0;
 }
 
 static int render_img(const constellation_t *con, const painter_t *painter)
