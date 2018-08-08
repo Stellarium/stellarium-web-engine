@@ -1068,8 +1068,10 @@ static void line(renderer_t           *rend_,
     lines_buf_t *buf;
     uint16_t *indices;
 
-    // Try to use the last pushed item.
-    if (!(item = get_item(rend, ITEM_LINES, nb_segs * 2, NULL))) {
+    item = get_item(rend, ITEM_LINES, nb_segs * 2, NULL);
+    if (item && !vec4_equal(item->color, painter->color)) item = NULL;
+
+    if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_LINES;
         item->capacity = 1024;
