@@ -113,10 +113,10 @@ export default {
       if (this.pickLocationMode && this.pickLocation === undefined) {
         return this.autoDetectLocation
       }
-      return this.pickLocationMode ? this.pickLocation : (this.autoDetectLocationMode ? this.autoDetectLocation : this.selectedKnownLocation)
+      return this.pickLocationMode ? this.pickLocation : this.selectedKnownLocation
     },
     autoDetectLocation: function () {
-      return this.$store.state.autoDetectedLocation
+      return this.$store.state.useAutoLocation ? this.$store.state.autoDetectedLocation : this.$store.state.currentLocation
     }
   },
   mounted: function () {
