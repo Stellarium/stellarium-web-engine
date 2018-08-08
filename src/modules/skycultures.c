@@ -178,10 +178,15 @@ static json_value *parse_imgs(const char *data, const char *uri)
 {
     int i;
     char base_path[1024];
+    char error[json_error_max] = "";
     json_value *value, *v;
     json_settings settings = {};
     settings.value_extra = json_builder_extra;
-    value = json_parse_ex(&settings, data, strlen(data), NULL);
+    value = json_parse_ex(&settings, data, strlen(data), error);
+    if (error[0]) {
+        LOG_E("Failed to parse json: %s", error);
+        return NULL;
+    }
 
     // Add the base_path attribute needed by the constellation add_img
     // function.
