@@ -137,15 +137,15 @@ double paint_quad_area(const painter_t *painter,
 int paint_text_size(const painter_t *painter, const char *text, double size,
                     int out[2])
 {
-    REND(painter->rend, text, text, NULL, size, NULL, out);
+    REND(painter->rend, text, text, NULL, size, NULL, 0, out);
     return 0;
 }
 
 int paint_text(const painter_t *painter, const char *text,
                const double pos[2], double size,
-               const double color[4])
+               const double color[4], double angle)
 {
-    REND(painter->rend, text, text, pos, size, color, NULL);
+    REND(painter->rend, text, text, pos, size, color, angle, NULL);
     return 0;
 }
 

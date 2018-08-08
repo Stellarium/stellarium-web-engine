@@ -53,7 +53,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
                 2, pos, pos))
             continue;
-        labels_add(POINTS[i].text, pos, 0, size, color,
+        labels_add(POINTS[i].text, pos, 0, size, color, 0,
                    ANCHOR_CENTER | ANCHOR_FIXED, 0);
     }
     return 0;

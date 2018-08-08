@@ -21,6 +21,7 @@ struct label
     double  radius;     // Radius of the object.
     double  size;
     double  color[4];
+    double  angle;
     int     flags;
 
     double  priority;
@@ -143,7 +144,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
             if (!test_label_overlaps(label)) break;
         }
         paint_text(painter, label->text, label->box, label->size,
-                   label->color);
+                   label->color, label->angle);
         label->flags &= ~SKIPPED;
 skip:;
     }
@@ -151,8 +152,8 @@ skip:;
 }
 
 label_t *labels_add(const char *text, const double pos[2], double radius,
-                    double size, const double color[4], int flags,
-                    double priority)
+                    double size, const double color[4], double angle,
+                    int flags, double priority)
 {
     if (flags & ANCHOR_FIXED) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
@@ -164,6 +165,7 @@ label_t *labels_add(const char *text, const double pos[2], double radius,
         .radius = radius,
         .size = size,
         .color = {color[0], color[1], color[2], color[3]},
+        .angle = angle,
         .flags = flags,
         .priority = priority,
     };

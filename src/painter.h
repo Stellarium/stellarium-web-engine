@@ -54,6 +54,7 @@ struct renderer
                  const double    pos[2],
                  double          size,
                  const double    color[4],
+                 double          angle,
                  int             tex_size[2]    // Output, can be NULL.
                  );
 
@@ -192,7 +193,7 @@ int paint_text_size(const painter_t *painter, const char *text, double size,
 // size in inch ??
 int paint_text(const painter_t *painter,
                const char *text, const double pos[2],
-               double size, const double color[4]);
+               double size, const double color[4], double angle);
 
 // Pos in NDC coordinates (-1 to 1)
 // size in inch ?

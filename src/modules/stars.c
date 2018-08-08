@@ -830,13 +830,13 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     make_id(id, "HD", s->hd);
     name = identifiers_get(id, "NAME");
     if (name) {
-        labels_add(name, pos, size, 13, label_color, ANCHOR_AROUND, -vmag);
+        labels_add(name, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
         return;
     }
     bayer_get(s->hd, NULL, &bayer, &bayer_n);
     if (bayer) {
         sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-        labels_add(tmp, pos, size, 13, label_color, ANCHOR_AROUND, -vmag);
+        labels_add(tmp, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
     }
 }
 

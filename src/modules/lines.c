@@ -266,7 +266,7 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
     vec2_addk(p, v, 0.05, pos);
     vec4_copy(painter->color, color);
     color[3] = 1.0;
-    labels_add(buff, pos, 0, 13, color, ANCHOR_FIXED, 0);
+    labels_add(buff, pos, 0, 13, color, 0, ANCHOR_FIXED, 0);
 }
 
 int on_quad(int step, qtree_node_t *node,

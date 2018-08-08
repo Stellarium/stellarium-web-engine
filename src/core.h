@@ -118,8 +118,8 @@ enum {
 
 void labels_reset(void);
 label_t *labels_add(const char *text, const double pos[2], double radius,
-                    double size, const double color[4], int flags,
-                    double priority);
+                    double size, const double color[4], double angle,
+                    int flags, double priority);
 
 /******* Section: Core ****************************************************/
 
