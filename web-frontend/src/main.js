@@ -54,8 +54,8 @@ context.keys().forEach(function (key) {
 })
 
 // Don't use plugins for the moment
-// Vue.SWPlugins = []
-Vue.SWPlugins = plugins
+Vue.SWPlugins = []
+// Vue.SWPlugins = plugins
 
 Vue.use(Router)
 
