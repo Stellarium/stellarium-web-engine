@@ -66,6 +66,7 @@ static cache_t *g_cache = NULL;
 
 struct hips {
     char        *url;
+    char        *service_url;
     const char  *ext; // jpg, png, or webp.
     double      release_date; // release date as jd value.
     int         error; // Set if an error occurred.
@@ -91,6 +92,7 @@ hips_t *hips_create(const char *url, double release_date)
 {
     hips_t *hips = calloc(1, sizeof(*hips));
     hips->url = strdup(url);
+    hips->service_url = strdup(url);
     hips->ext = "jpg";
     hips->order_min = 3;
     hips->release_date = release_date;
@@ -116,15 +118,15 @@ static const char *get_url_for(const hips_t *hips, char *buf,
     char *p = buf;
 
     va_start(ap, format);
-    p += sprintf(p, "%s/", hips->url);
+    p += sprintf(p, "%s/", hips->service_url);
     p += vsprintf(p, format, ap);
     va_end(ap);
 
     // If we are using http, add the release date parameter for better
     // cache control.
     if (    hips->release_date &&
-            (strncmp(hips->url, "http://", 7) == 0 ||
-             strncmp(hips->url, "https://", 8) == 0)) {
+            (strncmp(hips->service_url, "http://", 7) == 0 ||
+             strncmp(hips->service_url, "https://", 8) == 0)) {
         sprintf(p, "?v=%d", (int)hips->release_date);
     }
     return buf;
@@ -156,6 +158,10 @@ static int property_handler(void* user, const char* section,
              if (strstr(value, "webp")) hips->ext = "webp";
         else if (strstr(value, "jpeg")) hips->ext = "jpg";
         else if (strstr(value, "png"))  hips->ext = "png";
+    }
+    if (strcmp(name, "hips_service_url") == 0) {
+        free(hips->service_url);
+        hips->service_url = strdup(value);
     }
     return 0;
 }
@@ -522,7 +528,7 @@ static bool hips_update(hips_t *hips)
 
     // Get the allsky before anything else if available.
     if (!hips->allsky.not_available && !hips->allsky.data) {
-        asprintf(&url, "%s/Norder%d/Allsky.%s?v=%d", hips->url,
+        asprintf(&url, "%s/Norder%d/Allsky.%s?v=%d", hips->service_url,
                  hips->order_min, hips->ext,
                  (int)hips->release_date);
         data = asset_get_data(url, &size, &code);
