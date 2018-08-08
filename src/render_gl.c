@@ -614,8 +614,8 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     for (i = 0; i < 4; i++) {
         uv[i][0] = ((i % 2) * tex->w) / (double)tex->tex_w;
         uv[i][1] = ((i / 2) * tex->h) / (double)tex->tex_h;
-        verts[i][0] = (i % 2) * tex->w / oversample;
-        verts[i][1] = (i / 2) * tex->h / oversample;
+        verts[i][0] = (i % 2 - 0.5) * tex->w / oversample;
+        verts[i][1] = (i / 2 - 0.5) * tex->h / oversample;
         vec2_rotate(angle, verts[i], verts[i]);
         verts[i][0] += p[0] * fb_size[0] / 2.0;
         verts[i][1] += p[1] * fb_size[1] / 2.0;

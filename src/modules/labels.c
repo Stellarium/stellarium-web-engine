@@ -134,6 +134,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
 {
     label_t *label;
     int i;
+    double pos[2];
     DL_SORT(g_labels, label_cmp);
     DL_FOREACH(g_labels, label) {
         for (i = 0; ; i++) {
@@ -143,7 +144,9 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
             }
             if (!test_label_overlaps(label)) break;
         }
-        paint_text(painter, label->text, label->box, label->size,
+        pos[0] = (label->box[0] + label->box[2]) / 2;
+        pos[1] = (label->box[1] + label->box[3]) / 2;
+        paint_text(painter, label->text, pos, label->size,
                    label->color, label->angle);
         label->flags &= ~SKIPPED;
 skip:;
