@@ -14,6 +14,14 @@
  * Module that handles the skycultures list.
  */
 
+/*
+ * Enum of all the data files we need to parse.
+ */
+enum {
+    SK_INFO           = 1 << 0,
+    SK_NAMES          = 1 << 1,
+    SK_CONSTELLATIONS = 1 << 2,
+};
 
 /*
  * Type: skyculture_t
@@ -30,15 +38,18 @@ typedef struct skyculture {
     char            *(*names)[2]; // [ID, Name].  NULL terminated.
     constellation_infos_t *constellations;
     bool            active;
+    int             parsed; // union of SK_ enum for each parsed file.
 } skyculture_t;
 
 static void skyculture_on_active_changed(
         obj_t *obj, const attribute_t *attr);
+static int skyculture_update(obj_t *obj, const observer_t *obs, double dt);
 
 static obj_klass_t skyculture_klass = {
     .id     = "skyculture",
     .size   = sizeof(skyculture_t),
     .flags  = 0,
+    .update = skyculture_update,
     .attributes = (attribute_t[]) {
         PROPERTY("active", "b", MEMBER(skyculture_t, active),
                  .on_changed = skyculture_on_active_changed),
@@ -55,6 +66,7 @@ typedef struct skycultures_t {
 
 static int skycultures_init(obj_t *obj, json_value *args);
 static void skycultures_gui(obj_t *obj, int location);
+static int skycultures_update(obj_t *obj, const observer_t *obs, double dt);
 
 static obj_klass_t skycultures_klass = {
     .id             = "skycultures",
@@ -62,6 +74,7 @@ static obj_klass_t skycultures_klass = {
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init           = skycultures_init,
     .gui            = skycultures_gui,
+    .update         = skycultures_update,
     .create_order   = 30, // After constellations.
 };
 
@@ -123,35 +136,9 @@ static int info_ini_handler(void* user, const char* section,
 static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri)
 {
     skyculture_t *cult;
-    char path[1024];
-    const char *info, *constellations, *edges, *names;
-    int nb;
-
     cult = (void*)obj_create("skyculture", NULL, (obj_t*)cults, NULL);
     cult->uri = strdup(uri);
-
-    sprintf(path, "%s/%s", cult->uri, "info.ini");
-    info = asset_get_data(path, NULL, NULL);
-    assert(info);
-    ini_parse_string(info, info_ini_handler, cult);
-    free(cult->obj.id);
-    asprintf(&cult->obj.id, "CULT %s", cult->info.name);
-
-    sprintf(path, "%s/%s", cult->uri, "names.txt");
-    names = asset_get_data(path , NULL, NULL);
-    assert(names);
-    nb = skyculture_parse_names(names, NULL);
-    cult->names = calloc(nb + 1, sizeof(*cult->names));
-    skyculture_parse_names(names, cult->names);
-
-    sprintf(path, "%s/%s", uri, "constellations.txt");
-    constellations = asset_get_data(path, NULL, NULL);
-    sprintf(path, "%s/%s", uri, "edges.txt");
-    edges = asset_get_data(path, NULL, NULL);
-    assert(constellations);
-
-    cult->constellations = skyculture_parse_constellations(
-            constellations, edges, &cult->nb_constellations);
+    skyculture_update((obj_t*)cult, NULL, 0);
     return cult;
 }
 
@@ -170,6 +157,48 @@ static void skyculture_on_active_changed(
 
     if (cult->active) skyculture_activate(cult);
     else skyculture_deactivate(cult);
+}
+
+static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    skyculture_t *cult = (skyculture_t*)obj;
+    const char *info, *constellations, *edges, *names;
+    char path[1024];
+    int nb;
+
+    if (!(cult->parsed & SK_INFO)) {
+        sprintf(path, "%s/%s", cult->uri, "info.ini");
+        info = asset_get_data(path, NULL, NULL);
+        assert(info); // For the moment assume local!
+        ini_parse_string(info, info_ini_handler, cult);
+        free(cult->obj.id);
+        asprintf(&cult->obj.id, "CULT %s", cult->info.name);
+        cult->parsed |= SK_INFO;
+    }
+
+    if (!(cult->parsed & SK_NAMES)) {
+        sprintf(path, "%s/%s", cult->uri, "names.txt");
+        names = asset_get_data(path , NULL, NULL);
+        assert(names); // For the moment assume local!
+        nb = skyculture_parse_names(names, NULL);
+        cult->names = calloc(nb + 1, sizeof(*cult->names));
+        skyculture_parse_names(names, cult->names);
+        cult->parsed |= SK_NAMES;
+    }
+
+    if (!(cult->parsed & SK_CONSTELLATIONS)) {
+        sprintf(path, "%s/%s", cult->uri, "constellations.txt");
+        constellations = asset_get_data(path, NULL, NULL);
+        sprintf(path, "%s/%s", cult->uri, "edges.txt");
+        edges = asset_get_data(path, NULL, NULL);
+        assert(constellations); // For the moment assume local!
+        cult->parsed |= SK_CONSTELLATIONS;
+        cult->constellations = skyculture_parse_constellations(
+                constellations, edges, &cult->nb_constellations);
+        cult->parsed |= SK_CONSTELLATIONS;
+    }
+
+    return 0;
 }
 
 static int skycultures_init(obj_t *obj, json_value *args)
@@ -199,4 +228,13 @@ static void skycultures_gui(obj_t *obj, int location)
         }
         gui_tab_end();
     }
+}
+
+static int skycultures_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    obj_t *skyculture;
+    OBJ_ITER(obj, skyculture, &skyculture_klass) {
+        obj_update(skyculture, obs, dt);
+    }
+    return 0;
 }
