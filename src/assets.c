@@ -44,6 +44,7 @@ static asset_t *asset_get(const char *url)
 {
     asset_t *asset;
     HASH_FIND_STR(g_assets, url, asset);
+    if (!asset && str_startswith(url, "asset://")) return NULL;
     if (!asset) {
         asset = calloc(1, sizeof(*asset));
         asset->url = strdup(url);
@@ -83,8 +84,13 @@ const void *asset_get_data(const char *url, int *size, int *code)
     (void)r;
     size = size ?: &default_size;
     asset = asset_get(url);
-    if (code) *code = 0;
 
+    if (!asset) {
+        if (code) *code = 404;
+        return NULL;
+    }
+
+    if (code) *code = 0;
     if (!asset->data && asset->compressed_data) {
         asset->size = ((uint32_t*)asset->compressed_data)[0];
         assert(asset->size > 0);
