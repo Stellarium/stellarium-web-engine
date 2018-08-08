@@ -175,20 +175,12 @@ static void skyculture_on_active_changed(
 static int skycultures_init(obj_t *obj, json_value *args)
 {
     skycultures_t *cults = (void*)obj;
-    skyculture_t *cult, *western = NULL;
-    const char *path;
-    char uri[512];
-
-    // Load bundled skycultures.
-    // At least the western skyculture should be bundled.
-    // TODO: would be better to have a function to iter assets directory.
-    ASSET_ITER("asset://skycultures/", path) {
-        if (!str_endswith(path, "/info.ini")) continue;
-        strcpy(uri, path);
-        *strrchr(uri, '/') = '\0';
-        cult = add_from_uri(cults, uri);
-        if (strcmp(cult->info.name, "Western") == 0) western = cult;
-    }
+    skyculture_t *western;
+    asset_set_alias("https://data.stellarium.org/skycultures",
+                    "asset://skycultures");
+    // Immediately load western sky culture.
+    western = add_from_uri(cults,
+            "https://data.stellarium.org/skycultures/western");
     assert(western);
     obj_set_attr((obj_t*)western, "active", "b", true);
     return 0;
