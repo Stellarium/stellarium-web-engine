@@ -49,7 +49,7 @@ const NoctuaSkyClient = {
           })
         },
 
-        // Get data for a SkySource from its NSID in papi service
+        // Get data for a SkySource from its NSID in NoctuaSky api service
         get: function (nsid) {
           return clientApisSkysources.get({nsid: nsid}).then(res => {
             return res.body
