@@ -247,7 +247,8 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
     uw[1] = u[1] * core->win_size[1];
 
     vec2_normalize(uw, n);
-    if (fabs(vec2_dot(n, v)) < 0.5) return;
+    // Give up if angle with screen is too acute.
+    if (fabs(vec2_dot(n, v)) < 0.25) return;
 
     if (vec2_dot(n, v) < 0) {
         vec2_mul(-1, uw, uw);
