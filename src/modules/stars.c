@@ -219,6 +219,10 @@ struct stars {
     regex_t         search_reg;
     char            *survey;
     bool            visible;
+    // Keep the max vmag of the bundled stars, so that we don't render them
+    // twice if they are also in the gaia survey.
+    // XXX: would be better to check their gaia id instead.
+    double          bundled_max_vmag;
 };
 
 static int stars_init(obj_t *obj, json_value *args);
@@ -299,21 +303,22 @@ static int star_data_cmp(const void *a, const void *b)
 
 static int load_worker(worker_t *w)
 {
-    int i, sp, r;
+    int i, sp, r, nb;
     star_data_t *s;
     double vmag, ra, de, pra, pde, plx, bv, rv;
     typeof(((tile_t*)0)->loader) loader = (void*)w;
     tile_t *tile = loader->tile;
     int size = loader->is_gaia ? 32 : 40;
 
-    tile->nb = loader->size / size;
-    tile->stars = calloc(tile->nb, sizeof(*tile->stars));
+    nb = loader->size / size;
+    tile->stars = calloc(nb, sizeof(*tile->stars));
     // Unshuffle the data.
-    shuffle_bytes(loader->data, size, tile->nb);
+    shuffle_bytes(loader->data, size, nb);
 
+    assert(tile->nb == 0);
     if (!loader->is_gaia) {
-        for (i = 0; i < tile->nb; i++) {
-            s = &tile->stars[i];
+        for (i = 0; i < nb; i++) {
+            s = &tile->stars[tile->nb];
             binunpack(loader->data + i * 4 * 10, "iiifffffff",
                       &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
                       &bv);
@@ -328,6 +333,7 @@ static int load_worker(worker_t *w)
             compute_pv(ra, de, pra, pde, plx, s);
             tile->mag_min = min(tile->mag_min, vmag);
             tile->mag_max = max(tile->mag_max, vmag);
+            tile->nb++;
         }
     } else {
         /* Gaia packed data:
@@ -341,8 +347,8 @@ static int load_worker(worker_t *w)
          * 4 bytes (float)      pdec (rad/year)
          *
          */
-        for (i = 0; i < tile->nb; i++) {
-            s = &tile->stars[i];
+        for (i = 0; i < nb; i++) {
+            s = &tile->stars[tile->nb];
             binunpack(loader->data + i * 32, "Qffffff",
                     &s->gaia, &vmag, &ra, &de, &plx, &pra, &pde);
 
@@ -375,6 +381,8 @@ static int load_worker(worker_t *w)
                 if (r & ~1)
                     LOG_E("Cannot convert from J2015 to J2000: error %d", r);
             }
+            // If the stars was already in the bundled data, skip it.
+            if (vmag < tile->parent->bundled_max_vmag) continue;
 
             s->vmag = vmag;
             s->ra = ra;
@@ -386,6 +394,7 @@ static int load_worker(worker_t *w)
 
             tile->mag_min = min(tile->mag_min, s->vmag);
             tile->mag_max = max(tile->mag_max, s->vmag);
+            tile->nb++;
         }
     }
 
@@ -432,6 +441,7 @@ static int on_file_tile_loaded(int version, int order, int pix,
     tile->loader->worker.fn(&tile->loader->worker);
     free(tile->loader);
     tile->loader = NULL;
+    stars->bundled_max_vmag = max(stars->bundled_max_vmag, tile->mag_max);
 
     return 0;
 }
