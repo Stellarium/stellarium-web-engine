@@ -135,7 +135,7 @@ for line in gzip.open(hip_file):
     stars[hd] = Star(hd=hd, hip=hip, vmag=vmag,
                      ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv, sp=0)
 
-stars = sorted(stars.values(), key=lambda x: x.vmag)
+stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
 
 # Create the tiles.
 # For each star, try to add to the lowest tile that is not already full.
