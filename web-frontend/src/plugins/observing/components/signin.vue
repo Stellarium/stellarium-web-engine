@@ -8,9 +8,14 @@
 
 <template>
 <div style="height: 100%">
+  <v-toolbar dark dense>
+    <v-btn icon @click.stop.native="back">
+      <v-icon>arrow_back</v-icon>
+    </v-btn>
+    <v-spacer></v-spacer>
+  </v-toolbar>
+
   <v-tabs dark v-model="active" style="height: 0px;">
-    <v-tab key="0"></v-tab>
-    <v-tab key="1"></v-tab>
   </v-tabs>
   <v-tabs-items v-model="active">
 
@@ -140,7 +145,7 @@ export default {
   methods: {
     signIn: function () {
       var that = this
-      this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).catch(function (res) {
+      this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).then(function (res) { that.back() }, function (res) {
         if (res.message) {
           that.signInErrorAlert = res.message
         } else if (res.errors) {
@@ -182,6 +187,9 @@ export default {
     },
     clearSignUpErrorAlert: function () {
       this.signUpErrorAlert = ''
+    },
+    back: function () {
+      this.$emit('back')
     }
   },
   computed: {
@@ -214,5 +222,6 @@ export default {
 }
 .tabs__bar {
   background-color: #303030;
+  opacity: 0;
 }
 </style>

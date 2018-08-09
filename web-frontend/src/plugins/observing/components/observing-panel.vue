@@ -17,7 +17,6 @@
 </template>
 
 <script>
-import Signin from './signin.vue'
 import ObservationsPage from './observations-page.vue'
 
 export default {
@@ -27,9 +26,6 @@ export default {
   },
   computed: {
     currentComponent: function () {
-      if (this.$store.state.plugins.observing.noctuaSky.loginStatus !== 'loggedIn') {
-        return 'Signin'
-      }
       return 'ObservationsPage'
     },
     showObservingPanel: function () {
@@ -41,7 +37,7 @@ export default {
       this.$store.commit('setValue', {varName: 'showSidePanel', newValue: v})
     }
   },
-  components: { Signin, ObservationsPage }
+  components: { ObservationsPage }
 }
 </script>
 
