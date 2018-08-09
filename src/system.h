@@ -39,6 +39,20 @@ int sys_get_utc_offset(void);
 const char *sys_get_user_dir(void);
 
 /*
+ * Function: sys_device_sensors
+ * Get the readings from the device accelerometers and magnetometer.
+ *
+ * Parameters:
+ *   enable - set to 1 to enable the sensors, 0 to stop them.
+ *   acc    - get the accelerometer readings.
+ *   mag    - get the magnetomer readings.
+ *
+ * Return:
+ *   0 on success.
+ */
+int sys_device_sensors(int enable, double acc[3], double mag[3]);
+
+/*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
  */
@@ -46,6 +60,8 @@ typedef struct {
     void *user;
     void (*log)(void *user, const char *msg);
     const char *(*get_user_dir)(void *user);
+    int (*device_sensors)(void *user, int enable,
+                          double acc[3], double mag[3]);
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

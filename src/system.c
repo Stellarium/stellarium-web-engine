@@ -49,3 +49,9 @@ const char *sys_get_user_dir(void)
         return ".";
     }
 }
+
+int sys_device_sensors(int enable, double acc[3], double mag[3])
+{
+    if (!sys_callbacks.device_sensors) return -1;
+    return sys_callbacks.device_sensors(sys_callbacks.user, enable, acc, mag);
+}
