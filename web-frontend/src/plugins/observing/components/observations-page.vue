@@ -13,16 +13,18 @@
   <v-tab key="1"></v-tab>
 </v-tabs>
 <v-tabs-items v-model="active">
+
   <v-tab-item key="0" style="height: 100%">
     <div style="height: 100%;">
       <v-toolbar dark dense>
         <v-spacer></v-spacer>
+        {{ userFirstName }}
         <v-menu offset-y left>
           <v-btn icon slot="activator">
             <v-icon>account_circle</v-icon>
           </v-btn>
           <v-list subheader>
-            <v-subheader>Logged as {{ userName }}</v-subheader>
+            <v-subheader>Logged as {{ userEmail }}</v-subheader>
             <v-list-tile avatar @click="showProfilePage()">
               <v-list-tile-avatar>
                 <v-icon>account_circle</v-icon>
@@ -66,6 +68,7 @@
   <v-tab-item key="1" style="height: 100%">
     <observation-details @back="backFromObservationDetails()" v-model="observationToAdd" :create="createObservation"></observation-details>
   </v-tab-item>
+
 </v-tabs-items>
 </div>
 </template>
@@ -140,8 +143,11 @@ export default {
       ]
       return nsh.mingo.aggregate(this.$store.state.plugins.observing.noctuaSky.observations, aggregator)
     },
-    userName: function () {
-      return this.$store.state.plugins.observing.noctuaSky.userName
+    userFirstName: function () {
+      return this.$store.state.plugins.observing.noctuaSky.user.firstName ? this.$store.state.plugins.observing.noctuaSky.user.firstName : 'Anonymous'
+    },
+    userEmail: function () {
+      return this.$store.state.plugins.observing.noctuaSky.user.email
     }
   },
   components: { GroupedObservations, ObservationDetails }

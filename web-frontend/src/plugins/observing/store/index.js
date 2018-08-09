@@ -28,7 +28,11 @@ const moduleStore = {
 
     noctuaSky: {
       loginStatus: 'loggedOut',
-      userName: 'loggedOut',
+      user: {
+        email: undefined,
+        firstName: undefined,
+        lastName: undefined
+      },
       lastSavedLocationId: undefined,
       lastUsedObservingSetup: {
         'id': 'eyes_observation',
@@ -44,7 +48,9 @@ const moduleStore = {
     },
     setLoginStatus (state, newValue) {
       if (NoctuaSkyClient.currentUser) {
-        state.noctuaSky.userName = NoctuaSkyClient.currentUser.email
+        state.noctuaSky.user.email = NoctuaSkyClient.currentUser.email
+        state.noctuaSky.user.firstName = NoctuaSkyClient.currentUser.first_name
+        state.noctuaSky.user.lastName = NoctuaSkyClient.currentUser.last_name
       }
       state.noctuaSky.loginStatus = newValue
     },
