@@ -189,7 +189,7 @@ export default {
       return this.signUpUserName !== '' && this.signUpPassword.len > 5 && this.signUpPassword === this.signUpPassword2
     },
     signInButtonDisabled: function () {
-      return this.userName === '' || this.password === ''
+      return this.email === '' || this.password === ''
     },
     signInInProgress: function () {
       return this.$store.state.plugins.observing.noctuaSky.loginStatus === 'signInInProgress'
