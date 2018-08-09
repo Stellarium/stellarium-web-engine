@@ -760,10 +760,10 @@ DEF void mat4_transpose(const double mat[4][4], double out[4][4])
 
 DEF void quat_set_identity(double q[4])
 {
-    q[0] = 0.0;
+    q[0] = 1.0;
     q[1] = 0.0;
     q[2] = 0.0;
-    q[3] = 1.0;
+    q[3] = 0.0;
 }
 
 DEF void quat_from_axis(double q[4], double a, double x, double y, double z)
@@ -773,21 +773,21 @@ DEF void quat_from_axis(double q[4], double a, double x, double y, double z)
     a *= 0.5;
     vec3_normalize(vn, vn);
     sin_angle = sin(a);
-    q[0] = vn[0] * sin_angle;
-    q[1] = vn[1] * sin_angle;
-    q[2] = vn[2] * sin_angle;
-    q[3] = cos(a);
+    q[0] = cos(a);
+    q[1] = vn[0] * sin_angle;
+    q[2] = vn[1] * sin_angle;
+    q[3] = vn[2] * sin_angle;
 }
 
 DEF void quat_mul(const double a[4], const double b[4], double out[4])
 {
     double ax, ay, az, aw, bx, by, bz, bw;
-    ax = a[0]; ay = a[1]; az = a[2]; aw = a[3];
-    bx = b[0]; by = b[1]; bz = b[2]; bw = b[3];
-    out[0] = aw * bx + ax * bw + ay * bz - az * by;
-    out[1] = aw * by + ay * bw + az * bx - ax * bz;
-    out[2] = aw * bz + az * bw + ax * by - ay * bx;
-    out[3] = aw * bw - ax * bx - ay * by - az * bz;
+    aw = a[0]; ax = a[1]; ay = a[2]; az = a[3];
+    bw = b[0]; bx = b[1]; by = b[2]; bz = b[3];
+    out[0] = aw * bw - ax * bx - ay * by - az * bz;
+    out[1] = aw * bx + ax * bw + ay * bz - az * by;
+    out[2] = aw * by + ay * bw + az * bx - ax * bz;
+    out[3] = aw * bz + az * bw + ax * by - ay * bx;
 }
 
 DEF void quat_mul_vec3(const double q[4], const double v[3], double out[3])
@@ -799,17 +799,35 @@ DEF void quat_mul_vec3(const double q[4], const double v[3], double out[3])
 
 DEF void quat_to_mat3(const double q[4], double out[3][3])
 {
-    double x, y, z, w;
-    x = q[0]; y = q[1]; z = q[2]; w = q[3];
-    out[0][0] = 1 - 2 * y * y - 2 * z * z;
-    out[0][1] = 2 *x *y + 2 * z * w;
-    out[0][2] = 2 *x *z - 2 * y * w;
-    out[1][0] = 2 *x *y - 2 * z * w;
-    out[1][1] = 1 -2 *x * x - 2 * z * z;
-    out[1][2] = 2 * y * z + 2 * x * w;
-    out[2][0] = 2 * x * z + 2 * y * w;
-    out[2][1] = 2 * y * z - 2 * x * w;
-    out[2][2] = 1 - 2 * x * x - 2 * y * y;
+    double q0, q1, q2, q3, qda, qdb, qdc, qaa, qab, qac, qbb, qbc, qcc;
+    const double SQRT2 = 1.41421356237309504880;
+
+    q0 = SQRT2 * q[0];
+    q1 = SQRT2 * q[1];
+    q2 = SQRT2 * q[2];
+    q3 = SQRT2 * q[3];
+
+    qda = q0 * q1;
+    qdb = q0 * q2;
+    qdc = q0 * q3;
+    qaa = q1 * q1;
+    qab = q1 * q2;
+    qac = q1 * q3;
+    qbb = q2 * q2;
+    qbc = q2 * q3;
+    qcc = q3 * q3;
+
+    out[0][0] = (1.0 - qbb - qcc);
+    out[0][1] = (qdc + qab);
+    out[0][2] = (-qdb + qac);
+
+    out[1][0] = (-qdc + qab);
+    out[1][1] = (1.0 - qaa - qcc);
+    out[1][2] = (qda + qbc);
+
+    out[2][0] = (qdb + qac);
+    out[2][1] = (-qda + qbc);
+    out[2][2] = (1.0 - qaa - qbb);
 }
 
 DEF void quat_ineg(double q[4])
