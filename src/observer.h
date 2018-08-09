@@ -29,6 +29,7 @@ struct observer
 
     double altitude;
     double azimuth;
+    double roll;
     obj_t  *city;
 
     bool dirty;                 // Require an update.

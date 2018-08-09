@@ -49,6 +49,7 @@ static obj_klass_t observer_klass = {
                 .hint = "d_angle"),
         PROPERTY("azimuth", "f", MEMBER(observer_t, azimuth),
                 .hint = "h_angle"),
+        PROPERTY("roll", "f", MEMBER(observer_t, roll)),
         PROPERTY("azalt", "v3", .hint = "azalt", .fn = observer_get_azalt),
         {}
     },

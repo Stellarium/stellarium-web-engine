@@ -32,6 +32,7 @@ static void update_matrices(observer_t *obs)
     double r2gl[3][3] = {{0, 0,-1},
                          {1, 0, 0},
                          {0, 1, 0}};
+    mat3_rz(obs->roll, ro2v, ro2v);
     mat3_rx(-obs->altitude, ro2v, ro2v);
     mat3_ry(obs->azimuth, ro2v, ro2v);
     mat3_mul(ro2v, r2gl, ro2v);
@@ -88,6 +89,7 @@ void observer_recompute_hash(observer_t *obs)
     H(refraction);
     H(altitude);
     H(azimuth);
+    H(roll);
     H(tt);
     #undef H
     obs->hash = v;
