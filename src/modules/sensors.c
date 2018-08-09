@@ -48,6 +48,8 @@ static int sensors_update(obj_t *obj, const observer_t *obs_, double dt)
     }
     if (!sensors->active) {
         sensors->started = false;
+        obj_set_attr((obj_t*)obs, "roll", "f", 0.0);
+        obs->dirty = true;
         return 0;
     }
 
