@@ -11,6 +11,7 @@
 <v-tabs dark v-model="active" style="height: 0px;">
   <v-tab key="0"></v-tab>
   <v-tab key="1"></v-tab>
+  <v-tab key="2"></v-tab>
 </v-tabs>
 <v-tabs-items v-model="active">
 
@@ -24,8 +25,8 @@
             <v-icon>account_circle</v-icon>
           </v-btn>
           <v-list subheader>
-            <v-subheader>Logged as {{ userEmail }}</v-subheader>
-            <v-list-tile avatar @click="showProfilePage()">
+            <v-subheader v-if='userLoggedIn'>Logged as {{ userEmail }}</v-subheader>
+            <v-list-tile v-if='userLoggedIn' avatar @click="showProfilePage()">
               <v-list-tile-avatar>
                 <v-icon>account_circle</v-icon>
               </v-list-tile-avatar>
@@ -33,12 +34,20 @@
                 <v-list-tile-title>My Profile</v-list-tile-title>
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile avatar @click="logout()">
+            <v-list-tile v-if='userLoggedIn' avatar @click="logout()">
               <v-list-tile-avatar>
                 <v-icon>exit_to_app</v-icon>
               </v-list-tile-avatar>
               <v-list-tile-content>
                 <v-list-tile-title>Logout</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile v-if='!userLoggedIn' avatar @click="showLoginPage()">
+              <v-list-tile-avatar>
+                <v-icon>account_box</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-list-tile-title>Sign In</v-list-tile-title>
               </v-list-tile-content>
             </v-list-tile>
           </v-list>
@@ -69,6 +78,10 @@
     <observation-details @back="backFromObservationDetails()" v-model="observationToAdd" :create="createObservation"></observation-details>
   </v-tab-item>
 
+  <v-tab-item key="2" style="height: 100%">
+    <signin @back="showMyObservationsPage()"></signin>
+  </v-tab-item>
+
 </v-tabs-items>
 </div>
 </template>
@@ -76,6 +89,7 @@
 <script>
 import GroupedObservations from './grouped-observations.vue'
 import ObservationDetails from './observation-details.vue'
+import Signin from './signin.vue'
 import { nsh } from '../ns_helpers.js'
 
 export default {
@@ -130,6 +144,12 @@ export default {
     },
     showProfilePage: function () {
       console.log('showProfilePage')
+    },
+    showLoginPage: function () {
+      this.active = '2'
+    },
+    showMyObservationsPage: function () {
+      this.active = '0'
     }
   },
   computed: {
@@ -143,6 +163,9 @@ export default {
       ]
       return nsh.mingo.aggregate(this.$store.state.plugins.observing.noctuaSky.observations, aggregator)
     },
+    userLoggedIn: function () {
+      return this.$store.state.plugins.observing.noctuaSky.loginStatus === 'loggedIn'
+    },
     userFirstName: function () {
       return this.$store.state.plugins.observing.noctuaSky.user.firstName ? this.$store.state.plugins.observing.noctuaSky.user.firstName : 'Anonymous'
     },
@@ -150,7 +173,7 @@ export default {
       return this.$store.state.plugins.observing.noctuaSky.user.email
     }
   },
-  components: { GroupedObservations, ObservationDetails }
+  components: { GroupedObservations, ObservationDetails, Signin }
 }
 </script>
 

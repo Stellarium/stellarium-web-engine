@@ -51,6 +51,10 @@ const moduleStore = {
         state.noctuaSky.user.email = NoctuaSkyClient.currentUser.email
         state.noctuaSky.user.firstName = NoctuaSkyClient.currentUser.first_name
         state.noctuaSky.user.lastName = NoctuaSkyClient.currentUser.last_name
+      } else {
+        state.noctuaSky.user.email = undefined
+        state.noctuaSky.user.firstName = undefined
+        state.noctuaSky.user.lastName = undefined
       }
       state.noctuaSky.loginStatus = newValue
     },
