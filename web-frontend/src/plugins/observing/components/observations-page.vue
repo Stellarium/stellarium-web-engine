@@ -22,7 +22,7 @@
             <v-icon>account_circle</v-icon>
           </v-btn>
           <v-list subheader>
-            <v-subheader>Logged In as {{ userName }}</v-subheader>
+            <v-subheader>Logged as {{ userName }}</v-subheader>
             <v-list-tile avatar @click="showProfilePage()">
               <v-list-tile-avatar>
                 <v-icon>account_circle</v-icon>
@@ -49,6 +49,7 @@
               <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
             </v-flex>
           </v-layout>
+          <div v-if="showEmptyMessage" style="margin-top: 40vh; text-align: center;">Nothing here yet..<br>Add new observations by clicking on the + button below</div>
           <v-layout row wrap>
             <v-btn fab dark absolute color="pink" bottom right class="pink" slot="activator" style="bottom: 16px; margin-right: 10px" @click.stop.native="showObservationDetailsPage()">
               <v-icon dark>add</v-icon>
@@ -129,6 +130,9 @@ export default {
     }
   },
   computed: {
+    showEmptyMessage: function () {
+      return this.observationGroups.length === 0
+    },
     observationGroups: function () {
       var aggregator = [
         { $group: { id: { location: '$location', julian_day: { $floor: '$mjd' } }, groupDate: { min: { $min: '$mjd' }, max: { $max: '$mjd' } }, f0: { $sum: 1 }, f1: { $push: '$$ROOT' } } },
