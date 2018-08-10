@@ -709,6 +709,7 @@ int core_render(int w, int h)
         core->fov /= ZOOM_FACTOR;
     if (core->inputs.keys[KEY_PAGE_DOWN])
         core->fov *= ZOOM_FACTOR;
+    core->observer->dirty = true;
 
     projection_init(&proj, core->proj, core->fov, (float)w / h);
 
