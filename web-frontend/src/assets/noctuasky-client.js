@@ -14,8 +14,10 @@ var swaggerClient
 
 const NoctuaSkyClient = {
   currentUser: undefined,
+  serverUrl: undefined,
   init: function (serverUrl) {
     let that = this
+    this.serverUrl = serverUrl
     return Swagger(serverUrl + '/doc/openapi.json', {
       authorizations: {
         APIToken: ''
@@ -78,7 +80,7 @@ const NoctuaSkyClient = {
   },
   login: function (email, password) {
     let that = this
-    return swaggerClient.apis.users.login({body: {email: email, password: password}}).then((res) => {
+    return this.users.login({body: {email: email, password: password}}).then((res) => {
       that.currentUser = res.body
       swaggerClient.authorizations.APIToken = 'Bearer ' + res.body.access_token
       store.set('noctuasky_token', swaggerClient.authorizations.APIToken)
@@ -101,6 +103,29 @@ const NoctuaSkyClient = {
     }, err => {
       throw err.response.body
     })
+  },
+  changePassword: function (currentPassword, newPassword) {
+    let that = this
+    return this.users.changePassword({user_id: that.currentUser.id, body: {password: currentPassword, new_password: newPassword}}).then((res) => {
+      console.log('Password change successful')
+      return res.body
+    }, err => {
+      throw err.response.body
+    })
+  },
+  updateUserInfo: function (newInfo) {
+    let that = this
+    return this.users.update({user_id: this.currentUser.id, body: newInfo}).then((res) => {
+      console.log('User info update successful')
+      return that.users.get({user_id: that.currentUser.id}).then((res) => {
+        that.currentUser = res.body
+        return res.body
+      }, err => {
+        throw err.response.body
+      })
+    }, err => {
+      throw err.response.body
+    }).then()
   }
 }
 

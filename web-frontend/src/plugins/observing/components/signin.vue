@@ -21,10 +21,12 @@
 
     <v-tab-item key="0" style="height: 100%">
       <v-container fluid style="height: 100%">
-        <v-layout row justify-space-around style="margin-top: calc(100vh /2 - 200px);">
-          <h4 class="white--text">Sign in to NoctuaSky</h4>
-        </v-layout>
         <v-card>
+          <v-card-title primary-title>
+            <div>
+              <h3 class="headline mb-0">Sign in to NoctuaSky</h3>
+            </div>
+          </v-card-title>
           <v-progress-circular v-if="signInInProgress" indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 60px;"></v-progress-circular>
           <v-card-text>
             <v-text-field :disabled="signInInProgress" name="input-login" label="Email" v-model="email" @input="clearSignInErrorAlert"></v-text-field>
@@ -45,10 +47,12 @@
 
     <v-tab-item key="1" style="height: 100%">
       <v-container fluid style="height: 100%">
-        <v-layout row justify-space-around style="margin-top: calc(100vh /2 - 300px);">
-          <h4 class="white--text">Create a NoctuaSky account</h4>
-        </v-layout>
         <v-card>
+          <v-card-title primary-title>
+            <div>
+              <h3 class="headline mb-0">Create a NoctuaSky account</h3>
+            </div>
+          </v-card-title>
           <v-progress-circular v-if="signInInProgress" indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 60px;"></v-progress-circular>
           <v-card-text>
             <v-layout row justify-space-between>
@@ -67,18 +71,17 @@
             </v-layout>
           </v-card-text>
         </v-card>
-        <v-layout row justify-space-around style="margin-top: 30px">
-          <p><v-btn flat small @click.stop.native="showSigninTab()">Back to SignIn</v-btn></p>
-        </v-layout>
       </v-container>
     </v-tab-item>
 
     <v-tab-item key="2" style="height: 100%">
       <v-container fluid style="height: 100%">
-        <v-layout row justify-space-around style="margin-top: calc(100vh /2 - 150px); margin-bottom: 20px">
-          <h4 class="white--text">Thanks for Signin In to NoctuaSky.com!</h4>
-        </v-layout>
         <v-card>
+          <v-card-title primary-title>
+            <div>
+              <h3 class="headline mb-0">Thanks for Signin In to NoctuaSky.com!</h3>
+            </div>
+          </v-card-title>
           <v-card-text>
             <p>Before you can continue, you need to confirm that your email is valid.</p>
             <p>We have just sent you a message containing a confirmation link that you need to click.</p>
@@ -189,6 +192,10 @@ export default {
       this.signUpErrorAlert = ''
     },
     back: function () {
+      if (this.active === '1' || this.active === '2') {
+        this.active = '0'
+        return
+      }
       this.$emit('back')
     }
   },

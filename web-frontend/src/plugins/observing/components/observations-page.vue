@@ -82,6 +82,10 @@
     <signin @back="showMyObservationsPage()"></signin>
   </v-tab-item>
 
+  <v-tab-item key="3" style="height: 100%">
+    <my-profile @back="showMyObservationsPage()"></my-profile>
+  </v-tab-item>
+
 </v-tabs-items>
 </div>
 </template>
@@ -90,6 +94,7 @@
 import GroupedObservations from './grouped-observations.vue'
 import ObservationDetails from './observation-details.vue'
 import Signin from './signin.vue'
+import MyProfile from './my-profile.vue'
 import { nsh } from '../ns_helpers.js'
 
 export default {
@@ -143,7 +148,7 @@ export default {
       this.active = '1'
     },
     showProfilePage: function () {
-      console.log('showProfilePage')
+      this.active = '3'
     },
     showLoginPage: function () {
       this.active = '2'
@@ -173,7 +178,7 @@ export default {
       return this.$store.state.plugins.observing.noctuaSky.user.email
     }
   },
-  components: { GroupedObservations, ObservationDetails, Signin }
+  components: { GroupedObservations, ObservationDetails, Signin, MyProfile }
 }
 </script>
 

@@ -102,7 +102,21 @@ const moduleStore = {
     },
     signOut ({ commit, state }) {
       NoctuaSkyClient.logout()
+      commit('setParseTable', { 'tableName': 'observations', 'newValue': [] })
+      commit('setParseTable', { 'tableName': 'locations', 'newValue': [] })
       commit('setLoginStatus', 'loggedOut')
+    },
+    deleteAccount ({ dispatch, commit, state }) {
+      return NoctuaSkyClient.users.delete({user_id: NoctuaSkyClient.currentUser.id}).then(res => {
+        console.log('Account deleted')
+        return dispatch('signOut')
+      })
+    },
+    updateUserInfo ({ dispatch, commit, state }, data) {
+      return NoctuaSkyClient.updateUserInfo(data).then(res => {
+        console.log('User Info updated')
+        commit('setLoginStatus', 'loggedIn')
+      })
     },
     loadUserData ({ commit, state }) {
       return loadParseTable(commit, 'locations').then(() => { return loadParseTable(commit, 'observations') })
