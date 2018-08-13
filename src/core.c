@@ -371,9 +371,8 @@ static int core_pan(const gesture_t *g, void *user)
     obj_set_attr(&core->obj, "lock", "p", NULL);
     observer_update(core->observer, true);
     // Notify the changes.
-    obj_changed(&core->observer->obj, "azalt");
-    obj_changed(&core->observer->obj, "az");
-    obj_changed(&core->observer->obj, "alt");
+    obj_changed(&core->observer->obj, "altitude");
+    obj_changed(&core->observer->obj, "azimuth");
     return 0;
 }
 
@@ -577,9 +576,8 @@ static int core_update_direction(double dt)
             core->target.dst_fov = 0.0;
         }
         // Notify the changes.
-        obj_changed(&core->observer->obj, "azalt");
-        obj_changed(&core->observer->obj, "az");
-        obj_changed(&core->observer->obj, "alt");
+        obj_changed(&core->observer->obj, "altitude");
+        obj_changed(&core->observer->obj, "azimuth");
     }
 
     if (core->target.lock && !core->target.t) {
@@ -870,9 +868,8 @@ void core_on_zoom(double k, double x, double y)
     core->observer->dirty = true;
     core->fast_mode = true;
     // Notify the changes.
-    obj_changed(&core->observer->obj, "azalt");
-    obj_changed(&core->observer->obj, "az");
-    obj_changed(&core->observer->obj, "alt");
+    obj_changed(&core->observer->obj, "altitude");
+    obj_changed(&core->observer->obj, "azimuth");
 }
 
 /*
