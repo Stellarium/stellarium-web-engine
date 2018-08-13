@@ -18,6 +18,7 @@ static int constellation_render(const obj_t *obj, const painter_t *painter);
 static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
 static json_value *constellation_set_image(
         obj_t *obj, const attribute_t *attr, const json_value *args);
+static void constellation_del(obj_t *obj);
 
 typedef struct constellation {
     obj_t       obj;
@@ -37,6 +38,7 @@ static obj_klass_t constellation_klass = {
     .init       = constellation_init,
     .update     = constellation_update,
     .render     = constellation_render,
+    .del        = constellation_del,
     .attributes = (attribute_t[]) {
         FUNCTION("set_image", .fn = constellation_set_image),
         // Default properties.
@@ -310,6 +312,18 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
     render_bounds(con, &painter);
 
     return 0;
+}
+
+static void constellation_del(obj_t *obj)
+{
+    int i;
+    constellation_t *con = (constellation_t*)obj;
+    texture_release(con->img);
+    for (i = 0; i < con->count; i++) {
+        obj_release(con->stars[i]);
+    }
+    free(con->stars);
+    free(con->name);
 }
 
 // Project from uv to the sphere.

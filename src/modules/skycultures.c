@@ -123,7 +123,10 @@ static void skyculture_activate(skyculture_t *cult)
         cst = &cult->constellations[i];
         sprintf(id, "CST %s", cst->id);
         cons = obj_get(constellations, id, 0);
-        if (cons) continue;
+        if (cons) {
+            obj_release(cons);
+            continue;
+        }
         args = json_object_new(0);
         json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
         obj_create("constellation", id, constellations, args);
@@ -138,6 +141,7 @@ static void skyculture_activate(skyculture_t *cult)
             cons = obj_get(constellations, id, 0);
             if (!cons) continue;
             obj_call_json(cons, "set_image", args);
+            obj_release(cons);
         }
     }
 }
