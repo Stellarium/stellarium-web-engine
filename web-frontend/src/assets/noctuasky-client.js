@@ -104,6 +104,9 @@ const NoctuaSkyClient = {
       throw err.response.body
     })
   },
+  deleteAccount: function () {
+    return NoctuaSkyClient.users.delete({user_id: NoctuaSkyClient.currentUser.id})
+  },
   changePassword: function (currentPassword, newPassword) {
     let that = this
     return this.users.changePassword({user_id: that.currentUser.id, body: {password: currentPassword, new_password: newPassword}}).then((res) => {
