@@ -92,7 +92,6 @@ for line in gzip.open(hip_file):
     vmag = float(line[41:46].strip() or 'nan')
     ra = float(line[51:63].strip() or 'nan')
     de = float(line[64:76].strip() or 'nan')
-    if isnan(ra) or isnan(de): continue
     all_stars[hip] = Star(hip, hd, vmag, s2c(ra * DD2R, de * DD2R))
 
 # Compute list of bright stars we can use in the data files.
@@ -107,6 +106,7 @@ def find_closest_brigh_star(hip):
     if hip in specials: return specials[hip]
     s = all_stars[hip]
     assert s
+    assert not isnan(s.pos[0])
     return sorted(bright_stars.values(), key=lambda x: sep(x, s))[0].hd
 
 def make_lines(stars):
@@ -167,13 +167,12 @@ for line in open(path):
     if line.startswith('#'):
         comments.append(line)
         continue
-    # abb, native_name, english_name = re.split(r'(?:\t+)|(?:    +)', line)
     abb, native_name, english_name = \
-            re.match(r'(.+?)[ \t]+"(.+)"[ \t]+_\("(.+)"\)', line) \
+            re.match(r'(.+?)[ \t]+"(.*)"[ \t]+_\("(.+)"\)', line) \
             .group(1, 2, 3)
     abb = abb.strip().lower()
-    # english_name = re.match(r'_\("(.+)"\)', english_name).group(1)
-    csts[abb] = csts[abb]._replace(name=english_name)
+    if abb in csts:
+        csts[abb] = csts[abb]._replace(name=english_name)
 
 out = open(os.path.join(output_dir, 'constellations.txt'), 'w')
 print >>out, '\n'.join(comments)
