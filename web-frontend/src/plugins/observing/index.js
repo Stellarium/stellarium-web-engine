@@ -6,19 +6,17 @@
 // The terms of the AGPL v3 license can be found in the main directory of this
 // repository.
 
-import ObservingPanel from './components/observing-panel.vue'
+import ObservationsPage from './components/observations-page.vue'
 import storeModule from './store'
 
 export default {
   vuePlugin: {
     install: (Vue, options) => {
-      Vue.component('observing-panel', ObservingPanel)
+      Vue.component('observations-page', ObservationsPage)
     }
   },
   name: 'observing',
   storeModule: storeModule,
-  menuItems: [{header: 'Observing'},
-    {title: 'Show Observing Panel', icon: 'visibility', store_var_name: 'plugins.observing.showObservingPanel', switch: 'true'}
-  ],
-  guiComponents: ['observing-panel']
+  observingPanelComponents: ['observations-page'],
+  observingTabName: 'Obs'
 }

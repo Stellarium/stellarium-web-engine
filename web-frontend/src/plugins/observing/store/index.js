@@ -24,8 +24,6 @@ var loadParseTable = function (commit, tableName) {
 const moduleStore = {
   namespaced: true,
   state: {
-    showObservingPanel: false,
-
     noctuaSky: {
       loginStatus: 'loggedOut',
       user: {

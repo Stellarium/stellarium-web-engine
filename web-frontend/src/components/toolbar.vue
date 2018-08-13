@@ -16,6 +16,7 @@
       <target-search></target-search>
       <v-spacer></v-spacer>
       <div class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
+      <v-btn class="transparent" v-if="!$store.state.showObservingPanel" @click.native.stop="showObservingPanel">Observe<v-icon>expand_more</v-icon></v-btn>
     </v-toolbar>
   </div>
 </template>
@@ -33,6 +34,9 @@ export default {
   methods: {
     toggleNavigationDrawer: function () {
       this.$store.commit('toggleBool', 'showNavigationDrawer')
+    },
+    showObservingPanel: function () {
+      this.$store.commit('toggleBool', 'showObservingPanel')
     }
   },
   components: { TargetSearch }

@@ -18,6 +18,7 @@
   <v-tab-item key="0" style="height: 100%">
     <div style="height: 100%;">
       <v-toolbar dark dense>
+        <v-btn icon @click.stop.native="hideObservingPanel"><v-icon>close</v-icon></v-btn>
         <v-spacer></v-spacer>
         {{ userFirstName }}
         <v-menu offset-y left>
@@ -107,6 +108,9 @@ export default {
     }
   },
   methods: {
+    hideObservingPanel: function () {
+      this.$store.commit('toggleBool', 'showObservingPanel')
+    },
     logout: function () {
       this.$store.dispatch('observing/signOut')
     },
