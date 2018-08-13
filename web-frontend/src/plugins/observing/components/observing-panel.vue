@@ -10,7 +10,7 @@
 
 <div id="observing-panel-container" v-if="$store.state.plugins.observing.showObservingPanel" class="get-click">
   <div id="observing-panel">
-    <component v-bind:is="currentComponent"></component>
+    <observations-page></observations-page>
   </div>
 </div>
 
@@ -25,9 +25,6 @@ export default {
     }
   },
   computed: {
-    currentComponent: function () {
-      return 'ObservationsPage'
-    },
     showObservingPanel: function () {
       return this.$store.state.plugins.observing.showObservingPanel
     }
