@@ -781,11 +781,13 @@ static void init_attribute(attribute_t *attr)
         if (str_equ(attr->name, DEFAULT_ATTRIBUTES[i].name)) break;
     }
     if (i == ARRAY_SIZE(DEFAULT_ATTRIBUTES)) return;
-    attr->type = DEFAULT_ATTRIBUTES[i].type;
-    attr->hint = DEFAULT_ATTRIBUTES[i].hint;
-    attr->fn = DEFAULT_ATTRIBUTES[i].fn;
+    attr->hint = attr->hint ?: DEFAULT_ATTRIBUTES[i].hint;
     attr->desc = attr->desc ?: DEFAULT_ATTRIBUTES[i].desc;
-    if (!attr->member.size) attr->member = DEFAULT_ATTRIBUTES[i].member;
+    if (!attr->member.size) {
+        attr->member = DEFAULT_ATTRIBUTES[i].member;
+        attr->type = attr->type ?: DEFAULT_ATTRIBUTES[i].type;
+        attr->fn = attr->fn ?: DEFAULT_ATTRIBUTES[i].fn;
+    }
     if (attr->member.size) assert(attr->type);
 }
 
@@ -816,6 +818,15 @@ obj_klass_t *obj_get_all_klasses(void)
 {
     LL_SORT(g_klasses, klass_sort_cmp);
     return g_klasses;
+}
+
+obj_klass_t *obj_get_klass_by_name(const char *name)
+{
+    obj_klass_t *klass;
+    for (klass = g_klasses; klass; klass = klass->next) {
+        if (klass->id && strcmp(klass->id, name) == 0) return klass;
+    }
+    return NULL;
 }
 
 void obj_get_pos_icrs(obj_t *obj, observer_t *obs, double pos[4])

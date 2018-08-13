@@ -527,4 +527,6 @@ void obj_foreach_attr(const obj_t *obj,
                       void *user,
                       void (*f)(const char *attr, int is_property, void *user));
 
+obj_klass_t *obj_get_klass_by_name(const char *name);
+
 #endif // OBJ_H
