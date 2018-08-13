@@ -160,7 +160,7 @@ constellation_infos_t *skyculture_parse_constellations(
 {
     char *data, *line, *tmp = NULL, *tok;
     bool linked;
-    int i = 0, star, last_star = 0, nb = 0;
+    int star, last_star = 0, nb = 0;
     constellation_infos_t *ret, *cons;
 
     data = strdup(consts);
@@ -168,32 +168,32 @@ constellation_infos_t *skyculture_parse_constellations(
     // Count the number of lines in the file.
     for (line = data; *line; line = strchr(line, '\n') + 1) nb++;
 
-    *nb_cst = nb;
     ret = calloc(nb + 1, sizeof(*ret));
+    nb = 0;
     for (line = strtok_r(data, "\n", &tmp); line;
           line = strtok_r(NULL, "\n", &tmp)) {
+        if (*line == '\0') continue;
         if (*line == '#') continue;
-        cons = &ret[i];
+        cons = &ret[nb];
         strcpy(cons->id, strtok(line, "|"));
         strcpy(cons->name, strtok(NULL, "|"));
         trim_right_spaces(cons->name);
-        nb = 0;
         while ((tok = strtok(NULL, " -"))) {
             // Check if the last separator was a '-'.
             linked = consts[tok - 1 - data] == '-';
             if (linked) assert(last_star);
             star = parse_star(cons->id, tok);
             if (linked) {
-                cons->lines[nb][0] = last_star;
-                cons->lines[nb][1] = star;
-                nb++;
+                cons->lines[cons->nb_lines][0] = last_star;
+                cons->lines[cons->nb_lines][1] = star;
+                cons->nb_lines++;
             }
             last_star = star;
         }
-        cons->nb_lines = nb;
-        i++;
+        nb++;
     }
     free(data);
+    *nb_cst = nb;
 
     if (edges) parse_edges(edges, ret);
     return ret;

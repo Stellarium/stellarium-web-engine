@@ -84,6 +84,18 @@ static obj_klass_t skycultures_klass = {
 OBJ_REGISTER(skycultures_klass)
 
 
+static void skyculture_deactivate(skyculture_t *cult)
+{
+    obj_t *constellations, *cst, *tmp;
+    // Remove all the constellation objects.
+    constellations = obj_get(NULL, "constellations", 0);
+    assert(constellations);
+    DL_FOREACH_SAFE(constellations->children, cst, tmp) {
+        if (str_startswith(cst->id, "CST "))
+            obj_remove(constellations, cst);
+    }
+}
+
 static void skyculture_activate(skyculture_t *cult)
 {
     char id[32];
@@ -91,6 +103,12 @@ static void skyculture_activate(skyculture_t *cult)
     json_value *args;
     constellation_infos_t *cst;
     obj_t *constellations, *cons;
+    skyculture_t *other;
+
+    // Deactivate the current activated skyculture if any.
+    OBJ_ITER(cult->obj.parent, other, &skyculture_klass) {
+        if (other != cult && other->active) skyculture_deactivate(other);
+    }
 
     // Add all the names.
     for (i = 0; cult->names[i][0]; i++) {
@@ -121,18 +139,6 @@ static void skyculture_activate(skyculture_t *cult)
             if (!cons) continue;
             obj_call_json(cons, "set_image", args);
         }
-    }
-}
-
-static void skyculture_deactivate(skyculture_t *cult)
-{
-    obj_t *constellations, *cst, *tmp;
-    // Remove all the constellation objects.
-    constellations = obj_get(NULL, "constellations", 0);
-    assert(constellations);
-    DL_FOREACH_SAFE(constellations->children, cst, tmp) {
-        if (str_startswith(cst->id, "CST "))
-            obj_remove(constellations, cst);
     }
 }
 
