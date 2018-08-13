@@ -97,6 +97,8 @@ static obj_klass_t core_klass = {
                  .sub = "hints"),
         PROPERTY("progressbars", "json", .fn = core_fn_progressbars),
         PROPERTY("fps", "f", MEMBER(core_t, prof.fps)),
+        PROPERTY("clicks", "d", MEMBER(core_t, clicks)),
+        PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
         FUNCTION("lookat", .fn = core_lookat),
         {}
     }
@@ -395,11 +397,15 @@ static obj_t *get_obj_at(double x, double y, double max_dist)
 static int core_click(const gesture_t *g, void *user)
 {
     obj_t *obj;
-    obj = get_obj_at(g->pos[0] * core->win_pixels_scale,
-                     g->pos[1] * core->win_pixels_scale,
-                     18 * core->win_pixels_scale);
-    obj_set_attr(&core->obj, "selection", "p", obj);
-    obj_release(obj);
+    if (!core->ignore_clicks) {
+        obj = get_obj_at(g->pos[0] * core->win_pixels_scale,
+                         g->pos[1] * core->win_pixels_scale,
+                         18 * core->win_pixels_scale);
+        obj_set_attr(&core->obj, "selection", "p", obj);
+        obj_release(obj);
+    }
+    core->clicks++;
+    obj_changed(core, "clicks");
     return 0;
 }
 
