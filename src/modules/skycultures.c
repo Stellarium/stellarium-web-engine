@@ -53,6 +53,7 @@ static obj_klass_t skyculture_klass = {
     .flags  = 0,
     .update = skyculture_update,
     .attributes = (attribute_t[]) {
+        PROPERTY("name", "s", MEMBER(skyculture_t, info.name)),
         PROPERTY("active", "b", MEMBER(skyculture_t, active),
                  .on_changed = skyculture_on_active_changed),
         {}
