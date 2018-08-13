@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <curl/curl.h>
+#include <errno.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -26,6 +27,10 @@
 
 #ifndef LOG_E
 #   define LOG_E
+#endif
+
+#ifndef PATH_MAX
+#   define PATH_MAX 1024
 #endif
 
 #define MAX_NB  16
@@ -96,17 +101,34 @@ static bool file_exists(const char *path)
     return false;
 }
 
+/*
+ * Create directories for a given file path.
+ */
+static int ensure_dir(const char *path)
+{
+    char tmp[PATH_MAX];
+    char *p;
+    strcpy(tmp, path);
+    for (p = tmp + 1; *p; p++) {
+        if (*p != '/') continue;
+        *p = '\0';
+        if ((mkdir(tmp, S_IRWXU) != 0) && (errno != EEXIST)) return -1;
+        *p = '/';
+    }
+    return 0;
+}
+
 static char *create_local_path(const char *url, const char *suffix)
 {
     char *ret;
     int i, r;
-    mkdir(g.cache_dir, 0777);
     r = asprintf(&ret, "%s/%s%s", g.cache_dir, url, suffix ?: "");
     if (r == -1) LOG_E("Error");
     for (i = strlen(g.cache_dir) + 1; ret[i]; i++) {
         if (ret[i] == '/' || ret[i] == ':')
             ret[i] = '_';
     }
+    ensure_dir(ret);
     return ret;
 }
 
