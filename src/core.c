@@ -405,7 +405,7 @@ static int core_click(const gesture_t *g, void *user)
         obj_release(obj);
     }
     core->clicks++;
-    obj_changed(core, "clicks");
+    obj_changed((obj_t*)core, "clicks");
     return 0;
 }
 
