@@ -254,15 +254,24 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int skycultures_init(obj_t *obj, json_value *args)
 {
+    const char *path;
+    char name[256], url[1024];
     skycultures_t *cults = (void*)obj;
-    skyculture_t *western;
+    skyculture_t *cult;
     asset_set_alias("https://data.stellarium.org/skycultures",
                     "asset://skycultures");
-    // Immediately load western sky culture.
-    western = add_from_uri(cults,
-            "https://data.stellarium.org/skycultures/western");
-    assert(western);
-    obj_set_attr((obj_t*)western, "active", "b", true);
+
+    // Add the other ones.
+    ASSET_ITER("asset://skycultures/", path) {
+        if (!str_endswith(path, "/info.ini")) continue;
+        strcpy(name, path + strlen("asset://skycultures/"));
+        *strchr(name, '/') = '\0';
+        sprintf(url, "https://data.stellarium.org/skycultures/%s", name);
+        cult = add_from_uri(cults, url);
+        // Immedatly load the western skyculture.
+        if (strcmp(name, "western") == 0)
+            obj_set_attr((obj_t*)cult, "active", "b", true);
+    }
     return 0;
 }
 
