@@ -10,6 +10,7 @@
 
 <div class="click-through" style="position:absolute; width: 100%; height: 100%; display:flex; align-items: flex-end;">
   <toolbar class="get-click"></toolbar>
+  <observing-panel></observing-panel>
   <template v-for="item in pluginsGuiComponents">
     <component :is="item"></component>
   </template>
@@ -17,7 +18,7 @@
     <component :is="item"></component>
   </template>
   <selected-object-info style="position: absolute; top: 48px; left: 0px; width: 430px; max-width: calc(100vw - 12px); margin: 6px" class="get-click"></selected-object-info>
-  <progress-bars style="position: absolute; top: 54px; right: 6px;"></progress-bars>
+  <progress-bars style="position: absolute; bottom: 54px; right: 12px;"></progress-bars>
   <bottom-bar style="position:absolute; width: 100%; justify-content: center; bottom: 0; display:flex; margin-bottom: 0px" class="get-click"></bottom-bar>
 </div>
 
@@ -36,6 +37,7 @@ import ViewSettingsDialog from '@/components/view-settings-dialog.vue'
 import SkyThisMonth from '@/components/sky-this-month.vue'
 import PlanetsVisibility from '@/components/planets-visibility.vue'
 import LocationDialog from '@/components/location-dialog.vue'
+import ObservingPanel from '@/components/observing-panel.vue'
 
 export default {
   data: function () {
@@ -64,7 +66,7 @@ export default {
       return res
     }
   },
-  components: { Toolbar, BottomBar, AboutDialog, DataCreditsDialog, PrivacyDialog, ViewSettingsDialog, SkyThisMonth, PlanetsVisibility, SelectedObjectInfo, LocationDialog, ProgressBars }
+  components: { Toolbar, BottomBar, AboutDialog, DataCreditsDialog, PrivacyDialog, ViewSettingsDialog, SkyThisMonth, PlanetsVisibility, SelectedObjectInfo, LocationDialog, ProgressBars, ObservingPanel }
 }
 </script>
 
