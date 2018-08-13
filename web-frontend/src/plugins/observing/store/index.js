@@ -105,7 +105,7 @@ const moduleStore = {
       commit('setLoginStatus', 'loggedOut')
     },
     deleteAccount ({ dispatch, commit, state }) {
-      return NoctuaSkyClient.users.delete({user_id: NoctuaSkyClient.currentUser.id}).then(res => {
+      return NoctuaSkyClient.deleteAccount().then(res => {
         console.log('Account deleted')
         return dispatch('signOut')
       })
