@@ -48,53 +48,16 @@ typedef struct skyculture {
     char            *description;  // html description if any.
 } skyculture_t;
 
-static void skyculture_on_active_changed(
-        obj_t *obj, const attribute_t *attr);
-static int skyculture_update(obj_t *obj, const observer_t *obs, double dt);
-
-static obj_klass_t skyculture_klass = {
-    .id     = "skyculture",
-    .size   = sizeof(skyculture_t),
-    .flags  = 0,
-    .update = skyculture_update,
-    .attributes = (attribute_t[]) {
-        PROPERTY("name", "s", MEMBER(skyculture_t, info.name)),
-        PROPERTY("active", "b", MEMBER(skyculture_t, active),
-                 .on_changed = skyculture_on_active_changed),
-        PROPERTY("description", "s", MEMBER(skyculture_t, description)),
-        {}
-    },
-};
-
-OBJ_REGISTER(skyculture_klass)
-
-// Module class.
+/*
+ * Type: skycultures_t
+ * The module, that maintains the list of skycultures.
+ */
 typedef struct skycultures_t {
     obj_t   obj;
     skyculture_t *current; // The current skyculture.
     int loading_code; // Return code of the initial list loading.
 } skycultures_t;
 
-static int skycultures_init(obj_t *obj, json_value *args);
-static void skycultures_gui(obj_t *obj, int location);
-static int skycultures_update(obj_t *obj, const observer_t *obs, double dt);
-
-static obj_klass_t skycultures_klass = {
-    .id             = "skycultures",
-    .size           = sizeof(skycultures_t),
-    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init           = skycultures_init,
-    .gui            = skycultures_gui,
-    .update         = skycultures_update,
-    .create_order   = 30, // After constellations.
-    .attributes = (attribute_t[]) {
-        PROPERTY("current", "p", MEMBER(skycultures_t, current),
-                 .hint = "obj"),
-        {}
-    },
-};
-
-OBJ_REGISTER(skycultures_klass)
 
 
 static void skyculture_deactivate(skyculture_t *cult)
@@ -175,6 +138,7 @@ static int info_ini_handler(void* user, const char* section,
     return 0;
 }
 
+static int skyculture_update(obj_t *obj, const observer_t *obs, double dt);
 static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
                                   const char *id)
 {
@@ -371,3 +335,40 @@ static int skycultures_update(obj_t *obj, const observer_t *obs, double dt)
     }
     return 0;
 }
+
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t skyculture_klass = {
+    .id     = "skyculture",
+    .size   = sizeof(skyculture_t),
+    .flags  = 0,
+    .update = skyculture_update,
+    .attributes = (attribute_t[]) {
+        PROPERTY("name", "s", MEMBER(skyculture_t, info.name)),
+        PROPERTY("active", "b", MEMBER(skyculture_t, active),
+                 .on_changed = skyculture_on_active_changed),
+        PROPERTY("description", "s", MEMBER(skyculture_t, description)),
+        {}
+    },
+};
+OBJ_REGISTER(skyculture_klass)
+
+
+static obj_klass_t skycultures_klass = {
+    .id             = "skycultures",
+    .size           = sizeof(skycultures_t),
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init           = skycultures_init,
+    .gui            = skycultures_gui,
+    .update         = skycultures_update,
+    .create_order   = 30, // After constellations.
+    .attributes = (attribute_t[]) {
+        PROPERTY("current", "p", MEMBER(skycultures_t, current),
+                 .hint = "obj"),
+        {}
+    },
+};
+OBJ_REGISTER(skycultures_klass)
