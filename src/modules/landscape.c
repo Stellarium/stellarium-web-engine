@@ -23,6 +23,9 @@ typedef struct landscape {
     hips_t          *hips;
     texture_t       *fog;
     bool            active;
+    struct  {
+        char        *name;
+    } info;
 } landscape_t;
 
 /*
@@ -158,6 +161,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
     landscape_t *ls;
     ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
     ls->hips = hips_create(uri, 0);
+    ls->info.name = strdup(id);
     hips_set_label(ls->hips, "Landscape");
     hips_set_frame(ls->hips, FRAME_OBSERVED);
     return ls;
@@ -265,6 +269,7 @@ static obj_klass_t landscape_klass = {
     .render = landscape_render,
     .render_order = 40,
     .attributes = (attribute_t[]) {
+        PROPERTY("name", "s", MEMBER(landscape_t, info.name)),
         PROPERTY("visible", "b", MEMBER(landscape_t, visible.target)),
         PROPERTY("color", "v4", MEMBER(landscape_t, color), .hint = "color"),
         PROPERTY("active", "b", MEMBER(landscape_t, active),
