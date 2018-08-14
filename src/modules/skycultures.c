@@ -14,6 +14,9 @@
  * Module that handles the skycultures list.
  */
 
+// URL where we get the cultures list.
+#define BASE_URL "https://data.stellarium.org/skycultures"
+
 /*
  * Enum of all the data files we need to parse.
  */
@@ -69,6 +72,7 @@ OBJ_REGISTER(skyculture_klass)
 typedef struct skycultures_t {
     obj_t   obj;
     skyculture_t *current; // The current skyculture.
+    int loading_code; // Return code of the initial list loading.
 } skycultures_t;
 
 static int skycultures_init(obj_t *obj, json_value *args);
@@ -171,10 +175,11 @@ static int info_ini_handler(void* user, const char* section,
     return 0;
 }
 
-static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri)
+static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
+                                  const char *id)
 {
     skyculture_t *cult;
-    cult = (void*)obj_create("skyculture", NULL, (obj_t*)cults, NULL);
+    cult = (void*)obj_create("skyculture", id, (obj_t*)cults, NULL);
     cult->uri = strdup(uri);
     skyculture_update((obj_t*)cult, NULL, 0);
     return cult;
@@ -226,46 +231,45 @@ static json_value *parse_imgs(const char *data, const char *uri)
 static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
-    const char *info, *constellations, *edges, *names, *imgs, *data;
+    const char *constellations, *edges, *imgs, *data;
     char path[1024];
     int nb, code;
 
     if (!(cult->parsed & SK_INFO)) {
         sprintf(path, "%s/%s", cult->uri, "info.ini");
-        info = asset_get_data(path, NULL, NULL);
-        assert(info); // For the moment assume local!
-        ini_parse_string(info, info_ini_handler, cult);
-        free(cult->obj.id);
-        asprintf(&cult->obj.id, "CULT %s", cult->info.name);
+        data = asset_get_data(path, NULL, &code);
+        if (!code) return 0;
         cult->parsed |= SK_INFO;
+        ini_parse_string(data, info_ini_handler, cult);
     }
 
     if (!(cult->parsed & SK_NAMES)) {
         sprintf(path, "%s/%s", cult->uri, "names.txt");
-        names = asset_get_data(path , NULL, NULL);
-        assert(names); // For the moment assume local!
-        nb = skyculture_parse_names(names, NULL);
-        cult->names = calloc(nb + 1, sizeof(*cult->names));
-        skyculture_parse_names(names, cult->names);
+        data = asset_get_data(path , NULL, &code);
+        if (!code) return 0;
         cult->parsed |= SK_NAMES;
+        nb = skyculture_parse_names(data, NULL);
+        cult->names = calloc(nb + 1, sizeof(*cult->names));
+        skyculture_parse_names(data, cult->names);
     }
 
     if (!(cult->parsed & SK_CONSTELLATIONS)) {
         sprintf(path, "%s/%s", cult->uri, "constellations.txt");
-        constellations = asset_get_data(path, NULL, NULL);
+        constellations = asset_get_data(path, NULL, &code);
+        if (!code) return 0;
         sprintf(path, "%s/%s", cult->uri, "edges.txt");
-        edges = asset_get_data(path, NULL, NULL);
-        assert(constellations); // For the moment assume local!
+        edges = asset_get_data(path, NULL, &code);
+        if (!code) return 0;
         cult->parsed |= SK_CONSTELLATIONS;
         cult->constellations = skyculture_parse_constellations(
                 constellations, edges, &cult->nb_constellations);
-        cult->parsed |= SK_CONSTELLATIONS;
     }
 
     if (!(cult->parsed & SK_DESCRIPTION)) {
         sprintf(path, "%s/%s", cult->uri, "description.en.html");
         data = asset_get_data(path, NULL, &code);
-        if (code) cult->parsed |= SK_DESCRIPTION;
+        if (!code) return 0;
+        cult->parsed |= SK_DESCRIPTION;
         if (!data) return 0;
         cult->description = strdup(data);
         obj_changed((obj_t*)cult, "description");
@@ -274,7 +278,8 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
     if (!(cult->parsed & SK_IMGS)) {
         sprintf(path, "%s/%s", cult->uri, "imgs/index.json");
         imgs = asset_get_data(path, NULL, &code);
-        if (code) cult->parsed |= SK_IMGS;
+        if (!code) return 0;
+        cult->parsed |= SK_IMGS;
         if (!imgs) return 0;
         cult->imgs = parse_imgs(imgs, cult->uri);
         if (cult->active) skyculture_activate(cult);
@@ -289,16 +294,15 @@ static int skycultures_init(obj_t *obj, json_value *args)
     char name[256], url[1024];
     skycultures_t *cults = (void*)obj;
     skyculture_t *cult;
-    asset_set_alias("https://data.stellarium.org/skycultures",
-                    "asset://skycultures");
+    asset_set_alias(BASE_URL, "asset://skycultures");
 
     // Add all the skycultures available in the assets.
     ASSET_ITER("asset://skycultures/", path) {
         if (!str_endswith(path, "/info.ini")) continue;
         strcpy(name, path + strlen("asset://skycultures/"));
         *strchr(name, '/') = '\0';
-        sprintf(url, "https://data.stellarium.org/skycultures/%s", name);
-        cult = add_from_uri(cults, url);
+        sprintf(url, "%s/%s", BASE_URL, name);
+        cult = add_from_uri(cults, url, name);
         // Immediately load the western skyculture.
         if (strcmp(name, "western") == 0)
             obj_set_attr((obj_t*)cult, "active", "b", true);
@@ -321,9 +325,47 @@ static void skycultures_gui(obj_t *obj, int location)
     }
 }
 
+static int parse_index(skycultures_t *cults, const char *base_url,
+                       const char *data)
+{
+    json_value *json;
+    const char *key;
+    int i;
+    char url[1024];
+
+    json = json_parse(data, strlen(data));
+    if (!json || json->type != json_object) {
+        LOG_E("Cannot parse json file");
+        return -1;
+    }
+    for (i = 0; i < json->u.object.length; i++) {
+        if (json->u.object.values[i].value->type != json_object) continue;
+        key = json->u.object.values[i].name;
+        // Skip if we already have it.
+        if (obj_get((obj_t*)cults, key, 0)) continue;
+        sprintf(url, "%s/%s", base_url, key);
+        add_from_uri(cults, url, key);
+    }
+
+    json_value_free(json);
+    return 0;
+}
+
 static int skycultures_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    skycultures_t *cults = (skycultures_t*)obj;
     obj_t *skyculture;
+    const char *data;
+
+    if (!cults->loading_code) {
+        if ((data = asset_get_data(
+                    BASE_URL "/index.json",
+                    NULL, &cults->loading_code)))
+        {
+            parse_index(cults, BASE_URL, data);
+        }
+    }
+
     OBJ_ITER(obj, skyculture, &skyculture_klass) {
         obj_update(skyculture, obs, dt);
     }
