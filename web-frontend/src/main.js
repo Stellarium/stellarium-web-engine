@@ -80,6 +80,7 @@ for (let i in Vue.SWPlugins) {
 }
 
 var router = new Router({
+  mode: 'history',
   routes: routes
 })
 
