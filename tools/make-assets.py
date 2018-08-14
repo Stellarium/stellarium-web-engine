@@ -37,6 +37,7 @@ TYPES = {
     "ini": {"text": True,  "compress": False},
     "vert": {"text": True,  "compress": False},
     "frag": {"text": True,  "compress": False},
+    "html": {"text": True,  "compress": False},
 }
 
 def list_data_files():
