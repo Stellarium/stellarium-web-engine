@@ -28,6 +28,7 @@
             </div>
           </v-card-title>
           <v-card-text>
+            <form action="">
             <v-layout row justify-space-between>
               <v-text-field label="First Name" disabled v-model="$store.state.plugins.observing.noctuaSky.user.firstName"></v-text-field>
               &nbsp;
@@ -38,11 +39,12 @@
             </v-layout>
             <v-text-field name="input-email" disabled label="Email" v-model="$store.state.plugins.observing.noctuaSky.user.email"></v-text-field>
             <v-layout row justify-space-between>
-              <v-text-field label="Password" disabled type="password" value="xxxxxxxx"></v-text-field>
+              <v-text-field label="Password" disabled type="password" value="xxxxxxxx" autocomplete=""></v-text-field>
               <v-btn icon ripple @click.native="showChangePasswordTab()">
                 <v-icon class="grey--text text--lighten-1">edit</v-icon>
               </v-btn>
             </v-layout>
+            </form>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -85,8 +87,8 @@
           <v-progress-circular v-if="modifyPasswordInProgress" indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 60px;"></v-progress-circular>
           <v-card-text>
             <form action="">
-            <v-text-field name="username" label="Email" disabled :value="$store.state.plugins.observing.noctuaSky.user.email" type="text"></v-text-field>
-            <v-text-field required name="input-oldpwd" label="Current password" autocomplete="password" v-model="currentPassword" type="password"></v-text-field>
+            <v-text-field name="username" label="Email" disabled :value="$store.state.plugins.observing.noctuaSky.user.email" type="text" autocomplete="username"></v-text-field>
+            <v-text-field required name="input-oldpwd" label="Current password" autocomplete="current-password" v-model="currentPassword" type="password"></v-text-field>
             <v-text-field required name="input-newpwd" label="New password" autocomplete="new-password" v-model="newPassword" type="password" counter :rules="[rules.password]"></v-text-field>
             <v-text-field required name="input-newpwd2" label="Confirm new password" autocomplete="new-password" v-model="newPassword2" type="password" :rules="[rules.confirmPassword]"></v-text-field>
             </form>
