@@ -13,7 +13,14 @@
 import os
 import re
 import struct
+import sys
 import zlib
+
+SOURCE = "data"
+DEST = "src/assets/"
+
+if len(sys.argv) > 1:
+    SOURCE, DEST = sys.argv[1:]
 
 if os.path.dirname(__file__) != "./tools":
     print "Should be run from root directory"
@@ -33,7 +40,7 @@ TYPES = {
 }
 
 def list_data_files():
-    for root, dirs, files in os.walk("data"):
+    for root, dirs, files in os.walk(SOURCE):
         for f in sorted(files, key=lambda x: x.upper()):
             if any(f.endswith(x) for x in TYPES.keys()):
                 p = os.path.join(root, f)
@@ -68,11 +75,11 @@ def encode_bin(data):
 # Get all the asset files sorted by group:
 groups = {}
 for f in list_data_files():
-    group = f.split('/')[1]
+    group = os.path.relpath(f, SOURCE).split('/')[0]
     groups.setdefault(group, []).append(f)
 
 for group in groups:
-    out = open("src/assets/%s.inl" % group, "w")
+    out = open(os.path.join(DEST, "%s.inl" % group), "w")
     print >>out, "// Auto generated from tools/makeassets.py\n"
     for f in groups[group]:
         data = open(f).read()
