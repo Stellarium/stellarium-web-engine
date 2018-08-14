@@ -9,6 +9,8 @@
 
 #include "swe.h"
 
+// URL where we get the landscapes list.
+#define BASE_URL "https://data.stellarium.org/landscapes"
 
 /*
  * Type: landscape_t
@@ -20,6 +22,7 @@ typedef struct landscape {
     double          color[4];
     hips_t          *hips;
     texture_t       *fog;
+    bool            active;
 } landscape_t;
 
 /*
@@ -30,39 +33,16 @@ typedef struct landscapes {
     obj_t           obj;
     fader_t         visible;
     landscape_t     *current; // The current landscape.
+    int             loading_code; // Return code of the initial list loading.
 } landscapes_t;
 
 
 static int landscape_init(obj_t *obj, json_value *args)
 {
     landscape_t *ls = (void*)obj;
-    fader_init(&ls->visible, true);
-    // XXX: this should be taken from the hipslist.
-    // XXX: I use guereins2 as a temporary survey, since the original
-    // is only in png, while this one is using wepb.
-    ls->hips = hips_create("https://data.stellarium.org/surveys/guereins2", 0);
-    hips_set_label(ls->hips, "Landscape");
-    hips_set_frame(ls->hips, FRAME_OBSERVED);
+    fader_init(&ls->visible, false);
     vec4_set(ls->color, 1.0, 1.0, 1.0, 1.0);
     return 0;
-}
-
-static obj_t *landscape_add_res(obj_t *obj, json_value *val,
-                                const char *base_path)
-{
-    const char *type, *url;
-    landscape_t *landscape = (landscape_t*)obj;
-    type = json_get_attr_s(val, "type");
-    if (!type || strcmp(type, "landscape") != 0)
-        return NULL;
-    url = json_get_attr_s(val, "url");
-    if (!url) {
-        LOG_E("landscape needs a url attribute");
-        return NULL;
-    }
-    landscape->hips = hips_create(url, 0);
-    landscape->color[3] = 1.0;
-    return NULL; // Should render the hips but it's not an object...
 }
 
 static int landscape_update(obj_t *obj, const observer_t *obs, double dt)
@@ -158,11 +138,68 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
+static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
+{
+    landscape_t *ls = (void*)obj, *other;
+
+    // Deactivate the others.
+    if (ls->active) {
+        OBJ_ITER(ls->obj.parent, other, "landscape") {
+            if (other == ls) continue;
+            obj_set_attr((obj_t*)other, "active", "b", false);
+        }
+    }
+    ls->visible.target = ls->active;
+}
+
+static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
+                                 const char *id)
+{
+    landscape_t *ls;
+    ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
+    ls->hips = hips_create(uri, 0);
+    hips_set_label(ls->hips, "Landscape");
+    hips_set_frame(ls->hips, FRAME_OBSERVED);
+    return ls;
+}
+
 static int landscapes_init(obj_t *obj, json_value *args)
 {
     landscapes_t *lss = (landscapes_t*)obj;
+    landscape_t *ls;
     fader_init(&lss->visible, true);
-    obj_create("landscape", "guereins", (obj_t*)lss, NULL);
+    asset_set_alias(BASE_URL, "asset://landscapes");
+
+    // Add Guereins immediately.
+    ls = add_from_uri(lss, BASE_URL "/guereins", "guereins");
+    obj_set_attr((obj_t*)ls, "active", "b", true);
+    return 0;
+}
+
+// XXX: exact same code as in skycultures.c
+static int parse_index(landscapes_t *lss, const char *base_url,
+                       const char *data)
+{
+    json_value *json;
+    const char *key;
+    int i;
+    char url[1024];
+
+    json = json_parse(data, strlen(data));
+    if (!json || json->type != json_object) {
+        LOG_E("Cannot parse json file");
+        return -1;
+    }
+    for (i = 0; i < json->u.object.length; i++) {
+        if (json->u.object.values[i].value->type != json_object) continue;
+        key = json->u.object.values[i].name;
+        // Skip if we already have it.
+        if (obj_get((obj_t*)lss, key, 0)) continue;
+        sprintf(url, "%s/%s", base_url, key);
+        add_from_uri(lss, url, key);
+    }
+
+    json_value_free(json);
     return 0;
 }
 
@@ -170,6 +207,17 @@ static int landscapes_update(obj_t *obj, const observer_t *obs, double dt)
 {
     landscapes_t *lss = (landscapes_t*)obj;
     obj_t *ls;
+    const char *data;
+
+    if (!lss->loading_code) {
+        if ((data = asset_get_data(
+                    BASE_URL "/index.json",
+                    NULL, &lss->loading_code)))
+        {
+            parse_index(lss, BASE_URL, data);
+        }
+    }
+
     OBJ_ITER((obj_t*)lss, ls, "landscape") {
         obj_update(ls, obs, dt);
     }
@@ -189,6 +237,21 @@ static int landscapes_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
+static void landscapes_gui(obj_t *obj, int location)
+{
+    landscape_t *ls;
+    if (!DEFINED(SWE_GUI)) return;
+    if (gui_tab("Landscapes")) {
+        OBJ_ITER(obj, ls, "landscape") {
+            gui_item(&(gui_item_t){
+                    .label = ls->obj.id,
+                    .obj = (obj_t*)ls,
+                    .attr = "active"});
+        }
+        gui_tab_end();
+    }
+}
+
 /*
  * Meta class declarations.
  */
@@ -201,10 +264,11 @@ static obj_klass_t landscape_klass = {
     .update = landscape_update,
     .render = landscape_render,
     .render_order = 40,
-    .add_res = landscape_add_res,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(landscape_t, visible.target)),
         PROPERTY("color", "v4", MEMBER(landscape_t, color), .hint = "color"),
+        PROPERTY("active", "b", MEMBER(landscape_t, active),
+                 .on_changed = landscape_on_active_changed),
         {}
     },
 };
@@ -217,6 +281,7 @@ static obj_klass_t landscapes_klass = {
     .init           = landscapes_init,
     .update         = landscapes_update,
     .render         = landscapes_render,
+    .gui            = landscapes_gui,
     .render_order   = 40,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(landscapes_t, visible.target)),
