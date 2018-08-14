@@ -292,14 +292,14 @@ static int skycultures_init(obj_t *obj, json_value *args)
     asset_set_alias("https://data.stellarium.org/skycultures",
                     "asset://skycultures");
 
-    // Add the other ones.
+    // Add all the skycultures available in the assets.
     ASSET_ITER("asset://skycultures/", path) {
         if (!str_endswith(path, "/info.ini")) continue;
         strcpy(name, path + strlen("asset://skycultures/"));
         *strchr(name, '/') = '\0';
         sprintf(url, "https://data.stellarium.org/skycultures/%s", name);
         cult = add_from_uri(cults, url);
-        // Immedatly load the western skyculture.
+        // Immediately load the western skyculture.
         if (strcmp(name, "western") == 0)
             obj_set_attr((obj_t*)cult, "active", "b", true);
     }
