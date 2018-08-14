@@ -13,11 +13,19 @@
 #define BASE_URL "https://data.stellarium.org/landscapes"
 
 /*
+ * Enum of all the data files we need to parse.
+ */
+enum {
+    LS_DESCRIPTION    = 1 << 1,
+};
+
+/*
  * Type: landscape_t
  * Represent an individual landscape.
  */
 typedef struct landscape {
     obj_t           obj;
+    char            *uri;
     fader_t         visible;
     double          color[4];
     hips_t          *hips;
@@ -26,6 +34,8 @@ typedef struct landscape {
     struct  {
         char        *name;
     } info;
+    int             parsed; // union of LS_ enum for each parsed file.
+    char            *description;  // html description if any.
 } landscape_t;
 
 /*
@@ -50,8 +60,22 @@ static int landscape_init(obj_t *obj, json_value *args)
 
 static int landscape_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    landscape_t *landscape = (landscape_t*)obj;
-    return fader_update(&landscape->visible, dt);
+    landscape_t *ls = (landscape_t*)obj;
+    const char *data;
+    char path[1024];
+    int code;
+
+    if (!(ls->parsed & LS_DESCRIPTION)) {
+        sprintf(path, "%s/%s", ls->uri, "description.en.html");
+        data = asset_get_data(path, NULL, &code);
+        if (!code) return 0;
+        ls->parsed |= LS_DESCRIPTION;
+        if (!data) return 0;
+        ls->description = strdup(data);
+        obj_changed((obj_t*)ls, "description");
+    }
+
+    return fader_update(&ls->visible, dt);
 }
 
 static void spherical_project(
@@ -153,6 +177,9 @@ static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
         }
     }
     ls->visible.target = ls->active;
+    // Set the current attribute of the landscape manager object.
+    if (ls->active)
+        obj_set_attr(ls->obj.parent, "current", "p", ls);
 }
 
 static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
@@ -160,6 +187,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
 {
     landscape_t *ls;
     ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
+    ls->uri = strdup(uri);
     ls->hips = hips_create(uri, 0);
     ls->info.name = strdup(id);
     hips_set_label(ls->hips, "Landscape");
@@ -274,6 +302,7 @@ static obj_klass_t landscape_klass = {
         PROPERTY("color", "v4", MEMBER(landscape_t, color), .hint = "color"),
         PROPERTY("active", "b", MEMBER(landscape_t, active),
                  .on_changed = landscape_on_active_changed),
+        PROPERTY("description", "s", MEMBER(landscape_t, description)),
         {}
     },
 };

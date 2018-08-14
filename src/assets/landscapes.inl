@@ -1,6 +1,16 @@
 // Auto generated from tools/makeassets.py
 
 #if ASSETS_INCLUDE_EXTRA
+static const unsigned char DATA_landscapes_guereins_description_en_html[258] __attribute__((aligned(4))) =
+    "<h2>Guéreins</h2>\n"
+    "<p>Guéreins is a small French village in the Valley of the Saône river, 50 km North of Lyon. In the west stand the small mountains of the \"Beaujolais\" where the famous wine is produced. It is also the town where Stellarium was born :)\n"
+    "\n"
+    "";
+
+ASSET_REGISTER(landscapes_guereins_description_en_html, "landscapes/guereins/description.en.html", DATA_landscapes_guereins_description_en_html, false)
+#endif
+
+#if ASSETS_INCLUDE_EXTRA
 static const unsigned char DATA_landscapes_guereins_properties[378] __attribute__((aligned(4))) =
     "hips_order            = 2\n"
     "hips_order_min        = 0\n"
