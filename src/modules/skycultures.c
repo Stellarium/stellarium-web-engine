@@ -22,6 +22,7 @@ enum {
     SK_NAMES          = 1 << 1,
     SK_CONSTELLATIONS = 1 << 2,
     SK_IMGS           = 1 << 3,
+    SK_DESCRIPTION    = 1 << 4,
 };
 
 /*
@@ -41,6 +42,7 @@ typedef struct skyculture {
     json_value      *imgs;
     bool            active;
     int             parsed; // union of SK_ enum for each parsed file.
+    char            *description;  // html description if any.
 } skyculture_t;
 
 static void skyculture_on_active_changed(
@@ -56,6 +58,7 @@ static obj_klass_t skyculture_klass = {
         PROPERTY("name", "s", MEMBER(skyculture_t, info.name)),
         PROPERTY("active", "b", MEMBER(skyculture_t, active),
                  .on_changed = skyculture_on_active_changed),
+        PROPERTY("description", "s", MEMBER(skyculture_t, description)),
         {}
     },
 };
@@ -65,6 +68,7 @@ OBJ_REGISTER(skyculture_klass)
 // Module class.
 typedef struct skycultures_t {
     obj_t   obj;
+    skyculture_t *current; // The current skyculture.
 } skycultures_t;
 
 static int skycultures_init(obj_t *obj, json_value *args);
@@ -79,6 +83,11 @@ static obj_klass_t skycultures_klass = {
     .gui            = skycultures_gui,
     .update         = skycultures_update,
     .create_order   = 30, // After constellations.
+    .attributes = (attribute_t[]) {
+        PROPERTY("current", "p", MEMBER(skycultures_t, current),
+                 .hint = "obj"),
+        {}
+    },
 };
 
 OBJ_REGISTER(skycultures_klass)
@@ -144,6 +153,9 @@ static void skyculture_activate(skyculture_t *cult)
             obj_release(cons);
         }
     }
+
+    // Set the current attribute of the skycultures manager object.
+    obj_set_attr(cult->obj.parent, "current", "p", cult);
 }
 
 static int info_ini_handler(void* user, const char* section,
@@ -214,7 +226,7 @@ static json_value *parse_imgs(const char *data, const char *uri)
 static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
-    const char *info, *constellations, *edges, *names, *imgs;
+    const char *info, *constellations, *edges, *names, *imgs, *data;
     char path[1024];
     int nb, code;
 
@@ -248,6 +260,15 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         cult->constellations = skyculture_parse_constellations(
                 constellations, edges, &cult->nb_constellations);
         cult->parsed |= SK_CONSTELLATIONS;
+    }
+
+    if (!(cult->parsed & SK_DESCRIPTION)) {
+        sprintf(path, "%s/%s", cult->uri, "description.en.html");
+        data = asset_get_data(path, NULL, &code);
+        if (code) cult->parsed |= SK_DESCRIPTION;
+        if (!data) return 0;
+        cult->description = strdup(data);
+        obj_changed((obj_t*)cult, "description");
     }
 
     if (!(cult->parsed & SK_IMGS)) {
