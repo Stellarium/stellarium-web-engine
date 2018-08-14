@@ -420,7 +420,7 @@ static int constellations_init(obj_t *obj, json_value *args)
 static obj_t *constellations_get(const obj_t *obj, const char *id, int flags)
 {
     obj_t *cons;
-    OBJ_ITER(obj, cons, &constellation_klass) {
+    OBJ_ITER(obj, cons, "constellation") {
         if (strcmp(cons->id, id) == 0) {
             cons->ref++; // XXX: make the object static instead?
             return cons;
@@ -447,7 +447,7 @@ static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
          constellations->bounds_visible.value == 0.0))
         return 0;
 
-    OBJ_ITER(obj, cons, &constellation_klass) {
+    OBJ_ITER(obj, cons, "constellation") {
         ret |= obj_update((obj_t*)cons, obs, dt);
     }
     return ret;
@@ -464,7 +464,7 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
     painter_t painter2 = *painter;
     painter2.color[3] *= constellations->visible.value;
 
-    OBJ_ITER(obj, cons, &constellation_klass) {
+    OBJ_ITER(obj, cons, "constellation") {
         obj_render((obj_t*)cons, &painter2);
     }
     return 0;

@@ -261,12 +261,19 @@ obj_t *obj_create_str(const char *type, const char *id, obj_t *parent,
 /*
  * Macro: OBJ_ITER
  * Iter all the children of a given object of a given type.
+ *
+ * Properties:
+ *   obj    - The object we want to iterate.
+ *   child  - Pointer to an object, that will be set with each child.
+ *   klass_ - Children klass type id string, or NULL for no filter.
  */
 #define OBJ_ITER(obj, child, klass_) \
     for (child = (void*)(((obj_t*)obj)->children); child; \
                         child = (void*)(((obj_t*)child)->next)) \
-        if ((uintptr_t)(klass_) == (uintptr_t)NULL || \
-                ((obj_t*)child)->klass == klass_)
+        if (!(klass_) || \
+                ((((obj_t*)child)->klass) && \
+                 (((obj_t*)child)->klass->id) && \
+                 (strcmp(((obj_t*)child)->klass->id, klass_ ?: "") == 0)))
 
 /*
  * Function: obj_add

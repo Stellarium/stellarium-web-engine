@@ -126,7 +126,7 @@ obj_t *city_create(const char *name, const char *country_code,
     str_to_upper(id, id);
     // First search for a nearby city.
     if (!isnan(nearby)) {
-        OBJ_ITER(cities, city, &city_klass) {
+        OBJ_ITER(cities, city, "city") {
             dist = EARTH_RADIUS_KM *
                         eraSeps(longitude, latitude,
                                 city->longitude, city->latitude);

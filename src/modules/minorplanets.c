@@ -335,7 +335,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 {
     obj_t *child;
-    OBJ_ITER(obj, child, &mplanet_klass)
+    OBJ_ITER(obj, child, "minor_planet")
         obj_update(child, obs, dt);
     return 0;
 }
@@ -343,7 +343,7 @@ static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
     obj_t *child;
-    OBJ_ITER(obj, child, &mplanet_klass)
+    OBJ_ITER(obj, child, "minor_planet")
         obj_render(child, painter);
     return 0;
 }

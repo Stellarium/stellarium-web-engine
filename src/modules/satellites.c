@@ -207,7 +207,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
     if (!load_qsmag(sats)) return 0;
     if (!load_data(sats)) return 0;
 
-    OBJ_ITER(sats, sat, &satellite_klass) {
+    OBJ_ITER(sats, sat, "satellite") {
         obj_update((obj_t*)sat, obs, dt);
     }
 
@@ -217,7 +217,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
     obj_t *child;
-    OBJ_ITER(obj, child, &satellite_klass)
+    OBJ_ITER(obj, child, "satellite")
         obj_render(child, painter);
     return 0;
 }

@@ -186,7 +186,7 @@ static int lines_update(obj_t *obj, const observer_t *obs, double dt)
 static int lines_render(const obj_t *obj, const painter_t *painter)
 {
     obj_t *line;
-    OBJ_ITER(obj, line, &line_klass)
+    OBJ_ITER(obj, line, "line")
         line->klass->render(line, painter);
     return 0;
 }
