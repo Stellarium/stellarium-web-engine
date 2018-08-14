@@ -19,27 +19,7 @@ typedef struct landscape {
     texture_t       *fog;
 } landscape_t;
 
-static int landscape_init(obj_t *obj, json_value *args);
-static int landscape_update(obj_t *obj, const observer_t *obs, double dt);
-static int landscape_render(const obj_t *obj, const painter_t *painter);
-static obj_t *landscape_add_res(obj_t *obj, json_value *val,
-                                const char *base_path);
 
-static obj_klass_t landscape_klass = {
-    .id = "landscape",
-    .size = sizeof(landscape_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init = landscape_init,
-    .update = landscape_update,
-    .render = landscape_render,
-    .render_order = 40,
-    .add_res = landscape_add_res,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(landscape_t, visible.target)),
-        PROPERTY("color", "v4", MEMBER(landscape_t, color), .hint = "color"),
-        {}
-    },
-};
 
 static int landscape_init(obj_t *obj, json_value *args)
 {
@@ -166,5 +146,25 @@ static int landscape_render(const obj_t *obj, const painter_t *painter)
 
     return 0;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t landscape_klass = {
+    .id = "landscape",
+    .size = sizeof(landscape_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = landscape_init,
+    .update = landscape_update,
+    .render = landscape_render,
+    .render_order = 40,
+    .add_res = landscape_add_res,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(landscape_t, visible.target)),
+        PROPERTY("color", "v4", MEMBER(landscape_t, color), .hint = "color"),
+        {}
+    },
+};
 
 OBJ_REGISTER(landscape_klass)
