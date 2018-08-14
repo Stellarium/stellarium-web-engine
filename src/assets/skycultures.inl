@@ -1,6 +1,7 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_skycultures_chinese_constellations_txt[5044] __attribute__((aligned(4))) =
+#if ASSETS_INCLUDE_EXTRA
+static const unsigned char DATA_skycultures_chinese_constellations_txt[5044] __attribute__((aligned(4))) =
     "\n"
     "001|Northern Dipper|120315-116656-112185-106591-103287-95418-95689\n"
     "002|Curved Array|217382-5848-8890-166205-153751-142105\n"
@@ -95,17 +96,21 @@ static const unsigned char DATA_data_skycultures_chinese_constellations_txt[5044
     "094|Flat Road|119149-114330\n"
     "";
 
-ASSET_REGISTER(data_skycultures_chinese_constellations_txt, "skycultures/chinese/constellations.txt", DATA_data_skycultures_chinese_constellations_txt, false)
+ASSET_REGISTER(skycultures_chinese_constellations_txt, "skycultures/chinese/constellations.txt", DATA_skycultures_chinese_constellations_txt, false)
+#endif
 
-static const unsigned char DATA_data_skycultures_chinese_info_ini[50] __attribute__((aligned(4))) =
+#if ASSETS_INCLUDE_EXTRA
+static const unsigned char DATA_skycultures_chinese_info_ini[50] __attribute__((aligned(4))) =
     "[info]\n"
     "name = Chinese\n"
     "author = Stellarium's team\n"
     "";
 
-ASSET_REGISTER(data_skycultures_chinese_info_ini, "skycultures/chinese/info.ini", DATA_data_skycultures_chinese_info_ini, false)
+ASSET_REGISTER(skycultures_chinese_info_ini, "skycultures/chinese/info.ini", DATA_skycultures_chinese_info_ini, false)
+#endif
 
-static const unsigned char DATA_data_skycultures_chinese_names_txt[1214] __attribute__((aligned(4))) =
+#if ASSETS_INCLUDE_EXTRA
+static const unsigned char DATA_skycultures_chinese_names_txt[1214] __attribute__((aligned(4))) =
     "HD 169467 | Softshell Turtle I\n"
     "HD 78045 | Flying Fish I\n"
     "HD 55864 | Flying Fish II\n"
@@ -158,9 +163,10 @@ static const unsigned char DATA_data_skycultures_chinese_names_txt[1214] __attri
     "HD 118098 | Horn II\n"
     "";
 
-ASSET_REGISTER(data_skycultures_chinese_names_txt, "skycultures/chinese/names.txt", DATA_data_skycultures_chinese_names_txt, false)
+ASSET_REGISTER(skycultures_chinese_names_txt, "skycultures/chinese/names.txt", DATA_skycultures_chinese_names_txt, false)
+#endif
 
-static const unsigned char DATA_data_skycultures_western_constellations_txt[6098] __attribute__((aligned(4))) =
+static const unsigned char DATA_skycultures_western_constellations_txt[6098] __attribute__((aligned(4))) =
     "Aql|Aquila                |bet-alf-gam alf-del-eta tet-eta del-zet-eps del-lam\n"
     "And|Andromeda             |alf-del-bet gam1-bet-mu-nu\n"
     "Scl|Sculptor              |bet-alf-gam-bet\n"
@@ -251,9 +257,9 @@ static const unsigned char DATA_data_skycultures_western_constellations_txt[6098
     "Vel|Vela                  |gam2-74195-del-kap-phi-mu-92139-88955-psi-lam-gam2\n"
     "";
 
-ASSET_REGISTER(data_skycultures_western_constellations_txt, "skycultures/western/constellations.txt", DATA_data_skycultures_western_constellations_txt, false)
+ASSET_REGISTER(skycultures_western_constellations_txt, "skycultures/western/constellations.txt", DATA_skycultures_western_constellations_txt, false)
 
-static const unsigned char DATA_data_skycultures_western_edges_txt[44615] __attribute__((aligned(4))) =
+static const unsigned char DATA_skycultures_western_edges_txt[44615] __attribute__((aligned(4))) =
     "// From http://pbarbier.com/constellations/edges_18.txt\n"
     "\n"
     "001:002 M+ 22:52:00 +34:30:00 22:52:00 +52:30:00 AND LAC\n"
@@ -1039,17 +1045,17 @@ static const unsigned char DATA_data_skycultures_western_edges_txt[44615] __attr
     "687:686 M+ 19:15:00 +19:10:00 19:15:00 +21:05:00 VUL SGE\n"
     "";
 
-ASSET_REGISTER(data_skycultures_western_edges_txt, "skycultures/western/edges.txt", DATA_data_skycultures_western_edges_txt, false)
+ASSET_REGISTER(skycultures_western_edges_txt, "skycultures/western/edges.txt", DATA_skycultures_western_edges_txt, false)
 
-static const unsigned char DATA_data_skycultures_western_info_ini[50] __attribute__((aligned(4))) =
+static const unsigned char DATA_skycultures_western_info_ini[50] __attribute__((aligned(4))) =
     "[info]\n"
     "name = Western\n"
     "author = Stellarium's team\n"
     "";
 
-ASSET_REGISTER(data_skycultures_western_info_ini, "skycultures/western/info.ini", DATA_data_skycultures_western_info_ini, false)
+ASSET_REGISTER(skycultures_western_info_ini, "skycultures/western/info.ini", DATA_skycultures_western_info_ini, false)
 
-static const unsigned char DATA_data_skycultures_western_names_txt[1890] __attribute__((aligned(4))) =
+static const unsigned char DATA_skycultures_western_names_txt[1890] __attribute__((aligned(4))) =
     "HD 358 |  Alpheratz\n"
     "HD 432 | Caph\n"
     "HD 886 | Algenib\n"
@@ -1148,5 +1154,5 @@ static const unsigned char DATA_data_skycultures_western_names_txt[1890] __attri
     "HD 218045 | Markab\n"
     "";
 
-ASSET_REGISTER(data_skycultures_western_names_txt, "skycultures/western/names.txt", DATA_data_skycultures_western_names_txt, false)
+ASSET_REGISTER(skycultures_western_names_txt, "skycultures/western/names.txt", DATA_skycultures_western_names_txt, false)
 

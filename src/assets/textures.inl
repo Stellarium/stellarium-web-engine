@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_textures_earth_shadow_png[261] __attribute__((aligned(4))) =
+static const unsigned char DATA_textures_earth_shadow_png[261] __attribute__((aligned(4))) =
 {
     137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,1,0,0,0,0,4,8,6,0,0,
     0,97,148,225,196,0,0,0,204,73,68,65,84,88,195,237,148,75,15,2,33,12,132,
@@ -17,9 +17,9 @@ static const unsigned char DATA_data_textures_earth_shadow_png[261] __attribute_
     73,69,78,68,174,66,96,130,
 };
 
-ASSET_REGISTER(data_textures_earth_shadow_png, "textures/earth_shadow.png", DATA_data_textures_earth_shadow_png, false)
+ASSET_REGISTER(textures_earth_shadow_png, "textures/earth_shadow.png", DATA_textures_earth_shadow_png, false)
 
-static const unsigned char DATA_data_textures_fog_png[156] __attribute__((aligned(4))) =
+static const unsigned char DATA_textures_fog_png[156] __attribute__((aligned(4))) =
 {
     137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,64,0,0,0,64,8,6,0,
     0,0,170,105,113,222,0,0,0,99,73,68,65,84,120,218,237,215,177,9,128,80,
@@ -30,9 +30,9 @@ static const unsigned char DATA_data_textures_fog_png[156] __attribute__((aligne
     9,52,67,215,159,100,0,0,0,0,73,69,78,68,174,66,96,130,
 };
 
-ASSET_REGISTER(data_textures_fog_png, "textures/fog.png", DATA_data_textures_fog_png, false)
+ASSET_REGISTER(textures_fog_png, "textures/fog.png", DATA_textures_fog_png, false)
 
-static const unsigned char DATA_data_textures_milkyway_jpg[159498] __attribute__((aligned(4))) =
+static const unsigned char DATA_textures_milkyway_jpg[159498] __attribute__((aligned(4))) =
 {
     255,216,255,224,0,16,74,70,73,70,0,1,1,0,0,1,0,1,0,0,255,219,0,132,0,3,
     3,3,3,3,3,4,4,4,4,5,5,5,5,5,7,7,6,6,7,7,11,8,9,8,9,8,11,17,11,12,11,11,
@@ -7933,9 +7933,9 @@ static const unsigned char DATA_data_textures_milkyway_jpg[159498] __attribute__
     240,213,133,154,188,83,42,59,248,175,231,168,171,240,95,201,255,217,
 };
 
-ASSET_REGISTER(data_textures_milkyway_jpg, "textures/milkyway.jpg", DATA_data_textures_milkyway_jpg, false)
+ASSET_REGISTER(textures_milkyway_jpg, "textures/milkyway.jpg", DATA_textures_milkyway_jpg, false)
 
-static const unsigned char DATA_data_textures_saturn_rings_png[1175] __attribute__((aligned(4))) =
+static const unsigned char DATA_textures_saturn_rings_png[1175] __attribute__((aligned(4))) =
 {
     137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,64,0,0,1,0,8,6,0,0,
     0,3,70,112,6,0,0,0,6,98,75,71,68,0,255,0,255,0,255,160,189,167,147,0,0,
@@ -7996,5 +7996,5 @@ static const unsigned char DATA_data_textures_saturn_rings_png[1175] __attribute
     127,168,64,103,88,20,68,43,177,0,0,0,0,73,69,78,68,174,66,96,130,
 };
 
-ASSET_REGISTER(data_textures_saturn_rings_png, "textures/saturn_rings.png", DATA_data_textures_saturn_rings_png, false)
+ASSET_REGISTER(textures_saturn_rings_png, "textures/saturn_rings.png", DATA_textures_saturn_rings_png, false)
 

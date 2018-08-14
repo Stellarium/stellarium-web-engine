@@ -47,7 +47,15 @@ def list_data_files():
                 # Limit hips surveys to level 1
                 m = re.match(r'^.+/Norder(\d+)/.+\.eph', p)
                 if m and int(m.group(1)) > 1: continue
-                yield p
+                yield os.path.relpath(p, SOURCE)
+
+
+def is_extra(path):
+    """Return whether an asset should only be included if the macro
+       ASSETS_INCLUDE_EXTRA has been defined"""
+    if re.match(r'^skycultures/(?!western).*', path): return True
+    return False
+
 
 def encode_str(data):
     ret = '    "'
@@ -75,14 +83,14 @@ def encode_bin(data):
 # Get all the asset files sorted by group:
 groups = {}
 for f in list_data_files():
-    group = os.path.relpath(f, SOURCE).split('/')[0]
+    group = f.split('/')[0]
     groups.setdefault(group, []).append(f)
 
 for group in groups:
     out = open(os.path.join(DEST, "%s.inl" % group), "w")
     print >>out, "// Auto generated from tools/makeassets.py\n"
     for f in groups[group]:
-        data = open(f).read()
+        data = open(os.path.join(SOURCE, f)).read()
         type = TYPES[f.split(".")[-1]]
         size = len(data)
         compressed = False
@@ -99,12 +107,14 @@ for group in groups:
             data = encode_bin(data)
 
         name = f.replace('.', '_').replace('-', '_').replace('/', '_')
-        url = f[len('data/'):]
+        extra = is_extra(f)
 
+        if extra: print >>out, "#if ASSETS_INCLUDE_EXTRA"
         print >>out, ("static const unsigned char DATA_{}[{}] "
                       "__attribute__((aligned(4))) =\n{};\n").format(
                               name, size, data)
         print >>out, 'ASSET_REGISTER({name}, "{url}", DATA_{name}, {comp})' \
-                        .format(name=name, url=url,
+                        .format(name=name, url=f,
                                 comp='true' if compressed else 'false')
+        if extra: print >>out, "#endif"
         print >>out

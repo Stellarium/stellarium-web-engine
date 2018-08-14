@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_shaders_blit_frag[359] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_frag[359] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -23,9 +23,9 @@ static const unsigned char DATA_data_shaders_blit_frag[359] __attribute__((align
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_blit_frag, "shaders/blit.frag", DATA_data_shaders_blit_frag, false)
+ASSET_REGISTER(shaders_blit_frag, "shaders/blit.frag", DATA_shaders_blit_frag, false)
 
-static const unsigned char DATA_data_shaders_blit_vert[256] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_vert[256] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec2 a_tex_pos;\n"
     "attribute vec3 a_color;\n"
@@ -43,9 +43,9 @@ static const unsigned char DATA_data_shaders_blit_vert[256] __attribute__((align
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_blit_vert, "shaders/blit.vert", DATA_data_shaders_blit_vert, false)
+ASSET_REGISTER(shaders_blit_vert, "shaders/blit.vert", DATA_shaders_blit_vert, false)
 
-static const unsigned char DATA_data_shaders_blit_tag_frag[217] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_tag_frag[217] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -62,9 +62,9 @@ static const unsigned char DATA_data_shaders_blit_tag_frag[217] __attribute__((a
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_blit_tag_frag, "shaders/blit_tag.frag", DATA_data_shaders_blit_tag_frag, false)
+ASSET_REGISTER(shaders_blit_tag_frag, "shaders/blit_tag.frag", DATA_shaders_blit_tag_frag, false)
 
-static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_tag_vert[256] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec2 a_tex_pos;\n"
     "attribute vec3 a_color;\n"
@@ -82,9 +82,9 @@ static const unsigned char DATA_data_shaders_blit_tag_vert[256] __attribute__((a
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_data_shaders_blit_tag_vert, false)
+ASSET_REGISTER(shaders_blit_tag_vert, "shaders/blit_tag.vert", DATA_shaders_blit_tag_vert, false)
 
-static const unsigned char DATA_data_shaders_planet_frag[5579] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_frag[5579] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -241,9 +241,9 @@ static const unsigned char DATA_data_shaders_planet_frag[5579] __attribute__((al
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_planet_frag, "shaders/planet.frag", DATA_data_shaders_planet_frag, false)
+ASSET_REGISTER(shaders_planet_frag, "shaders/planet.frag", DATA_shaders_planet_frag, false)
 
-static const unsigned char DATA_data_shaders_planet_vert[726] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_vert[726] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec4 a_mpos;\n"
     "attribute vec2 a_tex_pos;\n"
@@ -277,9 +277,9 @@ static const unsigned char DATA_data_shaders_planet_vert[726] __attribute__((ali
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_planet_vert, "shaders/planet.vert", DATA_data_shaders_planet_vert, false)
+ASSET_REGISTER(shaders_planet_vert, "shaders/planet.vert", DATA_shaders_planet_vert, false)
 
-static const unsigned char DATA_data_shaders_points_frag[450] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_frag[450] __attribute__((aligned(4))) =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -304,9 +304,9 @@ static const unsigned char DATA_data_shaders_points_frag[450] __attribute__((ali
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_points_frag, "shaders/points.frag", DATA_data_shaders_points_frag, false)
+ASSET_REGISTER(shaders_points_frag, "shaders/points.frag", DATA_shaders_points_frag, false)
 
-static const unsigned char DATA_data_shaders_points_vert[318] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_vert[318] __attribute__((aligned(4))) =
     "attribute vec4 a_pos;\n"
     "attribute vec2 a_tex_pos;\n"
     "attribute vec4 a_color;\n"
@@ -327,5 +327,5 @@ static const unsigned char DATA_data_shaders_points_vert[318] __attribute__((ali
     "}\n"
     "";
 
-ASSET_REGISTER(data_shaders_points_vert, "shaders/points.vert", DATA_data_shaders_points_vert, false)
+ASSET_REGISTER(shaders_points_vert, "shaders/points.vert", DATA_shaders_points_vert, false)
 

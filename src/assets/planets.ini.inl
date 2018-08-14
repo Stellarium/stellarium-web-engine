@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_data_planets_ini[25547] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[25547] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = SUN\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -596,5 +596,5 @@ static const unsigned char DATA_data_planets_ini[25547] __attribute__((aligned(4
     "\n"
     "";
 
-ASSET_REGISTER(data_planets_ini, "planets.ini", DATA_data_planets_ini, false)
+ASSET_REGISTER(planets_ini, "planets.ini", DATA_planets_ini, false)
 
