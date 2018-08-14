@@ -61,7 +61,8 @@ void request_delete(request_t *req)
 static bool is_str(const request_t *req)
 {
     return str_endswith(req->url, ".txt") ||
-           str_endswith(req->url, ".json");
+           str_endswith(req->url, ".json") ||
+           str_endswith(req->url, ".html");
 }
 
 static void onload(unsigned int _, void *arg, void *data, unsigned int size)
