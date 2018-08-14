@@ -606,12 +606,9 @@ static bool is_below_horizon_hidden(void)
 {
     obj_t *ls;
     bool visible;
-    double color[4];
-    ls = obj_get(&core->obj, "landscape", 0);
+    ls = obj_get(&core->obj, "landscapes", 0);
     obj_get_attr(ls, "visible", "b", &visible);
     if (!visible) return false;
-    obj_get_attr(ls, "color", "v4", color);
-    if (color[3] < 1.0) return false;
     return true;
 }
 
@@ -799,8 +796,8 @@ void core_on_key(int key, int action)
 {
     static char *SC[][3] = {
         {"A", "core.atmosphere"},
-        {"G", "core.landscape"},
-        {"C", "core.constellations.lines"},
+        {"G", "core.landscapes"},
+        {"C", "core.constellastions.lines"},
         {"R", "core.constellations.images"},
         {"Z", "core.lines.azimuthal"},
         {"E", "core.lines.equatorial"},

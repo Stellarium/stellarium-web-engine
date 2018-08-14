@@ -10,15 +10,27 @@
 #include "swe.h"
 
 
+/*
+ * Type: landscape_t
+ * Represent an individual landscape.
+ */
 typedef struct landscape {
     obj_t           obj;
     fader_t         visible;
     double          color[4];
-
     hips_t          *hips;
     texture_t       *fog;
 } landscape_t;
 
+/*
+ * Type: landscapes_t
+ * The module, that maintains the list of landscapes.
+ */
+typedef struct landscapes {
+    obj_t           obj;
+    fader_t         visible;
+    landscape_t     *current; // The current landscape.
+} landscapes_t;
 
 
 static int landscape_init(obj_t *obj, json_value *args)
@@ -88,7 +100,7 @@ static double get_global_brightness(void)
     return min(brightness, 1.0);
 }
 
-static int landscape_render(const obj_t *obj, const painter_t *painter)
+static int landscape_render(const obj_t *obj, const painter_t *painter_)
 {
     /*
      *
@@ -100,7 +112,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter)
      *    az = 0              az = 360
      */
     landscape_t *ls = (landscape_t*)obj;
-    painter_t painter2;
+    painter_t painter = *painter_;
     projection_t proj_spherical = {
         .name       = "spherical",
         .backward   = spherical_project,
@@ -117,33 +129,63 @@ static int landscape_render(const obj_t *obj, const painter_t *painter)
         {0,  0,  1,  0},
         {0,  0,  0,  1},
     };
-    int div = (painter->flags & PAINTER_FAST_MODE) ? 16 : 32;
+    int div = (painter.flags & PAINTER_FAST_MODE) ? 16 : 32;
 
-    if (ls->visible.value == 0.0) return 0;
+    painter.color[3] *= ls->visible.value;
+    if (painter.color[3] == 0.0) return 0;
     if (!ls->fog) {
         ls->fog = texture_from_url("asset://textures/fog.png", 0);
         assert(ls->fog);
     }
 
     brightness = get_global_brightness();
-    painter2 = *painter;
-    painter2.color[3] *= ls->visible.value;
 
-    paint_quad(&painter2, FRAME_OBSERVED, ls->fog, NULL,
+    paint_quad(&painter, FRAME_OBSERVED, ls->fog, NULL,
                FULL_UV, &proj_spherical, div);
 
     if (ls->hips && hips_is_ready(ls->hips)) {
-        vec3_mul(brightness, painter2.color, painter2.color);
-        painter2.transform = &rg2h;
-        hips_render(ls->hips, &painter2, 2 * M_PI);
+        vec3_mul(brightness, painter.color, painter.color);
+        painter.transform = &rg2h;
+        hips_render(ls->hips, &painter, 2 * M_PI);
     } else {
-        vec4_copy(ls->color, painter2.color);
-        vec4_set(painter2.color, 0, 0, 0, ls->visible.value);
-        vec3_mul(brightness, painter2.color, painter2.color);
-        paint_quad(&painter2, FRAME_OBSERVED, NULL, NULL,
+        vec4_copy(ls->color, painter.color);
+        vec4_set(painter.color, 0, 0, 0, ls->visible.value);
+        vec3_mul(brightness, painter.color, painter.color);
+        paint_quad(&painter, FRAME_OBSERVED, NULL, NULL,
                    HALF_UV, &proj_spherical, div);
     }
 
+    return 0;
+}
+
+static int landscapes_init(obj_t *obj, json_value *args)
+{
+    landscapes_t *lss = (landscapes_t*)obj;
+    fader_init(&lss->visible, true);
+    obj_create("landscape", "guereins", (obj_t*)lss, NULL);
+    return 0;
+}
+
+static int landscapes_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    landscapes_t *lss = (landscapes_t*)obj;
+    obj_t *ls;
+    OBJ_ITER((obj_t*)lss, ls, "landscape") {
+        obj_update(ls, obs, dt);
+    }
+    return fader_update(&lss->visible, dt);
+}
+
+static int landscapes_render(const obj_t *obj, const painter_t *painter_)
+{
+    landscapes_t *lss = (landscapes_t*)obj;
+    obj_t *ls;
+    painter_t painter = *painter_;
+
+    painter.color[3] *= lss->visible.value;
+    OBJ_ITER(obj, ls, "landscape") {
+        obj_render(ls, &painter);
+    }
     return 0;
 }
 
@@ -154,7 +196,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter)
 static obj_klass_t landscape_klass = {
     .id = "landscape",
     .size = sizeof(landscape_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .flags = OBJ_IN_JSON_TREE,
     .init = landscape_init,
     .update = landscape_update,
     .render = landscape_render,
@@ -166,5 +208,21 @@ static obj_klass_t landscape_klass = {
         {}
     },
 };
-
 OBJ_REGISTER(landscape_klass)
+
+static obj_klass_t landscapes_klass = {
+    .id             = "landscapes",
+    .size           = sizeof(landscapes_t),
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init           = landscapes_init,
+    .update         = landscapes_update,
+    .render         = landscapes_render,
+    .render_order   = 40,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(landscapes_t, visible.target)),
+        PROPERTY("current", "p", MEMBER(landscapes_t, current),
+                 .hint = "obj"),
+        {}
+    },
+};
+OBJ_REGISTER(landscapes_klass)

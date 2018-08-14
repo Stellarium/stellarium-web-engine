@@ -179,7 +179,7 @@ static void menu_main(void *user)
     // XXX: replace all by modules gui hook method.
     const char *modules[][4] = {
         {"core.atmosphere", "visible", "Atmosphere", "btn_atmosphere"},
-        {"core.landscape", "visible", "Landscape", "btn_landscape"},
+        {"core.landscapes", "visible", "Landscape", "btn_landscape"},
         {"core.milkyway", "visible", "Milkyway", "btn_landscape"},
         {"core.constellations.lines", "visible", "Cst Lines", "btn_cst_lines"},
         {"core.constellations.images", "visible", "Cst Art", NULL},
