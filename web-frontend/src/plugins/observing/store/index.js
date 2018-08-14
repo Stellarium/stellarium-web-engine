@@ -9,15 +9,15 @@
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 var loadParseTable = function (commit, tableName) {
-  return NoctuaSkyClient[tableName].query({page_size: 100}).then(function (results) {
+  return NoctuaSkyClient[tableName].query().then(function (results) {
     return new Promise((resolve, reject) => {
-      console.log('Successfully retrieved ' + results.body.length + ' ' + tableName)
-      commit('setParseTable', { 'tableName': tableName, 'newValue': results.body })
+      console.log('Successfully retrieved ' + results.length + ' ' + tableName)
+      commit('setParseTable', { 'tableName': tableName, 'newValue': results })
       resolve()
     })
   },
   function (error) {
-    return error.response
+    return error
   })
 }
 
@@ -76,7 +76,7 @@ const moduleStore = {
     },
     signIn ({ dispatch, commit, state }, data) {
       commit('setLoginStatus', 'signInInProgress')
-      return NoctuaSkyClient.login(data.email, data.password).then(function (user) {
+      return NoctuaSkyClient.users.login(data.email, data.password).then(function (user) {
         commit('setLoginStatus', 'loggedIn')
         console.log('loggedIn!')
         return dispatch('loadUserData')
@@ -88,7 +88,7 @@ const moduleStore = {
     },
     signUp ({ dispatch, commit, state }, data) {
       commit('setLoginStatus', 'signInInProgress')
-      return NoctuaSkyClient.register(data.email, data.password, data.firstName, data.lastName).then(function (res) {
+      return NoctuaSkyClient.users.register(data.email, data.password, data.firstName, data.lastName).then(function (res) {
         commit('setLoginStatus', 'loggedOut')
         console.log('SignUp done')
         return res
@@ -99,19 +99,19 @@ const moduleStore = {
       })
     },
     signOut ({ commit, state }) {
-      NoctuaSkyClient.logout()
+      NoctuaSkyClient.users.logout()
       commit('setParseTable', { 'tableName': 'observations', 'newValue': [] })
       commit('setParseTable', { 'tableName': 'locations', 'newValue': [] })
       commit('setLoginStatus', 'loggedOut')
     },
     deleteAccount ({ dispatch, commit, state }) {
-      return NoctuaSkyClient.deleteAccount().then(res => {
+      return NoctuaSkyClient.users.deleteAccount().then(res => {
         console.log('Account deleted')
         return dispatch('signOut')
       })
     },
     updateUserInfo ({ dispatch, commit, state }, data) {
-      return NoctuaSkyClient.updateUserInfo(data).then(res => {
+      return NoctuaSkyClient.users.updateUserInfo(data).then(res => {
         console.log('User Info updated')
         commit('setLoginStatus', 'loggedIn')
       })
@@ -129,18 +129,18 @@ const moduleStore = {
         // We are editing an existing observation
         console.log('Updating observation ' + data.id)
         let obsId = data.id
-        return NoctuaSkyClient.observations.update({obs_id: obsId, body: data})
+        return NoctuaSkyClient.observations.update(obsId, data)
       }
       let obs
-      return NoctuaSkyClient.observations.add({body: data}).then(function (res) { obs = res.body; return loadParseTable(commit, 'observations') },
-        function (error) { console.log('Failed to create new observation:'); console.log(JSON.stringify(error.response)) }).then(() => { return obs })
+      return NoctuaSkyClient.observations.add(data).then(function (res) { obs = res; return loadParseTable(commit, 'observations') },
+        function (error) { console.log('Failed to create new observation:'); console.log(JSON.stringify(error)) }).then(() => { return obs })
     },
     deleteObservations ({ dispatch, commit, state }, data) {
-      return NoctuaSkyClient.observations.delete({obs_id: data}).then(function () { return loadParseTable(commit, 'observations') })
+      return NoctuaSkyClient.observations.delete(data).then(function () { return loadParseTable(commit, 'observations') })
     },
     addLocation ({ dispatch, commit, state }, data) {
       var nl
-      return NoctuaSkyClient.locations.add({body: data}).then(function (newLoc) { nl = newLoc.body; return loadParseTable(commit, 'locations') }).then(() => { return nl })
+      return NoctuaSkyClient.locations.add(data).then(function (newLoc) { nl = newLoc; return loadParseTable(commit, 'locations') }).then(() => { return nl })
     }
   }
 }

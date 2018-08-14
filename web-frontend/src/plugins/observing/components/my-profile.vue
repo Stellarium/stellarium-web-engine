@@ -216,7 +216,7 @@ export default {
     changePassword: function () {
       var that = this
       this.modifyPasswordInProgress = true
-      NoctuaSkyClient.changePassword(this.currentPassword, this.newPassword).then(res => {
+      NoctuaSkyClient.users.changePassword(this.currentPassword, this.newPassword).then(res => {
         that.back()
         that.modifyPasswordInProgress = false
       }).catch(function (res) {
