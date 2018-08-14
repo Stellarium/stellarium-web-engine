@@ -29,6 +29,7 @@ if os.path.dirname(__file__) != "./tools":
 TYPES = {
     "png": {"text": False, "compress": False},
     "jpg": {"text": False, "compress": False},
+    "webp": {"text": False, "compress": False},
     "txt": {"text": True,  "compress": False},
     "dat": {"text": False, "compress": True},
     "ttf": {"text": False, "compress": True},
@@ -38,6 +39,7 @@ TYPES = {
     "vert": {"text": True,  "compress": False},
     "frag": {"text": True,  "compress": False},
     "html": {"text": True,  "compress": False},
+    "properties": {"text": True,  "compress": False},
 }
 
 def list_data_files():
@@ -55,6 +57,7 @@ def is_extra(path):
     """Return whether an asset should only be included if the macro
        ASSETS_INCLUDE_EXTRA has been defined"""
     if re.match(r'^skycultures/(?!western).*', path): return True
+    if re.match(r'^landscapes/.*', path): return True
     return False
 
 
@@ -92,7 +95,7 @@ for group in groups:
     print >>out, "// Auto generated from tools/makeassets.py\n"
     for f in groups[group]:
         data = open(os.path.join(SOURCE, f)).read()
-        type = TYPES[f.split(".")[-1]]
+        type = TYPES[os.path.basename(f).split(".")[-1]]
         size = len(data)
         compressed = False
         if type["compress"]:

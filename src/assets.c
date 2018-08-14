@@ -165,6 +165,7 @@ void asset_set_alias(const char *base, const char *alias)
 
 #include "assets/cities.txt.inl"
 #include "assets/font.inl"
+#include "assets/landscapes.inl"
 #include "assets/mpcorb.dat.inl"
 #include "assets/planets.ini.inl"
 #include "assets/skycultures.inl"
