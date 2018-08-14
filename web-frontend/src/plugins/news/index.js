@@ -11,7 +11,7 @@ import News from './components/News'
 export default {
   name: 'news',
   menuItems: [
-    {title: 'News', icon: 'rss_feed', store_var_name: 'dummy', link: '#/news'}
+    {title: 'News', icon: 'rss_feed', store_var_name: 'dummy', link: '/news'}
   ],
   routes: [
     {
