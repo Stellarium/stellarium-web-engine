@@ -177,7 +177,7 @@ json_value *args_vvalue(const char *type, const char *hint, va_list ap)
         }
     }
     else if (strcmp(type, "s") == 0 || strcmp(type, "S") == 0)
-        val = json_string_new(va_arg(ap, char*));
+        val = json_string_new(va_arg(ap, char*) ?: "");
     else if (strcmp(type, "p") == 0)
         val = json_integer_new((uintptr_t)va_arg(ap, void*));
     else if (strcmp(type, "v2") == 0) {
