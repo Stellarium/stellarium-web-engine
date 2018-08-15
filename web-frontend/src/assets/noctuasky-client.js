@@ -184,11 +184,12 @@ const NoctuaSkyClient = {
           })
         },
         get: function (id) {
-          return tmpApis.locations.get({id: id}).then(res => {
-            return res.body
-          }, err => {
-            return err.response.body
-          })
+          return that.state.locations.find(function (l) { return l.id === id })
+          // return tmpApis.locations.get({id: id}).then(res => {
+          //   return res.body
+          // }, err => {
+          //   return err.response.body
+          // })
         },
         update: function (id, loc) {
           return tmpApis.locations.update({id: id, body: loc}).then(res => {

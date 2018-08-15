@@ -21,8 +21,8 @@
 
 <script>
 import ObservationThumbnail from './observation-thumbnail.vue'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 import { swh } from '@/assets/sw_helpers.js'
-import { nsh } from '../ns_helpers.js'
 import Moment from 'moment'
 
 export default {
@@ -52,7 +52,7 @@ export default {
             }
           }
         }
-        var loc = nsh.locationForId(this, this.obsGroupData.f1[0].location)
+        var loc = NoctuaSkyClient.locations.get(this.obsGroupData.f1[0].location)
         var locName = loc ? loc.shortName : 'Unknown Location'
         return dayString + ' ' + swh.monthNames[dateMin.month()] + ', ' + humanFriendlyDaytime + ' in ' + locName
       }

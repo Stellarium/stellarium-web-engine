@@ -185,6 +185,7 @@ import Moment from 'moment'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 import { swh } from '@/assets/sw_helpers.js'
 import { nsh } from '../ns_helpers.js'
+import _ from 'lodash'
 
 export default {
   data: function () {
@@ -218,20 +219,14 @@ export default {
       let lastModified = NoctuaSkyClient.observations.lastModified()
       if (lastModified) {
         res.mjd = lastModified.mjd
-        res.location = lastModified.location
+        res.location = NoctuaSkyClient.locations.get(lastModified.location)
         res.observingSetup = lastModified.observingSetup
       }
       return res
     },
     setLocation: function (loc) {
-      if (!loc.id) {
-        var that = this
-        console.log('Location is new, needs to be saved...')
-        NoctuaSkyClient.locations.add(loc).then((newLoc) => { that.observation.location = newLoc.id; that.locationMenu = false })
-      } else {
-        this.observation.location = loc.id
-        this.locationMenu = false
-      }
+      this.observation.location = loc
+      this.locationMenu = false
       this.setViewSettingsForObservation()
     },
     setObservingSetup: function (obsSetup) {
@@ -241,25 +236,38 @@ export default {
     },
     save: function () {
       var that = this
-      // Backend can't deal with compacted form of observingSetup (a simple string)
-      this.observation.observingSetup = this.observation.observingSetup.id ? this.observation.observingSetup : {id: this.observation.observingSetup, state: {}}
 
-      if (that.modify) {
-        // We are editing an existing observation
-        console.log('Updating observation ' + this.observation.id)
-        return NoctuaSkyClient.observations.update(this.observation.id, this.observation).then(res => {
-          that.modify = false
+      let obsToSave = _.cloneDeep(this.observation)
+      // Backend can't deal with compacted form of observingSetup (a simple string)
+      obsToSave.observingSetup = obsToSave.observingSetup.id ? obsToSave.observingSetup : {id: obsToSave.observingSetup, state: {}}
+
+      let save2 = function (obs) {
+        if (that.modify) {
+          // We are editing an existing observation
+          console.log('Updating observation ' + obs.id)
+          return NoctuaSkyClient.observations.update(obs.id, obs).then(res => {
+            that.modify = false
+          }, err => {
+            console.log('Failed to update observation:')
+            console.log(JSON.stringify(err))
+          })
+        }
+        return NoctuaSkyClient.observations.add(obs).then(res => {
+          that.back()
         }, err => {
-          console.log('Failed to update observation:')
+          console.log('Failed to create new observation:')
           console.log(JSON.stringify(err))
         })
       }
 
-      return NoctuaSkyClient.observations.add(this.observation).then(res => {
-        that.back()
-      }, err => {
-        console.log('Failed to create new observation:')
-        console.log(JSON.stringify(err))
+      if (obsToSave.location.id) {
+        obsToSave.location = obsToSave.location.id
+        return save2(obsToSave)
+      }
+      console.log('Location is new, save it first..')
+      return NoctuaSkyClient.locations.add(obsToSave.location).then(res => {
+        obsToSave.location = res.id
+        return save2(obsToSave)
       })
     },
     back: function () {
@@ -296,7 +304,7 @@ export default {
       this.$stel.core.observer.utc = obs.mjd
       let loc
       if (obs.location) {
-        loc = nsh.locationForId(this, obs.location)
+        loc = obs.location
       } else {
         loc = this.$store.state.currentLocation
       }
@@ -337,6 +345,9 @@ export default {
     },
     value: function (newValue) {
       if (newValue !== undefined) {
+        if (newValue.location && !newValue.location.id) {
+          newValue.location = NoctuaSkyClient.locations.get(newValue.location)
+        }
         this.observation = newValue
       } else {
         this.observation = this.getDefaultObservation()
@@ -374,16 +385,14 @@ export default {
     },
     currentLocationTitle: function () {
       if (this.observation.location) {
-        let loc = nsh.locationForId(this, this.observation.location)
-        return loc ? loc.shortName : ''
+        return this.observation.location ? this.observation.location.shortName : ''
       } else {
         return 'Location'
       }
     },
     currentLocationSubtitle: function () {
       if (this.observation.location) {
-        let loc = nsh.locationForId(this, this.observation.location)
-        return loc ? loc.country : ''
+        return this.observation.location ? this.observation.location.country : ''
       } else {
         return 'Please select a location'
       }
