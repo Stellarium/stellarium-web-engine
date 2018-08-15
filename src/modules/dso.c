@@ -335,10 +335,10 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
 }
 
 static void dso_render_name(const painter_t *painter, const dso_data_t *d,
-                            const double pos[2], double size, double vmag)
+                            const double pos[2], double size, double vmag,
+                            int anchor)
 {
     char buff[128] = "";
-    double label_color[4] = {1, 1, 1, 0.5};
     if (d->short_name[0])
         strcpy(buff, d->short_name);
     else if (d->id.m)
@@ -348,52 +348,63 @@ static void dso_render_name(const painter_t *painter, const dso_data_t *d,
     else if (d->id.ic)
         sprintf(buff, "IC %d", d->id.ic);
     if (buff[0])
-        labels_add(buff, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
+        labels_add(buff, pos, size, 13, painter->color, 0, anchor, -vmag);
 }
 
-// Project from UV to the annotation countour shape (just a rect for the
-// moment).
+// Project from UV to the annotation contour ellipse.
 // XXX: Should probably add a painter functions to render shapes from ICRS
 // coordinate + size so that we don't have to do this everywhere!
 static void contour_project(const projection_t *proj, int flags,
                             const double *v, double *out)
 {
-    const double (*mat)[4][4] = proj->user;
-    double p[4] = {v[0], v[1], 1.0, 1.0};
-    mat4_mul_vec4(*mat, p, p);
-    vec3_normalize(p, p);
-    p[3] = 0;
-    vec4_copy(p, out);
-}
-
-static void render_contour(const dso_data_t *data,
-                           const painter_t *painter_)
-{
-    double mat[4][4];
+    // XXX: most of the mat computation should be done in advance.
+    const dso_data_t *data = proj->user;
+    double theta, r, mat[3][3], p[4] = {1, 0, 0, 0};
+    theta = v[0] * 2 * M_PI;
     double smax = data->smax;
     double smin = data->smin;
     double angle = data->angle;
-    painter_t painter = *painter_;
-    projection_t proj;
+    r = v[1] * smax / 2;
 
     if (isnan(angle) || isnan(smin)) {
         angle = 0.0;
         smin = smax;
     }
-    mat4_set_identity(mat);
-    mat4_rz(data->ra, mat, mat);
-    mat4_ry(90 * DD2R - data->de, mat, mat);
-    mat4_rz(-angle, mat, mat);
-    mat4_iscale(mat, smax, smin, 1.0);
-    mat4_itranslate(mat, -0.5, -0.5, 0.0);
 
+    mat3_set_identity(mat);
+    mat3_rz(data->ra, mat, mat);
+    mat3_ry(-data->de, mat, mat);
+    mat3_rx(-angle, mat, mat);
+    mat3_iscale(mat, 1.0, smin / smax);
+    mat3_rx(-theta, mat, mat);
+    mat3_rz(r, mat, mat);
+
+    mat3_mul_vec3(mat, p, p);
+    out[3] = 0;
+    vec4_copy(p, out);
+}
+
+static void render_contour(const dso_data_t *data,
+                           const painter_t *painter_,
+                           double p[4])
+{
+    double v[2] = {0, 1}, tmp[4];
+    painter_t painter = *painter_;
+    projection_t proj;
     painter.lines_stripes = 10.0;
-    vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
     proj = (projection_t) {
         .backward   = contour_project,
-        .user       = mat,
+        .user       = data,
     };
-    paint_quad_contour(&painter, FRAME_ICRS, &proj, 8, 15);
+    paint_quad_contour(&painter, FRAME_ICRS, &proj, 64, 4);
+
+    // Find the new position for the label:
+    for (v[0] = 0; v[0] < 1; v[0] += 1.0 / 16) {
+        contour_project(&proj, 0, v, tmp);
+        convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, tmp, tmp);
+        project(painter.proj, PROJ_TO_NDC_SPACE, 2, tmp, tmp);
+        if (tmp[1] > p[1]) vec2_copy(tmp, p);
+    }
 }
 
 // Render a DSO from its data.
@@ -406,6 +417,8 @@ static int dso_render_from_data(const dso_data_t *d,
     const char *symbol;
     painter_t painter = *painter_;
     double min_circle_size, circle_size = 0;
+    int label_anchor = ANCHOR_AROUND;
+    bool show_contour;
 
     min_circle_size = core->fov / 20;
     temp_mag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
@@ -426,14 +439,19 @@ static int dso_render_from_data(const dso_data_t *d,
                  PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE, 2, p, p))
         return 0;
 
-    if (!isnan(d->smax) && d->smax > min_circle_size)
-        render_contour(d, &painter);
-
-    symbol = d->type;
-    while (symbol && !symbols_get(symbol, NULL))
-        symbol = otypes_get_parent(symbol);
-    symbol = symbol ?: "ISM";
-    symbols_paint(&painter, symbol, p, 12.0, NULL, 0.0);
+    show_contour = !isnan(d->smax) && d->smax > min_circle_size;
+    if (show_contour) {
+        vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
+        render_contour(d, &painter, p);
+        label_anchor = ANCHOR_BOTTOM | ANCHOR_HCENTER | ANCHOR_FIXED;
+    } else {
+        vec4_set(painter.color, 1, 1, 1, 0.5);
+        symbol = d->type;
+        while (symbol && !symbols_get(symbol, NULL))
+            symbol = otypes_get_parent(symbol);
+        symbol = symbol ?: "ISM";
+        symbols_paint(&painter, symbol, p, 12.0, NULL, 0.0);
+    }
 
     // Add the dso in the global list of rendered objects.
     // XXX: we could move this into symbols_paint.
@@ -447,8 +465,9 @@ static int dso_render_from_data(const dso_data_t *d,
     id ? strcpy(point.id, id) : make_id(d, point.id);
     utarray_push_back(core->rend_points, &point);
 
-    if (temp_mag <= painter.label_mag_max)
-        dso_render_name(&painter, d, p, max(size, circle_size), mag);
+    if (temp_mag <= painter.label_mag_max || show_contour)
+        dso_render_name(&painter, d, p, max(size, circle_size), mag,
+                        label_anchor);
 
     return 0;
 }
