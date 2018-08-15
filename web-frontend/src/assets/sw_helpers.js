@@ -620,7 +620,6 @@ export const swh = {
       accuracy: pos.accuracy,
       streetAddress: ''
     }
-    loc['publicData'] = {'shortName': 'Near Lat ' + pos.lat.toFixed(1) + '° Lon ' + pos.lng.toFixed(1) + '°', 'lat': Math.round(loc.lat * 10) / 10, 'lng': Math.round(loc.lng * 10) / 10, 'alt': loc.alt, 'country': ''}
     return new Promise((resolve, reject) => {
       window.gm_authFailure = function () {
         // This happens when the map API is not usable for some reasons
@@ -659,8 +658,6 @@ export const swh = {
                 }
               }
             }
-            loc.publicData.shortName = (pos.accuracy <= 500 ? 'Near ' : '') + loc.shortName
-            loc.publicData.country = loc.country
             resolve(loc)
           } else {
             console.log('Geocoder returned nothing')

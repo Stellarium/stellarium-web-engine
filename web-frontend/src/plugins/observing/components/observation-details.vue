@@ -241,9 +241,6 @@ export default {
     },
     save: function () {
       var that = this
-      if (!this.observation.locationPublicData) {
-        this.observation.locationPublicData = nsh.locationForId(this, this.observation.location).publicData
-      }
       // Backend can't deal with compacted form of observingSetup (a simple string)
       this.observation.observingSetup = this.observation.observingSetup.id ? this.observation.observingSetup : {id: this.observation.observingSetup, state: {}}
 
