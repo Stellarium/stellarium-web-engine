@@ -17,8 +17,8 @@
 </template>
 
 <script>
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 import { swh } from '@/assets/sw_helpers.js'
-import { nsh } from '../ns_helpers.js'
 
 export default {
   props: ['obsData'],
@@ -33,10 +33,10 @@ export default {
   },
   methods: {
     instIcon: function (obsData) {
-      return nsh.iconForObservingSetup(obsData.observingSetup)
+      return NoctuaSkyClient.iconForObservingSetup(obsData.observingSetup)
     },
     obsIcon: function (obsData) {
-      return nsh.iconForObservation(obsData)
+      return swh.iconForObservation(obsData)
     },
     ratingHtml: function (obsData) {
       var res = '<img src="/static/images/svg/ui/star_rate.svg" height="15px"></img>'.repeat(obsData.rating)

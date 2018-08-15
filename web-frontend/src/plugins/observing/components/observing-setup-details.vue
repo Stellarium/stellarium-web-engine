@@ -36,7 +36,7 @@
 
 <script>
 
-import { nsh } from '../ns_helpers.js'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 import EquipmentDetails from './equipment-details.vue'
 
 export default {
@@ -64,7 +64,7 @@ export default {
   },
   computed: {
     observingSetupDescription: function () {
-      return nsh.equipmentForId(this.instanceId).description
+      return NoctuaSkyClient.equipments.get(this.instanceId).description
     },
     instanceId: {
       get: function () {
