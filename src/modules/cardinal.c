@@ -26,19 +26,15 @@ static struct {
     {"NW", { D, -D,  0}},
 };
 
-static int cardinal_render(const obj_t *obj, const painter_t *painter);
 
+/*
+ * Type: cardinal_t
+ * Cardinal module.
+ */
 typedef struct cardinal {
     obj_t obj;
 } cardinal_t;
 
-static obj_klass_t cardinal_klass = {
-    .id = "cardinals",
-    .size = sizeof(obj_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .render = cardinal_render,
-    .render_order = 50,
-};
 
 static int cardinal_render(const obj_t *obj, const painter_t *painter)
 {
@@ -59,4 +55,16 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
+
+/*
+ * Meta class declaration.
+ */
+
+static obj_klass_t cardinal_klass = {
+    .id = "cardinals",
+    .size = sizeof(obj_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .render = cardinal_render,
+    .render_order = 50,
+};
 OBJ_REGISTER(cardinal_klass)

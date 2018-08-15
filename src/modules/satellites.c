@@ -39,35 +39,6 @@ typedef struct satellite {
     double stdmag; // Taken from the qsmag data.
 } satellite_t;
 
-static int satellite_update(obj_t *obj, const observer_t *obs, double dt);
-static int satellite_render(const obj_t *obj, const painter_t *painter);
-
-static obj_klass_t satellite_klass = {
-    .id             = "satellite",
-    .size           = sizeof(satellite_t),
-    .flags          = 0,
-    .render_order   = 30,
-    .update         = satellite_update,
-    .render         = satellite_render,
-
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        PROPERTY("name"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("distance"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("radec"),
-        PROPERTY("azalt"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
-        {}
-    },
-};
-
-OBJ_REGISTER(satellite_klass)
-
 // Module class.
 typedef struct satellites {
     obj_t   obj;
@@ -76,21 +47,6 @@ typedef struct satellites {
     bool    loaded;
 } satellites_t;
 
-static int satellites_init(obj_t *obj, json_value *args);
-static int satellites_update(obj_t *obj, const observer_t *obs, double dt);
-static int satellites_render(const obj_t *obj, const painter_t *painter);
-
-static obj_klass_t satellites_klass = {
-    .id             = "satellites",
-    .size           = sizeof(satellites_t),
-    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init           = satellites_init,
-    .render_order   = 30,
-    .update         = satellites_update,
-    .render         = satellites_render,
-};
-
-OBJ_REGISTER(satellites_klass)
 
 static int satellites_init(obj_t *obj, json_value *args)
 {
@@ -357,3 +313,43 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     return 0;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t satellite_klass = {
+    .id             = "satellite",
+    .size           = sizeof(satellite_t),
+    .flags          = 0,
+    .render_order   = 30,
+    .update         = satellite_update,
+    .render         = satellite_render,
+
+    .attributes = (attribute_t[]) {
+        // Default properties.
+        PROPERTY("name"),
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("distance"),
+        PROPERTY("alt"),
+        PROPERTY("az"),
+        PROPERTY("radec"),
+        PROPERTY("azalt"),
+        PROPERTY("vmag"),
+        PROPERTY("type"),
+        {}
+    },
+};
+OBJ_REGISTER(satellite_klass)
+
+static obj_klass_t satellites_klass = {
+    .id             = "satellites",
+    .size           = sizeof(satellites_t),
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init           = satellites_init,
+    .render_order   = 30,
+    .update         = satellites_update,
+    .render         = satellites_render,
+};
+OBJ_REGISTER(satellites_klass)

@@ -40,39 +40,10 @@ typedef struct {
     star_data_t data;
 } star_t;
 
-static int star_update(obj_t *obj, const observer_t *obs, double dt);
-static int star_init(obj_t *obj, json_value *args);
-static int star_render(const obj_t *obj, const painter_t *painter);
-
 static void star_render_name(const painter_t *painter, const star_data_t *s,
                              const double pos[3], double size, double vmag);
 static void get_star_color(const char sp, double out[3]);
 
-
-static obj_klass_t star_klass = {
-    .id         = "star",
-    .init       = star_init,
-    .size       = sizeof(star_t),
-    .update     = star_update,
-    .render     = star_render,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        PROPERTY("name"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("distance"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("radec"),
-        PROPERTY("azalt"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
-        {},
-    },
-};
-OBJ_REGISTER(star_klass)
 
 // Precompute values about the star position to make rendering faster.
 static void compute_pv(double ra, double de,
@@ -233,24 +204,6 @@ static int stars_list(const obj_t *obj, double max_mag, void *user,
                      int (*f)(const char *id, void *user));
 static obj_t *stars_add_res(obj_t *obj, json_value *val,
                             const char *base_path);
-
-static obj_klass_t stars_klass = {
-    .id             = "stars",
-    .size           = sizeof(stars_t),
-    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init           = stars_init,
-    .render         = stars_render,
-    .get            = stars_get,
-    .get_by_nsid    = stars_get_by_nsid,
-    .list           = stars_list,
-    .add_res        = stars_add_res,
-    .render_order   = 20,
-    .attributes = (attribute_t[]) {
-        PROPERTY("max_mag", "f", MEMBER(stars_t, mag_max)),
-        PROPERTY("visible", "b", MEMBER(stars_t, visible)),
-        {},
-    },
-};
 
 static star_t *star_create(const star_data_t *data)
 {
@@ -876,6 +829,52 @@ static void get_star_color(const char sp, double out[3])
     out[2] = b / 255.0;
 }
 
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t star_klass = {
+    .id         = "star",
+    .init       = star_init,
+    .size       = sizeof(star_t),
+    .update     = star_update,
+    .render     = star_render,
+    .attributes = (attribute_t[]) {
+        // Default properties.
+        PROPERTY("name"),
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("distance"),
+        PROPERTY("alt"),
+        PROPERTY("az"),
+        PROPERTY("radec"),
+        PROPERTY("azalt"),
+        PROPERTY("rise"),
+        PROPERTY("set"),
+        PROPERTY("vmag"),
+        PROPERTY("type"),
+        {},
+    },
+};
+OBJ_REGISTER(star_klass)
+
+static obj_klass_t stars_klass = {
+    .id             = "stars",
+    .size           = sizeof(stars_t),
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init           = stars_init,
+    .render         = stars_render,
+    .get            = stars_get,
+    .get_by_nsid    = stars_get_by_nsid,
+    .list           = stars_list,
+    .add_res        = stars_add_res,
+    .render_order   = 20,
+    .attributes = (attribute_t[]) {
+        PROPERTY("max_mag", "f", MEMBER(stars_t, mag_max)),
+        PROPERTY("visible", "b", MEMBER(stars_t, visible)),
+        {},
+    },
+};
 OBJ_REGISTER(stars_klass);
 
 

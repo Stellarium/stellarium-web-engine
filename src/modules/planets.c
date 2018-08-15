@@ -77,34 +77,6 @@ struct planet {
     hips_t      *hips_normalmap;    // Normal map survey.
 };
 
-
-static int planet_update_(planet_t *planet, const observer_t *obs);
-static int planet_update(obj_t *obj, const observer_t *obs, double dt);
-
-static obj_klass_t planet_klass = {
-    .id = "planet",
-    .size = sizeof(planet_t),
-    .update = planet_update,
-    .attributes = (attribute_t[]) {
-        PROPERTY("name"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("radec"),
-        PROPERTY("azalt"),
-        PROPERTY("vmag"),
-        PROPERTY("distance"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
-        PROPERTY("phase", "f", MEMBER(planet_t, phase)),
-        PROPERTY("radius", "f", MEMBER(planet_t, radius)),
-        PROPERTY("type"),
-        {}
-    },
-};
-OBJ_REGISTER(planet_klass)
-
 // Planets layer object type;
 typedef struct planets {
     obj_t       obj;
@@ -119,6 +91,9 @@ typedef struct planets {
     int         hipslist_parsed;
 } planets_t;
 
+
+static int planet_update_(planet_t *planet, const observer_t *obs);
+static int planet_update(obj_t *obj, const observer_t *obs, double dt);
 static planet_t *planet_get_by_name(planets_t *planets, const char *name);
 static int planets_init(obj_t *obj, json_value *args);
 static int planets_update(obj_t *obj, const observer_t *obs, double dt);
@@ -126,18 +101,6 @@ static int planets_render(const obj_t *obj, const painter_t *painter);
 static obj_t *planets_get(const obj_t *obj, const char *id, int flags);
 static int planets_list(const obj_t *obj, double max_mag, void *user,
                         int (*f)(const char *id, void *user));
-
-static obj_klass_t planets_klass = {
-    .id     = "planets",
-    .size   = sizeof(planets_t),
-    .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init   = planets_init,
-    .update = planets_update,
-    .render = planets_render,
-    .get     = planets_get,
-    .list    = planets_list,
-    .render_order = 30,
-};
 
 /*
  * List of known bodies id.
@@ -1083,4 +1046,44 @@ static int planets_list(const obj_t *obj, double max_mag, void *user,
     return nb;
 }
 
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t planet_klass = {
+    .id = "planet",
+    .size = sizeof(planet_t),
+    .update = planet_update,
+    .attributes = (attribute_t[]) {
+        PROPERTY("name"),
+        PROPERTY("alt"),
+        PROPERTY("az"),
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("radec"),
+        PROPERTY("azalt"),
+        PROPERTY("vmag"),
+        PROPERTY("distance"),
+        PROPERTY("rise"),
+        PROPERTY("set"),
+        PROPERTY("phase", "f", MEMBER(planet_t, phase)),
+        PROPERTY("radius", "f", MEMBER(planet_t, radius)),
+        PROPERTY("type"),
+        {}
+    },
+};
+OBJ_REGISTER(planet_klass)
+
+static obj_klass_t planets_klass = {
+    .id     = "planets",
+    .size   = sizeof(planets_t),
+    .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init   = planets_init,
+    .update = planets_update,
+    .render = planets_render,
+    .get     = planets_get,
+    .list    = planets_list,
+    .render_order = 30,
+};
 OBJ_REGISTER(planets_klass)

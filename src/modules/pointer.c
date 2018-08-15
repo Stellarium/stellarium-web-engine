@@ -17,17 +17,6 @@ typedef struct pointer {
     obj_t           obj;
 } pointer_t;
 
-static int pointer_render(const obj_t *obj, const painter_t *painter);
-
-static obj_klass_t pointer_klass = {
-    .id = "pointer",
-    .size = sizeof(pointer_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .render = pointer_render,
-    .render_order = 199, // Just before the ui.
-};
-
-OBJ_REGISTER(pointer_klass)
 
 static int pointer_render(const obj_t *obj, const painter_t *painter)
 {
@@ -75,3 +64,17 @@ static int pointer_render(const obj_t *obj, const painter_t *painter)
     }
     return 0;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t pointer_klass = {
+    .id = "pointer",
+    .size = sizeof(pointer_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .render = pointer_render,
+    .render_order = 199, // Just before the ui.
+};
+
+OBJ_REGISTER(pointer_klass)

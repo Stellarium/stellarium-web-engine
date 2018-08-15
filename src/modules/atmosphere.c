@@ -17,6 +17,10 @@
 
 static const int TEX_SIZE = 64;
 
+/*
+ * Type: atmosphere_t
+ * Atmosphere module struct.
+ */
 typedef struct atmosphere {
     obj_t           obj;
     // The twelves tile textures of healpix at order 0.
@@ -28,24 +32,6 @@ typedef struct atmosphere {
         double sun_pos[3];
     } last_state;
 } atmosphere_t;
-
-static int atmosphere_init(obj_t *obj, json_value *args);
-static int atmosphere_render(const obj_t *obj, const painter_t *painter);
-static int atmosphere_update(obj_t *obj, const observer_t *obs, double dt);
-
-static obj_klass_t atmosphere_klass = {
-    .id     = "atmosphere",
-    .size   = sizeof(atmosphere_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init = atmosphere_init,
-    .render = atmosphere_render,
-    .update = atmosphere_update,
-    .render_order = 35,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(atmosphere_t, visible.target)),
-        {}
-    },
-};
 
 // All the precomputed data
 typedef struct {
@@ -240,4 +226,21 @@ static int atmosphere_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t atmosphere_klass = {
+    .id     = "atmosphere",
+    .size   = sizeof(atmosphere_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = atmosphere_init,
+    .render = atmosphere_render,
+    .update = atmosphere_update,
+    .render_order = 35,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(atmosphere_t, visible.target)),
+        {}
+    },
+};
 OBJ_REGISTER(atmosphere_klass)
