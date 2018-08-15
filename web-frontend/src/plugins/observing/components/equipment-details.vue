@@ -36,7 +36,7 @@
 
 <script>
 
-import { nsh } from '../ns_helpers.js'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 import EquipmentDetails from './equipment-details.vue'
 import _ from 'lodash'
 
@@ -45,7 +45,7 @@ export default {
   components: { EquipmentDetails },
   data: function () {
     return {
-      equipmentInstance: nsh.expandEquipmentInstance(this.instance)
+      equipmentInstance: NoctuaSkyClient.equipments.expandEquipmentInstance(this.instance)
     }
   },
   props: {
@@ -58,12 +58,12 @@ export default {
     },
     valueForField: function (field) {
       if (field.fixedValue) {
-        return this.selectItemForEquipment(field, nsh.equipmentForId(field.fixedValue))
+        return this.selectItemForEquipment(field, NoctuaSkyClient.equipments.get(field.fixedValue))
       }
       if (!this.equipmentInstance.state[field.id]) {
         return undefined
       }
-      return this.selectItemForEquipment(field, nsh.equipmentForId(this.equipmentInstance.state[field.id].id ? this.equipmentInstance.state[field.id].id : this.equipmentInstance.state[field.id]))
+      return this.selectItemForEquipment(field, NoctuaSkyClient.equipments.get(this.equipmentInstance.state[field.id].id ? this.equipmentInstance.state[field.id].id : this.equipmentInstance.state[field.id]))
     },
     choiceForEquipmentFilter: function (field) {
       if (!field.choiceFilter) {
@@ -71,31 +71,31 @@ export default {
       }
       var that = this
       var f = function (e) { return that.selectItemForEquipment(field, e) }
-      return nsh.equipments.filter(field.choiceFilter).map(f)
+      return NoctuaSkyClient.state.equipments.filter(field.choiceFilter).map(f)
     },
     onChangeEquipment: function (v) {
       var p = JSON.parse(v)
       var tmp = _.cloneDeep(this.equipmentInstance)
       tmp.state[tmp.schema[p.index].id] = p.val
       this.equipmentInstance = tmp
-      this.$emit('equipmentChanged', this.index, nsh.simplifyEquipmentInstance(this.equipmentInstance))
+      this.$emit('equipmentChanged', this.index, NoctuaSkyClient.equipments.simplifyEquipmentInstance(this.equipmentInstance))
     },
     onChangeValue: function (v, idx) {
       if (this.equipmentInstance.schema[idx].type === 'number') {
         v = +v
       }
       this.equipmentInstance.state[this.equipmentInstance.schema[idx].id] = v
-      this.$emit('equipmentChanged', this.index, nsh.simplifyEquipmentInstance(this.equipmentInstance))
+      this.$emit('equipmentChanged', this.index, NoctuaSkyClient.equipments.simplifyEquipmentInstance(this.equipmentInstance))
     },
     onSubEquipmentChanged: function (idx, inst) {
       // Called when a sub equipment change it's state
       this.equipmentInstance.state[this.equipmentInstance.schema[idx].id] = {id: inst.id, state: inst.state}
-      this.$emit('equipmentChanged', this.index, nsh.simplifyEquipmentInstance(this.equipmentInstance))
+      this.$emit('equipmentChanged', this.index, NoctuaSkyClient.equipments.simplifyEquipmentInstance(this.equipmentInstance))
     }
   },
   watch: {
     instance: function (newValue) {
-      this.equipmentInstance = nsh.expandEquipmentInstance(newValue)
+      this.equipmentInstance = NoctuaSkyClient.equipments.expandEquipmentInstance(newValue)
     }
   },
   computed: {

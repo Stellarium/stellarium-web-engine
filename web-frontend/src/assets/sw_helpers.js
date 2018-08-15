@@ -155,6 +155,14 @@ export const swh = {
     return swh.iconForSkySourceTypes(skySource.types)
   },
 
+  iconForObservation: function (obs) {
+    if (obs && obs.target) {
+      return this.iconForSkySource(obs.target)
+    } else {
+      return this.iconForSkySourceTypes(['reg'])
+    }
+  },
+
   cleanupOneSkySourceName: function (name) {
     const greek = {
       'alf': 'α',

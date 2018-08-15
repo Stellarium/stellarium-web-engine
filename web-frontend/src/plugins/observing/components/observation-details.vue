@@ -184,7 +184,6 @@ import ObservingSetupDetails from './observing-setup-details.vue'
 import Moment from 'moment'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 import { swh } from '@/assets/sw_helpers.js'
-import { nsh } from '../ns_helpers.js'
 import _ from 'lodash'
 
 export default {
@@ -323,7 +322,7 @@ export default {
         ss.update()
         azalt = ss.azalt
       }
-      let expandedObservingSetup = nsh.fullEquipmentInstanceState(obs.observingSetup)
+      let expandedObservingSetup = NoctuaSkyClient.equipments.fullEquipmentInstanceState(obs.observingSetup)
       let fp = expandedObservingSetup.footprint({ra: 0, de: 0})
       let fov = fp[2] * Math.PI / 180.0
       this.$stel.core.lock = 0
@@ -372,7 +371,7 @@ export default {
       }
     },
     currentSkySourceIcon: function () {
-      return nsh.iconForObservation(this.observation)
+      return swh.iconForObservation(this.observation)
     },
     currentSkySourceName: function () {
       if (this.observation.target === undefined) {
@@ -412,10 +411,10 @@ export default {
       }
     },
     currentObservingSetupTitle: function () {
-      return nsh.titleForObservingSetup(this.observation.observingSetup)
+      return NoctuaSkyClient.titleForObservingSetup(this.observation.observingSetup)
     },
     currentObservingSetupIcon: function () {
-      return nsh.iconForObservingSetup(this.observation.observingSetup)
+      return NoctuaSkyClient.iconForObservingSetup(this.observation.observingSetup)
     },
     addedObsDate: {
       get: function () {
