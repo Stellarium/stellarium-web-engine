@@ -55,7 +55,7 @@
               <h3 class="headline mb-0">Create a NoctuaSky account</h3>
             </div>
           </v-card-title>
-          <v-progress-circular v-if="signInInProgress" indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 60px;"></v-progress-circular>
+          <v-progress-circular v-if="signUpInProgress" indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 60px;"></v-progress-circular>
           <v-card-text>
             <v-layout row justify-space-between>
               <v-text-field name="input-first-name" label="First Name" v-model="signUpFirstName"></v-text-field>
@@ -101,6 +101,8 @@
 
 <script>
 
+import NoctuaSkyClient from '@/assets/noctuasky-client'
+
 export default {
   data: function () {
     return {
@@ -144,13 +146,10 @@ export default {
       }
     }
   },
-  mounted: function () {
-    this.$store.dispatch('observing/initLoginStatus')
-  },
   methods: {
     signIn: function () {
       var that = this
-      this.$store.dispatch('observing/signIn', {'email': this.email, 'password': this.password}).then(function (res) { that.back() }, function (res) {
+      NoctuaSkyClient.users.login(this.email, this.password).then(function (res) { that.back() }, function (res) {
         if (res.message) {
           that.signInErrorAlert = res.message
         } else if (res.errors) {
@@ -163,7 +162,7 @@ export default {
     },
     signUp: function () {
       var that = this
-      this.$store.dispatch('observing/signUp', {'password': this.signUpPassword, 'email': this.signUpEmail, 'firstName': this.signUpFirstName, 'lastName': this.signUpLastName}).then(res => {
+      NoctuaSkyClient.users.register(this.signUpEmail, this.signUpPassword, this.signUpFirstName, this.signUpLastName).then(res => {
         that.showWaitConfirmationEmailTab()
       }).catch(function (res) {
         if (res.message) {
@@ -209,7 +208,10 @@ export default {
       return this.email === '' || this.password === ''
     },
     signInInProgress: function () {
-      return this.$store.state.plugins.observing.noctuaSky.loginStatus === 'signInInProgress'
+      return this.$store.state.plugins.observing.noctuaSky.status === 'signInInProgress'
+    },
+    signUpInProgress: function () {
+      return this.$store.state.plugins.observing.noctuaSky.status === 'signUpInProgress'
     },
     showSignInErrorAlert: function () {
       return this.signInErrorAlert !== ''

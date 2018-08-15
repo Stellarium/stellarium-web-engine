@@ -97,6 +97,7 @@ import ObservationDetails from './observation-details.vue'
 import Signin from './signin.vue'
 import MyProfile from './my-profile.vue'
 import { nsh } from '../ns_helpers.js'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data: function () {
@@ -112,7 +113,7 @@ export default {
       this.$store.commit('toggleBool', 'showObservingPanel')
     },
     logout: function () {
-      this.$store.dispatch('observing/signOut')
+      NoctuaSkyClient.users.logout()
     },
     showObservationDetailsPage: function () {
       // Set this to undefined to tell the observation-detail component to use default values
@@ -173,10 +174,10 @@ export default {
       return nsh.mingo.aggregate(this.$store.state.plugins.observing.noctuaSky.observations, aggregator)
     },
     userLoggedIn: function () {
-      return this.$store.state.plugins.observing.noctuaSky.loginStatus === 'loggedIn'
+      return this.$store.state.plugins.observing.noctuaSky.status === 'loggedIn'
     },
     userFirstName: function () {
-      return this.$store.state.plugins.observing.noctuaSky.user.firstName ? this.$store.state.plugins.observing.noctuaSky.user.firstName : 'Anonymous'
+      return this.$store.state.plugins.observing.noctuaSky.user.first_name ? this.$store.state.plugins.observing.noctuaSky.user.first_name : 'Anonymous'
     },
     userEmail: function () {
       return this.$store.state.plugins.observing.noctuaSky.user.email

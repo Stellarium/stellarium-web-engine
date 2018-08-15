@@ -6,142 +6,18 @@
 // The terms of the AGPL v3 license can be found in the main directory of this
 // repository.
 
-import NoctuaSkyClient from '@/assets/noctuasky-client'
-
-var loadParseTable = function (commit, tableName) {
-  return NoctuaSkyClient[tableName].query().then(function (results) {
-    return new Promise((resolve, reject) => {
-      console.log('Successfully retrieved ' + results.length + ' ' + tableName)
-      commit('setParseTable', { 'tableName': tableName, 'newValue': results })
-      resolve()
-    })
-  },
-  function (error) {
-    return error
-  })
-}
-
 const moduleStore = {
   namespaced: true,
   state: {
-    noctuaSky: {
-      loginStatus: 'loggedOut',
-      user: {
-        email: undefined,
-        firstName: undefined,
-        lastName: undefined
-      },
-      lastSavedLocationId: undefined,
-      lastUsedObservingSetup: {
-        'id': 'eyes_observation',
-        'state': {}
-      },
-      observations: [],
-      locations: []
-    }
+    noctuaSky: {}
   },
   mutations: {
-    toggleBool (state, varName) {
-      state[varName] = !state[varName]
-    },
-    setLoginStatus (state, newValue) {
-      if (NoctuaSkyClient.currentUser) {
-        state.noctuaSky.user.email = NoctuaSkyClient.currentUser.email
-        state.noctuaSky.user.firstName = NoctuaSkyClient.currentUser.first_name
-        state.noctuaSky.user.lastName = NoctuaSkyClient.currentUser.last_name
-      } else {
-        state.noctuaSky.user.email = undefined
-        state.noctuaSky.user.firstName = undefined
-        state.noctuaSky.user.lastName = undefined
-      }
-      state.noctuaSky.loginStatus = newValue
-    },
-    setParseTable (state, {tableName, newValue}) {
-      state.noctuaSky[tableName] = newValue
-    },
-    setLastSavedLocationId (state, newValue) {
-      state.noctuaSky.lastSavedLocationId = newValue
-    },
-    setLastUsedObservingSetup (state, newValue) {
-      state.noctuaSky.lastUsedObservingSetup = newValue
+    replaceNoctuaSkyState (state, newTree) {
+      // mutate NoctuaSky state
+      state.noctuaSky = newTree
     }
   },
   actions: {
-    initLoginStatus ({ dispatch, commit, state }) {
-      var currentUser = NoctuaSkyClient.currentUser
-      if (currentUser) {
-        commit('setLoginStatus', 'loggedIn')
-        return dispatch('loadUserData')
-      }
-    },
-    signIn ({ dispatch, commit, state }, data) {
-      commit('setLoginStatus', 'signInInProgress')
-      return NoctuaSkyClient.users.login(data.email, data.password).then(function (user) {
-        commit('setLoginStatus', 'loggedIn')
-        console.log('loggedIn!')
-        return dispatch('loadUserData')
-      }, function (error) {
-        console.log('Signin Error: ' + JSON.stringify(error))
-        commit('setLoginStatus', 'loggedOut')
-        throw error
-      })
-    },
-    signUp ({ dispatch, commit, state }, data) {
-      commit('setLoginStatus', 'signInInProgress')
-      return NoctuaSkyClient.users.register(data.email, data.password, data.firstName, data.lastName).then(function (res) {
-        commit('setLoginStatus', 'loggedOut')
-        console.log('SignUp done')
-        return res
-      }, function (error) {
-        console.log('Signup Error: ' + JSON.stringify(error))
-        commit('setLoginStatus', 'loggedOut')
-        throw error
-      })
-    },
-    signOut ({ commit, state }) {
-      NoctuaSkyClient.users.logout()
-      commit('setParseTable', { 'tableName': 'observations', 'newValue': [] })
-      commit('setParseTable', { 'tableName': 'locations', 'newValue': [] })
-      commit('setLoginStatus', 'loggedOut')
-    },
-    deleteAccount ({ dispatch, commit, state }) {
-      return NoctuaSkyClient.users.deleteAccount().then(res => {
-        console.log('Account deleted')
-        return dispatch('signOut')
-      })
-    },
-    updateUserInfo ({ dispatch, commit, state }, data) {
-      return NoctuaSkyClient.users.updateUserInfo(data).then(res => {
-        console.log('User Info updated')
-        commit('setLoginStatus', 'loggedIn')
-      })
-    },
-    loadUserData ({ commit, state }) {
-      return loadParseTable(commit, 'locations').then(() => { return loadParseTable(commit, 'observations') })
-    },
-    addObservation ({ dispatch, commit, state }, data) {
-      // Backend can't deal with compacted form of observingSetup (a simple string)
-      data.observingSetup = data.observingSetup.id ? data.observingSetup : {id: data.observingSetup, state: {}}
-      commit('setLastSavedLocationId', data.location)
-      commit('setLastUsedObservingSetup', data.observingSetup)
-
-      if (data.id) {
-        // We are editing an existing observation
-        console.log('Updating observation ' + data.id)
-        let obsId = data.id
-        return NoctuaSkyClient.observations.update(obsId, data)
-      }
-      let obs
-      return NoctuaSkyClient.observations.add(data).then(function (res) { obs = res; return loadParseTable(commit, 'observations') },
-        function (error) { console.log('Failed to create new observation:'); console.log(JSON.stringify(error)) }).then(() => { return obs })
-    },
-    deleteObservations ({ dispatch, commit, state }, data) {
-      return NoctuaSkyClient.observations.delete(data).then(function () { return loadParseTable(commit, 'observations') })
-    },
-    addLocation ({ dispatch, commit, state }, data) {
-      var nl
-      return NoctuaSkyClient.locations.add(data).then(function (newLoc) { nl = newLoc; return loadParseTable(commit, 'locations') }).then(() => { return nl })
-    }
   }
 }
 

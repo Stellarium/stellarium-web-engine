@@ -63,22 +63,6 @@ export const nsh = {
     return context.$store.state.plugins.observing.noctuaSky.locations.find(function (l) { return l.id === id })
   },
 
-  observationForId: function (context, id) {
-    return context.$store.state.plugins.observing.noctuaSky.observations.find(function (l) { return l.id === id })
-  },
-
-  getDefaultObservation: function (context) {
-    return {
-      target: undefined,
-      mjd: context.$store.state.stel.observer.utc,
-      location: context.$store.state.plugins.observing.noctuaSky.lastSavedLocationId,
-      difficulty: 0,
-      rating: 0,
-      comment: '',
-      observingSetup: context.$store.state.plugins.observing.noctuaSky.lastUsedObservingSetup
-    }
-  },
-
   equipments: [
     {
       id: 'none'
