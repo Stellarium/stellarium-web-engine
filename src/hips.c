@@ -300,6 +300,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
     transparency = tile->loader->transparency;
     free(tile->loader->img);
     free(tile->loader);
+    tile->loader = NULL;
 
     tile->flags |= TILE_LOADED;
     if (!tex) {
