@@ -59,10 +59,6 @@ export const nsh = {
     }
   },
 
-  locationForId: function (context, id) {
-    return context.$store.state.plugins.observing.noctuaSky.locations.find(function (l) { return l.id === id })
-  },
-
   equipments: [
     {
       id: 'none'
