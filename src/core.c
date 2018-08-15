@@ -663,13 +663,13 @@ int core_render(int w, int h)
     double t;
     double dt = 1.0 / 16.0;
     int r;
-    bool updated = false;
+    bool updated = false, cst_visible;
     double max_mag;
 
     // Constants that define the magnitude needed to see objects, hints,
     // and labels.  Default values.
     const double max_hint_mag = 7.0;
-    const double max_label_mag = 4.0;
+    const double max_label_mag = 3.0;
 
     // XXX: Compute r_min and max_mag from the screen resolution.
     // I add a small security offset to max_mag to prevent bugs when we
@@ -714,6 +714,11 @@ int core_render(int w, int h)
 
     projection_init(&proj, core->proj, core->fov, (float)w / h);
 
+    // Show bayer only if the constellations are visible.
+    module = obj_get((obj_t*)core, "constellations", 0);
+    assert(module);
+    obj_get_attr(module, "visible", "b", &cst_visible);
+
     painter_t painter = {
         .rend = core->rend,
         .obs = core->observer,
@@ -727,7 +732,8 @@ int core_render(int w, int h)
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
         .flags = (core->fast_mode ? PAINTER_FAST_MODE : 0) |
-            (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0),
+            (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
+            (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
     };
     // Limit the number of labels when we zoom out, so that we don't make
     // the screen filled with text.

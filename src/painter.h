@@ -88,6 +88,7 @@ enum {
     PAINTER_PLANET_SHADER       = 1 << 4,
     PAINTER_RING_SHADER         = 1 << 5,
     PAINTER_IS_MOON             = 1 << 6, // Only for moon texture!
+    PAINTER_SHOW_BAYER_LABELS   = 1 << 7,
 };
 
 struct painter
