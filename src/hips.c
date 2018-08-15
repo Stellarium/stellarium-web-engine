@@ -291,6 +291,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         memcpy(tile->loader->data, data, size);
     }
     if (!worker_iter(&tile->loader->worker)) goto after_load;
+
     if (tile->loader->img) {
         tex = texture_from_data(tile->loader->img,
                 tile->loader->w, tile->loader->h, tile->loader->bpp,
@@ -415,7 +416,8 @@ texture_t *hips_get_tile_texture(
 
     // If the tile texture is not loaded yet, we try to use a parent tile
     // texture instead.
-    while ( !render_tile->tex && !(render_tile->flags & TILE_LOADED) &&
+    while ( !(render_tile->tex || render_tile->allsky_tex) &&
+            !(render_tile->flags & TILE_LOADED) &&
             render_tile->pos.order > hips->order_min) {
         mat3_set_identity(mat);
         get_child_uv_mat(render_tile->pos.pix % 4, mat, mat);
@@ -425,7 +427,7 @@ texture_t *hips_get_tile_texture(
     }
 
 end:
-    tex = render_tile->tex ?: tile->allsky_tex;
+    tex = render_tile->tex ?: render_tile->allsky_tex;
     if (!tex) return NULL;
 
     tile->fader.value = max(tile->fader.value, render_tile->fader.value);
