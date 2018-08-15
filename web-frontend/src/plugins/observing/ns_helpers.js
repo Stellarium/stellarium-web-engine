@@ -6,16 +6,10 @@
 // The terms of the AGPL v3 license can be found in the main directory of this
 // repository.
 
-import mingo from 'mingo'
 import _ from 'lodash'
 import { swh } from '@/assets/sw_helpers.js'
 
-mingo.setup({key: 'id'})
-
 export const nsh = {
-
-  mingo: mingo,
-
   iconForObservingSetup: function (obsSetup) {
     if (!obsSetup) {
       return '/static/images/svg/equipments/unknown.svg'

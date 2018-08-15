@@ -9,6 +9,9 @@
 import Swagger from 'swagger-client'
 import _ from 'lodash'
 import store from 'store'
+import mingo from 'mingo'
+
+mingo.setup({key: 'id'})
 
 var swaggerClient
 
@@ -216,6 +219,9 @@ const NoctuaSkyClient = {
           }, err => {
             return err.response.body
           })
+        },
+        aggregate: function (aggregator) {
+          return mingo.aggregate(that.state.observations, aggregator)
         },
         add: function (loc) {
           return tmpApis.observations.add({body: loc}).then(res => {

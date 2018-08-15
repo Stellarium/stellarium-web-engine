@@ -96,7 +96,6 @@ import GroupedObservations from './grouped-observations.vue'
 import ObservationDetails from './observation-details.vue'
 import Signin from './signin.vue'
 import MyProfile from './my-profile.vue'
-import { nsh } from '../ns_helpers.js'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
@@ -171,7 +170,7 @@ export default {
         { $group: { id: { location: '$location', julian_day: { $floor: '$mjd' } }, groupDate: { min: { $min: '$mjd' }, max: { $max: '$mjd' } }, f0: { $sum: 1 }, f1: { $push: '$$ROOT' } } },
         { $sort: { 'groupDate.max': -1 } }
       ]
-      return nsh.mingo.aggregate(this.$store.state.plugins.observing.noctuaSky.observations, aggregator)
+      return NoctuaSkyClient.observations.aggregate(aggregator)
     },
     userLoggedIn: function () {
       return this.$store.state.plugins.observing.noctuaSky.status === 'loggedIn'
