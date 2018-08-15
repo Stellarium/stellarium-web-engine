@@ -269,7 +269,9 @@ static void on_done(request_t *req)
                     buf, sizeof(buf))) {
         req->expiration = get_unix_time() + atof(buf);
     }
-    if (req->etag && req->expiration) {
+    // For the moment we save all the files in the cache as long as they
+    // have an etag.  We also never clean the cache!
+    if (req->etag) {
         path = request_get_file(req, NULL);
         save_cache(req->url, path, req->etag, req->expiration);
     }
