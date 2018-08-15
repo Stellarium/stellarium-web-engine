@@ -135,10 +135,10 @@ const NoctuaSkyClient = {
           })
         },
         deleteAccount: function () {
-          return tmpApis.users.delete({user_id: that.state.user.id}).then(res => { that.users.logout() })
+          return tmpApis.users.delete({id: that.state.user.id}).then(res => { that.users.logout() })
         },
         changePassword: function (currentPassword, newPassword) {
-          return tmpApis.users.changePassword({user_id: that.state.user.id, body: {password: currentPassword, new_password: newPassword}}).then((res) => {
+          return tmpApis.users.changePassword({id: that.state.user.id, body: {password: currentPassword, new_password: newPassword}}).then((res) => {
             console.log('Password change successful')
             return res.body
           }, err => {
@@ -146,14 +146,14 @@ const NoctuaSkyClient = {
           })
         },
         get: function () {
-          return tmpApis.users.get({user_id: that.state.user.id}).then((res) => {
+          return tmpApis.users.get({id: that.state.user.id}).then((res) => {
             return res.body
           }, err => {
             throw err.response.body
           })
         },
         updateUserInfo: function (newInfo) {
-          return tmpApis.users.update({user_id: that.state.user.id, body: newInfo}).then((res) => {
+          return tmpApis.users.update({id: that.state.user.id, body: newInfo}).then((res) => {
             console.log('User info update successful')
             return that.users.get(that.state.user.id).then((res) => {
               that.state.user = res
@@ -184,21 +184,21 @@ const NoctuaSkyClient = {
           })
         },
         get: function (id) {
-          return tmpApis.locations.get({loc_id: id}).then(res => {
+          return tmpApis.locations.get({id: id}).then(res => {
             return res.body
           }, err => {
             return err.response.body
           })
         },
         update: function (id, loc) {
-          return tmpApis.locations.update({loc_id: id, body: loc}).then(res => {
+          return tmpApis.locations.update({id: id, body: loc}).then(res => {
             return that.syncDataTable('locations').then(res => { return that.locations.get(id) })
           }, err => {
             return err.response.body
           })
         },
         delete: function (id) {
-          return tmpApis.locations.delete({loc_id: id}).then(res => {
+          return tmpApis.locations.delete({id: id}).then(res => {
             that.state.locations = that.state.locations.filter(e => { return e.id !== id })
             that.stateChanged('locations', that.state.locations)
             return res
@@ -226,21 +226,21 @@ const NoctuaSkyClient = {
           })
         },
         get: function (id) {
-          return tmpApis.observations.get({obs_id: id}).then(res => {
+          return tmpApis.observations.get({id: id}).then(res => {
             return res.body
           }, err => {
             return err.response.body
           })
         },
         update: function (id, loc) {
-          return tmpApis.observations.update({obs_id: id, body: loc}).then(res => {
+          return tmpApis.observations.update({id: id, body: loc}).then(res => {
             return that.syncDataTable('observations').then(res => { return that.observations.get(id) })
           }, err => {
             return err.response.body
           })
         },
         delete: function (id) {
-          return tmpApis.observations.delete({obs_id: id}).then(res => {
+          return tmpApis.observations.delete({id: id}).then(res => {
             that.state.observations = that.state.observations.filter(e => { return e.id !== id })
             that.stateChanged('observations', that.state.observations)
             return res
@@ -260,7 +260,7 @@ const NoctuaSkyClient = {
       if (token) {
         console.log('Found previous token, try to re-use..')
         swaggerClient.authorizations.APIToken = token
-        tmpApis.users.get({user_id: 'me'}).then((res) => {
+        tmpApis.users.get({id: 'me'}).then((res) => {
           console.log('NoctuaSky Login successful')
           that.state.user = res.body
           that.state.status = 'loggedIn'
