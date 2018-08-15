@@ -116,6 +116,8 @@ const void *asset_get_data(const char *url, int *size, int *code)
         if (str_startswith(url, g_alias[i].base)) {
             sprintf(alias, "%s%s",
                     g_alias[i].alias, url + strlen(g_alias[i].base));
+            // Remove http parameters for alias!
+            if (strrchr(alias, '?')) *strrchr(alias, '?') = '\0';
             data = asset_get_data(alias, size, code);
             if (data) return data;
         }
