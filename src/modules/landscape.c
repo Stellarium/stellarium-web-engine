@@ -205,6 +205,7 @@ static int landscapes_init(obj_t *obj, json_value *args)
     // Add Guereins immediately.
     ls = add_from_uri(lss, BASE_URL "/guereins", "guereins");
     obj_set_attr((obj_t*)ls, "active", "b", true);
+    ls->visible.value = 1.0;
     return 0;
 }
 
