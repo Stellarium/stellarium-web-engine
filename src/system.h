@@ -52,6 +52,8 @@ const char *sys_get_user_dir(void);
  */
 int sys_device_sensors(int enable, double acc[3], double mag[3]);
 
+int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
+
 /*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
@@ -62,6 +64,8 @@ typedef struct {
     const char *(*get_user_dir)(void *user);
     int (*device_sensors)(void *user, int enable,
                           double acc[3], double mag[3]);
+    int (*get_position)(void *user, double *lat, double *lon,
+                        double *alt, double *accuracy);
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

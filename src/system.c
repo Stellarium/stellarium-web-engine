@@ -55,3 +55,10 @@ int sys_device_sensors(int enable, double acc[3], double mag[3])
     if (!sys_callbacks.device_sensors) return -1;
     return sys_callbacks.device_sensors(sys_callbacks.user, enable, acc, mag);
 }
+
+int sys_get_position(double *lat, double *lon, double *alt, double *accuracy)
+{
+    if (!sys_callbacks.get_position) return -1;
+    return sys_callbacks.get_position(
+                        sys_callbacks.user, lat, lon, alt, accuracy);
+}
