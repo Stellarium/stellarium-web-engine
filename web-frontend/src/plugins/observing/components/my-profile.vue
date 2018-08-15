@@ -30,9 +30,9 @@
           <v-card-text>
             <form action="">
             <v-layout row justify-space-between>
-              <v-text-field label="First Name" disabled v-model="$store.state.plugins.observing.noctuaSky.user.firstName"></v-text-field>
+              <v-text-field label="First Name" disabled v-model="$store.state.plugins.observing.noctuaSky.user.first_name"></v-text-field>
               &nbsp;
-              <v-text-field label="Last Name" disabled v-model="$store.state.plugins.observing.noctuaSky.user.lastName"></v-text-field>
+              <v-text-field label="Last Name" disabled v-model="$store.state.plugins.observing.noctuaSky.user.last_name"></v-text-field>
               <v-btn icon ripple @click.native="showUpdateUserInfoTab()">
                 <v-icon class="grey--text text--lighten-1">edit</v-icon>
               </v-btn>
@@ -194,8 +194,8 @@ export default {
       this.active = '1'
     },
     showUpdateUserInfoTab: function () {
-      this.firstName = this.$store.state.plugins.observing.noctuaSky.user.firstName
-      this.lastName = this.$store.state.plugins.observing.noctuaSky.user.lastName
+      this.firstName = this.$store.state.plugins.observing.noctuaSky.user.first_name
+      this.lastName = this.$store.state.plugins.observing.noctuaSky.user.last_name
       this.active = '2'
     },
     clearUserUpdateErrorAlert: function () {
