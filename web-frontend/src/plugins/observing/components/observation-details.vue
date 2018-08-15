@@ -182,6 +182,7 @@ import SkysourceSearch from '@/components/skysource-search.vue'
 import LocationMgr from '@/components/location-mgr.vue'
 import ObservingSetupDetails from './observing-setup-details.vue'
 import Moment from 'moment'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 import { swh } from '@/assets/sw_helpers.js'
 import { nsh } from '../ns_helpers.js'
 
@@ -189,8 +190,8 @@ export default {
   data: function () {
     return {
       modify: false,
-      observationBackup: nsh.getDefaultObservation(this),
-      observation: nsh.getDefaultObservation(this),
+      observationBackup: this.getDefaultObservation(),
+      observation: this.getDefaultObservation(),
       skySourceSearchMenu: false,
       locationMenu: false,
       dateTimeMenu: false,
@@ -201,11 +202,32 @@ export default {
   },
   props: ['value', 'create'],
   methods: {
+    getDefaultObservation: function () {
+      let res = {
+        target: undefined,
+        mjd: this.$store.state.stel.observer.utc,
+        location: this.$store.state.currentLocation,
+        difficulty: 0,
+        rating: 0,
+        comment: '',
+        observingSetup: {
+          'id': 'eyes_observation',
+          'state': {}
+        }
+      }
+      let lastModified = NoctuaSkyClient.observations.lastModified()
+      if (lastModified) {
+        res.mjd = lastModified.mjd
+        res.location = lastModified.location
+        res.observingSetup = lastModified.observingSetup
+      }
+      return res
+    },
     setLocation: function (loc) {
       if (!loc.id) {
         var that = this
         console.log('Location is new, needs to be saved...')
-        this.$store.dispatch('observing/addLocation', loc).then((newLoc) => { that.observation.location = newLoc.id; that.locationMenu = false })
+        NoctuaSkyClient.locations.add(loc).then((newLoc) => { that.observation.location = newLoc.id; that.locationMenu = false })
       } else {
         this.observation.location = loc.id
         this.locationMenu = false
@@ -222,13 +244,26 @@ export default {
       if (!this.observation.locationPublicData) {
         this.observation.locationPublicData = nsh.locationForId(this, this.observation.location).publicData
       }
-      this.$store.dispatch('observing/addObservation', this.observation).then(function (res) {
-        if (that.modify) {
+      // Backend can't deal with compacted form of observingSetup (a simple string)
+      this.observation.observingSetup = this.observation.observingSetup.id ? this.observation.observingSetup : {id: this.observation.observingSetup, state: {}}
+
+      if (that.modify) {
+        // We are editing an existing observation
+        console.log('Updating observation ' + this.observation.id)
+        return NoctuaSkyClient.observations.update(this.observation.id, this.observation).then(res => {
           that.modify = false
-        } else {
-          that.back()
-        }
-      }, function (error) { alert(error) })
+        }, err => {
+          console.log('Failed to update observation:')
+          console.log(JSON.stringify(err))
+        })
+      }
+
+      return NoctuaSkyClient.observations.add(this.observation).then(res => {
+        that.back()
+      }, err => {
+        console.log('Failed to create new observation:')
+        console.log(JSON.stringify(err))
+      })
     },
     back: function () {
       if (this.modify) {
@@ -244,7 +279,7 @@ export default {
     deleteObservation: function () {
       var that = this
       console.log('Delete ' + this.observation.id)
-      this.$store.dispatch('observing/deleteObservations', this.observation.id).then(function (res) { that.back() })
+      NoctuaSkyClient.observations.delete(this.observation.id).then(function (res) { that.back() })
     },
     setRating: function (r) {
       this.observation.rating = r
@@ -307,8 +342,8 @@ export default {
       if (newValue !== undefined) {
         this.observation = newValue
       } else {
-        this.observation = nsh.getDefaultObservation(this)
-        this.observationBackup = nsh.getDefaultObservation(this)
+        this.observation = this.getDefaultObservation()
+        this.observationBackup = this.getDefaultObservation()
       }
     },
     observation: function (obs) {

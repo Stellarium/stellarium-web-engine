@@ -210,7 +210,7 @@ export default {
     },
     deleteAccount: function () {
       var that = this
-      this.$store.dispatch('observing/deleteAccount').then(res => {
+      NoctuaSkyClient.users.deleteAccount().then(res => {
         that.showDeleteAccountDialog = false
         that.back()
       })
@@ -236,7 +236,7 @@ export default {
     updateUserInfo: function () {
       var that = this
       this.updateUserInfoInProgress = true
-      this.$store.dispatch('observing/updateUserInfo', {first_name: this.firstName, last_name: this.lastName}).then(res => {
+      NoctuaSkyClient.users.updateUserInfo({first_name: this.firstName, last_name: this.lastName}).then(res => {
         that.back()
         that.updateUserInfoInProgress = false
       }).catch(function (res) {
