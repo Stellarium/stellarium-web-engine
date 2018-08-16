@@ -19,8 +19,11 @@
 #define URL_MAX_SIZE 4096
 #define DSO_DEFAULT_VMAG 16.0
 
-typedef struct dsos dsos_t;
 
+/*
+ * Type: dso_data_t
+ * Holds information data about a single DSO entry
+ */
 typedef struct {
     char        type[4];
     struct {
@@ -40,50 +43,21 @@ typedef struct {
     char short_name[64];
 } dso_data_t;
 
-// A single DSO.
+/*
+ * Type: dso_t
+ * A single DSO object.
+ */
 typedef struct {
     obj_t       obj;
     dso_data_t  data;
 } dso_t;
-
-static int dso_init(obj_t *obj, json_value *args);
-static int dso_update(obj_t *obj, const observer_t *obs, double dt);
-static int dso_render(const obj_t *obj, const painter_t *painter);
-static int dso_render_from_data(const dso_data_t *d,
-                                const char *id, // NULL for default.
-                                const painter_t *painter_);
-
-static obj_klass_t dso_klass = {
-    .id = "dso",
-    .size = sizeof(dso_t),
-    .init = dso_init,
-    .update = dso_update,
-    .render = dso_render,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        PROPERTY("name"),
-        PROPERTY("distance"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("radec"),
-        PROPERTY("azalt"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
-        {},
-    },
-};
-
-OBJ_REGISTER(dso_klass)
 
 typedef struct {
     int order;
     int pix;
 } tile_pos_t;
 
+typedef struct dsos dsos_t;
 typedef struct {
     UT_hash_handle  hh;
     tile_pos_t  pos;
@@ -95,6 +69,10 @@ typedef struct {
     dso_data_t *data;
 } tile_t;
 
+/*
+ * Type: dsos_t
+ * The module object.
+ */
 struct dsos {
     obj_t       obj;
     cache_t     *tiles;
@@ -103,27 +81,6 @@ struct dsos {
 
     char        *survey; // Url of the DSO survey.
     double      survey_release_date; // release date as jd value.
-};
-
-static int dsos_render(const obj_t *obj, const painter_t *painter);
-static int dsos_init(obj_t *obj, json_value *args);
-static int dsos_update(obj_t *obj, const observer_t *obs, double dt);
-static obj_t *dsos_get(const obj_t *obj, const char *id, int flags);
-static obj_t *dsos_get_by_nsid(const obj_t *obj, uint64_t nsid);
-static obj_klass_t dsos_klass = {
-    .id     = "dsos",
-    .size   = sizeof(dsos_t),
-    .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init   = dsos_init,
-    .update = dsos_update,
-    .render = dsos_render,
-    .get    = dsos_get,
-    .get_by_nsid = dsos_get_by_nsid,
-    .render_order = 25,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(dsos_t, visible.target)),
-        {}
-    },
 };
 
 static char *make_id(const dso_data_t *data, char buff[128])
@@ -182,12 +139,6 @@ static int dso_update(obj_t *obj, const observer_t *obs, double dt)
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
     return 0;
-}
-
-static int dso_render(const obj_t *obj, const painter_t *painter)
-{
-    const dso_t *dso = (dso_t*)obj;
-    return dso_render_from_data(&dso->data, obj->id, painter);
 }
 
 static void strip_type(char str[4])
@@ -472,6 +423,12 @@ static int dso_render_from_data(const dso_data_t *d,
     return 0;
 }
 
+static int dso_render(const obj_t *obj, const painter_t *painter)
+{
+    const dso_t *dso = (dso_t*)obj;
+    return dso_render_from_data(&dso->data, obj->id, painter);
+}
+
 static int render_visitor(int order, int pix, void *user)
 {
     dsos_t *dsos = USER_GET(user, 0);
@@ -629,4 +586,48 @@ static obj_t *dsos_get_by_nsid(const obj_t *obj, uint64_t nsid)
     return d.ret;
 }
 
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t dso_klass = {
+    .id = "dso",
+    .size = sizeof(dso_t),
+    .init = dso_init,
+    .update = dso_update,
+    .render = dso_render,
+    .attributes = (attribute_t[]) {
+        // Default properties.
+        PROPERTY("name"),
+        PROPERTY("distance"),
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("alt"),
+        PROPERTY("az"),
+        PROPERTY("radec"),
+        PROPERTY("azalt"),
+        PROPERTY("rise"),
+        PROPERTY("set"),
+        PROPERTY("vmag"),
+        PROPERTY("type"),
+        {},
+    },
+};
+OBJ_REGISTER(dso_klass)
+
+static obj_klass_t dsos_klass = {
+    .id     = "dsos",
+    .size   = sizeof(dsos_t),
+    .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init   = dsos_init,
+    .update = dsos_update,
+    .render = dsos_render,
+    .get    = dsos_get,
+    .get_by_nsid = dsos_get_by_nsid,
+    .render_order = 25,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(dsos_t, visible.target)),
+        {}
+    },
+};
 OBJ_REGISTER(dsos_klass)
