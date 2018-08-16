@@ -14,6 +14,12 @@ import mingo from 'mingo'
 mingo.setup({key: 'id'})
 
 var swaggerClient
+var localIdCounter = 0
+
+var generateLocalId = function () {
+  localIdCounter++
+  return 'local_' + localIdCounter
+}
 
 var equipments = [
   {
@@ -246,6 +252,9 @@ const NoctuaSkyClient = {
     let that = this
     return that.syncDataTable('locations').then(() => { return that.syncDataTable('observations') })
   },
+  offlineMode: function () {
+    return this.state.status !== 'loggedIn'
+  },
   init: function (serverUrl, onStateChanged) {
     let that = this
     that.serverUrl = serverUrl
@@ -382,6 +391,16 @@ const NoctuaSkyClient = {
           })
         },
         add: function (loc) {
+          if (that.offlineMode()) {
+            return new Promise(function (resolve, reject) {
+              // Generate a local ID
+              var newLoc = _.cloneDeep(loc)
+              newLoc.id = generateLocalId()
+              that.state.locations.push(newLoc)
+              that.stateChanged('locations', that.state.locations)
+              resolve(newLoc)
+            })
+          }
           return tmpApis.locations.add({body: loc}).then(res => {
             that.state.locations.push(res.body)
             that.stateChanged('locations', that.state.locations)
@@ -399,6 +418,18 @@ const NoctuaSkyClient = {
           // })
         },
         update: function (id, loc) {
+          if (that.offlineMode()) {
+            return new Promise(function (resolve, reject) {
+              if (loc.id && !loc.id.startsWith('local_')) {
+                reject(new Error('Cannot modify remote location when being offline'))
+                return
+              }
+              let l = that.locations.get(id)
+              l = Object.assign({}, loc)
+              that.stateChanged('locations', that.state.locations)
+              resolve(l)
+            })
+          }
           return tmpApis.locations.update({id: id, body: loc}).then(res => {
             return that.syncDataTable('locations').then(res => { return that.locations.get(id) })
           }, err => {
@@ -406,6 +437,17 @@ const NoctuaSkyClient = {
           })
         },
         delete: function (id) {
+          if (that.offlineMode()) {
+            return new Promise(function (resolve, reject) {
+              if (!id.startsWith('local_')) {
+                reject(new Error('Cannot delete remote location when being offline'))
+                return
+              }
+              that.state.locations = that.state.locations.filter(e => { return e.id !== id })
+              that.stateChanged('locations', that.state.locations)
+              resolve()
+            })
+          }
           return tmpApis.locations.delete({id: id}).then(res => {
             that.state.locations = that.state.locations.filter(e => { return e.id !== id })
             that.stateChanged('locations', that.state.locations)
