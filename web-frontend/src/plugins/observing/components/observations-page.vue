@@ -172,6 +172,7 @@ export default {
         obs.location = NoctuaSkyClient.locations.get(lastModified.location)
         obs.observingSetup = lastModified.observingSetup
       }
+      this.saveViewSettings()
       this.observationToAdd = Object.assign({}, obs)
       this.createObservation = true
       this.active = '1'
@@ -182,6 +183,7 @@ export default {
       if (lastModified) {
         obs.observingSetup = lastModified.observingSetup
       }
+      this.saveViewSettings()
       this.observationToAdd = Object.assign({}, obs)
       this.createObservation = true
       this.active = '1'
