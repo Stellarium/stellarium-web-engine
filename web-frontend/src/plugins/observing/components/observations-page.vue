@@ -103,7 +103,7 @@ export default {
   data: function () {
     return {
       active: null,
-      observationToAdd: Object.assign({}, this.getDefaultObservation()),
+      observationToAdd: undefined,
       createObservation: false,
       savedViewSettings: []
     }
@@ -164,7 +164,24 @@ export default {
     },
     showObservationDetailsPage: function () {
       // Set this to default values
-      this.observationToAdd = Object.assign({}, this.getDefaultObservation())
+      let obs = this.getDefaultObservation()
+      let lastModified = NoctuaSkyClient.observations.lastModified()
+      if (lastModified) {
+        obs.mjd = lastModified.mjd
+        obs.location = NoctuaSkyClient.locations.get(lastModified.location)
+        obs.observingSetup = lastModified.observingSetup
+      }
+      this.observationToAdd = Object.assign({}, obs)
+      this.createObservation = true
+      this.active = '1'
+    },
+    editNewObservationFromSelection: function () {
+      let obs = this.getDefaultObservation()
+      let lastModified = NoctuaSkyClient.observations.lastModified()
+      if (lastModified) {
+        obs.observingSetup = lastModified.observingSetup
+      }
+      this.observationToAdd = Object.assign({}, obs)
       this.createObservation = true
       this.active = '1'
     },
@@ -186,12 +203,6 @@ export default {
           'id': 'eyes_observation',
           'state': {}
         }
-      }
-      let lastModified = NoctuaSkyClient.observations.lastModified()
-      if (lastModified) {
-        res.mjd = lastModified.mjd
-        res.location = NoctuaSkyClient.locations.get(lastModified.location)
-        res.observingSetup = lastModified.observingSetup
       }
       if (this.$store.state.selectedObject) {
         res.target = this.$store.state.selectedObject
