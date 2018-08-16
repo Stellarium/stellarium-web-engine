@@ -224,6 +224,17 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
     double mat3[3][3];
     int i;
 
+    // At order zero, the tiles are too big and it can give false positive,
+    // so in that case is check the four tiles of level one.
+    if (outside && order == 0) {
+        for (i = 0; i < 4; i++) {
+            if (!painter_is_tile_clipped(painter, frame, 1, pix * 4 + i,
+                                         outside))
+                return false;
+        }
+        return true;
+    }
+
     healpix_get_mat3(1 << order, pix, mat3);
     for (i = 0; i < 4; i++) {
         mat3_mul_vec3(mat3, quad[i], quad[i]);

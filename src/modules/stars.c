@@ -554,10 +554,7 @@ static int render_visitor(int order, int pix, void *user)
 
     painter.mag_max = min(painter.mag_max, stars->mag_max);
     // Early exit if the tile is clipped.
-    // (don't test at order 0 because is_tile_clipped doesn't work very
-    //  well in that case!).
-    if (    order > 0 &&
-            painter_is_tile_clipped(&painter, FRAME_ICRS, order, pix, true))
+    if (painter_is_tile_clipped(&painter, FRAME_ICRS, order, pix, true))
         return 0;
 
     (*nb_tot)++;
