@@ -56,6 +56,7 @@
       </v-toolbar>
       <div class="scroll-container">
         <v-container fluid style="height: 100%">
+          <div v-if="!userLoggedIn" style="text-align: center; margin-bottom: 15px; color: red;">Warning: you are not logged in, you can add and edit observations, but they all will be suppressed if you leave the page, or login with your account.</div>
           <v-layout row wrap>
             <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].id">
               <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
