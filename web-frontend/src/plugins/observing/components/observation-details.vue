@@ -190,20 +190,8 @@ export default {
   data: function () {
     return {
       modify: false,
-      observationBackup: this.getDefaultObservation(),
-      observation: this.getDefaultObservation(),
-      skySourceSearchMenu: false,
-      locationMenu: false,
-      dateTimeMenu: false,
-      equipmentMenu: false,
-      deleteDialog: false,
-      footprintShape: undefined
-    }
-  },
-  props: ['value', 'create'],
-  methods: {
-    getDefaultObservation: function () {
-      let res = {
+      observationBackup: undefined,
+      observation: {
         target: undefined,
         mjd: this.$store.state.stel.observer.utc,
         location: this.$store.state.currentLocation,
@@ -214,15 +202,17 @@ export default {
           'id': 'eyes_observation',
           'state': {}
         }
-      }
-      let lastModified = NoctuaSkyClient.observations.lastModified()
-      if (lastModified) {
-        res.mjd = lastModified.mjd
-        res.location = NoctuaSkyClient.locations.get(lastModified.location)
-        res.observingSetup = lastModified.observingSetup
-      }
-      return res
-    },
+      },
+      skySourceSearchMenu: false,
+      locationMenu: false,
+      dateTimeMenu: false,
+      equipmentMenu: false,
+      deleteDialog: false,
+      footprintShape: undefined
+    }
+  },
+  props: ['value', 'create'],
+  methods: {
     setLocation: function (loc) {
       this.observation.location = loc
       this.locationMenu = false
@@ -343,15 +333,15 @@ export default {
       this.skySourceSearchMenu = false
     },
     value: function (newValue) {
-      if (newValue !== undefined) {
-        if (newValue.location && !newValue.location.id) {
-          newValue.location = NoctuaSkyClient.locations.get(newValue.location)
-        }
-        this.observation = newValue
-      } else {
-        this.observation = this.getDefaultObservation()
-        this.observationBackup = this.getDefaultObservation()
+      console.log('newValue:' + JSON.stringify(newValue))
+      if (newValue === undefined) {
+        console.log('WARNING: Cant use undefined observations')
       }
+      if (newValue.location && !newValue.location.lat) {
+        newValue.location = NoctuaSkyClient.locations.get(newValue.location)
+      }
+      this.observation = newValue
+      this.observationBackup = JSON.parse(JSON.stringify(this.observation))
     },
     observation: function (obs) {
       this.setViewSettingsForObservation()

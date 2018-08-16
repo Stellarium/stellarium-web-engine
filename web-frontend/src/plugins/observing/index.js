@@ -17,6 +17,6 @@ export default {
   },
   name: 'observing',
   storeModule: storeModule,
-  observingPanelComponents: ['observations-page'],
+  observingPanelComponent: 'observations-page',
   observingTabName: 'Obs'
 }

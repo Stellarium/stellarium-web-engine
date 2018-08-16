@@ -97,15 +97,29 @@ import ObservationDetails from './observation-details.vue'
 import Signin from './signin.vue'
 import MyProfile from './my-profile.vue'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
+import { swh } from '@/assets/sw_helpers.js'
 
 export default {
   data: function () {
     return {
       active: null,
-      observationToAdd: undefined,
+      observationToAdd: Object.assign({}, this.getDefaultObservation()),
       createObservation: false,
       savedViewSettings: []
     }
+  },
+  created: function () {
+    let that = this
+    swh.selectedObjectExtraButtons.push({
+      id: 'observe',
+      name: 'Observe',
+      icon: 'add',
+      callback: function (b) {
+        that.$store.commit('setValue', {varName: 'showObservingPanel', newValue: true})
+        that.$store.commit('setValue', {varName: 'observingPanelCurrentComponent', newValue: 'observations-page'})
+        that.showObservationDetailsPage()
+      }
+    })
   },
   methods: {
     hideObservingPanel: function () {
@@ -113,12 +127,6 @@ export default {
     },
     logout: function () {
       NoctuaSkyClient.users.logout()
-    },
-    showObservationDetailsPage: function () {
-      // Set this to undefined to tell the observation-detail component to use default values
-      this.observationToAdd = undefined
-      this.createObservation = true
-      this.active = '1'
     },
     saveViewSettings: function () {
       this.savedViewSettings['utc'] = this.$store.state.stel.observer.utc
@@ -151,14 +159,44 @@ export default {
       this.observationToAdd = Object.assign({}, obs)
       this.active = '1'
     },
-    showProfilePage: function () {
-      this.active = '3'
+    showMyObservationsPage: function () {
+      this.active = '0'
+    },
+    showObservationDetailsPage: function () {
+      // Set this to default values
+      this.observationToAdd = Object.assign({}, this.getDefaultObservation())
+      this.createObservation = true
+      this.active = '1'
     },
     showLoginPage: function () {
       this.active = '2'
     },
-    showMyObservationsPage: function () {
-      this.active = '0'
+    showProfilePage: function () {
+      this.active = '3'
+    },
+    getDefaultObservation: function () {
+      let res = {
+        target: undefined,
+        mjd: this.$store.state.stel.observer.utc,
+        location: this.$store.state.currentLocation,
+        difficulty: 0,
+        rating: 0,
+        comment: '',
+        observingSetup: {
+          'id': 'eyes_observation',
+          'state': {}
+        }
+      }
+      let lastModified = NoctuaSkyClient.observations.lastModified()
+      if (lastModified) {
+        res.mjd = lastModified.mjd
+        res.location = NoctuaSkyClient.locations.get(lastModified.location)
+        res.observingSetup = lastModified.observingSetup
+      }
+      if (this.$store.state.selectedObject) {
+        res.target = this.$store.state.selectedObject
+      }
+      return res
     }
   },
   computed: {

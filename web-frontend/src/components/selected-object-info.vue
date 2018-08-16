@@ -40,6 +40,9 @@
       </v-layout>
     </v-card-text>
     <div style="position: absolute; right: 20px; bottom: -50px;">
+      <v-btn v-for="btn in extraButtons" :key="btn.id" dark color="transparent" @click.native="extraButtonClicked(btn)">
+        {{ btn.name }}<v-icon right dark>{{ btn.icon }}</v-icon>
+      </v-btn>
       <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
         <img src="/static/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
@@ -208,6 +211,9 @@ export default {
     },
     stelSelection: function () {
       return this.$store.state.stel && this.$store.state.stel.selection ? this.$store.state.stel.selection : undefined
+    },
+    extraButtons: function () {
+      return swh.selectedObjectExtraButtons
     }
   },
   watch: {
@@ -350,6 +356,9 @@ export default {
           return
         }
       }
+    },
+    extraButtonClicked: function (btn) {
+      btn.callback()
     }
   }
 }
