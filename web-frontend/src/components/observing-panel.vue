@@ -8,8 +8,8 @@
 
 <template>
 
-<div id="observing-panel-container" v-if="$store.state.showObservingPanel" class="get-click">
-  <div class="observing-panel-tabsbtn">
+<div id="observing-panel-container" :class="{observingpanelhidden: !$store.state.showObservingPanel}" class="get-click">
+  <div class="observing-panel-tabsbtn" >
     <v-btn v-for="tab in tabs" small :key="tab">{{ tab }}</v-btn>
   </div>
   <div id="observing-panel">
@@ -36,8 +36,8 @@ export default {
       let res = []
       for (let i in this.$stellariumWebPlugins()) {
         let plugin = this.$stellariumWebPlugins()[i]
-        if (plugin.observingPanelComponents) {
-          res = res.concat(plugin.observingPanelComponents)
+        if (plugin.observingPanelComponent) {
+          res.push(plugin.observingPanelComponent)
         }
       }
       return res
@@ -46,8 +46,8 @@ export default {
       let res = []
       for (let i in this.$stellariumWebPlugins()) {
         let plugin = this.$stellariumWebPlugins()[i]
-        if (plugin.observingPanelComponents) {
-          res = res.concat(plugin.observingTabName)
+        if (plugin.observingPanelComponent) {
+          res.push(plugin.observingTabName)
         }
       }
       return res
@@ -85,5 +85,8 @@ export default {
   width: 100vh;
   top: 12px;
   text-align: right;
+}
+.observingpanelhidden {
+  display: none;
 }
 </style>
