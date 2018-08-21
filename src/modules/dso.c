@@ -414,7 +414,7 @@ static int dso_render_from_data(const dso_data_t *d,
         .size = 8,
     };
     id ? strcpy(point.id, id) : make_id(d, point.id);
-    utarray_push_back(core->rend_points, &point);
+    areas_add_circle(core->areas, point.pos, point.size, point.id, point.nsid);
 
     if (temp_mag <= painter.label_mag_max || show_contour)
         dso_render_name(&painter, d, p, max(size, circle_size), mag,

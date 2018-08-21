@@ -17,7 +17,7 @@ static bool g_debug = false;
 
 int paint_prepare(const painter_t *painter, int w, int h)
 {
-    utarray_clear(core->rend_points);
+    areas_clear_all(core->areas);
     REND(painter->rend, prepare, w, h);
     return 0;
 }

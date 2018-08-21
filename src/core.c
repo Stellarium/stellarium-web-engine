@@ -378,19 +378,12 @@ static int core_pan(const gesture_t *g, void *user)
 
 static obj_t *get_obj_at(double x, double y, double max_dist)
 {
-    point_t *p = NULL, *best = NULL;
     double pos[2] = {x, y};
-    double dist, best_dist = max_dist;
-    while ( (p = (point_t*)utarray_next(core->rend_points, p)) ) {
-        dist = vec2_dist(p->pos, pos) - p->size;
-        if (dist < best_dist) {
-            best_dist = dist;
-            best = p;
-        }
-    }
-    if (!best) return NULL;
-    return best->nsid ? obj_get_by_nsid(NULL, best->nsid) :
-                        obj_get(NULL, best->id, 0);
+    char id[128];
+    uint64_t nsid;
+    if (!areas_lookup(core->areas, pos, max_dist, id, &nsid))
+        return NULL;
+    return nsid ? obj_get_by_nsid(NULL, nsid) : obj_get(NULL, id, 0);
 }
 
 static int core_click(const gesture_t *g, void *user)
@@ -537,8 +530,7 @@ void core_init(void)
     }
     DL_SORT(core->obj.children, modules_sort_cmp);
 
-    static UT_icd point_icd = {sizeof(point_t), NULL, NULL, NULL};
-    utarray_new(core->rend_points, &point_icd);
+    core->areas = areas_create();
     progressbar_add_listener(on_progressbar);
 
     core_set_default();

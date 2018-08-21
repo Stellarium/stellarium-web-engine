@@ -9,6 +9,7 @@
 
 // File: core.h
 
+#include "areas.h"
 #include "calendar.h"
 #include "events.h"
 #include "frames.h"
@@ -193,10 +194,8 @@ struct core
         double      dst_fov;  // Destination fov (0 to ignore).
     } target;
 
-    // Array of the last rendered points (as point_t).
-    // It can be used for fast lookup of the objects hovered by the mouse.
-    // The point position and size are all in screen coordinates.
-    UT_array        *rend_points;
+    // Maintains a list of clickable/hoverable areas.
+    areas_t         *areas;
 };
 
 enum {
