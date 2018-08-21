@@ -386,6 +386,35 @@ static void render_contour(const dso_data_t *data,
                       vec2_dist(a, c), vec2_dist(b, c), NULL, data->id.nsid);
 }
 
+/*
+ * Return the dso angle in screen coordinates.
+ */
+static double get_screen_angle(const dso_data_t *d, const painter_t *painter)
+{
+    projection_t proj;
+    double v[2], c[4], a[4];
+    proj = (projection_t) {
+        .backward   = contour_project,
+        .user       = d,
+    };
+    // 1. Center
+    v[0] = v[1] = 0;
+    contour_project(&proj, 0, v, c);
+    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, c, c);
+    project(painter->proj, PROJ_TO_NDC_SPACE, 2, c, c);
+    c[0] = (+c[0] + 1) / 2 * core->win_size[0];
+    c[1] = (-c[1] + 1) / 2 * core->win_size[1];
+    // 2. Semi major.
+    v[1] = 1;
+    v[0] = 0;
+    contour_project(&proj, 0, v, a);
+    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, a, a);
+    project(painter->proj, PROJ_TO_NDC_SPACE, 2, a, a);
+    a[0] = (+a[0] + 1) / 2 * core->win_size[0];
+    a[1] = (-a[1] + 1) / 2 * core->win_size[1];
+    return atan2(a[1] - c[1], a[0] - c[0]);
+}
+
 // Render a DSO from its data.
 static int dso_render_from_data(const dso_data_t *d,
                                 const char *id,
@@ -395,7 +424,7 @@ static int dso_render_from_data(const dso_data_t *d,
     point_t point;
     const char *symbol;
     painter_t painter = *painter_;
-    double min_circle_size, circle_size = 0;
+    double min_circle_size, circle_size = 0, angle;
     int label_anchor = ANCHOR_AROUND;
     bool show_contour;
 
@@ -429,7 +458,10 @@ static int dso_render_from_data(const dso_data_t *d,
         while (symbol && !symbols_get(symbol, NULL))
             symbol = otypes_get_parent(symbol);
         symbol = symbol ?: "ISM";
-        symbols_paint(&painter, symbol, p, 12.0, NULL, 0.0);
+        angle = 0;
+        if (strcmp(symbol, "G") == 0 && !isnan(d->angle) && d->smax > 0)
+            angle = 45 * DD2R - get_screen_angle(d, &painter);
+        symbols_paint(&painter, symbol, p, 12.0, NULL, angle);
         // Add the dso in the global list of rendered objects.
         // XXX: we could move this into symbols_paint.
         point = (point_t) {
