@@ -9,6 +9,8 @@
 
 #include "areas.h"
 #include "utarray.h"
+#include "utils/vec.h"
+#include "utils/utils.h"
 
 #include <assert.h>
 #include <math.h>
@@ -18,7 +20,9 @@ typedef struct item item_t;
 struct item
 {
     double pos[2];
-    double r;
+    double a; // Semi-major axis.
+    double b; // Semi-minor axis.
+    double angle;
     char id[128];
     uint64_t nsid;
 };
@@ -28,12 +32,17 @@ struct areas
     UT_array *items;
 };
 
-static double vec2_dist(const double a[2], const double b[2])
+static double ellipse_dist(const double center[2], double angle,
+                           double a, double b, const double p_[2])
 {
-    double x, y;
-    x = a[0] - b[0];
-    y = a[1] - b[1];
-    return sqrt(x * x + y * y);
+    double p[2], p2[2], t;
+    // Convert into ellipse frame.
+    vec2_sub(p_, center, p);
+    vec2_rotate(-angle, p, p);
+    t = atan2(p[1], p[0]);
+    p2[0] = a * cos(t);
+    p2[1] = b * sin(t);
+    return max(0.0, vec2_norm(p) - vec2_norm(p2));
 }
 
 areas_t *areas_create(void)
@@ -52,7 +61,22 @@ void areas_add_circle(areas_t *areas, const double pos[2], double r,
 
     assert(nsid || (id && strlen(id) < sizeof(item.id) - 1));
     memcpy(item.pos, pos, sizeof(item.pos));
-    item.r = r;
+    item.a = item.b = r;
+    item.nsid = nsid;
+    if (!nsid) strcpy(item.id, id);
+    utarray_push_back(areas->items, &item);
+}
+
+void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
+                       double a, double b,
+                       const char id[128], uint64_t nsid)
+{
+    item_t item = {};
+    assert(nsid || (id && strlen(id) < sizeof(item.id) - 1));
+    memcpy(item.pos, pos, sizeof(item.pos));
+    item.angle = angle;
+    item.a = a;
+    item.b = b;
     item.nsid = nsid;
     if (!nsid) strcpy(item.id, id);
     utarray_push_back(areas->items, &item);
@@ -70,7 +94,15 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
     double dist, best_dist = max_dist;
 
     while ( (item = (item_t*)utarray_next(areas->items, item)) ) {
-        dist = vec2_dist(item->pos, pos) - item->r;
+        if (item->a == item->b) { // Circle
+            dist = max(0, vec2_dist(item->pos, pos) - item->a);
+        } else { // Ellipse
+            dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
+        }
+        // Simple heuristic: if we are totally inside several shapes, we
+        // pick the one with the smallest area.
+        if (dist == 0.0) dist = -1.0 / (item->a * item->b);
+
         if (dist < best_dist) {
             best_dist = dist;
             best = item;

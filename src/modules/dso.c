@@ -333,7 +333,7 @@ static void render_contour(const dso_data_t *data,
                            const painter_t *painter_,
                            double p[4])
 {
-    double v[2] = {0, 1}, tmp[4];
+    double v[2] = {0, 1}, tmp[4], c[4], a[4], b[4], angle;
     painter_t painter = *painter_;
     projection_t proj;
     painter.lines_stripes = 10.0;
@@ -350,6 +350,37 @@ static void render_contour(const dso_data_t *data,
         project(painter.proj, PROJ_TO_NDC_SPACE, 2, tmp, tmp);
         if (tmp[1] > p[1]) vec2_copy(tmp, p);
     }
+
+    // Compute ellipse in screen frame and add it to the clickable areas.
+    // XXX: All of this should be done in the painter.
+    //
+    // 1. Center
+    v[0] = v[1] = 0;
+    contour_project(&proj, 0, v, c);
+    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, c, c);
+    project(painter.proj, PROJ_TO_NDC_SPACE, 2, c, c);
+    c[0] = (+c[0] + 1) / 2 * core->win_size[0];
+    c[1] = (-c[1] + 1) / 2 * core->win_size[1];
+    // 2. Semi major.
+    v[1] = 1;
+    v[0] = 0;
+    contour_project(&proj, 0, v, a);
+    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, a, a);
+    project(painter.proj, PROJ_TO_NDC_SPACE, 2, a, a);
+    a[0] = (+a[0] + 1) / 2 * core->win_size[0];
+    a[1] = (-a[1] + 1) / 2 * core->win_size[1];
+    // 3. Semi minor.
+    v[1] = 1;
+    v[0] = 0.25;
+    contour_project(&proj, 0, v, b);
+    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, b, b);
+    project(painter.proj, PROJ_TO_NDC_SPACE, 2, b, b);
+    b[0] = (+b[0] + 1) / 2 * core->win_size[0];
+    b[1] = (-b[1] + 1) / 2 * core->win_size[1];
+
+    angle = atan2(a[1] - c[1], a[0] - c[0]);
+    areas_add_ellipse(core->areas, c, angle,
+                      vec2_dist(a, c), vec2_dist(b, c), NULL, data->id.nsid);
 }
 
 // Render a DSO from its data.
@@ -396,19 +427,18 @@ static int dso_render_from_data(const dso_data_t *d,
             symbol = otypes_get_parent(symbol);
         symbol = symbol ?: "ISM";
         symbols_paint(&painter, symbol, p, 12.0, NULL, 0.0);
+        // Add the dso in the global list of rendered objects.
+        // XXX: we could move this into symbols_paint.
+        point = (point_t) {
+            .pos = {
+                (+p[0] + 1) / 2 * core->win_size[0],
+                (-p[1] + 1) / 2 * core->win_size[1],
+            },
+                .size = 8,
+                .nsid = d->id.nsid,
+        };
+        areas_add_circle(core->areas, point.pos, point.size, NULL, point.nsid);
     }
-
-    // Add the dso in the global list of rendered objects.
-    // XXX: we could move this into symbols_paint.
-    point = (point_t) {
-        .pos = {
-            (+p[0] + 1) / 2 * core->win_size[0],
-            (-p[1] + 1) / 2 * core->win_size[1],
-        },
-        .size = 8,
-        .nsid = d->id.nsid,
-    };
-    areas_add_circle(core->areas, point.pos, point.size, NULL, point.nsid);
 
     if (temp_mag <= painter.label_mag_max || show_contour)
         dso_render_name(&painter, d, p, max(size, circle_size), mag,

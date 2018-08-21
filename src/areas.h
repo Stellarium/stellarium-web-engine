@@ -37,6 +37,10 @@ areas_t *areas_create(void);
 void areas_add_circle(areas_t *areas, const double pos[2], double r,
                       const char id[128], uint64_t nsid);
 
+void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
+                       double a, double b,
+                       const char id[128], uint64_t nsid);
+
 /*
  * Function: areas_lookup
  * Return the closest shape at a given position in an areas.
