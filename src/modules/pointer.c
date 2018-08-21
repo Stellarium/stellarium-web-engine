@@ -18,17 +18,26 @@ typedef struct pointer {
 } pointer_t;
 
 
-static int pointer_render(const obj_t *obj, const painter_t *painter)
+static int pointer_render(const obj_t *obj, const painter_t *painter_)
 {
     int i;
     double pos[4], pos2d[2];
     double mag, size, luminance, angle, radius = NAN;
-    double color[4] = {0.34, 0.59, 1.0, 0.9};
+    double white[4] = {1, 1, 1, 1};
     obj_t *selection = core->selection;
+    painter_t painter = *painter_;
+    vec4_set(painter.color, 0.34, 0.59, 1.0, 0.9);
     if (!selection) return 0;
-    obj_get_pos_observed(selection, painter->obs, pos);
-    mat4_mul_vec3(painter->obs->ro2v, pos, pos);
-    if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos2d))
+
+    // If the selection has a custom rendering method, we use it.
+    if (selection->klass->render_pointer) {
+        if (selection->klass->render_pointer(selection, &painter) == 0)
+            return 0;
+    }
+
+    obj_get_pos_observed(selection, painter.obs, pos);
+    mat4_mul_vec3(painter.obs->ro2v, pos, pos);
+    if (!project(painter.proj, PROJ_TO_NDC_SPACE, 2, pos, pos2d))
         return 0;
 
     // Empirical formula to compute the pointer size.
@@ -43,22 +52,22 @@ static int pointer_render(const obj_t *obj, const painter_t *painter)
     if (isnan(radius)) {
         size = 4000.0 * size / core->fov;
         size = max(size, 32);
-        symbols_paint(painter, "POIN", pos2d, size, color, angle);
+        symbols_paint(&painter, "POIN", pos2d, size, white, angle);
     } else {
         // Draw four strokes around the object.
         // XXX: a bit ugly code.
         for (i = 0; i < 4; i++) {
             double p[2] = {1, 0};
             double r;
-            double scaling = painter->proj->scaling[0] /
-                             painter->proj->scaling[1];
+            double scaling = painter.proj->scaling[0] /
+                             painter.proj->scaling[1];
             r = size / core->fov * 2 + 0.02;
             r = max(r, 0.04);
             r += 0.01 * (sin(angle * 4) + 1);
             vec2_rotate(angle + i * 90 * DD2R, p, p);
             p[1] *= scaling;
             vec2_addk(pos2d, p, r, p);
-            symbols_paint(painter, "POIN2", p, 16, color,
+            symbols_paint(&painter, "POIN2", p, 16, white,
                           angle + i * 90 * DD2R);
         }
     }

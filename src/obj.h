@@ -95,6 +95,7 @@ struct obj_klass
     int (*update)(obj_t *obj, const observer_t *obs, double dt);
     int (*render)(const obj_t *obj, const painter_t *painter);
     obj_t* (*clone)(const obj_t *obj);
+    int (*render_pointer)(const obj_t *obj, const painter_t *painter);
 
     // Find a sub object given an id.
     obj_t *(*get)(const obj_t *obj, const char *id, int flags);

@@ -344,11 +344,14 @@ static void render_contour(const dso_data_t *data,
     paint_quad_contour(&painter, FRAME_ICRS, &proj, 64, 4);
 
     // Find the new position for the label:
-    for (v[0] = 0; v[0] < 1; v[0] += 1.0 / 16) {
-        contour_project(&proj, 0, v, tmp);
-        convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, tmp, tmp);
-        project(painter.proj, PROJ_TO_NDC_SPACE, 2, tmp, tmp);
-        if (tmp[1] > p[1]) vec2_copy(tmp, p);
+    if (p) {
+        for (v[0] = 0; v[0] < 1; v[0] += 1.0 / 16) {
+            contour_project(&proj, 0, v, tmp);
+            convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0,
+                                tmp, tmp);
+            project(painter.proj, PROJ_TO_NDC_SPACE, 2, tmp, tmp);
+            if (tmp[1] > p[1]) vec2_copy(tmp, p);
+        }
     }
 
     // Compute ellipse in screen frame and add it to the clickable areas.
@@ -451,6 +454,17 @@ static int dso_render(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (dso_t*)obj;
     return dso_render_from_data(&dso->data, obj->id, painter);
+}
+
+static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
+{
+    const dso_t *dso = (dso_t*)obj;
+    double min_circle_size;
+
+    min_circle_size = core->fov / 20;
+    if (isnan(dso->data.smax) || dso->data.smax <= min_circle_size) return 1;
+    render_contour(&dso->data, painter, NULL);
+    return 0;
 }
 
 static int render_visitor(int order, int pix, void *user)
@@ -620,6 +634,7 @@ static obj_klass_t dso_klass = {
     .init = dso_init,
     .update = dso_update,
     .render = dso_render,
+    .render_pointer = dso_render_pointer,
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
