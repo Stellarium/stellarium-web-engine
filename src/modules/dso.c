@@ -186,30 +186,24 @@ static int on_file_tile_loaded(int version, int order, int pix,
     tile->data = calloc(tile->nb, sizeof(*tile->data));
     cache_add(dsos->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->data), del_tile);
+    assert(version == 2);
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];
-        if (version == 1) {
-            binunpack(data + i * 40, "siiiffffff",
-                      4, d->type,
-                      &d->id.ngc, &d->id.ic, &d->id.m, &d->vmag,
-                      &d->ra, &d->de,
-                      &d->smax, &d->smin, &d->angle);
-        } else {
-            binunpack(data + i * 104, "Qsfffffffs",
-                      &d->id.nsid,
-                      4, d->type,
-                      &d->vmag, &bmag, &d->ra, &d->de,
-                      &d->smax, &d->smin, &d->angle,
-                      64, d->short_name);
-            d->ra *= DD2R;
-            d->de *= DD2R;
-            d->smax *= DAM2R;
-            d->smin *= DAM2R;
-            if (!d->smin && d->smax) d->smin = d->smax;
-            d->angle *= DD2R;
-            // For the moment use bmag as fallback vmag value
-            if (isnan(d->vmag)) d->vmag = bmag;
-        }
+        binunpack(data + i * 104, "Qsfffffffs",
+                  &d->id.nsid,
+                  4, d->type,
+                  &d->vmag, &bmag, &d->ra, &d->de,
+                  &d->smax, &d->smin, &d->angle,
+                  64, d->short_name);
+        assert(d->id.nsid);
+        d->ra *= DD2R;
+        d->de *= DD2R;
+        d->smax *= DAM2R;
+        d->smin *= DAM2R;
+        if (!d->smin && d->smax) d->smin = d->smax;
+        d->angle *= DD2R;
+        // For the moment use bmag as fallback vmag value
+        if (isnan(d->vmag)) d->vmag = bmag;
         strip_type(d->type);
         temp_mag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
         tile->mag_min = min(tile->mag_min, temp_mag);
@@ -412,9 +406,9 @@ static int dso_render_from_data(const dso_data_t *d,
             (-p[1] + 1) / 2 * core->win_size[1],
         },
         .size = 8,
+        .nsid = d->id.nsid,
     };
-    id ? strcpy(point.id, id) : make_id(d, point.id);
-    areas_add_circle(core->areas, point.pos, point.size, point.id, point.nsid);
+    areas_add_circle(core->areas, point.pos, point.size, NULL, point.nsid);
 
     if (temp_mag <= painter.label_mag_max || show_contour)
         dso_render_name(&painter, d, p, max(size, circle_size), mag,
