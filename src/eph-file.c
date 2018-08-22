@@ -28,13 +28,6 @@
  *  4 bytes: data
  *  4 bytes: CRC
  *
- * NAME chunck: a list of (id, name) tuples.
- *  For each entry:
- *      4 bytes: id size
- *      n bytes: id
- *      4 bytes: name size
- *      n bytes: name
- *
  * We can register tile chunks with the eph_file_register_tile_type function.
  * Tiles chunks all have the following structure:
  *
@@ -86,7 +79,6 @@ typedef struct {
     int         data_size;
     entry_t     *entries; // Hash of id -> entry
     tile_t      *tiles;
-    chunk_t     names_chunk;
 } file_t;
 
 void eph_file_register_tile_type(const char type[4],
@@ -150,24 +142,6 @@ static void chunk_read(chunk_t *c, const void **data, int *data_size,
         v_; \
     })
 
-static void load_names_chunk(chunk_t *c, const void **data, int *data_size)
-{
-    int len;
-    char id[64], name[128];
-    while (c->pos < c->length) {
-        len = CHUNK_READ(c, data, data_size, int32_t);
-        assert(len < ARRAY_SIZE(id));
-        chunk_read(c, data, data_size, id, len);
-        id[len] = '\0';
-        len = CHUNK_READ(c, data, data_size, int32_t);
-        assert(len < ARRAY_SIZE(name));
-        chunk_read(c, data, data_size, name, len);
-        name[len] = '\0';
-        identifiers_add(id, "NAME", name, NULL, NULL);
-    }
-    chunk_read_finish(c, data, data_size);
-}
-
 int eph_load_file(const char *path, void *user)
 {
     int size, ret;
@@ -193,10 +167,6 @@ int eph_load(const void *data, int data_size, void *user)
     version = READ(data, data_size, int32_t);
     CHECK(version == FILE_VERSION);
     while (chunk_read_start(&c, &data, &data_size)) {
-        if (strncmp(c.type, "NAME", 4) == 0) {
-            load_names_chunk(&c, &data, &data_size);
-            continue;
-        }
         for (i = 0; i < ARRAY_SIZE(g_tile_types); i++) {
             if (strncmp(g_tile_types[i].type, c.type, 4) == 0) break;
         }
