@@ -167,13 +167,25 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     tile_t *tile;
     dso_data_t *d;
     tile_pos_t pos = {order, pix};
-    int i, source_size;
+    int i, source_size, data_ofs = 0;
     char buff[16], id[128];
     double bmag, temp_mag;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
+    eph_table_column_t columns[10] = {
+        {"nsid", 'Q'},
+        {"type", 's', .size=4},
+        {"vmag", 'f'},
+        {"bmag", 'f'},
+        {"ra",   'f'},
+        {"de",   'f'},
+        {"smax", 'f'},
+        {"smin", 'f'},
+        {"angl", 'f'},
+        {"snam", 's', .size=64},
+    };
 
     if (strncmp(type, "DSO ", 4) != 0) return 0;
-    source_size = version == 1 ? 40 : 104;
+    source_size = 104;
     assert(size % source_size == 0);
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
     assert(!tile);
@@ -188,14 +200,17 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     cache_add(dsos->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->data), del_tile);
     assert(version == 2);
+
+    eph_read_table_prepare(0, data, size, &data_ofs, source_size, 10, columns);
+
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];
-        binunpack(data + i * 104, "Qsfffffffs",
-                  &d->id.nsid,
-                  4, d->type,
-                  &d->vmag, &bmag, &d->ra, &d->de,
-                  &d->smax, &d->smin, &d->angle,
-                  64, d->short_name);
+        eph_read_table_row(data, size, &data_ofs, source_size, 10, columns,
+                           &d->id.nsid, d->type,
+                           &d->vmag, &bmag, &d->ra, &d->de,
+                           &d->smax, &d->smin, &d->angle,
+                           d->short_name);
+
         assert(d->id.nsid);
         d->ra *= DD2R;
         d->de *= DD2R;

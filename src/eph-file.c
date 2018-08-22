@@ -138,3 +138,88 @@ int eph_load(const void *data, int data_size, void *user,
     }
     return 0;
 }
+
+// In place shuffle of the data bytes for optimized compression.
+static void shuffle_bytes(uint8_t *data, int nb, int size)
+{
+    int i, j;
+    uint8_t *buf = calloc(nb, size);
+    memcpy(buf, data, nb * size);
+    for (j = 0; j < size; j++) {
+        for (i = 0; i < nb; i++) {
+            data[j * nb + i] = buf[i * size + j];
+        }
+    }
+    free(buf);
+}
+
+int eph_read_table_prepare(int version, void *data, int data_size,
+                           int *data_ofs, int row_size,
+                           int nb_columns, eph_table_column_t *columns)
+{
+    int i, start = 0;
+
+    assert(*data_ofs == 0);
+    if (version > 0)
+        shuffle_bytes(data, row_size, data_size / row_size);
+    for (i = 0; i < nb_columns; i++) {
+        columns[i].start = start;
+        columns[i].src_unit = columns[i].unit;
+        if (!columns[i].size) {
+            switch (columns[i].type) {
+            case 'i':
+            case 'f': columns[i].size = 4; break;
+            case 'Q': columns[i].size = 8; break;
+            }
+        }
+        start += columns[i].size;
+    }
+    return 0;
+}
+
+double eph_convert_f(int src_unit, int unit, double v)
+{
+    assert(src_unit == unit);
+    return v;
+}
+
+int eph_read_table_row(const void *data, int data_size, int *data_ofs,
+                       int row_size, int nb_columns,
+                       const eph_table_column_t *columns,
+                       ...)
+{
+    int i;
+    va_list ap;
+    union {
+        char    *s;
+        int      i;
+        float    f;
+        uint64_t q;
+    } v;
+
+    va_start(ap, columns);
+    for (i = 0; i < nb_columns; i++) {
+        switch (columns[i].type) {
+        case 'i':
+            memcpy(&v.i, data + *data_ofs + columns[i].start, 4);
+            *va_arg(ap, int*) = v.i;
+            break;
+        case 'f':
+            memcpy(&v.f, data + *data_ofs + columns[i].start, 4);
+            *va_arg(ap, double*) = eph_convert_f(
+                    columns[i].src_unit, columns[i].unit, v.f);
+            break;
+        case 'Q':
+            memcpy(&v.q, data + *data_ofs + columns[i].start, 8);
+            *va_arg(ap, uint64_t*) = v.q;
+            break;
+        case 's':
+            memcpy(va_arg(ap, char*), data + *data_ofs + columns[i].start,
+                   columns[i].size);
+            break;
+        }
+    }
+    va_end(ap);
+    *data_ofs += row_size;
+    return 0;
+}

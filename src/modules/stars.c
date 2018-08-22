@@ -235,20 +235,6 @@ static int del_tile(void *data)
     return 0;
 }
 
-// In place shuffle of the data bytes for optimized compression.
-static void shuffle_bytes(uint8_t *data, int nb, int size)
-{
-    int i, j;
-    uint8_t *buf = calloc(nb, size);
-    memcpy(buf, data, nb * size);
-    for (j = 0; j < size; j++) {
-        for (i = 0; i < nb; i++) {
-            data[j * nb + i] = buf[i * size + j];
-        }
-    }
-    free(buf);
-}
-
 static int star_data_cmp(const void *a, const void *b)
 {
     return cmp(((const star_data_t*)a)->vmag, ((const star_data_t*)b)->vmag);
@@ -256,7 +242,7 @@ static int star_data_cmp(const void *a, const void *b)
 
 static int load_worker(worker_t *w)
 {
-    int i, sp, r, nb;
+    int i, sp, r, nb, data_ofs = 0;
     star_data_t *s;
     double vmag, ra, de, pra, pde, plx, bv, rv;
     typeof(((tile_t*)0)->loader) loader = (void*)w;
@@ -265,16 +251,30 @@ static int load_worker(worker_t *w)
 
     nb = loader->size / size;
     tile->stars = calloc(nb, sizeof(*tile->stars));
-    // Unshuffle the data.
-    shuffle_bytes(loader->data, size, nb);
 
     assert(tile->nb == 0);
     if (!loader->is_gaia) {
+        eph_table_column_t columns[10] = {
+            {"hip",  'i'},
+            {"hd",   'i'},
+            {"sp",   'i'},
+            {"vmag", 'f'},
+            {"ra",   'f'},
+            {"de",   'f'},
+            {"plx",  'f'},
+            {"pra",  'f'},
+            {"pde",  'f'},
+            {"bv",   'f'},
+        };
+        eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
+                               size, 10, columns);
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
-            binunpack(loader->data + i * 4 * 10, "iiifffffff",
-                      &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
-                      &bv);
+            eph_read_table_row(
+                    loader->data, loader->size, &data_ofs, size,
+                    10, columns,
+                    &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
+                    &bv);
             s->sp = sp;
             s->vmag = vmag;
             s->ra = ra;
@@ -300,9 +300,22 @@ static int load_worker(worker_t *w)
          * 4 bytes (float)      pdec (rad/year)
          *
          */
+        eph_table_column_t columns[7] = {
+            {"gaia", 'Q'},
+            {"vmag", 'f'},
+            {"ra",   'f'},
+            {"de",   'f'},
+            {"plx",  'f'},
+            {"pra",  'f'},
+            {"pde",  'f'},
+        };
+        eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
+                               size, 7, columns);
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
-            binunpack(loader->data + i * 32, "Qffffff",
+            eph_read_table_row(
+                    loader->data, loader->size, &data_ofs, size,
+                    7, columns,
                     &s->gaia, &vmag, &ra, &de, &plx, &pra, &pde);
 
             // I disable this part until we switch to gaia dr2, since the dr1

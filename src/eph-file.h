@@ -22,4 +22,24 @@ int eph_load(const void *data, int data_size, void *user,
                              int order, int pix,
                              int size, void *data, void *user));
 
+typedef struct eph_table_column {
+    char        name[4];
+    char        type;
+    int         unit;
+
+    // Attributes filled by eph_read_table_prepare.
+    int         start;
+    int         size;
+    int         src_unit;
+} eph_table_column_t;
+
+int eph_read_table_prepare(int version, void *data, int data_size,
+                           int *data_ofs, int row_size,
+                           int nb_columns, eph_table_column_t *columns);
+
+int eph_read_table_row(const void *data, int data_size, int *data_ofs,
+                       int row_size, int nb_columns,
+                       const eph_table_column_t *columns,
+                       ...);
+
 #endif // EPH_FILE_H
