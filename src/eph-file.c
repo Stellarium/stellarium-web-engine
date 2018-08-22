@@ -56,30 +56,6 @@ static struct {
     char type[4];
 } g_tile_types[8] = {};
 
-// Structs used when we prepare a file for saving.
-typedef struct {
-    UT_hash_handle  hh;
-    char    id[16];  // uniq key in the hash.
-    double  vmag;
-    double  pos[3];
-    char    data[64];
-} entry_t;
-
-typedef struct {
-    UT_hash_handle  hh;
-    uint64_t        nuniq; // Hips nuniq position.
-    int             nb;
-    void            *data;
-} tile_t;
-
-typedef struct {
-    char        type[4];
-    int         version;
-    int         nb_per_tile;
-    int         data_size;
-    entry_t     *entries; // Hash of id -> entry
-    tile_t      *tiles;
-} file_t;
 
 void eph_file_register_tile_type(const char type[4],
         int (*f)(int version, int order, int pix,
