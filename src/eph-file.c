@@ -142,15 +142,6 @@ static void chunk_read(chunk_t *c, const void **data, int *data_size,
         v_; \
     })
 
-int eph_load_file(const char *path, void *user)
-{
-    int size, ret;
-    void *data = read_file(path, &size);
-    ret = eph_load(data, size, user);
-    free(data);
-    return ret;
-}
-
 int eph_load(const void *data, int data_size, void *user)
 {
     chunk_t c;

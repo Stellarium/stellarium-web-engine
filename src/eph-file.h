@@ -22,6 +22,5 @@ void eph_file_register_tile_type(const char type[4],
                   int size, void *data, void *user));
 
 int eph_load(const void *data, int data_size, void *user);
-int eph_load_file(const char *path, void *user);
 
 #endif // EPH_FILE_H
