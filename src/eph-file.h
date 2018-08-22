@@ -28,6 +28,7 @@ typedef struct eph_table_column {
     int         unit;
 
     // Attributes filled by eph_read_table_prepare.
+    int         row_size;
     int         start;
     int         size;
     int         src_unit;
@@ -38,8 +39,7 @@ int eph_read_table_prepare(int version, void *data, int data_size,
                            int nb_columns, eph_table_column_t *columns);
 
 int eph_read_table_row(const void *data, int data_size, int *data_ofs,
-                       int row_size, int nb_columns,
-                       const eph_table_column_t *columns,
+                       int nb_columns, const eph_table_column_t *columns,
                        ...);
 
 #endif // EPH_FILE_H

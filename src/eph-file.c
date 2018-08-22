@@ -157,24 +157,68 @@ int eph_read_table_prepare(int version, void *data, int data_size,
                            int *data_ofs, int row_size,
                            int nb_columns, eph_table_column_t *columns)
 {
-    int i, start = 0;
+    int i, j, start = 0, flags, n_col, n_row;
+    char name[4], type[4];
 
     assert(*data_ofs == 0);
-    if (version > 0)
-        shuffle_bytes(data, row_size, data_size / row_size);
-    for (i = 0; i < nb_columns; i++) {
-        columns[i].start = start;
-        columns[i].src_unit = columns[i].unit;
-        if (!columns[i].size) {
-            switch (columns[i].type) {
-            case 'i':
-            case 'f': columns[i].size = 4; break;
-            case 'Q': columns[i].size = 8; break;
+    data += *data_ofs;
+
+    // Old style with no header support.
+    // To remove as soon as all the eph file switch to the new format.
+    if (version < 3) {
+        if (version > 0) shuffle_bytes(data, row_size, data_size / row_size);
+        for (i = 0; i < nb_columns; i++) {
+            columns[i].row_size = row_size;
+            columns[i].start = start;
+            columns[i].src_unit = columns[i].unit;
+            if (!columns[i].size) {
+                switch (columns[i].type) {
+                case 'i':
+                case 'f': columns[i].size = 4; break;
+                case 'Q': columns[i].size = 8; break;
+                }
             }
+            start += columns[i].size;
         }
-        start += columns[i].size;
+        return data_size / row_size;
     }
-    return 0;
+
+    memcpy(&flags,    data + 0 , 4);
+    memcpy(&row_size, data + 4 , 4);
+    memcpy(&n_col,    data + 8 , 4);
+    memcpy(&n_row,    data + 12, 4);
+
+    for (i = 0; i < n_col; i++) {
+        memcpy(name, data + 16 + i * 20, 4);
+        memcpy(type, data + 20 + i * 20, 4);
+        for (j = 0; j < nb_columns; j++) {
+            if (strncmp(columns[j].name, name, 4) == 0) break;
+        }
+        if (j == nb_columns) continue;
+        if (columns[j].type != *type) {
+            LOG_E("Wrong type");
+            return -1;
+        }
+        columns[j].row_size = row_size;
+        memcpy(&columns[j].src_unit, data + 24 + i * 20, 4);
+        memcpy(&columns[j].start, data + 28 + i * 20, 4);
+        memcpy(&columns[j].size, data + 32 + i * 20, 4);
+    }
+
+    // Check that all the columns have been found.
+    for (i = 0; i < nb_columns; i++) {
+        if (!columns[i].row_size) {
+            LOG_E("Cannot find column %.4s", columns[i].name);
+            return -1;
+        }
+    }
+
+    if (flags & 1)
+        shuffle_bytes(data + 16 + n_col * 20, row_size, n_row);
+
+    *data_ofs += 16 + n_col * 20;
+    return n_row;
+
 }
 
 double eph_convert_f(int src_unit, int unit, double v)
@@ -184,8 +228,7 @@ double eph_convert_f(int src_unit, int unit, double v)
 }
 
 int eph_read_table_row(const void *data, int data_size, int *data_ofs,
-                       int row_size, int nb_columns,
-                       const eph_table_column_t *columns,
+                       int nb_columns, const eph_table_column_t *columns,
                        ...)
 {
     int i;
@@ -197,29 +240,31 @@ int eph_read_table_row(const void *data, int data_size, int *data_ofs,
         uint64_t q;
     } v;
 
+    assert(nb_columns > 0);
+    data += *data_ofs;
     va_start(ap, columns);
     for (i = 0; i < nb_columns; i++) {
         switch (columns[i].type) {
         case 'i':
-            memcpy(&v.i, data + *data_ofs + columns[i].start, 4);
+            memcpy(&v.i, data + columns[i].start, 4);
             *va_arg(ap, int*) = v.i;
             break;
         case 'f':
-            memcpy(&v.f, data + *data_ofs + columns[i].start, 4);
+            memcpy(&v.f, data + columns[i].start, 4);
             *va_arg(ap, double*) = eph_convert_f(
                     columns[i].src_unit, columns[i].unit, v.f);
             break;
         case 'Q':
-            memcpy(&v.q, data + *data_ofs + columns[i].start, 8);
+            memcpy(&v.q, data + columns[i].start, 8);
             *va_arg(ap, uint64_t*) = v.q;
             break;
         case 's':
-            memcpy(va_arg(ap, char*), data + *data_ofs + columns[i].start,
+            memcpy(va_arg(ap, char*), data + columns[i].start,
                    columns[i].size);
             break;
         }
     }
     va_end(ap);
-    *data_ofs += row_size;
+    *data_ofs += columns[0].row_size;
     return 0;
 }

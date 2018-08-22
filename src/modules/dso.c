@@ -205,7 +205,7 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
 
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];
-        eph_read_table_row(data, size, &data_ofs, source_size, 10, columns,
+        eph_read_table_row(data, size, &data_ofs, 10, columns,
                            &d->id.nsid, d->type,
                            &d->vmag, &bmag, &d->ra, &d->de,
                            &d->smax, &d->smin, &d->angle,

@@ -247,10 +247,6 @@ static int load_worker(worker_t *w)
     double vmag, ra, de, pra, pde, plx, bv, rv;
     typeof(((tile_t*)0)->loader) loader = (void*)w;
     tile_t *tile = loader->tile;
-    int size = loader->is_gaia ? 32 : 40;
-
-    nb = loader->size / size;
-    tile->stars = calloc(nb, sizeof(*tile->stars));
 
     assert(tile->nb == 0);
     if (!loader->is_gaia) {
@@ -266,13 +262,17 @@ static int load_worker(worker_t *w)
             {"pde",  'f'},
             {"bv",   'f'},
         };
-        eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
-                               size, 10, columns);
+        nb = eph_read_table_prepare(loader->data_version, loader->data,
+                                    loader->size, &data_ofs, 40, 10, columns);
+        if (nb < 0) {
+            LOG_E("Cannot parse file");
+            return -1;
+        }
+        tile->stars = calloc(nb, sizeof(*tile->stars));
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
             eph_read_table_row(
-                    loader->data, loader->size, &data_ofs, size,
-                    10, columns,
+                    loader->data, loader->size, &data_ofs, 10, columns,
                     &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
                     &bv);
             s->sp = sp;
@@ -309,13 +309,17 @@ static int load_worker(worker_t *w)
             {"pra",  'f'},
             {"pde",  'f'},
         };
-        eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
-                               size, 7, columns);
+        nb = eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
+                                    32, 7, columns);
+        if (nb < 0) {
+            LOG_E("Cannot parse file");
+            return -1;
+        }
+        tile->stars = calloc(nb, sizeof(*tile->stars));
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
             eph_read_table_row(
-                    loader->data, loader->size, &data_ofs, size,
-                    7, columns,
+                    loader->data, loader->size, &data_ofs, 7, columns,
                     &s->gaia, &vmag, &ra, &de, &plx, &pra, &pde);
 
             // I disable this part until we switch to gaia dr2, since the dr1
@@ -381,12 +385,11 @@ static int on_file_tile_loaded(const char type[4], int version,
     tile_t *tile;
 
     if (strncmp(type, "STAR", 4) != 0) return 0;
-    assert(size % (4 * 10) == 0);
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
         return -1;
     }
-    nb = size / (4 * 10);
+    nb = size / 40; // XXX: only estimation until we parse the file!
 
     tile = calloc(1, sizeof(*tile));
     tile->parent = stars;
@@ -399,6 +402,7 @@ static int on_file_tile_loaded(const char type[4], int version,
     tile->loader = calloc(1, sizeof(*tile->loader));
     worker_init(&tile->loader->worker, load_worker);
     tile->loader->tile = tile;
+    tile->loader->data_version = version;
     tile->loader->data = malloc(size);
     memcpy(tile->loader->data, data, size);
     tile->loader->size = size;
