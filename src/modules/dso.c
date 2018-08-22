@@ -167,7 +167,7 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     tile_t *tile;
     dso_data_t *d;
     tile_pos_t pos = {order, pix};
-    int i, source_size, data_ofs = 0;
+    int i, data_ofs = 0;
     char buff[16], id[128];
     double bmag, temp_mag;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
@@ -185,8 +185,6 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     };
 
     if (strncmp(type, "DSO ", 4) != 0) return 0;
-    source_size = 104;
-    assert(size % source_size == 0);
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
     assert(!tile);
     tile = calloc(1, sizeof(*tile));
@@ -195,13 +193,11 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
 
-    tile->nb = size / source_size;
+    tile->nb = eph_read_table_prepare(
+            version, data, size, &data_ofs, 104, 10, columns);
     tile->data = calloc(tile->nb, sizeof(*tile->data));
     cache_add(dsos->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->data), del_tile);
-    assert(version == 2);
-
-    eph_read_table_prepare(0, data, size, &data_ofs, source_size, 10, columns);
 
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];

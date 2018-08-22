@@ -166,7 +166,8 @@ int eph_read_table_prepare(int version, void *data, int data_size,
     // Old style with no header support.
     // To remove as soon as all the eph file switch to the new format.
     if (version < 3) {
-        if (version > 0) shuffle_bytes(data, row_size, data_size / row_size);
+        if (row_size != 104) // Hack to handle DSO non shuffle.
+            shuffle_bytes(data, row_size, data_size / row_size);
         for (i = 0; i < nb_columns; i++) {
             columns[i].row_size = row_size;
             columns[i].start = start;
