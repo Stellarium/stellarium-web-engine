@@ -28,7 +28,6 @@
  *  4 bytes: data
  *  4 bytes: CRC
  *
- * We can register tile chunks with the eph_file_register_tile_type function.
  * Tiles chunks all have the following structure:
  *
  *  4 bytes: version
@@ -43,6 +42,7 @@
 
 typedef struct {
     char     type[4];
+    char     type_padding_; // Ensure that type is null terminated.
     int      length;
     uint32_t crc;
     char     *buffer;   // Used when writing.
@@ -50,26 +50,6 @@ typedef struct {
     int      pos;
 } chunk_t;
 
-static struct {
-    int (*callback)(int version, int order, int pix,
-                    int size, void *data, void *user);
-    char type[4];
-} g_tile_types[8] = {};
-
-
-void eph_file_register_tile_type(const char type[4],
-        int (*f)(int version, int order, int pix,
-                  int size, void *data, void *user))
-
-{
-    int i;
-    for (i = 0; i < ARRAY_SIZE(g_tile_types); i++) {
-        if (!g_tile_types[i].callback) break;
-    }
-    assert(i < ARRAY_SIZE(g_tile_types));
-    g_tile_types[i].callback = f;
-    memcpy(g_tile_types[i].type, type, 4);
-}
 
 #define CHUNK_BUFF_SIZE (1 << 20) // 1 MiB max buffer size!
 
@@ -118,11 +98,14 @@ static void chunk_read(chunk_t *c, const void **data, int *data_size,
         v_; \
     })
 
-int eph_load(const void *data, int data_size, void *user)
+int eph_load(const void *data, int data_size, void *user,
+             int (*callback)(const char type[4], int version,
+                             int order, int pix,
+                             int size, void *data, void *user))
 {
     chunk_t c;
     int version, tile_version;
-    int i, order, pix, comp_size;
+    int order, pix, comp_size;
     uint64_t nuniq;
     unsigned long size;
     void *chunk_data, *buf;
@@ -134,14 +117,6 @@ int eph_load(const void *data, int data_size, void *user)
     version = READ(data, data_size, int32_t);
     CHECK(version == FILE_VERSION);
     while (chunk_read_start(&c, &data, &data_size)) {
-        for (i = 0; i < ARRAY_SIZE(g_tile_types); i++) {
-            if (strncmp(g_tile_types[i].type, c.type, 4) == 0) break;
-        }
-        if (i == ARRAY_SIZE(g_tile_types)) {
-            LOG_E("Unknown chunk type: %.4s", c.type);
-            assert(false);
-        }
-
         tile_version = CHUNK_READ(&c, &data, &data_size, int32_t);
         nuniq = CHUNK_READ(&c, &data, &data_size, uint64_t);
         order = log2(nuniq / 4) / 2;
@@ -155,8 +130,7 @@ int eph_load(const void *data, int data_size, void *user)
         uncompress(chunk_data, &size, buf, comp_size);
         free(buf);
         chunk_read_finish(&c, &data, &data_size);
-        g_tile_types[i].callback(tile_version, order, pix,
-                                 size, chunk_data, user);
+        callback(c.type, tile_version, order, pix, size, chunk_data, user);
         free(chunk_data);
     }
     return 0;

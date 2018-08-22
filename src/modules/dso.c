@@ -160,8 +160,8 @@ static int del_tile(void *data)
     return 0;
 }
 
-static int on_file_tile_loaded(int version, int order, int pix,
-                               int size, void *data, void *user)
+static int on_file_tile_loaded(const char type[4], int version, int order,
+                               int pix, int size, void *data, void *user)
 {
     dsos_t *dsos = user;
     tile_t *tile;
@@ -172,6 +172,7 @@ static int on_file_tile_loaded(int version, int order, int pix,
     double bmag, temp_mag;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
 
+    if (strncmp(type, "DSO ", 4) != 0) return 0;
     source_size = version == 1 ? 40 : 104;
     assert(size % source_size == 0);
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
@@ -234,13 +235,12 @@ static int dsos_init(obj_t *obj, json_value *args)
     int size;
     dsos_t *dsos = (dsos_t*)obj;
     fader_init(&dsos->visible, false);
-    eph_file_register_tile_type("DSO ", on_file_tile_loaded);
     dsos->tiles = cache_create(CACHE_SIZE);
 
     // Bundled DSO if there is any (shouldn't be)
     ASSET_ITER("asset://dso/", path) {
         data = asset_get_data(path, &size, NULL);
-        eph_load(data, size, dsos);
+        eph_load(data, size, dsos, on_file_tile_loaded);
     }
 
     regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
@@ -274,7 +274,7 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
         }
         if (loading_complete) *loading_complete = (code != 0);
         free(url);
-        if (data) eph_load(data, size, dsos);
+        if (data) eph_load(data, size, dsos, on_file_tile_loaded);
     }
     return tile;
 }

@@ -358,7 +358,8 @@ static int load_worker(worker_t *w)
     return 0;
 }
 
-static int on_file_tile_loaded(int version, int order, int pix,
+static int on_file_tile_loaded(const char type[4], int version,
+                               int order, int pix,
                                int size, void *data, void *user)
 {
     int nb;
@@ -366,6 +367,7 @@ static int on_file_tile_loaded(int version, int order, int pix,
     stars_t *stars = user;
     tile_t *tile;
 
+    if (strncmp(type, "STAR", 4) != 0) return 0;
     assert(size % (4 * 10) == 0);
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
@@ -399,7 +401,8 @@ static int on_file_tile_loaded(int version, int order, int pix,
     return 0;
 }
 
-static int on_gaia_tile_loaded(int version, int order, int pix,
+static int on_gaia_tile_loaded(const char type[4], int version,
+                               int order, int pix,
                                int size, void *data, void *user)
 {
     int nb;
@@ -407,6 +410,7 @@ static int on_gaia_tile_loaded(int version, int order, int pix,
     stars_t *stars = user;
     tile_t *tile;
 
+    if (strncmp(type, "GAIA", 4) != 0) return 0;
     assert(size % 32 == 0);
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
@@ -443,14 +447,12 @@ static int stars_init(obj_t *obj, json_value *args)
     stars_t *stars = (stars_t*)obj;
     stars->visible = true;
     stars->mag_max = INFINITY;
-    eph_file_register_tile_type("STAR", on_file_tile_loaded);
-    eph_file_register_tile_type("GAIA", on_gaia_tile_loaded);
     stars->tiles = cache_create(CACHE_SIZE);
 
     // Load all tile files that we have in the assets.
     ASSET_ITER("asset://stars/", path) {
         data = asset_get_data(path, &size, NULL);
-        eph_load(data, size, stars);
+        eph_load(data, size, stars, on_file_tile_loaded);
     }
 
     regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
@@ -483,7 +485,7 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
         if (loading_complete) *loading_complete = (code != 0);
         free(url);
         if (data) {
-            eph_load(data, size, stars);
+            eph_load(data, size, stars, on_gaia_tile_loaded);
         }
     }
     // Got a tile, but it is still loading.

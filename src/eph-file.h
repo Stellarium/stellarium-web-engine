@@ -17,10 +17,9 @@
  * See eph-file.c for some doc about the format.
  */
 
-void eph_file_register_tile_type(const char type[4],
-        int (*f)(int version, int order, int pix,
-                  int size, void *data, void *user));
-
-int eph_load(const void *data, int data_size, void *user);
+int eph_load(const void *data, int data_size, void *user,
+             int (*callback)(const char type[4], int version,
+                             int order, int pix,
+                             int size, void *data, void *user));
 
 #endif // EPH_FILE_H
