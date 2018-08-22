@@ -23,20 +23,33 @@
  * List of chuncks
  *
  * chunk:
- *  4 bytes: type
- *  4 bytes: data len
- *  4 bytes: data
- *  4 bytes: CRC
+ *   4 bytes: type
+ *   4 bytes: data len
+ *   4 bytes: data
+ *   4 bytes: CRC
  *
  * If type starts with an uppercase letter, this means we got an healpix
  * tile chunck, with the following structure:
  *
- *  4 bytes: version
- *  8 bytes: nuniq hips tile pos
- *  4 bytes: data size
- *  4 bytes: compressed data size
- *  n bytes: compressed data
+ *   4 bytes: version
+ *   8 bytes: nuniq hips tile pos
+ *   4 bytes: data size
+ *   4 bytes: compressed data size
+ *   n bytes: compressed data
  *
+ * There is also some support for tabular data.  A table consists of a header
+ * followed by the table data.  The header structure is:
+ *
+ *   4 bytes: flags (1: data is shuffled)
+ *   4 bytes: row size in bytes
+ *   4 bytes: columns number
+ *   4 bytes: row number
+ *   Then for each column:
+ *     4 bytes: id string
+ *     4 bytes: type ('f', 'i', 'Q', 's')
+ *     4 bytes: unit (one of EPH_UNIT value, e.g EPH_RAD or 0 to ignore)
+ *     4 bytes: start offset in bytes
+ *     4 bytes: data size
  */
 
 #define FILE_VERSION 2
