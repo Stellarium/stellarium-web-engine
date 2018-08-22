@@ -254,12 +254,12 @@ static int load_worker(worker_t *w)
             {"hip",  'i'},
             {"hd",   'i'},
             {"sp",   'i'},
-            {"vmag", 'f'},
-            {"ra",   'f'},
-            {"de",   'f'},
-            {"plx",  'f'},
-            {"pra",  'f'},
-            {"pde",  'f'},
+            {"vmag", 'f', EPH_VMAG},
+            {"ra",   'f', EPH_RAD},
+            {"de",   'f', EPH_RAD},
+            {"plx",  'f', EPH_ARCSEC},
+            {"pra",  'f', EPH_RAD_PER_YEAR},
+            {"pde",  'f', EPH_RAD_PER_YEAR},
             {"bv",   'f'},
         };
         nb = eph_read_table_prepare(loader->data_version, loader->data,
@@ -302,12 +302,12 @@ static int load_worker(worker_t *w)
          */
         eph_table_column_t columns[7] = {
             {"gaia", 'Q'},
-            {"vmag", 'f'},
-            {"ra",   'f'},
-            {"de",   'f'},
-            {"plx",  'f'},
-            {"pra",  'f'},
-            {"pde",  'f'},
+            {"vmag", 'f', EPH_VMAG},
+            {"ra",   'f', EPH_RAD},
+            {"de",   'f', EPH_RAD},
+            {"plx",  'f', EPH_ARCSEC},
+            {"pra",  'f', EPH_RAD_PER_YEAR},
+            {"pde",  'f', EPH_RAD_PER_YEAR},
         };
         nb = eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
                                     32, 7, columns);

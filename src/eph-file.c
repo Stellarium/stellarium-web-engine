@@ -223,7 +223,21 @@ int eph_read_table_prepare(int version, void *data, int data_size,
 
 double eph_convert_f(int src_unit, int unit, double v)
 {
-    assert(src_unit == unit);
+    if (!unit || src_unit == unit) return v; // Most common case.
+
+    // 1 -> deg to rad
+    if ( (src_unit & 1) && !(unit & 1)) v *= DD2R;
+    if (!(src_unit & 1) &&  (unit & 1)) v *= DR2D;
+    // 2 -> 1/60
+    if ( (src_unit & 2) && !(unit & 2)) v /= 60;
+    if (!(src_unit & 2) &&  (unit & 2)) v *= 60;
+    // 4 -> 1/60
+    if ( (src_unit & 4) && !(unit & 4)) v /= 60;
+    if (!(src_unit & 4) &&  (unit & 4)) v *= 60;
+    // 8 -> 365.25
+    if ( (src_unit & 8) && !(unit & 8)) v *= 365.25;
+    if (!(src_unit & 8) &&  (unit & 8)) v /= 365.25;
+
     return v;
 }
 
