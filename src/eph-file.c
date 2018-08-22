@@ -28,7 +28,8 @@
  *  4 bytes: data
  *  4 bytes: CRC
  *
- * Tiles chunks all have the following structure:
+ * If type starts with an uppercase letter, this means we got an healpix
+ * tile chunck, with the following structure:
  *
  *  4 bytes: version
  *  8 bytes: nuniq hips tile pos
@@ -117,21 +118,23 @@ int eph_load(const void *data, int data_size, void *user,
     version = READ(data, data_size, int32_t);
     CHECK(version == FILE_VERSION);
     while (chunk_read_start(&c, &data, &data_size)) {
-        tile_version = CHUNK_READ(&c, &data, &data_size, int32_t);
-        nuniq = CHUNK_READ(&c, &data, &data_size, uint64_t);
-        order = log2(nuniq / 4) / 2;
-        pix = nuniq - 4 * (1 << (2 * order));
-        size = CHUNK_READ(&c, &data, &data_size, int32_t);
-        comp_size = CHUNK_READ(&c, &data, &data_size, int32_t);
-
-        chunk_data = malloc(size);
-        buf = malloc(comp_size);
-        chunk_read(&c, &data, &data_size, buf, comp_size);
-        uncompress(chunk_data, &size, buf, comp_size);
-        free(buf);
+        // Uppercase starting chunks are healpix tiles.
+        if (c.type[0] >= 'A' && c.type[0] <= 'Z') {
+            tile_version = CHUNK_READ(&c, &data, &data_size, int32_t);
+            nuniq = CHUNK_READ(&c, &data, &data_size, uint64_t);
+            order = log2(nuniq / 4) / 2;
+            pix = nuniq - 4 * (1 << (2 * order));
+            size = CHUNK_READ(&c, &data, &data_size, int32_t);
+            comp_size = CHUNK_READ(&c, &data, &data_size, int32_t);
+            chunk_data = malloc(size);
+            buf = malloc(comp_size);
+            chunk_read(&c, &data, &data_size, buf, comp_size);
+            uncompress(chunk_data, &size, buf, comp_size);
+            free(buf);
+            callback(c.type, tile_version, order, pix, size, chunk_data, user);
+            free(chunk_data);
+        }
         chunk_read_finish(&c, &data, &data_size);
-        callback(c.type, tile_version, order, pix, size, chunk_data, user);
-        free(chunk_data);
     }
     return 0;
 }
