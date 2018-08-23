@@ -126,6 +126,7 @@ void eph_shuffle_bytes(uint8_t *data, int nb, int size)
     free(buf);
 }
 
+// XXX: to be removed once we switch all eph file to new format.
 static int eph_read_table_header_workaround(
         int version, const void *data, int data_size,
         int *data_ofs, int *row_size, int *flags,
@@ -170,6 +171,8 @@ static int eph_read_table_header_workaround(
     const eph_table_column_t *cols = NULL;
     int i, j;
 
+    data += *data_ofs;
+
     // STAR tile.
     if (*row_size == 40) cols = STAR_COLS;
     if (*row_size == 32) cols = GAIA_COLS;
@@ -188,6 +191,8 @@ static int eph_read_table_header_workaround(
         columns[i].row_size = *row_size;
 
     *flags = *row_size != 104 ? 1 : 0;
+
+    if (*flags & 1) memcpy(&data_size, data, 4);
     return data_size / *row_size;
 }
 
@@ -198,8 +203,6 @@ int eph_read_table_header(int version, const void *data, int data_size,
     int i, j, n_col, n_row;
     char name[4], type[4];
 
-    data += *data_ofs;
-
     // Old style with no header support.
     // To remove as soon as all the eph file switch to the new format.
     if (version < 3) {
@@ -207,6 +210,7 @@ int eph_read_table_header(int version, const void *data, int data_size,
                     data_ofs, row_size, flags, nb_columns, columns);
     }
 
+    data += *data_ofs;
     memcpy(flags,    data + 0 , 4);
     memcpy(row_size, data + 4 , 4);
     memcpy(&n_col,    data + 8 , 4);

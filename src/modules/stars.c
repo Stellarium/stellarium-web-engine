@@ -242,12 +242,14 @@ static int star_data_cmp(const void *a, const void *b)
 
 static int load_worker(worker_t *w)
 {
-    int i, sp, r, nb, data_ofs = 0, size, version, order, pix, row_size, flags;
+    int i, sp, nb, data_ofs = 0, size, version, order, pix, row_size, flags;
     star_data_t *s;
-    double vmag, ra, de, pra, pde, plx, bv, rv;
+    double vmag, ra, de, pra, pde, plx, bv;
     void *data;
     typeof(((tile_t*)0)->loader) loader = (void*)w;
     tile_t *tile = loader->tile;
+
+    // All the columns we care about in the source file.
     eph_table_column_t columns[] = {
         {"gaia", 'Q'},
         {"hip",  'i'},
@@ -266,131 +268,49 @@ static int load_worker(worker_t *w)
     eph_read_tile_header(loader->data, loader->size, &data_ofs,
                          &version, &order, &pix);
 
-    if (!loader->is_gaia) {
-        row_size = 40;
+    // Once we migrate to new format with table headers we can remove this.
+    row_size = loader->is_gaia ? 32 : 40;
 
-        if (version < 3) {
-            // Deprecated format: the table header is compressed.
-            // To be removed once we switch all the data to the new
-            // format.
-            data = eph_read_compressed_block(
-                    loader->data, loader->size, &data_ofs, &size);
-            if (!data) return -1;
-            data_ofs = 0;
-            nb = eph_read_table_header(version, data, size, &data_ofs,
-                                       &row_size, &flags,
-                                       ARRAY_SIZE(columns), columns);
-            if (nb < 0) {
-                LOG_E("Cannot parse file");
-                return -1;
-            }
-        } else {
-            // New format: the table header is not compressed.
-            nb = eph_read_table_header(version, loader->data, loader->size,
-                                       &data_ofs, &row_size, &flags,
-                                       ARRAY_SIZE(columns), columns);
-            if (nb < 0) {
-                LOG_E("Cannot parse file");
-                return -1;
-            }
-            data = eph_read_compressed_block(
-                    loader->data, loader->size, &data_ofs, &size);
-            if (!data) return -1;
-            data_ofs = 0;
-        }
+    nb = eph_read_table_header(version, loader->data, loader->size,
+                               &data_ofs, &row_size, &flags,
+                               ARRAY_SIZE(columns), columns);
+    if (nb < 0) {
+        LOG_E("Cannot parse file");
+        return -1;
+    }
+    data = eph_read_compressed_block(
+            loader->data, loader->size, &data_ofs, &size);
+    if (!data) return -1;
+    data_ofs = 0;
 
-        if (flags & 1) {
-            eph_shuffle_bytes(data + data_ofs, row_size, nb);
-        }
+    if (flags & 1) {
+        eph_shuffle_bytes(data + data_ofs, row_size, nb);
+    }
 
-        tile->stars = calloc(nb, sizeof(*tile->stars));
-        for (i = 0; i < nb; i++) {
-            s = &tile->stars[tile->nb];
-            eph_read_table_row(
-                    data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                    &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
-                    &pra, &pde, &bv);
-            s->sp = sp;
-            s->vmag = vmag;
-            s->ra = ra;
-            s->de = de;
-            s->pra = pra;
-            s->pde = pde;
-            s->plx = plx;
-            s->bv = bv;
-            compute_pv(ra, de, pra, pde, plx, s);
-            tile->mag_min = min(tile->mag_min, vmag);
-            tile->mag_max = max(tile->mag_max, vmag);
-            tile->nb++;
-        }
-    } else {
-        row_size = 32;
-        data = eph_read_compressed_block(
-                loader->data, loader->size, &data_ofs, &size);
-        if (!data) return -1;
-        data_ofs = 0;
-        nb = eph_read_table_header(version, data, size, &data_ofs,
-                                   &row_size, &flags,
-                                   ARRAY_SIZE(columns), columns);
-        if (nb < 0) {
-            LOG_E("Cannot parse file");
-            return -1;
-        }
-        if (flags & 1)
-            eph_shuffle_bytes(data + data_ofs, row_size, nb);
+    tile->stars = calloc(nb, sizeof(*tile->stars));
+    for (i = 0; i < nb; i++) {
+        s = &tile->stars[tile->nb];
+        eph_read_table_row(
+                data, size, &data_ofs, ARRAY_SIZE(columns), columns,
+                &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
+                &pra, &pde, &bv);
 
-        tile->stars = calloc(nb, sizeof(*tile->stars));
-        for (i = 0; i < nb; i++) {
-            s = &tile->stars[tile->nb];
-            eph_read_table_row(
-                    data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                    &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
-                    &pra, &pde, &bv);
+        // If the stars was already in the bundled data, skip it.
+        if (loader->is_gaia && vmag < tile->parent->bundled_max_vmag)
+            continue;
 
-            // I disable this part until we switch to gaia dr2, since the dr1
-            // survey seems to have some bugs in the stars locations.
-            // Once we switch to dr2 we can remore the if ((0)) and this
-            // comment.
-            if ((0))
-            if (gaia_index_to_pix(tile->pos.order, s->gaia) != tile->pos.pix) {
-                LOG_E("Wrong gaia id: order: %d, pix: %d, id: %lu, "
-                      "expected pix: %d", tile->pos.order, tile->pos.pix,
-                      s->gaia, gaia_index_to_pix(tile->pos.order, s->gaia));
-                assert(false);
-            }
-
-            // To remove once we totally switch to version 2 of gaia tiles.
-            if (version == 1) {
-                // Convert to proper units.
-                ra *= DD2R;
-                de *= DD2R;
-                pra *= ERFA_DMAS2R;
-                pde *= ERFA_DMAS2R;
-                plx /= 1000.0;
-
-                // Convert values from J2015 to J2000
-                r = eraPmsafe(ra, de, pra, pde, plx, 0.0,
-                              ERFA_DJ00, 15 * ERFA_DJY, // J2015
-                              ERFA_DJ00, 0.0, // Target J2000
-                              &ra, &de, &pra, &pde, &plx, &rv);
-                if (r & ~1)
-                    LOG_E("Cannot convert from J2015 to J2000: error %d", r);
-            }
-            // If the stars was already in the bundled data, skip it.
-            if (vmag < tile->parent->bundled_max_vmag) continue;
-
-            s->sp = sp;
-            s->vmag = vmag;
-            s->ra = ra;
-            s->de = de;
-            s->plx = plx;
-            s->pra = pra;
-            s->pde = pde;
-            compute_pv(ra, de, pra, pde, plx, s);
-            tile->mag_min = min(tile->mag_min, s->vmag);
-            tile->mag_max = max(tile->mag_max, s->vmag);
-            tile->nb++;
-        }
+        s->sp = sp;
+        s->vmag = vmag;
+        s->ra = ra;
+        s->de = de;
+        s->pra = pra;
+        s->pde = pde;
+        s->plx = plx;
+        s->bv = bv;
+        compute_pv(ra, de, pra, pde, plx, s);
+        tile->mag_min = min(tile->mag_min, vmag);
+        tile->mag_max = max(tile->mag_max, vmag);
+        tile->nb++;
     }
 
     // Sort the data by vmag, so that we can early exit during render.
