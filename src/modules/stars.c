@@ -384,7 +384,10 @@ static int on_file_tile_loaded(const char type[4], int version,
     stars_t *stars = user;
     tile_t *tile;
 
-    if (strncmp(type, "STAR", 4) != 0) return 0;
+    // Only support STAR and GAIA chunks.  Ignore anything else.
+    if (strncmp(type, "STAR", 4) != 0 &&
+        strncmp(type, "GAIA", 4) != 0) return 0;
+
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
         return -1;
@@ -406,53 +409,17 @@ static int on_file_tile_loaded(const char type[4], int version,
     tile->loader->data = malloc(size);
     memcpy(tile->loader->data, data, size);
     tile->loader->size = size;
+    tile->loader->is_gaia = strncmp(type, "GAIA", 4) == 0;
 
-    // For the moment we just run the loader immediately, not in a thread.
-    // This is because the non gaia stars need to be loaded at startup so that
-    // we can render the constellations!
-    tile->loader->worker.fn(&tile->loader->worker);
-    free(tile->loader);
-    tile->loader = NULL;
-    stars->bundled_max_vmag = max(stars->bundled_max_vmag, tile->mag_max);
-
-    return 0;
-}
-
-static int on_gaia_tile_loaded(const char type[4], int version,
-                               int order, int pix,
-                               int size, void *data, void *user)
-{
-    int nb;
-    tile_pos_t pos = {order, pix};
-    stars_t *stars = user;
-    tile_t *tile;
-
-    if (strncmp(type, "GAIA", 4) != 0) return 0;
-    assert(size % 32 == 0);
-    if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
-        LOG_W("Trying to load a tile already present!");
-        return -1;
+    if (!tile->loader->is_gaia) {
+        // For the moment we just run the loader immediately, not in a thread.
+        // This is because the non gaia stars need to be loaded at startup so
+        // that we can render the constellations!
+        tile->loader->worker.fn(&tile->loader->worker);
+        free(tile->loader);
+        tile->loader = NULL;
+        stars->bundled_max_vmag = max(stars->bundled_max_vmag, tile->mag_max);
     }
-    assert(!tile);
-
-    tile = calloc(1, sizeof(*tile));
-    tile->parent = stars;
-    tile->pos = pos;
-    tile->mag_min = +INFINITY;
-    tile->mag_max = -INFINITY;
-    nb = size / 32;
-    cache_add(stars->tiles, &pos, sizeof(pos), tile,
-              nb * sizeof(*tile->stars), del_tile);
-
-    tile->loader = calloc(1, sizeof(*tile->loader));
-    worker_init(&tile->loader->worker, load_worker);
-    tile->loader->tile = tile;
-    tile->loader->data = malloc(size);
-    tile->loader->data_version = version;
-    memcpy(tile->loader->data, data, size);
-    tile->loader->size = size;
-    tile->loader->is_gaia = true;
-
     return 0;
 }
 
@@ -502,7 +469,7 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
         if (loading_complete) *loading_complete = (code != 0);
         free(url);
         if (data) {
-            eph_load(data, size, stars, on_gaia_tile_loaded);
+            eph_load(data, size, stars, on_file_tile_loaded);
         }
     }
     // Got a tile, but it is still loading.
