@@ -180,11 +180,12 @@ static int eph_read_table_header_workaround(
             if (strncmp(columns[j].name, cols[i].name, 4) == 0) break;
         }
         if (j == nb_columns) continue;
-        columns[j].row_size = *row_size;
         columns[j].src_unit = cols[i].src_unit;
         columns[j].start = cols[i].start;
         columns[j].size = cols[i].size;
     }
+    for (i = 0; i < nb_columns; i++)
+        columns[i].row_size = *row_size;
 
     *flags = *row_size != 104 ? 1 : 0;
     return data_size / *row_size;
@@ -222,23 +223,13 @@ int eph_read_table_header(int version, const void *data, int data_size,
             LOG_E("Wrong type");
             return -1;
         }
-        columns[j].row_size = *row_size;
         memcpy(&columns[j].src_unit, data + 24 + i * 20, 4);
         memcpy(&columns[j].start, data + 28 + i * 20, 4);
         memcpy(&columns[j].size, data + 32 + i * 20, 4);
     }
-
-    // Check that all the columns have been found.
-    for (i = 0; i < nb_columns; i++) {
-        if (!columns[i].row_size) {
-            LOG_E("Cannot find column %.4s", columns[i].name);
-            return -1;
-        }
-    }
-
+    for (i = 0; i < nb_columns; i++) columns[i].row_size = *row_size;
     *data_ofs += 16 + n_col * 20;
     return n_row;
-
 }
 
 double eph_convert_f(int src_unit, int unit, double v)
@@ -273,28 +264,34 @@ int eph_read_table_row(const void *data, int data_size, int *data_ofs,
         float    f;
         uint64_t q;
     } v;
+    bool got;
 
     assert(nb_columns > 0);
     data += *data_ofs;
     va_start(ap, columns);
     for (i = 0; i < nb_columns; i++) {
+        memset(&v, 0, sizeof(v));
+        got = columns[i].row_size != 0;
         switch (columns[i].type) {
         case 'i':
-            memcpy(&v.i, data + columns[i].start, 4);
+            if (got) memcpy(&v.i, data + columns[i].start, 4);
             *va_arg(ap, int*) = v.i;
             break;
         case 'f':
-            memcpy(&v.f, data + columns[i].start, 4);
+            if (got) memcpy(&v.f, data + columns[i].start, 4);
             *va_arg(ap, double*) = eph_convert_f(
                     columns[i].src_unit, columns[i].unit, v.f);
             break;
         case 'Q':
-            memcpy(&v.q, data + columns[i].start, 8);
+            if (got) memcpy(&v.q, data + columns[i].start, 8);
             *va_arg(ap, uint64_t*) = v.q;
             break;
         case 's':
-            memcpy(va_arg(ap, char*), data + columns[i].start,
-                   columns[i].size);
+            if (got)
+                memcpy(va_arg(ap, char*), data + columns[i].start,
+                       columns[i].size);
+            else
+                memset(va_arg(ap, char*), 0, columns[i].size);
             break;
         }
     }

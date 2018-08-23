@@ -248,35 +248,57 @@ static int load_worker(worker_t *w)
     void *data;
     typeof(((tile_t*)0)->loader) loader = (void*)w;
     tile_t *tile = loader->tile;
+    eph_table_column_t columns[] = {
+        {"gaia", 'Q'},
+        {"hip",  'i'},
+        {"hd",   'i'},
+        {"sp",   'i'},
+        {"vmag", 'f', EPH_VMAG},
+        {"ra",   'f', EPH_RAD},
+        {"de",   'f', EPH_RAD},
+        {"plx",  'f', EPH_ARCSEC},
+        {"pra",  'f', EPH_RAD_PER_YEAR},
+        {"pde",  'f', EPH_RAD_PER_YEAR},
+        {"bv",   'f'},
+    };
 
     assert(tile->nb == 0);
     eph_read_tile_header(loader->data, loader->size, &data_ofs,
                          &version, &order, &pix);
-    data = eph_read_compressed_block(
-            loader->data, loader->size, &data_ofs, &size);
-    if (!data) return -1;
-    data_ofs = 0;
 
     if (!loader->is_gaia) {
-        eph_table_column_t columns[10] = {
-            {"hip",  'i'},
-            {"hd",   'i'},
-            {"sp",   'i'},
-            {"vmag", 'f', EPH_VMAG},
-            {"ra",   'f', EPH_RAD},
-            {"de",   'f', EPH_RAD},
-            {"plx",  'f', EPH_ARCSEC},
-            {"pra",  'f', EPH_RAD_PER_YEAR},
-            {"pde",  'f', EPH_RAD_PER_YEAR},
-            {"bv",   'f'},
-        };
         row_size = 40;
-        nb = eph_read_table_header(version, data, size, &data_ofs,
-                                   &row_size, &flags, 10, columns);
-        if (nb < 0) {
-            LOG_E("Cannot parse file");
-            return -1;
+
+        if (version < 3) {
+            // Deprecated format: the table header is compressed.
+            // To be removed once we switch all the data to the new
+            // format.
+            data = eph_read_compressed_block(
+                    loader->data, loader->size, &data_ofs, &size);
+            if (!data) return -1;
+            data_ofs = 0;
+            nb = eph_read_table_header(version, data, size, &data_ofs,
+                                       &row_size, &flags,
+                                       ARRAY_SIZE(columns), columns);
+            if (nb < 0) {
+                LOG_E("Cannot parse file");
+                return -1;
+            }
+        } else {
+            // New format: the table header is not compressed.
+            nb = eph_read_table_header(version, loader->data, loader->size,
+                                       &data_ofs, &row_size, &flags,
+                                       ARRAY_SIZE(columns), columns);
+            if (nb < 0) {
+                LOG_E("Cannot parse file");
+                return -1;
+            }
+            data = eph_read_compressed_block(
+                    loader->data, loader->size, &data_ofs, &size);
+            if (!data) return -1;
+            data_ofs = 0;
         }
+
         if (flags & 1) {
             eph_shuffle_bytes(data + data_ofs, row_size, nb);
         }
@@ -285,9 +307,9 @@ static int load_worker(worker_t *w)
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
             eph_read_table_row(
-                    data, size, &data_ofs, 10, columns,
-                    &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
-                    &bv);
+                    data, size, &data_ofs, ARRAY_SIZE(columns), columns,
+                    &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
+                    &pra, &pde, &bv);
             s->sp = sp;
             s->vmag = vmag;
             s->ra = ra;
@@ -302,42 +324,28 @@ static int load_worker(worker_t *w)
             tile->nb++;
         }
     } else {
-        /* Gaia packed data:
-         *
-         * 8 bytes (uint64_t)   source_id
-         * 4 bytes (float)      GMag
-         * 4 bytes (float)      ra   (rad)
-         * 4 bytes (float)      dec  (rad)
-         * 4 bytes (float)      plx  (arcsec)
-         * 4 bytes (float)      pra  (rad/year)
-         * 4 bytes (float)      pdec (rad/year)
-         *
-         */
-        eph_table_column_t columns[7] = {
-            {"gaia", 'Q'},
-            {"vmag", 'f', EPH_VMAG},
-            {"ra",   'f', EPH_RAD},
-            {"de",   'f', EPH_RAD},
-            {"plx",  'f', EPH_ARCSEC},
-            {"pra",  'f', EPH_RAD_PER_YEAR},
-            {"pde",  'f', EPH_RAD_PER_YEAR},
-        };
         row_size = 32;
-        nb = eph_read_table_header(
-                1, data, size, &data_ofs, &row_size, &flags, 7, columns);
-        if (flags & 1)
-            eph_shuffle_bytes(data + data_ofs, row_size, nb);
-
+        data = eph_read_compressed_block(
+                loader->data, loader->size, &data_ofs, &size);
+        if (!data) return -1;
+        data_ofs = 0;
+        nb = eph_read_table_header(version, data, size, &data_ofs,
+                                   &row_size, &flags,
+                                   ARRAY_SIZE(columns), columns);
         if (nb < 0) {
             LOG_E("Cannot parse file");
             return -1;
         }
+        if (flags & 1)
+            eph_shuffle_bytes(data + data_ofs, row_size, nb);
+
         tile->stars = calloc(nb, sizeof(*tile->stars));
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
             eph_read_table_row(
-                    data, size, &data_ofs, 7, columns,
-                    &s->gaia, &vmag, &ra, &de, &plx, &pra, &pde);
+                    data, size, &data_ofs, ARRAY_SIZE(columns), columns,
+                    &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
+                    &pra, &pde, &bv);
 
             // I disable this part until we switch to gaia dr2, since the dr1
             // survey seems to have some bugs in the stars locations.
@@ -371,6 +379,7 @@ static int load_worker(worker_t *w)
             // If the stars was already in the bundled data, skip it.
             if (vmag < tile->parent->bundled_max_vmag) continue;
 
+            s->sp = sp;
             s->vmag = vmag;
             s->ra = ra;
             s->de = de;
@@ -378,7 +387,6 @@ static int load_worker(worker_t *w)
             s->pra = pra;
             s->pde = pde;
             compute_pv(ra, de, pra, pde, plx, s);
-
             tile->mag_min = min(tile->mag_min, s->vmag);
             tile->mag_max = max(tile->mag_max, s->vmag);
             tile->nb++;
