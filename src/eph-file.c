@@ -54,100 +54,74 @@
 
 #define FILE_VERSION 2
 
-typedef struct {
-    char     type[4];
-    char     type_padding_; // Ensure that type is null terminated.
-    int      length;
-    uint32_t crc;
-    char     *buffer;   // Used when writing.
-
-    int      pos;
-} chunk_t;
-
-
-#define CHUNK_BUFF_SIZE (1 << 20) // 1 MiB max buffer size!
-
-#define READ(data, size, type) ({ \
-        type v_; \
-        CHECK(size >= sizeof(type)); \
-        memcpy(&v_, data, sizeof(type)); \
-        size -= sizeof(type); \
-        data += sizeof(type); \
-        v_; \
-    })
-
-static bool chunk_read_start(chunk_t *c, const void **data, int *data_size)
+static int eph_read_tile_header(
+        const void *data, int data_size, int *data_ofs,
+        int *version, int *order, int *pix)
 {
-    memset(c, 0, sizeof(*c));
-    if (*data_size == 0) return false;
-    CHECK(*data_size >= 8);
-    memcpy(c->type, *data, 4);
-    *data += 4; *data_size -= 4;
-    c->length = READ(*data, *data_size, int32_t);
-    return true;
+    uint64_t nuniq;
+    data += *data_ofs;
+    memcpy(version, data, 4);
+    memcpy(&nuniq, data + 4, 8);
+    *order = log2(nuniq / 4) / 2;
+    *pix = nuniq - 4 * (1 << (2 * (*order)));
+    *data_ofs += 12;
+    return 0;
 }
 
-static void chunk_read_finish(chunk_t *c, const void **data, int *data_size)
+static void *eph_read_compressed_block(
+        const void *data, int data_size, int *data_ofs, int *size)
 {
-    int crc;
-    assert(c->pos == c->length);
-    crc = READ(*data, *data_size, int32_t);
-    (void)crc; // TODO: check crc.
+    int comp_size;
+    void *ret;
+    unsigned long lsize;
+    data += *data_ofs;
+    memcpy(size, data, 4);
+    memcpy(&comp_size, data + 4, 4);
+    lsize = *size;
+    ret = malloc(lsize);
+    *data_ofs += 8 + comp_size;
+    if (uncompress(ret, &lsize, data + 8, comp_size) != Z_OK) {
+        LOG_E("Cannot uncompress data");
+        return NULL;
+    }
+    return ret;
 }
-
-static void chunk_read(chunk_t *c, const void **data, int *data_size,
-                       char *buff, int size)
-{
-    c->pos += size;
-    assert(c->pos <= c->length);
-    CHECK(*data_size >= size);
-    memcpy(buff, *data, size);
-    *data += size;
-    *data_size -= size;
-}
-
-#define CHUNK_READ(chunk, data, data_size, type) ({ \
-        type v_; \
-        chunk_read(chunk, data, data_size, (char*)&(v_), sizeof(v_)); \
-        v_; \
-    })
 
 int eph_load(const void *data, int data_size, void *user,
              int (*callback)(const char type[4], int version,
                              int order, int pix,
                              int size, void *data, void *user))
 {
-    chunk_t c;
     int version, tile_version;
-    int order, pix, comp_size;
-    uint64_t nuniq;
-    unsigned long size;
-    void *chunk_data, *buf;
+    int size, order, pix, chunk_size, data_ofs = 0;
+    void *tile_data;
+    char type[4];
 
     assert(data);
     CHECK(data_size >= 4);
     CHECK(strncmp(data, "EPHE", 4) == 0);
-    data += 4; data_size -= 4;
-    version = READ(data, data_size, int32_t);
+    memcpy(&version, data + 4, 4);
+    data += 8; data_size -= 8;
+
     CHECK(version == FILE_VERSION);
-    while (chunk_read_start(&c, &data, &data_size)) {
+    while (data_size) {
+        CHECK(data_size >= 8);
+        memcpy(type, data, 4);
+        memcpy(&chunk_size, data + 4, 4);
+        data_ofs = 8;
         // Uppercase starting chunks are healpix tiles.
-        if (c.type[0] >= 'A' && c.type[0] <= 'Z') {
-            tile_version = CHUNK_READ(&c, &data, &data_size, int32_t);
-            nuniq = CHUNK_READ(&c, &data, &data_size, uint64_t);
-            order = log2(nuniq / 4) / 2;
-            pix = nuniq - 4 * (1 << (2 * order));
-            size = CHUNK_READ(&c, &data, &data_size, int32_t);
-            comp_size = CHUNK_READ(&c, &data, &data_size, int32_t);
-            chunk_data = malloc(size);
-            buf = malloc(comp_size);
-            chunk_read(&c, &data, &data_size, buf, comp_size);
-            uncompress(chunk_data, &size, buf, comp_size);
-            free(buf);
-            callback(c.type, tile_version, order, pix, size, chunk_data, user);
-            free(chunk_data);
+        if (type[0] >= 'A' && type[0] <= 'Z') {
+            eph_read_tile_header(data, data_size, &data_ofs,
+                                 &tile_version, &order, &pix);
+            tile_data = eph_read_compressed_block(
+                    data, data_size, &data_ofs, &size);
+            CHECK(tile_data);
+            callback(type, tile_version, order, pix, size, tile_data, user);
+            free(tile_data);
         }
-        chunk_read_finish(&c, &data, &data_size);
+        data += chunk_size + 12;
+        data_size -= chunk_size + 12;
+        data_ofs = 0;
     }
     return 0;
 }
