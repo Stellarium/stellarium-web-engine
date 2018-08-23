@@ -17,10 +17,16 @@
  * See eph-file.c for some doc about the format.
  */
 
+
 int eph_load(const void *data, int data_size, void *user,
-             int (*callback)(const char type[4], int version,
-                             int order, int pix,
-                             int size, void *data, void *user));
+             int (*callback)(const char type[4],
+                             const void *data, int size, void *user));
+
+int eph_read_tile_header(const void *data, int data_size, int *data_ofs,
+                         int *version, int *order, int *pix);
+
+void *eph_read_compressed_block(const void *data, int data_size,
+                                int *data_ofs, int *size);
 
 /*
  * Enum: EPH_UNIT

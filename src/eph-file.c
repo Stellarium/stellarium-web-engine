@@ -20,7 +20,7 @@
  *
  * 4 bytes magic string:    "EPHE"
  * 4 bytes file version:    <FILE_VERSION>
- * List of chuncks
+ * List of chunks
  *
  * chunk:
  *   4 bytes: type
@@ -28,18 +28,19 @@
  *   4 bytes: data
  *   4 bytes: CRC
  *
- * If type starts with an uppercase letter, this means we got an healpix
- * tile chunck, with the following structure:
+ * It's then up to the caller to parse the chunks data.  We add some helper
+ * functions to parse common structures:
  *
+ * Tile header:
  *   4 bytes: version
  *   8 bytes: nuniq hips tile pos
+ *
+ * Compressed data block:
  *   4 bytes: data size
  *   4 bytes: compressed data size
  *   n bytes: compressed data
  *
- * There is also some support for tabular data.  A table consists of a header
- * followed by the table data.  The header structure is:
- *
+ * Tabular data:
  *   4 bytes: flags (1: data is shuffled)
  *   4 bytes: row size in bytes
  *   4 bytes: columns number
@@ -54,9 +55,8 @@
 
 #define FILE_VERSION 2
 
-static int eph_read_tile_header(
-        const void *data, int data_size, int *data_ofs,
-        int *version, int *order, int *pix)
+int eph_read_tile_header(const void *data, int data_size, int *data_ofs,
+                         int *version, int *order, int *pix)
 {
     uint64_t nuniq;
     data += *data_ofs;
@@ -68,8 +68,8 @@ static int eph_read_tile_header(
     return 0;
 }
 
-static void *eph_read_compressed_block(
-        const void *data, int data_size, int *data_ofs, int *size)
+void *eph_read_compressed_block(const void *data, int data_size,
+                                int *data_ofs, int *size)
 {
     int comp_size;
     void *ret;
@@ -88,13 +88,10 @@ static void *eph_read_compressed_block(
 }
 
 int eph_load(const void *data, int data_size, void *user,
-             int (*callback)(const char type[4], int version,
-                             int order, int pix,
-                             int size, void *data, void *user))
+             int (*callback)(const char type[4],
+                             const void *data, int size, void *user))
 {
-    int version, tile_version;
-    int size, order, pix, chunk_size, data_ofs = 0;
-    void *tile_data;
+    int version, chunk_data_size;
     char type[4];
 
     assert(data);
@@ -107,21 +104,10 @@ int eph_load(const void *data, int data_size, void *user,
     while (data_size) {
         CHECK(data_size >= 8);
         memcpy(type, data, 4);
-        memcpy(&chunk_size, data + 4, 4);
-        data_ofs = 8;
-        // Uppercase starting chunks are healpix tiles.
-        if (type[0] >= 'A' && type[0] <= 'Z') {
-            eph_read_tile_header(data, data_size, &data_ofs,
-                                 &tile_version, &order, &pix);
-            tile_data = eph_read_compressed_block(
-                    data, data_size, &data_ofs, &size);
-            CHECK(tile_data);
-            callback(type, tile_version, order, pix, size, tile_data, user);
-            free(tile_data);
-        }
-        data += chunk_size + 12;
-        data_size -= chunk_size + 12;
-        data_ofs = 0;
+        memcpy(&chunk_data_size, data + 4, 4);
+        callback(type, data + 8, chunk_data_size, user);
+        data += chunk_data_size + 12;
+        data_size -= chunk_data_size + 12;
     }
     return 0;
 }

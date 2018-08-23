@@ -160,16 +160,17 @@ static int del_tile(void *data)
     return 0;
 }
 
-static int on_file_tile_loaded(const char type[4], int version, int order,
-                               int pix, int size, void *data, void *user)
+static int on_file_tile_loaded(const char type[4],
+                               const void *data, int size, void *user)
 {
     dsos_t *dsos = user;
     tile_t *tile;
     dso_data_t *d;
-    tile_pos_t pos = {order, pix};
-    int i, data_ofs = 0;
+    tile_pos_t pos;
+    int i, version, data_ofs = 0;
     char buff[16], id[128];
     double bmag, temp_mag;
+    void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
     eph_table_column_t columns[10] = {
         {"nsid", 'Q'},
@@ -185,6 +186,13 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     };
 
     if (strncmp(type, "DSO ", 4) != 0) return 0;
+
+    eph_read_tile_header(data, size, &data_ofs,
+                         &version, &pos.order, &pos.pix);
+    tile_data = eph_read_compressed_block(data, size, &data_ofs, &size);
+    if (!tile_data) return -1;
+    data_ofs = 0;
+
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
     assert(!tile);
     tile = calloc(1, sizeof(*tile));
@@ -194,14 +202,14 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
     tile->mag_max = -INFINITY;
 
     tile->nb = eph_read_table_prepare(
-            version, data, size, &data_ofs, 104, 10, columns);
+            version, tile_data, size, &data_ofs, 104, 10, columns);
     tile->data = calloc(tile->nb, sizeof(*tile->data));
     cache_add(dsos->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->data), del_tile);
 
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];
-        eph_read_table_row(data, size, &data_ofs, 10, columns,
+        eph_read_table_row(tile_data, size, &data_ofs, 10, columns,
                            &d->id.nsid, d->type,
                            &d->vmag, &bmag, &d->ra, &d->de,
                            &d->smax, &d->smin, &d->angle,
@@ -236,6 +244,7 @@ static int on_file_tile_loaded(const char type[4], int version, int order,
             identifiers_add(id, "IC", buff + 3, buff, buff);
         }
     }
+    free(tile_data);
     return 0;
 }
 

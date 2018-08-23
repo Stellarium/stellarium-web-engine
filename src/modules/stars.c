@@ -375,18 +375,23 @@ static int load_worker(worker_t *w)
     return 0;
 }
 
-static int on_file_tile_loaded(const char type[4], int version,
-                               int order, int pix,
-                               int size, void *data, void *user)
+static int on_file_tile_loaded(const char type[4],
+                               const void *data, int size, void *user)
 {
-    int nb;
-    tile_pos_t pos = {order, pix};
+    int version, nb, data_ofs = 0;
+    void *tile_data;
+    tile_pos_t pos;
     stars_t *stars = user;
     tile_t *tile;
 
     // Only support STAR and GAIA chunks.  Ignore anything else.
     if (strncmp(type, "STAR", 4) != 0 &&
         strncmp(type, "GAIA", 4) != 0) return 0;
+
+    eph_read_tile_header(data, size, &data_ofs,
+                         &version, &pos.order, &pos.pix);
+    tile_data = eph_read_compressed_block(data, size, &data_ofs, &size);
+    if (!tile_data) return -1;
 
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
@@ -406,8 +411,7 @@ static int on_file_tile_loaded(const char type[4], int version,
     worker_init(&tile->loader->worker, load_worker);
     tile->loader->tile = tile;
     tile->loader->data_version = version;
-    tile->loader->data = malloc(size);
-    memcpy(tile->loader->data, data, size);
+    tile->loader->data = tile_data;
     tile->loader->size = size;
     tile->loader->is_gaia = strncmp(type, "GAIA", 4) == 0;
 
