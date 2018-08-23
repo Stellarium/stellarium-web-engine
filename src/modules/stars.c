@@ -242,13 +242,21 @@ static int star_data_cmp(const void *a, const void *b)
 
 static int load_worker(worker_t *w)
 {
-    int i, sp, r, nb, data_ofs = 0;
+    int i, sp, r, nb, data_ofs = 0, size, version, order, pix;
     star_data_t *s;
     double vmag, ra, de, pra, pde, plx, bv, rv;
+    void *data;
     typeof(((tile_t*)0)->loader) loader = (void*)w;
     tile_t *tile = loader->tile;
 
     assert(tile->nb == 0);
+    eph_read_tile_header(loader->data, loader->size, &data_ofs,
+                         &version, &order, &pix);
+    data = eph_read_compressed_block(
+            loader->data, loader->size, &data_ofs, &size);
+    if (!data) return -1;
+    data_ofs = 0;
+
     if (!loader->is_gaia) {
         eph_table_column_t columns[10] = {
             {"hip",  'i'},
@@ -262,8 +270,8 @@ static int load_worker(worker_t *w)
             {"pde",  'f', EPH_RAD_PER_YEAR},
             {"bv",   'f'},
         };
-        nb = eph_read_table_prepare(loader->data_version, loader->data,
-                                    loader->size, &data_ofs, 40, 10, columns);
+        nb = eph_read_table_prepare(version, data, size, &data_ofs,
+                                    40, 10, columns);
         if (nb < 0) {
             LOG_E("Cannot parse file");
             return -1;
@@ -272,7 +280,7 @@ static int load_worker(worker_t *w)
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
             eph_read_table_row(
-                    loader->data, loader->size, &data_ofs, 10, columns,
+                    data, size, &data_ofs, 10, columns,
                     &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx, &pra, &pde,
                     &bv);
             s->sp = sp;
@@ -309,8 +317,7 @@ static int load_worker(worker_t *w)
             {"pra",  'f', EPH_RAD_PER_YEAR},
             {"pde",  'f', EPH_RAD_PER_YEAR},
         };
-        nb = eph_read_table_prepare(1, loader->data, loader->size, &data_ofs,
-                                    32, 7, columns);
+        nb = eph_read_table_prepare(1, data, size, &data_ofs, 32, 7, columns);
         if (nb < 0) {
             LOG_E("Cannot parse file");
             return -1;
@@ -319,7 +326,7 @@ static int load_worker(worker_t *w)
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
             eph_read_table_row(
-                    loader->data, loader->size, &data_ofs, 7, columns,
+                    data, size, &data_ofs, 7, columns,
                     &s->gaia, &vmag, &ra, &de, &plx, &pra, &pde);
 
             // I disable this part until we switch to gaia dr2, since the dr1
@@ -335,7 +342,7 @@ static int load_worker(worker_t *w)
             }
 
             // To remove once we totally switch to version 2 of gaia tiles.
-            if (loader->data_version == 1) {
+            if (version == 1) {
                 // Convert to proper units.
                 ra *= DD2R;
                 de *= DD2R;
@@ -371,6 +378,7 @@ static int load_worker(worker_t *w)
     // Sort the data by vmag, so that we can early exit during render.
     qsort(tile->stars, tile->nb, sizeof(*tile->stars), star_data_cmp);
 
+    free(data);
     free(loader->data);
     return 0;
 }
@@ -379,7 +387,6 @@ static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
     int version, nb, data_ofs = 0;
-    void *tile_data;
     tile_pos_t pos;
     stars_t *stars = user;
     tile_t *tile;
@@ -390,8 +397,6 @@ static int on_file_tile_loaded(const char type[4],
 
     eph_read_tile_header(data, size, &data_ofs,
                          &version, &pos.order, &pos.pix);
-    tile_data = eph_read_compressed_block(data, size, &data_ofs, &size);
-    if (!tile_data) return -1;
 
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
@@ -411,7 +416,8 @@ static int on_file_tile_loaded(const char type[4],
     worker_init(&tile->loader->worker, load_worker);
     tile->loader->tile = tile;
     tile->loader->data_version = version;
-    tile->loader->data = tile_data;
+    tile->loader->data = malloc(size);
+    memcpy(tile->loader->data, data, size);
     tile->loader->size = size;
     tile->loader->is_gaia = strncmp(type, "GAIA", 4) == 0;
 
