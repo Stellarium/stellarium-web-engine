@@ -60,10 +60,10 @@ typedef struct eph_table_column {
     int         unit;
 
     // Attributes filled by eph_read_table_prepare.
-    int         row_size;
     int         start;
     int         size;
     int         src_unit;
+    int         row_size;
 } eph_table_column_t;
 
 int eph_read_table_header(int version, const void *data, int data_size,

@@ -126,34 +126,84 @@ void eph_shuffle_bytes(uint8_t *data, int nb, int size)
     free(buf);
 }
 
+static int eph_read_table_header_workaround(
+        int version, const void *data, int data_size,
+        int *data_ofs, int *row_size, int *flags,
+        int nb_columns, eph_table_column_t *columns)
+{
+    const eph_table_column_t STAR_COLS[] = {
+        {"hip",  'i', 0, 0,  4, 0},
+        {"hd",   'i', 0, 4,  4, 0},
+        {"sp",   'i', 0, 8,  4, 0},
+        {"vmag", 'f', 0, 12, 4, EPH_VMAG},
+        {"ra",   'f', 0, 16, 4, EPH_RAD},
+        {"de",   'f', 0, 20, 4, EPH_RAD},
+        {"plx",  'f', 0, 24, 4, EPH_ARCSEC},
+        {"pra",  'f', 0, 28, 4, EPH_RAD_PER_YEAR},
+        {"pde",  'f', 0, 32, 4, EPH_RAD_PER_YEAR},
+        {"bv",   'f', 0, 36, 4, 0},
+        {},
+    };
+    const eph_table_column_t GAIA_COLS[] = {
+        {"gaia", 'Q', 0, 0,  8, 0},
+        {"vmag", 'f', 0, 8,  4, EPH_VMAG},
+        {"ra",   'f', 0, 12, 4, EPH_RAD},
+        {"de",   'f', 0, 16, 4, EPH_RAD},
+        {"plx",  'f', 0, 20, 4, EPH_ARCSEC},
+        {"pra",  'f', 0, 24, 4, EPH_RAD_PER_YEAR},
+        {"pde",  'f', 0, 28, 4, EPH_RAD_PER_YEAR},
+        {},
+    };
+    const eph_table_column_t DSO_COLS[] = {
+        {"nsid", 'Q', 0, 0,  8,  0},
+        {"type", 's', 0, 8,  4,  0},
+        {"vmag", 'f', 0, 12, 4,  EPH_VMAG},
+        {"bmag", 'f', 0, 16, 4,  EPH_VMAG},
+        {"ra",   'f', 0, 20, 4,  EPH_DEG},
+        {"de",   'f', 0, 24, 4,  EPH_DEG},
+        {"smax", 'f', 0, 28, 4,  EPH_ARCMIN},
+        {"smin", 'f', 0, 32, 4,  EPH_ARCMIN},
+        {"angl", 'f', 0, 36, 4,  EPH_DEG},
+        {"snam", 's', 0, 40, 64, 0},
+        {}
+    };
+    const eph_table_column_t *cols = NULL;
+    int i, j;
+
+    // STAR tile.
+    if (*row_size == 40) cols = STAR_COLS;
+    if (*row_size == 32) cols = GAIA_COLS;
+    if (*row_size == 104) cols = DSO_COLS;
+
+    for (i = 0; *cols[i].name; i++) {
+        for (j = 0; j < nb_columns; j++) {
+            if (strncmp(columns[j].name, cols[i].name, 4) == 0) break;
+        }
+        if (j == nb_columns) continue;
+        columns[j].row_size = *row_size;
+        columns[j].src_unit = cols[i].src_unit;
+        columns[j].start = cols[i].start;
+        columns[j].size = cols[i].size;
+    }
+
+    *flags = *row_size != 104 ? 1 : 0;
+    return data_size / *row_size;
+}
+
 int eph_read_table_header(int version, const void *data, int data_size,
                           int *data_ofs, int *row_size, int *flags,
                           int nb_columns, eph_table_column_t *columns)
 {
-    int i, j, start = 0, n_col, n_row;
+    int i, j, n_col, n_row;
     char name[4], type[4];
 
-    assert(*data_ofs == 0);
     data += *data_ofs;
 
     // Old style with no header support.
     // To remove as soon as all the eph file switch to the new format.
     if (version < 3) {
-        *flags = *row_size != 104 ? 1 : 0; // Hack to handle DSO non shuffle.
-        for (i = 0; i < nb_columns; i++) {
-            columns[i].row_size = *row_size;
-            columns[i].start = start;
-            columns[i].src_unit = columns[i].unit;
-            if (!columns[i].size) {
-                switch (columns[i].type) {
-                case 'i':
-                case 'f': columns[i].size = 4; break;
-                case 'Q': columns[i].size = 8; break;
-                }
-            }
-            start += columns[i].size;
-        }
-        return data_size / *row_size;
+        return eph_read_table_header_workaround(version, data, data_size,
+                    data_ofs, row_size, flags, nb_columns, columns);
     }
 
     memcpy(flags,    data + 0 , 4);
