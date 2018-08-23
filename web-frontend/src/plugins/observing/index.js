@@ -16,6 +16,7 @@ export default {
     }
   },
   name: 'observing',
+  enabled: false,
   storeModule: storeModule,
   observingPanelComponent: 'observations-page',
   observingTabName: 'Obs'

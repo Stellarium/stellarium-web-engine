@@ -49,7 +49,10 @@ var context = require.context('./plugins', true, /^\.\/.*\/index\.js$/)
 var plugins = []
 context.keys().forEach(function (key) {
   if (key.split('/').length === 3) {
-    plugins.push(context(key).default)
+    let plugin = context(key).default
+    if (plugin.enabled !== false) {
+      plugins.push(plugin)
+    }
   }
 })
 
