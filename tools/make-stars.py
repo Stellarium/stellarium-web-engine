@@ -33,6 +33,13 @@ DD2R = 1.745329251994329576923691e-2
 # Radians to degrees
 DR2D = 57.29577951308232087679815
 
+# Unit constants: must be exactly the same as in src/eph-file.h!
+EPH_RAD             = 1 << 16
+EPH_VMAG            = 3 << 16
+EPH_ARCSEC          = 5 << 16 | 1 | 2 | 4
+EPH_RAD_PER_YEAR    = 7 << 16
+
+
 Star = collections.namedtuple('Star',
         ['hd', 'hip', 'vmag', 'ra', 'de', 'plx', 'bv', 'sp'])
 
@@ -163,6 +170,22 @@ for nuniq, stars in tiles.items():
     path = '%s/Norder%d/Dir%d/Npix%d.eph' % (
             out_dir, order, (pix / 10000) * 10000, pix)
     ensure_dir(path)
+
+    # Header:
+    header = ''
+    # shuffle, 40 bytes, 10 columns, <nb> rows
+    header += struct.pack('iiii', 1, 40, 10, len(stars))
+    header += struct.pack('4s4siii', 'hip',  'i', 0, 0,  4)
+    header += struct.pack('4s4siii', 'hd',   'i', 0, 4,  4)
+    header += struct.pack('4s4siii', 'sp',   'i', 0, 8,  4)
+    header += struct.pack('4s4siii', 'vmag', 'f', EPH_VMAG, 12, 4)
+    header += struct.pack('4s4siii', 'ra',   'f', EPH_RAD, 16, 4)
+    header += struct.pack('4s4siii', 'de',   'f', EPH_RAD, 20, 4)
+    header += struct.pack('4s4siii', 'plx',  'f', EPH_ARCSEC, 24, 4)
+    header += struct.pack('4s4siii', 'pra',  'f', EPH_RAD_PER_YEAR, 28, 4)
+    header += struct.pack('4s4siii', 'pde',  'f', EPH_RAD_PER_YEAR, 32, 4)
+    header += struct.pack('4s4siii', 'bv',   'f', 0, 36, 4)
+
     data = ''
     for s in stars:
         line = struct.pack('iiifffffff',
@@ -175,8 +198,10 @@ for nuniq, stars in tiles.items():
     ret += struct.pack('I', 2) # File version
 
     chunk = ''
-    chunk += struct.pack('I', 2) # Star tile Version
+    chunk += struct.pack('I', 3) # Star tile Version
     chunk += struct.pack('Q', nuniq)
+    chunk += header
+
     chunk += struct.pack('I', len(data))
     chunk += struct.pack('I', len(comp_data))
     chunk += comp_data
