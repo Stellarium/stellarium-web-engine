@@ -113,7 +113,7 @@ int eph_load(const void *data, int data_size, void *user,
 }
 
 // In place shuffle of the data bytes for optimized compression.
-static void shuffle_bytes(uint8_t *data, int nb, int size)
+void eph_shuffle_bytes(uint8_t *data, int nb, int size)
 {
     int i, j;
     uint8_t *buf = calloc(nb, size);
@@ -126,11 +126,11 @@ static void shuffle_bytes(uint8_t *data, int nb, int size)
     free(buf);
 }
 
-int eph_read_table_prepare(int version, void *data, int data_size,
-                           int *data_ofs, int row_size,
-                           int nb_columns, eph_table_column_t *columns)
+int eph_read_table_header(int version, const void *data, int data_size,
+                          int *data_ofs, int *row_size, int *flags,
+                          int nb_columns, eph_table_column_t *columns)
 {
-    int i, j, start = 0, flags, n_col, n_row;
+    int i, j, start = 0, n_col, n_row;
     char name[4], type[4];
 
     assert(*data_ofs == 0);
@@ -139,10 +139,9 @@ int eph_read_table_prepare(int version, void *data, int data_size,
     // Old style with no header support.
     // To remove as soon as all the eph file switch to the new format.
     if (version < 3) {
-        if (row_size != 104) // Hack to handle DSO non shuffle.
-            shuffle_bytes(data, row_size, data_size / row_size);
+        *flags = *row_size != 104 ? 1 : 0; // Hack to handle DSO non shuffle.
         for (i = 0; i < nb_columns; i++) {
-            columns[i].row_size = row_size;
+            columns[i].row_size = *row_size;
             columns[i].start = start;
             columns[i].src_unit = columns[i].unit;
             if (!columns[i].size) {
@@ -154,11 +153,11 @@ int eph_read_table_prepare(int version, void *data, int data_size,
             }
             start += columns[i].size;
         }
-        return data_size / row_size;
+        return data_size / *row_size;
     }
 
-    memcpy(&flags,    data + 0 , 4);
-    memcpy(&row_size, data + 4 , 4);
+    memcpy(flags,    data + 0 , 4);
+    memcpy(row_size, data + 4 , 4);
     memcpy(&n_col,    data + 8 , 4);
     memcpy(&n_row,    data + 12, 4);
 
@@ -173,7 +172,7 @@ int eph_read_table_prepare(int version, void *data, int data_size,
             LOG_E("Wrong type");
             return -1;
         }
-        columns[j].row_size = row_size;
+        columns[j].row_size = *row_size;
         memcpy(&columns[j].src_unit, data + 24 + i * 20, 4);
         memcpy(&columns[j].start, data + 28 + i * 20, 4);
         memcpy(&columns[j].size, data + 32 + i * 20, 4);
@@ -186,9 +185,6 @@ int eph_read_table_prepare(int version, void *data, int data_size,
             return -1;
         }
     }
-
-    if (flags & 1)
-        shuffle_bytes(data + 16 + n_col * 20, row_size, n_row);
 
     *data_ofs += 16 + n_col * 20;
     return n_row;

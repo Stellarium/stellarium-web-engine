@@ -242,7 +242,7 @@ static int star_data_cmp(const void *a, const void *b)
 
 static int load_worker(worker_t *w)
 {
-    int i, sp, r, nb, data_ofs = 0, size, version, order, pix;
+    int i, sp, r, nb, data_ofs = 0, size, version, order, pix, row_size, flags;
     star_data_t *s;
     double vmag, ra, de, pra, pde, plx, bv, rv;
     void *data;
@@ -270,12 +270,17 @@ static int load_worker(worker_t *w)
             {"pde",  'f', EPH_RAD_PER_YEAR},
             {"bv",   'f'},
         };
-        nb = eph_read_table_prepare(version, data, size, &data_ofs,
-                                    40, 10, columns);
+        row_size = 40;
+        nb = eph_read_table_header(version, data, size, &data_ofs,
+                                   &row_size, &flags, 10, columns);
         if (nb < 0) {
             LOG_E("Cannot parse file");
             return -1;
         }
+        if (flags & 1) {
+            eph_shuffle_bytes(data + data_ofs, row_size, nb);
+        }
+
         tile->stars = calloc(nb, sizeof(*tile->stars));
         for (i = 0; i < nb; i++) {
             s = &tile->stars[tile->nb];
@@ -317,7 +322,12 @@ static int load_worker(worker_t *w)
             {"pra",  'f', EPH_RAD_PER_YEAR},
             {"pde",  'f', EPH_RAD_PER_YEAR},
         };
-        nb = eph_read_table_prepare(1, data, size, &data_ofs, 32, 7, columns);
+        row_size = 32;
+        nb = eph_read_table_header(
+                1, data, size, &data_ofs, &row_size, &flags, 7, columns);
+        if (flags & 1)
+            eph_shuffle_bytes(data + data_ofs, row_size, nb);
+
         if (nb < 0) {
             LOG_E("Cannot parse file");
             return -1;

@@ -167,7 +167,7 @@ static int on_file_tile_loaded(const char type[4],
     tile_t *tile;
     dso_data_t *d;
     tile_pos_t pos;
-    int i, version, data_ofs = 0;
+    int i, version, data_ofs = 0, flags, row_size = 104;
     char buff[16], id[128];
     double bmag, temp_mag;
     void *tile_data;
@@ -201,8 +201,13 @@ static int on_file_tile_loaded(const char type[4],
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
 
-    tile->nb = eph_read_table_prepare(
-            version, tile_data, size, &data_ofs, 104, 10, columns);
+    tile->nb = eph_read_table_header(
+            version, tile_data, size, &data_ofs, &row_size, &flags,
+            10, columns);
+    if (flags & 1) {
+        eph_shuffle_bytes(tile_data + data_ofs, row_size, tile->nb);
+    }
+
     tile->data = calloc(tile->nb, sizeof(*tile->data));
     cache_add(dsos->tiles, &pos, sizeof(pos), tile,
               tile->nb * sizeof(*tile->data), del_tile);

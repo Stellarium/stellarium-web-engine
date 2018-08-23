@@ -10,6 +10,8 @@
 #ifndef EPH_FILE_H
 #define EPH_FILE_H
 
+#include <stdint.h>
+
 /*
  * File: eph-file.h
  * Some support functions to read and write eph file format.
@@ -27,6 +29,8 @@ int eph_read_tile_header(const void *data, int data_size, int *data_ofs,
 
 void *eph_read_compressed_block(const void *data, int data_size,
                                 int *data_ofs, int *size);
+
+void eph_shuffle_bytes(uint8_t *data, int nb, int size);
 
 /*
  * Enum: EPH_UNIT
@@ -62,9 +66,9 @@ typedef struct eph_table_column {
     int         src_unit;
 } eph_table_column_t;
 
-int eph_read_table_prepare(int version, void *data, int data_size,
-                           int *data_ofs, int row_size,
-                           int nb_columns, eph_table_column_t *columns);
+int eph_read_table_header(int version, const void *data, int data_size,
+                          int *data_ofs, int *row_size, int *flags,
+                          int nb_columns, eph_table_column_t *columns);
 
 int eph_read_table_row(const void *data, int data_size, int *data_ofs,
                        int nb_columns, const eph_table_column_t *columns,
