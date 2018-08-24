@@ -29,6 +29,7 @@ const createStore = () => {
     },
     state: {
       stel: null,
+      initComplete: false,
 
       showNavigationDrawer: false,
       showAboutDialog: false,
@@ -36,7 +37,6 @@ const createStore = () => {
       showPrivacyDialog: false,
       showViewSettingsDialog: false,
       showPlanetsVisibilityDialog: false,
-      showSkyThisMonthDialog: false,
       showLocationDialog: false,
       selectedObject: undefined,
 

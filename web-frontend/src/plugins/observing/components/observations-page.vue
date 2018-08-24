@@ -7,44 +7,41 @@
 // repository.
 
 <template>
-<div style="height: 100%">
-<v-tabs dark v-model="active" style="height: 0px;">
-  <v-tab key="0"></v-tab>
-  <v-tab key="1"></v-tab>
-</v-tabs>
-<v-tabs-items v-model="active" style="height: 100%">
-
-  <v-tab-item key="0" style="height: 100%">
-    <div style="height: 100%;">
-      <observing-panel-root-toolbar></observing-panel-root-toolbar>
-      <div class="scroll-container">
-        <v-container fluid style="height: 100%">
-          <div v-if="this.$store.state.plugins.observing.noctuaSky.status !== 'loggedIn'" style="text-align: center; margin-bottom: 15px; color: red;">Warning: you are not logged in, you can add and edit observations, but they all will be suppressed if you leave the page, or login with your account.</div>
-          <v-layout row wrap>
-            <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].id">
-              <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
-            </v-flex>
-          </v-layout>
-          <div v-if="showEmptyMessage" style="margin-top: 40vh; text-align: center;">Nothing here yet..<br>Add new observations by clicking on the + button below</div>
-          <v-layout row wrap>
-            <v-btn fab dark absolute color="pink" bottom right class="pink" slot="activator" style="bottom: 16px; margin-right: 10px" @click.stop.native="showObservationDetailsPage()">
-              <v-icon dark>add</v-icon>
-            </v-btn>
-              <v-tooltip left>
-                <span>Log a new Observation</span>
-              </v-tooltip>
-          </v-layout>
-        </v-container>
-      </div>
-    </div>
-  </v-tab-item>
-
-  <v-tab-item key="1" style="height: 100%">
-    <observation-details @back="backFromObservationDetails()" v-model="observationToAdd" :create="createObservation"></observation-details>
-  </v-tab-item>
-
-</v-tabs-items>
-</div>
+  <div style="height: 100%">
+    <v-tabs dark v-model="active" style="height: 0px;">
+      <v-tab key="0"></v-tab>
+      <v-tab key="1"></v-tab>
+    </v-tabs>
+    <v-tabs-items v-model="active" style="height: 100%">
+      <v-tab-item key="0" style="height: 100%">
+        <div style="height: 100%;">
+          <observing-panel-root-toolbar></observing-panel-root-toolbar>
+          <div class="scroll-container">
+            <v-container fluid style="height: 100%">
+              <div v-if="this.$store.state.plugins.observing.noctuaSky.status !== 'loggedIn'" style="text-align: center; margin-bottom: 15px; color: red;">Warning: you are not logged in, you can add and edit observations, but they all will be suppressed if you leave the page, or login with your account.</div>
+              <v-layout row wrap>
+                <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].id">
+                  <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
+                </v-flex>
+              </v-layout>
+              <div v-if="showEmptyMessage" style="margin-top: 40vh; text-align: center;">Nothing here yet..<br>Add new observations by clicking on the + button below</div>
+              <v-layout row wrap>
+                <v-btn fab dark absolute color="pink" bottom right class="pink" slot="activator" style="bottom: 16px; margin-right: 10px" @click.stop.native="showObservationDetailsPage()">
+                  <v-icon dark>add</v-icon>
+                </v-btn>
+                  <v-tooltip left>
+                    <span>Log a new Observation</span>
+                  </v-tooltip>
+              </v-layout>
+            </v-container>
+          </div>
+        </div>
+      </v-tab-item>
+      <v-tab-item key="1" style="height: 100%">
+        <observation-details @back="backFromObservationDetails()" v-model="observationToAdd" :create="createObservation"></observation-details>
+      </v-tab-item>
+    </v-tabs-items>
+  </div>
 </template>
 
 <script>
