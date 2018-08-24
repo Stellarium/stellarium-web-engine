@@ -167,7 +167,7 @@ static int on_file_tile_loaded(const char type[4],
     tile_t *tile;
     dso_data_t *d;
     tile_pos_t pos;
-    int i, version, data_ofs = 0, flags, row_size = 104;
+    int nb, i, version, data_ofs = 0, flags, row_size = 104;
     char buff[16], id[128];
     double bmag, temp_mag;
     void *tile_data;
@@ -189,9 +189,19 @@ static int on_file_tile_loaded(const char type[4],
 
     eph_read_tile_header(data, size, &data_ofs,
                          &version, &pos.order, &pos.pix);
+    nb = eph_read_table_header(
+            version, data, size, &data_ofs, &row_size, &flags,
+            ARRAY_SIZE(columns), columns);
+    if (nb < 0) {
+        LOG_E("Cannot parse file");
+        return -1;
+    }
     tile_data = eph_read_compressed_block(data, size, &data_ofs, &size);
     if (!tile_data) return -1;
     data_ofs = 0;
+    if (flags & 1) {
+        eph_shuffle_bytes(tile_data + data_ofs, row_size, nb);
+    }
 
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
     assert(!tile);
@@ -200,13 +210,7 @@ static int on_file_tile_loaded(const char type[4],
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
-
-    tile->nb = eph_read_table_header(
-            version, tile_data, size, &data_ofs, &row_size, &flags,
-            10, columns);
-    if (flags & 1) {
-        eph_shuffle_bytes(tile_data + data_ofs, row_size, tile->nb);
-    }
+    tile->nb = nb;
 
     tile->data = calloc(tile->nb, sizeof(*tile->data));
     cache_add(dsos->tiles, &pos, sizeof(pos), tile,
