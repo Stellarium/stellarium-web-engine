@@ -322,7 +322,7 @@ export default {
         frame: this.$stel.FRAME_OBSERVED,
         size: [2.0 * Math.PI - fov, 2.0 * Math.PI - fov],
         color: [0.1, 0.1, 0.1, 0.8],
-        border_color: [1, 0.1, 0.1, 1]
+        border_color: [0.6, 0.1, 0.1, 1]
       }
       if (this.footprintShape) this.footprintShape.destroy()
       this.footprintShape = this.$observingLayer.add('circle', shapeParams)
