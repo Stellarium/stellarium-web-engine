@@ -14,7 +14,7 @@
   </div>
   <div id="observing-panel">
     <transition name="fade" mode="out-in">
-      <router-view/>
+      <router-view style="height: 100%"/>
     </transition>
   </div>
 </div>
