@@ -157,23 +157,6 @@ bool move_toward(double *x,
  */
 const char *join_paths(const char *base, const char *path);
 
-/*
- * Function binpack
- * Pack binary data.
- *
- * Supported formats are:
- *   i - 4 bytes signed integer.
- *   f - 4 bytes float (still require a double argument).
- */
-int binpack(void *ptr, const char *format, ...);
-
-/*
- * Function binunpack
- * Unpack binary data.
- *
- * This is using the same format as binpack.
- */
-int binunpack(const void *ptr, const char *format, ...);
 
 static inline bool str_equ(const char *a, const char *b)
 {
