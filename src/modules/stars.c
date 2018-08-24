@@ -269,7 +269,7 @@ static int load_worker(worker_t *w)
                          &version, &order, &pix);
 
     // Once we migrate to new format with table headers we can remove this.
-    row_size = loader->is_gaia ? 32 : 40;
+    row_size = loader->is_gaia ? 32 : 0;
 
     nb = eph_read_table_header(version, loader->data, loader->size,
                                &data_ofs, &row_size, &flags,

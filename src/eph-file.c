@@ -132,19 +132,6 @@ static int eph_read_table_header_workaround(
         int *data_ofs, int *row_size, int *flags,
         int nb_columns, eph_table_column_t *columns)
 {
-    const eph_table_column_t STAR_COLS[] = {
-        {"hip",  'i', 0, 0,  4, 0},
-        {"hd",   'i', 0, 4,  4, 0},
-        {"sp",   'i', 0, 8,  4, 0},
-        {"vmag", 'f', 0, 12, 4, EPH_VMAG},
-        {"ra",   'f', 0, 16, 4, EPH_RAD},
-        {"de",   'f', 0, 20, 4, EPH_RAD},
-        {"plx",  'f', 0, 24, 4, EPH_ARCSEC},
-        {"pra",  'f', 0, 28, 4, EPH_RAD_PER_YEAR},
-        {"pde",  'f', 0, 32, 4, EPH_RAD_PER_YEAR},
-        {"bv",   'f', 0, 36, 4, 0},
-        {},
-    };
     const eph_table_column_t GAIA_COLS[] = {
         {"gaia", 'Q', 0, 0,  8, 0},
         {"vmag", 'f', 0, 8,  4, EPH_VMAG},
@@ -155,28 +142,11 @@ static int eph_read_table_header_workaround(
         {"pde",  'f', 0, 28, 4, EPH_RAD_PER_YEAR},
         {},
     };
-    const eph_table_column_t DSO_COLS[] = {
-        {"nsid", 'Q', 0, 0,  8,  0},
-        {"type", 's', 0, 8,  4,  0},
-        {"vmag", 'f', 0, 12, 4,  EPH_VMAG},
-        {"bmag", 'f', 0, 16, 4,  EPH_VMAG},
-        {"ra",   'f', 0, 20, 4,  EPH_DEG},
-        {"de",   'f', 0, 24, 4,  EPH_DEG},
-        {"smax", 'f', 0, 28, 4,  EPH_ARCMIN},
-        {"smin", 'f', 0, 32, 4,  EPH_ARCMIN},
-        {"angl", 'f', 0, 36, 4,  EPH_DEG},
-        {"snam", 's', 0, 40, 64, 0},
-        {}
-    };
     const eph_table_column_t *cols = NULL;
     int i, j;
 
     data += *data_ofs;
-
-    // STAR tile.
-    if (*row_size == 40) cols = STAR_COLS;
-    if (*row_size == 32) cols = GAIA_COLS;
-    if (*row_size == 104) cols = DSO_COLS;
+    cols = GAIA_COLS;
 
     for (i = 0; *cols[i].name; i++) {
         for (j = 0; j < nb_columns; j++) {

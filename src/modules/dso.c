@@ -167,7 +167,7 @@ static int on_file_tile_loaded(const char type[4],
     tile_t *tile;
     dso_data_t *d;
     tile_pos_t pos;
-    int nb, i, version, data_ofs = 0, flags, row_size = 104;
+    int nb, i, version, data_ofs = 0, flags, row_size;
     char buff[16], id[128];
     double bmag, temp_mag;
     void *tile_data;
