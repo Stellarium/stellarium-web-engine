@@ -18,7 +18,7 @@ export default {
   name: 'observing',
   storeModule: storeModule,
   observingRoutes: [
-    { path: '/observing/observations', component: ObservationsPage, meta: { tabName: 'Observations' } },
+    { path: '/observing/observations', component: ObservationsPage, meta: { tabName: 'My Observations' } },
     { path: '/observing', redirect: '/observing/observations' }
   ]
 }
