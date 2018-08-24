@@ -67,7 +67,6 @@ export default {
       menuItems: [
         {header: 'Ephemeris'},
         {title: 'Planets Tonight', icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog'},
-        {title: 'Sky This Month', icon: 'event', store_var_name: 'showSkyThisMonthDialog'},
         {divider: true},
         {header: 'Settings'},
         {title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog'}
@@ -128,6 +127,7 @@ export default {
         d.add(5, 'minutes')
       }
       this.$stel.core.observer.utc = d.toDate().getMJD()
+      this.startTimeIsSet = true
     },
     setStateFromQueryArgs: function () {
       // Check whether the observing panel must be displayed
@@ -139,8 +139,8 @@ export default {
       let d = new Date()
       if (this.$route.query.date) {
         d = new Moment(this.$route.query.date).toDate()
-        this.startTimeIsSet = true
         this.$stel.core.observer.utc = d.getMJD()
+        this.startTimeIsSet = true
       }
 
       if (this.$route.query.lng && this.$route.query.lat) {
@@ -176,9 +176,10 @@ export default {
       // At startup, we need to wait for the location to be set before deciding which
       // startup time to set so that it's night time.
       if (!this.startTimeIsSet) {
-        this.startTimeIsSet = true
         this.setTimeAfterSunSet()
       }
+      // Init of time and date is complete
+      this.$store.commit('setValue', {varName: 'initComplete', newValue: true})
     },
     '$route': function () {
       // react to route changes...
