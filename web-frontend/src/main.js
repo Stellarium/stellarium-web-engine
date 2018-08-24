@@ -26,6 +26,8 @@ import VueJsonp from 'vue-jsonp'
 import VueCookie from 'vue-cookie'
 
 import App from './App'
+import Signin from './components/signin.vue'
+import MyProfile from './components/my-profile.vue'
 
 Vue.use(VueCookie)
 
@@ -67,7 +69,17 @@ let routes = [
   {
     path: '/',
     name: 'App',
-    component: App
+    component: App,
+    children: [
+      {
+        path: 'observing/signin',
+        component: Signin
+      },
+      {
+        path: 'observing/profile',
+        component: MyProfile
+      }
+    ]
   }
 ]
 
@@ -76,6 +88,9 @@ for (let i in Vue.SWPlugins) {
   console.log('Loading plugin: ' + plugin.name)
   if (plugin.routes) {
     routes = routes.concat(plugin.routes)
+  }
+  if (plugin.observingRoutes) {
+    routes[0].children = routes[0].children.concat(plugin.observingRoutes)
   }
   if (plugin.vuePlugin) {
     Vue.use(plugin.vuePlugin)

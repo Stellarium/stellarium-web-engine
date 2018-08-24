@@ -71,6 +71,15 @@ export const swh = {
     })
   },
 
+  addSelectedObjectExtraButtons: function (bt) {
+    for (let i in this.selectedObjectExtraButtons) {
+      if (this.selectedObjectExtraButtons[i].id === bt.id) {
+        return
+      }
+    }
+    this.selectedObjectExtraButtons.push(bt)
+  },
+
   selectedObjectExtraButtons: [
   ],
 

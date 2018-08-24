@@ -16,8 +16,9 @@ export default {
     }
   },
   name: 'observing',
-  enabled: false,
   storeModule: storeModule,
-  observingPanelComponent: 'observations-page',
-  observingTabName: 'Obs'
+  observingRoutes: [
+    { path: '/observing/observations', component: ObservationsPage, meta: { tabName: 'Observations' } },
+    { path: '/observing', redirect: '/observing/observations' }
+  ]
 }

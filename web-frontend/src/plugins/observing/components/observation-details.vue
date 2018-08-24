@@ -333,7 +333,6 @@ export default {
       this.skySourceSearchMenu = false
     },
     value: function (newValue) {
-      console.log('newValue:' + JSON.stringify(newValue))
       if (newValue === undefined) {
         console.log('WARNING: Cant use undefined observations')
       }

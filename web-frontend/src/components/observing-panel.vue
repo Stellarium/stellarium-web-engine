@@ -8,12 +8,14 @@
 
 <template>
 
-<div id="observing-panel-container" :class="{observingpanelhidden: !$store.state.showObservingPanel}" class="get-click">
+<div id="observing-panel-container" :class="{observingpanelhidden: !$store.state.showSidePanel}" class="get-click">
   <div class="observing-panel-tabsbtn" >
-    <v-btn v-for="tab in tabs" small :key="tab">{{ tab }}</v-btn>
+    <v-btn v-for="tab in tabs" small :key="tab.tabName" :to="tab.url">{{ tab.tabName }}</v-btn>
   </div>
   <div id="observing-panel">
-    <component :is="observingPanelCurrentComponent"></component>
+    <transition name="fade" mode="out-in">
+      <router-view/>
+    </transition>
   </div>
 </div>
 
@@ -27,39 +29,23 @@ export default {
   },
   computed: {
     showObservingPanel: function () {
-      return this.$store.state.showObservingPanel
-    },
-    observingPanelCurrentComponent: function () {
-      return this.$store.state.observingPanelCurrentComponent
-    },
-    pluginsObservingPanelComponents: function () {
-      let res = []
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
-        if (plugin.observingPanelComponent) {
-          res.push(plugin.observingPanelComponent)
-        }
-      }
-      return res
+      return this.$store.state.showSidePanel
     },
     tabs: function () {
       let res = []
       for (let i in this.$stellariumWebPlugins()) {
         let plugin = this.$stellariumWebPlugins()[i]
-        if (plugin.observingPanelComponent) {
-          res.push(plugin.observingTabName)
+        if (plugin.observingRoutes) {
+          for (let j in plugin.observingRoutes) {
+            let r = plugin.observingRoutes[j]
+            if (r.meta && r.meta.tabName) {
+              res.push({ tabName: r.meta.tabName, url: r.path })
+            }
+          }
         }
       }
       return res
     }
-  },
-  watch: {
-    showObservingPanel: function (v) {
-      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: v})
-    }
-  },
-  mounted: function () {
-    this.$store.state.observingPanelCurrentComponent = this.pluginsObservingPanelComponents[0]
   }
 }
 </script>

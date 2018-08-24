@@ -197,7 +197,7 @@ export default {
         this.active = '0'
         return
       }
-      this.$emit('back')
+      this.$router.go(-1)
     }
   },
   computed: {
