@@ -29,8 +29,6 @@ const createStore = () => {
     },
     state: {
       stel: null,
-      showObservingPanel: false,
-      observingPanelCurrentComponent: undefined,
 
       showNavigationDrawer: false,
       showAboutDialog: false,

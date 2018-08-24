@@ -206,7 +206,7 @@ export default {
         this.showProfileTab()
         return
       }
-      this.$emit('back')
+      this.$router.go(-1)
     },
     deleteAccount: function () {
       var that = this

@@ -11,14 +11,13 @@
 <v-tabs dark v-model="active" style="height: 0px;">
   <v-tab key="0"></v-tab>
   <v-tab key="1"></v-tab>
-  <v-tab key="2"></v-tab>
 </v-tabs>
 <v-tabs-items v-model="active">
 
   <v-tab-item key="0" style="height: 100%">
     <div style="height: 100%;">
       <v-toolbar dark dense>
-        <v-btn icon @click.stop.native="hideObservingPanel"><v-icon>close</v-icon></v-btn>
+        <v-btn icon to="/"><v-icon>close</v-icon></v-btn>
         <v-spacer></v-spacer>
         {{ userFirstName }}
         <v-menu offset-y left>
@@ -27,7 +26,7 @@
           </v-btn>
           <v-list subheader>
             <v-subheader v-if='userLoggedIn'>Logged as {{ userEmail }}</v-subheader>
-            <v-list-tile v-if='userLoggedIn' avatar @click="showProfilePage()">
+            <v-list-tile v-if='userLoggedIn' avatar to="/observing/profile">
               <v-list-tile-avatar>
                 <v-icon>account_circle</v-icon>
               </v-list-tile-avatar>
@@ -43,7 +42,7 @@
                 <v-list-tile-title>Logout</v-list-tile-title>
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile v-if='!userLoggedIn' avatar @click="showLoginPage()">
+            <v-list-tile v-if='!userLoggedIn' avatar to="/observing/signin">
               <v-list-tile-avatar>
                 <v-icon>account_box</v-icon>
               </v-list-tile-avatar>
@@ -80,14 +79,6 @@
     <observation-details @back="backFromObservationDetails()" v-model="observationToAdd" :create="createObservation"></observation-details>
   </v-tab-item>
 
-  <v-tab-item key="2" style="height: 100%">
-    <signin @back="showMyObservationsPage()"></signin>
-  </v-tab-item>
-
-  <v-tab-item key="3" style="height: 100%">
-    <my-profile @back="showMyObservationsPage()"></my-profile>
-  </v-tab-item>
-
 </v-tabs-items>
 </div>
 </template>
@@ -95,8 +86,6 @@
 <script>
 import GroupedObservations from './grouped-observations.vue'
 import ObservationDetails from './observation-details.vue'
-import Signin from './signin.vue'
-import MyProfile from './my-profile.vue'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 import { swh } from '@/assets/sw_helpers.js'
 
@@ -111,21 +100,17 @@ export default {
   },
   created: function () {
     let that = this
-    swh.selectedObjectExtraButtons.push({
+    swh.addSelectedObjectExtraButtons({
       id: 'observe',
       name: 'Observe',
       icon: 'add',
       callback: function (b) {
-        that.$store.commit('setValue', {varName: 'showObservingPanel', newValue: true})
-        that.$store.commit('setValue', {varName: 'observingPanelCurrentComponent', newValue: 'observations-page'})
+        that.$router.replace('/observing/observations')
         that.showObservationDetailsPage()
       }
     })
   },
   methods: {
-    hideObservingPanel: function () {
-      this.$store.commit('toggleBool', 'showObservingPanel')
-    },
     logout: function () {
       NoctuaSkyClient.users.logout()
     },
@@ -160,9 +145,6 @@ export default {
       this.observationToAdd = Object.assign({}, obs)
       this.active = '1'
     },
-    showMyObservationsPage: function () {
-      this.active = '0'
-    },
     showObservationDetailsPage: function () {
       // Set this to default values
       let obs = this.getDefaultObservation()
@@ -187,12 +169,6 @@ export default {
       this.observationToAdd = Object.assign({}, obs)
       this.createObservation = true
       this.active = '1'
-    },
-    showLoginPage: function () {
-      this.active = '2'
-    },
-    showProfilePage: function () {
-      this.active = '3'
     },
     getDefaultObservation: function () {
       let res = {
@@ -234,7 +210,7 @@ export default {
       return this.$store.state.plugins.observing.noctuaSky.user.email
     }
   },
-  components: { GroupedObservations, ObservationDetails, Signin, MyProfile }
+  components: { GroupedObservations, ObservationDetails }
 }
 </script>
 

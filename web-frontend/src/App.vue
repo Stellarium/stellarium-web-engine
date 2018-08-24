@@ -130,6 +130,9 @@ export default {
       this.$stel.core.observer.utc = d.toDate().getMJD()
     },
     setStateFromQueryArgs: function () {
+      // Check whether the observing panel must be displayed
+      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: this.$route.fullPath.startsWith('/observing')})
+
       // Set the core's state from URL query arguments such
       // as date, location, view direction & fov
       var that = this
@@ -137,8 +140,8 @@ export default {
       if (this.$route.query.date) {
         d = new Moment(this.$route.query.date).toDate()
         this.startTimeIsSet = true
+        this.$stel.core.observer.utc = d.getMJD()
       }
-      this.$stel.core.observer.utc = d.getMJD()
 
       if (this.$route.query.lng && this.$route.query.lat) {
         let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.alt ? Number(this.$route.query.alt) : 0, accuracy: 1}
