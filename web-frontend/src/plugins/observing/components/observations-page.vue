@@ -12,50 +12,14 @@
   <v-tab key="0"></v-tab>
   <v-tab key="1"></v-tab>
 </v-tabs>
-<v-tabs-items v-model="active">
+<v-tabs-items v-model="active" style="height: 100%">
 
   <v-tab-item key="0" style="height: 100%">
     <div style="height: 100%;">
-      <v-toolbar dark dense>
-        <v-btn icon to="/"><v-icon>close</v-icon></v-btn>
-        <v-spacer></v-spacer>
-        {{ userFirstName }}
-        <v-menu offset-y left>
-          <v-btn icon slot="activator">
-            <v-icon>account_circle</v-icon>
-          </v-btn>
-          <v-list subheader>
-            <v-subheader v-if='userLoggedIn'>Logged as {{ userEmail }}</v-subheader>
-            <v-list-tile v-if='userLoggedIn' avatar to="/observing/profile">
-              <v-list-tile-avatar>
-                <v-icon>account_circle</v-icon>
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title>My Profile</v-list-tile-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile v-if='userLoggedIn' avatar @click="logout()">
-              <v-list-tile-avatar>
-                <v-icon>exit_to_app</v-icon>
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title>Logout</v-list-tile-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile v-if='!userLoggedIn' avatar to="/observing/signin">
-              <v-list-tile-avatar>
-                <v-icon>account_box</v-icon>
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title>Sign In</v-list-tile-title>
-              </v-list-tile-content>
-            </v-list-tile>
-          </v-list>
-        </v-menu>
-      </v-toolbar>
+      <observing-panel-root-toolbar></observing-panel-root-toolbar>
       <div class="scroll-container">
         <v-container fluid style="height: 100%">
-          <div v-if="!userLoggedIn" style="text-align: center; margin-bottom: 15px; color: red;">Warning: you are not logged in, you can add and edit observations, but they all will be suppressed if you leave the page, or login with your account.</div>
+          <div v-if="this.$store.state.plugins.observing.noctuaSky.status !== 'loggedIn'" style="text-align: center; margin-bottom: 15px; color: red;">Warning: you are not logged in, you can add and edit observations, but they all will be suppressed if you leave the page, or login with your account.</div>
           <v-layout row wrap>
             <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].id">
               <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
@@ -84,6 +48,7 @@
 </template>
 
 <script>
+import ObservingPanelRootToolbar from '@/components/observing-panel-root-toolbar.vue'
 import GroupedObservations from './grouped-observations.vue'
 import ObservationDetails from './observation-details.vue'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
@@ -111,9 +76,6 @@ export default {
     })
   },
   methods: {
-    logout: function () {
-      NoctuaSkyClient.users.logout()
-    },
     saveViewSettings: function () {
       this.savedViewSettings['utc'] = this.$store.state.stel.observer.utc
       this.savedViewSettings['loc'] = this.$store.state.currentLocation
@@ -199,18 +161,9 @@ export default {
         { $sort: { 'groupDate.max': -1 } }
       ]
       return NoctuaSkyClient.observations.aggregate(aggregator)
-    },
-    userLoggedIn: function () {
-      return this.$store.state.plugins.observing.noctuaSky.status === 'loggedIn'
-    },
-    userFirstName: function () {
-      return this.$store.state.plugins.observing.noctuaSky.user.first_name ? this.$store.state.plugins.observing.noctuaSky.user.first_name : 'Anonymous'
-    },
-    userEmail: function () {
-      return this.$store.state.plugins.observing.noctuaSky.user.email
     }
   },
-  components: { GroupedObservations, ObservationDetails }
+  components: { GroupedObservations, ObservationDetails, ObservingPanelRootToolbar }
 }
 </script>
 
