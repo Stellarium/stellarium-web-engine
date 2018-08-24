@@ -14,7 +14,7 @@
       <v-container fluid style="height: 100%">
         <v-card>
           <v-card-title primary-title>
-            <h3 class="headline mb-0">Ephemeris</h3>
+            <h3 class="headline mb-0">Calendar of events</h3>
           </v-card-title>
           <v-card-text>
             <v-layout row justify-space-between>

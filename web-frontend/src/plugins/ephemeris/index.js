@@ -11,6 +11,6 @@ import Ephemeris from './components/ephemeris.vue'
 export default {
   name: 'ephemeris',
   observingRoutes: [
-    { path: '/observing/ephemeris', component: Ephemeris, meta: { tabName: 'Ephemeris' } }
+    { path: '/observing/ephemeris', component: Ephemeris, meta: { tabName: 'Calendar' } }
   ]
 }

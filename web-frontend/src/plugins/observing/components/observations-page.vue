@@ -64,7 +64,7 @@ export default {
     let that = this
     swh.addSelectedObjectExtraButtons({
       id: 'observe',
-      name: 'Observe',
+      name: 'Observation',
       icon: 'add',
       callback: function (b) {
         that.$router.replace('/observing/observations')
