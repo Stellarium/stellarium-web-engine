@@ -397,6 +397,7 @@ export default {
         if (lastModified) {
           obs.observingSetup = lastModified.observingSetup
         }
+        this.create = true
       } else {
         console.log('Loading observation: ' + v)
         that.isLoading = true
