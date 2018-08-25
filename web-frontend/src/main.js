@@ -83,6 +83,10 @@ let routes = [
   }
 ]
 
+let defaultObservingRoute = {
+  path: 'observing/signin',
+  meta: {prio: 99}
+}
 for (let i in Vue.SWPlugins) {
   let plugin = Vue.SWPlugins[i]
   console.log('Loading plugin: ' + plugin.name)
@@ -91,11 +95,18 @@ for (let i in Vue.SWPlugins) {
   }
   if (plugin.observingRoutes) {
     routes[0].children = routes[0].children.concat(plugin.observingRoutes)
+    for (let j in plugin.observingRoutes) {
+      let r = plugin.observingRoutes[j]
+      if (r.meta && r.meta.prio && r.meta.prio < defaultObservingRoute.meta.prio) {
+        defaultObservingRoute = r
+      }
+    }
   }
   if (plugin.vuePlugin) {
     Vue.use(plugin.vuePlugin)
   }
 }
+routes[0].children.push({ path: '/observing', redirect: defaultObservingRoute.path })
 
 var router = new Router({
   mode: 'history',
