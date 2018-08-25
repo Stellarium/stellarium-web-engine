@@ -6,11 +6,11 @@
 // The terms of the AGPL v3 license can be found in the main directory of this
 // repository.
 
-import Ephemeris from './components/ephemeris.vue'
+import Calendar from './components/calendar.vue'
 
 export default {
   name: 'ephemeris',
   observingRoutes: [
-    { path: '/observing/ephemeris', component: Ephemeris, meta: { tabName: 'Calendar' } }
+    { path: '/observing/calendar', component: Calendar, meta: { tabName: 'Calendar' } }
   ]
 }
