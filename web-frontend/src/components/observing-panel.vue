@@ -13,9 +13,7 @@
     <v-btn v-for="tab in tabs" small :key="tab.tabName" :to="tab.url">{{ tab.tabName }}</v-btn>
   </div>
   <div id="observing-panel">
-    <transition name="fade" mode="out-in">
-      <router-view style="height: 100%"/>
-    </transition>
+    <router-view style="height: 100%"/>
   </div>
 </div>
 
