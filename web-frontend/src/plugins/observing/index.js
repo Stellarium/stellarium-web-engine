@@ -18,9 +18,9 @@ export default {
   },
   name: 'observing',
   storeModule: storeModule,
+  enabled: true,
   observingRoutes: [
-    { path: '/observing/observations', component: ObservationsPage, meta: { tabName: 'My Observations' } },
-    { path: '/observing', redirect: '/observing/observations' },
+    { path: '/observing/observations', component: ObservationsPage, meta: { tabName: 'My Observations', prio: 1 } },
     { path: '/observing/observations/:id', component: ObservationDetails, props: true }
   ]
 }
