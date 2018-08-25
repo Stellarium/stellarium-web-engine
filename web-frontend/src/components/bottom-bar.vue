@@ -25,8 +25,8 @@
     </bottom-button>
     <bottom-button label="Landscape"
                 img="/static/images/btn-landscape.svg"
-                :toggled="$store.state.stel.landscape.visible"
-                @clicked="(b) => { $stel.core.landscape.visible = b }">
+                :toggled="$store.state.stel.landscapes.visible"
+                @clicked="(b) => { $stel.core.landscapes.visible = b }">
     </bottom-button>
     <bottom-button label="Azimuthal Grid"
                 img="/static/images/btn-azimuthal-grid.svg"
