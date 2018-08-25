@@ -7,6 +7,7 @@
 // repository.
 
 import ObservationsPage from './components/observations-page.vue'
+import ObservationDetails from './components/observation-details.vue'
 import storeModule from './store'
 
 export default {
@@ -19,6 +20,7 @@ export default {
   storeModule: storeModule,
   observingRoutes: [
     { path: '/observing/observations', component: ObservationsPage, meta: { tabName: 'My Observations' } },
-    { path: '/observing', redirect: '/observing/observations' }
+    { path: '/observing', redirect: '/observing/observations' },
+    { path: '/observing/observations/:id', component: ObservationDetails, props: true }
   ]
 }

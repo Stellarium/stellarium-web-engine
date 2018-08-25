@@ -8,8 +8,8 @@
 
 <template>
   <div style="height: 100%;">
-
-    <v-toolbar dark dense>
+    <v-progress-circular v-if="isLoading" indeterminate size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 45%;"></v-progress-circular>
+    <v-toolbar dark dense v-if="!isLoading">
       <v-btn v-if="!edit" icon @click.stop.native="back">
         <v-icon>arrow_back</v-icon>
       </v-btn>
@@ -31,7 +31,7 @@
       </v-dialog>
     </v-toolbar>
 
-    <v-container fluid style="height: 100%">
+    <v-container fluid style="height: 100%" v-if="!isLoading">
       <v-list two-line subheader>
         <v-subheader inset>Observation Details</v-subheader>
 
@@ -190,6 +190,8 @@ export default {
   data: function () {
     return {
       modify: false,
+      create: false,
+      isLoading: false,
       observationBackup: undefined,
       observation: {
         target: undefined,
@@ -208,10 +210,11 @@ export default {
       dateTimeMenu: false,
       equipmentMenu: false,
       deleteDialog: false,
-      footprintShape: undefined
+      footprintShape: undefined,
+      savedViewSettings: []
     }
   },
-  props: ['value', 'create'],
+  props: ['id'],
   methods: {
     setLocation: function (loc) {
       this.observation.location = loc
@@ -268,7 +271,7 @@ export default {
       }
       if (this.footprintShape) this.footprintShape.destroy()
       this.footprintShape = undefined
-      this.$emit('back')
+      this.$router.go(-1)
     },
     deleteObservation: function () {
       var that = this
@@ -326,21 +329,116 @@ export default {
       }
       if (this.footprintShape) this.footprintShape.destroy()
       this.footprintShape = this.$observingLayer.add('circle', shapeParams)
+    },
+    saveViewSettings: function () {
+      this.savedViewSettings['utc'] = this.$store.state.stel.observer.utc
+      this.savedViewSettings['loc'] = this.$store.state.currentLocation
+      this.savedViewSettings['azalt'] = this.$store.state.stel.observer.azalt
+      this.savedViewSettings['fov'] = this.$store.state.stel.fov
+      this.savedViewSettings['lock'] = this.$stel.core.lock
+    },
+    restoreViewSettings: function () {
+      if (!this.savedViewSettings) return
+      if (this.savedViewSettings.utc) this.$stel.core.observer.utc = this.savedViewSettings.utc
+      if (this.savedViewSettings.loc) {
+        let loc = this.savedViewSettings.loc
+        this.$stel.core.observer.latitude = loc.lat * Math.PI / 180.0
+        this.$stel.core.observer.longitude = loc.lng * Math.PI / 180.0
+        this.$stel.core.observer.elevation = loc.alt
+        this.$store.commit('setCurrentLocation', loc)
+      }
+      if (this.savedViewSettings.lock) this.$stel.core.lock = this.savedViewSettings.lock
+      if (this.savedViewSettings.azalt && this.savedViewSettings.fov) this.$stel.core.lookat(this.savedViewSettings.azalt, 1.0, this.savedViewSettings.fov)
+    },
+    getDefaultObservation: function () {
+      let res = {
+        target: undefined,
+        mjd: this.$store.state.stel.observer.utc,
+        location: this.$store.state.currentLocation,
+        difficulty: 0,
+        rating: 0,
+        comment: '',
+        observingSetup: {
+          'id': 'eyes_observation',
+          'state': {}
+        }
+      }
+      if (this.$store.state.selectedObject) {
+        res.target = this.$store.state.selectedObject
+      }
+      return res
+    },
+    resetObs: function (obs) {
+      if (obs.location && !obs.location.lat) {
+        obs.location = NoctuaSkyClient.locations.get(obs.location)
+      }
+      this.observation = obs
+      this.observationBackup = JSON.parse(JSON.stringify(this.observation))
+      this.isLoading = false
+    },
+    refreshObs: function (v) {
+      let that = this
+      if (!v) return
+      let obs
+      if (v === 'create') {
+        console.log('Create observation')
+        // Set this to default values
+        obs = this.getDefaultObservation()
+        let lastModified = NoctuaSkyClient.observations.lastModified()
+        if (lastModified) {
+          obs.mjd = lastModified.mjd
+          obs.location = NoctuaSkyClient.locations.get(lastModified.location)
+          obs.observingSetup = lastModified.observingSetup
+        }
+        this.create = true
+      } else if (v === 'create_from_selection') {
+        obs = this.getDefaultObservation()
+        let lastModified = NoctuaSkyClient.observations.lastModified()
+        if (lastModified) {
+          obs.observingSetup = lastModified.observingSetup
+        }
+      } else {
+        console.log('Loading observation: ' + v)
+        that.isLoading = true
+        obs = NoctuaSkyClient.observations.get(v).then(ob => {
+          that.create = false
+          that.resetObs(ob)
+          that.isLoading = false
+        })
+        return
+      }
+      this.resetObs(obs)
     }
+  },
+  beforeRouteEnter (to, from, next) {
+    // called before the route that renders this component is confirmed.
+    // does NOT have access to `this` component instance,
+    // because it has not been created yet when this guard is called!
+    next(vm => {
+      vm.saveViewSettings()
+      vm.refreshObs(vm.id)
+    })
+  },
+  beforeRouteUpdate (to, from, next) {
+    // called when the route that renders this component has changed,
+    // but this component is reused in the new route.
+    // For example, for a route with dynamic params `/foo/:id`, when we
+    // navigate between `/foo/1` and `/foo/2`, the same `Foo` component instance
+    // will be reused, and this hook will be called when that happens.
+    // has access to `this` component instance.
+    this.refreshObs(this.id)
+    next()
+  },
+  beforeRouteLeave (to, from, next) {
+    // called when the route that renders this component is about to
+    // be navigated away from.
+    // has access to `this` component instance.
+    this.restoreViewSettings()
+    next()
   },
   watch: {
     obsSkySource: function () {
       this.skySourceSearchMenu = false
-    },
-    value: function (newValue) {
-      if (newValue === undefined) {
-        console.log('WARNING: Cant use undefined observations')
-      }
-      if (newValue.location && !newValue.location.lat) {
-        newValue.location = NoctuaSkyClient.locations.get(newValue.location)
-      }
-      this.observation = newValue
-      this.observationBackup = JSON.parse(JSON.stringify(this.observation))
     },
     observation: function (obs) {
       this.setViewSettingsForObservation()
