@@ -63,13 +63,13 @@ export default {
   },
   computed: {
     userLoggedIn: function () {
-      return this.$store.state.plugins.observing.noctuaSky.status === 'loggedIn'
+      return this.$store.state.noctuaSky.status === 'loggedIn'
     },
     userFirstName: function () {
-      return this.$store.state.plugins.observing.noctuaSky.user.first_name ? this.$store.state.plugins.observing.noctuaSky.user.first_name : 'Anonymous'
+      return this.$store.state.noctuaSky.user.first_name ? this.$store.state.noctuaSky.user.first_name : 'Anonymous'
     },
     userEmail: function () {
-      return this.$store.state.plugins.observing.noctuaSky.user.email
+      return this.$store.state.noctuaSky.user.email
     }
   }
 }

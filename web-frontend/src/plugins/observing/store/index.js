@@ -9,13 +9,8 @@
 const moduleStore = {
   namespaced: true,
   state: {
-    noctuaSky: {}
   },
   mutations: {
-    replaceNoctuaSkyState (state, newTree) {
-      // mutate NoctuaSky state
-      state.noctuaSky = newTree
-    }
   },
   actions: {
   }

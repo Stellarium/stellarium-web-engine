@@ -31,6 +31,8 @@ const createStore = () => {
       stel: null,
       initComplete: false,
 
+      noctuaSky: {},
+
       showNavigationDrawer: false,
       showAboutDialog: false,
       showDataCreditsDialog: false,
@@ -69,6 +71,10 @@ const createStore = () => {
       replaceStelWebEngine (state, newTree) {
         // mutate StelWebEngine state
         state.stel = newTree
+      },
+      replaceNoctuaSkyState (state, newTree) {
+        // mutate NoctuaSky state
+        state.noctuaSky = newTree
       },
       toggleBool (state, varName) {
         _.set(state, varName, !_.get(state, varName))
