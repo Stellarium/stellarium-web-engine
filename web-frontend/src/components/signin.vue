@@ -208,10 +208,10 @@ export default {
       return this.email === '' || this.password === ''
     },
     signInInProgress: function () {
-      return this.$store.state.plugins.observing.noctuaSky.status === 'signInInProgress'
+      return this.$store.state.noctuaSky.status === 'signInInProgress'
     },
     signUpInProgress: function () {
-      return this.$store.state.plugins.observing.noctuaSky.status === 'signUpInProgress'
+      return this.$store.state.noctuaSky.status === 'signUpInProgress'
     },
     showSignInErrorAlert: function () {
       return this.signInErrorAlert !== ''

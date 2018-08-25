@@ -37,12 +37,12 @@ export const swh = {
   initStelWebEngine: function (store, canvasElem, callBackOnDone) {
     let onNoctuaSkyStateChanged = function (path, value) {
       if (path === '') {
-        store.commit('observing/replaceNoctuaSkyState', value)
+        store.commit('replaceNoctuaSkyState', value)
         return
       }
-      let tree = store.state.plugins.observing.noctuaSky
+      let tree = store.state.noctuaSky
       _.set(tree, path, value)
-      store.commit('observing/replaceNoctuaSkyState', tree)
+      store.commit('replaceNoctuaSkyState', tree)
     }
     // Didn't find a better way to load stellarium-web-engine.js..
     // Note that "import StelWebEngine from '@/assets/js/stellarium-web-engine.js'" would work
