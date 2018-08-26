@@ -245,7 +245,7 @@ int eph_read_table_row(const void *data, int data_size, int *data_ofs,
     va_start(ap, columns);
     for (i = 0; i < nb_columns; i++) {
         memset(&v, 0, sizeof(v));
-        got = columns[i].row_size != 0;
+        got = columns[i].size;
         switch (columns[i].type) {
         case 'i':
             if (got) memcpy(&v.i, data + columns[i].start, 4);

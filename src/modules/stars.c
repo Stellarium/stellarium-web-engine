@@ -299,6 +299,7 @@ static int load_worker(worker_t *w)
         if (loader->is_gaia && vmag < tile->parent->bundled_max_vmag)
             continue;
 
+        if (!loader->is_gaia) assert(!s->gaia);
         s->sp = sp;
         s->vmag = vmag;
         s->ra = ra;
