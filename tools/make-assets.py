@@ -47,9 +47,9 @@ def list_data_files():
         for f in sorted(files, key=lambda x: x.upper()):
             if any(f.endswith(x) for x in TYPES.keys()):
                 p = os.path.join(root, f)
-                # Limit hips surveys to level 1
+                # Limit hips surveys to level 0
                 m = re.match(r'^.+/Norder(\d+)/.+\.eph', p)
-                if m and int(m.group(1)) > 1: continue
+                if m and int(m.group(1)) > 0: continue
                 yield os.path.relpath(p, SOURCE)
 
 
