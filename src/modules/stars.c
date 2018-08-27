@@ -40,6 +40,51 @@ typedef struct {
     star_data_t data;
 } star_t;
 
+/*
+ * Type: stars_t
+ * The module object.
+ */
+struct stars {
+    obj_t           obj;
+    cache_t         *tiles;
+    double          mag_max;
+    regex_t         search_reg;
+    char            *survey;
+    bool            visible;
+    // Keep the max vmag of the bundled stars, so that we don't render them
+    // twice if they are also in the gaia survey.
+    // XXX: would be better to check their gaia id instead.
+    double          bundled_max_vmag;
+};
+
+// Could we just replace with a nuniq uint64_t?
+typedef struct {
+    int order;
+    int pix;
+} tile_pos_t;
+
+typedef struct tile tile_t;
+struct tile {
+    tile_pos_t  pos;
+    stars_t     *parent;
+    int         flags;
+    double      mag_min;
+    double      mag_max;
+    int         nb;
+    star_data_t *stars;
+
+    struct {
+        worker_t worker;
+        tile_t *tile;
+        void *data;
+        int size;
+        bool is_gaia;
+        int data_version;
+    } *loader;
+
+};
+
+
 static void star_render_name(const painter_t *painter, const star_data_t *s,
                              const double pos[3], double size, double vmag);
 static void get_star_color(const char sp, double out[3]);
@@ -153,48 +198,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-// Could we just replace with a nuniq uint64_t?
-typedef struct {
-    int order;
-    int pix;
-} tile_pos_t;
-
-typedef struct tile tile_t;
-struct tile {
-    tile_pos_t  pos;
-    stars_t     *parent;
-    int         flags;
-    double      mag_min;
-    double      mag_max;
-    int         nb;
-    star_data_t *stars;
-
-    struct {
-        worker_t worker;
-        tile_t *tile;
-        void *data;
-        int size;
-        bool is_gaia;
-        int data_version;
-    } *loader;
-
-};
-
 void stars_load(const char *path, stars_t *stars);
 static void get_star_color(const char sp, double out[3]);
-
-struct stars {
-    obj_t           obj;
-    cache_t         *tiles;
-    double          mag_max;
-    regex_t         search_reg;
-    char            *survey;
-    bool            visible;
-    // Keep the max vmag of the bundled stars, so that we don't render them
-    // twice if they are also in the gaia survey.
-    // XXX: would be better to check their gaia id instead.
-    double          bundled_max_vmag;
-};
 
 static int stars_init(obj_t *obj, json_value *args);
 static int stars_render(const obj_t *obj, const painter_t *painter);
