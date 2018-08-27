@@ -3159,7 +3159,7 @@ static const unsigned char DATA_skycultures_chinese_names_txt[1214] __attribute_
 ASSET_REGISTER(skycultures_chinese_names_txt, "skycultures/chinese/names.txt", DATA_skycultures_chinese_names_txt, false)
 #endif
 
-static const unsigned char DATA_skycultures_western_constellations_txt[6098] __attribute__((aligned(4))) =
+static const unsigned char DATA_skycultures_western_constellations_txt[6097] __attribute__((aligned(4))) =
     "Aql|Aquila                |bet-alf-gam alf-del-eta tet-eta del-zet-eps del-lam\n"
     "And|Andromeda             |alf-del-bet gam1-bet-mu-nu\n"
     "Scl|Sculptor              |bet-alf-gam-bet\n"
@@ -3198,7 +3198,7 @@ static const unsigned char DATA_skycultures_western_constellations_txt[6098] __a
     "For|Fornax                |bet-alf\n"
     "Gem|Gemini                |gam-zet-del-lam-xi del-ups-kap ups-bet ups-iot-tau-alf tau-tet tau-eps-nu eps-mu-eta-41116\n"
     "Cam|Camelopardalis        |21291-24479-alf 21291-gam-alf gam-33564\n"
-    "CMa|Canis Major           |tet-gam-iot-alf-omi2-del-ome-eta eps-sig-del sig-50896-nu2-xi2 nu2-bet nu2-alf eps-kap zet-eps iot-tet\n"
+    "CMa|Canis Major           |tet-gam-iot-alf-omi2-del-ome-eta eps-sig-del sig-omi1-nu2-xi2 nu2-bet nu2-alf eps-kap zet-eps iot-tet\n"
     "UMa|Ursa Major            |eta-zet-eps-del-alf-bet-gam-del gam-chi-psi-lam psi-mu bet-phi-tet-kap tet-iot phi-ups-omi-81937-alf\n"
     "Gru|Grus                  |tet-del1-alf-bet-iot-tet bet-zet bet-eps alf-lam-gam\n"
     "Her|Hercules              |iot-tet-rho-156729-pi-eta-sig-tau-chi eta-zet-bet-gam zet-eps-lam-del mu-xi-omi xi-mu eps-pi\n"

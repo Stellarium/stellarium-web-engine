@@ -36,7 +36,7 @@ Sge|Sagitta               |bet-del-alf del-gam-eta
 For|Fornax                |bet-alf
 Gem|Gemini                |gam-zet-del-lam-xi del-ups-kap ups-bet ups-iot-tau-alf tau-tet tau-eps-nu eps-mu-eta-41116
 Cam|Camelopardalis        |21291-24479-alf 21291-gam-alf gam-33564
-CMa|Canis Major           |tet-gam-iot-alf-omi2-del-ome-eta eps-sig-del sig-50896-nu2-xi2 nu2-bet nu2-alf eps-kap zet-eps iot-tet
+CMa|Canis Major           |tet-gam-iot-alf-omi2-del-ome-eta eps-sig-del sig-omi1-nu2-xi2 nu2-bet nu2-alf eps-kap zet-eps iot-tet
 UMa|Ursa Major            |eta-zet-eps-del-alf-bet-gam-del gam-chi-psi-lam psi-mu bet-phi-tet-kap tet-iot phi-ups-omi-81937-alf
 Gru|Grus                  |tet-del1-alf-bet-iot-tet bet-zet bet-eps alf-lam-gam
 Her|Hercules              |iot-tet-rho-156729-pi-eta-sig-tau-chi eta-zet-bet-gam zet-eps-lam-del mu-xi-omi xi-mu eps-pi
