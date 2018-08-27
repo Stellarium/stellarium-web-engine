@@ -12,7 +12,7 @@
   <v-btn icon to="/"><v-icon>close</v-icon></v-btn>
   <v-spacer></v-spacer>
   {{ userFirstName }}
-  <v-menu offset-y left>
+  <v-menu offset-y left v-if="loginEnabled">
     <v-btn icon slot="activator">
       <v-icon>account_circle</v-icon>
     </v-btn>
@@ -54,6 +54,7 @@ import NoctuaSkyClient from '@/assets/noctuasky-client'
 export default {
   data: function () {
     return {
+      loginEnabled: false
     }
   },
   methods: {
@@ -66,6 +67,9 @@ export default {
       return this.$store.state.noctuaSky.status === 'loggedIn'
     },
     userFirstName: function () {
+      if (!this.loginEnabled) {
+        return ''
+      }
       return this.$store.state.noctuaSky.user.first_name ? this.$store.state.noctuaSky.user.first_name : 'Anonymous'
     },
     userEmail: function () {
