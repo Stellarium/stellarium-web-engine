@@ -39,6 +39,7 @@ TYPES = {
     "vert": {"text": True,  "compress": False},
     "frag": {"text": True,  "compress": False},
     "html": {"text": True,  "compress": False},
+    "json": {"text": True,  "compress": False},
     "properties": {"text": True,  "compress": False},
 }
 
