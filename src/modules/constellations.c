@@ -172,7 +172,7 @@ static json_value *constellation_set_image(
     base_path = json_get_attr_s(args, "base_path");
 
     if (parse_anchors(anchors, cons->mat) != 0) goto error;
-    cons->img = texture_from_url(join_paths(base_path, img), 0);
+    cons->img = texture_from_url(join_paths(base_path, img), TF_LAZY_LOAD);
     assert(cons->img);
     return NULL;
 

@@ -237,6 +237,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         if (!data) return 0;
         cult->description = strdup(data);
         obj_changed((obj_t*)cult, "description");
+        return 0; // Don't load imgs just after the descriptions.
     }
 
     if (!(cult->parsed & SK_IMGS)) {
