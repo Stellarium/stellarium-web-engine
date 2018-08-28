@@ -15,6 +15,18 @@
 typedef struct event event_t;
 typedef struct event_type event_type_t;
 
+struct calendar
+{
+    observer_t obs;
+    obj_t **objs;
+    int nb_objs;
+    double start;
+    double end;
+    double time;
+    event_t *events;
+    int flags;
+};
+
 static inline uint32_t s4toi(const char s[4])
 {
     return ((uint32_t)s[0] << 0) +
@@ -353,85 +365,134 @@ static int obj_add_f(const char *id, void *user)
 }
 
 EMSCRIPTEN_KEEPALIVE
+calendar_t *calendar_create(const observer_t *obs,
+                            double start, double end, int flags)
+{
+    calendar_t *cal;
+    cal = calloc(1, sizeof(*cal));
+    int i;
+
+    cal->obs = *obs;
+    // Make a full update at mid time, so that we can do fast update after that
+    // while still keeping a good precision.
+    cal->obs.tt = (start + end) / 2;
+    observer_update(&cal->obs, false);
+
+    // Create all the objects.
+    // -1 because we skip the earth.
+    cal->nb_objs = obj_list(&core->obj, &cal->obs, 2.0, NULL, NULL) - 1;
+    cal->objs = calloc(cal->nb_objs, sizeof(*cal->objs));
+    i = 0;
+    obj_list(&core->obj, &cal->obs, 2.0, USER_PASS(cal->objs, &i), obj_add_f);
+
+
+    cal->flags = flags;
+    cal->start = start;
+    cal->end = end;
+    cal->time = start;
+
+    return cal;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void calendar_delete(calendar_t *cal)
+{
+    int i;
+    event_t *ev, *ev_tmp;
+
+    // Release all objects.
+    for (i = 0; i < cal->nb_objs; i++) {
+        obj_release(cal->objs[i]);
+    }
+    free(cal->objs);
+    // Delete events.
+    DL_FOREACH_SAFE(cal->events, ev, ev_tmp) free(ev);
+    free(cal);
+}
+
+EMSCRIPTEN_KEEPALIVE
+int calendar_compute(calendar_t *cal)
+{
+    double step = DHOUR;
+    int i, j;
+    obj_t *o1, *o2;
+    const event_type_t *ev_type;
+    event_t *ev, *ev_tmp;
+
+    if (cal->time >= cal->end) goto end;
+
+    // Only compute event for one time iteration.
+    cal->obs.tt = cal->time;
+    observer_update(&cal->obs, true);
+    for (i = 0; i < cal->nb_objs; i++)
+        obj_update(cal->objs[i], &cal->obs, 0);
+    // Check two bodies events.
+    for (i = 0; i < cal->nb_objs; i++)
+    for (j = 0; j < cal->nb_objs; j++) {
+        o1 = cal->objs[i];
+        o2 = cal->objs[j];
+        if (o1 == o2) continue;
+        for (ev_type = &event_types[0]; ev_type->func; ev_type++) {
+            if (ev_type->nb_objs == 2) {
+                check_event(ev_type, &cal->obs, o1, o2, cal->flags,
+                            &cal->events);
+            }
+        }
+    }
+    clean_events(&cal->events, &cal->obs);
+    cal->time += step;
+    return 1;
+
+end:
+    // Remove all the tmp events
+    DL_FOREACH_SAFE(cal->events, ev, ev_tmp) {
+        if (ev->status != EV_STATE_FOUND) {
+            DL_DELETE(cal->events, ev);
+            free(ev);
+        }
+    }
+    // Compute fine value using newton algo.
+    DL_FOREACH(cal->events, ev) {
+        if (ev->type->precision >= step) continue;
+        ev->time = newton(newton_fn_,
+                          ev->time_range[0], ev->time_range[1],
+                          ev->type->precision, USER_PASS(&cal->obs, ev));
+    }
+    DL_SORT(cal->events, event_cmp);
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int calendar_get_results(calendar_t *cal, void *user,
+                         int (*callback)(double ut1, const char *type,
+                         const char *desc, int flags, void *user))
+{
+    int n = 0;
+    char buf[128];
+    event_t *ev;
+    DL_FOREACH(cal->events, ev) {
+        cal->obs.tt = ev->time;
+        observer_update(&cal->obs, true);
+        if (ev->o1) obj_update((obj_t*)ev->o1, &cal->obs, 0);
+        if (ev->o2) obj_update((obj_t*)ev->o2, &cal->obs, 0);
+        ev->type->format(ev, buf, ARRAY_SIZE(buf));
+        callback(ev->time, ev->type->name, buf, ev->flags, user);
+        n++;
+    }
+    return n;
+}
+
+EMSCRIPTEN_KEEPALIVE
 int calendar_get(
-        const observer_t *obs_,
+        const observer_t *obs,
         double start, double end, int flags, void *user,
         int (*callback)(double tt, const char *type,
                         const char *desc, int flags, void *user))
 {
-    int i, j, nb;
-    double step = DHOUR, time;
-    observer_t obs = *obs_;
-    obj_t **objs, *o1, *o2;
-    const event_type_t *ev_type;
-    event_t *events = NULL, *ev, *ev_tmp;
-    char buf[128];
-    assert(callback);
-
-    // Slow update at mid time, so that we can do fast update after that
-    // while still keeping a good precision.
-    obs.tt = (start + end) / 2;
-    observer_update(&obs, false);
-
-    // Create all the objects.
-    // -1 because we skip the earth.
-    nb = obj_list(&core->obj, &obs, 2.0, NULL, NULL) - 1;
-    objs = calloc(nb, sizeof(*objs));
-    i = 0;
-    obj_list(&core->obj, &obs, 2.0, USER_PASS(objs, &i), obj_add_f);
-
-    for (time = start; time < end; time += step) {
-        obs.tt = time;
-        observer_update(&obs, true);
-
-        for (i = 0; i < nb; i++)
-            obj_update(objs[i], &obs, 0);
-
-        // Check two bodies events.
-        for (i = 0; i < nb; i++)
-        for (j = 0; j < nb; j++) {
-            o1 = objs[i];
-            o2 = objs[j];
-            if (o1 == o2) continue;
-            for (ev_type = &event_types[0]; ev_type->func; ev_type++) {
-                if (ev_type->nb_objs == 2)
-                    check_event(ev_type, &obs, o1, o2, flags, &events);
-            }
-        }
-        clean_events(&events, &obs);
-    }
-
-    // Remove all the tmp events
-    DL_FOREACH_SAFE(events, ev, ev_tmp) {
-        if (ev->status != EV_STATE_FOUND) {
-            DL_DELETE(events, ev);
-            free(ev);
-        }
-    }
-
-    // Compute fine value using newton algo.
-    DL_FOREACH(events, ev) {
-        if (ev->type->precision >= step) continue;
-        ev->time = newton(newton_fn_,
-                          ev->time_range[0], ev->time_range[1],
-                          ev->type->precision, USER_PASS(&obs, ev));
-    }
-
-    // Return all the found events.
-    DL_SORT(events, event_cmp);
-    DL_FOREACH(events, ev) {
-        obs.tt = ev->time;
-        observer_update(&obs, true);
-        if (ev->o1) obj_update((obj_t*)ev->o1, &obs, 0);
-        if (ev->o2) obj_update((obj_t*)ev->o2, &obs, 0);
-        ev->type->format(ev, buf, ARRAY_SIZE(buf));
-        callback(ev->time, ev->type->name, buf, ev->flags, user);
-    }
-
-    DL_FOREACH_SAFE(events, ev, ev_tmp) free(ev);
-    for (i = 0; i < nb; i++) {
-        obj_release(objs[i]);
-    }
-    free(objs);
+    calendar_t *cal;
+    cal = calendar_create(obs, start, end, flags);
+    while (calendar_compute(cal)) {}
+    calendar_get_results(cal, user, callback);
+    calendar_delete(cal);
     return 0;
 }
