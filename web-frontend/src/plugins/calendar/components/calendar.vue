@@ -28,7 +28,7 @@
           <v-list-tile v-if="showProgress" style="position: relative">
             <v-progress-circular indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto;"></v-progress-circular>
           </v-list-tile>
-          <v-list-tile avatar v-for="event in events" v-bind:key="event.id"  @click="">
+          <v-list-tile avatar v-for="event in events" v-bind:key="event.id"  @click="eventClicked(event)">
             <v-list-tile-avatar>
               <img v-bind:src="getIcon(event.type)"/>
             </v-list-tile-avatar>
@@ -62,6 +62,13 @@ export default {
   methods: {
     getIcon: function (type) {
       return '/static/images/events/' + type + '.svg'
+    },
+    eventClicked: function (event) {
+      this.$stel.core.observer.utc = event.time.toDate().getMJD()
+      let ss = this.$stel.getObjByNSID(event.o1.nsid)
+      this.$stel.core.selection = ss
+      ss.update()
+      this.$stel.core.lookat(ss.azalt, 1.0)
     }
   },
   computed: {
@@ -75,15 +82,14 @@ export default {
       let ret = []
       let end = start.clone()
       end.endOf('month')
-      this.$stel.calendar(start, end, function (time, type, desc, flags) {
-        ret.push({
-          id: time + type + desc,
-          time: Moment(time),
-          type: type,
-          desc: desc,
-          flags: flags
-        })
-      })
+      this.$stel.calendar({
+        start: start.toDate(),
+        end: end.toDate(),
+        onEvent: function (ev) {
+          ev.id = ev.time + ev.type + ev.desc
+          ev.time = new Moment(ev.time)
+          ret.push(ev)
+        }})
       return ret
     },
     showProgress: function () {
