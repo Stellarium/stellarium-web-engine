@@ -79,6 +79,17 @@ var testCalendar = function(stel) {
       onEvent: onEvent
     });
     assert(gotMoonMars);
+
+    // Iterator form.
+    gotMoonMars = false;
+    var cal = stel.calendar({
+      start: new Date(2017, 1, 1),
+      end: new Date(2017, 1, 8),
+      onEvent: onEvent,
+      iterator: true
+    });
+    while (cal()) {}
+    assert(gotMoonMars);
 };
 
 var testTree = function(stel) {

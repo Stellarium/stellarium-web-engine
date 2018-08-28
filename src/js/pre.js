@@ -166,6 +166,37 @@ Module['cityCreate'] = function(args) {
   return ret;
 }
 
+/*
+ * Function: calendar
+ * Compute calendar events.
+ *
+ * Parameters:
+ *   settings - Plain object with attributes:
+ *     start    - start time (Date)
+ *     end      - end time (Date)
+ *     onEvent  - callback called for each calendar event, passed a plain
+ *                object with attributes:
+ *                  time  - time of the event (Date)
+ *                  type  - type of event (string)
+ *                  desc  - a small descrption (string)
+ *                  o1    - first object of the event (or null)
+ *                  o2    - second object of the event (or null)
+ *     iterator - if set to true, then instead of computing all the events
+ *                the function returns an itertor object that we have to
+ *                call until it returns 0 in order to get all the events.
+ *                eg:
+ *
+ *                var cal = stel.calendar({
+ *                  start: new Date(2017, 1, 1),
+ *                  end: new Date(2017, 1, 8),
+ *                  onEvent: onEvent,
+ *                  iterator: true
+ *                });
+ *                while (cal()) {}
+ *
+ *                This allows to split the computation into different frames
+ *                of a loop so that we don't block too long.
+ */
 Module['calendar'] = function(args) {
 
   // Old signature: (start, end, callback)
@@ -179,19 +210,40 @@ Module['calendar'] = function(args) {
     };
   }
 
-  var callback = Module.addFunction(
-    function(time, type, desc, flags, o1, o2, user) {
-      var ev = {
-        time: Module.MJD2date(time),
-        type: Module.Pointer_stringify(type),
-        desc: Module.Pointer_stringify(desc),
-        o1: o1 ? new Module.SweObj(o1) : null,
-        o2: o2 ? new Module.SweObj(o2) : null
-      };
-      args.onEvent(ev);
-    }, 'idiiiiii');
   var start = args.start / 86400000 + 2440587.5 - 2400000.5;
   var end = args.end / 86400000 + 2440587.5 - 2400000.5;
+
+  var getCallback = function() {
+    return Module.addFunction(
+      function(time, type, desc, flags, o1, o2, user) {
+        var ev = {
+          time: Module.MJD2date(time),
+          type: Module.Pointer_stringify(type),
+          desc: Module.Pointer_stringify(desc),
+          o1: o1 ? new Module.SweObj(o1) : null,
+          o2: o2 ? new Module.SweObj(o2) : null
+        };
+        args.onEvent(ev);
+      }, 'idiiiiii');
+  }
+
+  // Return an iterator function that the client needs to call as
+  // long as it doesn't return 0.
+  if (args.iterator) {
+    var cal = Module._calendar_create(this.observer.v, start, end, 1);
+    return function() {
+      var ret = Module._calendar_compute(cal);
+      if (!ret) {
+        var callback = getCallback();
+        Module._calendar_get_results(cal, 0, callback);
+        Module.removeFunction(callback);
+        Module._calendar_delete(cal);
+      }
+      return ret;
+    }
+  }
+
+  var callback = getCallback();
   Module._calendar_get(this.observer.v, start, end, 1, 0, callback);
   Module.removeFunction(callback);
 }
