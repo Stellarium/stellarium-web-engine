@@ -58,7 +58,8 @@ OBJ_REGISTER(observer_klass)
 
 static obj_t *core_get(const obj_t *obj, const char *id, int flags);
 static obj_t *core_get_by_nsid(const obj_t *obj, uint64_t nsid);
-static int core_list(const obj_t *obj, double max_mag, void *user,
+static int core_list(const obj_t *obj, observer_t *obs,
+                     double max_mag, void *user,
                      int (*f)(const char *id, void *user));
 static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
                                const json_value *args);
@@ -222,14 +223,15 @@ static obj_t *core_get_by_nsid(const obj_t *obj, uint64_t nsid)
     return NULL;
 }
 
-static int core_list(const obj_t *obj, double max_mag, void *user,
+static int core_list(const obj_t *obj, observer_t *obs,
+                     double max_mag, void *user,
                      int (*f)(const char *id, void *user))
 {
     // XXX: won't stop if the callback return != 0.
     obj_t *module;
     int nb = 0;
     DL_FOREACH(core->obj.children, module) {
-        nb += obj_list(module, max_mag, user, f);
+        nb += obj_list(module, obs, max_mag, user, f);
     }
     return nb;
 }

@@ -99,8 +99,6 @@ static int planets_init(obj_t *obj, json_value *args);
 static int planets_update(obj_t *obj, const observer_t *obs, double dt);
 static int planets_render(const obj_t *obj, const painter_t *painter);
 static obj_t *planets_get(const obj_t *obj, const char *id, int flags);
-static int planets_list(const obj_t *obj, double max_mag, void *user,
-                        int (*f)(const char *id, void *user));
 
 /*
  * List of known bodies id.
@@ -1033,12 +1031,14 @@ static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
     return NULL;
 }
 
-static int planets_list(const obj_t *obj, double max_mag, void *user,
+static int planets_list(const obj_t *obj, observer_t *obs,
+                        double max_mag, void *user,
                         int (*f)(const char *id, void *user))
 {
     planet_t *p;
     int nb = 0;
     PLANETS_ITER(obj, p) {
+        obj_update((obj_t*)p, obs, 0);
         if (p->obj.vmag > max_mag) continue;
         nb++;
         if (f && f(p->obj.id, user)) break;

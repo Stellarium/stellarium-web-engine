@@ -205,8 +205,6 @@ static int stars_init(obj_t *obj, json_value *args);
 static int stars_render(const obj_t *obj, const painter_t *painter);
 static obj_t *stars_get(const obj_t *obj, const char *id, int flags);
 static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid);
-static int stars_list(const obj_t *obj, double max_mag, void *user,
-                     int (*f)(const char *id, void *user));
 static obj_t *stars_add_res(obj_t *obj, json_value *val,
                             const char *base_path);
 
@@ -678,8 +676,9 @@ static int stars_list_visitor(int order, int pix, void *user)
     return 1;
 }
 
-static int stars_list(const obj_t *obj, double max_mag, void *user,
-                     int (*f)(const char *id, void *user))
+static int stars_list(const obj_t *obj, observer_t *obs,
+                      double max_mag, void *user,
+                      int (*f)(const char *id, void *user))
 {
     struct {
         stars_t *stars;

@@ -368,17 +368,17 @@ int calendar_get(
     char buf[128];
     assert(callback);
 
-    // Create all the objects.
-    // -1 because we skip the earth.
-    nb = obj_list(&core->obj, 2.0, NULL, NULL) - 1;
-    objs = calloc(nb, sizeof(*objs));
-    i = 0;
-    obj_list(&core->obj, 2.0, USER_PASS(objs, &i), obj_add_f);
-
     // Slow update at mid time, so that we can do fast update after that
     // while still keeping a good precision.
     obs.tt = (start + end) / 2;
     observer_update(&obs, false);
+
+    // Create all the objects.
+    // -1 because we skip the earth.
+    nb = obj_list(&core->obj, &obs, 2.0, NULL, NULL) - 1;
+    objs = calloc(nb, sizeof(*objs));
+    i = 0;
+    obj_list(&core->obj, &obs, 2.0, USER_PASS(objs, &i), obj_add_f);
 
     for (time = start; time < end; time += step) {
         obs.tt = time;

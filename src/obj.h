@@ -108,7 +108,7 @@ struct obj_klass
     // Try to register a resource from a json file into this module.
     obj_t *(*add_res)(obj_t *obj, json_value *value, const char *base_path);
     // List all the sky objects children from this module.
-    int (*list)(const obj_t *obj, double max_mag, void *user,
+    int (*list)(const obj_t *obj, observer_t *obs, double max_mag, void *user,
                 int (*f)(const char *id, void *user));
     // Return the render order.
     // By default this return the class attribute `render_order`.
@@ -426,8 +426,18 @@ char *obj_get_path(const obj_t *obj, const obj_t *root);
 /*
  * Function: obj_list
  * List all astro objects in a module.
+ *
+ * Parameters:
+ *   obj      - The module (core for all objects).
+ *   obs      - The observer used to compute the object vmag.
+ *   max_mag  - Only consider objects below this magnitude.
+ *   user     - Data passed to the callback.
+ *   f        - Callback function called once per object.
+ *
+ * Return:
+ *   The number of objects listed.
  */
-int obj_list(const obj_t *obj, double max_mag, void *user,
+int obj_list(const obj_t *obj, observer_t *obs, double max_mag, void *user,
              int (*f)(const char *id, void *user));
 
 /*

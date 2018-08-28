@@ -384,10 +384,11 @@ int obj_get_ids(const obj_t *obj,
 }
 
 EMSCRIPTEN_KEEPALIVE
-int obj_list(const obj_t *obj, double max_mag, void *user,
+int obj_list(const obj_t *obj, observer_t *obs, double max_mag, void *user,
              int (*f)(const char *id, void *user))
 {
-    if (obj->klass->list) return obj->klass->list(obj, max_mag, user, f);
+    if (obj->klass->list)
+        return obj->klass->list(obj, obs, max_mag, user, f);
     return 0;
 }
 
