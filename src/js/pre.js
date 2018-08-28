@@ -166,18 +166,32 @@ Module['cityCreate'] = function(args) {
   return ret;
 }
 
-Module['calendar'] = function(start, end, f) {
+Module['calendar'] = function(args) {
+
+  // Old signature: (start, end, callback)
+  if (arguments.length == 3) {
+    args = {
+      start: arguments[0],
+      end: arguments[1],
+      onEvent: function(ev) {
+        arguments[2](ev.time, ev.type, ev.desc, ev.flags, ev.o1, ev.o2);
+      }
+    };
+  }
+
   var callback = Module.addFunction(
     function(time, type, desc, flags, o1, o2, user) {
-      time = Module.MJD2date(time);
-      type = Module.Pointer_stringify(type);
-      desc = Module.Pointer_stringify(desc);
-      o1 = o1 ? new Module.SweObj(o1) : null;
-      o2 = o2 ? new Module.SweObj(o2) : null;
-      f(time, type, desc, flags, o1, o2);
+      var ev = {
+        time: Module.MJD2date(time),
+        type: Module.Pointer_stringify(type),
+        desc: Module.Pointer_stringify(desc),
+        o1: o1 ? new Module.SweObj(o1) : null,
+        o2: o2 ? new Module.SweObj(o2) : null
+      };
+      args.onEvent(ev);
     }, 'idiiiiii');
-  start = start / 86400000 + 2440587.5 - 2400000.5;
-  end = end / 86400000 + 2440587.5 - 2400000.5;
+  var start = args.start / 86400000 + 2440587.5 - 2400000.5;
+  var end = args.end / 86400000 + 2440587.5 - 2400000.5;
   Module._calendar_get(this.observer.v, start, end, 1, 0, callback);
   Module.removeFunction(callback);
 }

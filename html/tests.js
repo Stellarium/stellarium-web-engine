@@ -65,11 +65,19 @@ var testListener = function(stel) {
 
 var testCalendar = function(stel) {
     var gotMoonMars = false;
-    var onEvent = function(time, type, desc, flags, o1, o2) {
-        if (o1.name == 'Moon' && o2.name == 'Mars')
+    var onEvent = function(ev) {
+        if (ev.o1.name == 'Moon' && ev.o2.name == 'Mars') {
+          assert(ev.time);
+          assert(ev.type);
+          assert(ev.desc);
           gotMoonMars = true;
+        }
     };
-    stel.calendar(new Date(2017, 1, 1), new Date(2017, 1, 8), onEvent);
+    stel.calendar({
+      start: new Date(2017, 1, 1),
+      end: new Date(2017, 1, 8),
+      onEvent: onEvent
+    });
     assert(gotMoonMars);
 };
 
