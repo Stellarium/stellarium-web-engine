@@ -249,7 +249,9 @@ static const event_type_t event_types[] = {
 };
 
 static int print_callback(double time, const char *type,
-                          const char *desc, int flags, void *user)
+                          const char *desc, int flags,
+                          obj_t *o1, obj_t *o2,
+                          void *user)
 {
     char b1[64], b2[64];
     double *utcofs = USER_GET(user, 0);
@@ -465,7 +467,9 @@ end:
 EMSCRIPTEN_KEEPALIVE
 int calendar_get_results(calendar_t *cal, void *user,
                          int (*callback)(double ut1, const char *type,
-                         const char *desc, int flags, void *user))
+                         const char *desc, int flags,
+                         obj_t *o1, obj_t *o2,
+                         void *user))
 {
     int n = 0;
     char buf[128];
@@ -476,7 +480,8 @@ int calendar_get_results(calendar_t *cal, void *user,
         if (ev->o1) obj_update((obj_t*)ev->o1, &cal->obs, 0);
         if (ev->o2) obj_update((obj_t*)ev->o2, &cal->obs, 0);
         ev->type->format(ev, buf, ARRAY_SIZE(buf));
-        callback(ev->time, ev->type->name, buf, ev->flags, user);
+        callback(ev->time, ev->type->name, buf, ev->flags,
+                 ev->o1, ev->o2, user);
         n++;
     }
     return n;
@@ -487,7 +492,9 @@ int calendar_get(
         const observer_t *obs,
         double start, double end, int flags, void *user,
         int (*callback)(double tt, const char *type,
-                        const char *desc, int flags, void *user))
+                        const char *desc, int flags,
+                        obj_t *o1, obj_t *o2,
+                        void *user))
 {
     calendar_t *cal;
     cal = calendar_create(obs, start, end, flags);

@@ -293,4 +293,7 @@ Module.afterInit(function() {
       callback(path, value);
     });
   }
+
+  // Just so that we can use SweObj in pre.js.
+  Module['SweObj'] = SweObj;
 })

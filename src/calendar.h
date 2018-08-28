@@ -9,6 +9,7 @@
 
 typedef struct observer observer_t;
 typedef struct calendar calendar_t;
+typedef struct obj obj_t;
 
 /*
  * File: calendar.h
@@ -62,7 +63,9 @@ int calendar_compute(calendar_t *cal);
  */
 int calendar_get_results(calendar_t *cal, void *user,
                          int (*callback)(double ut1, const char *type,
-                         const char *desc, int flags, void *user));
+                         const char *desc, int flags,
+                         obj_t *o1, obj_t *o2,
+                         void *user));
 
 /*
  * Function: calendar_delete
@@ -90,4 +93,6 @@ int calendar_get(
         const observer_t *obs,
         double start_ut1, double end_ut1, int flags, void *user,
         int (*callback)(double ut1, const char *type,
-                        const char *desc, int flags, void *user));
+                        const char *desc, int flags,
+                        obj_t *o1, obj_t *o2,
+                        void *user));

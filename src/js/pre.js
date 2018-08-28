@@ -168,12 +168,14 @@ Module['cityCreate'] = function(args) {
 
 Module['calendar'] = function(start, end, f) {
   var callback = Module.addFunction(
-    function(time, type, desc, flags, user) {
+    function(time, type, desc, flags, o1, o2, user) {
       time = Module.MJD2date(time);
       type = Module.Pointer_stringify(type);
       desc = Module.Pointer_stringify(desc);
-      f(time, type, desc, flags);
-    }, 'idiiii');
+      o1 = o1 ? new Module.SweObj(o1) : null;
+      o2 = o2 ? new Module.SweObj(o2) : null;
+      f(time, type, desc, flags, o1, o2);
+    }, 'idiiiiii');
   start = start / 86400000 + 2440587.5 - 2400000.5;
   end = end / 86400000 + 2440587.5 - 2400000.5;
   Module._calendar_get(this.observer.v, start, end, 1, 0, callback);

@@ -64,12 +64,13 @@ var testListener = function(stel) {
 };
 
 var testCalendar = function(stel) {
-    var test = false;
-    var onEvent = function(time, type, desc, flags) {
-        test = true;
+    var gotMoonMars = false;
+    var onEvent = function(time, type, desc, flags, o1, o2) {
+        if (o1.name == 'Moon' && o2.name == 'Mars')
+          gotMoonMars = true;
     };
     stel.calendar(new Date(2017, 1, 1), new Date(2017, 1, 8), onEvent);
-    assert(test);
+    assert(gotMoonMars);
 };
 
 var testTree = function(stel) {
