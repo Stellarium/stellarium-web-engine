@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include "ini.h"
 #include <regex.h>
 #include <zlib.h>
 
@@ -50,6 +51,7 @@ struct stars {
     double          mag_max;
     regex_t         search_reg;
     char            *survey;
+    double          survey_release_date;
     bool            visible;
     // Keep the max vmag of the bundled stars, so that we don't render them
     // twice if they are also in the gaia survey.
@@ -398,6 +400,27 @@ static int stars_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+// Parse a release data as seen in hips property file.
+// XXX: same code as in dso.c, should be handled by hips.c
+static double parse_release_date(const char *str)
+{
+    int iy, im, id, ihr, imn;
+    double d1, d2;
+    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
+    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
+    return d1 - DJM0 + d2;
+}
+
+static int property_handler(void* user, const char* section,
+                            const char* name, const char* value)
+{
+    stars_t *stars = user;
+    if (strcmp(name, "hips_release_date") == 0) {
+        stars->survey_release_date = parse_release_date(value);
+    }
+    return 0;
+}
+
 static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
                         bool *loading_complete)
 {
@@ -409,10 +432,29 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
 
     if (loading_complete) *loading_complete = true;
     tile = cache_get(stars->tiles, &pos, sizeof(pos));
+
+    // Attempt to download a gaia tile.
     if (!tile && load && stars->survey && order >= 3) {
+
+        // Need to parse the property file first.
+        if (!stars->survey_release_date) {
+            asprintf(&url, "%s/properties", stars->survey);
+            data = asset_get_data(url, NULL, &code);
+            free(url);
+            if (!data && code && code / 100 != 2) {
+                LOG_E("Cannot get hips properties file at '%s': %d",
+                        stars->survey, code);
+                return NULL;
+            }
+            if (!data) return NULL;
+            ini_parse_string(data, property_handler, stars);
+            return NULL;
+        }
+
         dir = (pix / 10000) * 10000;
-        asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph",
-                stars->survey, order, dir, pix);
+        asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph?v=%d",
+                stars->survey, order, dir, pix,
+                (int)stars->survey_release_date);
         data = asset_get_data(url, &size, &code);
         if (!data && code) {
             // XXX: need to handle this case: the tiles should have a flag
