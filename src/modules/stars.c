@@ -272,10 +272,7 @@ static int load_worker(worker_t *w)
     assert(tile->nb == 0);
     eph_read_tile_header(loader->data, loader->size, &data_ofs,
                          &version, &order, &pix);
-
-    // Once we migrate to new format with table headers we can remove this.
-    row_size = loader->is_gaia ? 32 : 0;
-
+    assert(version >= 3); // No more support for old style format.
     nb = eph_read_table_header(version, loader->data, loader->size,
                                &data_ofs, &row_size, &flags,
                                ARRAY_SIZE(columns), columns);
@@ -396,7 +393,7 @@ static int stars_init(obj_t *obj, json_value *args)
     regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    asprintf(&stars->survey, "https://data.stellarium.org/surveys/gaia_dr2_v2");
+    asprintf(&stars->survey, "https://data.stellarium.org/surveys/gaia_dr2");
     return 0;
 }
 

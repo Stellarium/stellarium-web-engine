@@ -129,46 +129,6 @@ void eph_shuffle_bytes(uint8_t *data, int nb, int size)
     free(buf);
 }
 
-// XXX: to be removed once we switch all eph file to new format.
-static int eph_read_table_header_workaround(
-        int version, const void *data, int data_size,
-        int *data_ofs, int *row_size, int *flags,
-        int nb_columns, eph_table_column_t *columns)
-{
-    const eph_table_column_t GAIA_COLS[] = {
-        {"gaia", 'Q', 0, 0,  8, 0},
-        {"vmag", 'f', 0, 8,  4, EPH_VMAG},
-        {"ra",   'f', 0, 12, 4, EPH_RAD},
-        {"de",   'f', 0, 16, 4, EPH_RAD},
-        {"plx",  'f', 0, 20, 4, EPH_ARCSEC},
-        {"pra",  'f', 0, 24, 4, EPH_RAD_PER_YEAR},
-        {"pde",  'f', 0, 28, 4, EPH_RAD_PER_YEAR},
-        {},
-    };
-    const eph_table_column_t *cols = NULL;
-    int i, j;
-
-    data += *data_ofs;
-    cols = GAIA_COLS;
-
-    for (i = 0; *cols[i].name; i++) {
-        for (j = 0; j < nb_columns; j++) {
-            if (strncmp(columns[j].name, cols[i].name, 4) == 0) break;
-        }
-        if (j == nb_columns) continue;
-        columns[j].src_unit = cols[i].src_unit;
-        columns[j].start = cols[i].start;
-        columns[j].size = cols[i].size;
-    }
-    for (i = 0; i < nb_columns; i++)
-        columns[i].row_size = *row_size;
-
-    *flags = *row_size != 104 ? 1 : 0;
-
-    if (*flags & 1) memcpy(&data_size, data, 4);
-    return data_size / *row_size;
-}
-
 int eph_read_table_header(int version, const void *data, int data_size,
                           int *data_ofs, int *row_size, int *flags,
                           int nb_columns, eph_table_column_t *columns)
@@ -176,13 +136,7 @@ int eph_read_table_header(int version, const void *data, int data_size,
     int i, j, n_col, n_row;
     char name[4], type[4];
 
-    // Old style with no header support.
-    // To remove as soon as all the eph file switch to the new format.
-    if (version < 3) {
-        return eph_read_table_header_workaround(version, data, data_size,
-                    data_ofs, row_size, flags, nb_columns, columns);
-    }
-
+    assert(version >= 3);
     data += *data_ofs;
     memcpy(flags,    data + 0 , 4);
     memcpy(row_size, data + 4 , 4);
