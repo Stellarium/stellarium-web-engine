@@ -159,10 +159,16 @@ static int property_handler(void* user, const char* section,
         else if (strstr(value, "jpeg")) hips->ext = "jpg";
         else if (strstr(value, "png"))  hips->ext = "png";
     }
+    // Guillaume 2018 Aug 30: disable the hips_service_url, because
+    // it poses probleme when it changes the protocole from https to
+    // http.  Still not sure if we are supposed to use it of it it's just
+    // a hint.
+    /*
     if (strcmp(name, "hips_service_url") == 0) {
         free(hips->service_url);
         hips->service_url = strdup(value);
     }
+    */
     return 0;
 }
 
