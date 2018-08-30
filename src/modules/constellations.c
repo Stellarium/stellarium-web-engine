@@ -96,10 +96,8 @@ static obj_klass_t constellations_klass = {
 
 static int constellation_init(obj_t *obj, json_value *args)
 {
-    int i;
     constellation_t *cons = (constellation_t *)obj;
     constellation_infos_t *info;
-    char star_id[128];
 
     fader_init(&cons->visible, true);
 
@@ -107,22 +105,29 @@ static int constellation_init(obj_t *obj, json_value *args)
     // only, we pass the info as a pointer to the structure!
     info = (void*)(intptr_t)json_get_attr_i(args, "info_ptr", 0);
     if (!info) return 0;
-
     cons->info = *info;
     cons->name = strdup(info->name);
-    cons->count = info->nb_lines * 2;
-    cons->stars = calloc(info->nb_lines * 2, sizeof(*cons->stars));
-    for (i = 0; i < info->nb_lines * 2; i++) {
-        assert(info->lines[i / 2][i % 2] != 0);
-        sprintf(star_id, "HD %d", info->lines[i / 2][i % 2]);
-        cons->stars[i] = obj_get(NULL, star_id, 0);
-        if (!cons->stars[i])
-            LOG_W("Cannot find cst star: %s, %s", info->id, star_id);
-    }
     identifiers_add(cons->obj.id, "CST", info->id, info->id, info->id);
     identifiers_add(cons->obj.id, "NAME",
             info->name, info->name, info->name);
     return 0;
+}
+
+// Get the list of the constellation stars.
+static void constellation_create_stars(constellation_t *cons)
+{
+    int i;
+    char star_id[128];
+    if (cons->stars) return;
+    cons->count = cons->info.nb_lines * 2;
+    cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
+    for (i = 0; i < cons->info.nb_lines * 2; i++) {
+        assert(cons->info.lines[i / 2][i % 2] != 0);
+        sprintf(star_id, "HD %d", cons->info.lines[i / 2][i % 2]);
+        cons->stars[i] = obj_get(NULL, star_id, 0);
+        if (!cons->stars[i])
+            LOG_W("Cannot find cst star: %s, %s", cons->info.id, star_id);
+    }
 }
 
 // Still experimental.
@@ -229,7 +234,10 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     constellations_t *cons = (constellations_t*)obj->parent;
     double pos[4] = {0, 0, 0, 0};
     int i;
+    // Optimization: don't update invisible constellation.
+    if (con->visible.value == 0 && !con->visible.target) return 0;
 
+    constellation_create_stars(con);
     for (i = 0; i < con->count; i++) {
         obj_update(con->stars[i], obs, 0);
         vec3_add(pos, con->stars[i]->pos.pvg[0], pos);
@@ -304,6 +312,7 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
 
     painter.color[3] *= con->visible.value;
     if (painter.color[3] == 0.0) return 0;
+    constellation_create_stars(con);
     if (!constellation_is_visible(&painter, con))
         return 0;
 
