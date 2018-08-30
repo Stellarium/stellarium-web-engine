@@ -384,7 +384,7 @@ export const swh = {
       'Mi*': 'Variable Star of Mira Cet type',
       'Mi?': 'Mira candidate',
       'MoC': 'Molecular Cloud',
-      'Moo': 'Moon',
+      'Moo': 'Natural Satellite',
       'N*': 'Confirmed Neutron Star',
       'N*?': 'Neutron Star Candidate',
       'NEO': 'Near Earth Object',
@@ -548,9 +548,10 @@ export const swh = {
         let dimx = 'dimx' in ss.model_data ? ss.model_data.dimx : 5
         let dimy = 'dimy' in ss.model_data ? ss.model_data.dimy : 5
         return [20, Math.max(dimx, dimy) * 8 / 60]
-      case 'minor_planet':
+      case 'jpl_sso':
         return [20, 1 / 60]
-      case 'planet':
+      case 'mpc_asteroid':
+      case 'mpc_comet':
         return [20, 10 / 60, 1 / 60]
       default:
         return [20]
