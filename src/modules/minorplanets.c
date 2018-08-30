@@ -40,7 +40,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt);
 static int mplanet_render(const obj_t *obj, const painter_t *painter);
 
 static obj_klass_t mplanet_klass = {
-    .id         = "minor_planet",
+    .id         = "mpc_asteroid",
     .size       = sizeof(mplanet_t),
     .init       = mplanet_init,
     .update     = mplanet_update,
@@ -188,7 +188,7 @@ static void load_data(mplanets_t *mplanets, const char *data) {
         str_rstrip(readable);
         str_to_upper(desgn, desgn);
 
-        mplanet = (void*)obj_create("minor_planet", desgn,
+        mplanet = (void*)obj_create("mpc_asteroid", desgn,
                                     &mplanets->obj, NULL);
         mplanet->orbit.d = unpack_epoch(epoch);
         mplanet->orbit.m = m * DD2R;
@@ -335,7 +335,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 {
     obj_t *child;
-    OBJ_ITER(obj, child, "minor_planet")
+    OBJ_ITER(obj, child, "mpc_asteroid")
         obj_update(child, obs, dt);
     return 0;
 }
@@ -343,7 +343,7 @@ static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
     obj_t *child;
-    OBJ_ITER(obj, child, "minor_planet")
+    OBJ_ITER(obj, child, "mpc_asteroid")
         obj_render(child, painter);
     return 0;
 }
