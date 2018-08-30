@@ -275,7 +275,7 @@ static int dsos_init(obj_t *obj, json_value *args)
     regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    asprintf(&dsos->survey, "https://data.stellarium.org/surveys/dso2");
+    asprintf(&dsos->survey, "https://data.stellarium.org/surveys/dso");
     return 0;
 }
 
