@@ -68,7 +68,7 @@ Module['FRAME_OBSERVED'] = 3;
 Module['FRAME_VIEW'] = 4;
 
 Module['MJD2date'] = function(v) {
-  return new Date((v + 2400000.5 - 2440587.5) * 86400000);
+  return new Date(Math.round((v + 2400000.5 - 2440587.5) * 86400000));
 }
 
 /*
