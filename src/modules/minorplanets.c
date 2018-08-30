@@ -231,7 +231,8 @@ static int mplanet_init(obj_t *obj, json_value *args)
     // Support creating a minor planet using noctuasky model data json values.
     mplanet_t *mp = (mplanet_t*)obj;
     orbit_t *orbit = &mp->orbit;
-    json_value *model, *names;
+    json_value *model;
+    const char *name;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         mp->h = json_get_attr_f(model, "H", 0);
@@ -245,12 +246,9 @@ static int mplanet_init(obj_t *obj, json_value *args)
         orbit->e = json_get_attr_f(model, "e", 0);
         orbit->m = json_get_attr_f(model, "M", 0) * DD2R;
     }
-    // XXX: should use a function to extract string items from json
-    // array instead of this.
-    if (        ((names = json_get_attr(args, "names", json_array)) &&
-                    names->u.array.length >= 1)) {
-        strncpy(mp->name, names->u.array.values[0]->u.string.ptr,
-                sizeof(mp->name));
+    name = json_get_attr_s(args, "short_name");
+    if (name) {
+        strncpy(mp->name, name, sizeof(mp->name));
     }
     // XXX: use proper type.
     strncpy(mp->obj.type, "MBA", 4);
