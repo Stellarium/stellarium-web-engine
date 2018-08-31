@@ -194,7 +194,7 @@ void get_child_uv_mat(int i, const double m[3][3], double out[3][3])
 {
     double tmp[3][3];
     mat3_copy(m, tmp);
-    mat3_iscale(tmp, 0.5, 0.5);
+    mat3_iscale(tmp, 0.5, 0.5, 1.0);
     mat3_itranslate(tmp, i / 2, i % 2);
     mat3_copy(tmp, out);
 }

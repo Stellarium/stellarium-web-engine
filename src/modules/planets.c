@@ -485,7 +485,7 @@ static void ring_project(const projection_t *proj, int flags,
     r = mix(radii[0], radii[1], v[1]);
     mat3_set_identity(mat);
     mat3_rz(theta, mat, mat);
-    mat3_iscale(mat, r, r);
+    mat3_iscale(mat, r, r, 1.0);
     mat3_mul_vec3(mat, p, p);
     vec4_copy(p, out);
 }

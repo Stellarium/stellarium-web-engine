@@ -349,7 +349,7 @@ static void contour_project(const projection_t *proj, int flags,
     mat3_rz(data->ra, mat, mat);
     mat3_ry(-data->de, mat, mat);
     mat3_rx(-angle, mat, mat);
-    mat3_iscale(mat, 1.0, smin / smax);
+    mat3_iscale(mat, 1.0, smin / smax, 1.0);
     mat3_rx(-theta, mat, mat);
     mat3_rz(r, mat, mat);
 

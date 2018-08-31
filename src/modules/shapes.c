@@ -46,7 +46,7 @@ static void circle_project(const projection_t *proj, int flags,
     mat3_rz(ra, mat, mat);
     mat3_ry(-dec, mat, mat);
     mat3_rx(circle->orientation, mat, mat);
-    mat3_iscale(mat, 1.0, circle->size[1] / circle->size[0]);
+    mat3_iscale(mat, 1.0, circle->size[1] / circle->size[0], 1.0);
     mat3_rx(-theta, mat, mat);
     mat3_rz(r, mat, mat);
 

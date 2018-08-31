@@ -99,7 +99,7 @@ static void get_uv(const d_t *d, const qtree_node_t *node, double uv[4][2])
     double uv_mat[3][3];
     int i;
     mat3_set_identity(uv_mat);
-    mat3_iscale(uv_mat, 1.0 / node->s[0], 1.0 / node->s[1]);
+    mat3_iscale(uv_mat, 1.0 / node->s[0], 1.0 / node->s[1], 1.0);
     mat3_itranslate(uv_mat, node->x, node->y);
     for (i = 0; i < 4; i++) mat3_mul_vec2(uv_mat, d->uv[i], uv[i]);
 }

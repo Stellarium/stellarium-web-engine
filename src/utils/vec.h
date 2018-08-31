@@ -97,7 +97,7 @@ DEF void mat3_rx(double a, const double mat[3][3], double out[3][3]);
 DEF void mat3_ry(double a, const double mat[3][3], double out[3][3]);
 DEF void mat3_rz(double a, const double mat[3][3], double out[3][3]);
 DEF void mat3_itranslate(double m[3][3], double x, double y);
-DEF void mat3_iscale(double m[3][3], double x, double y);
+DEF void mat3_iscale(double m[3][3], double x, double y, double z);
 DEF bool mat3_invert(const double mat[3][3], double out[3][3]);
 DEF void mat3_transpose(const double mat[3][3], double out[3][3]);
 DEF void mat3_to_mat4(const double mat[3][3], double out[4][4]);
@@ -626,12 +626,13 @@ DEF void mat4_itranslate(double m[4][4], double x, double y, double z)
        m[3][i] += m[0][i] * x + m[1][i] * y + m[2][i] * z;
 }
 
-DEF void mat3_iscale(double m[3][3], double x, double y)
+DEF void mat3_iscale(double m[3][3], double x, double y, double z)
 {
     int i;
     for (i = 0; i < 3; i++) {
         m[0][i] *= x;
         m[1][i] *= y;
+        m[2][i] *= z;
     }
 }
 
