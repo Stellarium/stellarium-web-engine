@@ -9,7 +9,7 @@
 
 // Allow to set the memory file path in 'memFile' argument.
 Module['locateFile'] = function(path) {
-  if (path == "stellarium-web-engine.wasm") return Module.wasmFile;
+  if (path === "stellarium-web-engine.wasm") return Module.wasmFile;
   return path;
 }
 
@@ -254,30 +254,30 @@ Module['c2s'] = function(v) {
   var z = v[2];
   var d2 = x * x + y * y;
   var theta = (d2 == 0.0) ? 0.0 : Math.atan2(y, x);
-  var phi = (z == 0.0) ? 0.0 : Math.atan2(z, Math.sqrt(d2));
+  var phi = (z === 0.0) ? 0.0 : Math.atan2(z, Math.sqrt(d2));
   return [theta, phi];
 }
 
 // Normalize angle into the range 0 <= a < 2pi.
 Module['anp'] = function(a) {
-  v = a % (2 * Math.PI);
+  var v = a % (2 * Math.PI);
   if (v < 0) v += 2 * Math.PI;
   return v;
 }
 
 // Normalize angle into the range -pi <= a < +pi.
 Module['anpm'] = function(a) {
-  v = a % (2 * Math.PI);
+  var v = a % (2 * Math.PI);
   if (Math.abs(v) >= Math.PI) v -= 2 * Math.PI * Math.sign(a);
   return v;
 }
 
 var asFrame = function(f) {
-  if (f == 'ICRS') return Module.FRAME_ICRS;
-  if (f == 'CIRS') return Module.FRAME_CIRS;
-  if (f == 'OBSERVED') return Module.FRAME_OBSERVED;
-  if (f == 'VIEW') return Module.FRAME_VIEW;
-  assert(typeof(f) == 'number');
+  if (f === 'ICRS') return Module.FRAME_ICRS;
+  if (f === 'CIRS') return Module.FRAME_CIRS;
+  if (f === 'OBSERVED') return Module.FRAME_OBSERVED;
+  if (f === 'VIEW') return Module.FRAME_VIEW;
+  assert(typeof(f) === 'number');
   return f;
 }
 
