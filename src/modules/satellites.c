@@ -121,7 +121,7 @@ static bool load_qsmag(satellites_t *sats)
     if (sats->qsmags_status / 100 == 2) return true;
     if (sats->qsmags_status) return false;
     comp_data = asset_get_data(URL, &size, &sats->qsmags_status);
-    if (sats->qsmags_status && sats->qsmags_status / 100 != 2)
+    if (sats->qsmags_status && !comp_data)
         LOG_E("Error while loading qs.mag: %d", sats->qsmags_status);
     if (!comp_data) return false;
 
