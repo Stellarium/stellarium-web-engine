@@ -281,13 +281,13 @@ const NoctuaSkyClient = {
       tmpApis.skysources = _.mapKeys(client.apis.skysources, removeTrailingNumbers)
 
       that.skysources = {
-        query: function (str, limit, exact = null) {
+        query: function (str, limit) {
           if (limit === undefined) {
             limit = 10
           }
           str = str.toUpperCase()
           str = str.replace(/\s+/g, '')
-          return tmpApis.skysources.query({q: str, limit: limit, exact: exact}).then(res => {
+          return tmpApis.skysources.query({q: str, limit: limit}).then(res => {
             return res.body
           }, err => {
             throw err.response.body
