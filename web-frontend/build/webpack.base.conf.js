@@ -13,7 +13,7 @@ function resolve (dir) {
 module.exports = {
   context: path.resolve(__dirname, '../'),
   entry: {
-    app: ['babel-polyfill', './src/main.js']
+    app: ['babel-polyfill', './src/main.js', './src/assets/js/stellarium-web-engine.js']
   },
   plugins: [new BundleAnalyzerPlugin({
     // Can be `server`, `static` or `disabled`.
