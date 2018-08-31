@@ -26,7 +26,10 @@ typedef struct orbit_t {
     double wd;   // variation of w in time.
 } orbit_t;
 
-// A single minor planet.
+/*
+ * Type: mplanet_t
+ * Object that represents a single minor planet.
+ */
 typedef struct {
     obj_t       obj;
     orbit_t     orbit;
@@ -35,59 +38,13 @@ typedef struct {
     char        name[32];
 } mplanet_t;
 
-static int mplanet_init(obj_t *obj, json_value *args);
-static int mplanet_update(obj_t *obj, const observer_t *obs, double dt);
-static int mplanet_render(const obj_t *obj, const painter_t *painter);
-
-static obj_klass_t mplanet_klass = {
-    .id         = "mpc_asteroid",
-    .size       = sizeof(mplanet_t),
-    .init       = mplanet_init,
-    .update     = mplanet_update,
-    .render     = mplanet_render,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        PROPERTY("name"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("distance"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("radec"),
-        PROPERTY("azalt"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
-        {},
-    },
-};
-OBJ_REGISTER(mplanet_klass)
-
-
-// Planets module.
-
-static int mplanets_init(obj_t *obj, json_value *args);
-static int mplanets_update(obj_t *obj, const observer_t *obs, double dt);
-static int mplanets_render(const obj_t *obj, const painter_t *painter);
-
-typedef struct mplanets mplanets_t;
-struct mplanets {
+/*
+ * Type: mplanets_t
+ * Minor planets module object
+ */
+typedef struct mplanets {
     obj_t   obj;
-};
-
-
-static obj_klass_t mplanets_klass = {
-    .id             = "minor_planets",
-    .size           = sizeof(mplanets_t),
-    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init           = mplanets_init,
-    .update         = mplanets_update,
-    .render         = mplanets_render,
-    .render_order   = 20,
-};
-
-OBJ_REGISTER(mplanets_klass)
+} mplanets_t;
 
 static int unpack_number(char c)
 {
@@ -345,3 +302,43 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
         obj_render(child, painter);
     return 0;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t mplanet_klass = {
+    .id         = "mpc_asteroid",
+    .size       = sizeof(mplanet_t),
+    .init       = mplanet_init,
+    .update     = mplanet_update,
+    .render     = mplanet_render,
+    .attributes = (attribute_t[]) {
+        // Default properties.
+        PROPERTY("name"),
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("distance"),
+        PROPERTY("alt"),
+        PROPERTY("az"),
+        PROPERTY("radec"),
+        PROPERTY("azalt"),
+        PROPERTY("rise"),
+        PROPERTY("set"),
+        PROPERTY("vmag"),
+        PROPERTY("type"),
+        {},
+    },
+};
+OBJ_REGISTER(mplanet_klass)
+
+static obj_klass_t mplanets_klass = {
+    .id             = "minor_planets",
+    .size           = sizeof(mplanets_t),
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init           = mplanets_init,
+    .update         = mplanets_update,
+    .render         = mplanets_render,
+    .render_order   = 20,
+};
+OBJ_REGISTER(mplanets_klass)
