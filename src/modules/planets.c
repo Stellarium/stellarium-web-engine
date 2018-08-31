@@ -801,7 +801,7 @@ static int on_hips(const char *url, double release_date, void *user)
     regcomp(&reg, ".*/([^/-]+)(-normal)?$", REG_EXTENDED);
     r = regexec(&reg, url, 3, matches, 0);
     if (r) goto end;
-    sprintf(name, "%.*s", matches[1].rm_eo - matches[1].rm_so,
+    sprintf(name, "%.*s", (int)(matches[1].rm_eo - matches[1].rm_so),
                           url + matches[1].rm_so);
     normalmap = matches[2].rm_so >= 0;
 
@@ -1004,7 +1004,7 @@ static int planets_init(obj_t *obj, json_value *args)
     ASSET_ITER("asset://textures/", path) {
         r = regexec(&reg, path, 2, matches, 0);
         if (r) continue;
-        sprintf(name, "%.*s", matches[1].rm_eo - matches[1].rm_so,
+        sprintf(name, "%.*s", (int)(matches[1].rm_eo - matches[1].rm_so),
                 path + matches[1].rm_so);
         p = planet_get_by_name(planets, name);
         if (!p) continue;

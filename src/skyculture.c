@@ -48,7 +48,7 @@ int skyculture_parse_names(const char *data, char *(*names)[2])
         if (str_startswith(line, "#")) continue;
         r = regexec(&reg, line, 4, m, 0);
         if (r) goto error;
-        sprintf(name, "%*s", m[3].rm_eo - m[3].rm_so, line + m[3].rm_so);
+        sprintf(name, "%*s", (int)(m[3].rm_eo - m[3].rm_so), line + m[3].rm_so);
         *id = '\0';
         if (strncmp(line + m[1].rm_so, "HD", 2) == 0) {
             hd = strtoul(line + m[2].rm_so, NULL, 10);

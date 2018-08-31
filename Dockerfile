@@ -11,10 +11,10 @@ WORKDIR /emsdk-portable
 RUN ./emsdk update
 
 # Download and install the latest SDK tools.
-RUN ./emsdk install sdk-1.38.8-64bit
+RUN ./emsdk install sdk-1.38.11-64bit
 
 # Set up the compiler configuration to point to the "latest" SDK.
-RUN ./emsdk activate sdk-1.38.8-64bit
+RUN ./emsdk activate sdk-1.38.11-64bit
 
 EXPOSE 8000
 
