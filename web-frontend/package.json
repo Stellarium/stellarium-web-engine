@@ -62,6 +62,7 @@
     "portfinder": "^1.0.13",
     "postcss-import": "^11.1.0",
     "postcss-loader": "^2.1.5",
+    "preload-webpack-plugin": "^2.3.0",
     "rimraf": "^2.6.0",
     "semver": "^5.5.0",
     "shelljs": "^0.8.2",

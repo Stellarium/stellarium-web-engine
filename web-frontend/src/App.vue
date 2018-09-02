@@ -59,6 +59,7 @@ import Gui from '@/components/gui.vue'
 import GuiLoader from '@/components/gui-loader.vue'
 import { swh } from '@/assets/sw_helpers.js'
 import Moment from 'moment'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data (context) {
@@ -188,17 +189,38 @@ export default {
   },
   mounted: function () {
     var that = this
-    // Initialize the StelWebEngine viewer singleton
-    // After this call, the StelWebEngine state will always be available in vuex store
-    // in the $store.stel object in a reactive way (useful for vue components).
-    // To modify the state of the StelWebEngine, it's enough to call/set values directly on the $stel object
-    swh.initStelWebEngine(this.$store, this.$refs.stelCanvas, function () {
-      // Start auto location detection (even if we don't use it)
-      swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
-        that.$store.commit('setAutoDetectedLocation', loc)
-      }, (error) => { console.log(error) })
-      that.setStateFromQueryArgs()
-      that.guiComponent = 'Gui'
+
+    // Init NoctuaSkyClient
+    let onNoctuaSkyStateChanged = function (path, value) {
+      if (path === '') {
+        that.$store.commit('replaceNoctuaSkyState', value)
+        return
+      }
+      let tree = that.$store.state.noctuaSky
+      _.set(tree, path, value)
+      that.$store.commit('replaceNoctuaSkyState', tree)
+    }
+    NoctuaSkyClient.init(process.env.NOCTUASKY_API_SERVER, onNoctuaSkyStateChanged)
+
+    import('@/assets/js/stellarium-web-engine.wasm').then(f => {
+      fetch(f).then(response => {
+        response.arrayBuffer().then(buffer => {
+          console.log('WASM fetched,length: ' + buffer.byteLength)
+
+          // Initialize the StelWebEngine viewer singleton
+          // After this call, the StelWebEngine state will always be available in vuex store
+          // in the $store.stel object in a reactive way (useful for vue components).
+          // To modify the state of the StelWebEngine, it's enough to call/set values directly on the $stel object
+          swh.initStelWebEngine(that.$store, buffer, that.$refs.stelCanvas, function () {
+            // Start auto location detection (even if we don't use it)
+            swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
+              that.$store.commit('setAutoDetectedLocation', loc)
+            }, (error) => { console.log(error) })
+            that.setStateFromQueryArgs()
+            that.guiComponent = 'Gui'
+          })
+        })
+      })
     })
   }
 }

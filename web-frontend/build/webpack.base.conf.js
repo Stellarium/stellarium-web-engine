@@ -113,8 +113,7 @@ module.exports = {
         test: /stellarium-web-engine\.wasm$/,
         loader: "file-loader",
         options: {
-          name: '[name].[hash].[ext]',
-          outputPath: 'static/js'
+          name: '[name].[hash].[ext]'
         }
       }
     ]
