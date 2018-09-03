@@ -10,7 +10,7 @@
   <div id="toolbar-image">
     <v-toolbar class="transparent" dense dark>
       <v-toolbar-side-icon @click.native.stop="toggleNavigationDrawer" />
-      <img class="tbtitle hidden-xs-only" id="stellarium-web-toolbar-logo" src="/static/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
+      <img class="tbtitle hidden-xs-only" id="stellarium-web-toolbar-logo" src="@/assets/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
       <span class="tbtitle hidden-sm-and-down">Stellarium<sup>Web</sup></span>
       <v-spacer></v-spacer>
       <target-search></target-search>
@@ -42,7 +42,7 @@ export default {
 
 <style>
 #toolbar-image {
-  background: url("/static/images/header.png") center;
+  background: url("../assets/images/header.png") center;
   background-position-x: 55px;
   background-position-y: 0px;
   height: 48px;

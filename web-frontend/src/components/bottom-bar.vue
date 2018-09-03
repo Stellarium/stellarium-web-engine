@@ -14,32 +14,32 @@
     <v-spacer></v-spacer>
 
     <bottom-button label="Constellations"
-                img="/static/images/btn-cst-lines.svg"
+                :img="require('@/assets/images/btn-cst-lines.svg')"
                 :toggled="$store.state.stel.constellations.lines.visible"
                 @clicked="(b) => { $stel.core.constellations.lines.visible = b }">
     </bottom-button>
     <bottom-button label="Atmosphere"
-                img="/static/images/btn-atmosphere.svg"
+                :img="require('@/assets/images/btn-atmosphere.svg')"
                 :toggled="$store.state.stel.atmosphere.visible"
                 @clicked="(b) => { $stel.core.atmosphere.visible = b }">
     </bottom-button>
     <bottom-button label="Landscape"
-                img="/static/images/btn-landscape.svg"
+                :img="require('@/assets/images/btn-landscape.svg')"
                 :toggled="$store.state.stel.landscapes.visible"
                 @clicked="(b) => { $stel.core.landscapes.visible = b }">
     </bottom-button>
     <bottom-button label="Azimuthal Grid"
-                img="/static/images/btn-azimuthal-grid.svg"
+                :img="require('@/assets/images/btn-azimuthal-grid.svg')"
                 :toggled="$store.state.stel.lines.azimuthal.visible"
                 @clicked="(b) => { $stel.core.lines.azimuthal.visible = b }">
     </bottom-button>
     <bottom-button label="Equatorial Grid"
-                img="/static/images/btn-equatorial-grid.svg"
+                :img="require('@/assets/images/btn-equatorial-grid.svg')"
                 :toggled="$store.state.stel.lines.equatorial.visible"
                 @clicked="(b) => { $stel.core.lines.equatorial.visible = b }">
     </bottom-button>
     <bottom-button label="Deep Sky Objects"
-                img="/static/images/btn-nebulae.svg"
+                :img="require('@/assets/images/btn-nebulae.svg')"
                 class="mr-auto"
                 :toggled="$store.state.stel.dsos.visible"
                 @clicked="(b) => { $stel.core.dsos.visible = b }">
@@ -137,7 +137,7 @@ export default {
       }
     },
     fullscreenBtnImage: function () {
-      return this.$store.state.fullscreen ? '/static/images/svg/ui/fullscreen_exit.svg' : '/static/images/svg/ui/fullscreen.svg'
+      return this.$store.state.fullscreen ? require('@/assets/images/svg/ui/fullscreen_exit.svg') : require('@/assets/images/svg/ui/fullscreen.svg')
     }
   },
   methods: {
