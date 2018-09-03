@@ -551,11 +551,17 @@ export const swh = {
   // Get data for a SkySource from wikipedia
   getSkySourceSummaryFromWikipedia: function (ss) {
     let title
-    if (ss.model === 'planet') {
-      title = ss.names[0]
-      if (title === 'mercury') {
-        title = 'mercury_(planet)'
+    if (ss.model === 'jpl_sso') {
+      title = ss.short_name.toLowerCase()
+      if (['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune', 'pluto'].indexOf(title) > -1) {
+        title = title + '_(planet)'
       }
+      if (ss.types[0] === 'Moo') {
+        title = title + '_(moon)'
+      }
+    }
+    if (ss.model === 'mpc_asteroid') {
+      title = ss.short_name
     }
     if (ss.model === 'dso') {
       for (let i in ss.names) {
