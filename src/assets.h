@@ -99,3 +99,11 @@ void asset_register(const char *url, const void *data, int size,
  * as if it was online.
  */
 void asset_set_alias(const char *base_url, const char *alias);
+
+/*
+ * Function: asset_add_handler
+ * Add a custrom asset handler for urls with a given prefix.
+ */
+void asset_add_handler(
+        const char *prefix,
+        void *(*handler)(const char *path, int *size, int *code));

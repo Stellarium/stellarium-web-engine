@@ -40,6 +40,12 @@ static struct {
     char *alias;
 } g_alias[8] = {};
 
+// Only support a single custom handler for the moment.
+static struct {
+    char *prefix;
+    void *(*fn)(const char *path, int *size, int *code);
+} g_handler = {};
+
 static asset_t *asset_get(const char *url)
 {
     asset_t *asset;
@@ -123,6 +129,13 @@ const void *asset_get_data(const char *url, int *size, int *code)
         }
     }
 
+    // Check if we have a special handler for this asset.
+    if (g_handler.prefix && str_startswith(url, g_handler.prefix)) {
+        asset->data = g_handler.fn(url, &asset->size, code);
+        if (size) *size = asset->size;
+        return asset->data;
+    }
+
     if (!asset->request) asset->request = request_create(asset->url);
     return request_get_data(asset->request, size, code);
 }
@@ -178,6 +191,15 @@ void asset_release(const char *url)
         request_delete(asset->request);
     if (!(asset->flags & STATIC))
         HASH_DEL(g_assets, asset);
+}
+
+void asset_add_handler(
+        const char *prefix,
+        void *(*handler)(const char *path, int *size, int *code))
+{
+    assert(!g_handler.prefix);
+    g_handler.prefix = strdup(prefix);
+    g_handler.fn = handler;
 }
 
 #include "assets/cities.txt.inl"
