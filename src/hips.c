@@ -295,6 +295,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         tile->loader->data = malloc(size);
         tile->loader->size = size;
         memcpy(tile->loader->data, data, size);
+        asset_release(url);
     }
     if (!worker_iter(&tile->loader->worker)) goto after_load;
 

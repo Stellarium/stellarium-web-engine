@@ -388,6 +388,7 @@ static int stars_init(obj_t *obj, json_value *args)
     ASSET_ITER("asset://stars/", path) {
         data = asset_get_data(path, &size, NULL);
         eph_load(data, size, stars, on_file_tile_loaded);
+        asset_release(path);
     }
 
     regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
@@ -458,10 +459,11 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
             // that says that there is no data at this level, like in hips.c
         }
         if (loading_complete) *loading_complete = (code != 0);
-        free(url);
         if (data) {
             eph_load(data, size, stars, on_file_tile_loaded);
+            asset_release(url);
         }
+        free(url);
     }
     // Got a tile, but it is still loading.
     if (tile && tile->loader) {

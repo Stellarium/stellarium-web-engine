@@ -270,6 +270,7 @@ static int dsos_init(obj_t *obj, json_value *args)
     ASSET_ITER("asset://dso/", path) {
         data = asset_get_data(path, &size, NULL);
         eph_load(data, size, dsos, on_file_tile_loaded);
+        asset_release(path);
     }
 
     regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
@@ -302,8 +303,11 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
             // that says that there is no data at this level, like in hips.c
         }
         if (loading_complete) *loading_complete = (code != 0);
+        if (data) {
+            eph_load(data, size, dsos, on_file_tile_loaded);
+            asset_release(url);
+        }
         free(url);
-        if (data) eph_load(data, size, dsos, on_file_tile_loaded);
     }
     return tile;
 }
