@@ -1,0 +1,919 @@
+{
+  "info": {
+    "title": "noctuasky",
+    "version": "1"
+  },
+  "paths": {
+    "/locations/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Location"
+              }
+            }
+          }
+        },
+        "operationId": "query",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": 1,
+            "minimum": 1
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100
+          }
+        ],
+        "summary": "Get all locations for the current user",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "locations"
+        ]
+      },
+      "post": {
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Location"
+            }
+          }
+        },
+        "operationId": "add",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Location"
+            }
+          }
+        ],
+        "summary": "Create a new Location",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "locations"
+        ]
+      }
+    },
+    "/locations/{id}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Location"
+            }
+          }
+        },
+        "operationId": "get",
+        "summary": "Get a location by ID",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "locations"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "put": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "operationId": "update",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Location"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "summary": "Update a location",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "locations"
+        ]
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "operationId": "delete",
+        "summary": "Delete a location",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "locations"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/observations/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Observation"
+              }
+            }
+          }
+        },
+        "operationId": "query",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": 1,
+            "minimum": 1
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100
+          }
+        ],
+        "summary": "Get all observations for the current user",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "observations"
+        ]
+      },
+      "post": {
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          }
+        },
+        "operationId": "add",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          }
+        ],
+        "summary": "Add a new observation",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "observations"
+        ]
+      }
+    },
+    "/observations/{id}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          }
+        },
+        "operationId": "get",
+        "summary": "Get an observation by ID",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "observations"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "put": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "operationId": "update",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "summary": "Update an observation",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "observations"
+        ]
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "operationId": "delete",
+        "summary": "Delete an observation",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "tags": [
+          "observations"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/skysources/{nsid}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/SkySource"
+            }
+          }
+        },
+        "operationId": "get",
+        "summary": "Get one SkySource by ID",
+        "tags": [
+          "skysources"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nsid",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/skysources/name/{str}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/SkySource"
+            }
+          }
+        },
+        "operationId": "name",
+        "summary": "Get one SkySource fully matching the passed name",
+        "tags": [
+          "skysources"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "str",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/skysources/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SkySource"
+              }
+            }
+          }
+        },
+        "operationId": "query",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "type": "string",
+            "default": ""
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": 10
+          }
+        ],
+        "summary": "Query the list of SkySources",
+        "tags": [
+          "skysources"
+        ]
+      }
+    },
+    "/skysources/stats/": {
+      "get": {
+        "operationId": "stats",
+        "summary": "Return statistics about the sky source DB content",
+        "tags": [
+          "skysources"
+        ]
+      }
+    },
+    "/skysources/dump/{model}.json.gz": {
+      "get": {
+        "operationId": "dump",
+        "summary": "Get the full compressed list of skysource for a skysource model",
+        "tags": [
+          "skysources"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/users/login": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "first_name": {
+                  "type": "string"
+                },
+                "last_name": {
+                  "type": "string"
+                },
+                "access_token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "first_name",
+                "id",
+                "last_name"
+              ]
+            }
+          }
+        },
+        "operationId": "login",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "summary": "Login a user, return a JWT to use for further API calls",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/change_password/{id}": {
+      "post": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "operationId": "changePassword",
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "password": {
+                  "type": "string"
+                },
+                "new_password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "new_password",
+                "password"
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "summary": "Change a user's password",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/": {
+      "post": {
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "first_name": {
+                  "type": "string"
+                },
+                "last_name": {
+                  "type": "string"
+                },
+                "access_token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "first_name",
+                "id",
+                "last_name"
+              ]
+            }
+          }
+        },
+        "operationId": "add",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "password": {
+                  "type": "string"
+                },
+                "first_name": {
+                  "type": "string"
+                },
+                "last_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "first_name",
+                "last_name",
+                "password"
+              ]
+            }
+          }
+        ],
+        "summary": "Register a new user",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "first_name": {
+                  "type": "string"
+                },
+                "last_name": {
+                  "type": "string"
+                },
+                "access_token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "first_name",
+                "id",
+                "last_name"
+              ]
+            }
+          }
+        },
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "operationId": "get",
+        "summary": "Get a user by ID. Use the special id 'me' to get the current user if you already have a valid token.",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "put": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "operationId": "update",
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "first_name": {
+                  "type": "string"
+                },
+                "last_name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "summary": "Update a user",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "APIToken": []
+          }
+        ],
+        "operationId": "delete",
+        "summary": "Delete a user",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "locations",
+      "description": "API related to observing locations"
+    },
+    {
+      "name": "observations",
+      "description": "API related to Sky Observations"
+    },
+    {
+      "name": "skysources",
+      "description": "API related to SkySource"
+    },
+    {
+      "name": "users",
+      "description": "API related to Users"
+    }
+  ],
+  "swagger": "2.0",
+  "definitions": {
+    "Location": {
+      "type": "object",
+      "properties": {
+        "alt": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "id": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number",
+          "format": "float",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "shortName": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "lng": {
+          "type": "number",
+          "format": "float",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "streetAddress": {
+          "type": "string",
+          "maxLength": 255
+        }
+      },
+      "required": [
+        "country",
+        "lat",
+        "lng",
+        "shortName"
+      ]
+    },
+    "Observation": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "mjd": {
+          "type": "number",
+          "format": "float"
+        },
+        "target": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 1023
+        },
+        "observingSetup": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 255
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "location": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "location",
+        "mjd",
+        "observingSetup"
+      ]
+    },
+    "SkySource": {
+      "type": "object",
+      "properties": {
+        "nsid": {
+          "type": "string"
+        },
+        "short_name": {
+          "type": "string"
+        },
+        "model_data": {
+          "type": "object"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "interest": {
+          "type": "number",
+          "format": "float"
+        },
+        "model": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "match": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "parameters": {},
+  "securityDefinitions": {
+    "APIToken": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization"
+    }
+  }
+}
