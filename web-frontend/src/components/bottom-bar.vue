@@ -58,7 +58,7 @@
       <v-date-picker v-model="date" scrollable dark></v-date-picker>
     </v-menu>
 
-    <v-menu :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left offset-y>
+    <v-menu :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left>
       <v-btn class="tmenubt" color="secondary" slot="activator"><v-icon class="hidden-sm-and-up">access_time</v-icon><span class="hidden-xs-only">{{ time }}</span></v-btn>
       <v-card width="400">
         <v-slider min="0" max="1439" style="padding: 20px; margin-top: 18px" v-model="timeMinute" :label="time"></v-slider>
