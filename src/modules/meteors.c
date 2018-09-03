@@ -19,6 +19,8 @@
  */
 typedef struct {
     obj_t       obj;
+    double      duration; // Duration (sec).
+    double      time; // From 0 to duration.
 } meteor_t;
 
 /*
@@ -37,29 +39,31 @@ static double frand(double from, double to)
 
 static int meteor_init(obj_t *obj, json_value *args)
 {
-    double z;
-    double mat[3][3];
+    double z, mat[3][3];
+    meteor_t *m = (meteor_t*)obj;
 
     // Give the meteor a random position and speed.
-    // XXX: just testing values for the moment.
     z = (EARTH_RADIUS + MAX_ALTITUDE) * 1000 / DAU;
-    vec4_copy(core->observer->pointer.icrs, obj->pos.pvg[0]);
-    obj->pos.pvg[0][0] += frand(-0.2, +0.2);
-    obj->pos.pvg[0][1] += frand(-0.2, +0.2);
-    obj->pos.pvg[0][2] += frand(-0.2, +0.2);
-    vec3_normalize(obj->pos.pvg[0], obj->pos.pvg[0]);
+    mat3_set_identity(mat);
+    mat3_rz(frand(0, 360 * DD2R), mat, mat);
+    mat3_ry(frand(-90 * DD2R, +90 * DD2R), mat, mat);
+    mat3_mul_vec3(mat, VEC(1, 0, 0), obj->pos.pvg[0]);
     vec3_mul(z, obj->pos.pvg[0], obj->pos.pvg[0]);
     obj->pos.pvg[0][3] = 1.0;
-    mat3_set_identity(mat);
-    mat3_mul_vec3(mat, obj->pos.pvg[0], obj->pos.pvg[0]);
+
     vec4_set(obj->pos.pvg[1], frand(-1, 1), frand(-1, 1), frand(-1, 1), 1);
     vec3_mul(0.00001, obj->pos.pvg[1], obj->pos.pvg[1]);
+
+    m->duration = 4.0;
+
     return 0;
 }
 
 static int meteor_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    meteor_t *m = (meteor_t*)obj;
     vec3_addk(obj->pos.pvg[0], obj->pos.pvg[1], dt, obj->pos.pvg[0]);
+    m->time += dt;
     return 0;
 }
 
@@ -111,43 +115,40 @@ static void render_tail(const painter_t *painter,
     paint_quad(painter, FRAME_CIRS, NULL, NULL, NULL, &proj, 8);
 }
 
-static int meteor_render(const obj_t *obj, const painter_t *painter)
+static int meteor_render(const obj_t *obj, const painter_t *painter_)
 {
-    point_t point;
     double p1[4]; // Head position (CIRS)
     double p2[4]; // End of tail position (CIRS)
-    double size, luminance;
+    painter_t painter = *painter_;
+    meteor_t *m = (meteor_t*)obj;
+
+    // Very basic fade out.
+    painter.color[3] *= max(0.0, 1.0 - m->time / m->duration);
 
     vec4_copy(obj->pos.pvg[0], p1);
     vec3_addk(p1, obj->pos.pvg[1], -2, p2);
 
-    core_get_point_for_mag(4, &size, &luminance);
-    point = (point_t) {
-        .pos = {p1[0], p1[1], p1[2]},
-        .size = size,
-        .color = {1, 1, 1, luminance},
-    };
-    if (0)
-    paint_points(painter, 1, &point, FRAME_CIRS);
-
-    render_tail(painter, p1, p2);
+    render_tail(&painter, p1, p2);
     return 0;
 }
 
 static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    obj_t *child;
+    meteor_t *m;
+    obj_t *child, *tmp;
     int nb;
 
-    obj_create("meteor", NULL, obj, NULL);
-
-    OBJ_ITER(obj, child, "meteor")
-        obj_update(child, obs, dt);
-
     DL_COUNT(obj->children, child, nb);
-    if (nb > 100) {
-        obj_remove(obj, obj->children);
+    if (nb < 100)
+        obj_create("meteor", NULL, obj, NULL);
+
+    DL_FOREACH_SAFE(obj->children, child, tmp) {
+        m = (meteor_t*)child;
+        obj_update(child, obs, dt);
+        if (m->time > m->duration)
+            obj_remove(obj, child);
     }
+
     return 0;
 }
 
