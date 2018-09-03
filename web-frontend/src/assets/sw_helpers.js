@@ -137,7 +137,9 @@ export const swh = {
       'DPl': 'planet',
       'Com': 'comet',
       'MPl': 'minor_planet',
-      'SSO': 'minor_planet'
+      'SSO': 'minor_planet',
+
+      'Con': 'constellation'
     }
     for (let i in skySourceTypes) {
       if (skySourceTypes[i] in iconForType) {
@@ -562,6 +564,9 @@ export const swh = {
     }
     if (ss.model === 'mpc_asteroid') {
       title = ss.short_name
+    }
+    if (ss.model === 'constellation') {
+      title = ss.short_name + '_(constellation)'
     }
     if (ss.model === 'dso') {
       for (let i in ss.names) {
