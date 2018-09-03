@@ -24,6 +24,16 @@ void asset_register(const char *url, const void *data, int size,
                     bool compressed);
 const void *asset_get_data(const char *url, int *size, int *code);
 
+/*
+ * Function: asset_release
+ * Release the memory associated with an asset.
+ *
+ * This should be called after asset_get_data, once we don't need the data
+ * anymore.
+ */
+void asset_release(const char *url);
+
+
 #define ASSET_REGISTER(id_, name_, data_, comp_) \
     static void register_asset_##id_(void) __attribute__((constructor)); \
     static void register_asset_##id_(void) { \

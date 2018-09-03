@@ -165,6 +165,21 @@ void asset_set_alias(const char *base, const char *alias)
     g_alias[i].alias = strdup(alias);
 }
 
+void asset_release(const char *url)
+{
+    asset_t *asset;
+    HASH_FIND_STR(g_assets, url, asset);
+    if (!asset) return;
+    if (asset->compressed_data) {
+        free(asset->data);
+        asset->size = 0;
+    }
+    if (asset->request)
+        request_delete(asset->request);
+    if (!(asset->flags & STATIC))
+        HASH_DEL(g_assets, asset);
+}
+
 #include "assets/cities.txt.inl"
 #include "assets/font.inl"
 #include "assets/landscapes.inl"
