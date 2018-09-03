@@ -292,7 +292,7 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
 
     if (loading_complete) *loading_complete = true;
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
-    if (!tile && load && dsos->survey_url) {
+    if (!tile && load && *dsos->survey_url) {
         dir = (pix / 10000) * 10000;
         asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph?v=%f",
                  dsos->survey_url, order, dir, pix,
