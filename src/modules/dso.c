@@ -79,7 +79,7 @@ struct dsos {
     regex_t     search_reg;
     fader_t     visible;
 
-    char        *survey; // Url of the DSO survey.
+    char        survey_url[URL_MAX_SIZE - 256]; // Url of the DSO survey.
     double      survey_release_date; // release date as jd value.
 };
 
@@ -276,7 +276,7 @@ static int dsos_init(obj_t *obj, json_value *args)
     regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    asprintf(&dsos->survey, "https://data.stellarium.org/surveys/dso");
+    sprintf(dsos->survey_url, "https://data.stellarium.org/surveys/dso");
     return 0;
 }
 
@@ -292,10 +292,10 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
 
     if (loading_complete) *loading_complete = true;
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
-    if (!tile && load && dsos->survey) {
+    if (!tile && load && dsos->survey_url) {
         dir = (pix / 10000) * 10000;
         asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph?v=%f",
-                 dsos->survey, order, dir, pix,
+                 dsos->survey_url, order, dir, pix,
                  dsos->survey_release_date);
         data = asset_get_data(url, &size, &code);
         if (!data && code) {
@@ -593,11 +593,11 @@ static int parse_properties(dsos_t *dsos)
     char *data;
     char url[URL_MAX_SIZE];
     int code;
-    sprintf(url, "%s/properties", dsos->survey);
+    sprintf(url, "%s/properties", dsos->survey_url);
     data = asset_get_data(url, NULL, &code);
     if (!data && code && code / 100 != 2) {
         LOG_E("Cannot get hips properties file at '%s': %d",
-                dsos->survey, code);
+                dsos->survey_url, code);
         return -1;
     }
     if (!data) return 0;
@@ -731,6 +731,7 @@ static obj_klass_t dsos_klass = {
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(dsos_t, visible.target)),
+        PROPERTY("survey_url", "S", MEMBER(dsos_t, survey_url)),
         {}
     },
 };
