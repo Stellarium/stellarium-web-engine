@@ -35,9 +35,9 @@ DDDate.prototype.setMJD = function (mjd) {
 }
 
 export const swh = {
-  initStelWebEngine: function (store, wasmBinary, canvasElem, callBackOnDone) {
+  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone) {
     let lstel = StelWebEngine({
-      wasmBinary: wasmBinary,
+      wasmFile: wasmFile,
       canvas: canvasElem,
       res: ['http://stelladata.noctua-software.com/surveys/stars/info.json'],
       onReady: function () {
