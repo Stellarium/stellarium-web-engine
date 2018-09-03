@@ -11,7 +11,7 @@
 <v-app dark>
   <div id="toolbar-image">
     <v-toolbar class="transparent" dense dark>
-      <img id="stellarium-web-toolbar-logo" src="/static/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
+      <img id="stellarium-web-toolbar-logo" src="@/assets/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
       <span class="tbtitle">Stellarum<sup>Web</sup></span>
       <v-spacer></v-spacer>
     </v-toolbar>
@@ -52,7 +52,7 @@ export default {
 
 
 #toolbar-image {
-  background: url("/static/images/header.png") center;
+  background: url("../../../assets/images/header.png") center;
   background-position-x: 55px;
   background-position-y: 0px;
   height: 48px;
