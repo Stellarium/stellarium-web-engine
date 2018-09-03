@@ -481,13 +481,16 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     return NULL;
 }
 
+// XXX: cleanup this code.
 static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
                                   const json_value *args)
 {
     obj_t *container_obj = obj->klass == &obj_sub_klass ? obj->parent : obj;
     assert(attr->type);
     void *p = ((void*)container_obj) + attr->member.offset;
-    char buf[128] __attribute__((aligned(8)));
+    // Buffer large enough to contain any kind of property data, including
+    // static strings.
+    char buf[4096] __attribute__((aligned(8)));
     obj_t *o;
 
     // If no input arguents, return the value.
