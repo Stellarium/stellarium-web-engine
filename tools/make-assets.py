@@ -52,6 +52,7 @@ def list_data_files():
                 m = re.match(r'^.+/Norder(\d+)/.+\.eph', p)
                 if m and int(m.group(1)) > 0: continue
                 yield os.path.relpath(p, SOURCE)
+        dirs[:] = sorted(dirs)
 
 
 def is_extra(path):
