@@ -132,15 +132,28 @@ static int meteor_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
+static int meteors_init(obj_t *obj, json_value *args)
+{
+    meteors_t *ms = (meteors_t*)obj;
+    ms->zhr = 10; // Normal rate.
+    return 0;
+}
+
 static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    meteors_t *ms = (meteors_t*)obj;
     meteor_t *m;
     obj_t *child, *tmp;
-    int nb;
+    int nb, max_nb = 100;
+    double proba;
 
     DL_COUNT(obj->children, child, nb);
-    if (nb < 100)
+    // Probabiliy of having a new shooting star at this frame.
+    proba = ms->zhr * dt / 3600;
+
+    if (nb < max_nb && frand(0, 1) < proba) {
         obj_create("meteor", NULL, obj, NULL);
+    }
 
     DL_FOREACH_SAFE(obj->children, child, tmp) {
         m = (meteor_t*)child;
@@ -177,6 +190,7 @@ static obj_klass_t meteors_klass = {
     .size           = sizeof(meteors_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .render_order   = 20,
+    .init           = meteors_init,
     .update         = meteors_update,
     .render         = meteors_render,
     .attributes = (attribute_t[]) {
