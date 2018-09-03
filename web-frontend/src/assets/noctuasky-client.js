@@ -262,7 +262,9 @@ const NoctuaSkyClient = {
 
     // Setup with initial default state
     that.stateChanged('', that.state)
+    let api = require('./openapi.json')
     return Swagger(serverUrl + '/doc/openapi.json', {
+      spec: api,
       authorizations: {
         APIToken: ''
       },
