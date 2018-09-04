@@ -303,6 +303,15 @@ const NoctuaSkyClient = {
           }, err => {
             throw err.response.body
           })
+        },
+
+        // Get data for a SkySource from its NSID in NoctuaSky api service
+        getByName: function (name) {
+          return tmpApis.skysources.name({str: name}).then(res => {
+            return res.body
+          }, err => {
+            throw err.response.body
+          })
         }
       }
 
