@@ -189,8 +189,11 @@ void asset_release(const char *url)
     }
     if (asset->request)
         request_delete(asset->request);
-    if (!(asset->flags & STATIC))
+    if (!(asset->flags & STATIC)) {
         HASH_DEL(g_assets, asset);
+        free(asset->url);
+        free(asset);
+    }
 }
 
 void asset_add_handler(
