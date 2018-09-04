@@ -9,17 +9,10 @@
 
 #include "swe.h"
 
-static int constellations_init(obj_t *obj, json_value *args);
-static int constellations_update(obj_t *obj, const observer_t *obs, double dt);
-static int constellations_render(const obj_t *obj, const painter_t *painter);
-
-static int constellation_init(obj_t *obj, json_value *args);
-static int constellation_render(const obj_t *obj, const painter_t *painter);
-static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
-static json_value *constellation_set_image(
-        obj_t *obj, const attribute_t *attr, const json_value *args);
-static void constellation_del(obj_t *obj);
-
+/*
+ * Type: constellation_t
+ * Object representing a single constellation.
+ */
 typedef struct constellation {
     obj_t       obj;
     constellation_infos_t info;
@@ -32,35 +25,10 @@ typedef struct constellation {
     double      mat[3][3];
 } constellation_t;
 
-static obj_klass_t constellation_klass = {
-    .id         = "constellation",
-    .size       = sizeof(constellation_t),
-    .init       = constellation_init,
-    .update     = constellation_update,
-    .render     = constellation_render,
-    .del        = constellation_del,
-    .attributes = (attribute_t[]) {
-        FUNCTION("set_image", .fn = constellation_set_image),
-        // Default properties.
-        PROPERTY("name"),
-        PROPERTY("distance"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("radec"),
-        PROPERTY("azalt"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
-        {}
-    },
-};
-OBJ_REGISTER(constellation_klass)
-
-static obj_t *constellations_get(const obj_t *obj, const char *id, int flags);
-
+/*
+ * Type: constellations_t
+ * The module object.
+ */
 typedef struct constellations {
     obj_t       obj;
     fader_t     visible;
@@ -70,29 +38,6 @@ typedef struct constellations {
     bool        show_all;
 } constellations_t;
 
-static obj_klass_t constellations_klass = {
-    .id = "constellations",
-    .size = sizeof(constellations_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init = constellations_init,
-    .update = constellations_update,
-    .render = constellations_render,
-    .get    = constellations_get,
-    .render_order = 25,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b",
-                 MEMBER(constellations_t, lines_visible.target),
-                 .sub = "lines"),
-        PROPERTY("visible", "b",
-                 MEMBER(constellations_t, images_visible.target),
-                 .sub = "images"),
-        PROPERTY("visible", "b",
-                 MEMBER(constellations_t, bounds_visible.target),
-                 .sub = "bounds"),
-        PROPERTY("show_all", "b", MEMBER(constellations_t, show_all)),
-        {}
-    },
-};
 
 static int constellation_init(obj_t *obj, json_value *args)
 {
@@ -479,4 +424,59 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t constellation_klass = {
+    .id         = "constellation",
+    .size       = sizeof(constellation_t),
+    .init       = constellation_init,
+    .update     = constellation_update,
+    .render     = constellation_render,
+    .del        = constellation_del,
+    .attributes = (attribute_t[]) {
+        FUNCTION("set_image", .fn = constellation_set_image),
+        // Default properties.
+        PROPERTY("name"),
+        PROPERTY("distance"),
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("alt"),
+        PROPERTY("az"),
+        PROPERTY("radec"),
+        PROPERTY("azalt"),
+        PROPERTY("rise"),
+        PROPERTY("set"),
+        PROPERTY("vmag"),
+        PROPERTY("type"),
+        {}
+    },
+};
+OBJ_REGISTER(constellation_klass)
+
+static obj_klass_t constellations_klass = {
+    .id = "constellations",
+    .size = sizeof(constellations_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = constellations_init,
+    .update = constellations_update,
+    .render = constellations_render,
+    .get    = constellations_get,
+    .render_order = 25,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b",
+                 MEMBER(constellations_t, lines_visible.target),
+                 .sub = "lines"),
+        PROPERTY("visible", "b",
+                 MEMBER(constellations_t, images_visible.target),
+                 .sub = "images"),
+        PROPERTY("visible", "b",
+                 MEMBER(constellations_t, bounds_visible.target),
+                 .sub = "bounds"),
+        PROPERTY("show_all", "b", MEMBER(constellations_t, show_all)),
+        {}
+    },
+};
 OBJ_REGISTER(constellations_klass);
