@@ -81,7 +81,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         data += 1;
 
         sprintf(id, "NORAD %.5s", line1 + 2);
-        sat = (satellite_t*)obj_create("satellite", id, (obj_t*)sats, NULL);
+        sat = (satellite_t*)obj_create("tle_satellite", id, (obj_t*)sats, NULL);
         sat->stdmag = NAN;
         strcpy(sat->obj.type, "Asa"); // Otype code.
 
@@ -163,7 +163,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
     if (!load_qsmag(sats)) return 0;
     if (!load_data(sats)) return 0;
 
-    OBJ_ITER(sats, sat, "satellite") {
+    OBJ_ITER(sats, sat, "tle_satellite") {
         obj_update((obj_t*)sat, obs, dt);
     }
 
@@ -173,7 +173,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
     obj_t *child;
-    OBJ_ITER(obj, child, "satellite")
+    OBJ_ITER(obj, child, "tle_satellite")
         obj_render(child, painter);
     return 0;
 }
@@ -217,7 +217,7 @@ static double satellite_compute_vmag(const satellite_t *sat,
         // Eclipsed.
         return 17.0;
     }
-    if (isnan(sat->stdmag)) return 7.0; // Default value.
+    if (isnan(sat->stdmag)) return sat->obj.vmag; // Default value.
 
     // If we have a std mag value,
     // We use the formula:
@@ -240,6 +240,31 @@ static double satellite_compute_vmag(const satellite_t *sat,
     elong = eraSepp(sun_pos, sat_pos);
     fracil = 0.5 * (1. + cos(elong));
     return sat->stdmag - 15.75 + 2.5 * log10(range * range / fracil);
+}
+
+static int satellite_init(obj_t *obj, json_value *args)
+{
+    // Support creating a dso using noctuasky model data json values.
+    satellite_t *sat = (satellite_t*)obj;
+    json_value *model, *tle;
+    const char *tle1, *tle2, *name;
+    double startmfe, stopmfe, deltamin;
+
+    sat->obj.vmag = 7.0; // Default value.
+    model = json_get_attr(args, "model_data", json_object);
+    if (model) {
+        if ((tle = json_get_attr(model, "tle", json_array))) {
+            tle1 = tle->u.array.values[0]->u.string.ptr;
+            tle2 = tle->u.array.values[1]->u.string.ptr;
+            sat->elsetrec = sgp4_twoline2rv(
+                    tle1, tle2, 'c', 'm', 'i',
+                    &startmfe, &stopmfe, &deltamin);
+        }
+        sat->obj.vmag = json_get_attr_f(model, "mag", NAN);
+    }
+    if ((name = json_get_attr_s(args, "short_name")))
+        snprintf(sat->name, sizeof(sat->name), "%s", name);
+    return 0;
 }
 
 /*
@@ -319,10 +344,11 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
  */
 
 static obj_klass_t satellite_klass = {
-    .id             = "satellite",
+    .id             = "tle_satellite",
     .size           = sizeof(satellite_t),
     .flags          = 0,
     .render_order   = 30,
+    .init           = satellite_init,
     .update         = satellite_update,
     .render         = satellite_render,
 

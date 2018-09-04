@@ -116,9 +116,10 @@ var testTree = function(stel) {
 
 var testCreate = function(stel) {
 
-    var obj = stel.createObj('dso', {
+    var layer = stel.createLayer({z: 7, visible: true})
+    var obj1 = stel.createObj('dso', {
       id: 'my dso',
-      nsid: 'beefbeefbeefbeef',
+      nsid: '0000000beefbeef1',
       model_data: {
         ra: 0,
         de: 89,
@@ -127,11 +128,27 @@ var testCreate = function(stel) {
         dimy: 60,
       }
     })
-    assert(obj.nsid == 'beefbeefbeefbeef')
+    console.log(obj1.nsid);
+    assert(obj1.nsid == '0000000beefbeef1')
 
-    var layer = stel.createLayer({z: 7, visible: true})
-    layer.add(obj)
-    assert(stel.getObjByNSID('beefbeefbeefbeef'))
+    var obj2 = stel.createObj('tle_satellite', {
+      id: 'my sat',
+      nsid: '0000000beefbeef2',
+      model_data: {
+        mag: 2.0,
+        norad_number: 19120,
+        tle: [
+          "1 19120U 88039B   18246.93217385  .00000115  00000-0  77599-4 0  9998",
+          "2 19120  71.0141 107.3044 0023686 231.5553 128.3447 14.19191161569077"
+        ]
+      }
+    })
+    assert(obj2.nsid == '0000000beefbeef2')
+
+    layer.add(obj1)
+    layer.add(obj2)
+    assert(stel.getObjByNSID('0000000beefbeef1'))
+    assert(stel.getObjByNSID('0000000beefbeef2'))
 }
 
 var testFormat = function(stel) {
