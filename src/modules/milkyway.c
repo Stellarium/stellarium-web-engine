@@ -90,7 +90,9 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter)
     if (mw->visible.value == 0.0) return 0;
 
     if (!mw->tex) {
-        mw->tex = texture_from_url("asset://textures/milkyway.jpg", 0);
+        // For the moment the texture url is hardcoded.
+        mw->tex = texture_from_url(
+                "https:/data.stellarium.org/other/milkyway.webp", 0);
         assert(mw->tex);
     }
     painter2 = *painter;
