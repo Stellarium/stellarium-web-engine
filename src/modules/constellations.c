@@ -180,7 +180,7 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     double pos[4] = {0, 0, 0, 0};
     int i;
     // Optimization: don't update invisible constellation.
-    if (con->visible.value == 0 && !con->visible.target) return 0;
+    if (con->visible.value == 0 && !con->visible.target) goto end;
 
     constellation_create_stars(con);
     for (i = 0; i < con->count; i++) {
@@ -196,7 +196,7 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     compute_coordinates(obs, obj->pos.pvg[0],
                         &obj->pos.ra, &obj->pos.dec,
                         &obj->pos.az, &obj->pos.alt);
-
+end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0);
     return fader_update(&con->visible, dt * 0.1) ? 1 : 0;
