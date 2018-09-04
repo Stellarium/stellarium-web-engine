@@ -538,6 +538,7 @@ export const swh = {
         return [20, 1 / 60]
       case 'mpc_asteroid':
       case 'mpc_comet':
+      case 'tle_satellite':
         return [20, 10 / 60, 1 / 60]
       default:
         return [20]
