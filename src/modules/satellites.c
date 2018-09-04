@@ -260,7 +260,7 @@ static int satellite_init(obj_t *obj, json_value *args)
                     tle1, tle2, 'c', 'm', 'i',
                     &startmfe, &stopmfe, &deltamin);
         }
-        sat->obj.vmag = json_get_attr_f(model, "mag", NAN);
+        sat->stdmag = json_get_attr_f(model, "mag", NAN);
     }
     if ((name = json_get_attr_s(args, "short_name")))
         snprintf(sat->name, sizeof(sat->name), "%s", name);
