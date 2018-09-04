@@ -80,7 +80,10 @@ export default {
       } else {
         let obj = this.$stel.getObjByNSID(this.selectedObject.nsid)
         if (!obj) {
-          obj = this.$stel.createObj(this.selectedObject.model, this.selectedObject)
+          obj = this.$stel.getObj(this.selectedObject.id)
+          if (!obj) {
+            obj = this.$stel.createObj(this.selectedObject.model, this.selectedObject)
+          }
         }
         return obj
       }
@@ -274,19 +277,18 @@ export default {
         return
       }
 
-      console.log("Couldn't get the object's NSID, try to find it from its ID and name")
       let obj = this.$stel.core.selection
+      console.log("Couldn't get the object's NSID, try to find it by name: " + obj.id)
       if (obj.type.v === 'MPl') {
         s = '(' + obj.id.replace(/^0+/, '') + ') ' + obj.name
       }
-      NoctuaSkyClient.skysources.query(s, 1, true).then(res => {
-        if (res.length === 0) {
-          console.log("Couldn't find object in onlineDB: " + s)
-          this.$store.commit('setSelectedObject', undefined)
-          return
-        }
-        res[0]['id'] = obj.id
-        this.$store.commit('setSelectedObject', res[0])
+      NoctuaSkyClient.skysources.getByName(obj.id).then(res => {
+        res['id'] = obj.id
+        this.$store.commit('setSelectedObject', res)
+      }, err => {
+        console.log(err)
+        console.log("Couldn't find skysource in onlineDB: " + obj.id)
+        this.$store.commit('setSelectedObject', undefined)
       })
     }
   },

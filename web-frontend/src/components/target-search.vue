@@ -26,9 +26,16 @@ export default {
       if (!v) {
         return
       }
-      v.id = v.names[0]
+      if (v.model === 'tle_satellite') {
+        v.id = 'NORAD ' + v.model_data.norad_number
+      } else {
+        v.id = v.names[0]
+      }
       // First check if the object already exists in SWE
       let ss = this.$stel.getObjByNSID(v.nsid)
+      if (!ss) {
+        ss = this.$stel.getObj(v.id)
+      }
       if (ss) {
         ss.update()
       } else {
