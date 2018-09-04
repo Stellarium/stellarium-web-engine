@@ -1074,6 +1074,7 @@ static void line(renderer_t           *rend_,
 
     item = get_item(rend, ITEM_LINES, nb_segs * 2, NULL);
     if (item && !vec4_equal(item->color, painter->color)) item = NULL;
+    if (item && item->lines.width != painter->lines_width) item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
@@ -1081,7 +1082,7 @@ static void line(renderer_t           *rend_,
         item->capacity = 1024;
         item->buf = calloc(item->capacity, sizeof(*buf));
         item->indices = calloc(item->capacity, sizeof(*indices));
-        item->lines.width = painter->lines_width ?: 1;
+        item->lines.width = painter->lines_width;
         vec4_copy(painter->color, item->color);
         DL_APPEND(rend->items, item);
     }

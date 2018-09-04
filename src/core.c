@@ -725,6 +725,7 @@ int core_render(int w, int h)
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
+        .lines_width = 1.0,
         .flags = (core->fast_mode ? PAINTER_FAST_MODE : 0) |
             (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
             (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
