@@ -198,7 +198,8 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
                         &obj->pos.az, &obj->pos.alt);
 end:
     con->visible.target = cons->show_all ||
-                          (strcasecmp(obs->pointer.cst, con->info.id) == 0);
+                          (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
+                          ((obj_t*)con == core->selection);
     return fader_update(&con->visible, dt * 0.1) ? 1 : 0;
 }
 
@@ -229,14 +230,13 @@ static int render_bounds(const constellation_t *con,
     int i;
     const constellation_infos_t *info;
     double line[2][4] = {};
-    const constellations_t *cons = (const constellations_t*)con->obj.parent;
     painter_t painter = *painter_;
     projection_t proj = {
         .backward = spherical_project,
     };
 
-    painter.color[3] *= cons->bounds_visible.value;
-    painter.lines_stripes = 10.0;
+    painter.lines_stripes = 10.0; // Why not working anymore?
+    painter.color[3] *= 0.5;
     if (!painter.color[3]) return 0;
     info = &con->info;
     if (!info) return 0;
@@ -249,22 +249,48 @@ static int render_bounds(const constellation_t *con,
     return 0;
 }
 
+static bool constellation_is_selected(const constellation_t *con)
+{
+    if (!core->selection) return false;
+    return strcmp(core->selection->id, con->obj.id) == 0;
+}
 
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
     const constellation_t *con = (const constellation_t*)obj;
-    painter_t painter = *_painter;
+    const constellations_t *cons = (const constellations_t*)con->obj.parent;
+    painter_t painter = *_painter, painter2;
+    bool selected = constellation_is_selected(con);
 
-    painter.color[3] *= con->visible.value;
+    if (!selected)
+        painter.color[3] *= cons->visible.value * con->visible.value;
     if (painter.color[3] == 0.0) return 0;
+
     constellation_create_stars(con);
     if (!constellation_is_visible(&painter, con))
         return 0;
 
-    render_lines(con, &painter);
-    render_img(con, &painter);
-    render_bounds(con, &painter);
+    painter2 = painter;
+    if (!selected) painter2.color[3] *= cons->lines_visible.value;
+    else painter2.lines_width *= 2;
+    render_lines(con, &painter2);
 
+    painter2 = painter;
+    if (!selected) painter2.color[3] *= cons->images_visible.value;
+    render_img(con, &painter2);
+
+    painter2 = painter;
+    if (!selected) painter2.color[3] *= cons->bounds_visible.value;
+    render_bounds(con, &painter2);
+
+    return 0;
+}
+
+static int constellation_render_pointer(
+        const obj_t *obj, const painter_t *painter)
+{
+    // Do nothing: selected constellations are simply rendered with different
+    // colors.
     return 0;
 }
 
@@ -298,12 +324,10 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     double lines_color[4];
     double pos[3] = {0, 0, 0};
     double mag[2], radius[2];
-    const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
-    painter.color[3] *= con->visible.value * cons->lines_visible.value;
     if (painter.color[3] == 0.0) return 0;
-    hex_to_rgba(0x6096C280, lines_color);
-    painter.lines_width = clamp(1.0 / (core->fov / (90 * DD2R)), 1.0, 16.0);
+    hex_to_rgba(0x6096C2B0, lines_color);
+    painter.lines_width *= clamp(1.0 / (core->fov / (90 * DD2R)), 1.0, 16.0);
     // Refraction already taken into account from stars position.
     vec4_emul(lines_color, painter.color, painter.color);
 
@@ -342,8 +366,6 @@ static int render_img(const constellation_t *con, const painter_t *painter)
 {
     projection_t proj = {0};
     painter_t painter2 = *painter;
-    const constellations_t *cons = (const constellations_t*)con->obj.parent;
-    painter2.color[3] *= cons->images_visible.value;
     if (!painter2.color[3]) return 0;
     if (!con->img || !texture_load(con->img, NULL)) return 0;
 
@@ -386,40 +408,39 @@ static obj_t *constellations_get(const obj_t *obj, const char *id, int flags)
 static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
 {
     int ret = 0;
-    constellation_t *cons;
-    constellations_t *constellations = (constellations_t*)obj;
+    constellation_t *con;
+    constellations_t *cons = (constellations_t*)obj;
 
-    if (fader_update(&constellations->visible, dt)) ret = 1;
-    if (fader_update(&constellations->images_visible, dt)) ret = 1;
-    if (fader_update(&constellations->lines_visible, dt)) ret = 1;
-    if (fader_update(&constellations->bounds_visible, dt)) ret = 1;
+    if (fader_update(&cons->visible, dt)) ret = 1;
+    if (fader_update(&cons->images_visible, dt)) ret = 1;
+    if (fader_update(&cons->lines_visible, dt)) ret = 1;
+    if (fader_update(&cons->bounds_visible, dt)) ret = 1;
 
     // Skip update if not visible.
-    if ((constellations->visible.value == 0.0) ||
-        (constellations->images_visible.value == 0.0 &&
-         constellations->lines_visible.value == 0.0 &&
-         constellations->bounds_visible.value == 0.0))
-        return 0;
+    if (cons->visible.value == 0.0) return 0;
+    if (cons->lines_visible.value == 0.0 &&
+        cons->images_visible.value == 0.0 &&
+        cons->bounds_visible.value == 0.0 &&
+        (!core->selection || core->selection->parent != obj)) return 0;
 
-    OBJ_ITER(obj, cons, "constellation") {
-        ret |= obj_update((obj_t*)cons, obs, dt);
+    OBJ_ITER(obj, con, "constellation") {
+        ret |= obj_update((obj_t*)con, obs, dt);
     }
     return ret;
 }
 
 static int constellations_render(const obj_t *obj, const painter_t *painter)
 {
-    constellations_t *constellations = (constellations_t*)obj;
-    constellation_t *cons;
-    if (constellations->visible.value == 0.0) return 0;
-    if (constellations->lines_visible.value == 0.0 &&
-        constellations->images_visible.value == 0.0 &&
-        constellations->bounds_visible.value == 0.0) return 0;
-    painter_t painter2 = *painter;
-    painter2.color[3] *= constellations->visible.value;
+    constellations_t *cons = (constellations_t*)obj;
+    constellation_t *con;
+    if (cons->visible.value == 0.0) return 0;
+    if (cons->lines_visible.value == 0.0 &&
+        cons->images_visible.value == 0.0 &&
+        cons->bounds_visible.value == 0.0 &&
+        (!core->selection || core->selection->parent != obj)) return 0;
 
-    OBJ_ITER(obj, cons, "constellation") {
-        obj_render((obj_t*)cons, &painter2);
+    OBJ_ITER(obj, con, "constellation") {
+        obj_render((obj_t*)con, painter);
     }
     return 0;
 }
@@ -430,13 +451,14 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
  */
 
 static obj_klass_t constellation_klass = {
-    .id         = "constellation",
-    .size       = sizeof(constellation_t),
-    .init       = constellation_init,
-    .update     = constellation_update,
-    .render     = constellation_render,
-    .del        = constellation_del,
-    .attributes = (attribute_t[]) {
+    .id             = "constellation",
+    .size           = sizeof(constellation_t),
+    .init           = constellation_init,
+    .update         = constellation_update,
+    .render         = constellation_render,
+    .render_pointer = constellation_render_pointer,
+    .del            = constellation_del,
+    .attributes     = (attribute_t[]) {
         FUNCTION("set_image", .fn = constellation_set_image),
         // Default properties.
         PROPERTY("name"),
