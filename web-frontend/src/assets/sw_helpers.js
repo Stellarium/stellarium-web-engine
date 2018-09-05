@@ -556,7 +556,7 @@ const swh = {
     link += 'fov=' + (context.$store.state.stel.fov * 180 / Math.PI).toPrecision(5)
     let d = new Date()
     d.setMJD(context.$stel.core.observer.utc)
-    link += '&date=' + new Moment(d).format()
+    link += '&date=' + new Moment(d).utc().format()
     link += '&lat=' + (context.$stel.core.observer.latitude * 180 / Math.PI).toFixed(2)
     link += '&lng=' + (context.$stel.core.observer.longitude * 180 / Math.PI).toFixed(2)
     link += '&elev=' + context.$stel.core.observer.elevation
