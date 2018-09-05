@@ -18,7 +18,7 @@
 
 <script>
 import NoctuaSkyClient from '@/assets/noctuasky-client'
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 
 export default {
   props: ['obsData'],

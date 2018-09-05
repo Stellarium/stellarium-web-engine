@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 import _ from 'lodash'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 

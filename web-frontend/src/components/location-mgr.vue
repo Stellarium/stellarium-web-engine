@@ -87,7 +87,7 @@
 </template>
 
 <script>
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 
 export default {
   data: function () {

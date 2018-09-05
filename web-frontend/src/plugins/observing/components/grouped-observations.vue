@@ -22,7 +22,7 @@
 <script>
 import ObservationThumbnail from './observation-thumbnail.vue'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 import Moment from 'moment'
 
 export default {

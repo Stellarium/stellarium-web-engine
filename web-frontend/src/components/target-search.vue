@@ -14,7 +14,7 @@
 
 <script>
 import SkysourceSearch from '@/components/skysource-search.vue'
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 
 export default {
   data: function () {
