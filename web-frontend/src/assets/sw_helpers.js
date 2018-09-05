@@ -632,6 +632,15 @@ const swh = {
     })
   },
 
+  setSweObjAsSelection: function (obj) {
+    let $stel = Vue.prototype.$stel
+    obj.update()
+    $stel.core.selection = obj
+    $stel.core.lock = obj
+    $stel.core.lock.update()
+    $stel.core.lookat($stel.core.lock.azalt, 1.0)
+  },
+
   // Get data for a SkySource from wikipedia
   getSkySourceSummaryFromWikipedia: function (ss) {
     let title
