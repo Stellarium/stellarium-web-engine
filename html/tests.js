@@ -101,6 +101,8 @@ var testTree = function(stel) {
             assert(value === 0.1);
             test = true;
         }
+        if (path === 'selection')
+          assert(typeof(value) === 'number');
     });
     stel.setValue('observer.longitude', 0.1);
     assert(stel.getValue('observer.longitude') === 0.1);
@@ -109,9 +111,11 @@ var testTree = function(stel) {
 
     // Test that null object attributes are indeed 'null'
     assert(stel.getValue('selection') === null)
-    // Test that object attributes are returned by id string.
-    stel.setValue('selection', 'jupiter');
-    assert(stel.getValue('selection').toLowerCase() == 'jupiter')
+
+    // Test that object values are returned as pointer.
+    var o = stel.getObj('Polaris');
+    stel.core.selection = o;
+    assert(typeof(stel.getValue('selection')) === 'number');
 }
 
 var testCreate = function(stel) {
@@ -128,7 +132,6 @@ var testCreate = function(stel) {
         dimy: 60,
       }
     })
-    console.log(obj1.nsid);
     assert(obj1.nsid == '0000000beefbeef1')
 
     var obj2 = stel.createObj('tle_satellite', {

@@ -271,7 +271,8 @@ Module.afterInit(function() {
     var objPath = elems.join('.');
     var obj = Module.getObj(objPath);
     var value = obj[attr];
-    value = value ? value.valueOf() : null;
+    if (value && typeof(value) === 'object' && value.swe_)
+      value = value.v;
     return value;
   }
 
@@ -288,7 +289,8 @@ Module.afterInit(function() {
     Module.change(function(obj, attr) {
       var path = obj.path + "." + attr;
       var value = obj[attr];
-      value = value ? value.valueOf() : null;
+      if (value && typeof(value) === 'object' && value.swe_)
+        value = value.v;
       path = path.substr(5); // Remove the initial 'core.'
       callback(path, value);
     });
