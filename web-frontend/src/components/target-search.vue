@@ -35,11 +35,7 @@ export default {
       if (!obj) {
         console.warning("Can't find object in SWE: " + ss.short_name)
       }
-      obj.update()
-      this.$stel.core.selection = obj
-      this.$stel.core.lock = obj
-      this.$stel.core.lock.update()
-      this.$stel.core.lookat(this.$stel.core.lock.azalt, 1.0)
+      swh.setSweObjAsSelection(obj)
     }
   },
   components: { SkysourceSearch }
