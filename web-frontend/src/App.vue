@@ -132,7 +132,7 @@ export default {
     },
     setStateFromQueryArgs: function () {
       // Check whether the observing panel must be displayed
-      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: this.$route.fullPath.startsWith('/observing')})
+      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: this.$route.path.startsWith('/observing')})
 
       // Set the core's state from URL query arguments such
       // as date, location, view direction & fov
@@ -145,10 +145,35 @@ export default {
       }
 
       if (this.$route.query.lng && this.$route.query.lat) {
-        let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.alt ? Number(this.$route.query.alt) : 0, accuracy: 1}
+        let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1}
         swh.geoCodePosition(pos).then((loc) => {
           that.$store.commit('setCurrentLocation', loc)
         }, (error) => { console.log(error) })
+      }
+
+      this.$stel.core.observer.azimuth = this.$route.query.az ? Number(this.$route.query.az) * Math.PI / 180 : 0
+      this.$stel.core.observer.altitude = this.$route.query.alt ? Number(this.$route.query.alt) * Math.PI / 180 : 20 * Math.PI / 180
+
+      if (this.$route.path.startsWith('/skysource/')) {
+        let name = this.$route.path.substring(11)
+        console.log('Will select object: ' + name)
+        return NoctuaSkyClient.skysources.getByName(name).then(ss => {
+          if (!ss) {
+            return
+          }
+          let obj = swh.skySource2SweObj(ss)
+          if (!obj) {
+            obj = this.$stel.createObj(ss.model, ss)
+            this.$selectionLayer.add(obj)
+          }
+          if (!obj) {
+            console.warning("Can't find object in SWE: " + ss.short_name)
+          }
+          swh.setSweObjAsSelection(obj)
+        }, err => {
+          console.log(err)
+          console.log("Couldn't find skysource for name: " + name)
+        })
       }
     }
   },

@@ -80,6 +80,11 @@ let routes = [
         component: MyProfile
       }
     ]
+  },
+  {
+    path: '/skysource/:name',
+    component: App,
+    alias: '/'
   }
 ]
 
