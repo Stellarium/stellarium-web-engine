@@ -156,7 +156,7 @@ export default {
       this.$stel.core.fov = this.$route.query.fov ? Number(this.$route.query.fov) * Math.PI / 180 : 120 * Math.PI / 180
 
       if (this.$route.path.startsWith('/skysource/')) {
-        let name = this.$route.path.substring(11)
+        let name = decodeURIComponent(this.$route.path.substring(11))
         console.log('Will select object: ' + name)
         return NoctuaSkyClient.skysources.getByName(name).then(ss => {
           if (!ss) {
