@@ -12,6 +12,7 @@ import axios from 'axios'
 import hex2dec from 'hex2dec'
 import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
+import Moment from 'moment'
 
 // jquery is used inside StelWebEngine code as a global
 import $ from 'jquery'
@@ -544,6 +545,26 @@ const swh = {
       default:
         return [20]
     }
+  },
+
+  getShareLink: function (context) {
+    let link = 'https://stellarium-web.org/'
+    if (context.$store.state.selectedObject) {
+      link += 'skysource/' + context.$store.state.selectedObject.short_name
+    }
+    link += '?'
+    link += 'fov=' + (context.$store.state.stel.fov * 180 / Math.PI).toPrecision(5)
+    let d = new Date()
+    d.setMJD(context.$stel.core.observer.utc)
+    link += '&date=' + new Moment(d).format()
+    link += '&lat=' + (context.$stel.core.observer.latitude * 180 / Math.PI).toFixed(2)
+    link += '&lng=' + (context.$stel.core.observer.longitude * 180 / Math.PI).toFixed(2)
+    link += '&elev=' + context.$stel.core.observer.elevation
+    if (!context.$store.state.selectedObject) {
+      link += '&az=' + (context.$stel.core.observer.azimuth * 180 / Math.PI).toPrecision(5)
+      link += '&alt=' + (context.$stel.core.observer.altitude * 180 / Math.PI).toPrecision(5)
+    }
+    return link
   },
 
   // Convert a decimal representation of a uint64 value to Hexadecimal

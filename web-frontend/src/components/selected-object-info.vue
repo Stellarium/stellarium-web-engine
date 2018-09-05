@@ -43,6 +43,9 @@
       <v-btn v-for="btn in extraButtons" :key="btn.id" dark color="transparent" @click.native="extraButtonClicked(btn)">
         {{ btn.name }}<v-icon right dark>{{ btn.icon }}</v-icon>
       </v-btn>
+      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @click.native="showShareLinkDialog = !showShareLinkDialog">
+        <v-icon>link</v-icon>
+      </v-btn>
       <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
         <img src="/static/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
@@ -53,6 +56,24 @@
         <img :class="{bt_disabled: !zoomInButtonEnabled}" src="/static/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
     </div>
+    <v-dialog v-model="showShareLinkDialog" width="500px" lazy absolute>
+      <v-card style="height: 180px" class="secondary white--text">
+        <v-card-title primary-title>
+          <div>
+            <h3 class="headline mb-0">Share link</h3>
+          </div>
+        </v-card-title>
+        <v-card-text style="width:100%;">
+          <v-layout row wrap style="width: 100%">
+            <v-text-field ref='link_input' v-model="shareLink" label="Link" solo readonly></v-text-field>
+            <v-btn @click.native.stop="copyLink">Copy</v-btn>
+          </v-layout>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-snackbar bottom left :timeout="2000" v-model="copied" color="secondary" >
+      Link copied
+    </v-snackbar>
   </v-card>
 </template>
 
@@ -66,7 +87,10 @@ export default {
     return {
       showMinorNames: false,
       // Contains the
-      wikipediaData: undefined
+      wikipediaData: undefined,
+      shareLink: undefined,
+      showShareLinkDialog: false,
+      copied: false
     }
   },
   computed: {
@@ -225,6 +249,9 @@ export default {
         console.log("Couldn't find info for object " + s + ':' + err)
         this.$store.commit('setSelectedObject', undefined)
       })
+    },
+    showShareLinkDialog: function (b) {
+      this.shareLink = swh.getShareLink(this)
     }
   },
   methods: {
@@ -296,6 +323,14 @@ export default {
     },
     extraButtonClicked: function (btn) {
       btn.callback()
+    },
+    copyLink: function () {
+      const input = this.$refs.link_input
+      input.focus()
+      document.execCommand('selectAll')
+      this.copied = document.execCommand('copy')
+      window.getSelection().removeAllRanges()
+      this.showShareLinkDialog = false
     }
   }
 }
