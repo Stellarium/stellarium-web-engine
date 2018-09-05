@@ -35,7 +35,7 @@ DDDate.prototype.setMJD = function (mjd) {
   this.setJD(mjd + 2400000.5)
 }
 
-export const swh = {
+const swh = {
   initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone) {
     let lstel = StelWebEngine({
       wasmFile: wasmFile,
@@ -793,3 +793,5 @@ export const swh = {
     return d
   }
 }
+
+export default swh

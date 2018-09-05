@@ -35,7 +35,7 @@
 import ObservingPanelRootToolbar from '@/components/observing-panel-root-toolbar.vue'
 import GroupedObservations from './grouped-observations.vue'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 
 export default {
   data: function () {

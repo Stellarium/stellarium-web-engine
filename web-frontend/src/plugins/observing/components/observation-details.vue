@@ -183,7 +183,7 @@ import LocationMgr from '@/components/location-mgr.vue'
 import ObservingSetupDetails from './observing-setup-details.vue'
 import Moment from 'moment'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 import _ from 'lodash'
 
 export default {

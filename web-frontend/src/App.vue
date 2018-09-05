@@ -57,7 +57,7 @@
 import _ from 'lodash'
 import Gui from '@/components/gui.vue'
 import GuiLoader from '@/components/gui-loader.vue'
-import { swh } from '@/assets/sw_helpers.js'
+import swh from '@/assets/sw_helpers.js'
 import Moment from 'moment'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 
