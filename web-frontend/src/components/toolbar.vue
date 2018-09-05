@@ -15,7 +15,8 @@
       <v-spacer></v-spacer>
       <target-search></target-search>
       <v-spacer></v-spacer>
-      <div class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
+      <div v-if="$store.state.showFPS" class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
+      <div class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FOV {{ fov }}</div>
       <v-btn class="transparent" v-if="!$store.state.showSidePanel" to="/observing">Observe<v-icon>expand_more</v-icon></v-btn>
     </v-toolbar>
   </div>
@@ -30,7 +31,13 @@ export default {
     return {
     }
   },
-
+  computed: {
+    fov: function () {
+      if (!this.$store.state.stel) return '-'
+      let fov = this.$store.state.stel.fov * 180 / Math.PI
+      return fov.toPrecision(3) + '°'
+    }
+  },
   methods: {
     toggleNavigationDrawer: function () {
       this.$store.commit('toggleBool', 'showNavigationDrawer')
