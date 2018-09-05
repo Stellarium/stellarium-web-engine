@@ -11,6 +11,7 @@ import _ from 'lodash'
 import axios from 'axios'
 import hex2dec from 'hex2dec'
 import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
+import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 // jquery is used inside StelWebEngine code as a global
 import $ from 'jquery'
@@ -549,6 +550,86 @@ export const swh = {
   // Everything is done as strings as 64 bit ints don't work in Javascript
   nsidDecimalToHex: function (nsidDecimal) {
     return hex2dec.decToHex(nsidDecimal).substr(2)
+  },
+
+  // Return a SweObj matching a passed sky source JSON object if it's already instanciated in SWE
+  skySource2SweObj: function (ss) {
+    if (!ss || !ss.model) {
+      return undefined
+    }
+    let $stel = Vue.prototype.$stel
+    let obj
+    if (ss.model === 'dso') {
+      obj = $stel.getObjByNSID(ss.nsid)
+    } else if (ss.model === 'tle_satellite') {
+      let id = 'NORAD ' + ss.model_data.norad_number
+      obj = $stel.getObj(id)
+    } else {
+      obj = $stel.getObjByNSID(ss.nsid)
+    }
+    if (!obj) {
+      obj = $stel.getObj(ss.names[0])
+    }
+    if (obj === null) return undefined
+    return obj
+  },
+
+  sweObj2SkySource: function (obj) {
+    let nsid
+    let $stel = Vue.prototype.$stel
+    if (obj.id.startsWith('NSID ')) {
+      nsid = swh.nsidDecimalToHex(obj.id.replace(/^NSID /, ''))
+    }
+    if (!nsid && obj.id.startsWith('GAIA ')) {
+      nsid = swh.nsidDecimalToHex(obj.id.replace(/^GAIA /, ''))
+    }
+    if (obj.id === '' && obj.nsid) {
+      // Case of objects created dynamically using core.createObj()
+      nsid = obj.nsid
+    }
+    if (nsid) {
+      return NoctuaSkyClient.skysources.get(nsid).then(res => {
+        return res
+      }, reason => {
+        if (obj.name.startsWith('GAIA')) {
+          console.log('Generate Gaia object info from StelWebEngine object')
+          let radecICRS = $stel.c2s(obj.icrs)
+          let raICRS = $stel.anp(radecICRS[0])
+          let decICRS = $stel.anpm(radecICRS[1])
+          let ss = {
+            model: 'star',
+            nsid: nsid,
+            types: ['*'],
+            names: [obj.name.replace(/^GAIA /, 'Gaia DR2 ')],
+            modelData: {
+              Vmag: obj.vmag.v,
+              ra: raICRS * 180 / Math.PI,
+              de: decICRS * 180 / Math.PI
+            }
+          }
+          return ss
+        } else {
+          console.log("Couldn't find skysource for NSID " + nsid + ': ' + reason)
+          throw reason
+        }
+      })
+    }
+
+    let searchName = obj.id
+    if (searchName === 'HD 148478') searchName = 'Antares'
+    if (searchName.startsWith('NORAD ')) {
+      searchName = 'NORAD ' + searchName.substring(6).replace(/^0+/, '')
+    }
+    if (obj.type === 'MPl') {
+      searchName = '(' + obj.id.replace(/^0+/, '') + ') ' + obj.name
+    }
+    return NoctuaSkyClient.skysources.getByName(searchName).then(res => {
+      return res
+    }, err => {
+      console.log(err)
+      console.log("Couldn't find skysource for name: " + searchName)
+      throw err
+    })
   },
 
   // Get data for a SkySource from wikipedia

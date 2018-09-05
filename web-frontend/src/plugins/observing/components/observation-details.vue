@@ -306,9 +306,9 @@ export default {
       let azalt
       if (!obs.target) {
         azalt = this.$stel.core.observer.azalt
-      } else if (obs.target.nsid) {
+      } else {
         // First check if the object already exists in SWE
-        let ss = this.$stel.getObjByNSID(obs.target.nsid)
+        let ss = swh.skySource2SweObj(obs.target)
         if (!ss) {
           ss = this.$stel.createObj(obs.target.model, obs.target)
         }

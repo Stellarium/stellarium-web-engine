@@ -60,7 +60,6 @@
 
 import Moment from 'moment'
 import { swh } from '@/assets/sw_helpers.js'
-import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data: function () {
@@ -74,19 +73,8 @@ export default {
     selectedObject: function () {
       return this.$store.state.selectedObject
     },
-    selectedStelObject: function () {
-      if (this.$stel.core.selection.nsid === this.selectedObject.nsid) {
-        return this.$stel.core.selection
-      } else {
-        let obj = this.$stel.getObjByNSID(this.selectedObject.nsid)
-        if (!obj) {
-          obj = this.$stel.getObj(this.selectedObject.id)
-          if (!obj) {
-            obj = this.$stel.createObj(this.selectedObject.model, this.selectedObject)
-          }
-        }
-        return obj
-      }
+    stelSelectionId: function () {
+      return this.$store.state.stel && this.$store.state.stel.selection ? this.$store.state.stel.selection : undefined
     },
     title: function () {
       return this.selectedObject ? swh.nameForSkySource(this.selectedObject) : 'Selection'
@@ -120,7 +108,7 @@ export default {
       return swh.iconForSkySource(this.selectedObject)
     },
     items: function () {
-      let obj = this.selectedStelObject
+      let obj = this.$stel.core.selection
       if (!obj) return []
 
       obj.update(this.$stel.core.observer)
@@ -212,9 +200,6 @@ export default {
       let currentFov = this.$store.state.stel.fov * 180 / Math.PI
       return (fovs[0] > currentFov + 0.0001)
     },
-    stelSelection: function () {
-      return this.$store.state.stel && this.$store.state.stel.selection ? this.$store.state.stel.selection : undefined
-    },
     extraButtons: function () {
       return swh.selectedObjectExtraButtons
     }
@@ -229,65 +214,15 @@ export default {
         that.wikipediaData = data
       }, reason => { })
     },
-    stelSelection: function (s) {
-      if (!s) {
+    stelSelectionId: function (s) {
+      if (!this.$stel.core.selection) {
         this.$store.commit('setSelectedObject', undefined)
         return
       }
-      if (this.$store.state.selectedObject && this.$store.state.selectedObject.nsid && s === this.$store.state.selectedObject.nsid) {
-        // The object is already selected (fom search)
-        return
-      }
-      // Try to get the NSID of the object
-      let nsid = this.$stel.core.selection ? this.$stel.core.selection.nsid : undefined
-      if (!nsid && s.startsWith('NSID ')) {
-        s = s.replace(/^NSID /, '')
-        nsid = swh.nsidDecimalToHex(s)
-      }
-      if (!nsid && s.startsWith('GAIA ')) {
-        s = s.replace(/^NSID /, '')
-        nsid = swh.nsidDecimalToHex(s)
-      }
-      if (nsid) {
-        NoctuaSkyClient.skysources.get(nsid).then(res => {
-          this.$store.commit('setSelectedObject', res)
-        }, reason => {
-          let obj = this.$stel.core.selection
-          if (obj.name.startsWith('GAIA')) {
-            console.log('Generate Gaia object info from StelWebEngine object')
-            let radecICRS = this.$stel.c2s(obj.icrs)
-            let raICRS = this.$stel.anp(radecICRS[0])
-            let decICRS = this.$stel.anpm(radecICRS[1])
-            let ss = {
-              model: 'star',
-              nsid: nsid,
-              types: ['*'],
-              names: [obj.name.replace(/^GAIA /, 'Gaia DR2 ')],
-              modelData: {
-                Vmag: obj.vmag.v,
-                ra: raICRS * 180 / Math.PI,
-                de: decICRS * 180 / Math.PI
-              }
-            }
-            this.$store.commit('setSelectedObject', ss)
-          } else {
-            console.log("Couldn't find object for NSID " + nsid + ' in onlineDB: ' + reason)
-          }
-        })
-        return
-      }
-
-      let obj = this.$stel.core.selection
-      console.log("Couldn't get the object's NSID, try to find it by name: " + obj.id)
-      if (obj.type.v === 'MPl') {
-        s = '(' + obj.id.replace(/^0+/, '') + ') ' + obj.name
-      }
-      NoctuaSkyClient.skysources.getByName(obj.id).then(res => {
-        res['id'] = obj.id
+      swh.sweObj2SkySource(this.$stel.core.selection).then(res => {
         this.$store.commit('setSelectedObject', res)
       }, err => {
-        console.log(err)
-        console.log("Couldn't find skysource in onlineDB: " + obj.id)
+        console.log("Couldn't find info for object " + s + ':' + err)
         this.$store.commit('setSelectedObject', undefined)
       })
     }
@@ -331,8 +266,8 @@ export default {
       this.$stel.core.selection = undefined
     },
     lockToSelection: function () {
-      if (this.selectedStelObject) {
-        this.$stel.core.lock = this.selectedStelObject
+      if (this.$stel.core.selection) {
+        this.$stel.core.lock = this.$stel.core.selection
         this.$stel.core.lock.update()
         this.$stel.core.lookat(this.$stel.core.lock.azalt, 1.0)
       }

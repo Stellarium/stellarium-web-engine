@@ -14,6 +14,7 @@
 
 <script>
 import SkysourceSearch from '@/components/skysource-search.vue'
+import { swh } from '@/assets/sw_helpers.js'
 
 export default {
   data: function () {
@@ -22,31 +23,21 @@ export default {
     }
   },
   watch: {
-    obsSkySource: function (v) {
-      if (!v) {
+    obsSkySource: function (ss) {
+      if (!ss) {
         return
       }
-      if (v.model === 'tle_satellite') {
-        v.id = 'NORAD ' + v.model_data.norad_number
-      } else {
-        v.id = v.names[0]
+      let obj = swh.skySource2SweObj(ss)
+      if (!obj) {
+        obj = this.$stel.createObj(ss.model, ss)
+        this.$selectionLayer.add(obj)
       }
-      // First check if the object already exists in SWE
-      let ss = this.$stel.getObjByNSID(v.nsid)
-      if (!ss) {
-        ss = this.$stel.getObj(v.id)
+      if (!obj) {
+        console.warning("Can't find object in SWE: " + ss.short_name)
       }
-      if (ss) {
-        ss.update()
-      } else {
-        ss = this.$stel.createObj(v.model, v)
-        ss.update()
-        this.$selectionLayer.add(ss)
-      }
-      this.$store.commit('setSelectedObject', v)
-      this.$stel.core.selection = ss
-
-      this.$stel.core.lock = ss
+      obj.update()
+      this.$stel.core.selection = obj
+      this.$stel.core.lock = obj
       this.$stel.core.lock.update()
       this.$stel.core.lookat(this.$stel.core.lock.azalt, 1.0)
     }
