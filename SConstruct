@@ -13,6 +13,7 @@ profile = int(ARGUMENTS.get('profile', 0))
 emscripten = int(ARGUMENTS.get('emscripten', 0))
 werror = int(ARGUMENTS.get("werror", 1))
 analyze = int(ARGUMENTS.get("analyze", 0))
+es6 = int(ARGUMENTS.get("es6", 0))
 
 if emscripten: target_os = 'js'
 
@@ -143,6 +144,9 @@ if target_os == 'js':
 
     if debug:
         flags += ['-s', 'SAFE_HEAP=1', '-s', 'ASSERTIONS=1']
+
+    if es6:
+        flags += ['-s', 'EXPORT_ES6=1']
 
     env.Append(CCFLAGS=['-DNO_ARGP', '-DGLES2 1'] + flags)
     env.Append(LINKFLAGS=flags)
