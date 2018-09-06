@@ -33,6 +33,13 @@ var testBasic = function(stel) {
     assert(isNear(sun.dec,  6.20 * stel.D2R, 0.01));
 };
 
+var testIds = function(stel) {
+    var o = stel.getObj('Polaris');
+    var names = o.names();
+    var tests = ['BAYER alf UMi', 'HIP 11767', 'HD 8890', 'NAME Polaris']
+    for (var v of tests) assert(names.includes(v))
+}
+
 var testSearch = function(stel) {
     var obj
     // Simple object search.
@@ -191,6 +198,7 @@ require('./static/js/stellarium-web-engine.js')({
     onReady: function(stel) {
         testCore(stel);
         testBasic(stel);
+        testIds(stel);
         testSearch(stel);
         testCloneObserver(stel);
         testListener(stel);

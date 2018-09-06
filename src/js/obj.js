@@ -120,6 +120,7 @@ Module.afterInit(function() {
     }
   }
 
+  // XXX: deprecated: use names instead.
   SweObj.prototype.ids = function(f) {
     var callback = Module.addFunction(function(k, v, u) {
       k = Module.Pointer_stringify(k);
@@ -128,6 +129,18 @@ Module.afterInit(function() {
     }, 'viii');
     Module._obj_get_ids(this.v, callback, 0);
     Module.removeFunction(callback);
+  };
+
+  SweObj.prototype.names = function() {
+    var ret = [];
+    var callback = Module.addFunction(function(cat, v, u) {
+      cat = Module.Pointer_stringify(cat);
+      v = Module.Pointer_stringify(v);
+      ret.push(cat + ' ' + v);
+    }, 'viii');
+    Module._obj_get_ids(this.v, callback, 0);
+    Module.removeFunction(callback);
+    return ret;
   };
 
   // XXX: deprecated.
