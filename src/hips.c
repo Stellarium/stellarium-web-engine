@@ -65,7 +65,7 @@ static cache_t *g_cache = NULL;
 struct hips {
     char        *url;
     char        *service_url;
-    const char  *ext; // jpg, png, or webp.
+    const char  *ext; // jpg, png, webp.
     double      release_date; // release date as jd value.
     int         error; // Set if an error occurred.
     char        *label; // Short label used in the progressbar.
@@ -161,6 +161,8 @@ static int property_handler(void* user, const char* section,
              if (strstr(value, "webp")) hips->ext = "webp";
         else if (strstr(value, "jpeg")) hips->ext = "jpg";
         else if (strstr(value, "png"))  hips->ext = "png";
+        else if (strstr(value, "eph"))  hips->ext = "eph";
+        else LOG_W("Unknown hips format: %s", value);
     }
     // Guillaume 2018 Aug 30: disable the hips_service_url, because
     // it poses probleme when it changes the protocole from https to
@@ -190,6 +192,7 @@ static int parse_properties(hips_t *hips)
     if (!data) return 0;
     hips->properties = json_object_new(0);
     ini_parse_string(data, property_handler, hips);
+    asset_release(url);
     return 0;
 }
 
@@ -209,6 +212,7 @@ static int del_tile(void *data)
     if (tile->loader && worker_is_running(&tile->loader->worker))
         return CACHE_KEEP;
     texture_release(tile->tex);
+    if (tile->data) tile->hips->settings.delete_tile(tile->data);
     free(tile);
     return 0;
 }
@@ -641,14 +645,16 @@ next:
     return nb;
 }
 
-const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
-                          int *code)
+
+static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
+                              int *code)
 {
     const void *data, *tile_data;
     int size, parent_code, cost;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
 
+    assert(order >= 0);
     *code = 0;
     if (!hips_is_ready(hips)) return NULL;
 
@@ -662,26 +668,27 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
                 order, (pix / 10000) * 10000, pix, hips->ext);
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
     tile = cache_get(g_cache, url, strlen(url));
-    if (tile) return tile->data;
+    if (tile) return tile;
 
     // Skip if we already know that this tile doesn't exists.
     if (order > 0) {
-        parent = hips_get_tile(hips, order - 1, pix / 4, 0, &parent_code);
+        parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
         if (!parent) return NULL; // Always get parent first.
         if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
             *code = 404;
             return NULL;
         }
     }
-
     data = asset_get_data(url, &size, code);
-    if (!*code) return NULL; // Still loading the file.
+    if (!(*code)) return NULL; // Still loading the file.
 
     // If the tile doesn't exists, mark it in the parent tile so that we
     // won't have to search for it again.
     if ((*code) == 404) {
-        parent = hips_get_tile(hips, order - 1, pix / 4, 0, &parent_code);
-        if (parent) parent->flags |= (TILE_NO_CHILD_0 << (pix % 4));
+        if (order > 0) {
+            parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
+            if (parent) parent->flags |= (TILE_NO_CHILD_0 << (pix % 4));
+        }
         return NULL;
     }
     // Anything else that doesn't return the data is an actual error.
@@ -703,5 +710,12 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
     cache_add(g_cache, url, strlen(url), tile, sizeof(*tile) + cost,
               del_tile);
 
-    return tile->data;
+    return tile;
+}
+
+const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
+                          int *code)
+{
+    tile_t *tile = hips_get_tile_(hips, order, pix, flags, code);
+    return tile ? tile->data : NULL;
 }

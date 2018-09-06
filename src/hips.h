@@ -31,6 +31,7 @@ enum {
 typedef struct hips_settings {
     const void *(*create_tile)(int order, int pix, void *src,
                                int size, int *cost);
+    int (*delete_tile)(void *tile);
 } hips_settings_t;
 
 /*
