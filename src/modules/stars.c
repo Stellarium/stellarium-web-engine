@@ -68,17 +68,6 @@ struct tile {
     double      mag_max;
     int         nb;
     star_data_t *stars;
-
-    struct {
-        worker_t worker;
-        tile_t *tile;
-        stars_t *stars;
-        void *data;
-        int size;
-        bool is_gaia;
-        int data_version;
-    } *loader;
-
 };
 
 
@@ -241,9 +230,6 @@ static star_t *star_create(const star_data_t *data)
 static int del_tile(void *data)
 {
     tile_t *tile = data;
-    if (tile->loader && worker_is_running(&tile->loader->worker))
-        return CACHE_KEEP;
-    free(tile->loader);
     free(tile->stars);
     free(tile);
     return 0;
@@ -254,14 +240,18 @@ static int star_data_cmp(const void *a, const void *b)
     return cmp(((const star_data_t*)a)->vmag, ((const star_data_t*)b)->vmag);
 }
 
-static int load_worker(worker_t *w)
+static int on_file_tile_loaded(const char type[4],
+                               const void *data, int size, void *user)
 {
-    int i, sp, nb, data_ofs = 0, size, version, order, pix, row_size, flags;
-    star_data_t *s;
+    int version, nb, sp, data_ofs = 0, row_size, flags, i;
     double vmag, ra, de, pra, pde, plx, bv;
-    void *data;
-    typeof(((tile_t*)0)->loader) loader = (void*)w;
-    tile_t *tile = loader->tile;
+    stars_t *stars = USER_GET(user, 0);
+    tile_t **out = USER_GET(user, 1); // Receive the tile.
+    tile_t *tile;
+    typeof(tile->pos) pos;
+    bool is_gaia = strncmp(type, "GAIA", 4) == 0;
+    void *table_data;
+    star_data_t *s;
 
     // All the columns we care about in the source file.
     eph_table_column_t columns[] = {
@@ -278,39 +268,47 @@ static int load_worker(worker_t *w)
         {"bv",   'f'},
     };
 
-    assert(tile->nb == 0);
-    eph_read_tile_header(loader->data, loader->size, &data_ofs,
-                         &version, &order, &pix);
+    *out = NULL;
+    // Only support STAR and GAIA chunks.  Ignore anything else.
+    if (strncmp(type, "STAR", 4) != 0 &&
+        strncmp(type, "GAIA", 4) != 0) return 0;
+
+    eph_read_tile_header(data, size, &data_ofs,
+                         &version, &pos.order, &pos.pix);
     assert(version >= 3); // No more support for old style format.
-    nb = eph_read_table_header(version, loader->data, loader->size,
+    nb = eph_read_table_header(version, data, size,
                                &data_ofs, &row_size, &flags,
                                ARRAY_SIZE(columns), columns);
     if (nb < 0) {
         LOG_E("Cannot parse file");
         return -1;
     }
-    data = eph_read_compressed_block(
-            loader->data, loader->size, &data_ofs, &size);
-    if (!data) return -1;
-    data_ofs = 0;
 
-    if (flags & 1) {
-        eph_shuffle_bytes(data + data_ofs, row_size, nb);
+    table_data = eph_read_compressed_block(data, size, &data_ofs, &size);
+    if (!table_data) {
+        LOG_E("Cannot get table data");
+        return -1;
     }
+    data_ofs = 0;
+    if (flags & 1) eph_shuffle_bytes(table_data, row_size, nb);
 
+    tile = calloc(1, sizeof(*tile));
     tile->stars = calloc(nb, sizeof(*tile->stars));
+    tile->pos = pos;
+    tile->mag_min = +INFINITY;
+    tile->mag_max = -INFINITY;
+
     for (i = 0; i < nb; i++) {
         s = &tile->stars[tile->nb];
         eph_read_table_row(
-                data, size, &data_ofs, ARRAY_SIZE(columns), columns,
+                table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
                 &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
                 &pra, &pde, &bv);
 
         // If the stars was already in the bundled data, skip it.
-        if (loader->is_gaia && vmag < loader->stars->bundled_max_vmag)
+        if (is_gaia && vmag < stars->bundled_max_vmag)
             continue;
-
-        if (!loader->is_gaia) assert(!s->gaia);
+        if (!is_gaia) assert(!s->gaia);
         s->sp = sp;
         s->vmag = vmag;
         s->ra = ra;
@@ -327,57 +325,10 @@ static int load_worker(worker_t *w)
 
     // Sort the data by vmag, so that we can early exit during render.
     qsort(tile->stars, tile->nb, sizeof(*tile->stars), star_data_cmp);
-
-    free(data);
-    free(loader->data);
-    return 0;
-}
-
-static int on_file_tile_loaded(const char type[4],
-                               const void *data, int size, void *user)
-{
-    int version, nb, data_ofs = 0, row_size, flags;
-    stars_t *stars = USER_GET(user, 0);
-    tile_t **out = USER_GET(user, 1); // Receive the tile.
-    tile_t *tile;
-    typeof(tile->pos) pos;
-
-    *out = NULL;
-    // Only support STAR and GAIA chunks.  Ignore anything else.
-    if (strncmp(type, "STAR", 4) != 0 &&
-        strncmp(type, "GAIA", 4) != 0) return 0;
-
-    eph_read_tile_header(data, size, &data_ofs,
-                         &version, &pos.order, &pos.pix);
-    assert(version >= 3); // No more support for old style format.
-    nb = eph_read_table_header(version, data, size,
-                               &data_ofs, &row_size, &flags, 0, NULL);
-    (void)nb;
-
-    tile = calloc(1, sizeof(*tile));
-    tile->pos = pos;
-    tile->mag_min = +INFINITY;
-    tile->mag_max = -INFINITY;
-
-    tile->loader = calloc(1, sizeof(*tile->loader));
-    worker_init(&tile->loader->worker, load_worker);
-    tile->loader->tile = tile;
-    tile->loader->stars = stars;
-    tile->loader->data_version = version;
-    tile->loader->data = malloc(size);
-    memcpy(tile->loader->data, data, size);
-    tile->loader->size = size;
-    tile->loader->is_gaia = strncmp(type, "GAIA", 4) == 0;
-
-    if (!tile->loader->is_gaia) {
-        // For the moment we just run the loader immediately, not in a thread.
-        // This is because the non gaia stars need to be loaded at startup so
-        // that we can render the constellations!
-        tile->loader->worker.fn(&tile->loader->worker);
-        free(tile->loader);
-        tile->loader = NULL;
+    free(table_data);
+    if (!is_gaia)
         stars->bundled_max_vmag = max(stars->bundled_max_vmag, tile->mag_max);
-    }
+
     *out = tile;
     return 0;
 }
@@ -432,14 +383,6 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
     tile_t *tile;
     tile = hips_get_tile(stars->survey, order, pix, 0, &code);
     if (loading_complete) *loading_complete = (code != 0);
-    // Got a tile, but it is still loading.
-    if (tile && tile->loader) {
-        if (worker_iter(&tile->loader->worker)) {
-            free(tile->loader);
-            tile->loader = NULL;
-        }
-        return NULL;
-    }
     return tile;
 }
 
