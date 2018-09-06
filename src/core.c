@@ -11,57 +11,6 @@
 
 core_t *core;   // The global core object.
 
-static obj_t *core_get(const obj_t *obj, const char *id, int flags);
-static obj_t *core_get_by_nsid(const obj_t *obj, uint64_t nsid);
-static int core_list(const obj_t *obj, observer_t *obs,
-                     double max_mag, void *user,
-                     int (*f)(const char *id, void *user));
-static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
-                               const json_value *args);
-static int selection_get_choices(
-        int (*f)(const char* name, const char *id, void *user),
-        void *user);
-static int proj_get_choices(
-        int (*f)(const char* name, const char *id, void *user),
-        void *user);
-static void core_on_fov_changed(obj_t *obj, const attribute_t *attr);
-static void core_on_utcoffset_changed(obj_t *obj, const attribute_t *attr);
-static json_value *core_fn_progressbars(obj_t *obj, const attribute_t *attr,
-                                        const json_value *args);
-
-static obj_klass_t core_klass = {
-    .id = "core",
-    .size = sizeof(core_t),
-    .flags = OBJ_IN_JSON_TREE,
-    .get = core_get,
-    .get_by_nsid = core_get_by_nsid,
-    .list = core_list,
-    .attributes = (attribute_t[]) {
-        PROPERTY("utcoffset", "d", MEMBER(core_t, utc_offset),
-                 .on_changed = core_on_utcoffset_changed),
-        PROPERTY("fov", "f", MEMBER(core_t, fov),
-                 .on_changed = core_on_fov_changed),
-        PROPERTY("projection", "d", MEMBER(core_t, proj),
-                 .choices = proj_get_choices),
-        PROPERTY("selection", "p", MEMBER(core_t, selection),
-                 .hint = "obj", .choices = selection_get_choices),
-        PROPERTY("lock", "p", MEMBER(core_t, target.lock),
-                 .hint = "obj"),
-        PROPERTY("hovered", "p", MEMBER(core_t, hovered),
-                 .hint = "obj"),
-        PROPERTY("max_mag", "f", MEMBER(core_t, hints_mag_max),
-                 .sub = "hints"),
-        PROPERTY("progressbars", "json", .fn = core_fn_progressbars),
-        PROPERTY("fps", "f", MEMBER(core_t, prof.fps)),
-        PROPERTY("clicks", "d", MEMBER(core_t, clicks)),
-        PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
-        FUNCTION("lookat", .fn = core_lookat),
-        {}
-    }
-};
-
-OBJ_REGISTER(core_klass)
-
 typedef union
 {
     bool    b;
@@ -982,6 +931,37 @@ const char *type_to_str(const char type[4])
     return "?";
 }
 
+static obj_klass_t core_klass = {
+    .id = "core",
+    .size = sizeof(core_t),
+    .flags = OBJ_IN_JSON_TREE,
+    .get = core_get,
+    .get_by_nsid = core_get_by_nsid,
+    .list = core_list,
+    .attributes = (attribute_t[]) {
+        PROPERTY("utcoffset", "d", MEMBER(core_t, utc_offset),
+                 .on_changed = core_on_utcoffset_changed),
+        PROPERTY("fov", "f", MEMBER(core_t, fov),
+                 .on_changed = core_on_fov_changed),
+        PROPERTY("projection", "d", MEMBER(core_t, proj),
+                 .choices = proj_get_choices),
+        PROPERTY("selection", "p", MEMBER(core_t, selection),
+                 .hint = "obj", .choices = selection_get_choices),
+        PROPERTY("lock", "p", MEMBER(core_t, target.lock),
+                 .hint = "obj"),
+        PROPERTY("hovered", "p", MEMBER(core_t, hovered),
+                 .hint = "obj"),
+        PROPERTY("max_mag", "f", MEMBER(core_t, hints_mag_max),
+                 .sub = "hints"),
+        PROPERTY("progressbars", "json", .fn = core_fn_progressbars),
+        PROPERTY("fps", "f", MEMBER(core_t, prof.fps)),
+        PROPERTY("clicks", "d", MEMBER(core_t, clicks)),
+        PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
+        FUNCTION("lookat", .fn = core_lookat),
+        {}
+    }
+};
+OBJ_REGISTER(core_klass)
 
 /******* TESTS **********************************************************/
 
