@@ -131,8 +131,10 @@ for line in gzip.open(bsc_file):
 for line in gzip.open(hip_file):
     hd = parse(line, 391, 396, type=int)
     if hd is None: continue
-    if hd in stars: continue
     hip = parse(line, 9, 14, type=int, required=True)
+    if hd in stars:
+        stars[hd] = stars[hd]._replace(hip=hip)
+        continue
     vmag = parse(line, 42, 46, zerobits=16, required=True)
     ra = parse(line, 52, 63, zerobits=8)
     de = parse(line, 65, 76, zerobits=8)
