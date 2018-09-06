@@ -212,15 +212,29 @@ static obj_t *stars_add_res(obj_t *obj, json_value *val,
 
 static star_t *star_create(const star_data_t *data)
 {
-    char id[128];
+    char id[128], desgn[128];
     star_t *star;
 
     if (data->hd) {
         sprintf(id, "HD %d", data->hd);
-        identifiers_add(id, "HD", id + 3, NULL, NULL);
     } else {
         sprintf(id, "GAIA %" PRId64, data->gaia);
     }
+
+    // Add all the identifers for this star.
+    if (data->hd) {
+        sprintf(desgn, "%d", data->hd);
+        identifiers_add(id, "HD", desgn, NULL, NULL);
+    }
+    if (data->hip) {
+        sprintf(desgn, "%d", data->hip);
+        identifiers_add(id, "HIP", desgn, NULL, NULL);
+    }
+    if (data->gaia) {
+        sprintf(desgn, "%" PRId64, data->gaia);
+        identifiers_add(id, "GAIA", desgn, NULL, NULL);
+    }
+
     star = (star_t*)obj_create("star", id, NULL, NULL);
     strcpy(star->obj.type, "*");
     star->data = *data;
