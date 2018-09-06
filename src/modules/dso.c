@@ -154,7 +154,7 @@ static int del_tile(void *data)
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
-    tile_t *tile = user;
+    tile_t *tile;
     dso_data_t *d;
     typeof(tile->pos) pos;
     int nb, i, version, data_ofs = 0, flags, row_size;
@@ -184,6 +184,7 @@ static int on_file_tile_loaded(const char type[4],
             ARRAY_SIZE(columns), columns);
     if (nb < 0) {
         LOG_E("Cannot parse file");
+        *(tile_t**)user = NULL;
         return -1;
     }
     tile_data = eph_read_compressed_block(data, size, &data_ofs, &size);
@@ -193,7 +194,9 @@ static int on_file_tile_loaded(const char type[4],
         eph_shuffle_bytes(tile_data + data_ofs, row_size, nb);
     }
 
-    assert(tile);
+    tile = calloc(1, sizeof(*tile));
+    tile->pos.order = pos.order;
+    tile->pos.pix = pos.pix;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
     tile->nb = nb;
@@ -238,18 +241,16 @@ static int on_file_tile_loaded(const char type[4],
         }
     }
     free(tile_data);
+    *(tile_t**)user = tile;
     return 0;
 }
 
 static const void *dsos_create_tile(int order, int pix, void *data,
                                     int size, int *cost)
 {
-    // XXX: should return NULL in case of parsing error.
-    tile_t *tile = calloc(1, sizeof(*tile));
-    tile->pos.order = order;
-    tile->pos.pix = pix;
-    eph_load(data, size, tile, on_file_tile_loaded);
-    *cost = tile->nb * sizeof(*tile->data);
+    tile_t *tile;
+    eph_load(data, size, &tile, on_file_tile_loaded);
+    if (tile) *cost = tile->nb * sizeof(*tile->data);
     return tile;
 }
 
