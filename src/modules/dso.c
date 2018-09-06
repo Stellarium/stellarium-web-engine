@@ -13,9 +13,6 @@
 
 // XXX: this very similar to stars.c.  I think we could merge most of the code.
 
-// Size of the cache allocated to all the tiles.
-#define CACHE_SIZE (8 * (1 << 20))
-
 #define URL_MAX_SIZE 4096
 #define DSO_DEFAULT_VMAG 16.0
 
@@ -71,10 +68,10 @@ typedef struct {
  */
 struct dsos {
     obj_t       obj;
-    cache_t     *tiles;
     regex_t     search_reg;
     fader_t     visible;
 
+    hips_t      *survey;
     char        survey_url[URL_MAX_SIZE - 256]; // Url of the DSO survey.
     double      survey_release_date; // release date as jd value.
 };
@@ -159,8 +156,7 @@ static int del_tile(void *data)
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
-    dsos_t *dsos = user;
-    tile_t *tile;
+    tile_t *tile = user;
     dso_data_t *d;
     typeof(tile->pos) pos;
     int nb, i, version, data_ofs = 0, flags, row_size;
@@ -199,17 +195,12 @@ static int on_file_tile_loaded(const char type[4],
         eph_shuffle_bytes(tile_data + data_ofs, row_size, nb);
     }
 
-    tile = cache_get(dsos->tiles, &pos, sizeof(pos));
-    assert(!tile);
-    tile = calloc(1, sizeof(*tile));
-    tile->pos = pos;
+    assert(tile);
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
     tile->nb = nb;
 
     tile->data = calloc(tile->nb, sizeof(*tile->data));
-    cache_add(dsos->tiles, &pos, sizeof(pos), tile,
-              tile->nb * sizeof(*tile->data), del_tile);
 
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];
@@ -252,26 +243,43 @@ static int on_file_tile_loaded(const char type[4],
     return 0;
 }
 
+static const void *dsos_create_tile(int order, int pix, void *data,
+                                    int size, int *cost)
+{
+    // XXX: should return NULL in case of parsing error.
+    tile_t *tile = calloc(1, sizeof(*tile));
+    tile->pos.order = order;
+    tile->pos.pix = pix;
+    eph_load(data, size, tile, on_file_tile_loaded);
+    *cost = tile->nb * sizeof(*tile->data);
+    return tile;
+}
+
 static int dsos_init(obj_t *obj, json_value *args)
 {
-    const char *path;
-    const void *data;
-    int size;
     dsos_t *dsos = (dsos_t*)obj;
+    hips_settings_t survey_settings = {
+        .create_tile = dsos_create_tile,
+        .delete_tile = del_tile,
+    };
+
     fader_init(&dsos->visible, false);
-    dsos->tiles = cache_create(CACHE_SIZE);
+
 
     // Bundled DSO if there is any (shouldn't be)
+    /*
     ASSET_ITER("asset://dso/", path) {
         data = asset_get_data(path, &size, NULL);
         eph_load(data, size, dsos, on_file_tile_loaded);
         asset_release(path);
     }
+    */
 
     regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
     sprintf(dsos->survey_url, "https://data.stellarium.org/surveys/dso");
+    dsos->survey = hips_create(dsos->survey_url, 0, &survey_settings);
     return 0;
 }
 
@@ -279,31 +287,10 @@ static int dsos_init(obj_t *obj, json_value *args)
 static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
                         bool *loading_complete)
 {
+    int code;
     tile_t *tile;
-    typeof(tile->pos) pos = {order, pix};
-    char *url;
-    void *data;
-    int size, code, dir;
-
-    if (loading_complete) *loading_complete = true;
-    tile = cache_get(dsos->tiles, &pos, sizeof(pos));
-    if (!tile && load && *dsos->survey_url) {
-        dir = (pix / 10000) * 10000;
-        asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph?v=%f",
-                 dsos->survey_url, order, dir, pix,
-                 dsos->survey_release_date);
-        data = asset_get_data(url, &size, &code);
-        if (!data && code) {
-            // XXX: need to handle this case: the tiles should have a flag
-            // that says that there is no data at this level, like in hips.c
-        }
-        if (loading_complete) *loading_complete = (code != 0);
-        if (data) {
-            eph_load(data, size, dsos, on_file_tile_loaded);
-            asset_release(url);
-        }
-        free(url);
-    }
+    tile = hips_get_tile(dsos->survey, order, pix, 0, &code);
+    if (loading_complete) *loading_complete = (code != 0);
     return tile;
 }
 
