@@ -65,7 +65,6 @@ struct tile {
         int order;
         int pix;
     } pos;
-    stars_t     *parent;
     int         flags;
     double      mag_min;
     double      mag_max;
@@ -75,6 +74,7 @@ struct tile {
     struct {
         worker_t worker;
         tile_t *tile;
+        stars_t *stars;
         void *data;
         int size;
         bool is_gaia;
@@ -309,7 +309,7 @@ static int load_worker(worker_t *w)
                 &pra, &pde, &bv);
 
         // If the stars was already in the bundled data, skip it.
-        if (loader->is_gaia && vmag < tile->parent->bundled_max_vmag)
+        if (loader->is_gaia && vmag < loader->stars->bundled_max_vmag)
             continue;
 
         if (!loader->is_gaia) assert(!s->gaia);
@@ -357,7 +357,6 @@ static int on_file_tile_loaded(const char type[4],
     nb = size / 40; // XXX: only estimation until we parse the file!
 
     tile = calloc(1, sizeof(*tile));
-    tile->parent = stars;
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
@@ -367,6 +366,7 @@ static int on_file_tile_loaded(const char type[4],
     tile->loader = calloc(1, sizeof(*tile->loader));
     worker_init(&tile->loader->worker, load_worker);
     tile->loader->tile = tile;
+    tile->loader->stars = stars;
     tile->loader->data_version = version;
     tile->loader->data = malloc(size);
     memcpy(tile->loader->data, data, size);
