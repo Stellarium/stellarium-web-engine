@@ -440,7 +440,7 @@ obj_t *obj_add_res(obj_t *obj, const char *data, const char *base_path)
 static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
                                        const json_value *args)
 {
-    return args_value("s", NULL, obj_get_name(obj));
+    return args_value_new("s", NULL, obj_get_name(obj));
 }
 
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
@@ -449,18 +449,18 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     double time;
     double v[4] = {};
     if (str_equ(attr->name, "distance")) {
-        return args_value("f", "dist",
+        return args_value_new("f", "dist",
                 obj->pos.pvg[0][3] == 0 ? NAN :
                 vec3_norm(obj->pos.pvg[0]));
     }
     // XXX: not correct!  radec should be in CIRS, not ICRS!
     if (str_equ(attr->name, "radec")) {
         vec4_copy(obj->pos.pvg[0], v);
-        return args_value("v4", "radec", v);
+        return args_value_new("v4", "radec", v);
     }
     if (str_equ(attr->name, "azalt")) {
         eraS2c(obj->pos.az, obj->pos.alt, v);
-        return args_value("v3", "azalt", v);
+        return args_value_new("v3", "azalt", v);
     }
 
     if (str_equ(attr->name, "rise")) {
@@ -468,14 +468,14 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                              core->observer->tt - 1.0 / 2,
                              core->observer->tt + 1.0 / 2,
                              1.0 / 24 / 60 / 2);
-        return args_value("f", "jdm", time);
+        return args_value_new("f", "jdm", time);
     }
     if (str_equ(attr->name, "set")) {
         time = compute_event(core->observer, obj, EVENT_SET,
                              core->observer->tt - 1.0 / 2,
                              core->observer->tt + 1.0 / 2,
                              1.0 / 24 / 60 / 2);
-        return args_value("f", "jdm", time);
+        return args_value_new("f", "jdm", time);
     }
     assert(false);
     return NULL;
@@ -496,17 +496,17 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
     // If no input arguents, return the value.
     if (!args || (args->type == json_array && !args->u.array.length)) {
         if (strcmp(attr->type, "b") == 0)
-            return args_value(attr->type, attr->hint, *(bool*)p);
+            return args_value_new(attr->type, attr->hint, *(bool*)p);
         else if (strcmp(attr->type, "d") == 0)
-            return args_value(attr->type, attr->hint, *(int*)p);
+            return args_value_new(attr->type, attr->hint, *(int*)p);
         else if (strcmp(attr->type, "f") == 0)
-            return args_value(attr->type, attr->hint, *(double*)p);
+            return args_value_new(attr->type, attr->hint, *(double*)p);
         else if (strcmp(attr->type, "p") == 0)
-            return args_value(attr->type, attr->hint, *(void**)p);
+            return args_value_new(attr->type, attr->hint, *(void**)p);
         else if (strcmp(attr->type, "s") == 0)
-            return args_value(attr->type, attr->hint, *(char**)p);
+            return args_value_new(attr->type, attr->hint, *(char**)p);
         else
-            return args_value(attr->type, attr->hint, p);
+            return args_value_new(attr->type, attr->hint, p);
     } else { // Set the value.
         assert(attr->member.size <= sizeof(buf));
         args_get(args, NULL, 1, attr->type, attr->hint, buf);
@@ -623,7 +623,7 @@ int obj_call(obj_t *obj, const char *attr, const char *sig, ...)
     nb_args = split_types(sig, types);
     args = json_array_new(nb_args);
     for (i = 0; i < nb_args; i++)
-        json_array_push(args, args_vvalue(types[i], NULL, ap));
+        json_array_push(args, args_vvalue_new(types[i], NULL, ap));
     ret = obj_call_json(obj, attr, args);
     json_builder_free(args);
     json_builder_free(ret);
@@ -665,7 +665,7 @@ int obj_set_attr(const obj_t *obj, const char *name, const char *type, ...)
     json_value *arg, *ret;
     va_list ap;
     va_start(ap, type);
-    arg = args_vvalue(type, NULL, ap);
+    arg = args_vvalue_new(type, NULL, ap);
     ret = obj_call_json(obj, name, arg);
     json_builder_free(arg);
     json_builder_free(ret);

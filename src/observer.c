@@ -211,7 +211,7 @@ static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
     observer_t *obs = (observer_t*)obj;
     double v[3];
     eraS2c(obs->azimuth, obs->altitude, v);
-    return args_value("v3", "azalt", v);
+    return args_value_new("v3", "azalt", v);
 }
 
 static void observer_on_city_changed(obj_t *obj, const attribute_t *attr)

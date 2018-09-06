@@ -71,7 +71,7 @@ static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
         args_get(args, NULL, 1, "s", NULL, &url);
         photo->img = texture_from_url(url, 0);
     }
-    return photo->img ? args_value("s", NULL, photo->img->url) : NULL;
+    return photo->img ? args_value_new("s", NULL, photo->img->url) : NULL;
 }
 
 static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,

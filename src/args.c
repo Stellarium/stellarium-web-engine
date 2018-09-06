@@ -151,7 +151,7 @@ int args_get(const json_value *args, const char *name, int pos,
     return ret;
 }
 
-json_value *args_vvalue(const char *type, const char *hint, va_list ap)
+json_value *args_vvalue_new(const char *type, const char *hint, va_list ap)
 {
     json_value *ret, *val;
     double f;
@@ -210,12 +210,12 @@ json_value *args_vvalue(const char *type, const char *hint, va_list ap)
     return ret;
 }
 
-json_value *args_value(const char *type, const char *hint, ...)
+json_value *args_value_new(const char *type, const char *hint, ...)
 {
     va_list ap;
     json_value *ret;
     va_start(ap, hint);
-    ret = args_vvalue(type, hint, ap);
+    ret = args_vvalue_new(type, hint, ap);
     va_end(ap);
     return ret;
 }
