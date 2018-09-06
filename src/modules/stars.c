@@ -59,15 +59,12 @@ struct stars {
     double          bundled_max_vmag;
 };
 
-// Could we just replace with a nuniq uint64_t?
-typedef struct {
-    int order;
-    int pix;
-} tile_pos_t;
-
 typedef struct tile tile_t;
 struct tile {
-    tile_pos_t  pos;
+    struct {
+        int order;
+        int pix;
+    } pos;
     stars_t     *parent;
     int         flags;
     double      mag_min;
@@ -342,9 +339,9 @@ static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
     int version, nb, data_ofs = 0;
-    tile_pos_t pos;
     stars_t *stars = user;
     tile_t *tile;
+    typeof(tile->pos) pos;
 
     // Only support STAR and GAIA chunks.  Ignore anything else.
     if (strncmp(type, "STAR", 4) != 0 &&
@@ -436,8 +433,8 @@ static int property_handler(void* user, const char* section,
 static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
                         bool *loading_complete)
 {
-    tile_pos_t pos = {order, pix};
     tile_t *tile;
+    typeof(tile->pos) pos = {order, pix};
     char *url;
     void *data;
     int size, code, dir;

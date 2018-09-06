@@ -52,15 +52,13 @@ typedef struct {
     dso_data_t  data;
 } dso_t;
 
-typedef struct {
-    int order;
-    int pix;
-} tile_pos_t;
-
 typedef struct dsos dsos_t;
 typedef struct {
     UT_hash_handle  hh;
-    tile_pos_t  pos;
+    struct {
+        int order;
+        int pix;
+    } pos;
     dsos_t   *parent;
     int         flags;
     double      mag_min;
@@ -166,7 +164,7 @@ static int on_file_tile_loaded(const char type[4],
     dsos_t *dsos = user;
     tile_t *tile;
     dso_data_t *d;
-    tile_pos_t pos;
+    typeof(tile->pos) pos;
     int nb, i, version, data_ofs = 0, flags, row_size;
     char buff[16], id[128];
     double bmag, temp_mag;
@@ -284,8 +282,8 @@ static int dsos_init(obj_t *obj, json_value *args)
 static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
                         bool *loading_complete)
 {
-    tile_pos_t pos = {order, pix};
     tile_t *tile;
+    typeof(tile->pos) pos = {order, pix};
     char *url;
     void *data;
     int size, code, dir;

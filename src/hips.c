@@ -35,15 +35,11 @@ enum {
 #define TILE_NO_CHILD_ALL \
     (TILE_NO_CHILD_0 | TILE_NO_CHILD_1 | TILE_NO_CHILD_2 | TILE_NO_CHILD_3)
 
-
-// Should we use UNIQ scheme to put the pos in a single uint64_t ?
 typedef struct {
-    int order;
-    int pix;
-} pos_t;
-
-typedef struct {
-    pos_t       pos;
+    struct {
+        int order;
+        int pix;
+    } pos;
     texture_t   *tex;
     texture_t   *allsky_tex;
     fader_t     fader;
