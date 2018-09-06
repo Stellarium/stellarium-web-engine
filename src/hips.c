@@ -260,7 +260,9 @@ static int load_image_worker(worker_t *worker)
     return 0;
 }
 
-static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
+// XXX: should be replaced by the generic hips_get_tile.  It's almost the
+//      same.
+static tile_t *get_img_tile(hips_t *hips, int order, int pix, int flags)
 {
     tile_t *tile, *parent;
     texture_t *tex = NULL;
@@ -287,7 +289,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
 
     // Skip if we know that this tile doesn't exists.
     if (order > hips->order_min) {
-        parent = get_tile(hips, order - 1, pix / 4, flags);
+        parent = get_img_tile(hips, order - 1, pix / 4, flags);
         if (!(parent->flags & TILE_LOADED)) return tile;
         if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
             tile->flags |= TILE_LOADED | TILE_NO_CHILD_ALL;
@@ -434,7 +436,7 @@ texture_t *hips_get_tile_texture(
         return NULL;
     }
 
-    tile = get_tile(hips, order, pix, flags);
+    tile = get_img_tile(hips, order, pix, flags);
     render_tile = tile;
 
     // Special case if we forced to use the allsky texture.
@@ -453,8 +455,8 @@ texture_t *hips_get_tile_texture(
         mat3_set_identity(mat);
         get_child_uv_mat(render_tile->pos.pix % 4, mat, mat);
         if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
-        render_tile = get_tile(hips, render_tile->pos.order - 1,
-                                     render_tile->pos.pix / 4, flags);
+        render_tile = get_img_tile(hips, render_tile->pos.order - 1,
+                                   render_tile->pos.pix / 4, flags);
     }
 
 end:
