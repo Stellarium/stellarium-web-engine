@@ -57,6 +57,10 @@ struct stars {
     double          bundled_max_vmag;
 };
 
+/*
+ * Type: tile_t
+ * Custom tile structure for the stars hips survey.
+ */
 typedef struct tile {
     int         flags;
     double      mag_min;

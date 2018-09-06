@@ -48,6 +48,10 @@ typedef struct dso {
     dso_data_t  data;
 } dso_t;
 
+/*
+ * Type: tile_t
+ * Custom tile structure for the dso HiPS survey.
+ */
 typedef struct tile {
     int         flags;
     double      mag_min;
