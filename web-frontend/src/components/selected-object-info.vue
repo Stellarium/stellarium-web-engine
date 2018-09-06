@@ -65,7 +65,7 @@
         </v-card-title>
         <v-card-text style="width:100%;">
           <v-layout row wrap style="width: 100%">
-            <v-text-field ref='link_input' v-model="shareLink" label="Link" solo readonly></v-text-field>
+            <v-text-field id="link_inputid" v-model="shareLink" label="Link" solo readonly></v-text-field>
             <v-btn @click.native.stop="copyLink">Copy</v-btn>
           </v-layout>
         </v-card-text>
@@ -325,9 +325,9 @@ export default {
       btn.callback()
     },
     copyLink: function () {
-      const input = this.$refs.link_input
+      const input = document.querySelector('#link_inputid')
       input.focus()
-      document.execCommand('selectAll')
+      input.select()
       this.copied = document.execCommand('copy')
       window.getSelection().removeAllRanges()
       this.showShareLinkDialog = false
