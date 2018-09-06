@@ -698,7 +698,8 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     }
 
     assert(hips->settings.create_tile);
-    tile_data = hips->settings.create_tile(order, pix, data, size, &cost);
+    tile_data = hips->settings.create_tile(
+            hips->settings.user, order, pix, data, size, &cost);
     assert(tile_data);
 
     tile = calloc(1, sizeof(*tile));

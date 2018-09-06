@@ -245,7 +245,7 @@ static int on_file_tile_loaded(const char type[4],
     return 0;
 }
 
-static const void *dsos_create_tile(int order, int pix, void *data,
+static const void *dsos_create_tile(void *user, int order, int pix, void *data,
                                     int size, int *cost)
 {
     tile_t *tile;
