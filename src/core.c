@@ -11,14 +11,6 @@
 
 core_t *core;   // The global core object.
 
-typedef union
-{
-    bool    b;
-    int     d;
-    double  f;
-    void   *p;
-} any_t;
-
 static int selection_get_choices(
         int (*f)(const char* name, const char *id, void *user),
         void *user)
