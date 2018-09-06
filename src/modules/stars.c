@@ -379,9 +379,12 @@ static int stars_init(obj_t *obj, json_value *args)
 static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
                         bool *loading_complete)
 {
-    int code;
+    int code, flags = 0;
     tile_t *tile;
-    tile = hips_get_tile(stars->survey, order, pix, 0, &code);
+    // Immediate load of the level 0 stars (they are needed for the
+    // constellations).  The other tiles can be loaded in a thread.
+    if (order > 0) flags |= HIPS_LOAD_IN_THREAD;
+    tile = hips_get_tile(stars->survey, order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
     return tile;
 }

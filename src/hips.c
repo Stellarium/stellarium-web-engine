@@ -35,7 +35,8 @@ enum {
 #define TILE_NO_CHILD_ALL \
     (TILE_NO_CHILD_0 | TILE_NO_CHILD_1 | TILE_NO_CHILD_2 | TILE_NO_CHILD_3)
 
-typedef struct {
+typedef struct tile tile_t;
+struct tile {
     struct {
         int order;
         int pix;
@@ -50,14 +51,17 @@ typedef struct {
     // Loader to parse the image in a thread.
     struct {
         worker_t worker;
+        tile_t *tile;
         void *data;
         int size;
+        int cost;
+
+        // Specific to image tile.
         void *img;
         int w, h, bpp;
         int transparency;
     } *loader;
-
-} tile_t;
+};
 
 // Gobal cache for all the tiles.
 static cache_t *g_cache = NULL;
@@ -211,6 +215,7 @@ void get_child_uv_mat(int i, const double m[3][3], double out[3][3])
 static int del_tile(void *data)
 {
     tile_t *tile = data;
+    // XXX: why the worker_is_running?
     if (tile->loader && worker_is_running(&tile->loader->worker))
         return CACHE_KEEP;
     if (tile->data) {
@@ -655,12 +660,24 @@ next:
     return nb;
 }
 
+static int load_tile_worker(worker_t *worker)
+{
+    typeof(((tile_t*)0)->loader) loader = (void*)worker;
+    tile_t *tile = loader->tile;
+    hips_t *hips = tile->hips;
+    tile->data = hips->settings.create_tile(
+                    hips->settings.user, tile->pos.order, tile->pos.pix,
+                    loader->data, loader->size, &loader->cost);
+    assert(tile->data); // XXX: should handle error case.
+    free(loader->data);
+    return 0;
+}
 
 static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
                               int *code)
 {
-    const void *data, *tile_data;
-    int size, parent_code, cost;
+    const void *data, *tile_data = NULL;
+    int size, parent_code, cost = 0;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
     struct {
@@ -674,6 +691,13 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
     tile = cache_get(g_cache, &key, sizeof(key));
+
+    if (tile && tile->loader) {
+        if (!worker_iter(&tile->loader->worker)) return NULL;
+        cache_set_cost(g_cache, &key, sizeof(key), tile->loader->cost);
+        free(tile->loader);
+        tile->loader = NULL;
+    }
     if (tile) return tile;
 
     if (!hips_is_ready(hips)) return NULL;
@@ -713,9 +737,13 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     }
 
     assert(hips->settings.create_tile);
-    tile_data = hips->settings.create_tile(
-            hips->settings.user, order, pix, data, size, &cost);
-    assert(tile_data);
+
+    if (!(flags & HIPS_LOAD_IN_THREAD)) {
+        tile_data = hips->settings.create_tile(
+                hips->settings.user, order, pix, data, size, &cost);
+        asset_release(url);
+        if (!tile_data) return NULL;
+    }
 
     tile = calloc(1, sizeof(*tile));
     tile->pos.order = order;
@@ -725,6 +753,18 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
+
+    if (flags & HIPS_LOAD_IN_THREAD) {
+        assert(!tile->data);
+        tile->loader = calloc(1, sizeof(*tile->loader));
+        worker_init(&tile->loader->worker, load_tile_worker);
+        tile->loader->data = malloc(size);
+        tile->loader->size = size;
+        tile->loader->tile = tile;
+        memcpy(tile->loader->data, data, size);
+        asset_release(url);
+        return NULL;
+    }
 
     return tile;
 }
