@@ -700,7 +700,10 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
         free(tile->loader);
         tile->loader = NULL;
     }
-    if (tile) return tile;
+    if (tile) {
+        *code = 200;
+        return tile;
+    }
 
     if (!hips_is_ready(hips)) return NULL;
     // Can't get a tile of order higher than the survey order.
