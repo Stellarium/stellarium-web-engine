@@ -30,6 +30,7 @@ enum {
     TILE_NO_CHILD_2     = 1 << 3,
     TILE_NO_CHILD_3     = 1 << 4,
 
+    TILE_LOAD_ERROR     = 1 << 5,
 };
 
 #define TILE_NO_CHILD_ALL \
@@ -668,7 +669,7 @@ static int load_tile_worker(worker_t *worker)
     tile->data = hips->settings.create_tile(
                     hips->settings.user, tile->pos.order, tile->pos.pix,
                     loader->data, loader->size, &loader->cost);
-    assert(tile->data); // XXX: should handle error case.
+    if (!tile->data) tile->flags |= TILE_LOAD_ERROR;
     free(loader->data);
     return 0;
 }
@@ -692,6 +693,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
     tile = cache_get(g_cache, &key, sizeof(key));
 
+    // Got a tile but it is still loading.
     if (tile && tile->loader) {
         if (!worker_iter(&tile->loader->worker)) return NULL;
         cache_set_cost(g_cache, &key, sizeof(key), tile->loader->cost);
@@ -738,24 +740,20 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     assert(hips->settings.create_tile);
 
-    if (!(flags & HIPS_LOAD_IN_THREAD)) {
-        tile_data = hips->settings.create_tile(
-                hips->settings.user, order, pix, data, size, &cost);
-        asset_release(url);
-        if (!tile_data) return NULL;
-    }
-
     tile = calloc(1, sizeof(*tile));
     tile->pos.order = order;
     tile->pos.pix = pix;
     tile->data = tile_data;
     tile->hips = hips;
-
     cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
 
-    if (flags & HIPS_LOAD_IN_THREAD) {
-        assert(!tile->data);
+    if (!(flags & HIPS_LOAD_IN_THREAD)) {
+        tile_data = hips->settings.create_tile(
+                hips->settings.user, order, pix, data, size, &cost);
+        if (!tile_data) tile->flags |= TILE_LOAD_ERROR;
+        asset_release(url);
+    } else {
         tile->loader = calloc(1, sizeof(*tile->loader));
         worker_init(&tile->loader->worker, load_tile_worker);
         tile->loader->data = malloc(size);
@@ -765,7 +763,6 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
         asset_release(url);
         return NULL;
     }
-
     return tile;
 }
 
