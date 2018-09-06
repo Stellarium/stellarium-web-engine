@@ -668,20 +668,20 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     assert(order >= 0);
     *code = 0;
-    if (!hips_is_ready(hips)) return NULL;
 
+    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
+    tile = cache_get(g_cache, &key, sizeof(key));
+    if (tile) return tile;
+
+    if (!hips_is_ready(hips)) return NULL;
     // Can't get a tile of order higher than the survey order.
     if (hips->order && (order > hips->order)) {
         *code = 404;
         return NULL;
     }
 
-    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
-    tile = cache_get(g_cache, &key, sizeof(key));
-    if (tile) return tile;
-
     // Skip if we already know that this tile doesn't exists.
-    if (order > 0) {
+    if (order > hips->order_min) {
         parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
         if (!parent) return NULL; // Always get parent first.
         if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
@@ -697,7 +697,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     // If the tile doesn't exists, mark it in the parent tile so that we
     // won't have to search for it again.
     if ((*code) == 404) {
-        if (order > 0) {
+        if (order > hips->order_min) {
             parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
             if (parent) parent->flags |= (TILE_NO_CHILD_0 << (pix % 4));
         }
