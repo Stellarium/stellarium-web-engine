@@ -732,3 +732,35 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
     tile_t *tile = hips_get_tile_(hips, order, pix, flags, code);
     return tile ? tile->data : NULL;
 }
+
+const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
+                                 const void *data, int size)
+{
+    const void *tile_data;
+    int cost;
+    tile_t *tile;
+    struct {
+        uint32_t hash;
+        int order;
+        int pix;
+    } key = {hips->hash, order, pix};
+
+    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
+    tile = cache_get(g_cache, &key, sizeof(key));
+    assert(!tile);
+
+    assert(hips->settings.create_tile);
+    tile_data = hips->settings.create_tile(
+            hips->settings.user, order, pix, data, size, &cost);
+    assert(tile_data);
+
+    tile = calloc(1, sizeof(*tile));
+    tile->pos.order = order;
+    tile->pos.pix = pix;
+    tile->data = tile_data;
+    tile->hips = hips;
+
+    cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
+              del_tile);
+    return tile->data;
+}

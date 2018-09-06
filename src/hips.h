@@ -70,6 +70,9 @@ void hips_set_label(hips_t *hips, const char* label);
 const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
                           int *code);
 
+const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
+                                 const void *data, int size);
+
 /*
  * Function: hips_render
  * Render a hips survey.
