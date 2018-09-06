@@ -339,7 +339,7 @@ static int load_worker(worker_t *w)
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
-    int version, nb, data_ofs = 0;
+    int version, nb, data_ofs = 0, row_size, flags;
     stars_t *stars = user;
     tile_t *tile;
     typeof(tile->pos) pos;
@@ -350,12 +350,14 @@ static int on_file_tile_loaded(const char type[4],
 
     eph_read_tile_header(data, size, &data_ofs,
                          &version, &pos.order, &pos.pix);
+    assert(version >= 3); // No more support for old style format.
+    nb = eph_read_table_header(version, data, size,
+                               &data_ofs, &row_size, &flags, 0, NULL);
 
     if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
         LOG_W("Trying to load a tile already present!");
         return -1;
     }
-    nb = size / 40; // XXX: only estimation until we parse the file!
 
     tile = calloc(1, sizeof(*tile));
     tile->pos = pos;
