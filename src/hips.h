@@ -28,6 +28,18 @@ enum {
     HIPS_FORCE_USE_ALLSKY       = 1 << 1,
 };
 
+/*
+ * Type: hips_settings
+ * Structure passed to hips_create for custom type surveys.
+ *
+ * Attributes:
+ *   create_tile - function used to convert source data into a tile.
+ *                 The returned pointer is handled by the hips survey, and
+ *                 can be anything.  This is called every time the survey
+ *                 load a tile that is not in the cache.
+ *   delete_tile - function used to delete the data returned by create_tile.
+ *   user        - pointer passed to create_tile.
+ */
 typedef struct hips_settings {
     const void *(*create_tile)(void *user, int order, int pix, void *src,
                                int size, int *cost);
@@ -67,9 +79,35 @@ void hips_set_frame(hips_t *hips, int frame);
  */
 void hips_set_label(hips_t *hips, const char* label);
 
+/*
+ * Function: hips_get_tile
+ * Get a given tile of a hips survey.
+ *
+ * This only makes sense for custom type surveys (for images we can use
+ * <hips_get_tile_texture>).
+ *
+ * Parameters:
+ *   hips   - a hips survey.
+ *   order  - order of the tile.
+ *   pix    - pix of the tile.
+ *   flags  - unused for the moment.
+ *   code   - get the return code of the tile loading.
+ *
+ * Return:
+ *   The value previously returned by the settings create_tile function.
+ *   If the tile data is not available yet set code to 0 and return NULL.
+ *   In case of error, set code to the error code and return NULL.
+ */
 const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
                           int *code);
 
+/*
+ * Function: hips_add_manual_tile
+ * Add some pre loaded tiles into a survey.
+ *
+ * Don't use this.  This is just there for the moment for the stars survey
+ * that mixes different sources.
+ */
 const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
                                  const void *data, int size);
 
