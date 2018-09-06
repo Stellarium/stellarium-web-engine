@@ -12,6 +12,7 @@
 #include <regex.h>
 #include <zlib.h>
 
+#define URL_MAX_SIZE 4096
 // Size of the cache allocated to all the tiles.
 #define CACHE_SIZE (32 * (1 << 20))
 
@@ -50,7 +51,7 @@ struct stars {
     cache_t         *tiles;
     double          mag_max;
     regex_t         search_reg;
-    char            *survey;
+    char            survey_url[URL_MAX_SIZE - 256];
     double          survey_release_date;
     bool            visible;
     // Keep the max vmag of the bundled stars, so that we don't render them
@@ -405,7 +406,7 @@ static int stars_init(obj_t *obj, json_value *args)
     regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    asprintf(&stars->survey, "https://data.stellarium.org/surveys/gaia_dr2");
+    sprintf(stars->survey_url, "https://data.stellarium.org/surveys/gaia_dr2");
     return 0;
 }
 
@@ -443,16 +444,16 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
     tile = cache_get(stars->tiles, &pos, sizeof(pos));
 
     // Attempt to download a gaia tile.
-    if (!tile && load && stars->survey && order >= 3) {
+    if (!tile && load && *stars->survey_url && order >= 3) {
 
         // Need to parse the property file first.
         if (!stars->survey_release_date) {
-            asprintf(&url, "%s/properties", stars->survey);
+            asprintf(&url, "%s/properties", stars->survey_url);
             data = asset_get_data(url, NULL, &code);
             free(url);
             if (!data && code && code / 100 != 2) {
                 LOG_E("Cannot get hips properties file at '%s': %d",
-                        stars->survey, code);
+                        stars->survey_url, code);
                 return NULL;
             }
             if (!data) return NULL;
@@ -462,7 +463,7 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
 
         dir = (pix / 10000) * 10000;
         asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph?v=%d",
-                stars->survey, order, dir, pix,
+                stars->survey_url, order, dir, pix,
                 (int)stars->survey_release_date);
         data = asset_get_data(url, &size, &code);
         if (!data && code) {
@@ -756,13 +757,13 @@ static obj_t *stars_add_res(obj_t *obj, json_value *val,
     if (!val) return NULL;
     type = json_get_attr_s(val, "type");
     if (!type || strcmp(type, "stars") != 0) return NULL;
-    if (stars->survey) {
+    if (*stars->survey_url) {
         LOG_E("Only support one star survey");
         return NULL;
     }
     path = json_get_attr_s(val, "path");
     if (!path) return NULL;
-    asprintf(&stars->survey, "%s/%s", base_path, path);
+    sprintf(stars->survey_url, "%s/%s", base_path, path);
     return NULL;
 }
 
