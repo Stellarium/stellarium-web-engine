@@ -213,8 +213,11 @@ static int del_tile(void *data)
     tile_t *tile = data;
     if (tile->loader && worker_is_running(&tile->loader->worker))
         return CACHE_KEEP;
+    if (tile->data) {
+        if (tile->hips->settings.delete_tile(tile->data) == CACHE_KEEP)
+            return CACHE_KEEP;
+    }
     texture_release(tile->tex);
-    if (tile->data) tile->hips->settings.delete_tile(tile->data);
     free(tile);
     return 0;
 }
