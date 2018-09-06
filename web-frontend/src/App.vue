@@ -233,14 +233,18 @@ export default {
       // After this call, the StelWebEngine state will always be available in vuex store
       // in the $store.stel object in a reactive way (useful for vue components).
       // To modify the state of the StelWebEngine, it's enough to call/set values directly on the $stel object
-      swh.initStelWebEngine(that.$store, f, that.$refs.stelCanvas, function () {
-        // Start auto location detection (even if we don't use it)
-        swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
-          that.$store.commit('setAutoDetectedLocation', loc)
-        }, (error) => { console.log(error) })
-        that.setStateFromQueryArgs()
-        that.guiComponent = 'Gui'
-      })
+      try {
+        swh.initStelWebEngine(that.$store, f, that.$refs.stelCanvas, function () {
+          // Start auto location detection (even if we don't use it)
+          swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
+            that.$store.commit('setAutoDetectedLocation', loc)
+          }, (error) => { console.log(error) })
+          that.setStateFromQueryArgs()
+          that.guiComponent = 'Gui'
+        })
+      } catch (e) {
+        this.$store.commit('setValue', {varName: 'wasmSupport', newValue: false})
+      }
     })
   }
 }

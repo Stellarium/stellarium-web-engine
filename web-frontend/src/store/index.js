@@ -44,6 +44,7 @@ const createStore = () => {
 
       showSidePanel: false,
       fullscreen: false,
+      wasmSupport: true,
 
       autoDetectedLocation: {
         shortName: 'Unknown',
