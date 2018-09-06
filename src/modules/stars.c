@@ -59,10 +59,6 @@ struct stars {
 
 typedef struct tile tile_t;
 struct tile {
-    struct {
-        int order;
-        int pix;
-    } pos;
     int         flags;
     double      mag_min;
     double      mag_max;
@@ -243,12 +239,11 @@ static int star_data_cmp(const void *a, const void *b)
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
-    int version, nb, sp, data_ofs = 0, row_size, flags, i;
+    int version, nb, sp, data_ofs = 0, row_size, flags, i, order, pix;
     double vmag, ra, de, pra, pde, plx, bv;
     stars_t *stars = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
-    typeof(tile->pos) pos;
     bool is_gaia = strncmp(type, "GAIA", 4) == 0;
     void *table_data;
     star_data_t *s;
@@ -273,8 +268,7 @@ static int on_file_tile_loaded(const char type[4],
     if (strncmp(type, "STAR", 4) != 0 &&
         strncmp(type, "GAIA", 4) != 0) return 0;
 
-    eph_read_tile_header(data, size, &data_ofs,
-                         &version, &pos.order, &pos.pix);
+    eph_read_tile_header(data, size, &data_ofs, &version, &order, &pix);
     assert(version >= 3); // No more support for old style format.
     nb = eph_read_table_header(version, data, size,
                                &data_ofs, &row_size, &flags,
@@ -294,7 +288,6 @@ static int on_file_tile_loaded(const char type[4],
 
     tile = calloc(1, sizeof(*tile));
     tile->stars = calloc(nb, sizeof(*tile->stars));
-    tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
 

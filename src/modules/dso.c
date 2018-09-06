@@ -50,10 +50,6 @@ typedef struct {
 
 typedef struct dsos dsos_t;
 typedef struct {
-    struct {
-        int order;
-        int pix;
-    } pos;
     int         flags;
     double      mag_min;
     double      mag_max;
@@ -156,8 +152,7 @@ static int on_file_tile_loaded(const char type[4],
 {
     tile_t *tile;
     dso_data_t *d;
-    typeof(tile->pos) pos;
-    int nb, i, version, data_ofs = 0, flags, row_size;
+    int nb, i, version, data_ofs = 0, flags, row_size, order, pix;
     char buff[16], id[128];
     double bmag, temp_mag;
     void *tile_data;
@@ -177,8 +172,7 @@ static int on_file_tile_loaded(const char type[4],
 
     if (strncmp(type, "DSO ", 4) != 0) return 0;
 
-    eph_read_tile_header(data, size, &data_ofs,
-                         &version, &pos.order, &pos.pix);
+    eph_read_tile_header(data, size, &data_ofs, &version, &order, &pix);
     nb = eph_read_table_header(
             version, data, size, &data_ofs, &row_size, &flags,
             ARRAY_SIZE(columns), columns);
@@ -195,8 +189,6 @@ static int on_file_tile_loaded(const char type[4],
     }
 
     tile = calloc(1, sizeof(*tile));
-    tile->pos.order = pos.order;
-    tile->pos.pix = pos.pix;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
     tile->nb = nb;
