@@ -81,12 +81,17 @@ struct hips {
     int order;
     int order_min;
     int tile_width;
+
+    // The settings as passed in the create function.
+    hips_settings_t settings;
 };
 
 
-hips_t *hips_create(const char *url, double release_date)
+hips_t *hips_create(const char *url, double release_date,
+                    const hips_settings_t *settings)
 {
     hips_t *hips = calloc(1, sizeof(*hips));
+    if (settings) hips->settings = *settings;
     hips->url = strdup(url);
     hips->service_url = strdup(url);
     hips->ext = "jpg";

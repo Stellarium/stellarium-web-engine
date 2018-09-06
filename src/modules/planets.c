@@ -809,11 +809,11 @@ static int on_hips(const char *url, double release_date, void *user)
     if ((p = planet_get_by_name(planets, name))) {
         LOG_V("Assign hips '%s' to planet '%s'", url, name);
         if (!normalmap) {
-            p->hips = hips_create(url, release_date);
+            p->hips = hips_create(url, release_date, NULL);
             hips_set_frame(p->hips, FRAME_ICRS);
         }
         else {
-            p->hips_normalmap = hips_create(url, release_date);
+            p->hips_normalmap = hips_create(url, release_date, NULL);
             hips_set_frame(p->hips_normalmap, FRAME_ICRS);
         }
     }

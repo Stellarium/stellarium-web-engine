@@ -188,7 +188,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
     landscape_t *ls;
     ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
     ls->uri = strdup(uri);
-    ls->hips = hips_create(uri, 0);
+    ls->hips = hips_create(uri, 0, NULL);
     ls->info.name = strdup(id);
     hips_set_label(ls->hips, "Landscape");
     hips_set_frame(ls->hips, FRAME_OBSERVED);

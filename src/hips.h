@@ -28,6 +28,9 @@ enum {
     HIPS_FORCE_USE_ALLSKY       = 1 << 1,
 };
 
+typedef struct hips_settings {
+} hips_settings_t;
+
 /*
  * Function: hips_create
  * Create a new hips survey.
@@ -36,7 +39,8 @@ enum {
  *   url          - URL to the root of the survey.
  *   release_date - If known, release date in utc.  Otherwise 0.
  */
-hips_t *hips_create(const char *url, double release_date);
+hips_t *hips_create(const char *url, double release_date,
+                    const hips_settings_t *settings);
 
 /*
  * Function: hips_set_frame

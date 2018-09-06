@@ -39,7 +39,8 @@ static int dss_init(obj_t *obj, json_value *args)
 {
     dss_t *dss = (void*)obj;
     fader_init(&dss->visible, true); // Visible by default.
-    dss->hips = hips_create("https://alaskybis.unistra.fr/DSS/DSSColor", 0);
+    dss->hips = hips_create("https://alaskybis.unistra.fr/DSS/DSSColor", 0,
+                            NULL);
     return 0;
 }
 
