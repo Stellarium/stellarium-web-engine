@@ -70,6 +70,7 @@ struct hips {
     int         error; // Set if an error occurred.
     char        *label; // Short label used in the progressbar.
     int         frame; // FRAME_ICRS | FRAME_OBSERVED.
+    uint32_t    hash; // Hash of the url.
 
     // Stores the allsky image if available.
     struct {
@@ -100,6 +101,7 @@ hips_t *hips_create(const char *url, double release_date,
     hips->order_min = 3;
     hips->release_date = release_date;
     hips->frame = FRAME_ICRS;
+    hips->hash = crc64(0, url, strlen(url)) & 0xffffffff;
     return hips;
 }
 
@@ -257,16 +259,19 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
     void *data;
     int size, nbw, x, y, code, transparency;
     char url[URL_MAX_SIZE];
-    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
-                order, (pix / 10000) * 10000, pix, hips->ext);
+    struct {
+        uint32_t hash;
+        int order;
+        int pix;
+    } key = {hips->hash, order, pix};
 
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
-    tile = cache_get(g_cache, url, strlen(url));
+    tile = cache_get(g_cache, &key, sizeof(key));
 
     if (!tile) {
         tile = calloc(1, sizeof(*tile));
         tile->pos = pos;
-        cache_add(g_cache, url, strlen(url), tile, sizeof(*tile), del_tile);
+        cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile), del_tile);
     }
     if (tile->flags & TILE_LOADED) return tile;
     if (flags & HIPS_FORCE_USE_ALLSKY) goto after_load;
@@ -281,6 +286,8 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
         }
     }
 
+    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
+                order, (pix / 10000) * 10000, pix, hips->ext);
     data = asset_get_data(url, &size, &code);
     if (!data && !code) goto after_load; // Still loading.
     if (code == 404) { // No tile at this level.
@@ -325,7 +332,7 @@ static tile_t *get_tile(hips_t *hips, int order, int pix, int flags)
     texture_release(tile->allsky_tex);
     tile->allsky_tex = NULL;
     tile->tex = tex;
-    cache_set_cost(g_cache, url, strlen(url), tex->tex_w * tex->tex_h * 4);
+    cache_set_cost(g_cache, &key, sizeof(key), tex->tex_w * tex->tex_h * 4);
     tile->fader.target = true;
 
 after_load:
@@ -653,6 +660,11 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     int size, parent_code, cost;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
+    struct {
+        uint32_t hash;
+        int order;
+        int pix;
+    } key = {hips->hash, order, pix};
 
     assert(order >= 0);
     *code = 0;
@@ -664,10 +676,8 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
         return NULL;
     }
 
-    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
-                order, (pix / 10000) * 10000, pix, hips->ext);
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
-    tile = cache_get(g_cache, url, strlen(url));
+    tile = cache_get(g_cache, &key, sizeof(key));
     if (tile) return tile;
 
     // Skip if we already know that this tile doesn't exists.
@@ -679,6 +689,8 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
             return NULL;
         }
     }
+    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
+                order, (pix / 10000) * 10000, pix, hips->ext);
     data = asset_get_data(url, &size, code);
     if (!(*code)) return NULL; // Still loading the file.
 
@@ -708,7 +720,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     tile->data = tile_data;
     tile->hips = hips;
 
-    cache_add(g_cache, url, strlen(url), tile, sizeof(*tile) + cost,
+    cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
 
     return tile;
