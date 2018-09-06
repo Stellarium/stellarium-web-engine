@@ -13,8 +13,6 @@
 #include <zlib.h>
 
 #define URL_MAX_SIZE 4096
-// Size of the cache allocated to all the tiles.
-#define CACHE_SIZE (32 * (1 << 20))
 
 // Min mag to start loading the gaia survey.
 static const double GAIA_MIN_MAG = 8.0;
@@ -48,11 +46,10 @@ typedef struct {
  */
 struct stars {
     obj_t           obj;
-    cache_t         *tiles;
     double          mag_max;
     regex_t         search_reg;
+    hips_t          *survey;
     char            survey_url[URL_MAX_SIZE - 256];
-    double          survey_release_date;
     bool            visible;
     // Keep the max vmag of the bundled stars, so that we don't render them
     // twice if they are also in the gaia survey.
@@ -340,10 +337,12 @@ static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
     int version, nb, data_ofs = 0, row_size, flags;
-    stars_t *stars = user;
+    stars_t *stars = USER_GET(user, 0);
+    tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
     typeof(tile->pos) pos;
 
+    *out = NULL;
     // Only support STAR and GAIA chunks.  Ignore anything else.
     if (strncmp(type, "STAR", 4) != 0 &&
         strncmp(type, "GAIA", 4) != 0) return 0;
@@ -353,18 +352,12 @@ static int on_file_tile_loaded(const char type[4],
     assert(version >= 3); // No more support for old style format.
     nb = eph_read_table_header(version, data, size,
                                &data_ofs, &row_size, &flags, 0, NULL);
-
-    if ((tile = cache_get(stars->tiles, &pos, sizeof(pos)))) {
-        LOG_W("Trying to load a tile already present!");
-        return -1;
-    }
+    (void)nb;
 
     tile = calloc(1, sizeof(*tile));
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
-    cache_add(stars->tiles, &pos, sizeof(pos), tile,
-              nb * sizeof(*tile->stars), del_tile);
 
     tile->loader = calloc(1, sizeof(*tile->loader));
     worker_init(&tile->loader->worker, load_worker);
@@ -385,100 +378,60 @@ static int on_file_tile_loaded(const char type[4],
         tile->loader = NULL;
         stars->bundled_max_vmag = max(stars->bundled_max_vmag, tile->mag_max);
     }
+    *out = tile;
     return 0;
+}
+
+static const void *stars_create_tile(
+        void *user, int order, int pix, void *data, int size, int *cost)
+{
+    tile_t *tile;
+    stars_t *stars = user;
+    eph_load(data, size, USER_PASS(stars, &tile), on_file_tile_loaded);
+    if (tile) *cost = tile->nb * sizeof(*tile->stars);
+    return tile;
 }
 
 static int stars_init(obj_t *obj, json_value *args)
 {
     const char *path;
-    const void *data;
-    int size;
+    int order, dir, pix, size;
+    const char *data;
     stars_t *stars = (stars_t*)obj;
+    hips_settings_t survey_settings = {
+        .create_tile = stars_create_tile,
+        .delete_tile = del_tile,
+        .user = stars,
+    };
+
     stars->visible = true;
     stars->mag_max = INFINITY;
-    stars->tiles = cache_create(CACHE_SIZE);
-
-    // Load all tile files that we have in the assets.
-    ASSET_ITER("asset://stars/", path) {
-        data = asset_get_data(path, &size, NULL);
-        eph_load(data, size, stars, on_file_tile_loaded);
-        asset_release(path);
-    }
 
     regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
     sprintf(stars->survey_url, "https://data.stellarium.org/surveys/gaia_dr2");
-    return 0;
-}
+    stars->survey = hips_create(stars->survey_url, 0, &survey_settings);
 
-// Parse a release data as seen in hips property file.
-// XXX: same code as in dso.c, should be handled by hips.c
-static double parse_release_date(const char *str)
-{
-    int iy, im, id, ihr, imn;
-    double d1, d2;
-    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
-    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
-    return d1 - DJM0 + d2;
-}
-
-static int property_handler(void* user, const char* section,
-                            const char* name, const char* value)
-{
-    stars_t *stars = user;
-    if (strcmp(name, "hips_release_date") == 0) {
-        stars->survey_release_date = parse_release_date(value);
+    // Load all tile files that we have in the assets.
+    // XXX: would probably be better to use two surveys here instead of
+    // 'hips_add_manual_tile'.
+    ASSET_ITER("asset://stars/", path) {
+        sscanf(path + 14, "Norder%d/Dir%d/Npix%d.eph", &order, &dir, &pix);
+        data = asset_get_data(path, &size, NULL);
+        hips_add_manual_tile(stars->survey, order, pix, data, size);
     }
+
     return 0;
 }
 
 static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
                         bool *loading_complete)
 {
+    int code;
     tile_t *tile;
-    typeof(tile->pos) pos = {order, pix};
-    char *url;
-    void *data;
-    int size, code, dir;
-
-    if (loading_complete) *loading_complete = true;
-    tile = cache_get(stars->tiles, &pos, sizeof(pos));
-
-    // Attempt to download a gaia tile.
-    if (!tile && load && *stars->survey_url && order >= 3) {
-
-        // Need to parse the property file first.
-        if (!stars->survey_release_date) {
-            asprintf(&url, "%s/properties", stars->survey_url);
-            data = asset_get_data(url, NULL, &code);
-            free(url);
-            if (!data && code && code / 100 != 2) {
-                LOG_E("Cannot get hips properties file at '%s': %d",
-                        stars->survey_url, code);
-                return NULL;
-            }
-            if (!data) return NULL;
-            ini_parse_string(data, property_handler, stars);
-            return NULL;
-        }
-
-        dir = (pix / 10000) * 10000;
-        asprintf(&url, "%s/Norder%d/Dir%d/Npix%d.eph?v=%d",
-                stars->survey_url, order, dir, pix,
-                (int)stars->survey_release_date);
-        data = asset_get_data(url, &size, &code);
-        if (!data && code) {
-            // XXX: need to handle this case: the tiles should have a flag
-            // that says that there is no data at this level, like in hips.c
-        }
-        if (loading_complete) *loading_complete = (code != 0);
-        if (data) {
-            eph_load(data, size, stars, on_file_tile_loaded);
-            asset_release(url);
-        }
-        free(url);
-    }
+    tile = hips_get_tile(stars->survey, order, pix, 0, &code);
+    if (loading_complete) *loading_complete = (code != 0);
     // Got a tile, but it is still loading.
     if (tile && tile->loader) {
         if (worker_iter(&tile->loader->worker)) {
