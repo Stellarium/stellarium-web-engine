@@ -54,12 +54,10 @@ typedef struct {
 
 typedef struct dsos dsos_t;
 typedef struct {
-    UT_hash_handle  hh;
     struct {
         int order;
         int pix;
     } pos;
-    dsos_t   *parent;
     int         flags;
     double      mag_min;
     double      mag_max;
@@ -204,7 +202,6 @@ static int on_file_tile_loaded(const char type[4],
     tile = cache_get(dsos->tiles, &pos, sizeof(pos));
     assert(!tile);
     tile = calloc(1, sizeof(*tile));
-    tile->parent = dsos;
     tile->pos = pos;
     tile->mag_min = +INFINITY;
     tile->mag_max = -INFINITY;
