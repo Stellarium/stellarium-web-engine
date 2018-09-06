@@ -40,10 +40,12 @@ typedef struct {
         int order;
         int pix;
     } pos;
+    hips_t      *hips;
     texture_t   *tex;
     texture_t   *allsky_tex;
     fader_t     fader;
     int         flags;
+    const void  *data;
 
     // Loader to parse the image in a thread.
     struct {
@@ -637,4 +639,69 @@ next:
 
     free(hips_service_url);
     return nb;
+}
+
+const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
+                          int *code)
+{
+    const void *data, *tile_data;
+    int size, parent_code, cost;
+    char url[URL_MAX_SIZE];
+    tile_t *tile, *parent;
+
+    *code = 0;
+    if (!hips_is_ready(hips)) return NULL;
+
+    // Can't get a tile of order higher than the survey order.
+    if (hips->order && (order > hips->order)) {
+        *code = 404;
+        return NULL;
+    }
+
+    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
+                order, (pix / 10000) * 10000, pix, hips->ext);
+    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
+    tile = cache_get(g_cache, url, strlen(url));
+    if (tile) return tile->data;
+
+    // Skip if we already know that this tile doesn't exists.
+    if (order > 0) {
+        parent = hips_get_tile(hips, order - 1, pix / 4, 0, &parent_code);
+        if (!parent) return NULL; // Always get parent first.
+        if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
+            *code = 404;
+            return NULL;
+        }
+    }
+
+    data = asset_get_data(url, &size, code);
+    if (!*code) return NULL; // Still loading the file.
+
+    // If the tile doesn't exists, mark it in the parent tile so that we
+    // won't have to search for it again.
+    if ((*code) == 404) {
+        parent = hips_get_tile(hips, order - 1, pix / 4, 0, &parent_code);
+        if (parent) parent->flags |= (TILE_NO_CHILD_0 << (pix % 4));
+        return NULL;
+    }
+    // Anything else that doesn't return the data is an actual error.
+    if (!data) {
+        LOG_E("Cannot get url '%s'", url);
+        return NULL;
+    }
+
+    assert(hips->settings.create_tile);
+    tile_data = hips->settings.create_tile(order, pix, data, size, &cost);
+    assert(tile_data);
+
+    tile = calloc(1, sizeof(*tile));
+    tile->pos.order = order;
+    tile->pos.pix = pix;
+    tile->data = tile_data;
+    tile->hips = hips;
+
+    cache_add(g_cache, url, strlen(url), tile, sizeof(*tile) + cost,
+              del_tile);
+
+    return tile->data;
 }

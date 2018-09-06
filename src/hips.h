@@ -29,6 +29,8 @@ enum {
 };
 
 typedef struct hips_settings {
+    const void *(*create_tile)(int order, int pix, void *src,
+                               int size, int *cost);
 } hips_settings_t;
 
 /*
@@ -62,6 +64,9 @@ void hips_set_frame(hips_t *hips, int frame);
  *           such as the ones taken from the properties file.
  */
 void hips_set_label(hips_t *hips, const char* label);
+
+const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
+                          int *code);
 
 /*
  * Function: hips_render
