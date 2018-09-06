@@ -57,14 +57,13 @@ struct stars {
     double          bundled_max_vmag;
 };
 
-typedef struct tile tile_t;
-struct tile {
+typedef struct tile {
     int         flags;
     double      mag_min;
     double      mag_max;
     int         nb;
     star_data_t *stars;
-};
+} tile_t;
 
 
 static void star_render_name(const painter_t *painter, const star_data_t *s,

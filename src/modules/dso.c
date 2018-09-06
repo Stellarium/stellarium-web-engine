@@ -43,13 +43,12 @@ typedef struct {
  * Type: dso_t
  * A single DSO object.
  */
-typedef struct {
+typedef struct dso {
     obj_t       obj;
     dso_data_t  data;
 } dso_t;
 
-typedef struct dsos dsos_t;
-typedef struct {
+typedef struct tile {
     int         flags;
     double      mag_min;
     double      mag_max;
@@ -61,14 +60,14 @@ typedef struct {
  * Type: dsos_t
  * The module object.
  */
-struct dsos {
+typedef struct {
     obj_t       obj;
     regex_t     search_reg;
     fader_t     visible;
 
     hips_t      *survey;
     char        survey_url[URL_MAX_SIZE - 256]; // Url of the DSO survey.
-};
+} dsos_t;
 
 static char *make_id(const dso_data_t *data, char buff[128])
 {
