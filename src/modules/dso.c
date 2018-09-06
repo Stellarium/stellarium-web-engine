@@ -8,7 +8,6 @@
  */
 
 #include "swe.h"
-#include "ini.h"
 #include <regex.h>
 
 // XXX: this very similar to stars.c.  I think we could merge most of the code.
@@ -73,7 +72,6 @@ struct dsos {
 
     hips_t      *survey;
     char        survey_url[URL_MAX_SIZE - 256]; // Url of the DSO survey.
-    double      survey_release_date; // release date as jd value.
 };
 
 static char *make_id(const dso_data_t *data, char buff[128])
@@ -551,44 +549,6 @@ static int dsos_update(obj_t *obj, const observer_t *obs, double dt)
     return fader_update(&dsos->visible, dt);
 }
 
-static double parse_release_date(const char *str)
-{
-    int iy, im, id, ihr, imn;
-    double d1, d2;
-    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
-    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
-    return d1 - DJM0 + d2;
-}
-
-static int property_handler(void* user, const char* section,
-                            const char* name, const char* value)
-{
-    dsos_t *dsos = user;
-    if (strcmp(name, "hips_release_date") == 0)
-        dsos->survey_release_date = parse_release_date(value);
-    return 0;
-}
-
-// XXX: this is the same as in hips.c!  We should make a generic function!
-static int parse_properties(dsos_t *dsos)
-{
-    char *data;
-    char url[URL_MAX_SIZE];
-    int code;
-    sprintf(url, "%s/properties", dsos->survey_url);
-    data = asset_get_data(url, NULL, &code);
-    if (!data && code && code / 100 != 2) {
-        LOG_E("Cannot get hips properties file at '%s': %d",
-                dsos->survey_url, code);
-        return -1;
-    }
-    if (!data) return 0;
-    // Set default values.
-    ini_parse_string(data, property_handler, dsos);
-    return 0;
-}
-
-
 static int dsos_render(const obj_t *obj, const painter_t *painter_)
 {
     dsos_t *dsos = (dsos_t*)obj;
@@ -596,14 +556,6 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     painter.color[3] *= dsos->visible.value;
     if (painter.color[3] == 0) return 0;
-
-    // Make sure we get the properties file first.
-    // XXX: this should be a function in hips.c ??
-    if (!dsos->survey_release_date) {
-        parse_properties(dsos);
-        if (!dsos->survey_release_date) return 0;
-    }
-
     hips_traverse(USER_PASS(dsos, &painter, &nb_tot, &nb_loaded),
                   render_visitor);
     progressbar_report("DSO", "DSO", nb_loaded, nb_tot, -1);
