@@ -281,9 +281,10 @@ static int dsos_init(obj_t *obj, json_value *args)
 static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
                         bool *loading_complete)
 {
-    int code;
+    int code, flags = 0;
     tile_t *tile;
-    tile = hips_get_tile(dsos->survey, order, pix, 0, &code);
+    if (!load) flags |= HIPS_CACHED_ONLY;
+    tile = hips_get_tile(dsos->survey, order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
     return tile;
 }

@@ -636,6 +636,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
         *code = 200;
         return tile;
     }
+    if (flags & HIPS_CACHED_ONLY) return 0;
 
     if (!hips_is_ready(hips)) return NULL;
     // Don't bother looking for tile outside the hips order range.

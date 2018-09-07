@@ -381,6 +381,7 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
     // Immediate load of the level 0 stars (they are needed for the
     // constellations).  The other tiles can be loaded in a thread.
     if (order > 0) flags |= HIPS_LOAD_IN_THREAD;
+    if (!load) flags |= HIPS_CACHED_ONLY;
     tile = hips_get_tile(stars->survey, order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
     return tile;

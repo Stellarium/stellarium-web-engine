@@ -27,6 +27,7 @@ enum {
     HIPS_EXTERIOR               = 1 << 0,
     HIPS_FORCE_USE_ALLSKY       = 1 << 1,
     HIPS_LOAD_IN_THREAD         = 1 << 2,
+    HIPS_CACHED_ONLY            = 1 << 3,
 };
 
 /*
