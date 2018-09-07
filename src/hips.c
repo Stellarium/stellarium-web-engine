@@ -698,6 +698,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
         tile->loader->tile = tile;
         memcpy(tile->loader->data, data, size);
         asset_release(url);
+        *code = 0;
         return NULL;
     }
     return tile;
@@ -707,6 +708,8 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
                           int *code)
 {
     tile_t *tile = hips_get_tile_(hips, order, pix, flags, code);
+    if (*code == 200) assert(tile && tile->data);
+    if (*code == 0) assert(!tile);
     return tile ? tile->data : NULL;
 }
 
