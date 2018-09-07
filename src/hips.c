@@ -341,7 +341,6 @@ texture_t *hips_get_tile_texture(
 
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
-    if ((0)) // XXX: disabled for the moment.
     while (!(render_tile) && (order > hips->order_min)) {
         mat3_set_identity(mat);
         get_child_uv_mat(pix % 4, mat, mat);
