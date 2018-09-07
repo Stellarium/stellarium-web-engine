@@ -542,6 +542,8 @@ const swh = {
       case 'mpc_comet':
       case 'tle_satellite':
         return [20, 10 / 60, 1 / 60]
+      case 'constellation':
+        return [50]
       default:
         return [20]
     }
@@ -584,6 +586,9 @@ const swh = {
       obj = $stel.getObjByNSID(ss.nsid)
     } else if (ss.model === 'tle_satellite') {
       let id = 'NORAD ' + ss.model_data.norad_number
+      obj = $stel.getObj(id)
+    } else if (ss.model === 'constellation' && ss.model_data.iau_abbreviation) {
+      let id = 'CST ' + ss.model_data.iau_abbreviation
       obj = $stel.getObj(id)
     } else {
       obj = $stel.getObjByNSID(ss.nsid)
@@ -638,6 +643,9 @@ const swh = {
 
     let searchName = obj.id
     if (searchName === 'HD 148478') searchName = 'Antares'
+    if (searchName.startsWith('CST ')) {
+      searchName = searchName.substring(4)
+    }
     if (searchName.startsWith('NORAD ')) {
       searchName = 'NORAD ' + searchName.substring(6).replace(/^0+/, '')
     }
