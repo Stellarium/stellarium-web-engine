@@ -43,8 +43,6 @@ struct tile {
         int pix;
     } pos;
     hips_t      *hips;
-    texture_t   *tex;
-    texture_t   *allsky_tex;
     fader_t     fader;
     int         flags;
     const void  *data;
@@ -56,11 +54,6 @@ struct tile {
         void *data;
         int size;
         int cost;
-
-        // Specific to image tile.
-        void *img;
-        int w, h, bpp;
-        int transparency;
     } *loader;
 };
 
@@ -73,6 +66,18 @@ typedef struct {
     int         order;
     int         pix;
 } tile_key_t;
+
+/*
+ * Type: img_tile_t
+ * type data for images surveys.
+ */
+typedef struct {
+    void        *img;
+    int         w, h, bpp;
+    int         transparency;
+    texture_t   *tex;
+    texture_t   *allsky_tex;
+} img_tile_t;
 
 // Gobal cache for all the tiles.
 static cache_t *g_cache = NULL;
@@ -105,11 +110,21 @@ struct hips {
 };
 
 
+static const void *create_img_tile(
+        void *user, int order, int pix, void *src, int size, int *cost);
+static int delete_img_tile(void *tile);
+
 hips_t *hips_create(const char *url, double release_date,
                     const hips_settings_t *settings)
 {
+    const hips_settings_t default_settings = {
+        .create_tile = create_img_tile,
+        .delete_tile = delete_img_tile,
+    };
     hips_t *hips = calloc(1, sizeof(*hips));
-    if (settings) hips->settings = *settings;
+    if (!settings) settings = &default_settings;
+
+    hips->settings = *settings;
     hips->url = strdup(url);
     hips->service_url = strdup(url);
     hips->ext = "jpg";
@@ -233,7 +248,6 @@ static int del_tile(void *data)
         if (tile->hips->settings.delete_tile(tile->data) == CACHE_KEEP)
             return CACHE_KEEP;
     }
-    texture_release(tile->tex);
     free(tile);
     return 0;
 }
@@ -250,126 +264,6 @@ static bool img_is_transparent(
             if (img[(i * img_w + j) * 4 + 3])
                 return false;
     return true;
-}
-
-static int load_image_worker(worker_t *worker)
-{
-    int i;
-    typeof(((tile_t*)0)->loader) loader = (void*)worker;
-    loader->img = img_read_from_mem(loader->data, loader->size,
-                                    &loader->w, &loader->h, &loader->bpp);
-    free(loader->data);
-    if (!loader->img) return 0;
-    for (i = 0; i < 4; i++) {
-        if (img_is_transparent(loader->img, loader->w, loader->h, loader->bpp,
-                        (i / 2) * loader->w / 2, (i % 2) * loader->h / 2,
-                        loader->w / 2, loader->h / 2)) {
-                loader->transparency |= 1 << i;
-        }
-    }
-    return 0;
-}
-
-// XXX: should be replaced by the generic hips_get_tile.  It's almost the
-//      same.
-static tile_t *get_img_tile(hips_t *hips, int order, int pix, int flags)
-{
-    tile_t *tile, *parent;
-    texture_t *tex = NULL;
-    typeof(tile->pos) pos = {order, pix};
-    void *data;
-    int size, nbw, x, y, code, transparency;
-    char url[URL_MAX_SIZE];
-    tile_key_t key = {hips->hash, order, pix};
-
-    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
-    tile = cache_get(g_cache, &key, sizeof(key));
-
-    if (!tile) {
-        tile = calloc(1, sizeof(*tile));
-        tile->pos = pos;
-        cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile), del_tile);
-    }
-    if (tile->flags & TILE_LOADED) return tile;
-    if (flags & HIPS_FORCE_USE_ALLSKY) goto after_load;
-
-    // Skip if we know that this tile doesn't exists.
-    if (order > hips->order_min) {
-        parent = get_img_tile(hips, order - 1, pix / 4, flags);
-        if (!(parent->flags & TILE_LOADED)) return tile;
-        if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
-            tile->flags |= TILE_LOADED | TILE_NO_CHILD_ALL;
-            return tile;
-        }
-    }
-
-    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
-                order, (pix / 10000) * 10000, pix, hips->ext);
-    data = asset_get_data(url, &size, &code);
-    if (!data && !code) goto after_load; // Still loading.
-    if (code == 404) { // No tile at this level.
-        tile->flags |= TILE_NO_CHILD_ALL;
-        tile->flags |= TILE_LOADED;
-        goto after_load;
-    }
-    if (!data) {
-        LOG_W("Cannot load tile at url %s (%d)", url, code);
-        goto after_load;
-    }
-
-    // Parse the image data in a worker so that we don't block the ui.
-    // The texture creation is still done in the main thread because
-    // we need to use OpenGL for it.
-    if (!tile->loader) {
-        tile->loader = calloc(1, sizeof(*tile->loader));
-        worker_init(&tile->loader->worker, load_image_worker);
-        tile->loader->data = malloc(size);
-        tile->loader->size = size;
-        memcpy(tile->loader->data, data, size);
-        asset_release(url);
-    }
-    if (!worker_iter(&tile->loader->worker)) goto after_load;
-
-    if (tile->loader->img) {
-        tex = texture_from_data(tile->loader->img,
-                tile->loader->w, tile->loader->h, tile->loader->bpp,
-                0, 0, tile->loader->w, tile->loader->h, 0);
-    }
-    transparency = tile->loader->transparency;
-    free(tile->loader->img);
-    free(tile->loader);
-    tile->loader = NULL;
-
-    tile->flags |= TILE_LOADED;
-    if (!tex) {
-        LOG_W("Cannot load img at url %s", url);
-        goto after_load;
-    }
-    tile->flags |= (transparency * TILE_NO_CHILD_0);
-    texture_release(tile->allsky_tex);
-    tile->allsky_tex = NULL;
-    tile->tex = tex;
-    cache_set_cost(g_cache, &key, sizeof(key), tex->tex_w * tex->tex_h * 4);
-    tile->fader.target = true;
-
-after_load:
-    if (tile->flags & TILE_LOADED) return tile;
-
-    // Until the tile get loaded we can try to use the allsky
-    // texture as a fallback.
-    if (    !tile->tex && hips->allsky.data &&
-            order == hips->order_min && !tile->allsky_tex) {
-        nbw = sqrt(12 * 1 << (2 * order));
-        x = (pix % nbw) * hips->allsky.w / nbw;
-        y = (pix / nbw) * hips->allsky.w / nbw;
-        tile->allsky_tex = texture_from_data(
-                hips->allsky.data, hips->allsky.w, hips->allsky.h,
-                hips->allsky.bpp,
-                x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
-        tile->fader.target = true;
-        return tile;
-    }
-    return tile;
 }
 
 int hips_traverse(void *user, int callback(int order, int pix, void *user))
@@ -418,12 +312,12 @@ texture_t *hips_get_tile_texture(
         bool *loading_complete)
 {
     texture_t *tex;
-    tile_t *tile, *render_tile;
+    img_tile_t *tile, *render_tile;
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
     const bool outside = !(flags & HIPS_EXTERIOR);
-    int i;
+    int i, code, x, y, nbw;
 
     if (loading_complete) *loading_complete = false;
 
@@ -442,39 +336,53 @@ texture_t *hips_get_tile_texture(
         return NULL;
     }
 
-    tile = get_img_tile(hips, order, pix, flags);
+    tile = hips_get_tile(hips, order, pix, flags, &code);
     render_tile = tile;
 
-    // Special case if we forced to use the allsky texture.
-    if (flags & HIPS_FORCE_USE_ALLSKY && tile->allsky_tex) {
-        if (loading_complete) *loading_complete = true;
-        goto end;
-    }
-
-    if (loading_complete) *loading_complete = tile->flags & TILE_LOADED;
-
-    // If the tile texture is not loaded yet, we try to use a parent tile
-    // texture instead.
-    while ( !(render_tile->tex || render_tile->allsky_tex) &&
-            !(render_tile->flags & TILE_LOADED) &&
-            render_tile->pos.order > hips->order_min) {
+    // If the tile is not loaded yet, we try to use a parent tile texture
+    // instead.
+    if ((0)) // XXX: disabled for the moment.
+    while (!(render_tile) && (order > hips->order_min)) {
         mat3_set_identity(mat);
-        get_child_uv_mat(render_tile->pos.pix % 4, mat, mat);
+        get_child_uv_mat(pix % 4, mat, mat);
         if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
-        render_tile = get_img_tile(hips, render_tile->pos.order - 1,
-                                   render_tile->pos.pix / 4, flags);
+        order -= 1;
+        pix /= 4;
+        render_tile = hips_get_tile(hips, order, pix, flags, &code);
+    }
+    if (!render_tile) return NULL;
+    if (loading_complete) *loading_complete = true;
+
+    // Create texture if needed.
+    if (render_tile->img && !render_tile->tex) {
+        render_tile->tex = texture_from_data(render_tile->img,
+                render_tile->w, render_tile->h, render_tile->bpp,
+                0, 0, render_tile->w, render_tile->h, 0);
+        free(render_tile->img);
+        render_tile->img = NULL;
     }
 
-end:
+    // Create allsky texture if needed.
+    if (    (flags & HIPS_FORCE_USE_ALLSKY) &&
+            order == hips->order_min &&
+            !render_tile->tex &&
+            !render_tile->allsky_tex)
+    {
+        nbw = sqrt(12 * 1 << (2 * order));
+        x = (pix % nbw) * hips->allsky.w / nbw;
+        y = (pix / nbw) * hips->allsky.w / nbw;
+        render_tile->allsky_tex = texture_from_data(
+                hips->allsky.data, hips->allsky.w, hips->allsky.h,
+                hips->allsky.bpp,
+                x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
+    }
+
     tex = render_tile->tex ?: render_tile->allsky_tex;
     if (!tex) return NULL;
-
-    tile->fader.value = max(tile->fader.value, render_tile->fader.value);
-    fader_update(&render_tile->fader, 0.06);
-    if (fade) *fade = tile->fader.value;
-    if (proj) projection_init_healpix(proj, 1 << render_tile->pos.order,
-                                      render_tile->pos.pix, true, outside);
+    if (proj) projection_init_healpix(
+            proj, 1 << order, pix, true, outside);
     if (split) *split = max(4, 12 >> order);
+    if (fade) *fade = 1.0;
     return tex;
 }
 
@@ -757,7 +665,10 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     if (!(flags & HIPS_LOAD_IN_THREAD)) {
         tile->data = hips->settings.create_tile(
                 hips->settings.user, order, pix, data, size, &cost);
-        if (!tile->data) tile->flags |= TILE_LOAD_ERROR;
+        if (!tile->data) {
+            LOG_W("Cannot parse tile %s", url);
+            tile->flags |= TILE_LOAD_ERROR;
+        }
         asset_release(url);
     } else {
         tile->loader = calloc(1, sizeof(*tile->loader));
@@ -805,4 +716,44 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
     cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
     return tile->data;
+}
+
+/*
+ * Default tile support for images surveys
+ */
+static const void *create_img_tile(
+        void *user, int order, int pix, void *data, int size, int *cost)
+{
+    void *img;
+    int i, w, h, bpp = 0;
+    img_tile_t *tile;
+
+    img = img_read_from_mem(data, size, &w, &h, &bpp);
+    if (!img) {
+        LOG_W("Cannot parse img");
+        return NULL;
+    }
+    tile = calloc(1, sizeof(*tile));
+    tile->img = img;
+    tile->w = w;
+    tile->h = h;
+    tile->bpp = bpp;
+    // Compute transparency.
+    for (i = 0; i < 4; i++) {
+        if (img_is_transparent(img, w, h, bpp,
+                    (i / 2) * w / 2, (i % 2) * h / 2, w / 2, h / 2)) {
+                tile->transparency |= 1 << i;
+        }
+    }
+    *cost = w * h * bpp;
+    return tile;
+}
+
+static int delete_img_tile(void *tile_)
+{
+    img_tile_t *tile = tile_;
+    texture_release(tile->tex);
+    texture_release(tile->allsky_tex);
+    free(tile);
+    return 0;
 }
