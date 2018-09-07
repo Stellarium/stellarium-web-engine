@@ -685,7 +685,7 @@ static int load_tile_worker(worker_t *worker)
 static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
                               int *code)
 {
-    const void *data, *tile_data = NULL;
+    const void *data;
     int size, parent_code, cost = 0;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
@@ -750,15 +750,14 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     tile = calloc(1, sizeof(*tile));
     tile->pos.order = order;
     tile->pos.pix = pix;
-    tile->data = tile_data;
     tile->hips = hips;
     cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
 
     if (!(flags & HIPS_LOAD_IN_THREAD)) {
-        tile_data = hips->settings.create_tile(
+        tile->data = hips->settings.create_tile(
                 hips->settings.user, order, pix, data, size, &cost);
-        if (!tile_data) tile->flags |= TILE_LOAD_ERROR;
+        if (!tile->data) tile->flags |= TILE_LOAD_ERROR;
         asset_release(url);
     } else {
         tile->loader = calloc(1, sizeof(*tile->loader));
