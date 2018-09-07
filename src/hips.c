@@ -456,6 +456,19 @@ void hips_set_label(hips_t *hips, const char* label)
     asprintf(&hips->label, "%s", label);
 }
 
+/*
+ * Add some virtual img tiles for the allsky texture.
+ * The trick for the moment is to put the allsky tiles at order -1, with
+ * no associated image data.
+ */
+static void add_allsky_tiles(hips_t *hips)
+{
+    int pix;
+    for (pix = 0; pix < 12; pix++) {
+        hips_add_manual_tile(hips, -1, pix, NULL, 0);
+    }
+}
+
 static bool hips_update(hips_t *hips)
 {
     int code, err, size;
@@ -483,6 +496,7 @@ static bool hips_update(hips_t *hips)
             hips->allsky.data = img_read_from_mem(data, size,
                     &hips->allsky.w, &hips->allsky.h, &hips->allsky.bpp);
             if (!hips->allsky.data) hips->allsky.not_available = true;
+            if (hips->allsky.data) add_allsky_tiles(hips);
         }
         free(url);
         return false;
@@ -597,6 +611,9 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
     tile_key_t key = {hips->hash, order, pix};
+
+    // To handle allsky textures we use the order -1.
+    if (flags & HIPS_FORCE_USE_ALLSKY) key.order = -1;
 
     assert(order >= 0);
     *code = 0;
@@ -730,6 +747,12 @@ static const void *create_img_tile(
     void *img;
     int i, w, h, bpp = 0;
     img_tile_t *tile;
+
+    // Special case for allsky tiles!  Just return an empty image tile.
+    if (order == -1) {
+        tile = calloc(1, sizeof(*tile));
+        return tile;
+    }
 
     img = img_read_from_mem(data, size, &w, &h, &bpp);
     if (!img) {
