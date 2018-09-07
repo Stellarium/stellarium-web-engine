@@ -34,6 +34,7 @@ export default {
       }
       if (!obj) {
         console.warning("Can't find object in SWE: " + ss.short_name)
+        return
       }
       swh.setSweObjAsSelection(obj)
     }
