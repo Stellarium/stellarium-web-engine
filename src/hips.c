@@ -319,8 +319,11 @@ texture_t *hips_get_tile_texture(
     const bool outside = !(flags & HIPS_EXTERIOR);
     int i, code, x, y, nbw;
 
+    // Set all the default values.
     if (loading_complete) *loading_complete = false;
-
+    if (fade) *fade = 1.0;
+    if (proj) projection_init_healpix(proj, 1 << order, pix, true, outside);
+    if (split) *split = max(4, 12 >> order);
     if (uv) {
         if (outside) memcpy(uv, UV_OUT, sizeof(UV_OUT));
         else memcpy(uv, UV_IN,  sizeof(UV_IN));
@@ -328,13 +331,7 @@ texture_t *hips_get_tile_texture(
 
     // If the texture is not ready yet, we still set the values, so that
     // the caller can render a fallback color instead.
-    if (!hips_is_ready(hips)) {
-        if (fade) *fade = 1.0;
-        if (proj) projection_init_healpix(proj, 1 << order, pix,
-                                          true, outside);
-        if (split) *split = max(4, 12 >> order);
-        return NULL;
-    }
+    if (!hips_is_ready(hips)) return NULL;
 
     tile = hips_get_tile(hips, order, pix, flags, &code);
     render_tile = tile;
