@@ -16,7 +16,6 @@
  * File: hips.h
  */
 
-
 /*
  * Type: hips_t
  * Opaque structure representing a hips survey.
@@ -66,32 +65,11 @@ hips_t *hips_create(const char *url, double release_date,
                     const hips_settings_t *settings);
 
 /*
- * Function: hips_set_frame
- * Set the frame of a hips survey (if it is not specified in the properties).
- *
- * Parameters:
- *   hips  - A hips survey.
- *   frame - FRAME_ICRS or FRAME_OBSERVED.
- */
-void hips_set_frame(hips_t *hips, int frame);
-
-/*
- * Function: hips_set_label
- * Set the label for a hips survey
- *
- * Parameters:
- *   hips  - A hips survey.
- *   label - The new label to use. It will override existing labels
- *           such as the ones taken from the properties file.
- */
-void hips_set_label(hips_t *hips, const char* label);
-
-/*
  * Function: hips_get_tile
  * Get a given tile of a hips survey.
  *
- * This only makes sense for custom type surveys (for images we can use
- * <hips_get_tile_texture>).
+ * This only makes sense for custom type surveys (for images we can directly
+ * use <hips_get_tile_texture>).
  *
  * Parameters:
  *   hips   - a hips survey.
@@ -119,6 +97,86 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
                                  const void *data, int size);
 
 /*
+ * Function: hips_is_ready
+ * Check if a hips survey is ready to use
+ *
+ * The return true if:
+ * - the property file has been parsed.
+ * - the allsky image has been loaded (if there is one).
+ */
+bool hips_is_ready(hips_t *hips);
+
+/*
+ * Function: hips_traverse
+ * Depth first traversal of healpix grid.
+ *
+ * The callback should return:
+ *   1 to keep going deeper into the tile.
+ *   0 to stop iterating inside this tile.
+ *   <0 to immediately return (with the same value).
+ *
+ * Return:
+ *   0 if the traverse finished.
+ *   -v if the callback returned a negative value -v.
+ */
+int hips_traverse(void *user, int callback(int order, int pix, void *user));
+
+/*
+ * Function: hips_get_tile_texture
+ * Get the texture for a given hips tile.
+ *
+ * Parameters:
+ *   flags   - <HIPS_FLAGS> union.
+ *   uv      - The uv coordinates of the texture.
+ *   proj    - An heapix projector already setup for the tile.
+ *   split   - Recommended spliting of the texture when we render it.
+ *   fade    - Recommended fade alpha.
+ *   loading_complete - set to true if the tile is totally loaded.
+ *
+ * Return:
+ *   The texture_t, or NULL if none is found.
+ */
+texture_t *hips_get_tile_texture(
+        hips_t *hips, int order, int pix, int flags,
+        double uv[4][2], projection_t *proj, int *split, double *fade,
+        bool *loading_complete);
+
+/*
+ * Function: hips_parse_hipslist
+ * Parse a hipslist file.
+ *
+ * Return:
+ *    >= 0 if list successfully parsed, number of parsed entries.
+ *    -1   if still loading.
+ *    < -1 if error.
+ */
+int hips_parse_hipslist(const char *url,
+                        int callback(const char *url, double release_date,
+                                     void *user),
+                        void *user);
+
+/*
+ * Function: hips_set_frame
+ * Set the frame of a hips survey (if it is not specified in the properties).
+ *
+ * Parameters:
+ *   hips  - A hips survey.
+ *   frame - FRAME_ICRS or FRAME_OBSERVED.
+ */
+void hips_set_frame(hips_t *hips, int frame);
+
+/*
+ * Function: hips_set_label
+ * Set the label for a hips survey
+ *
+ * Parameters:
+ *   hips  - A hips survey.
+ *   label - The new label to use. It will override existing labels
+ *           such as the ones taken from the properties file.
+ */
+void hips_set_label(hips_t *hips, const char* label);
+
+/*
  * Function: hips_render
  * Render a hips survey.
  *
@@ -142,57 +200,5 @@ int hips_render_traverse(hips_t *hips, const painter_t *painter,
                                       int order, int pix, int flags,
                                       void *user));
 
-/*
- * Function: hips_get_tile_texture
- * Get the texture for a given hips tile.
- *
- * Parameters:
- *   flags   - <HIPS_FLAGS> union.
- *   uv      - The uv coordinates of the texture.
- *   proj    - An heapix projector already setup for the tile.
- *   split   - Recommended spliting of the texture when we render it.
- *   fade    - Recommended fade alpha.
- *   loading_complete - set to true if the tile is totally loaded.
- *
- * Return:
- *   The texture_t, or NULL if none is found.
- */
-texture_t *hips_get_tile_texture(
-        hips_t *hips, int order, int pix, int flags,
-        double uv[4][2], projection_t *proj, int *split, double *fade,
-        bool *loading_complete);
-
-
-bool hips_is_ready(hips_t *hips);
-
-
-/*
- * Function: hips_parse_hipslist
- * Parse a hipslist file.
- *
- * Return:
- *    >= 0 if list successfully parsed, number of parsed entries.
- *    -1   if still loading.
- *    < -1 if error.
- */
-int hips_parse_hipslist(const char *url,
-                        int callback(const char *url, double release_date,
-                                     void *user),
-                        void *user);
-
-/*
- * Function: hips_traverse
- * Depth first traversal of healpix grid.
- *
- * The callback should return:
- *   1 to keep going deeper into the tile.
- *   0 to stop iterating inside this tile.
- *   <0 to immediately return (with the same value).
- *
- * Return:
- *   0 if the traverse finished.
- *   -v if the callback returned a negative value -v.
- */
-int hips_traverse(void *user, int callback(int order, int pix, void *user));
 
 #endif // HIPS_H
