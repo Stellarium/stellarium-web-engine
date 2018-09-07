@@ -150,6 +150,10 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     paint_quad(&painter, FRAME_OBSERVED, ls->fog, NULL,
                FULL_UV, &proj_spherical, div);
 
+    // Adjust the alpha to make the landscape transparent when we look down.
+    painter.color[3] *= mix(1.0, 0.25,
+                        smoothstep(0, -45, painter.obs->altitude * DR2D));
+
     if (ls->hips && hips_is_ready(ls->hips)) {
         vec3_mul(brightness, painter.color, painter.color);
         painter.transform = &rg2h;

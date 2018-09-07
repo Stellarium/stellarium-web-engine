@@ -416,8 +416,9 @@ static bool is_below_horizon_hidden(void)
     bool visible;
     ls = obj_get(&core->obj, "landscapes", 0);
     obj_get_attr(ls, "visible", "b", &visible);
-    if (!visible) return false;
-    return true;
+    // XXX: we should let the lanscape module notify the core that it hides
+    // the stars instead.
+    return (visible && core->observer->altitude >= 0);
 }
 
 static double get_radius_for_mag(double mag);
