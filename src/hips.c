@@ -634,8 +634,8 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     }
 
     if (!hips_is_ready(hips)) return NULL;
-    // Can't get a tile of order higher than the survey order.
-    if (hips->order && (order > hips->order)) {
+    // Don't bother looking for tile outside the hips order range.
+    if ((hips->order && (order > hips->order)) || order < hips->order_min) {
         *code = 404;
         return NULL;
     }
