@@ -64,6 +64,16 @@ struct tile {
     } *loader;
 };
 
+/*
+ * Type: tile_key_t
+ * Key used for the tiles cache.
+ */
+typedef struct {
+    uint32_t    hips_hash;
+    int         order;
+    int         pix;
+} tile_key_t;
+
 // Gobal cache for all the tiles.
 static cache_t *g_cache = NULL;
 
@@ -270,11 +280,7 @@ static tile_t *get_img_tile(hips_t *hips, int order, int pix, int flags)
     void *data;
     int size, nbw, x, y, code, transparency;
     char url[URL_MAX_SIZE];
-    struct {
-        uint32_t hash;
-        int order;
-        int pix;
-    } key = {hips->hash, order, pix};
+    tile_key_t key = {hips->hash, order, pix};
 
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
     tile = cache_get(g_cache, &key, sizeof(key));
@@ -683,11 +689,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     int size, parent_code, cost = 0;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
-    struct {
-        uint32_t hash;
-        int order;
-        int pix;
-    } key = {hips->hash, order, pix};
+    tile_key_t key = {hips->hash, order, pix};
 
     assert(order >= 0);
     *code = 0;
@@ -784,11 +786,7 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
     const void *tile_data;
     int cost;
     tile_t *tile;
-    struct {
-        uint32_t hash;
-        int order;
-        int pix;
-    } key = {hips->hash, order, pix};
+    tile_key_t key = {hips->hash, order, pix};
 
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
     tile = cache_get(g_cache, &key, sizeof(key));
