@@ -307,7 +307,6 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
 //  The texture_t, or NULL if none is found.
 texture_t *hips_get_tile_texture(
         hips_t *hips, int order, int pix, int flags,
-        const painter_t *painter,
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete)
 {
@@ -400,7 +399,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
 
     flags |= HIPS_LOAD_IN_THREAD;
     (*nb_tot)++;
-    tex = hips_get_tile_texture(hips, order, pix, flags, &painter,
+    tex = hips_get_tile_texture(hips, order, pix, flags,
                                 uv, &proj, &split, &fade, &loaded);
     if (loaded) (*nb_loaded)++;
     if (!tex) return 0;

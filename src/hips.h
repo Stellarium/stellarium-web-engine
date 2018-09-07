@@ -159,7 +159,6 @@ int hips_render_traverse(hips_t *hips, const painter_t *painter,
  */
 texture_t *hips_get_tile_texture(
         hips_t *hips, int order, int pix, int flags,
-        const painter_t *painter,
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete);
 
