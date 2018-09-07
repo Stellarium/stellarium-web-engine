@@ -398,6 +398,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     bool loaded;
     double fade, uv[4][2];
 
+    flags |= HIPS_LOAD_IN_THREAD;
     (*nb_tot)++;
     tex = hips_get_tile_texture(hips, order, pix, flags, &painter,
                                 uv, &proj, &split, &fade, &loaded);
