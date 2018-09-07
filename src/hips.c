@@ -74,7 +74,6 @@ typedef struct {
 typedef struct {
     void        *img;
     int         w, h, bpp;
-    int         transparency;
     texture_t   *tex;
     texture_t   *allsky_tex;
 } img_tile_t;
@@ -111,7 +110,8 @@ struct hips {
 
 
 static const void *create_img_tile(
-        void *user, int order, int pix, void *src, int size, int *cost);
+        void *user, int order, int pix, void *src, int size,
+        int *cost, int *transparency);
 static int delete_img_tile(void *tile);
 
 hips_t *hips_create(const char *url, double release_date,
@@ -579,13 +579,15 @@ next:
 
 static int load_tile_worker(worker_t *worker)
 {
+    int transparency = 0;
     typeof(((tile_t*)0)->loader) loader = (void*)worker;
     tile_t *tile = loader->tile;
     hips_t *hips = tile->hips;
     tile->data = hips->settings.create_tile(
                     hips->settings.user, tile->pos.order, tile->pos.pix,
-                    loader->data, loader->size, &loader->cost);
+                    loader->data, loader->size, &loader->cost, &transparency);
     if (!tile->data) tile->flags |= TILE_LOAD_ERROR;
+    tile->flags |= (transparency * TILE_NO_CHILD_0);
     free(loader->data);
     return 0;
 }
@@ -594,7 +596,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
                               int *code)
 {
     const void *data;
-    int size, parent_code, cost = 0;
+    int size, parent_code, cost = 0, transparency = 0;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
     tile_key_t key = {hips->hash, order, pix};
@@ -664,7 +666,9 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     if (!(flags & HIPS_LOAD_IN_THREAD)) {
         tile->data = hips->settings.create_tile(
-                hips->settings.user, order, pix, data, size, &cost);
+                hips->settings.user, order, pix, data, size,
+                &cost, &transparency);
+        tile->flags |= (transparency * TILE_NO_CHILD_0);
         if (!tile->data) {
             LOG_W("Cannot parse tile %s", url);
             tile->flags |= TILE_LOAD_ERROR;
@@ -694,7 +698,7 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
                                  const void *data, int size)
 {
     const void *tile_data;
-    int cost;
+    int cost = 0, transparency = 0;
     tile_t *tile;
     tile_key_t key = {hips->hash, order, pix};
 
@@ -704,7 +708,7 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
 
     assert(hips->settings.create_tile);
     tile_data = hips->settings.create_tile(
-            hips->settings.user, order, pix, data, size, &cost);
+            hips->settings.user, order, pix, data, size, &cost, &transparency);
     assert(tile_data);
 
     tile = calloc(1, sizeof(*tile));
@@ -712,6 +716,7 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
     tile->pos.pix = pix;
     tile->data = tile_data;
     tile->hips = hips;
+    tile->flags = (transparency * TILE_NO_CHILD_0);
 
     cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
@@ -722,7 +727,8 @@ const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
  * Default tile support for images surveys
  */
 static const void *create_img_tile(
-        void *user, int order, int pix, void *data, int size, int *cost)
+        void *user, int order, int pix, void *data, int size,
+        int *cost, int *transparency)
 {
     void *img;
     int i, w, h, bpp = 0;
@@ -742,7 +748,7 @@ static const void *create_img_tile(
     for (i = 0; i < 4; i++) {
         if (img_is_transparent(img, w, h, bpp,
                     (i / 2) * w / 2, (i % 2) * h / 2, w / 2, h / 2)) {
-                tile->transparency |= 1 << i;
+                *transparency |= 1 << i;
         }
     }
     *cost = w * h * bpp;

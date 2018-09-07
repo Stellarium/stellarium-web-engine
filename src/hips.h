@@ -37,13 +37,18 @@ enum {
  *   create_tile - function used to convert source data into a tile.
  *                 The returned pointer is handled by the hips survey, and
  *                 can be anything.  This is called every time the survey
- *                 load a tile that is not in the cache.
+ *                 load a tile that is not in the cache.  See note [1]
  *   delete_tile - function used to delete the data returned by create_tile.
  *   user        - pointer passed to create_tile.
+ *
+ * Note 1:
+ *   The create_tile function needs to return a cost value (in bytes) for the
+ *   cache, and if we know that some children tiles don't need to be loaded, we
+ *   can set the transparency value, as a four bits bitmask, one bit per child.
  */
 typedef struct hips_settings {
-    const void *(*create_tile)(void *user, int order, int pix, void *src,
-                               int size, int *cost);
+    const void *(*create_tile)(void *user, int order, int pix, void *data,
+                               int size, int *cost, int *transparency);
     int (*delete_tile)(void *tile);
     void *user;
 } hips_settings_t;

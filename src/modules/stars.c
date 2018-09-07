@@ -330,7 +330,8 @@ static int on_file_tile_loaded(const char type[4],
 }
 
 static const void *stars_create_tile(
-        void *user, int order, int pix, void *data, int size, int *cost)
+        void *user, int order, int pix, void *data, int size,
+        int *cost, int *transparency)
 {
     tile_t *tile;
     stars_t *stars = user;

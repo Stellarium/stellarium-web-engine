@@ -241,7 +241,7 @@ static int on_file_tile_loaded(const char type[4],
 }
 
 static const void *dsos_create_tile(void *user, int order, int pix, void *data,
-                                    int size, int *cost)
+                                    int size, int *cost, int *transparency)
 {
     tile_t *tile;
     eph_load(data, size, &tile, on_file_tile_loaded);
