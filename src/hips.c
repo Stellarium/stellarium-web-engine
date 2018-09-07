@@ -334,10 +334,14 @@ texture_t *hips_get_tile_texture(
     if (!hips_is_ready(hips)) return NULL;
 
     tile = hips_get_tile(hips, order, pix, flags, &code);
-    render_tile = tile;
+    if (!tile && code) { // The tile doesn't exists
+        if (loading_complete) *loading_complete = true;
+        return NULL;
+    }
 
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
+    render_tile = tile;
     while (!(render_tile) && (order > hips->order_min)) {
         mat3_set_identity(mat);
         get_child_uv_mat(pix % 4, mat, mat);
@@ -347,7 +351,7 @@ texture_t *hips_get_tile_texture(
         render_tile = hips_get_tile(hips, order, pix, flags, &code);
     }
     if (!render_tile) return NULL;
-    if (loading_complete) *loading_complete = true;
+    if (loading_complete && tile == render_tile) *loading_complete = true;
 
     // Create texture if needed.
     if (render_tile->img && !render_tile->tex) {
