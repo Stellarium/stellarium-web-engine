@@ -21,16 +21,14 @@
 
 // Flags of the tiles:
 enum {
-    TILE_LOADED         = 1 << 0, // Set when the tile is fully loaded.
-
     // Bit fields set by tile if we know that we don't have further tiles
     // for a given child.
-    TILE_NO_CHILD_0     = 1 << 1,
-    TILE_NO_CHILD_1     = 1 << 2,
-    TILE_NO_CHILD_2     = 1 << 3,
-    TILE_NO_CHILD_3     = 1 << 4,
+    TILE_NO_CHILD_0     = 1 << 0,
+    TILE_NO_CHILD_1     = 1 << 1,
+    TILE_NO_CHILD_2     = 1 << 2,
+    TILE_NO_CHILD_3     = 1 << 3,
 
-    TILE_LOAD_ERROR     = 1 << 5,
+    TILE_LOAD_ERROR     = 1 << 4,
 };
 
 #define TILE_NO_CHILD_ALL \
