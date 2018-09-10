@@ -994,6 +994,9 @@ static void test_core(void)
 static void test_basic(void)
 {
     obj_t *obj;
+    // Test search bright star by HIP:
+    obj = obj_get(NULL, "HIP 677", 0);
+    assert(obj);
     // Test obj_get with '|'
     obj = obj_get(NULL, "No result|Sun", 0);
     assert(obj);
