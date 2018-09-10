@@ -42,10 +42,11 @@ sgp4_elsetrec_t *sgp4_twoline2rv(
         char typerun, char typeinput, char opsmode,
         double *startmfe, double *stopmfe, double *deltamin)
 {
-    char str1[130], str2[130];
+    char str1[131] = {}, str2[131] = {};
     elsetrec *ret = (elsetrec*)calloc(1, sizeof(*ret));
     strncpy(str1, str1_, 130);
     strncpy(str2, str2_, 130);
+
     SGP4Funcs::twoline2rv(str1, str2, typerun, typeinput, opsmode,
                           wgs72, *startmfe, *stopmfe, *deltamin, *ret);
     return (sgp4_elsetrec*)ret;
