@@ -355,7 +355,7 @@ static int stars_init(obj_t *obj, json_value *args)
     stars->visible = true;
     stars->mag_max = INFINITY;
 
-    regcomp(&stars->search_reg, "(hd|gaia) *([0-9]+)",
+    regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
     sprintf(stars->survey_url, "https://data.stellarium.org/surveys/gaia_dr2");
@@ -539,23 +539,21 @@ static int stars_get_visitor(int order, int pix, void *user)
     struct {
         stars_t     *stars;
         obj_t       *ret;
-        int         hd;
-        uint64_t    gaia;
+        int         cat;
+        uint64_t    n;
     } *d = user;
     tile_t *tile;
     tile = get_tile(d->stars, order, pix, false, NULL);
-
     // If we are looking for a gaia star the id already gives us the tile.
-    if (d->gaia && gaia_index_to_pix(order, d->gaia) != pix)
+    if (d->cat == 2 && gaia_index_to_pix(order, d->n) != pix)
         return 0;
-
     // Gaia survey has a min order of 3.
     // XXX: read the survey properties file instead of hard coding!
     if (!tile) return order < 3 ? 1 : 0;
-
     for (i = 0; i < tile->nb; i++) {
-        if (    (d->hd && d->hd == tile->stars[i].hd) ||
-                (d->gaia && d->gaia == tile->stars[i].gaia)) {
+        if (    (d->cat == 0 && tile->stars[i].hip == d->n) ||
+                (d->cat == 1 && tile->stars[i].hd  == d->n) ||
+                (d->cat == 2 && tile->stars[i].gaia == d->n)) {
             d->ret = &star_create(&tile->stars[i])->obj;
             return -1; // Stop the search.
         }
@@ -565,25 +563,24 @@ static int stars_get_visitor(int order, int pix, void *user)
 
 static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
 {
-    int hd = 0, r = 0;
-    uint64_t gaia = 0;
+    int r, cat;
+    uint64_t n = 0;
     regmatch_t matches[3];
 
     stars_t *stars = (stars_t*)obj;
     r = regexec(&stars->search_reg, id, 3, matches, 0);
     if (r) return NULL;
-    if (id[matches[1].rm_so] == 'h' || id[matches[1].rm_so] == 'H')
-        hd = atoi(id + matches[2].rm_so);
-    else
-        gaia = atoll(id + matches[2].rm_so);
+    n = strtoull(id + matches[2].rm_so, NULL, 10);
+    if (strncasecmp(id, "hip", 3) == 0) cat = 0;
+    if (strncasecmp(id, "hd", 2) == 0) cat = 1;
+    if (strncasecmp(id, "gaia", 4) == 0) cat = 2;
 
     struct {
         stars_t  *stars;
         obj_t    *ret;
-        int      hd;
-        uint64_t gaia;
-    } d = {.stars=(void*)obj, .hd=hd, .gaia=gaia};
-
+        int      cat;
+        uint64_t n;
+    } d = {.stars=(void*)obj, .cat=cat, .n=n};
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
 }
@@ -593,9 +590,9 @@ static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid)
     struct {
         stars_t  *stars;
         obj_t    *ret;
-        int      hd;
-        uint64_t gaia;
-    } d = {.stars=(void*)obj, .gaia=nsid};
+        int      cat;
+        uint64_t n;
+    } d = {.stars=(void*)obj, .cat=2, .n=nsid};
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
 }
