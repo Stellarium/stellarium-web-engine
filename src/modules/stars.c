@@ -499,7 +499,9 @@ static int render_visitor(int order, int pix, void *user)
             .size = size,
             .color = {color[0], color[1], color[2], luminance},
         };
-        if (s->hd)
+        if (s->hip)
+            make_id(points[n].id, "HIP", s->hip);
+        else if (s->hd)
             make_id(points[n].id, "HD", s->hd);
         else
             points[n].nsid = s->gaia;
