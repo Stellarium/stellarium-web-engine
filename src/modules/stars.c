@@ -504,7 +504,7 @@ static int render_visitor(int order, int pix, void *user)
         else
             points[n].nsid = s->gaia;
         n++;
-        if (s->vmag <= painter.label_mag_max)
+        if (s->vmag <= painter.label_mag_max && !s->gaia)
             star_render_name(&painter, s, p_ndc, size, mag);
     }
     paint_points(&painter, n, points, FRAME_VIEW);
