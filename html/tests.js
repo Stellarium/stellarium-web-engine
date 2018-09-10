@@ -36,7 +36,7 @@ var testBasic = function(stel) {
 var testIds = function(stel) {
     var o = stel.getObj('Polaris');
     var names = o.names();
-    var tests = ['BAYER alf UMi', 'HIP 11767', 'HD 8890', 'NAME Polaris']
+    var tests = ['HIP 11767', 'HD 8890', 'NAME Polaris']
     for (var v of tests) assert(names.includes(v))
 }
 

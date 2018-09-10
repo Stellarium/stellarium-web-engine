@@ -279,24 +279,6 @@ static uint8_t *texture_load_function(
     return img_read_from_mem(data, size, w, h, bpp);
 }
 
-// Add all the bayer names into the identifiers table.
-static void add_bayer_identifiers(void)
-{
-    int hd, bayer, n, i;
-    char cons[4], id[32], txt[32], show[32];
-    const char *greek[3];
-    const char *g_abbr, *g_full;
-
-    for (i = 0; bayer_iter(i, &hd, cons, &bayer, &n, greek); i++) {
-        sprintf(id, "HD %d", hd);
-        g_abbr = greek[1];
-        g_full = greek[2];
-        sprintf(txt,  "%s%.*d %s", g_abbr, n ? 1 : 0, n, cons);
-        sprintf(show, "%s%.*d %s", g_full, n ? 1 : 0, n, cons);
-        identifiers_add(id, "BAYER", txt, NULL, show);
-    }
-}
-
 EMSCRIPTEN_KEEPALIVE
 void core_init(void)
 {
@@ -312,7 +294,6 @@ void core_init(void)
     sprintf(cache_dir, "%s/%s", sys_get_user_dir(), ".cache");
     request_init(cache_dir);
     identifiers_init();
-    add_bayer_identifiers();
 
     font_init(asset_get_data("asset://font/DejaVuSans-small.ttf", NULL, NULL));
     core = (core_t*)obj_create("core", "core", NULL, NULL);
