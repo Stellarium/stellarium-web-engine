@@ -1,50 +1,50 @@
-HD 169467 | Softshell Turtle I
-HD 78045 | Flying Fish I
-HD 55864 | Flying Fish II
-HD 71878 | Flying Fish III
-HD 71046 | Flying Fish IV
-HD 57623 | Flying Fish V
-HD 63295 | Flying Fish VI
-HD 144470 | West Gouqian Star
-HD 219571 | Crane V
-HD 160578 | Six Jias VI
-HD 11443 | Tianhunxinanxing
-HD 71369 | Inner Steps I
-HD 79028 | Inner Steps II
-HD 75958 | Inner Steps III
-HD 81937 | Inner Steps IV
-HD 75486 | Inner Steps V
-HD 79354 | Inner Steps VI
-HD 211416 | Beak I
-HD 212581 | Beak II
-HD 224361 | Beak III
-HD 3003 | Beak IV
-HD 4089 | Beak V
-HD 1581 | Beak VI
-HD 224686 | Beak VII
-HD 135382 | Triangle I
-HD 141891 | Triangle II
-HD 150798 | Shaofu
-HD 13161 | Great Southern Star
-HD 14055 | Celestial General X
-HD 13974 | Celestial General XI
-HD 94334 | Celestial Prison I
-HD 99787 | Celestial Prison II
-HD 95128 | Celestial Prison III
-HD 99984 | Celestial Prison IV
-HD 95310 | Celestial Prison V
-HD 98839 | Celestial Prison VI
-HD 151890 | Tail I
-HD 151680 | Tail II
-HD 152236 | Tail III
-HD 152334 | Tail III
-HD 155203 | Tail IV
-HD 159532 | Tail V
-HD 161471 | Tail VI
-HD 160578 | Tail VII
-HD 158926 | Tail VIII
-HD 158408 | Tail IX
-HD 114330 | Flat Road I
-HD 119149 | Flat Road II
-HD 116658 | Horn I
-HD 118098 | Horn II
+HIP 90422 | Softshell Turtle I
+HIP 44382 | Flying Fish I
+HIP 34473 | Flying Fish II
+HIP 41312 | Flying Fish III
+HIP 40817 | Flying Fish IV
+HIP 35228 | Flying Fish V
+HIP 37504 | Flying Fish VI
+HIP 78933 | West Gouqian Star
+HIP 114996 | Crane V
+HIP 86670 | Six Jias VI
+HIP 8796 | Tianhunxinanxing
+HIP 41704 | Inner Steps I
+HIP 45333 | Inner Steps II
+HIP 43903 | Inner Steps III
+HIP 46733 | Inner Steps IV
+HIP 43644 | Inner Steps V
+HIP 45455 | Inner Steps VI
+HIP 110130 | Beak I
+HIP 110838 | Beak II
+HIP 118092 | Beak III
+HIP 2578 | Beak IV
+HIP 3330 | Beak V
+HIP 1599 | Beak VI
+HIP 118322 | Beak VII
+HIP 74946 | Triangle I
+HIP 77952 | Triangle II
+HIP 82273 | Shaofu
+HIP 10064 | Great Southern Star
+HIP 10670 | Celestial General X
+HIP 10644 | Celestial General XI
+HIP 53295 | Celestial Prison I
+HIP 56034 | Celestial Prison II
+HIP 53721 | Celestial Prison III
+HIP 56148 | Celestial Prison IV
+HIP 53838 | Celestial Prison V
+HIP 55560 | Celestial Prison VI
+HIP 82514 | Tail I
+HIP 82396 | Tail II
+HIP 82671 | Tail III
+HIP 82729 | Tail III
+HIP 84143 | Tail IV
+HIP 86228 | Tail V
+HIP 87073 | Tail VI
+HIP 86670 | Tail VII
+HIP 85927 | Tail VIII
+HIP 85696 | Tail IX
+HIP 64238 | Flat Road I
+HIP 66803 | Flat Road II
+HIP 65474 | Horn I
+HIP 66249 | Horn II

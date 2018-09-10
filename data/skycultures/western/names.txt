@@ -1,96 +1,340 @@
-HD 358 |  Alpheratz
-HD 432 | Caph
-HD 886 | Algenib
-HD 2261 | Ankaa
-HD 3712 | Shedir
-HD 4128 | Diphda
-HIP 3829 | Van Maanen 2
-HD 6860 | Mirach
-HD 10144 | Achernar
-HD 12533 | Almaak
-HD 12929 | Hamal
-HD 14386 | Mira
-HD 8890 | Polaris
-HD 18622 | Acamar
-HD 18884 | Menkar
-HD 19356 | Algol
-HD 20902 | Mirphak
-HD 23630 | Alcyone
-HD 23862 | Pleione
-HD 25025 | Zaurak
-HD 29139 | Aldebaran
-HD 33793 | Kapteyn's star
-HD 34085 | Rigel
-HD 34029 | Capella
-HD 35468 | Bellatrix
-HD 35497 | Alnath
-HD 36079 | Nihal
-HD 36486 | Mintaka
-HD 36673 | Arneb
-HD 37128 | Alnilam
-HD 37742 | Alnitak
-HD 38771 | Saiph
-HD 39801 | Betelgeuse
-HD 44179 | Red Rectangle
-HD 45348 | Canopus
-HD 47105 | Alhena
-HD 48915 | Sirius
-HD 52089 | Adhara
-HIP 36208 | Luyten's star
-HD 60179 | Castor
-HD 61421 | Procyon
-HD 62509 | Pollux
-HD 81797 | Alphard
-HD 87901 | Regulus
-HD 89484 | Algieba
-HD 95418 | Merak
-HD 95689 | Dubhe
-HD 102647 | Denebola
-HD 103095 | Groombridge 1830
-HD 103287 | Phad
-HD 106591 | Megrez
-HD 108248 | Acrux
-HIP 60936 | 3C 273
-HD 112185 | Alioth
-HD 112413 | Cor Caroli
-HD 113226 | Vindemiatrix
-HD 116656 | Mizar
-HD 116658 | Spica
-HD 116842 | Alcor
-HD 120315 | Alkaid
-HD 122451 | Agena
-HD 122451 | Hadar
-HD 123299 | Thuban
-HD 124897 | Arcturus
+HIP 677 | Alpheratz
+HIP 746 | Caph
+HIP 1067 | Algenib
+HIP 1562 | Deneb Kaitos Shemali
+HIP 2081 | Ankaa
+HIP 3179 | Shedir
+HIP 3419 | Diphda
+HIP 3821 | Achird
+HIP 3829 | van Maanen 2
+HIP 4427 | Navi
+HIP 5364 | Deneb Algenubi
+HIP 5447 | Mirach
+HIP 5542 | Marfark
+HIP 6411 | Adhil
+HIP 6686 | Ruchbah
+HIP 7097 | Kullat Nunu
+HIP 7588 | Achernar
+HIP 7607 | Nembus
+HIP 8198 | Torcularis Septentrionalis
+HIP 8645 | Baten Kaitos
+HIP 8796 | Mothallah
+HIP 8832 | Mesarthim
+HIP 8903 | Sheratan
+HIP 9487 | Alrischa
+HIP 9640 | Almaak
+HIP 9884 | Hamal
+HIP 10826 | Mira
+HIP 11767 | Polaris
+HIP 12706 | Kaffaljidhma
+HIP 13268 | Miram
+HIP 13288 | Angetenar
+HIP 13701 | Azha
+HIP 13847 | Acamar
+HIP 13879 | Gorgonea Secunda
+HIP 14135 | Menkar
+HIP 14354 | Gorgonea Tertia
+HIP 14576 | Algol
+HIP 14668 | Misam
+HIP 14817 | Gorgonea Quarta
+HIP 14838 | Botein
+HIP 15197 | Zibal
+HIP 15863 | Mirphak
+HIP 17378 | Rana
+HIP 17448 | Atik
+HIP 17489 | Celaeno
+HIP 17499 | Electra
+HIP 17531 | Taygeta
+HIP 17573 | Maia
+HIP 17579 | Asterope
+HIP 17608 | Merope
+HIP 17702 | Alcyone
+HIP 17847 | Atlas
+HIP 17851 | Pleione
+HIP 18543 | Zaurak
+HIP 18614 | Menkib
+HIP 19587 | Beid
+HIP 19849 | Keid
+HIP 20205 | Hyadum I
+HIP 20455 | Hyadum II
+HIP 20648 | Cleeia
+HIP 20889 | Ain
+HIP 21393 | Theemim
+HIP 21421 | Aldebaran
+HIP 21594 | Sceptrum
+HIP 22449 | Tabit
+HIP 23015 | Hassaleh
+HIP 23203 | Hind's Crimson Star
+HIP 23416 | Almaaz
+HIP 23453 | Haedus
+HIP 23767 | Hoedus II
+HIP 23875 | Cursa
+HIP 24186 | Kapteyn's Star
+HIP 24436 | Rigel
+HIP 24608 | Capella
+HIP 25336 | Bellatrix
+HIP 25428 | Alnath
+HIP 25606 | Nihal
+HIP 25923 | Thabit
+HIP 25930 | Mintaka
+HIP 25945 | Ruby Star
+HIP 25985 | Arneb
+HIP 26207 | Meissa
+HIP 26241 | Hatsya
+HIP 26311 | Alnilam
+HIP 26634 | Phact
+HIP 26727 | Alnitak
+HIP 27366 | Saiph
+HIP 27628 | Wazn
+HIP 27989 | Betelgeuse
+HIP 28360 | Menkalinan
+HIP 28437 | Propus
+HIP 29034 | Al Kurud
+HIP 29655 | Tejat Prior
+HIP 30089 | Red Rectangle
+HIP 30122 | Furud
+HIP 30324 | Mirzam
+HIP 30343 | Tejat Posterior
+HIP 30438 | Canopus
+HIP 31646 | Plaskett's star
+HIP 31681 | Alhena
+HIP 32246 | Mebsuta
+HIP 32349 | Sirius
+HIP 32362 | Alzirr
+HIP 33579 | Adhara
+HIP 34045 | Muliphein
+HIP 34088 | Mekbuda
+HIP 34444 | Wezen
+HIP 35264 | Tureis
+HIP 35488 | Bernes 135
+HIP 35550 | Wasat
+HIP 35904 | Aludra
+HIP 36188 | Gomeisa
+HIP 36208 | Luyten's Star
+HIP 36850 | Castor
+HIP 37229 | Markeb
+HIP 37279 | Procyon
+HIP 37826 | Pollux
+HIP 38170 | Asmidiske
+HIP 39429 | Naos
+HIP 39953 | Regor
+HIP 40167 | Tegmine
+HIP 40526 | Tarf
+HIP 41037 | Avior
+HIP 41075 | Alsciaukat
+HIP 41704 | Muscida
+HIP 42402 | Minchir
+HIP 42806 | Asellus Borealis
+HIP 42911 | Asellus Australis
+HIP 43813 | Hydrobius
+HIP 44066 | Acubens
+HIP 44127 | Talitha
+HIP 44816 | Suhail
+HIP 45238 | Miaplacidus
+HIP 45556 | Aspidiske
+HIP 46390 | Alphard
+HIP 46750 | Alterf
+HIP 47508 | Subra
+HIP 47908 | Algenubi
+HIP 48455 | Rasalas
+HIP 48774 | Tseen Ke
+HIP 49669 | Regulus
+HIP 49583 | Al'dzhabkhakh
+HIP 50335 | Adhafera
+HIP 50372 | Tania Borealis
+HIP 50583 | Algieba
+HIP 50801 | Tania Australis
+HIP 53229 | Praecipua
+HIP 53740 | Alkes
+HIP 53910 | Merak
+HIP 54061 | Dubhe
+HIP 54872 | Zosma
+HIP 54879 | Chertan
+HIP 55042 | Innes' Star
+HIP 55203 | Alula Australis
+HIP 55219 | Alula Borealis
+HIP 55282 | Labr
+HIP 56211 | Giausar
+HIP 56709 | Przybylski's Star
+HIP 57399 | Alkaphrah
+HIP 57632 | Denebola
+HIP 57757 | Zavijava
+HIP 58001 | Phad
+HIP 59199 | Alchiba
+HIP 59316 | Minkar
+HIP 59774 | Megrez
+HIP 59803 | Gienah
+HIP 60129 | Zaniah
+HIP 60718 | Acrux
+HIP 60965 | Algorab
+HIP 61084 | Gacrux
+HIP 61317 | Chara
+HIP 61359 | Kraz
+HIP 61941 | Porrima
+HIP 62223 | La Superba
+HIP 62434 | Mimosa
+HIP 62956 | Alioth
+HIP 63090 | Auva
+HIP 63125 | Cor Caroli
+HIP 63608 | Vindemiatrix
+HIP 64241 | Diadem
+HIP 65378 | Mizar
+HIP 65474 | Spica
+HIP 65477 | Alcor
+HIP 66249 | Heze
+HIP 67301 | Alkaid
+HIP 67927 | Muphrid
+HIP 68702 | Hadar
+HIP 68756 | Thuban
+HIP 68933 | Menkent
+HIP 69673 | Arcturus
+HIP 69483 | Asellus Tertius
+HIP 69701 | Syrma
+HIP 69713 | Asellus Secundus
+HIP 69974 | Khambaliya
+HIP 70497 | Asellus Primus
 HIP 70890 | Proxima
-HD 128620 | Rigil Kent
-HD 129988 | Izar
-HD 131873 | Kocab
-HD 139006 | Alphekka
-HD 140573 | Unukalhai
-HD 148478 | Antares
-HD 156014 | Rasalgethi
-HD 158926 | Shaula
-HD 159561 | Rasalhague
-HD 164058 | Etamin
-HIP 87937 | Barnard's star
-HD 169022 | Kaus Australis
-HD 172167 | Vega
-HD 174638 | Sheliak
-HD 175191 | Nunki
-HD 183912 | Albireo
-HD 184738 | Campbell's star
-HD 186791 | Tarazed
-HD 187642 | Altair
-HD 188512 | Alshain
-HD 226868 | Cyg X-1
-HD 197345 | Deneb
-HD 203280 | Alderamin
-HD 206778 | Enif
-HD 209750 | Sadalmelik
-HD 209952 | Alnair
-HD 239960 | Kruger 60
-HD 215441 | Babcock's star
-HD 216956 | Fomalhaut
-HD 217906 | Scheat
-HD 218045 | Markab
+HIP 71075 | Seginus
+HIP 71683 | Rigil Kent
+HIP 71957 | Rijl al Awwa
+HIP 72105 | Izar
+HIP 72487 | Merga
+HIP 72603 | Zubenelgenubi
+HIP 72607 | Kochab
+HIP 72622 | Zubenelgenubi
+HIP 73473 | Zuben Elakribi
+HIP 73555 | Nekkar
+HIP 73714 | Brachium
+HIP 73945 | Zuben Hakrabi
+HIP 74666 | Printseps
+HIP 74785 | Zubeneschamali
+HIP 74793 | Pherkad Minor
+HIP 75097 | Pherkad
+HIP 75411 | Alkalurops
+HIP 75415 | Inkalunis
+HIP 75458 | Edasich
+HIP 75695 | Nusakan
+HIP 76267 | Alphekka
+HIP 76333 | Zuben Elakrab
+HIP 76534 | Ceginus
+HIP 77070 | Unukalhai
+HIP 78401 | Dschubba
+HIP 78727 | Graffias
+HIP 78820 | Acrab
+HIP 79043 | Marsik
+HIP 79374 | Jabbah
+HIP 79593 | Yed Prior
+HIP 79882 | Yed Posterior
+HIP 80112 | Al Niyat
+HIP 80463 | Cujam
+HIP 80763 | Antares
+HIP 80816 | Kornephoros
+HIP 80883 | Marfik
+HIP 81266 | Alniyat
+HIP 81377 | Han
+HIP 82273 | Atria
+HIP 82729 | Grafias
+HIP 83608 | Arrakis
+HIP 83895 | Aldhibah
+HIP 84012 | Sabik
+HIP 84345 | Rasalgethi
+HIP 84379 | Sarin
+HIP 85670 | Rastaban
+HIP 85693 | Maasym
+HIP 85696 | Lesath
+HIP 85819 | Kuma
+HIP 85822 | Yildun
+HIP 85927 | Shaula
+HIP 86032 | Rasalhague
+HIP 86228 | Sargas
+HIP 86614 | Dziban
+HIP 86742 | Cebalrai
+HIP 87585 | Grumium
+HIP 87833 | Etamin
+HIP 87937 | Barnard's Star
+HIP 88048 | Sinistra
+HIP 88567 | Nash
+HIP 88635 | Alnasl
+HIP 89341 | Polis
+HIP 89931 | Kaus Media
+HIP 90185 | Kaus Australis
+HIP 90191 | Alathfar
+HIP 90496 | Kaus Borealis
+HIP 91262 | Vega
+HIP 92420 | Sheliak
+HIP 92855 | Nunki
+HIP 92946 | Alya
+HIP 93194 | Sulafat
+HIP 93506 | Ascella
+HIP 93683 | Manubrij
+HIP 93747 | Deneb el Okab
+HIP 93805 | Al Thalimain Prior
+HIP 94114 | Alphekka Meridiana
+HIP 94141 | Albaldah
+HIP 94376 | Altais
+HIP 95241 | Arkab
+HIP 95347 | Rukbat
+HIP 95501 | Deneb Okab
+HIP 95771 | Lukida
+HIP 95947 | Albireo
+HIP 96100 | Alsafi
+HIP 96295 | Campbell's Star
+HIP 96468 | Al Thalimain
+HIP 96757 | Sham
+HIP 97165 | Rukh
+HIP 97278 | Tarazed
+HIP 97433 | Tyl
+HIP 97649 | Altair
+HIP 98036 | Alshain
+HIP 98066 | Terebellum I
+HIP 98162 | Terebellum II
+HIP 98353 | Terebellum III
+HIP 98688 | Terebellum IV
+HIP 100027 | Algedi
+HIP 100310 | Alshat
+HIP 100345 | Dabih
+HIP 100453 | Sadr
+HIP 100751 | Peacock
+HIP 100881 | Okul
+HIP 101421 | Deneb Dulfim
+HIP 101769 | Rotanev
+HIP 101958 | Sualocin
+HIP 102098 | Deneb
+HIP 102488 | Gienah
+HIP 102618 | Albali
+HIP 104019 | Armus
+HIP 104214 | Bessel's Star
+HIP 104382 | Polaris Australis
+HIP 104987 | Kitalpha
+HIP 105199 | Alderamin
+HIP 106032 | Alfirk
+HIP 106278 | Sadalsuud
+HIP 106723 | Castra
+HIP 106985 | Nashira
+HIP 107136 | Azelfafage
+HIP 107259 | The Garnet Star
+HIP 107315 | Enif
+HIP 107354 | Jih
+HIP 107533 | Pennae Caudalis
+HIP 107556 | Deneb Algedi
+HIP 108085 | Al Dhanab
+HIP 108917 | Kurhah
+HIP 109074 | Sadalmelik
+HIP 109268 | Alnair
+HIP 109427 | Biham
+HIP 110003 | Ancha
+HIP 110395 | Sadachbia
+HIP 110893 | Kruger 60
+HIP 110960 | Sadaltager
+HIP 111056 | Al Kalb al Rai
+HIP 111710 | Situla
+HIP 112029 | Homan
+HIP 112158 | Matar
+HIP 112247 | Babcock's Star
+HIP 112748 | Sadalbari
+HIP 113136 | Skat
+HIP 113368 | Fomalhaut
+HIP 113881 | Scheat
+HIP 113889 | Fum al Samakah
+HIP 113963 | Markab
+HIP 116727 | Errai

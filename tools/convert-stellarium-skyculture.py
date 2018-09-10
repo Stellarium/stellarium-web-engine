@@ -37,11 +37,6 @@ Cst = collections.namedtuple('Cst', ['abb', 'name', 'lines'])
 
 DD2R = pi / 180.0
 
-# Map of HIP -> HD for some special cases.
-specials = {
-    55203: 98230
-}
-
 if os.path.dirname(__file__) != "./tools":
     print "Should be run from root directory"
     sys.exit(-1)
@@ -101,13 +96,13 @@ bright_stars = {x.hip: x for x in bright_stars}
 
 
 def find_closest_brigh_star(hip):
-    """Return the closest bright star hd index around a given hip star"""
-    if hip in bright_stars: return bright_stars[hip].hd
-    if hip in specials: return specials[hip]
+    """Return the closest bright star hip index around a given hip star"""
+    if hip in bright_stars: return hip
     s = all_stars[hip]
     assert s
+    if isnan(s.pos[0]): print >> sys.stderr, s
     assert not isnan(s.pos[0])
-    return sorted(bright_stars.values(), key=lambda x: sep(x, s))[0].hd
+    return sorted(bright_stars.values(), key=lambda x: sep(x, s))[0].hip
 
 def make_lines(stars):
     """Turn list of [a1, b1, a2, b2, ....] into lines"""
@@ -135,8 +130,8 @@ for line in open(path):
         print >>out, line
         continue
     hip, name = re.match(r' *(\d+)\|_\("(.+)"\)', line).group(1, 2)
-    hd = find_closest_brigh_star(int(hip))
-    print >>out, 'HD %s | %s' % (hd, name)
+    # hip = find_closest_brigh_star(int(hip))
+    print >>out, 'HIP %s | %s' % (hip, name)
 
 
 csts = {}

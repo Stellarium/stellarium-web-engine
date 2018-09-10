@@ -198,7 +198,9 @@ static star_t *star_create(const star_data_t *data)
     char id[128], desgn[128];
     star_t *star;
 
-    if (data->hd) {
+    if (data->hip) {
+        sprintf(id, "HIP %d", data->hip);
+    } else if (data->hd) {
         sprintf(id, "HD %d", data->hd);
     } else {
         sprintf(id, "GAIA %" PRId64, data->gaia);
@@ -614,7 +616,9 @@ static int stars_list_visitor(int order, int pix, void *user)
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
         if (tile->stars[i].vmag <= d->max_mag) {
-            if (tile->stars[i].hd)
+            if (tile->stars[i].hip)
+                make_id(id, "HIP", tile->stars[i].hip);
+            else if (tile->stars[i].hd)
                 make_id(id, "HD", tile->stars[i].hd);
             else
                 make_id(id, "GAIA", tile->stars[i].gaia);
@@ -673,9 +677,9 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     const char *name = NULL;
     char tmp[8], id[32];
     double label_color[4] = {1, 1, 1, 0.5};
-    if (!s->hd) return;
+    if (!s->hip) return;
 
-    make_id(id, "HD", s->hd);
+    make_id(id, "HIP", s->hip);
     name = identifiers_get(id, "NAME");
     if (name) {
         labels_add(name, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);

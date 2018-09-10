@@ -68,7 +68,7 @@ static void constellation_create_stars(constellation_t *cons)
     cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
         assert(cons->info.lines[i / 2][i % 2] != 0);
-        sprintf(star_id, "HD %d", cons->info.lines[i / 2][i % 2]);
+        sprintf(star_id, "HIP %d", cons->info.lines[i / 2][i % 2]);
         cons->stars[i] = obj_get(NULL, star_id, 0);
         if (!cons->stars[i])
             LOG_W("Cannot find cst star: %s, %s", cons->info.id, star_id);

@@ -82,19 +82,13 @@ static void trim_right_spaces(char *s)
 
 static int parse_star(const char *cst, const char *tok)
 {
-    int hd;
-    char bayer_id[32];
-    if (tok[0] >= '0' && tok[1] <= '9') { // A HD number
-        sscanf(tok, "%d", &hd);
-        return hd;
+    int hip;
+    if (tok[0] >= '0' && tok[1] <= '9') { // A HIP number
+        sscanf(tok, "%d", &hip);
+        return hip;
+    } else {
+        return -1; // Error
     }
-    // Otherwise a bayer id.
-    sprintf(bayer_id, "%s %s", tok, cst);
-    tok = (char*)identifiers_search(bayer_id);
-    assert(tok && str_startswith(tok, "HD "));
-    tok += 3;
-    sscanf(tok, "%d", &hd);
-    return hd;
 }
 
 static constellation_infos_t *get_constellation(
