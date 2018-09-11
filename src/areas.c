@@ -62,7 +62,7 @@ void areas_add_circle(areas_t *areas, const double pos[2], double r,
 {
     item_t item = {};
 
-    assert(nsid || (id && strlen(id) < sizeof(item.id) - 1));
+    assert(nsid || oid || (id && strlen(id) < sizeof(item.id) - 1));
     memcpy(item.pos, pos, sizeof(item.pos));
     item.a = item.b = r;
     item.nsid = nsid;
@@ -120,7 +120,7 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
     *nsid = best->nsid;
     *oid = best->oid;
     *hint = best->hint;
-    if (!best->nsid) {
+    if (!best->nsid && !best->oid) {
         strcpy(id, best->id);
     }
     return 1;

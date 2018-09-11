@@ -88,18 +88,13 @@ static char *make_id(const dso_data_t *data, char buff[128])
 
 static uint64_t make_oid(const dso_data_t *data)
 {
-    uint64_t oid;
     if (data->id.ngc) {
-        memcpy(((uint32_t*)&oid) + 0, &data->id.ngc, 4);
-        memcpy(((uint32_t*)&oid) + 1, "NGC ", 4);
+        return oid_create("NGC ", data->id.ngc);
     } else if (data->id.ic) {
-        memcpy(((uint32_t*)&oid) + 0, &data->id.ic, 4);
-        memcpy(((uint32_t*)&oid) + 1, "IC  ", 4);
+        return oid_create("IC  ", data->id.ic);
     } else {
-        memcpy(((uint32_t*)&oid) + 0, &data->id.nsid, 4);
-        memcpy(((uint32_t*)&oid) + 1, "NDSO", 4);
+        return oid_create("NDSO", (uint32_t)data->id.nsid);
     }
-    return oid;
 }
 
 static dso_t *dso_create(const dso_data_t *data)
@@ -652,9 +647,9 @@ static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         int         cat;
         uint64_t    n;
     } d = {.dsos=(void*)obj, .cat=4, .n=oid};
-    if (    memcmp(((uint32_t*)&oid) + 1, "NGC ", 4) != 0 &&
-            memcmp(((uint32_t*)&oid) + 1, "IC  ", 4) != 0 &&
-            memcmp(((uint32_t*)&oid) + 1, "NDSO", 4) != 0)
+    if (    !oid_is_catalog(oid, "NGC ") &&
+            !oid_is_catalog(oid, "IC  ") &&
+            !oid_is_catalog(oid, "NDSO"))
         return NULL;
     hips_traverse(&d, dsos_get_visitor);
     return d.ret;

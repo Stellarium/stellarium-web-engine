@@ -274,7 +274,7 @@ static void points(renderer_t *rend_,
         }
         // Add the point int the global list of rendered points.
         // XXX: could be done in the painter.
-        if (p.id[0] || p.nsid) {
+        if (p.id[0] || p.nsid || p.oid) {
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
             p.size = tan(p.size / 2) / s[0] * core->win_size[0];
