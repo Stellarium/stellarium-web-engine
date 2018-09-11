@@ -408,8 +408,7 @@ static void render_contour(const dso_data_t *data,
 
     angle = atan2(a[1] - c[1], a[0] - c[0]);
     areas_add_ellipse(core->areas, c, angle,
-                      vec2_dist(a, c), vec2_dist(b, c), NULL, data->id.nsid,
-                      data->id.oid, 0);
+                      vec2_dist(a, c), vec2_dist(b, c), data->id.oid, 0);
 }
 
 /*
@@ -496,11 +495,9 @@ static int dso_render_from_data(const dso_data_t *d,
                 (-p[1] + 1) / 2 * core->win_size[1],
             },
             .size = 8,
-            .nsid = d->id.nsid,
             .oid = d->id.oid,
         };
-        areas_add_circle(core->areas, point.pos, point.size, NULL,
-                         point.nsid, point.oid, 0);
+        areas_add_circle(core->areas, point.pos, point.size, point.oid, 0);
     }
 
     if (temp_mag <= painter.label_mag_max || show_contour)

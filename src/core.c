@@ -206,13 +206,11 @@ static int core_pan(const gesture_t *g, void *user)
 static obj_t *get_obj_at(double x, double y, double max_dist)
 {
     double pos[2] = {x, y};
-    char id[128];
-    uint64_t nsid, oid, hint;
-    if (!areas_lookup(core->areas, pos, max_dist, id, &nsid, &oid, &hint))
+    uint64_t oid, hint;
+    if (!areas_lookup(core->areas, pos, max_dist, &oid, &hint))
         return NULL;
-    if (oid) return obj_get_by_oid(NULL, oid, hint);
-    if (nsid) return obj_get_by_nsid(NULL, nsid);
-    return obj_get(NULL, id, 0);
+    if (!oid) return NULL;
+    return obj_get_by_oid(NULL, oid, hint);
 }
 
 static int core_click(const gesture_t *g, void *user)

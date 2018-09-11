@@ -172,7 +172,6 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
         .color = {color[0], color[1], color[2], luminance},
         .oid = s->oid,
     };
-    strcpy(point.id, obj->id);
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (s->vmag <= painter.label_mag_max) {
