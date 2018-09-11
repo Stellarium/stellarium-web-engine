@@ -184,6 +184,29 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
+
+void star_get_names(const obj_t *obj, void *user,
+                    int (*f)(void *user, const char *cat, const char *str))
+{
+    star_t *star = (star_t*)obj;
+    const star_data_t *s = &star->data;
+    char buf[128];
+    if (s->hd) {
+        sprintf(buf, "%d", s->hd);
+        f(user, "HD", buf);
+    }
+    if (s->hip) {
+        sprintf(buf, "%d", s->hip);
+        f(user, "HIP", buf);
+    }
+    if (s->gaia) {
+        sprintf(buf, "%" PRId64, s->gaia);
+        f(user, "GAIA", buf);
+        sprintf(buf, "%016" PRIx64, s->gaia);
+        f(user, "NSID", buf);
+    }
+}
+
 void stars_load(const char *path, stars_t *stars);
 static void get_star_color(const char sp, double out[3]);
 
@@ -753,6 +776,7 @@ static obj_klass_t star_klass = {
     .size       = sizeof(star_t),
     .update     = star_update,
     .render     = star_render,
+    .get_names  = star_get_names,
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
