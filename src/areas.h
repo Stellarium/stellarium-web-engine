@@ -35,11 +35,13 @@ areas_t *areas_create(void);
  *   nsid   - an nsid associated with the circle.  Can be zero if id is set.
  */
 void areas_add_circle(areas_t *areas, const double pos[2], double r,
-                      const char id[128], uint64_t nsid);
+                      const char id[128], uint64_t nsid,
+                      uint64_t oid, uint64_t hint);
 
 void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
                        double a, double b,
-                       const char id[128], uint64_t nsid);
+                       const char id[128], uint64_t nsid,
+                       uint64_t oid, uint64_t hint);
 
 /*
  * Function: areas_lookup
@@ -56,7 +58,7 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
  *   0 if no shape was found, otherwise 1.
  */
 int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
-                 char id[128], uint64_t *nsid);
+                 char id[128], uint64_t *nsid, uint64_t *oid, uint64_t *hint);
 
 /*
  * Function: areas_clear_all

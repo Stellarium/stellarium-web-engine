@@ -292,6 +292,15 @@ obj_t *obj_get_by_nsid(const obj_t *obj, uint64_t nsid)
     return NULL;
 }
 
+// Find an object by its oid.
+obj_t *obj_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj = obj ?: (obj_t*)core;
+    if (obj->klass->get_by_oid)
+        return obj->klass->get_by_oid(obj, oid, hint);
+    return NULL;
+}
+
 EMSCRIPTEN_KEEPALIVE
 obj_t *obj_get_by_nsid_str(const obj_t *obj, const char *nsid_str)
 {

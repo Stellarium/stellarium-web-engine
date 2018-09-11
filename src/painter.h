@@ -77,7 +77,9 @@ struct point
     double  color[4];
     char    id[128];    // Obj id.  If set then the point is kept in a list
                         // for fast lookup of mouse pointing position.
-    uint64_t nsid;      // Used instead of id if set.
+    uint64_t nsid;      // Used instead of id if set. (deprecated).
+    uint64_t oid;       // Used instead of id if set.
+    uint64_t hint;      // Oid hint.
 };
 
 // Painter flags

@@ -27,6 +27,7 @@ typedef struct {
         int ngc;
         int ic;
         uint64_t nsid;
+        uint64_t oid;
     } id;
     double      vmag;
     double      ra;     // ra equ J2000
@@ -85,6 +86,22 @@ static char *make_id(const dso_data_t *data, char buff[128])
     return buff;
 }
 
+static uint64_t make_oid(const dso_data_t *data)
+{
+    uint64_t oid;
+    if (data->id.ngc) {
+        memcpy(((uint32_t*)&oid) + 0, &data->id.ngc, 4);
+        memcpy(((uint32_t*)&oid) + 1, "NGC ", 4);
+    } else if (data->id.ic) {
+        memcpy(((uint32_t*)&oid) + 0, &data->id.ic, 4);
+        memcpy(((uint32_t*)&oid) + 1, "IC  ", 4);
+    } else {
+        memcpy(((uint32_t*)&oid) + 0, &data->id.nsid, 4);
+        memcpy(((uint32_t*)&oid) + 1, "NDSO", 4);
+    }
+    return oid;
+}
+
 static dso_t *dso_create(const dso_data_t *data)
 {
     dso_t *dso;
@@ -97,6 +114,7 @@ static dso_t *dso_create(const dso_data_t *data)
     dso->data = *data;
     memcpy(&dso->obj.type, data->type, 4);
     dso->obj.nsid = data->id.nsid;
+    dso->obj.oid = data->id.oid;
     return dso;
 }
 
@@ -117,6 +135,7 @@ static int dso_init(obj_t *obj, json_value *args)
         dso->data.smax = json_get_attr_f(model, "dimx", NAN) * DAM2R;
         dso->data.smin = json_get_attr_f(model, "dimy", NAN) * DAM2R;
     }
+    dso->data.id.oid = make_oid(&dso->data);
     return 0;
 }
 
@@ -234,6 +253,7 @@ static int on_file_tile_loaded(const char type[4],
             sprintf(buff, "IC %d", d->id.ic);
             identifiers_add(id, "IC", buff + 3, buff, buff);
         }
+        d->id.oid = make_oid(d);
     }
     free(tile_data);
     *(tile_t**)user = tile;
@@ -393,7 +413,8 @@ static void render_contour(const dso_data_t *data,
 
     angle = atan2(a[1] - c[1], a[0] - c[0]);
     areas_add_ellipse(core->areas, c, angle,
-                      vec2_dist(a, c), vec2_dist(b, c), NULL, data->id.nsid);
+                      vec2_dist(a, c), vec2_dist(b, c), NULL, data->id.nsid,
+                      data->id.oid, 0);
 }
 
 /*
@@ -479,10 +500,12 @@ static int dso_render_from_data(const dso_data_t *d,
                 (+p[0] + 1) / 2 * core->win_size[0],
                 (-p[1] + 1) / 2 * core->win_size[1],
             },
-                .size = 8,
-                .nsid = d->id.nsid,
+            .size = 8,
+            .nsid = d->id.nsid,
+            .oid = d->id.oid,
         };
-        areas_add_circle(core->areas, point.pos, point.size, NULL, point.nsid);
+        areas_add_circle(core->areas, point.pos, point.size, NULL,
+                         point.nsid, point.oid, 0);
     }
 
     if (temp_mag <= painter.label_mag_max || show_contour)
@@ -575,7 +598,8 @@ static int dsos_get_visitor(int order, int pix, void *user)
         if (    (d->cat == 0 && tile->data[i].id.m    == d->n) ||
                 (d->cat == 1 && tile->data[i].id.ngc  == d->n) ||
                 (d->cat == 2 && tile->data[i].id.ic   == d->n) ||
-                (d->cat == 3 && tile->data[i].id.nsid == d->n)) {
+                (d->cat == 3 && tile->data[i].id.nsid == d->n) ||
+                (d->cat == 4 && tile->data[i].id.oid == d->n)) {
             d->ret = &dso_create(&tile->data[i])->obj;
             return -1; // Stop the search.
         }
@@ -620,6 +644,22 @@ static obj_t *dsos_get_by_nsid(const obj_t *obj, uint64_t nsid)
     return d.ret;
 }
 
+static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    struct {
+        dsos_t      *dsos;
+        obj_t       *ret;
+        int         cat;
+        uint64_t    n;
+    } d = {.dsos=(void*)obj, .cat=4, .n=oid};
+    if (    memcmp(((uint32_t*)&oid) + 1, "NGC ", 4) != 0 &&
+            memcmp(((uint32_t*)&oid) + 1, "IC  ", 4) != 0 &&
+            memcmp(((uint32_t*)&oid) + 1, "NDSO", 4) != 0)
+        return NULL;
+    hips_traverse(&d, dsos_get_visitor);
+    return d.ret;
+}
+
 /*
  * Meta class declarations.
  */
@@ -658,6 +698,7 @@ static obj_klass_t dsos_klass = {
     .update = dsos_update,
     .render = dsos_render,
     .get    = dsos_get,
+    .get_by_oid  = dsos_get_by_oid,
     .get_by_nsid = dsos_get_by_nsid,
     .render_order = 25,
     .attributes = (attribute_t[]) {

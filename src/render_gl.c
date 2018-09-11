@@ -278,7 +278,8 @@ static void points(renderer_t *rend_,
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
             p.size = tan(p.size / 2) / s[0] * core->win_size[0];
-            areas_add_circle(core->areas, p.pos, p.size, p.id, p.nsid);
+            areas_add_circle(core->areas, p.pos, p.size, p.id, p.nsid,
+                             p.oid, p.hint);
         }
     }
     for (i = 0; i < n; i++) {

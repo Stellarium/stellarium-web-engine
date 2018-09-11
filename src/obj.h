@@ -73,6 +73,7 @@ typedef struct obj_klass obj_klass_t;
  *   clone  - Create a copy of the object.
  *   get    - Find a sub-object for a given query.
  *   get_by_nsid - Find a sub-object for a given nsid.
+ *   get_by_oid  - Find a sub-object for a given oid.
  *
  * Module Attributes:
  *   render_order - Used to sort the modules before rendering.
@@ -101,6 +102,8 @@ struct obj_klass
     obj_t *(*get)(const obj_t *obj, const char *id, int flags);
     // Find a sub object given a NSID.
     obj_t *(*get_by_nsid)(const obj_t *obj, uint64_t nsid);
+    // Find a sub object given an oid
+    obj_t *(*get_by_oid)(const obj_t *obj, uint64_t oid, uint64_t hint);
 
     void (*gui)(obj_t *obj, int location);
 
@@ -138,6 +141,7 @@ struct obj_klass
  *   klass      - Pointer to an <obj_klass_t> structure.
  *   ref        - Reference counter.
  *   id         - String id of the object.
+ *   oid        - Internal uniq id.
  *   nsid       - Noctuasky internal id if defined, or zero.
  *   type       - Four bytes type id of the object.  Should follow the
  *                condensed values defined by Simbad:
@@ -157,7 +161,8 @@ struct obj
 {
     obj_klass_t *klass;
     int         ref;
-    char        *id;
+    char        *id;    // To be removed.  Use oid instead.
+    uint64_t    oid;
     uint64_t    nsid;
     char        type[4];
     char        type_padding_; // Ensure that type is null terminated.
@@ -327,6 +332,12 @@ obj_t *obj_add_sub(obj_t *parent, const char *name);
  *   flags  - always zero for the moment.
  */
 obj_t *obj_get(const obj_t *obj, const char *query, int flags);
+
+/*
+ * Function: obj_get_by_oid
+ * Find an object by its oid.
+ */
+obj_t *obj_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint);
 
 /*
  * Function: obj_get_by_nsid

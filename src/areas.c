@@ -25,6 +25,8 @@ struct item
     double angle;
     char id[128];
     uint64_t nsid;
+    uint64_t oid;
+    uint64_t hint;
 };
 
 struct areas
@@ -55,7 +57,8 @@ areas_t *areas_create(void)
 }
 
 void areas_add_circle(areas_t *areas, const double pos[2], double r,
-                      const char id[128], uint64_t nsid)
+                      const char id[128], uint64_t nsid,
+                      uint64_t oid, uint64_t hint)
 {
     item_t item = {};
 
@@ -63,13 +66,16 @@ void areas_add_circle(areas_t *areas, const double pos[2], double r,
     memcpy(item.pos, pos, sizeof(item.pos));
     item.a = item.b = r;
     item.nsid = nsid;
-    if (!nsid) strcpy(item.id, id);
+    item.oid = oid;
+    item.hint = hint;
+    if (!nsid && !oid) strcpy(item.id, id);
     utarray_push_back(areas->items, &item);
 }
 
 void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
                        double a, double b,
-                       const char id[128], uint64_t nsid)
+                       const char id[128], uint64_t nsid,
+                       uint64_t oid, uint64_t hint)
 {
     item_t item = {};
     assert(nsid || (id && strlen(id) < sizeof(item.id) - 1));
@@ -78,7 +84,9 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
     item.a = a;
     item.b = b;
     item.nsid = nsid;
-    if (!nsid) strcpy(item.id, id);
+    item.oid = oid;
+    item.hint = hint;
+    if (!nsid && !oid) strcpy(item.id, id);
     utarray_push_back(areas->items, &item);
 }
 
@@ -88,7 +96,7 @@ void areas_clear_all(areas_t *areas)
 }
 
 int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
-                 char id[128], uint64_t *nsid)
+                 char id[128], uint64_t *nsid, uint64_t *oid, uint64_t *hint)
 {
     item_t *item = NULL, *best = NULL;
     double dist, best_dist = max_dist;
@@ -110,6 +118,8 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
     }
     if (!best) return 0;
     *nsid = best->nsid;
+    *oid = best->oid;
+    *hint = best->hint;
     if (!best->nsid) {
         strcpy(id, best->id);
     }

@@ -108,6 +108,17 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
     return NULL;
 }
 
+static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *module;
+    obj_t *ret;
+    DL_FOREACH(core->obj.children, module) {
+        ret = obj_get_by_oid(module, oid, hint);
+        if (ret) return ret;
+    }
+    return NULL;
+}
+
 static obj_t *core_get_by_nsid(const obj_t *obj, uint64_t nsid)
 {
     obj_t *module;
@@ -196,10 +207,12 @@ static obj_t *get_obj_at(double x, double y, double max_dist)
 {
     double pos[2] = {x, y};
     char id[128];
-    uint64_t nsid;
-    if (!areas_lookup(core->areas, pos, max_dist, id, &nsid))
+    uint64_t nsid, oid, hint;
+    if (!areas_lookup(core->areas, pos, max_dist, id, &nsid, &oid, &hint))
         return NULL;
-    return nsid ? obj_get_by_nsid(NULL, nsid) : obj_get(NULL, id, 0);
+    if (oid) return obj_get_by_oid(NULL, oid, hint);
+    if (nsid) return obj_get_by_nsid(NULL, nsid);
+    return obj_get(NULL, id, 0);
 }
 
 static int core_click(const gesture_t *g, void *user)
@@ -910,6 +923,7 @@ static obj_klass_t core_klass = {
     .size = sizeof(core_t),
     .flags = OBJ_IN_JSON_TREE,
     .get = core_get,
+    .get_by_oid = core_get_by_oid,
     .get_by_nsid = core_get_by_nsid,
     .list = core_list,
     .attributes = (attribute_t[]) {
