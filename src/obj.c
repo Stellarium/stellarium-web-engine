@@ -380,9 +380,9 @@ void obj_get_nsid_str(const obj_t *obj, char out[32])
 
 
 EMSCRIPTEN_KEEPALIVE
-int obj_get_ids(const obj_t *obj,
-                void (*f)(const char *cat, const char *value, void *user),
-                void *user)
+int obj_get_names(const obj_t *obj,
+                  void (*f)(const char *cat, const char *value, void *user),
+                  void *user)
 {
     const char *cat, *value;
     int nb = 0;

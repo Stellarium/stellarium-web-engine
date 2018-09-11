@@ -113,6 +113,7 @@ struct obj_klass
     // List all the sky objects children from this module.
     int (*list)(const obj_t *obj, observer_t *obs, double max_mag, void *user,
                 int (*f)(const char *id, void *user));
+
     // Return the render order.
     // By default this return the class attribute `render_order`.
     double (*get_render_order)(const obj_t *obj);
@@ -401,12 +402,12 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
 const char *obj_get_name(const obj_t *obj);
 
 /*
- * Function: obj_get_ids
+ * Function: obj_get_names
  * Return the list of all the identifiers of an object.
  */
-int obj_get_ids(const obj_t *obj,
-                void (*f)(const char *id, const char *value, void *user),
-                void *user);
+int obj_get_names(const obj_t *obj,
+                  void (*f)(const char *id, const char *value, void *user),
+                  void *user);
 
 /*
  * Function: obj_get_tree

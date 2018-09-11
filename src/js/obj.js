@@ -127,7 +127,7 @@ Module.afterInit(function() {
       v = Module.Pointer_stringify(v);
       f(k, v);
     }, 'viii');
-    Module._obj_get_ids(this.v, callback, 0);
+    Module._obj_get_names(this.v, callback, 0);
     Module.removeFunction(callback);
   };
 
@@ -138,7 +138,7 @@ Module.afterInit(function() {
       v = Module.Pointer_stringify(v);
       ret.push(cat + ' ' + v);
     }, 'viii');
-    Module._obj_get_ids(this.v, callback, 0);
+    Module._obj_get_names(this.v, callback, 0);
     Module.removeFunction(callback);
     return ret;
   };
