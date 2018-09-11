@@ -378,16 +378,37 @@ void obj_get_nsid_str(const obj_t *obj, char out[32])
     else out[0] = '\0';
 }
 
+static int on_name(void *user, const char *cat, const char *value)
+{
+    void (*f)(const char *cat, const char *value, void *user);
+    void *u;
+    int *nb;
+    f = USER_GET(user, 0);
+    u = USER_GET(user, 1);
+    nb = USER_GET(user, 2);
+    f(cat, value, u);
+    nb++;
+    return 0;
+}
 
 EMSCRIPTEN_KEEPALIVE
 int obj_get_names(const obj_t *obj,
                   void (*f)(const char *cat, const char *value, void *user),
                   void *user)
 {
-    const char *cat, *value;
+    const char *cat, *value, buf[128];
     int nb = 0;
-    IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL) {
-        f(cat, value, user);
+    if (obj->klass->get_names)
+        obj->klass->get_names(obj, USER_PASS(f, user, &nb), on_name);
+    if (obj->oid) {
+        IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL) {
+            f(cat, value, user);
+            nb++;
+        }
+    }
+    if (obj->nsid) {
+        sprintf(buf, "%016" PRIx64, obj->nsid);
+        f("NSID", buf, user);
         nb++;
     }
     return nb;

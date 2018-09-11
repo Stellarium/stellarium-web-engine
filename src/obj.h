@@ -105,6 +105,10 @@ struct obj_klass
     // Find a sub object given an oid
     obj_t *(*get_by_oid)(const obj_t *obj, uint64_t oid, uint64_t hint);
 
+    // List all the names associated with an object.
+    void (*get_names)(const obj_t *obj, void *user,
+                      int (*f)(void *user, const char *cat, const char *str));
+
     void (*gui)(obj_t *obj, int location);
 
     // For modules objects.
