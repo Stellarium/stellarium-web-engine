@@ -750,8 +750,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         .pos = {pos[0], pos[1], pos[2]},
         .size = point_r,
         .color = {color[0], color[1], color[2], color[3]},
+        .oid = planet->obj.oid,
     };
-    strcpy(point.id, planet->obj.id);
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (hips_alpha > 0) {
@@ -853,6 +853,20 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
+static obj_t *planets_get_by_oid(
+        const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *child;
+    if (!oid_is_catalog(oid, "HORI")) return NULL;
+    OBJ_ITER(obj, child, "planet") {
+        if (child->oid == oid) {
+            child->ref++;
+            return child;
+        }
+    }
+    return NULL;
+}
+
 /*
  * Conveniance function to look for a planet by name
  */
@@ -922,6 +936,7 @@ static int planets_ini_handler(void* user, const char* section,
     }
     if (strcmp(attr, "horizons_id") == 0) {
         sscanf(value, "%d", &planet->id);
+        planet->obj.oid = oid_create("HORI", planet->id);
     }
     if (strcmp(attr, "type") == 0) {
         strncpy(planet->obj.type, value, 4);
@@ -1082,6 +1097,7 @@ static obj_klass_t planets_klass = {
     .init   = planets_init,
     .update = planets_update,
     .render = planets_render,
+    .get_by_oid = planets_get_by_oid,
     .get     = planets_get,
     .list    = planets_list,
     .render_order = 30,
