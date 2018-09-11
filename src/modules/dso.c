@@ -170,7 +170,7 @@ static int on_file_tile_loaded(const char type[4],
     tile_t *tile;
     dso_data_t *d;
     int nb, i, version, data_ofs = 0, flags, row_size, order, pix;
-    char buff[16], id[128];
+    char buff[16];
     double bmag, temp_mag;
     void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
@@ -233,22 +233,21 @@ static int on_file_tile_loaded(const char type[4],
         temp_mag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
         tile->mag_min = min(tile->mag_min, temp_mag);
         tile->mag_max = max(tile->mag_max, temp_mag);
+        d->id.oid = make_oid(d);
 
         // Add the identifiers.
-        make_id(d, id);
         if (d->id.m) {
             sprintf(buff, "M %d", d->id.m);
-            identifiers_add(id, "M", buff + 2, buff, buff);
+            identifiers_add(d->id.oid, "M", buff + 2, buff, buff);
         }
         if (d->id.ngc) {
             sprintf(buff, "NGC %d", d->id.ngc);
-            identifiers_add(id, "NGC", buff + 4, buff, buff);
+            identifiers_add(d->id.oid, "NGC", buff + 4, buff, buff);
         }
         if (d->id.ic) {
             sprintf(buff, "IC %d", d->id.ic);
-            identifiers_add(id, "IC", buff + 3, buff, buff);
+            identifiers_add(d->id.oid, "IC", buff + 3, buff, buff);
         }
-        d->id.oid = make_oid(d);
     }
     free(tile_data);
     *(tile_t**)user = tile;

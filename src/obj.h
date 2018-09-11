@@ -222,7 +222,7 @@ struct attribute {
     const char *sub;
     const char *desc;
     void (*on_changed)(obj_t *obj, const attribute_t *attr);
-    int (*choices)(int (*f)(const char *name, const char *id, void *user),
+    int (*choices)(int (*f)(const char *name, uint64_t oid, void *user),
                    void *user);
 };
 

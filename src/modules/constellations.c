@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include <zlib.h> // For crc32.
 
 /*
  * Type: constellation_t
@@ -52,8 +53,10 @@ static int constellation_init(obj_t *obj, json_value *args)
     if (!info) return 0;
     cons->info = *info;
     cons->name = strdup(info->name);
-    identifiers_add(cons->obj.id, "CST", info->id, info->id, info->id);
-    identifiers_add(cons->obj.id, "NAME",
+    cons->obj.oid = oid_create("CST ",
+                            crc32(0, (void*)info->id, strlen(info->id)));
+    identifiers_add(cons->obj.oid, "CST", info->id, info->id, info->id);
+    identifiers_add(cons->obj.oid, "NAME",
             info->name, info->name, info->name);
     return 0;
 }

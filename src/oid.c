@@ -39,3 +39,16 @@ bool oid_is_gaia(uint64_t oid)
 {
     return ((oid >> 32) & 0x80000000) == 0;
 }
+
+const char *oid_get_catalog(uint64_t oid, char cat[4])
+{
+    uint32_t cat_n;
+    if (oid_is_gaia(oid)) {
+        memcpy(cat, "GAIA", 4);
+    } else {
+        cat_n = oid >> 32;
+        cat_n &= ~0x80000000;
+        memcpy(cat, &cat_n, 4);
+    }
+    return cat;
+}

@@ -199,6 +199,7 @@ static star_t *star_create(const star_data_t *data)
     char id[128], desgn[128];
     star_t *star;
 
+    // XXX: to remove: we don't need the id anymore.
     if (data->hip) {
         sprintf(id, "HIP %d", data->hip);
     } else if (data->hd) {
@@ -207,25 +208,27 @@ static star_t *star_create(const star_data_t *data)
         sprintf(id, "GAIA %" PRId64, data->gaia);
     }
 
-    // Add all the identifers for this star.
-    if (data->hd) {
-        sprintf(desgn, "%d", data->hd);
-        identifiers_add(id, "HD", desgn, NULL, NULL);
-    }
-    if (data->hip) {
-        sprintf(desgn, "%d", data->hip);
-        identifiers_add(id, "HIP", desgn, NULL, NULL);
-    }
-    if (data->gaia) {
-        sprintf(desgn, "%" PRId64, data->gaia);
-        identifiers_add(id, "GAIA", desgn, NULL, NULL);
-    }
-
     star = (star_t*)obj_create("star", id, NULL, NULL);
     strcpy(star->obj.type, "*");
     star->data = *data;
     star->obj.nsid = star->data.gaia;
     star->obj.oid = star->data.oid;
+
+    // Add all the identifers for this star.
+    // XXX: remove that.
+    if (data->hd) {
+        sprintf(desgn, "%d", data->hd);
+        identifiers_add(star->obj.oid, "HD", desgn, NULL, NULL);
+    }
+    if (data->hip) {
+        sprintf(desgn, "%d", data->hip);
+        identifiers_add(star->obj.oid, "HIP", desgn, NULL, NULL);
+    }
+    if (data->gaia) {
+        sprintf(desgn, "%" PRId64, data->gaia);
+        identifiers_add(star->obj.oid, "GAIA", desgn, NULL, NULL);
+    }
+
     return star;
 }
 
@@ -695,12 +698,11 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
                            "υ", "φ", "χ", "ψ", "ω"};
     int bayer, bayer_n;
     const char *name = NULL;
-    char tmp[8], id[32];
+    char tmp[8];
     double label_color[4] = {1, 1, 1, 0.5};
     if (!s->hip) return;
 
-    make_id(id, "HIP", s->hip);
-    name = identifiers_get(id, "NAME");
+    name = identifiers_get(s->oid, "NAME");
     if (name) {
         labels_add(name, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
         return;

@@ -146,15 +146,16 @@ void observer_update(observer_t *obs, bool fast)
 }
 
 static int city_get_choices(
-        int (*f)(const char* name, const char *id, void *user),
+        int (*f)(const char* name, uint64_t oid, void *user),
         void *user)
 {
     // XXX: we are iterating all the registered names, this is too slow.
     // We should have a way to index the objects by catalog in identifiers.
-    const char *id, *cat, *value, *search_str;
-    IDENTIFIERS_ITER(NULL, "NAME", &id, &cat, &value, &search_str, NULL) {
-        if (str_startswith(id, "CITY "))
-            if (f(value, id, user)) return 0;
+    const char *cat, *value, *search_str;
+    uint64_t oid;
+    IDENTIFIERS_ITER(0, "NAME", &oid, &cat, &value, &search_str, NULL) {
+        if (oid_is_catalog(oid, "CITY"))
+            if (f(value, oid, user)) return 0;
     }
     return 0;
 }

@@ -928,7 +928,6 @@ static int planets_ini_handler(void* user, const char* section,
                         strlen(planet->obj.id), planet);
         strcpy(name, section);
         name[0] += 'A' - 'a';
-        identifiers_add(id, "NAME", name, NULL, NULL);
         planet->name = strdup(name);
         planet->obj.nsid = compute_nsid(name);
         if (strcmp(id, "SUN") == 0) planets->sun = planet;
@@ -1013,6 +1012,12 @@ static int planets_init(obj_t *obj, json_value *args)
     ini_parse_string(data, planets_ini_handler, planets);
     assert(planets->sun);
     assert(planets->earth);
+
+    // Add name identifiers:
+    PLANETS_ITER(planets, p) {
+        if (!p->obj.oid || !p->name) continue;
+        identifiers_add(p->obj.oid, "NAME", p->name, NULL, NULL);
+    }
 
     // Add rings textures from assets.
     regcomp(&reg, "^.*/([^/]+)_rings.png$", REG_EXTENDED);

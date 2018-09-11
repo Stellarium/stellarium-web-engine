@@ -27,3 +27,9 @@ bool oid_is_catalog(uint64_t oid, const char cat[4]);
  * Return whether an oid is actually a gaia id.
  */
 bool oid_is_gaia(uint64_t oid);
+
+/*
+ * Function: oid_get_catalog
+ * Get the four character catalog part of an oid
+ */
+const char *oid_get_catalog(uint64_t oid, char cat[4]);

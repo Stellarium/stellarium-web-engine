@@ -12,42 +12,26 @@
 core_t *core;   // The global core object.
 
 static int selection_get_choices(
-        int (*f)(const char* name, const char *id, void *user),
+        int (*f)(const char* name, uint64_t oid, void *user),
         void *user)
 {
     char cat_up[8];
     char buff[128];
-    const char *id, *cat, *value;
+    const char *cat, *value;
     int nb = 0, r;
-    IDENTIFIERS_ITER(NULL, NULL, &id, &cat, &value, NULL, NULL) {
-        if      (str_startswith(id, "CITY ")) continue;
-        if      (str_equ(cat, "NAME"))  r = f(value, id, user);
-        else if (str_equ(cat, "BAYER")) r = f(value, id, user);
+    uint64_t oid;
+    IDENTIFIERS_ITER(0, NULL, &oid, &cat, &value, NULL, NULL) {
+        if      (oid_is_catalog(oid, "CITY")) continue;
+        if      (str_equ(cat, "NAME"))  r = f(value, oid, user);
+        else if (str_equ(cat, "BAYER")) r = f(value, oid, user);
         else {
             str_to_upper(cat, cat_up);
             sprintf(buff, "%s %s", cat_up, value);
-            r = f(buff, id, user);
+            r = f(buff, oid, user);
         }
         nb++;
         if (r) break;
     }
-    return nb;
-}
-
-static int proj_get_choices(
-        int (*f)(const char* name, const char *id, void *user),
-        void *user)
-{
-    char id_buf[8];
-    int nb = 0;
-    #define F(p, n) do { \
-        nb++; \
-        if (f) {sprintf(id_buf, "%d", p); f(n, id_buf, user);} \
-    } while (0)
-    F(PROJ_PERSPECTIVE, "Perspective");
-    F(PROJ_STEREOGRAPHIC, "Stereographic");
-    F(PROJ_MERCATOR, "Mercator");
-    #undef F
     return nb;
 }
 
@@ -93,15 +77,16 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
 {
     obj_t *module;
     obj_t *ret;
+    uint64_t oid;
     DL_FOREACH(core->obj.children, module) {
         if (strcmp(module->id, id) == 0) return module;
         ret = obj_get(module, id, flags);
         if (ret) return ret;
     }
-    id = identifiers_search(id);
-    if (id) {
+    oid = identifiers_search(id);
+    if (oid) {
         DL_FOREACH(core->obj.children, module) {
-            ret = obj_get(module, id, flags);
+            ret = obj_get_by_oid(module, oid, 0);
             if (ret) return ret;
         }
     }
@@ -929,8 +914,7 @@ static obj_klass_t core_klass = {
                  .on_changed = core_on_utcoffset_changed),
         PROPERTY("fov", "f", MEMBER(core_t, fov),
                  .on_changed = core_on_fov_changed),
-        PROPERTY("projection", "d", MEMBER(core_t, proj),
-                 .choices = proj_get_choices),
+        PROPERTY("projection", "d", MEMBER(core_t, proj)),
         PROPERTY("selection", "p", MEMBER(core_t, selection),
                  .hint = "obj", .choices = selection_get_choices),
         PROPERTY("lock", "p", MEMBER(core_t, target.lock),

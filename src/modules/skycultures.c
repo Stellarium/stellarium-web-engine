@@ -76,6 +76,7 @@ static void skyculture_activate(skyculture_t *cult)
 {
     char id[32];
     int i;
+    obj_t *star;
     json_value *args;
     constellation_infos_t *cst;
     obj_t *constellations, *cons;
@@ -88,8 +89,9 @@ static void skyculture_activate(skyculture_t *cult)
 
     // Add all the names.
     for (i = 0; cult->names[i][0]; i++) {
-        identifiers_add(cult->names[i][0], "NAME", cult->names[i][1],
-                        NULL, NULL);
+        star = obj_get(NULL, cult->names[i][0], 0);
+        if (!star) continue;
+        identifiers_add(star->oid, "NAME", cult->names[i][1], NULL, NULL);
     }
 
     // Create all the constellations object.

@@ -113,11 +113,12 @@ static void search_widget(void)
     obj_t *obj;
     char can[128];
     int i = 0;
-    const char *id, *cat, *canv, *value;
+    const char *cat, *canv, *value;
+    uint64_t oid;
     if (strlen(buf) >= 3) {
         identifiers_make_canonical(buf, can, sizeof(can));
-        IDENTIFIERS_ITER(NULL, NULL, &id, &cat, NULL, &canv, &value) {
-            if (str_startswith(id, "CITY ")) continue;
+        IDENTIFIERS_ITER(0, NULL, &oid, &cat, NULL, &canv, &value) {
+            if (oid_is_catalog(oid, "CITY")) continue;
             if (!strstr(canv, can)) continue;
             suggestions[i++] = value;
             if (i >= ARRAY_SIZE(suggestions) - 1) break;
@@ -139,13 +140,15 @@ static void city_widget(void)
     static char buf[128];
     char can[128];
     int i = 0;
-    const char *id, *value, *canv;
+    const char *value, *canv;
     const char *suggestions[9] = {};
+    uint64_t oid;
+    obj_t *city;
 
     if (strlen(buf) >= 3) {
         identifiers_make_canonical(buf, can, sizeof(can));
-        IDENTIFIERS_ITER(NULL, "NAME", &id, NULL, NULL, &canv, &value) {
-            if (!str_startswith(id, "CITY ")) continue;
+        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, &canv, &value) {
+            if (!oid_is_catalog(oid, "CITY")) continue;
             if (!strstr(canv, can)) continue;
             suggestions[i++] = value;
             if (i >= ARRAY_SIZE(suggestions) - 1) break;
@@ -153,9 +156,10 @@ static void city_widget(void)
     }
 
     if (gui_input("City", buf, 128, suggestions)) {
-        IDENTIFIERS_ITER(NULL, "NAME", &id, NULL, NULL, NULL, &value) {
-            if (str_startswith(id, "CITY ") && str_equ(value, buf)) {
-                obj_set_attr(&core->observer->obj, "city", "s", id);
+        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, NULL, &value) {
+            if (oid_is_catalog(oid, "CITY") && str_equ(value, buf)) {
+                city = obj_get_by_oid(NULL, oid, 0);
+                obj_set_attr(&core->observer->obj, "city", "p", city);
                 break;
             }
         }
@@ -315,8 +319,8 @@ static void info_widget(obj_t *obj)
     obj_get_attr(obj, "name", "s", buf);
     gui_text_unformatted(buf);
 
-    gui_label("ID", obj->id);
-    IDENTIFIERS_ITER(obj->id, NULL, NULL, &cat, &value, NULL, NULL)
+    gui_label("ID", obj->id); // XXX: to remove.
+    IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL)
         gui_label(cat, value);
 
     obj_get_attr(obj, "radec", "v4", icrs);

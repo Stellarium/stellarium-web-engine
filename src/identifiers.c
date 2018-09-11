@@ -21,12 +21,11 @@
 
 /*
  *                                          (cannonical)
- *      id              CAT   value         search_value   show_value
+ *      oid             CAT   value         search_value   show_value
  *      ----------      ---   ---------     ------------   ----------
  *      hd 8890         hd    8890          HD 8890        HD 8890
  *      hd 8890         name  Polaris       POLARIS        Polaris
  *      hd 8890         bayer alf Umi       ALF UMI        Alpha Umi
- *      city paris      name  Paris         PARIS          Paris
  *      ngc 2632        m     44            M 44           M 44
  *
  */
@@ -35,7 +34,7 @@ typedef struct entry entry_t;
 struct entry {
     entry_t *next, *prev; // Global id list, grouped by id.
     UT_hash_handle hh;    // Hash of id to first matching entry.
-    char *id;
+    uint64_t oid;
     char *cat;
     char *value;
     char *search_value;
@@ -178,24 +177,25 @@ static bool is_valid_cat(const char *s)
 }
 #endif
 
-void identifiers_add(const char *id, const char *cat, const char *value,
+void identifiers_add(uint64_t oid, const char *cat, const char *value,
                      const char *search_value, const char *show_value)
 {
     entry_t *entry, *group;
     int len;
 
-    assert(id);
+    assert(oid);
     assert(cat);
     assert(is_valid_cat(cat));
     assert(value);
     search_value = search_value ?: value;
     show_value = show_value ?: value;
 
-    HASH_FIND_STR(g_idx, id, group);
+    HASH_FIND(hh, g_idx, &oid, sizeof(oid), group);
 
     if (group) {
         // Skip if already present.
-        for (   entry = group; entry && str_equ(entry->id, id);
+        for (   entry = group;
+                entry && entry->oid == oid;
                 entry = entry->next) {
             if (str_equ(entry->cat, cat) && str_equ(entry->value, value)) {
                 return;
@@ -204,7 +204,7 @@ void identifiers_add(const char *id, const char *cat, const char *value,
     }
 
     entry = calloc(1, sizeof(*entry));
-    entry->id = strdup(id);
+    entry->oid = oid;
     entry->cat = strdup(cat);
     entry->value = strdup(value);
     entry->show_value = strdup(show_value);
@@ -217,13 +217,13 @@ void identifiers_add(const char *id, const char *cat, const char *value,
     if (group) {
         DL_APPEND_ELEM(g_entries, group, entry);
     } else {
-        HASH_ADD_KEYPTR(hh, g_idx, entry->id, strlen(entry->id), entry);
+        HASH_ADD(hh, g_idx, oid, sizeof(oid), entry);
         DL_APPEND(g_entries, entry);
     }
 }
 
-bool identifiers_iter_(const char *id, const char *catalog,
-                       const char **rid,
+bool identifiers_iter_(uint64_t oid, const char *catalog,
+                       uint64_t *roid,
                        const char **rcat,
                        const char **rvalue,
                        const char **rcan,
@@ -234,18 +234,18 @@ bool identifiers_iter_(const char *id, const char *catalog,
     assert(!catalog || is_valid_cat(catalog));
     if (*tmp == g_entries) return false; // End of list reached.
     if (!*tmp) {
-        if (id) HASH_FIND_STR(g_idx, id, e);
+        if (oid) HASH_FIND(hh, g_idx, &oid, sizeof(oid), e);
         else e = g_entries;
         *tmp = e;
     }
     e = *tmp;
     while (true) {
         if (!e) return false;
-        if (id && !str_equ(id, e->id)) return false;
+        if (oid && oid != e->oid) return false;
         if (!catalog || str_equ(e->cat, catalog)) break;
         e = e->next;
     }
-    if (rid) *rid = e->id;
+    if (roid) *roid = e->oid;
     if (rcat) *rcat = e->cat;
     if (rvalue) *rvalue = e->value;
     if (rcan) *rcan = e->search_value;
@@ -258,26 +258,27 @@ bool identifiers_iter_(const char *id, const char *catalog,
     return true;
 }
 
-const char *identifiers_get(const char *id, const char *catalog)
+const char *identifiers_get(uint64_t oid, const char *catalog)
 {
     const char *value;
     assert(is_valid_cat(catalog));
-    IDENTIFIERS_ITER(id, catalog, NULL, NULL, &value, NULL, NULL) {
+    IDENTIFIERS_ITER(oid, catalog, NULL, NULL, &value, NULL, NULL) {
         return value;
     }
     return NULL;
 }
 
-const char *identifiers_search(const char *query)
+uint64_t identifiers_search(const char *query)
 {
     char can[128];
     entry_t *e = NULL;
     identifiers_make_canonical(query, can, sizeof(can));
     DL_FOREACH(g_entries, e) {
-        if (str_equ(e->search_value, can))
-            return e->id;
+        if (str_equ(e->search_value, can)) {
+            return e->oid;
+        }
     }
-    return NULL;
+    return 0;
 }
 
 /******* TESTS **********************************************************/

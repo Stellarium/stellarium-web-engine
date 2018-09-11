@@ -335,7 +335,7 @@ double obj_get_render_order(const obj_t *obj)
 const char *obj_get_name(const obj_t *obj)
 {
     const char *value;
-    IDENTIFIERS_ITER(obj->id, "NAME", NULL, NULL, &value, NULL, NULL) {
+    IDENTIFIERS_ITER(obj->oid, "NAME", NULL, NULL, &value, NULL, NULL) {
         return value;
     }
     return obj->id;
@@ -386,7 +386,7 @@ int obj_get_ids(const obj_t *obj,
 {
     const char *cat, *value;
     int nb = 0;
-    IDENTIFIERS_ITER(obj->id, NULL, NULL, &cat, &value, NULL, NULL) {
+    IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL) {
         f(cat, value, user);
         nb++;
     }
@@ -874,12 +874,12 @@ static void test_my_attr_changed(obj_t *obj, const attribute_t *attr)
 }
 
 static int test_choices(
-        int (*f)(const char *name, const char *id, void *user),
+        int (*f)(const char *name, uint64_t oid, void *user),
         void *user)
 {
     if (f) {
-        f("TEST1", "1", user);
-        f("TEST2", "2", user);
+        f("TEST1", 1, user);
+        f("TEST2", 2, user);
     }
     return 2;
 }

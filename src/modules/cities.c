@@ -9,6 +9,7 @@
 
 #include "swe.h"
 #include <float.h>
+#include <zlib.h> // For crc32.
 
 typedef struct city {
     obj_t       obj;
@@ -39,12 +40,14 @@ typedef struct cities {
 
 static int cities_init(obj_t *obj, json_value *args);
 static obj_t *cities_get(const obj_t *obj, const char *id, int flags);
+static obj_t *cities_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint);
 static obj_klass_t cities_klass = {
     .id = "cities",
     .size = sizeof(cities_t),
     .flags = OBJ_MODULE,
     .init = cities_init,
     .get = cities_get,
+    .get_by_oid = cities_get_by_oid,
 };
 
 OBJ_REGISTER(cities_klass)
@@ -65,6 +68,19 @@ static obj_t *cities_get(const obj_t *obj, const char *id, int flags)
     DL_FOREACH(obj->children, city) {
         if (strcmp(city->id, id) == 0) {
             city->ref++; // XXX: make it singleton.
+            return city;
+        }
+    }
+    return NULL;
+}
+
+static obj_t *cities_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *city;
+    if (!oid_is_catalog(oid, "CITY")) return NULL;
+    DL_FOREACH(obj->children, city) {
+        if (city->oid == oid) {
+            city->ref++;
             return city;
         }
     }
@@ -94,6 +110,7 @@ static void add_cities(cities_t *cities)
 
         sprintf(id, "CITY %s %s", country_code, asciiname_upper);
         city = (city_t*)obj_create("city", id, (obj_t*)cities, NULL);
+        city->obj.oid = oid_create("CITY", crc32(0, (void*)id, strlen(id)));
 
         strcpy(city->country_code, country_code);
         city->timezone = strdup(timezone);
@@ -101,7 +118,7 @@ static void add_cities(cities_t *cities)
         city->latitude = lat * DD2R;
         city->elevation = el;
         sprintf(id, "%s (%s)", name, country_code);
-        identifiers_add(city->obj.id, "NAME", id, asciiname_upper, id);
+        identifiers_add(city->obj.oid, "NAME", id, asciiname_upper, id);
 #undef TOK
     }
     free(data);
@@ -149,8 +166,9 @@ obj_t *city_create(const char *name, const char *country_code,
     city->longitude = longitude;
     city->elevation = elevation;
     str_to_upper(name, asciiname_upper);
+    city->obj.oid = oid_create("CITY", crc32(0, (void*)id, strlen(id)));
     sprintf(namebuf, "%s (%s)", name, country_code);
-    identifiers_add(city->obj.id, "NAME", namebuf, asciiname_upper, id);
+    identifiers_add(city->obj.oid, "NAME", namebuf, asciiname_upper, id);
     return &city->obj;
 }
 
@@ -162,10 +180,11 @@ static void test_cities(void)
     const char *name;
     const char tz[64];
     double lat;
+
     core_init();
     city = obj_get(NULL, "CITY GB London", 0);
     assert(city);
-    name = identifiers_get(city->id, "NAME");
+    name = identifiers_get(city->oid, "NAME");
     test_str(name, "London (GB)");
     obj_get_attr(city, "timezone", "S", tz);
     test_str(tz, "Europe/London");
