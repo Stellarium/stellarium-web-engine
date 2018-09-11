@@ -19,6 +19,7 @@ static const double GAIA_MIN_MAG = 8.0;
 
 typedef struct stars stars_t;
 typedef struct {
+    uint64_t oid;
     uint64_t gaia;  // Gaia source id (0 if none)
     int     hip;    // HIP number.
     int     hd;     // HD number.
@@ -169,6 +170,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
         .pos = {p[0], p[1], p[2]},
         .size = size,
         .color = {color[0], color[1], color[2], luminance},
+        .oid = s->oid,
     };
     strcpy(point.id, obj->id);
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
@@ -224,6 +226,7 @@ static star_t *star_create(const star_data_t *data)
     strcpy(star->obj.type, "*");
     star->data = *data;
     star->obj.nsid = star->data.gaia;
+    star->obj.oid = star->data.oid;
     return star;
 }
 
@@ -315,6 +318,10 @@ static int on_file_tile_loaded(const char type[4],
         s->pde = pde;
         s->plx = plx;
         s->bv = bv;
+        s->oid = s->hip ? oid_create("HIP ", s->hip) :
+                 s->hd  ? oid_create("HD  ", s->hd) :
+                 s->gaia;
+        assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
         tile->mag_min = min(tile->mag_min, vmag);
         tile->mag_max = max(tile->mag_max, vmag);
@@ -498,13 +505,8 @@ static int render_visitor(int order, int pix, void *user)
             .pos = {p[0], p[1], p[2], 0},
             .size = size,
             .color = {color[0], color[1], color[2], luminance},
+            .oid = s->oid,
         };
-        if (s->hip)
-            make_id(points[n].id, "HIP", s->hip);
-        else if (s->hd)
-            make_id(points[n].id, "HD", s->hd);
-        else
-            points[n].nsid = s->gaia;
         n++;
         if (s->vmag <= painter.label_mag_max && !s->gaia)
             star_render_name(&painter, s, p_ndc, size, mag);
@@ -557,7 +559,8 @@ static int stars_get_visitor(int order, int pix, void *user)
     for (i = 0; i < tile->nb; i++) {
         if (    (d->cat == 0 && tile->stars[i].hip == d->n) ||
                 (d->cat == 1 && tile->stars[i].hd  == d->n) ||
-                (d->cat == 2 && tile->stars[i].gaia == d->n)) {
+                (d->cat == 2 && tile->stars[i].gaia == d->n) ||
+                (d->cat == 3 && tile->stars[i].oid  == d->n)) {
             d->ret = &star_create(&tile->stars[i])->obj;
             return -1; // Stop the search.
         }
@@ -597,6 +600,22 @@ static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid)
         int      cat;
         uint64_t n;
     } d = {.stars=(void*)obj, .cat=2, .n=nsid};
+    hips_traverse(&d, stars_get_visitor);
+    return d.ret;
+}
+
+static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    struct {
+        stars_t  *stars;
+        obj_t    *ret;
+        int      cat;
+        uint64_t n;
+    } d = {.stars=(void*)obj, .cat=3, .n=oid};
+    if (    !oid_is_catalog(oid, "HD  ") &&
+            !oid_is_catalog(oid, "HIP ") &&
+            !oid_is_gaia(oid))
+        return NULL;
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
 }
@@ -759,6 +778,7 @@ static obj_klass_t stars_klass = {
     .init           = stars_init,
     .render         = stars_render,
     .get            = stars_get,
+    .get_by_oid     = stars_get_by_oid,
     .get_by_nsid    = stars_get_by_nsid,
     .list           = stars_list,
     .add_res        = stars_add_res,
