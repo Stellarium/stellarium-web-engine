@@ -140,6 +140,12 @@ Module.afterInit(function() {
     }, 'viii');
     Module._obj_get_names(this.v, callback, 0);
     Module.removeFunction(callback);
+    // Remove duplicates.
+    // This should be done in the C code, but for the moment it's simpler
+    // here.
+    ret = ret.filter(function(item, pos, self) {
+      return self.indexOf(item) == pos;
+    });
     return ret;
   };
 
