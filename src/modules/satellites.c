@@ -63,7 +63,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 {
     const char *line0, *line1, *line2;
     char id[16];
-    int i, nb = 0;
+    int i, nb = 0, sat_num;
     satellite_t *sat;
     double startmfe, stopmfe, deltamin;
     qsmag_t *qsmag;
@@ -82,6 +82,8 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 
         sprintf(id, "NORAD %.5s", line1 + 2);
         sat = (satellite_t*)obj_create("tle_satellite", id, (obj_t*)sats, NULL);
+        sat_num = atoi(line1 + 2);
+        sat->obj.oid = oid_create("NORA", sat_num);
         sat->stdmag = NAN;
         strcpy(sat->obj.type, "Asa"); // Otype code.
 
@@ -176,6 +178,20 @@ static int satellites_render(const obj_t *obj, const painter_t *painter)
     OBJ_ITER(obj, child, "tle_satellite")
         obj_render(child, painter);
     return 0;
+}
+
+static obj_t *satellites_get_by_oid(
+        const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *child;
+    if (!oid_is_catalog(oid, "NORA")) return NULL;
+    OBJ_ITER(obj, child, "tle_satellite") {
+        if (child->oid == oid) {
+            child->ref++;
+            return child;
+        }
+    }
+    return NULL;
 }
 
 /*
@@ -326,8 +342,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
         .pos = {p[0], p[1], p[2], p[3]},
         .size = size,
         .color = {color[0], color[1], color[2], luminance},
+        .oid = obj->oid,
     };
-    strcpy(point.id, obj->id);
     paint_points(&painter, 1, &point, FRAME_VIEW);
 
     // Render name if needed.
@@ -377,5 +393,6 @@ static obj_klass_t satellites_klass = {
     .render_order   = 30,
     .update         = satellites_update,
     .render         = satellites_render,
+    .get_by_oid     = satellites_get_by_oid,
 };
 OBJ_REGISTER(satellites_klass)
