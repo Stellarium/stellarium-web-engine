@@ -46,12 +46,18 @@ typedef struct mplanets {
     obj_t   obj;
 } mplanets_t;
 
-static int unpack_number(char c)
+static int unpack_char(char c)
 {
     if (c >= '0' && c <= '9')
         return c - '0';
-    else
+    else if (c >= 'A' && c <= 'Z')
         return 10 + c - 'A';
+    else if (c >= 'a' && c < 'z')
+        return 36 + c - 'a';
+    else {
+        LOG_E("Cannot unpack char '%c'", c);
+        return -1;
+    }
 }
 
 // Unpack epoch field in MJD.
@@ -62,14 +68,54 @@ static double unpack_epoch(const char epoch[5])
     year = ((epoch[0] - 'I') + 18) * 100;
     year += (epoch[1] - '0') * 10;
     year += (epoch[2] - '0');
-    month = unpack_number(epoch[3]);
-    day = unpack_number(epoch[4]);
+    month = unpack_char(epoch[3]);
+    day = unpack_char(epoch[4]);
     r = eraDtf2d("", year, month, day, 0, 0, 0, &d1, &d2);
     if (r != 0) {
         LOG_E("Cannot parse epoch %.5s", epoch);
         return NAN;
     }
     return d1 - DJM0 + d2;
+}
+
+/*
+ * Parse a 7 char packed designation
+ *
+ * The algo is described there:
+ * https://www.minorplanetcenter.net/iau/info/PackedDes.html
+ */
+static int parse_designation(
+        const char str[7], char type[4], bool *permanent)
+{
+    int ret;
+    // 5 chars => permanent designations.
+    if (strlen(str) == 5) {
+        *permanent = true;
+        // Minor planet.
+        if (str[4] >= '0' && str[4] <= '9') {
+            memcpy(type, "MPl ", 4);
+            ret = atoi(str + 1) + 10000 * unpack_char(str[0]);
+        }
+        // Comet.
+        else if (str[4] == 'P' || str[4] == 'D') {
+            memcpy(type, "Com ", 4);
+            ret = atoi(str);
+        }
+        // Natural satellites (not supported yet).
+        else {
+            LOG_W("MPC natural satellites not supported");
+            memcpy(type, "    ", 4);
+            ret = 0;
+        }
+    }
+    // 7 char -> Provisional designation.
+    // Not supported yet.
+    else {
+        *permanent = false;
+        memcpy(type, "    ", 4);
+        ret = 0;
+    }
+    return ret;
 }
 
 // Compute nsid following the same algo as noctuasky.
@@ -80,6 +126,16 @@ static uint64_t compute_nsid(const char *readable)
     while (*readable == ' ') readable++;
     crc = crc32(0L, (const Bytef*)readable, strlen(readable));
     return (1ULL << 63) | (201326592ULL << 35) | (crc & 0xffffffff);
+}
+
+static uint64_t compute_oid(const char desgn[7])
+{
+    bool permanent;
+    char type[4];
+    int n;
+    n = parse_designation(desgn, type, &permanent);
+    if (permanent) return oid_create(type, n);
+    return oid_create("MPl ", crc32(0L, (const Bytef*)desgn, 7));
 }
 
 static void load_data(mplanets_t *mplanets, const char *data) {
@@ -161,6 +217,7 @@ static void load_data(mplanets_t *mplanets, const char *data) {
         orbit_type = flags & 0x3f;
         strcpy(mplanet->obj.type, ORBIT_TYPES[orbit_type]);
         mplanet->obj.nsid = compute_nsid(readable);
+        mplanet->obj.oid = compute_oid(desgn);
 
         r = regexec(&name_reg, readable, 3, matches, 0);
         if (!r) {
@@ -270,8 +327,8 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
         .pos = {pos[0], pos[1], pos[2], 0},
         .size = size,
         .color = {1, 1, 1, luminance},
+        .oid = obj->oid,
     };
-    strcpy(point.id, obj->id);
     paint_points(painter, 1, &point, FRAME_OBSERVED);
 
     // Render name if needed.
@@ -301,6 +358,21 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
     OBJ_ITER(obj, child, "mpc_asteroid")
         obj_render(child, painter);
     return 0;
+}
+
+static obj_t *mplanets_get_by_oid(
+        const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *child;
+    if (    !oid_is_catalog(oid, "MPl ") &&
+            !oid_is_catalog(oid, "Com ")) return NULL;
+    OBJ_ITER(obj, child, NULL) {
+        if (child->oid == oid) {
+            child->ref++;
+            return child;
+        }
+    }
+    return NULL;
 }
 
 /*
@@ -339,6 +411,7 @@ static obj_klass_t mplanets_klass = {
     .init           = mplanets_init,
     .update         = mplanets_update,
     .render         = mplanets_render,
+    .get_by_oid     = mplanets_get_by_oid,
     .render_order   = 20,
 };
 OBJ_REGISTER(mplanets_klass)
