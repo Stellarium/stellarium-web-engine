@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include "utstring.h"
 #include <regex.h>
 
 // XXX: this very similar to stars.c.  I think we could merge most of the code.
@@ -38,6 +39,8 @@ typedef struct {
     double      angle;
 
     char short_name[64];
+    // List of extra names, separated by '\0', terminated by two '\0'.
+    char *names;
 } dso_data_t;
 
 /*
@@ -113,12 +116,29 @@ static dso_t *dso_create(const dso_data_t *data)
     return dso;
 }
 
+// Turn a json array of string into a '\0' separated C string.
+// Move this in utils?
+static char *parse_json_names(json_value *names)
+{
+    int i;
+    json_value *jstr;
+    UT_string ret;
+    utstring_init(&ret);
+    for (i = 0; i < names->u.array.length; i++) {
+        jstr = names->u.array.values[i];
+        if (jstr->type != json_string) continue; // Not normal!
+        utstring_bincpy(&ret, jstr->u.string.ptr, jstr->u.string.length + 1);
+    }
+    utstring_bincpy(&ret, "", 1); // Add extra '\0' at the end.
+    return utstring_body(&ret);
+}
+
 static int dso_init(obj_t *obj, json_value *args)
 {
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
     // Support creating a dso using noctuasky model data json values.
     dso_t *dso = (dso_t*)obj;
-    json_value *model;
+    json_value *model, *names;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         dso->data.ra = json_get_attr_f(model, "ra", 0) * DD2R;
@@ -131,6 +151,11 @@ static int dso_init(obj_t *obj, json_value *args)
         dso->data.smin = json_get_attr_f(model, "dimy", NAN) * DAM2R;
     }
     dso->data.id.oid = make_oid(&dso->data);
+
+    names = json_get_attr(args, "names", json_array);
+    if (names)
+        dso->data.names = parse_json_names(names);
+
     return 0;
 }
 
@@ -159,6 +184,7 @@ static void strip_type(char str[4])
 static int del_tile(void *data)
 {
     tile_t *tile = data;
+    free(tile->data->names);
     free(tile->data);
     free(tile);
     return 0;
@@ -512,6 +538,22 @@ static int dso_render(const obj_t *obj, const painter_t *painter)
     return dso_render_from_data(&dso->data, obj->id, painter);
 }
 
+void dso_get_names(const obj_t *obj, void *user,
+                   int (*f)(void *user, const char *cat, const char *str))
+{
+    const dso_t *dso = (dso_t*)obj;
+    const dso_data_t *d = &dso->data;
+    const char *names = d->names;
+    char cat[128] = {};
+    while (names && *names) {
+        strncpy(cat, names, sizeof(cat) - 1);
+        if (!strchr(cat, ' ')) continue;
+        *strchr(cat, ' ') = '\0';
+        f(user, cat, names + strlen(cat) + 1);
+        names += strlen(names) + 1;
+    }
+}
+
 static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (dso_t*)obj;
@@ -661,6 +703,7 @@ static obj_klass_t dso_klass = {
     .init = dso_init,
     .update = dso_update,
     .render = dso_render,
+    .get_names = dso_get_names,
     .render_pointer = dso_render_pointer,
     .attributes = (attribute_t[]) {
         // Default properties.

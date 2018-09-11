@@ -137,9 +137,13 @@ var testCreate = function(stel) {
         vmag: 0,
         dimx: 60,
         dimy: 60,
-      }
+      },
+      names: ['NAME 1', 'NAME 2']
     })
     assert(obj1.nsid == '0000000beefbeef1')
+    assert(obj1.names().includes('NSID 0000000beefbeef1'))
+    assert(obj1.names().includes('NAME 1'))
+    assert(obj1.names().includes('NAME 2'))
 
     var obj2 = stel.createObj('tle_satellite', {
       id: 'my sat',
@@ -154,6 +158,7 @@ var testCreate = function(stel) {
       }
     })
     assert(obj2.nsid == '0000000beefbeef2')
+    assert(obj2.names().includes('NSID 0000000beefbeef2'))
 
     layer.add(obj1)
     layer.add(obj2)
