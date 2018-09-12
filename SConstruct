@@ -42,7 +42,7 @@ if debug:
     env.Append(CCFLAGS='-DCOMPILE_TESTS')
 
 if profile or debug:
-    env.Append(CCFLAGS='-g')
+    env.Append(CCFLAGS='-g', LINKFLAGS='-g')
     if target_os != 'js':
         env.Append(CCFLAGS='-Og')
 
