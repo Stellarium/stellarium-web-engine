@@ -34,10 +34,24 @@ var testBasic = function(stel) {
 };
 
 var testIds = function(stel) {
-    var o = stel.getObj('Polaris');
-    var names = o.names();
+    var o1 = stel.getObj('Polaris');
     var tests = ['HIP 11767', 'HD 8890', 'NAME Polaris']
-    for (var v of tests) assert(names.includes(v))
+    for (var v of tests) assert(o1.names().includes(v))
+
+    var o2 = stel.createObj('tle_satellite', {
+      nsid: '0000000beefbeef2',
+      model_data: {
+        mag: 2.0,
+        norad_number: 19120,
+        tle: [
+          '1 19120U 88039B   18246.93217385  .00000115  00000-0' +
+          '77599-4 0  9998',
+          '2 19120  71.0141 107.3044 0023686 231.5553 128.3447' +
+          '14.19191161569077'
+        ]
+      }
+    })
+    assert(o2.id == 'NORAD 19120');
 }
 
 var testSearch = function(stel) {
