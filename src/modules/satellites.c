@@ -355,6 +355,15 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
+void satellite_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(void *user, const char *cat, const char *str))
+{
+    char buf[32];
+    sprintf(buf, "%05d", (int)(obj->oid));
+    f(user, "NORAD", buf);
+}
+
 /*
  * Meta class declarations.
  */
@@ -367,6 +376,7 @@ static obj_klass_t satellite_klass = {
     .init           = satellite_init,
     .update         = satellite_update,
     .render         = satellite_render,
+    .get_designations = satellite_get_designations,
 
     .attributes = (attribute_t[]) {
         // Default properties.
