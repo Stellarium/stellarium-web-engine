@@ -201,9 +201,8 @@ static void load_data(mplanets_t *mplanets, const char *data) {
         assert(e >= 0 && e <= 1);
         str_rstrip(desgn);
         str_rstrip(readable);
-        str_to_upper(desgn, desgn);
 
-        mplanet = (void*)obj_create("mpc_asteroid", desgn,
+        mplanet = (void*)obj_create("mpc_asteroid", NULL,
                                     &mplanets->obj, NULL);
         mplanet->orbit.d = unpack_epoch(epoch);
         mplanet->orbit.m = m * DD2R;
@@ -362,6 +361,12 @@ void mplanet_get_designations(
     mplanet_t *mplanet = (mplanet_t*)obj;
     char buf[32];
     if (mplanet->mpl_number) {
+        // Workaround so that we don't break stellarium web, that expect
+        // to the an id that is simply the MPC object number!
+        // Remove when we can.
+        sprintf(buf, "%d", mplanet->mpl_number);
+        f(user, "", buf);
+
         sprintf(buf, "(%d)", mplanet->mpl_number);
         f(user, "MPC", buf);
     }
