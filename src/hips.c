@@ -210,7 +210,7 @@ static int property_handler(void* user, const char* section,
 
 static int parse_properties(hips_t *hips)
 {
-    char *data;
+    const char *data;
     char url[URL_MAX_SIZE];
     int code;
     get_url_for(hips, url, "properties");
