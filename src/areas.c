@@ -84,11 +84,31 @@ void areas_clear_all(areas_t *areas)
     utarray_clear(areas->items);
 }
 
+// Weight function to decide what item to return during a lookup.
+static double lookup_score(const item_t *item, double dist, double max_dist)
+{
+    // This is an heuristic function.  Probably need to be adjusted:
+    // Works more or less like this:
+    // - If the distance is larger than the max dist, ignore the item.
+    // - Sort items by size, with a small adjustment to favor the ones
+    //   that are centered in the lookup area.
+    // - Large item (DSO ellipse) area is clamped, to give a chance to other
+    //   objects inside.
+    // - If an item is extremely large, ignore it totally, so that when we
+    //   zoom in a DSO, we can't select it anymore.
+    double area;
+    if (dist > max_dist) return 0.0;
+    area = item->a * item->b;
+    if (area > 1000.0 * max_dist * max_dist) return 0.0;
+    area = min(area, max_dist * max_dist / 10.0);
+    return area + max_dist * max_dist - (dist * dist) * 0.2;
+}
+
 int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
                  uint64_t *oid, uint64_t *hint)
 {
     item_t *item = NULL, *best = NULL;
-    double dist, best_dist = max_dist;
+    double dist, score, best_score = 0.0;
 
     while ( (item = (item_t*)utarray_next(areas->items, item)) ) {
         if (item->a == item->b) { // Circle
@@ -96,12 +116,10 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
         } else { // Ellipse
             dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
         }
-        // Simple heuristic: if we are totally inside several shapes, we
-        // pick the one with the smallest area.
-        if (dist == 0.0) dist = -1.0 / (item->a * item->b);
+        score = lookup_score(item, dist, max_dist);
 
-        if (dist < best_dist) {
-            best_dist = dist;
+        if (score > best_score) {
+            best_score = score;
             best = item;
         }
     }
