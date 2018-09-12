@@ -106,7 +106,7 @@ struct obj_klass
     obj_t *(*get_by_oid)(const obj_t *obj, uint64_t oid, uint64_t hint);
 
     // List all the names associated with an object.
-    void (*get_names)(const obj_t *obj, void *user,
+    void (*get_designations)(const obj_t *obj, void *user,
                       int (*f)(void *user, const char *cat, const char *str));
 
     void (*gui)(obj_t *obj, int location);
@@ -406,11 +406,11 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
 const char *obj_get_name(const obj_t *obj);
 
 /*
- * Function: obj_get_names
+ * Function: obj_get_designations
  * Return the list of all the identifiers of an object.
  */
-int obj_get_names(const obj_t *obj,
-                  void (*f)(const char *id, const char *value, void *user),
+int obj_get_designations(const obj_t *obj,
+                  void (*f)(const char *cat, const char *value, void *user),
                   void *user);
 
 /*

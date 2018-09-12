@@ -392,14 +392,14 @@ static int on_name(void *user, const char *cat, const char *value)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int obj_get_names(const obj_t *obj,
+int obj_get_designations(const obj_t *obj,
                   void (*f)(const char *cat, const char *value, void *user),
                   void *user)
 {
     const char *cat, *value, buf[128];
     int nb = 0;
-    if (obj->klass->get_names)
-        obj->klass->get_names(obj, USER_PASS(f, user, &nb), on_name);
+    if (obj->klass->get_designations)
+        obj->klass->get_designations(obj, USER_PASS(f, user, &nb), on_name);
     if (obj->oid) {
         IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL) {
             f(cat, value, user);

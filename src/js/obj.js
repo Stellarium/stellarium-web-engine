@@ -127,7 +127,7 @@ Module.afterInit(function() {
       v = Module.Pointer_stringify(v);
       f(k, v);
     }, 'viii');
-    Module._obj_get_names(this.v, callback, 0);
+    Module._obj_get_designations(this.v, callback, 0);
     Module.removeFunction(callback);
   };
 
@@ -138,7 +138,7 @@ Module.afterInit(function() {
       v = Module.Pointer_stringify(v);
       ret.push(cat + ' ' + v);
     }, 'viii');
-    Module._obj_get_names(this.v, callback, 0);
+    Module._obj_get_designations(this.v, callback, 0);
     Module.removeFunction(callback);
     // Remove duplicates.
     // This should be done in the C code, but for the moment it's simpler

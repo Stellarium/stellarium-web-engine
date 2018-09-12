@@ -185,8 +185,9 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
 }
 
 
-void star_get_names(const obj_t *obj, void *user,
-                    int (*f)(void *user, const char *cat, const char *str))
+void star_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(void *user, const char *cat, const char *str))
 {
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
@@ -776,7 +777,7 @@ static obj_klass_t star_klass = {
     .size       = sizeof(star_t),
     .update     = star_update,
     .render     = star_render,
-    .get_names  = star_get_names,
+    .get_designations = star_get_designations,
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),

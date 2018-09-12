@@ -538,8 +538,9 @@ static int dso_render(const obj_t *obj, const painter_t *painter)
     return dso_render_from_data(&dso->data, obj->id, painter);
 }
 
-void dso_get_names(const obj_t *obj, void *user,
-                   int (*f)(void *user, const char *cat, const char *str))
+void dso_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(void *user, const char *cat, const char *str))
 {
     const dso_t *dso = (dso_t*)obj;
     const dso_data_t *d = &dso->data;
@@ -703,7 +704,7 @@ static obj_klass_t dso_klass = {
     .init = dso_init,
     .update = dso_update,
     .render = dso_render,
-    .get_names = dso_get_names,
+    .get_designations = dso_get_designations,
     .render_pointer = dso_render_pointer,
     .attributes = (attribute_t[]) {
         // Default properties.
