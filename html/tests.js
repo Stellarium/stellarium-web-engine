@@ -174,6 +174,52 @@ var testCreate = function(stel) {
     assert(obj2.nsid == '0000000beefbeef2')
     assert(obj2.names().includes('NSID 0000000beefbeef2'))
 
+    var obj3 = stel.createObj('mpc_asteroid', {
+      "interest": 3.6,
+      "match": "NAME 1",
+      "model": "mpc_asteroid",
+      "model_data": {
+        "Aphelion_dist": 2.9760543,
+        "Epoch": 2458200.5,
+        "G": 0.12,
+        "H": 3.34,
+        "Hex_flags": "0000",
+        "Last_obs": "2018-04-30",
+        "M": 352.23052,
+        "Node": 80.30992,
+        "Orbital_period": 4.6028269,
+        "Peri": 73.11528,
+        "Perihelion_dist": 2.5580383,
+        "Principal_desig": "A899 OF",
+        "Semilatus_rectum": 1.3756295,
+        "Synodic_period": 1.2775598,
+        "Tp": 2458236.78379,
+        "U": "0",
+        "a": 2.7670463,
+        "e": 0.0755347,
+        "i": 10.59351,
+        "n": 0.21413094,
+        "rms": 0.6
+      },
+      "names": [
+        "NAME (1) Ceres",
+        "NAME Ceres",
+        "NAME A899 OF",
+        "NAME 1",
+        "NAME (1)",
+        "1943 XB"
+      ],
+      "nsid": "e0000000c593bf28",
+      "short_name": "(1) Ceres",
+      "types": [
+        "MBA",
+        "MPl",
+        "SSO"
+      ]
+    })
+    assert(obj3.names().includes('MPC (1)'))
+    assert(obj3.names().includes('NAME (1) Ceres'))
+
     layer.add(obj1)
     layer.add(obj2)
     assert(stel.getObjByNSID('0000000beefbeef1'))
