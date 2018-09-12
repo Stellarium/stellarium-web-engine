@@ -36,6 +36,7 @@ typedef struct {
     double      h;      // Absolute magnitude.
     double      g;      // Slope parameter.
     char        name[32];
+    int         mpl_number; // Minor planet number if one has been assigned.
 } mplanet_t;
 
 /*
@@ -139,10 +140,11 @@ static uint64_t compute_oid(const char desgn[7])
 }
 
 static void load_data(mplanets_t *mplanets, const char *data) {
-    int line, r, flags, orbit_type;
-    char desgn[16] = {}, readable[32] = {}, epoch[5];
+    int line, r, flags, orbit_type, number;
+    char desgn[16] = {}, readable[32] = {}, epoch[5], type[4];
     double h = 0, g = 0;
     double m, w, o, i, e, n, a;
+    bool permanent;
     regex_t name_reg;
     mplanet_t *mplanet;
     regmatch_t matches[3];
@@ -217,6 +219,9 @@ static void load_data(mplanets_t *mplanets, const char *data) {
         orbit_type = flags & 0x3f;
         strcpy(mplanet->obj.type, ORBIT_TYPES[orbit_type]);
         mplanet->obj.nsid = compute_nsid(readable);
+        number = parse_designation(desgn, type, &permanent);
+        if (permanent && strncmp(type, "MPl ", 4) == 0)
+            mplanet->mpl_number = number;
         mplanet->obj.oid = compute_oid(desgn);
 
         r = regexec(&name_reg, readable, 3, matches, 0);
@@ -248,6 +253,7 @@ static int mplanet_init(obj_t *obj, json_value *args)
     orbit_t *orbit = &mp->orbit;
     json_value *model;
     const char *name;
+    int num;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         mp->h = json_get_attr_f(model, "H", 0);
@@ -264,6 +270,10 @@ static int mplanet_init(obj_t *obj, json_value *args)
     name = json_get_attr_s(args, "short_name");
     if (name) {
         strncpy(mp->name, name, sizeof(mp->name));
+        if (sscanf(name, "(%d)", &num) == 1) {
+            mp->obj.oid = oid_create("MPl ", num);
+            mp->mpl_number = num;
+        }
     }
     // XXX: use proper type.
     strncpy(mp->obj.type, "MBA", 4);
@@ -345,6 +355,19 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
+void mplanet_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(void *user, const char *cat, const char *str))
+{
+    mplanet_t *mplanet = (mplanet_t*)obj;
+    char buf[32];
+    if (mplanet->mpl_number) {
+        sprintf(buf, "(%d)", mplanet->mpl_number);
+        f(user, "MPC", buf);
+    }
+    if (*mplanet->name) f(user, "NAME", mplanet->name);
+}
+
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 {
     obj_t *child;
@@ -386,6 +409,7 @@ static obj_klass_t mplanet_klass = {
     .init       = mplanet_init,
     .update     = mplanet_update,
     .render     = mplanet_render,
+    .get_designations = mplanet_get_designations,
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
