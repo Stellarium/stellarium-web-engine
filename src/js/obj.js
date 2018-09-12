@@ -162,7 +162,9 @@ Module.afterInit(function() {
   // Add id property
   Object.defineProperty(SweObj.prototype, 'id', {
     get: function() {
-      return obj_get_id(this.v);
+      var ret = obj_get_id(this.v);
+      if (ret) return ret;
+      return this.names()[0];
     }
   })
 
