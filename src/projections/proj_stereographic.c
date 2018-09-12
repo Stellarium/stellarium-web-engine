@@ -41,15 +41,11 @@
 static void proj_stereographic_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
-    double h;
-    double p[3];
-    vec3_copy(v, p);
-    if (!(flags & PROJ_ALREADY_NORMALIZED)) vec3_normalize(p, p);
-    h = 0.5 * (1.0 - p[2]);
-    vec3_mul(1.0 / h, p, p);
-    p[0] /= proj->scaling[0];
-    p[1] /= proj->scaling[1];
-    vec3_copy(p, out);
+    vec3_copy(v, out);
+    if (!(flags & PROJ_ALREADY_NORMALIZED)) vec3_normalize(out, out);
+    double one_over_h = 1.0 / (0.5 * (1.0 - out[2]));
+    out[0] *= one_over_h / proj->scaling[0];
+    out[1] *= one_over_h / proj->scaling[1];
     out[2] = 0.0; // Z = 0 => Center in the clipping space.
     out[3] = 1.0; // w value.
 }
