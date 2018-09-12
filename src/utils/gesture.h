@@ -29,13 +29,19 @@ enum {
  * Define the states a gesture can be in.
  *
  * GESTURE_POSSIBLE     - The gesture is not recognised yet (default state).
+ * GESTURE_RECOGNISED   - The gesture is recognised (only used internally).
  * GESTURE_BEGIN        - The gesture has begun.
  * GESTURE_UPDATE       - The gesture is in progress.
+ * GESTURE_END          - The gesture has finished.
+ * GESTURE_FAILED       - The gesture can't start.
  */
 enum {
     GESTURE_POSSIBLE = 0,
+    GESTURE_RECOGNISED,
     GESTURE_BEGIN,
     GESTURE_UPDATE,
+    GESTURE_END,
+    GESTURE_FAILED,
 };
 
 typedef struct gesture gesture_t;
