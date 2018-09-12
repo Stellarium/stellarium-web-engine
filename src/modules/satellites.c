@@ -265,19 +265,23 @@ static int satellite_init(obj_t *obj, json_value *args)
     json_value *model, *tle;
     const char *tle1, *tle2, *name;
     double startmfe, stopmfe, deltamin;
+    int norad_num = 0;
 
     sat->obj.vmag = 7.0; // Default value.
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
+        norad_num = json_get_attr_i(model, "norad_num", 0);
         if ((tle = json_get_attr(model, "tle", json_array))) {
             tle1 = tle->u.array.values[0]->u.string.ptr;
             tle2 = tle->u.array.values[1]->u.string.ptr;
             sat->elsetrec = sgp4_twoline2rv(
                     tle1, tle2, 'c', 'm', 'i',
                     &startmfe, &stopmfe, &deltamin);
+            if (!norad_num) norad_num = atoi(tle1 + 2);
         }
         sat->stdmag = json_get_attr_f(model, "mag", NAN);
     }
+    sat->obj.oid = oid_create("NORA", norad_num);
     if ((name = json_get_attr_s(args, "short_name")))
         snprintf(sat->name, sizeof(sat->name), "%s", name);
     return 0;
