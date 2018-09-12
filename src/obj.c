@@ -8,7 +8,6 @@
  */
 
 #include "swe.h"
-#include "utstring.h"
 #include <inttypes.h>
 
 // Make sure the obj type padding is just after the type.
