@@ -164,6 +164,8 @@ var testCreate = function(stel) {
     layer.add(obj2)
     assert(stel.getObjByNSID('0000000beefbeef1'))
     assert(stel.getObjByNSID('0000000beefbeef2'))
+    assert(stel.getObj('NSID 0000000beefbeef1'))
+    assert(stel.getObj('NSID 0000000beefbeef2'))
 }
 
 var testFormat = function(stel) {

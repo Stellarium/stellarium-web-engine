@@ -77,7 +77,7 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
 {
     obj_t *module;
     obj_t *ret;
-    uint64_t oid;
+    uint64_t oid, nsid;
     DL_FOREACH(core->obj.children, module) {
         if (strcmp(module->id, id) == 0) return module;
         ret = obj_get(module, id, flags);
@@ -90,6 +90,9 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
             if (ret) return ret;
         }
     }
+    // Special case for nsid.
+    if (sscanf(id, "NSID %" PRIx64, &nsid) == 1)
+        return obj_get_by_nsid(obj, nsid);
     return NULL;
 }
 
