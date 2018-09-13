@@ -55,13 +55,18 @@ static double rise_dist(double time, void *user)
         observer_t *obs;
         obj_t *obj;
     } *data = user;
-    double radius = 0;
+    double radius = 0, observed[4], az, alt;
+
     data->obs->tt = time;
     observer_update(data->obs, false);
     obj_update(data->obj, data->obs, 0);
+    convert_coordinates(data->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                        data->obj->pos.pvg[0], observed);
+    eraC2s(observed, &az, &alt);
+    az = eraAnp(az);
     if (obj_has_attr(data->obj, "radius"))
         obj_get_attr(data->obj, "radius", "f", &radius);
-    return data->obj->pos.alt + radius - data->obs->horizon;
+    return alt + radius - data->obs->horizon;
 }
 
 double compute_event(observer_t *obs,
