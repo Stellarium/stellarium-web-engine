@@ -31,6 +31,7 @@ struct calendar
 // some events.
 typedef struct {
     double obs_z;  // Z value of observed position (if < 0 below horizon).
+    double ra, de;
 } extra_data_t;
 
 static inline uint32_t s4toi(const char s[4])
@@ -133,6 +134,7 @@ static double vertical_align_event_func(const event_type_t *type,
     };
     double sep;
     int i;
+    const extra_data_t *extra1 = o1->user, *extra2 = o2->user;
 
     // Make sure the objects are of the right types.
     if ((s4toi(o1->type) == s4toi(o2->type)) && o1 > o2) return NAN;
@@ -144,7 +146,7 @@ static double vertical_align_event_func(const event_type_t *type,
 
     sep = eraSepp(o1->pos.pvg[0], o2->pos.pvg[0]);
     if (sep > 5 * DD2R) return NAN;
-    return eraAnpm(o1->pos.ra - o2->pos.ra);
+    return eraAnpm(extra1->ra - extra2->ra);
 }
 
 static int vertical_align_format(const event_t *ev, char *out, int len)
@@ -152,9 +154,11 @@ static int vertical_align_format(const event_t *ev, char *out, int len)
     char buf[64];
     double v;
     int prec;
-    v = fabs(eraAnpm(ev->o1->pos.dec - ev->o2->pos.dec));
+    const extra_data_t *extra1 = ev->o1->user, *extra2 = ev->o2->user;
+
+    v = fabs(eraAnpm(extra1->de - extra2->de));
     prec = (v < 2 * DD2R) ? 1 : 0;
-    if (ev->o1->pos.dec < ev->o2->pos.dec)
+    if (extra1->de < extra2->de)
         sprintf(buf, "%.*f° south", prec, v * DR2D);
     else
         sprintf(buf, "%.*f° north", prec, v * DR2D);
@@ -434,7 +438,7 @@ void calendar_delete(calendar_t *cal)
 EMSCRIPTEN_KEEPALIVE
 int calendar_compute(calendar_t *cal)
 {
-    double step = DHOUR, observed[4];
+    double step = DHOUR, p[4], ra, de;
     int i, j;
     obj_t *o1, *o2;
     const event_type_t *ev_type;
@@ -449,10 +453,14 @@ int calendar_compute(calendar_t *cal)
     for (i = 0; i < cal->nb_objs; i++) {
         obj_update(cal->objs[i], &cal->obs, 0);
         // Compute extra dat.
-        convert_coordinates(&cal->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            cal->objs[i]->pos.pvg[0], observed);
         extra = cal->objs[i]->user;
-        extra->obs_z = observed[2];
+        vec4_copy(cal->objs[i]->pos.pvg[0], p);
+        convert_coordinates(&cal->obs, FRAME_ICRS, FRAME_CIRS, 0, p, p);
+        eraC2s(p, &ra, &de);
+        extra->ra = eraAnp(ra);
+        extra->de = eraAnp(de);
+        convert_coordinates(&cal->obs, FRAME_CIRS, FRAME_OBSERVED, 0, p, p);
+        extra->obs_z = p[2];
     }
     // Check two bodies events.
     for (i = 0; i < cal->nb_objs; i++)
