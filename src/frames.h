@@ -62,6 +62,4 @@ int convert_coordinates(const observer_t *obs,
 // convert_coordinates instead.
 int compute_coordinates(const observer_t *obs,
                         const double icrs[4],
-                        double *a_ra, double *a_dec,
-                        double *az,   double *alt);
-
+                        double *a_ra, double *a_dec);

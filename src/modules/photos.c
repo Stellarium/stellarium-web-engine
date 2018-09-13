@@ -109,9 +109,7 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
 
 static int photo_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    compute_coordinates(obs, obj->pos.pvg[0],
-                        &obj->pos.ra, &obj->pos.dec,
-                        &obj->pos.az, &obj->pos.alt);
+    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
     return 0;
 }
 

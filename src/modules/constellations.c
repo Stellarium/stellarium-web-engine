@@ -195,10 +195,8 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     obj->pos.pvg[0][3] = 0; // At infinity.
     vec4_set(obj->pos.pvg[1], 0, 0, 0, 0);
 
-    // Compute radec and azalt.
-    compute_coordinates(obs, obj->pos.pvg[0],
-                        &obj->pos.ra, &obj->pos.dec,
-                        &obj->pos.az, &obj->pos.alt);
+    // Compute radec pos.
+    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
 end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||

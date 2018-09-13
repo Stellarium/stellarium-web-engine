@@ -428,9 +428,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_copy(planet->pvgc[1], obj->pos.pvg[1]);
     obj->pos.pvg[0][3] = 1.0; // AU.
     obj->pos.pvg[1][3] = 1.0; // AU.
-    compute_coordinates(obs, obj->pos.pvg[0],
-                        &obj->pos.ra, &obj->pos.dec,
-                        &obj->pos.az, &obj->pos.alt);
+    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
     return 0;
 }
 

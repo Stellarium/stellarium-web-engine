@@ -136,9 +136,7 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
     // Set speed to 0.
     obj->pos.pvg[1][0] = obj->pos.pvg[1][1] = 0;
     // Compute radec and azalt.
-    compute_coordinates(obs, obj->pos.pvg[0],
-                        &obj->pos.ra, &obj->pos.dec,
-                        &obj->pos.az, &obj->pos.alt);
+    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
     return 0;
 }
 

@@ -293,9 +293,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_sub(ph, obs->earth_pvh[0], pg);
     vec3_copy(pg, obj->pos.pvg[0]);
     obj->pos.pvg[0][3] = 1.0; // AU unit.
-    compute_coordinates(obs, obj->pos.pvg[0],
-                        &obj->pos.ra, &obj->pos.dec,
-                        &obj->pos.az, &obj->pos.alt);
+    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
 
     // Compute vmag.
     // XXX: move this into algo.

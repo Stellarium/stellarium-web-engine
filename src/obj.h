@@ -183,7 +183,6 @@ struct obj
     struct {
         double pvg[2][4];   // ICRS pos and speed in xyzw.
         double ra, dec;     // CIRS polar.
-        double az, alt;     // Observed polar.
     } pos;
 };
 

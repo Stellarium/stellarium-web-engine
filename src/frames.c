@@ -81,8 +81,7 @@ int convert_coordinates(const observer_t *obs,
 // compute various coordinates.
 int compute_coordinates(const observer_t *obs,
                         const double icrs[4],
-                        double *ra, double *dec,
-                        double *az,   double *alt)
+                        double *ra, double *dec)
 {
     double pos[4];
     double ri, di;
@@ -92,12 +91,6 @@ int compute_coordinates(const observer_t *obs,
         eraC2s(pos, &ri, &di);
         if (ra) *ra = eraAnp(ri);
         if (dec) *dec = eraAnpm(di);
-    }
-    convert_coordinates(obs, FRAME_CIRS, FRAME_OBSERVED, 0, pos, pos);
-    if (az || alt) {
-        eraC2s(pos, &ri, &di);
-        if (az) *az = eraAnp(ri);
-        if (alt) *alt = eraAnpm(di);
     }
     return 0;
 }
