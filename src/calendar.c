@@ -276,6 +276,14 @@ void calendar_print(void)
                  USER_PASS(&utcoffset), print_callback);
 }
 
+static bool is_obj_hidden(obj_t *obj, const observer_t *obs)
+{
+    const double (*observed)[4];
+    if (!obj) return true;
+    observed = obj->user;
+    return observed[2] < 0;
+}
+
 static int check_event(const event_type_t *ev_type,
                        const observer_t *obs,
                        const obj_t *o1, const obj_t *o2,
@@ -284,7 +292,9 @@ static int check_event(const event_type_t *ev_type,
 {
     double v, time = obs->tt;
     event_t *ev;
-    bool hidden = (o1->pos.alt < 0) && (!o2 || o2->pos.alt < 0);
+    bool hidden = false;
+
+    hidden = is_obj_hidden(o1, obs) && is_obj_hidden(o2, obs);
     if (!(flags & CALENDAR_HIDDEN) && hidden)
         v = NAN;
     else
@@ -362,6 +372,8 @@ static int obj_add_f(const char *id, void *user)
     if (strcmp(id, "EARTH") == 0) return 0;
     assert(objs[*i] == NULL);
     objs[*i] = obj_get(NULL, id, 0);
+    // Extra data for observed position.
+    objs[*i]->user = calloc(4, sizeof(double));
     (*i)++;
     return 0;
 }
@@ -404,6 +416,7 @@ void calendar_delete(calendar_t *cal)
 
     // Release all objects.
     for (i = 0; i < cal->nb_objs; i++) {
+        free(cal->objs[i]->user);
         obj_release(cal->objs[i]);
     }
     free(cal->objs);
@@ -426,8 +439,11 @@ int calendar_compute(calendar_t *cal)
     // Only compute event for one time iteration.
     cal->obs.tt = cal->time;
     observer_update(&cal->obs, true);
-    for (i = 0; i < cal->nb_objs; i++)
+    for (i = 0; i < cal->nb_objs; i++) {
         obj_update(cal->objs[i], &cal->obs, 0);
+        convert_coordinates(&cal->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            cal->objs[i]->pos.pvg[0], cal->objs[i]->user);
+    }
     // Check two bodies events.
     for (i = 0; i < cal->nb_objs; i++)
     for (j = 0; j < cal->nb_objs; j++) {
