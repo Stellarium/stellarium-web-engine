@@ -105,7 +105,7 @@ Module.afterInit(function() {
         Module._core_on_mouse(id, 1, relX, relY);
       }
       render();
-    });
+    }, {passive: true});
     canvas.addEventListener('touchmove', function(e) {
       e.preventDefault();
       var rect = canvas.getBoundingClientRect();
@@ -116,7 +116,7 @@ Module.afterInit(function() {
         Module._core_on_mouse(id, -1, relX, relY);
       }
       render();
-    });
+    }, {passive: false});
     canvas.addEventListener('touchend', function(e) {
       var rect = canvas.getBoundingClientRect();
       for (var i = 0; i < e.changedTouches.length; i++) {
@@ -153,8 +153,8 @@ Module.afterInit(function() {
       render();
       return false;
     };
-    canvas.addEventListener('mousewheel', onWheelEvent);
-    canvas.addEventListener('DOMMouseScroll', onWheelEvent);
+    canvas.addEventListener('mousewheel', onWheelEvent, {passive: false});
+    canvas.addEventListener('DOMMouseScroll', onWheelEvent, {passive: false});
   };
 
   Module.change(function() {
