@@ -336,7 +336,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
-        eraS2c(con->stars[i]->pos.az, con->stars[i]->pos.alt, lines[i]);
+        convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            con->stars[i]->pos.pvg[0], lines[i]);
         vec3_add(pos, lines[i], pos);
     }
     for (i = 0; i < con->count; i += 2) {
