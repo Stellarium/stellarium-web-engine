@@ -27,6 +27,12 @@ struct calendar
     int flags;
 };
 
+// Extra position data that we compute for each object and needed to check
+// some events.
+typedef struct {
+    double obs_z;  // Z value of observed position (if < 0 below horizon).
+} extra_data_t;
+
 static inline uint32_t s4toi(const char s[4])
 {
     return ((uint32_t)s[0] << 0) +
@@ -278,10 +284,10 @@ void calendar_print(void)
 
 static bool is_obj_hidden(obj_t *obj, const observer_t *obs)
 {
-    const double (*observed)[4];
+    const extra_data_t *extra;
     if (!obj) return true;
-    observed = obj->user;
-    return observed[2] < 0;
+    extra = obj->user;
+    return extra->obs_z < 0;
 }
 
 static int check_event(const event_type_t *ev_type,
@@ -373,7 +379,7 @@ static int obj_add_f(const char *id, void *user)
     assert(objs[*i] == NULL);
     objs[*i] = obj_get(NULL, id, 0);
     // Extra data for observed position.
-    objs[*i]->user = calloc(4, sizeof(double));
+    objs[*i]->user = calloc(1, sizeof(extra_data_t));
     (*i)++;
     return 0;
 }
@@ -428,11 +434,12 @@ void calendar_delete(calendar_t *cal)
 EMSCRIPTEN_KEEPALIVE
 int calendar_compute(calendar_t *cal)
 {
-    double step = DHOUR;
+    double step = DHOUR, observed[4];
     int i, j;
     obj_t *o1, *o2;
     const event_type_t *ev_type;
     event_t *ev, *ev_tmp;
+    extra_data_t *extra;
 
     if (cal->time >= cal->end) goto end;
 
@@ -441,8 +448,11 @@ int calendar_compute(calendar_t *cal)
     observer_update(&cal->obs, true);
     for (i = 0; i < cal->nb_objs; i++) {
         obj_update(cal->objs[i], &cal->obs, 0);
+        // Compute extra dat.
         convert_coordinates(&cal->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            cal->objs[i]->pos.pvg[0], cal->objs[i]->user);
+                            cal->objs[i]->pos.pvg[0], observed);
+        extra = cal->objs[i]->user;
+        extra->obs_z = observed[2];
     }
     // Check two bodies events.
     for (i = 0; i < cal->nb_objs; i++)
