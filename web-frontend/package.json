@@ -10,7 +10,6 @@
     "build": "CDN_ENV=${CDN_ENV} node build/build.js"
   },
   "dependencies": {
-    "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "jquery": "^3.3.1",
     "mingo": "^2.2.2",

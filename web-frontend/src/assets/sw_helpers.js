@@ -8,7 +8,6 @@
 
 import Vue from 'vue'
 import _ from 'lodash'
-import axios from 'axios'
 import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 import Moment from 'moment'
@@ -696,10 +695,10 @@ const swh = {
     }
     if (!title) return Promise.reject(new Error("Can't find wikipedia compatible name"))
 
-    return axios.get('https://en.wikipedia.org/w/api.php?action=query&redirects&prop=extracts&exintro&exlimit=1&exchars=300&format=json&origin=*&titles=' + title,
+    return fetch('https://en.wikipedia.org/w/api.php?action=query&redirects&prop=extracts&exintro&exlimit=1&exchars=300&format=json&origin=*&titles=' + title,
       {headers: { 'Content-Type': 'application/json; charset=UTF-8' }})
       .then(response => {
-        return response.data
+        return response.json()
       })
   },
 
