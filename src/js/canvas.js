@@ -25,12 +25,14 @@ Module.afterInit(function() {
   var checkForCanvasResize = function () {
     window.requestAnimationFrame(function() {
       var canvas = Module.canvas;
-      var sizeChanged = (canvas.width !== $(canvas).width()) || (canvas.height !== $(canvas).height())
-      canvas.width = $(canvas).width();
-      canvas.height = $(canvas).height();
-      // Calls itself at each frame
-      checkForCanvasResize();
+      var displayWidth  = Math.floor(canvas.clientWidth);
+      var displayHeight = Math.floor(canvas.clientHeight);
+      var sizeChanged = (canvas.width  !== displayWidth) ||
+                        (canvas.height !== displayHeight);
+      checkForCanvasResize(); // Calls itself at each frame
       if (sizeChanged) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
         render();
       }
     })
