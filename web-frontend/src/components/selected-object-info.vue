@@ -296,7 +296,8 @@ export default {
       if (this.$stel.core.selection) {
         this.$stel.core.lock = this.$stel.core.selection
         this.$stel.core.lock.update()
-        this.$stel.core.lookat(this.$stel.core.lock.azalt, 1.0)
+        let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', this.$stel.core.lock.icrs)
+        this.$stel.core.lookat(azalt, 1.0)
       }
     },
     zoomInButtonClicked: function () {
@@ -304,7 +305,8 @@ export default {
       let currentFov = this.$store.state.stel.fov * 180 / Math.PI
       for (let i in fovs) {
         if (fovs[i] < currentFov - 0.0001) {
-          this.$stel.core.lookat(this.$stel.core.lock.azalt, 1.0, fovs[i] * Math.PI / 180)
+          let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', this.$stel.core.lock.icrs)
+          this.$stel.core.lookat(azalt, 1.0, fovs[i] * Math.PI / 180)
           return
         }
       }
@@ -316,7 +318,8 @@ export default {
       for (let i in fovs) {
         let f = fovs[fovs.length - i - 1]
         if (f > currentFov + 0.0001) {
-          this.$stel.core.lookat(this.$stel.core.lock.azalt, 1.0, f * Math.PI / 180)
+          let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', this.$stel.core.lock.icrs)
+          this.$stel.core.lookat(azalt, 1.0, f * Math.PI / 180)
           return
         }
       }

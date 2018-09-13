@@ -601,63 +601,52 @@ const swh = {
   },
 
   sweObj2SkySource: function (obj) {
-    let nsid
     let $stel = Vue.prototype.$stel
-    if (obj.id.startsWith('NSID ')) {
-      nsid = swh.nsidDecimalToHex(obj.id.replace(/^NSID /, ''))
-    }
-    if (!nsid && obj.id.startsWith('GAIA ')) {
-      nsid = swh.nsidDecimalToHex(obj.id.replace(/^GAIA /, ''))
-    }
-    if (obj.id === '' && obj.nsid) {
-      // Case of objects created dynamically using core.createObj()
-      nsid = obj.nsid
-    }
-    if (nsid) {
-      return NoctuaSkyClient.skysources.get(nsid).then(res => {
-        return res
-      }, reason => {
-        if (obj.name.startsWith('GAIA')) {
-          console.log('Generate Gaia object info from StelWebEngine object')
-          let radecICRS = $stel.c2s(obj.icrs)
-          let raICRS = $stel.anp(radecICRS[0])
-          let decICRS = $stel.anpm(radecICRS[1])
-          let ss = {
-            model: 'star',
-            nsid: nsid,
-            types: ['*'],
-            names: [obj.name.replace(/^GAIA /, 'Gaia DR2 ')],
-            modelData: {
-              Vmag: obj.vmag.v,
-              ra: raICRS * 180 / Math.PI,
-              de: decICRS * 180 / Math.PI
-            }
-          }
-          return ss
-        } else {
-          console.log("Couldn't find skysource for NSID " + nsid + ': ' + reason)
-          throw reason
+    let names = obj.names()
+
+    let printErr = function (err, n) {
+      let gaiaName
+      for (let i in names) {
+        if (names[i].startsWith('GAIA')) {
+          gaiaName = names[i]
         }
-      })
+      }
+      if (gaiaName) {
+        console.log('Generate Gaia object info from StelWebEngine object')
+        let radecICRS = $stel.c2s(obj.icrs)
+        let raICRS = $stel.anp(radecICRS[0])
+        let decICRS = $stel.anpm(radecICRS[1])
+        let ss = {
+          model: 'star',
+          types: ['*'],
+          names: [obj.name.replace(/^GAIA /, 'Gaia DR2 ')],
+          modelData: {
+            Vmag: obj.vmag.v,
+            ra: raICRS * 180 / Math.PI,
+            de: decICRS * 180 / Math.PI
+          }
+        }
+        return ss
+      }
+      console.log(err)
+      console.log("Couldn't find skysource for name: " + n)
+      throw err
     }
 
-    let searchName = obj.id
-    if (searchName === 'HD 148478') searchName = 'Antares'
-    if (searchName.startsWith('CST ')) {
-      searchName = searchName.substring(4)
-    }
-    if (searchName.startsWith('NORAD ')) {
-      searchName = 'NORAD ' + searchName.substring(6).replace(/^0+/, '')
-    }
-    if (obj.type === 'MPl') {
-      searchName = '(' + obj.id.replace(/^0+/, '') + ') ' + obj.name
-    }
-    return NoctuaSkyClient.skysources.getByName(searchName).then(res => {
+    return NoctuaSkyClient.skysources.getByName(names[0]).then(res => {
       return res
     }, err => {
-      console.log(err)
-      console.log("Couldn't find skysource for name: " + searchName)
-      throw err
+      if (names.length === 1) return printErr(err, names[0])
+      return NoctuaSkyClient.skysources.getByName(names[1]).then(res => {
+        return res
+      }, err => {
+        if (names.length === 2) return printErr(err, names[1])
+        return NoctuaSkyClient.skysources.getByName(names[2]).then(res => {
+          return res
+        }, err => {
+          return printErr(err, names[2])
+        })
+      })
     })
   },
 
@@ -667,7 +656,8 @@ const swh = {
     $stel.core.selection = obj
     $stel.core.lock = obj
     $stel.core.lock.update()
-    $stel.core.lookat($stel.core.lock.azalt, 1.0)
+    let azalt = $stel.convertPosition($stel.core.observer, 'ICRS', 'OBSERVED', $stel.core.lock.icrs)
+    $stel.core.lookat(azalt, 1.0)
   },
 
   // Get data for a SkySource from wikipedia

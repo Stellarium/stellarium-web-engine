@@ -110,24 +110,22 @@ export default {
     setTimeAfterSunSet: function () {
       // Look for the next time starting from now on when the night Sky is visible
       // i.e. when sun is more than 10 degree below horizon.
-      // If no such time was found (e.g. in a norhtern country in summer),
+      // If no such time was found (e.g. in a northern country in summer),
       // we default to current time.
-      var sun = this.$stel.getObj('Sun')
-      let d = new Date()
-      d.setMJD(this.$stel.core.observer.utc)
-      d = new Moment(d)
+      let sun = this.$stel.getObj('Sun')
+      let obs = this.$stel.observer.clone()
+      let utc = obs.utc
       let i = 0
-      for (i = 0; i < 24 * 60 + 1; i++) {
-        this.$stel.core.observer.utc = d
-        d.local()
-        sun.update()
-        let alt = sun.alt
+      for (i = 0; i < 24 * 60 / 5 + 1; i++) {
+        obs.utc = utc + 1.0 / (24 * 60) * (i * 5)
+        sun.update(obs)
+        let azalt = this.$stel.convertPosition(obs, 'ICRS', 'OBSERVED', sun.icrs)
+        let alt = this.$stel.anpm(this.$stel.c2s(azalt)[1])
         if (alt < -10 * Math.PI / 180) {
           break
         }
-        d.add(5, 'minutes')
       }
-      this.$stel.core.observer.utc = d.toDate().getMJD()
+      this.$stel.observer.utc = obs.utc
       this.startTimeIsSet = true
     },
     setStateFromQueryArgs: function () {

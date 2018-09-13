@@ -68,7 +68,8 @@ export default {
       let ss = this.$stel.getObjByNSID(event.o1.nsid)
       this.$stel.core.selection = ss
       ss.update()
-      this.$stel.core.lookat(ss.azalt, 1.0)
+      let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', ss.icrs)
+      this.$stel.core.lookat(azalt, 1.0)
     }
   },
   computed: {

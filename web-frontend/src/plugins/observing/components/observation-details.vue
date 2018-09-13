@@ -313,7 +313,7 @@ export default {
           ss = this.$stel.createObj(obs.target.model, obs.target)
         }
         ss.update()
-        azalt = ss.azalt
+        azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', ss.icrs)
       }
       let expandedObservingSetup = NoctuaSkyClient.equipments.fullEquipmentInstanceState(obs.observingSetup)
       let fp = expandedObservingSetup.footprint({ra: 0, de: 0})
