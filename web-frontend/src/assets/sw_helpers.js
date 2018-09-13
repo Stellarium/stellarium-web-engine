@@ -12,11 +12,6 @@ import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 import Moment from 'moment'
 
-// jquery is used inside StelWebEngine code as a global
-import $ from 'jquery'
-window.jQuery = $
-window.$ = $
-
 var DDDate = Date
 DDDate.prototype.getJD = function () {
   return (this.getTime() / 86400000) + 2440587.5
