@@ -487,8 +487,10 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
         vec4_copy(obj->pos.pvg[0], v);
         return args_value_new("v4", "radec", v);
     }
+    // XXX: deprecated argument.
     if (str_equ(attr->name, "azalt")) {
-        eraS2c(obj->pos.az, obj->pos.alt, v);
+        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            obj->pos.pvg[0], v);
         return args_value_new("v3", "azalt", v);
     }
 
