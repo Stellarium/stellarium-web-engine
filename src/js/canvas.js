@@ -56,27 +56,31 @@ Module.afterInit(function() {
   };
 
   var setupMouse = function() {
-    var canvas = $(Module.canvas);
+    var canvas = Module.canvas;
     var mouseDown = false;
-    canvas.mousedown(function(e) {
+    function getMousePos(evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousedown', function(e) {
       var that = this;
       e = e || event;
       fixPageXY(e);
-      var parentOffset = $(this).offset();
-      var relX = e.pageX - parentOffset.left;
-      var relY = e.pageY - parentOffset.top;
       mouseDown = true;
-      Module._core_on_mouse(0, 1, relX, relY);
+      var pos = getMousePos(e);
+      Module._core_on_mouse(0, 1, pos.x, pos.y);
       render();
 
       document.onmouseup = function(e) {
         e = e || event;
         fixPageXY(e);
-        var parentOffset = $(that).offset();
-        var relX = e.pageX - parentOffset.left;
-        var relY = e.pageY - parentOffset.top;
         mouseDown = false;
-        Module._core_on_mouse(0, 0, relX, relY);
+        var pos = getMousePos(e);
+        Module._core_on_mouse(0, 0, pos.x, pos.y);
         render();
       };
       document.onmouseleave = function(e) {
@@ -86,44 +90,39 @@ Module.afterInit(function() {
       document.onmousemove = function(e) {
         e = e || event;
         fixPageXY(e);
-        var parentOffset = $(that).offset();
-        var relX = e.pageX - parentOffset.left;
-        var relY = e.pageY - parentOffset.top;
-        Module._core_on_mouse(0, mouseDown ? 1 : 0, relX, relY);
+        var pos = getMousePos(e);
+        Module._core_on_mouse(0, mouseDown ? 1 : 0, pos.x, pos.y);
         if (mouseDown) render();
       }
     });
 
-    canvas.on('touchstart', function(e) {
-      e = e.originalEvent;
-      var parentOffset = $(this).offset();
+    canvas.addEventListener('touchstart', function(e) {
+      var rect = canvas.getBoundingClientRect();
       for (var i = 0; i < e.changedTouches.length; i++) {
         var id = e.changedTouches[i].identifier;
-        var relX = e.changedTouches[i].pageX - parentOffset.left;
-        var relY = e.changedTouches[i].pageY - parentOffset.top;
+        var relX = e.changedTouches[i].pageX - rect.left;
+        var relY = e.changedTouches[i].pageY - rect.top;
         Module._core_on_mouse(id, 1, relX, relY);
       }
       render();
     });
-    canvas.on('touchmove', function(e) {
+    canvas.addEventListener('touchmove', function(e) {
       e.preventDefault();
-      e = e.originalEvent;
-      var parentOffset = $(this).offset();
+      var rect = canvas.getBoundingClientRect();
       for (var i = 0; i < e.changedTouches.length; i++) {
         var id = e.changedTouches[i].identifier;
-        var relX = e.changedTouches[i].pageX - parentOffset.left;
-        var relY = e.changedTouches[i].pageY - parentOffset.top;
+        var relX = e.changedTouches[i].pageX - rect.left;
+        var relY = e.changedTouches[i].pageY - rect.top;
         Module._core_on_mouse(id, -1, relX, relY);
       }
       render();
     });
-    canvas.on('touchend', function(e) {
-      e = e.originalEvent;
-      var parentOffset = $(this).offset();
+    canvas.addEventListener('touchend', function(e) {
+      var rect = canvas.getBoundingClientRect();
       for (var i = 0; i < e.changedTouches.length; i++) {
         var id = e.changedTouches[i].identifier;
-        var relX = e.changedTouches[i].pageX - parentOffset.left;
-        var relY = e.changedTouches[i].pageY - parentOffset.top;
+        var relX = e.changedTouches[i].pageX - rect.left;
+        var relY = e.changedTouches[i].pageY - rect.top;
         Module._core_on_mouse(id, 0, relX, relY);
       }
       render();
@@ -144,18 +143,18 @@ Module.afterInit(function() {
       return delta;
     }
 
-    canvas.on('DOMMouseScroll mousewheel', function(e) {
-      e = e.originalEvent;
+    var onWheelEvent = function(e) {
+      e.preventDefault();
       fixPageXY(e);
-      var parentOffset = $(this).offset();
-      var relX = e.pageX - parentOffset.left;
-      var relY = e.pageY - parentOffset.top;
+      var pos = getMousePos(e);
       var zoom_factor = 1.05;
       var delta = getMouseWheelDelta(e);
-      Module._core_on_zoom(Math.pow(zoom_factor, delta), relX, relY);
+      Module._core_on_zoom(Math.pow(zoom_factor, delta), pos.x, pos.y);
       render();
       return false;
-    });
+    };
+    canvas.addEventListener('mousewheel', onWheelEvent);
+    canvas.addEventListener('DOMMouseScroll', onWheelEvent);
   };
 
   Module.change(function() {
