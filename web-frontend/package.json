@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
+    "lodash": "~>4.17.5",
     "mingo": "^2.2.2",
     "moment": "^2.22.2",
     "store": "^2.0.12",
@@ -23,8 +24,7 @@
     "vue-router": "^3.0.1",
     "vue2-google-maps": "^0.9.7",
     "vuetify": "^1.0.18",
-    "vuex": "^3.0.1",
-    "lodash": "~>4.17.5"
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^8.6.0",
