@@ -157,6 +157,7 @@ struct obj_klass
  *   next       - Pointer to the next sibling.
  *   observer_hash - Hash of the observer the last time obj_update was called.
  *                   Can be used to skip update.
+ *   user       - Pointer that can be used for anything.
  *   vmag       - Visual magnitude.
  *   pos        - TODO: for the moment this is a struct with various computed
  *                positions.  I want to replace it with a single ICRS
@@ -175,6 +176,7 @@ struct obj
     obj_t       *children, *prev, *next;
 
     uint64_t    observer_hash;
+    void *user;
 
     // Must be up to date after a call to obj_update.
     double vmag;
