@@ -32,32 +32,6 @@ typedef struct photo {
     double      mat[4][4];
 } photo_t;
 
-static int photo_render(const obj_t *obj, const painter_t *painter);
-static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
-                                const json_value *args);
-static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
-                                        const json_value *args);
-
-static obj_klass_t photo_klass = {
-    .id         = "photo",
-    .size       = sizeof(photo_t),
-    .render     = photo_render,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(photo_t, visible.target)),
-        PROPERTY("url", "s", .fn = photo_fn_url),
-        PROPERTY("calibration", "json", .fn = photo_fn_calibration),
-        PROPERTY("render_shape", "b", MEMBER(photo_t, render_shape)),
-        // Default properties.
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("radec"),
-        PROPERTY("az"),
-        PROPERTY("alt"),
-        PROPERTY("azalt"),
-        {}
-    },
-};
-OBJ_REGISTER(photo_klass)
 
 static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
                                 const json_value *args)
@@ -153,3 +127,28 @@ static int photo_render(const obj_t *obj, const painter_t *painter)
 
     return 0;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t photo_klass = {
+    .id         = "photo",
+    .size       = sizeof(photo_t),
+    .render     = photo_render,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(photo_t, visible.target)),
+        PROPERTY("url", "s", .fn = photo_fn_url),
+        PROPERTY("calibration", "json", .fn = photo_fn_calibration),
+        PROPERTY("render_shape", "b", MEMBER(photo_t, render_shape)),
+        // Default properties.
+        PROPERTY("ra"),
+        PROPERTY("dec"),
+        PROPERTY("radec"),
+        PROPERTY("az"),
+        PROPERTY("alt"),
+        PROPERTY("azalt"),
+        {}
+    },
+};
+OBJ_REGISTER(photo_klass)
