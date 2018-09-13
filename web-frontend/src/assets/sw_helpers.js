@@ -9,7 +9,6 @@
 import Vue from 'vue'
 import _ from 'lodash'
 import axios from 'axios'
-import hex2dec from 'hex2dec'
 import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
 import NoctuaSkyClient from '@/assets/noctuasky-client'
 import Moment from 'moment'
@@ -567,12 +566,6 @@ const swh = {
       link += '&alt=' + (context.$stel.core.observer.altitude * 180 / Math.PI).toPrecision(5)
     }
     return link
-  },
-
-  // Convert a decimal representation of a uint64 value to Hexadecimal
-  // Everything is done as strings as 64 bit ints don't work in Javascript
-  nsidDecimalToHex: function (nsidDecimal) {
-    return hex2dec.decToHex(nsidDecimal).substr(2)
   },
 
   // Return a SweObj matching a passed sky source JSON object if it's already instanciated in SWE

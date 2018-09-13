@@ -12,7 +12,6 @@
   "dependencies": {
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
-    "hex2dec": "^1.0.1",
     "jquery": "^3.3.1",
     "mingo": "^2.2.2",
     "moment": "^2.22.2",
