@@ -44,9 +44,9 @@ static const attribute_t DEFAULT_ATTRIBUTES[] = {
       .desc = "RA position angle (ICRS)." },
     { "dec", "f", .hint = "d_angle", MEMBER(obj_t, pos.dec),
       .desc = "Dec position angle (ICRS)."},
-    { "alt", "f", .hint = "d_angle", MEMBER(obj_t, pos.alt),
+    { "alt", "f", .hint = "d_angle", .fn = obj_fn_default_pos,
       .desc = "Altitude position angle" },
-    { "az", "f", .hint = "d_angle", MEMBER(obj_t, pos.az),
+    { "az", "f", .hint = "d_angle", .fn = obj_fn_default_pos,
       .desc = "Azimuth position angle" },
     { "radec", "v4", .hint = "radec", .fn = obj_fn_default_pos,
       .desc = "Cartesian 3d vector of the ra/dec position (ICRS)."},
@@ -476,7 +476,7 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
     double time;
-    double v[4] = {};
+    double v[4] = {}, az, alt;
     if (str_equ(attr->name, "distance")) {
         return args_value_new("f", "dist",
                 obj->pos.pvg[0][3] == 0 ? NAN :
@@ -492,6 +492,22 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
         convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
                             obj->pos.pvg[0], v);
         return args_value_new("v3", "azalt", v);
+    }
+    // XXX: deprecated argument.
+    if (str_equ(attr->name, "az")) {
+        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            obj->pos.pvg[0], v);
+        eraC2s(v, &az, &alt);
+        az = eraAnp(az);
+        return args_value_new("f", "d_angle", az);
+    }
+    // XXX: deprecated argument.
+    if (str_equ(attr->name, "alt")) {
+        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            obj->pos.pvg[0], v);
+        eraC2s(v, &az, &alt);
+        alt = eraAnp(alt);
+        return args_value_new("f", "d_angle", alt);
     }
 
     if (str_equ(attr->name, "rise")) {
