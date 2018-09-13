@@ -54,12 +54,3 @@ enum {
 int convert_coordinates(const observer_t *obs,
                         int origin, int dest, int flags,
                         const double v[4], double out[4]);
-
-
-// Given position and speed in Geocentric Equatorial J2000.0 (AU, AU/d),
-// compute various coordinates.
-// XXX: probably need to deprecate this function, and use
-// convert_coordinates instead.
-int compute_coordinates(const observer_t *obs,
-                        const double icrs[4],
-                        double *a_ra, double *a_dec);

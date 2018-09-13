@@ -75,23 +75,3 @@ int convert_coordinates(const observer_t *obs,
     vec4_copy(p, out);
     return 0;
 }
-
-
-// Given position and speed in Geocentric Equatorial J2000.0 (AU, AU/d),
-// compute various coordinates.
-int compute_coordinates(const observer_t *obs,
-                        const double icrs[4],
-                        double *ra, double *dec)
-{
-    double pos[4];
-    double ri, di;
-    vec4_copy(icrs, pos);
-    convert_coordinates(obs, FRAME_ICRS, FRAME_CIRS, 0, pos, pos);
-    if (ra || dec) {
-        eraC2s(pos, &ri, &di);
-        if (ra) *ra = eraAnp(ri);
-        if (dec) *dec = eraAnpm(di);
-    }
-    return 0;
-}
-
