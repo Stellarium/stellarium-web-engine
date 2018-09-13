@@ -226,8 +226,11 @@ static double satellite_compute_vmag(const satellite_t *sat,
                                      const observer_t *obs)
 {
     double illumination, fracil, elong, sun_pos[4], sat_pos[4], range;
+    double observed[4];
 
-    if (sat->obj.pos.alt < 0.0) return 99; // Below horizon.
+    convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                        sat->obj.pos.pvg[0], observed);
+    if (observed[2] < 0.0) return 99; // Below horizon.
     illumination = satellite_compute_earth_shadow(sat, obs);
     if (illumination == 0.0) {
         // Eclipsed.
