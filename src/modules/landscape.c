@@ -98,7 +98,7 @@ static double get_global_brightness(void)
     double sun_pos[4];
     double sin_sun_angle;
     double brightness = 0.0;
-    sun = obj_get(&core->obj, "SUN", 0);
+    sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
     obj_get_pos_observed(sun, core->observer, sun_pos);
     vec3_normalize(sun_pos, sun_pos);
     sin_sun_angle = sin(min(M_PI/ 2, asin(sun_pos[2]) + 8. * DD2R));

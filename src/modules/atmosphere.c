@@ -200,7 +200,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
     const double base_sun_vmag = -26.74;
 
     if (atm->visible.value == 0.0) return 0;
-    sun = obj_get(&core->obj, "SUN", 0);
+    sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
     assert(sun);
     obj_get_pos_observed(sun, painter->obs, sun_pos);
     vec3_normalize(sun_pos, sun_pos);
