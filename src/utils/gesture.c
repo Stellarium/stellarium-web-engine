@@ -133,16 +133,21 @@ int gesture_on_mouse(int n, gesture_t **gs, int id, int state,
             break;
     }
     gi = i;
-    if (gi >= n) return 0;
-    // If a gesture ended, we can make all the gestures possible again.
-    if (gs[gi]->state == GESTURE_END) {
-        for (i = 0; i < n; i++) gs[i]->state = GESTURE_POSSIBLE;
-        return 0;
-    }
+
     // If a gesture was triggered, we cancel all the others.
-    for (i = 0; i < n; i++) {
-        g = gs[i];
-        if (i != gi) g->state = GESTURE_FAILED;
+    if (gi < n) {
+        for (i = 0; i < n; i++) {
+            g = gs[i];
+            if (i != gi) g->state = GESTURE_FAILED;
+        }
     }
+
+    // If all touches are up, all the gestures become possible again.
+    if (!g_inputs.ts[0].down[0] && !g_inputs.ts[1].down[0]) {
+        for (i = 0; i < n; i++) {
+            gs[i]->state = GESTURE_POSSIBLE;
+        }
+    }
+
     return 0;
 }
