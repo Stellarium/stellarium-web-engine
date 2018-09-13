@@ -291,8 +291,8 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
     mat4_mul_vec3(obs->re2i, ph, ph);
     vec3_sub(ph, obs->earth_pvh[0], pg);
-    vec3_copy(pg, obj->pos.pvg[0]);
-    obj->pos.pvg[0][3] = 1.0; // AU unit.
+    vec3_copy(pg, obj->pvg[0]);
+    obj->pvg[0][3] = 1.0; // AU unit.
 
     // Compute vmag.
     // XXX: move this into algo.

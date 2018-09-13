@@ -176,13 +176,11 @@ struct obj
     obj_t       *children, *prev, *next;
 
     uint64_t    observer_hash;
-    void *user;
+    void        *user;
 
     // Must be up to date after a call to obj_update.
-    double vmag;
-    struct {
-        double pvg[2][4];   // ICRS pos and speed in xyzw.
-    } pos;
+    double      vmag;
+    double      pvg[2][4];   // ICRS pos and speed in xyzw.
 };
 
 /*

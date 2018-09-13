@@ -121,20 +121,20 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
     double dist;
     eraASTROM *astrom = (void*)&obs->astrom;
     eraPmpx(star->data.ra, star->data.de, 0, 0, star->data.plx, 0,
-            astrom->pmt, astrom->eb, obj->pos.pvg[0]);
+            astrom->pmt, astrom->eb, obj->pvg[0]);
 
     // Multiply by distance in AU:
     // XXX: we can do that a single time at the star creation!
     if (star->data.plx > 0.001) {
         dist = 1.0 / (star->data.plx) * PARSEC_IN_METER / DAU;
-        eraSxp(dist, obj->pos.pvg[0], obj->pos.pvg[0]);
-        obj->pos.pvg[0][3] = 1.0;
+        eraSxp(dist, obj->pvg[0], obj->pvg[0]);
+        obj->pvg[0][3] = 1.0;
     } else {
-        obj->pos.pvg[0][3] = 0.0;
+        obj->pvg[0][3] = 0.0;
     }
     obj->vmag = star->data.vmag;
     // Set speed to 0.
-    obj->pos.pvg[1][0] = obj->pos.pvg[1][1] = 0;
+    obj->pvg[1][0] = obj->pvg[1][1] = 0;
     return 0;
 }
 

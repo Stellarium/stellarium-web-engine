@@ -102,7 +102,7 @@ static int parse_anchors(const char *str, double mat[3][3])
         // XXX: instead we should get the star g_ra and g_dec, since they
         // shouldn't change.
         obj_update(star, core->observer, 0);
-        vec3_normalize(star->pos.pvg[0], pos[i]);
+        vec3_normalize(star->pvg[0], pos[i]);
         obj_release(star);
     }
     // Compute the transformation matrix M from uv to ICRS:
@@ -188,12 +188,12 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     constellation_create_stars(con);
     for (i = 0; i < con->count; i++) {
         obj_update(con->stars[i], obs, 0);
-        vec3_add(pos, con->stars[i]->pos.pvg[0], pos);
+        vec3_add(pos, con->stars[i]->pvg[0], pos);
     }
     vec3_normalize(pos, pos);
-    vec3_copy(pos, obj->pos.pvg[0]);
-    obj->pos.pvg[0][3] = 0; // At infinity.
-    vec4_set(obj->pos.pvg[1], 0, 0, 0, 0);
+    vec3_copy(pos, obj->pvg[0]);
+    obj->pvg[0][3] = 0; // At infinity.
+    vec4_set(obj->pvg[1], 0, 0, 0, 0);
 end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
@@ -332,7 +332,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
         convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            con->stars[i]->pos.pvg[0], lines[i]);
+                            con->stars[i]->pvg[0], lines[i]);
         vec3_add(pos, lines[i], pos);
     }
     for (i = 0; i < con->count; i += 2) {

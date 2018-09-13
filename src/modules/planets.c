@@ -424,10 +424,10 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 {
     planet_t *planet = (planet_t*)obj;
     planet_update_(planet, obs);
-    vec3_copy(planet->pvgc[0], obj->pos.pvg[0]);
-    vec3_copy(planet->pvgc[1], obj->pos.pvg[1]);
-    obj->pos.pvg[0][3] = 1.0; // AU.
-    obj->pos.pvg[1][3] = 1.0; // AU.
+    vec3_copy(planet->pvgc[0], obj->pvg[0]);
+    vec3_copy(planet->pvgc[1], obj->pvg[1]);
+    obj->pvg[0][3] = 1.0; // AU.
+    obj->pvg[1][3] = 1.0; // AU.
     return 0;
 }
 
@@ -600,13 +600,13 @@ static void planet_render_hips(const planet_t *planet,
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
 
-    vec4_copy(planet->obj.pos.pvg[0], pos);
+    vec4_copy(planet->obj.pvg[0], pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
     mat4_iscale(mat, radius, radius, radius);
 
     // Compute sun position.
-    vec3_copy(planets->sun->obj.pos.pvg[0], sun_pos);
+    vec3_copy(planets->sun->obj.pvg[0], sun_pos);
     sun_pos[3] = planets->sun->radius_m / DAU;
     painter.sun = &sun_pos;
 
@@ -661,18 +661,18 @@ static void planet_render_orbit(const planet_t *planet,
     if (planet->color[3]) vec3_copy(planet->color, painter.color);
 
     // Compute orbit elements.
-    vec3_sub(planet->obj.pos.pvg[0], planet->parent->obj.pos.pvg[0], p);
-    vec3_sub(planet->obj.pos.pvg[1], planet->parent->obj.pos.pvg[1], v);
+    vec3_sub(planet->obj.pvg[0], planet->parent->obj.pvg[0], p);
+    vec3_sub(planet->obj.pvg[1], planet->parent->obj.pvg[1], v);
     orbit_elements_from_pv(p, v, mu, &in, &om, &w, &a, &n, &ec, &ma);
 
     // Center the rendering on the parent planet.
-    vec4_copy(planet->parent->obj.pos.pvg[0], pos);
+    vec4_copy(planet->parent->obj.pvg[0], pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
     painter.transform = &mat;
 
     // Set the depth range same as the parent!!!!
-    dist = vec3_norm(planet->parent->obj.pos.pvg[0]);
+    dist = vec3_norm(planet->parent->obj.pvg[0]);
     depth_range[0] = dist * 0.5;
     depth_range[1] = dist * 2;
     painter.depth_range = &depth_range;
@@ -704,7 +704,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (planet->id == EARTH) return;
     if (planet->id != MOON && planet->obj.vmag > painter.mag_max) return;
 
-    vec4_copy(planet->obj.pos.pvg[0], pos);
+    vec4_copy(planet->obj.pvg[0], pos);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
 
     mag = core_get_observed_mag(planet->obj.vmag);
