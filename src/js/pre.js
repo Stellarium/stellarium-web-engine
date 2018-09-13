@@ -303,7 +303,7 @@ Module['convertPosition'] = function(obs, origin, dest, v) {
   for (i = 0; i < 4; i++)
     Module._setValue(ptr + i * 8, v4[i], 'double');
   Module._convert_coordinates(obs.v, origin, dest, 0, ptr, ptr + 4 * 8);
-  var ret = Array(v.length);
+  var ret = new Array(v.length);
   for (i = 0; i < v.length; i++)
     ret[i] = Module._getValue(ptr + (4 + i) * 8, 'double')
   Module._free(ptr);

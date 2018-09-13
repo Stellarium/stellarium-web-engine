@@ -59,7 +59,7 @@ Module.afterInit(function() {
 
     // Also add the children as properties
     var callback = Module.addFunction(function(id) {
-      var id = Module.Pointer_stringify(id);
+      id = Module.Pointer_stringify(id);
       if (!id) return; // Child with no id?
       Object.defineProperty(that, id, {
         enumerable: true,
