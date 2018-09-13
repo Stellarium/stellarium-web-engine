@@ -164,7 +164,6 @@ static int dso_update(obj_t *obj, const observer_t *obs, double dt)
     dso_t *dso = (dso_t*)obj;
     eraS2c(dso->data.ra, dso->data.de, obj->pos.pvg[0]);
     obj->vmag = dso->data.vmag;
-    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
     return 0;
 }
 

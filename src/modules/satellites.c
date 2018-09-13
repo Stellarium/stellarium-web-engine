@@ -307,9 +307,6 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
     obj->pos.pvg[0][3] = obj->pos.pvg[1][3] = 1.0; // AU.
 
     sat->obj.vmag = satellite_compute_vmag(sat, obs);
-
-    // XXX: We need to get ride of this!
-    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
     return 0;
 }
 

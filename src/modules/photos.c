@@ -32,7 +32,6 @@ typedef struct photo {
     double      mat[4][4];
 } photo_t;
 
-static int photo_update(obj_t *obj, const observer_t *obs, double dt);
 static int photo_render(const obj_t *obj, const painter_t *painter);
 static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
                                 const json_value *args);
@@ -42,7 +41,6 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
 static obj_klass_t photo_klass = {
     .id         = "photo",
     .size       = sizeof(photo_t),
-    .update     = photo_update,
     .render     = photo_render,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(photo_t, visible.target)),
@@ -105,12 +103,6 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
     json_object_push(val, "ra", json_double_new(cal->ra * DR2D));
     json_object_push(val, "dec", json_double_new(cal->dec * DR2D));
     return val;
-}
-
-static int photo_update(obj_t *obj, const observer_t *obs, double dt)
-{
-    compute_coordinates(obs, obj->pos.pvg[0], &obj->pos.ra, &obj->pos.dec);
-    return 0;
 }
 
 // Project from uv to the sphere.
