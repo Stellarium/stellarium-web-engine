@@ -233,6 +233,12 @@ void core_on_char(uint32_t c);
 void core_on_zoom(double zoom, double x, double y);
 
 /*
+ * Function: core_get_module
+ * Return a core module by name
+ */
+obj_t *core_get_module(const char *id);
+
+/*
  * Function: core_report_vmag_in_fov
  * Inform the core that an object with a given vmag is visible.
  *

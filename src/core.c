@@ -96,6 +96,15 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
     return NULL;
 }
 
+obj_t *core_get_module(const char *id)
+{
+    obj_t *module;
+    DL_FOREACH(core->obj.children, module) {
+        if (strcmp(module->id, id) == 0) return module;
+    }
+    return NULL;
+}
+
 static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     obj_t *module;
@@ -394,7 +403,7 @@ static bool is_below_horizon_hidden(void)
 {
     obj_t *ls;
     bool visible;
-    ls = obj_get(&core->obj, "landscapes", 0);
+    ls = core_get_module("landscapes");
     obj_get_attr(ls, "visible", "b", &visible);
     // XXX: we should let the lanscape module notify the core that it hides
     // the stars instead.
@@ -504,7 +513,7 @@ int core_render(int w, int h)
     projection_init(&proj, core->proj, core->fov, (float)w / h);
 
     // Show bayer only if the constellations are visible.
-    module = obj_get((obj_t*)core, "constellations", 0);
+    module = core_get_module("constellations");
     assert(module);
     obj_get_attr(module, "visible", "b", &cst_visible);
 
