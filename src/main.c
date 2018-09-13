@@ -185,7 +185,7 @@ static void loop_function(void)
     int fb_size[2];
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
 
-    core_render(fb_size[0], fb_size[1]);
+    core_render(fb_size[0], fb_size[1], 1.0);
     glfwSwapBuffers(g_window);
     glfwPollEvents();
 }

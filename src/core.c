@@ -454,7 +454,7 @@ static double get_absolute_mag(double value, double observed_mag)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int core_render(int w, int h)
+int core_render(int w, int h, double pixel_scale)
 {
     obj_t *module;
     projection_t proj;
@@ -489,6 +489,7 @@ int core_render(int w, int h)
         core->rend = render_gl_create();
     core->win_size[0] = w;
     core->win_size[1] = h;
+    core->win_pixels_scale = pixel_scale;
     labels_reset();
     r = core_update();
     if (r) updated = true;

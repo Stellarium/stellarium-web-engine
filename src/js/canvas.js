@@ -17,7 +17,7 @@ Module.afterInit(function() {
     window.requestAnimationFrame(function() {
       render.called = false;
       var canvas = Module.canvas;
-      if (Module._core_render(canvas.width, canvas.height))
+      if (Module._core_render(canvas.width, canvas.height, 1))
         render(); // Render again if needed.
     });
   }
