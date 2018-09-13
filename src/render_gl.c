@@ -259,14 +259,12 @@ static void points(renderer_t *rend_,
         p = points[i];
         convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p.pos, p.pos);
         project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
-        const float szx = p.size / 2 / s[0];
-        const float szy = p.size / 2 / s[1];
         for (j = 0; j < 4; j++) {
             idx = i * 4 + j;
             buf[idx].pos[3] = 1;
             vec3_to_float(p.pos, buf[i * 4 + j].pos);
-            buf[idx].shift[0] = (j % 2 - 0.5) * 2 * szx;
-            buf[idx].shift[1] = (j / 2 - 0.5) * 2 * szy;
+            buf[idx].shift[0] = (j % 2 - 0.5) * 2 * p.size / 2 / s[0];
+            buf[idx].shift[1] = (j / 2 - 0.5) * 2 * p.size / 2 / s[1];
             buf[idx].tex_pos[0] = j % 2;
             buf[idx].tex_pos[1] = j / 2;
             buf[idx].color[0] = p.color[0] * 255;
@@ -279,7 +277,7 @@ static void points(renderer_t *rend_,
         if (p.oid) {
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
-            p.size = szx * core->win_size[0];
+            p.size = p.size / 2 / s[0] * core->win_size[0];
             areas_add_circle(core->areas, p.pos, p.size, p.oid, p.hint);
         }
     }
