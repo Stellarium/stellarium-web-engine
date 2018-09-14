@@ -501,7 +501,14 @@ const NoctuaSkyClient = {
         },
         get: function (id) {
           if (that.offlineMode()) {
-            return that.state.observations.find(function (l) { return l.id === id })
+            return new Promise(function (resolve, reject) {
+              let obs = that.state.observations.find(function (l) { return l.id === id })
+              if (obs) {
+                resolve(obs)
+              } else {
+                reject(new Error('No such observation'))
+              }
+            })
           }
           return tmpApis.observations.get({id: id}).then(res => {
             return res.body
