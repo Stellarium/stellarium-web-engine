@@ -591,6 +591,10 @@ const swh = {
     let $stel = Vue.prototype.$stel
     let names = obj.names()
 
+    if (!names || !names.length) {
+      throw new Error("Can't find object without names")
+    }
+
     let printErr = function (err, n) {
       let gaiaName
       for (let i in names) {
