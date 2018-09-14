@@ -47,19 +47,11 @@ Vue.use(fullscreen)
 Vue.use(VueJsonp)
 // Vue.config.productionTip = false
 
-var context = require.context('./plugins', true, /^\.\/.*\/index\.js$/)
 var plugins = []
-context.keys().forEach(function (key) {
-  if (key.split('/').length === 3) {
-    let plugin = context(key).default
-    if (plugin.enabled !== false) {
-      plugins.push(plugin)
-    }
-  }
-})
+plugins.push(require('./plugins/calendar').default)
+plugins.push(require('./plugins/news').default)
+// plugins.push(require('./plugins/observing').default)
 
-// Don't use plugins for the moment
-// Vue.SWPlugins = []
 Vue.SWPlugins = plugins
 
 Vue.use(Router)
