@@ -776,10 +776,15 @@
           "type": "integer",
           "format": "int32"
         },
-        "owner": {
-          "type": "string"
+        "shortName": {
+          "type": "string",
+          "maxLength": 255
         },
         "country": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "streetAddress": {
           "type": "string",
           "maxLength": 255
         },
@@ -792,19 +797,14 @@
           "minimum": -90,
           "maximum": 90
         },
-        "shortName": {
-          "type": "string",
-          "maxLength": 255
-        },
         "lng": {
           "type": "number",
           "format": "float",
           "minimum": -180,
           "maximum": 180
         },
-        "streetAddress": {
-          "type": "string",
-          "maxLength": 255
+        "owner": {
+          "type": "string"
         }
       },
       "required": [
@@ -817,8 +817,26 @@
     "Observation": {
       "type": "object",
       "properties": {
-        "owner": {
-          "type": "string"
+        "observingSetup": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "difficulty": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 5
         },
         "id": {
           "type": "string"
@@ -829,37 +847,19 @@
           "minimum": 0,
           "maximum": 5
         },
-        "mjd": {
-          "type": "number",
-          "format": "float"
-        },
         "target": {
           "type": "string"
-        },
-        "difficulty": {
-          "type": "integer",
-          "format": "int32",
-          "minimum": 0,
-          "maximum": 5
         },
         "comment": {
           "type": "string",
           "maxLength": 1023
         },
-        "observingSetup": {
-          "type": "object",
-          "properties": {
-            "state": {
-              "type": "string"
-            },
-            "id": {
-              "type": "string",
-              "maxLength": 255
-            }
-          },
-          "required": [
-            "id"
-          ]
+        "mjd": {
+          "type": "number",
+          "format": "float"
+        },
+        "owner": {
+          "type": "string"
         },
         "location": {
           "type": "string"
