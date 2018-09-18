@@ -23,6 +23,19 @@
   .semi-transparent {opacity: 0.5;}
   .w-100 {width: 100%;}
   .h-100 {height: 100%;}
+
+  .radecVal {
+    display: inline-block;
+    font-family: monospace;
+    padding-right: 2px;
+    font-size: 13px;
+    font-weight: bold;
+  }
+
+  .radecUnit {
+    color: #dddddd;
+    font-weight: normal
+  }
 </style>
 
 <div id="app">
@@ -88,8 +101,25 @@
       <v-spacer></v-spacer>
     </v-footer>
 
-    <div id="stel" class="w-100 h-100" style="position: fixed;">
-      <canvas id="stel-canvas" class="w-100 h-100"></canvas>
+    <div id="stel" class="w-100 h-100" style="position: relative;">
+      <canvas id="stel-canvas" style="position:absolute;" class="w-100 h-100"></canvas>
+      <v-card v-if="stel && stel.core.selection"
+              style="position:absolute; top: 64px; width:430px;"
+              class="transparent">
+        <v-card-title primary-title>
+          <h3>{{stel.core.selection.name}}</h3>
+        </v-card-title>
+        <v-card-text>
+          <v-layout row wrap class="w-100">
+            <template v-for="i in getInfos(stel.core.selection)">
+              <v-flex xs4 style="color: #dddddd">{{i.key}}</v-flex>
+              <v-flex xs8 style="font-weight: 500">
+                <span v-html="i.value"></span>
+              </v-flex>
+            </template>
+          </v-layout>
+        </v-card-text>
+      </v-card>
     </div>
 
   </v-app>
@@ -145,6 +175,75 @@
           })
         }
       })
+    },
+    methods: {
+      getInfos: function(obj) {
+        var stel = this.stel;
+        obj.update();
+
+        var formatInt = function(num, padLen) {
+          let pad = new Array(1 + padLen).join('0')
+          return (pad + num).slice(-pad.length)
+        }
+
+        var formatRA = function(a) {
+          var raf = stel.a2tf(a, 1);
+          return '<div class="radecVal">' +
+            formatInt(raf.hours, 2) +
+            '<span class="radecUnit">h</span>&nbsp;</div>' +
+            '<div class="radecVal">' +
+            formatInt(raf.minutes, 2) +
+            '<span class="radecUnit">m</span></div>' +
+            '<div class="radecVal">' + formatInt(raf.seconds, 2) +
+            '.' + raf.fraction + '<span class="radecUnit">s</span></div>';
+        }
+
+        var formatDec = function(a) {
+          var raf = stel.a2af(a, 1);
+          return '<div class="radecVal">' +
+            raf.sign + formatInt(raf.degrees, 2) +
+            '<span class="radecUnit">°</span></div><div class="radecVal">' +
+            formatInt(raf.arcminutes, 2) +
+            '<span class="radecUnit">\'</span></div><div class="radecVal">' +
+            formatInt(raf.arcseconds, 2) + '.' + raf.fraction +
+            '<span class="radecUnit">"</span></div>';
+        }
+        var formatAz = function(a) {
+          let raf = stel.a2af(a, 1);
+          return '<div class="radecVal">' +
+            formatInt(raf.degrees < 0 ? raf.degrees + 180 : raf.degrees, 3) +
+            '<span class="radecUnit">°</span></div><div class="radecVal">' +
+            formatInt(raf.arcminutes, 2) +
+            '<span class="radecUnit">\'</span></div><div class="radecVal">' +
+            formatInt(raf.arcseconds, 2) + '.' + raf.fraction +
+            '<span class="radecUnit">"</span></div>';
+        }
+
+        var ret = [];
+        var obs = stel.core.observer;
+        var cirs = stel.convertPosition(obs, 'ICRS', 'CIRS', obj.icrs);
+        var radec = stel.c2s(cirs);
+        var ra = stel.anp(radec[0]);
+        var dec = stel.anpm(radec[1]);
+        var observed = stel.convertPosition(obs, 'CIRS', 'OBSERVED', cirs);
+        var azalt = stel.c2s(observed);
+        var az = stel.anp(azalt[0]);
+        var alt = stel.anp(azalt[1]);
+        var vmag = obj.vmag;
+        ret.push({
+          key: 'Magnitude',
+          value: vmag === undefined ? 'Unknown' : vmag.toFixed(2)
+        });
+        ret.push({
+          key: 'Ra/Dec',
+          value: formatRA(ra) + '&nbsp;&nbsp;&nbsp;' + formatDec(dec)
+        });
+        ret.push({
+          key: 'Az/Alt',
+          value: formatAz(az) + '&nbsp;&nbsp;&nbsp;' + formatDec(alt)
+        })
+        return ret;
+      }
     }
   })
 </script>
