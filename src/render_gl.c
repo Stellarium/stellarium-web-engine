@@ -637,8 +637,7 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
 
     GL(glEnable(GL_CULL_FACE));
     GL(glEnable(GL_BLEND));
-    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                           GL_ZERO, GL_ONE));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_ONE));
     GL(glDisable(GL_DEPTH_TEST));
 
     GL(glGenBuffers(1, &index_buffer));
