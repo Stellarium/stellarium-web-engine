@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<!--
+ Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+
+ This program is licensed under the terms of the GNU AGPL v3, or alternatively
+ under a commercial licence.
+
+ The terms of the AGPL v3 license can be found in the main directory of this
+ repository.
+-->
+
+<title>Stellarium Web Engine Page</title>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons"
+      rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css"
+      rel="stylesheet">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+<style>
+  .semi-transparent {opacity: 0.5;}
+  .w-100 {width: 100%;}
+  .h-100 {height: 100%;}
+</style>
+
+<div id="app">
+
+  <v-app dark>
+
+    <v-navigation-drawer absolute temporary clipped v-model="drawer" app>
+      <v-list dense>
+        <v-list-tile @click="">
+          <v-list-tile-action>
+            <v-icon>settings</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-list-tile-title>Settings</v-list-tile-title>
+          </v-list-tile-content>
+        </v-list-tile>
+      </v-list>
+    </v-navigation-drawer>
+
+    <v-toolbar app fixed clipped-left class="semi-transparent">
+      <v-toolbar-side-icon @click.stop="drawer = !drawer">
+      </v-toolbar-side-icon>
+      <v-toolbar-title>Stellarium<sup>Web</sup></v-toolbar-title>
+    </v-toolbar>
+
+    <v-footer app fixed class="transparent" style="height:auto;">
+      <v-spacer></v-spacer>
+      <stel-button label="Constellations"
+                   img="static/imgs/symbols/btn-cst-lines.svg"
+                   :obj="stel && stel.core.constellations.lines"
+                   attr="visible">
+      </stel-button>
+      <stel-button label="Atmosphere"
+                   img="static/imgs/symbols/btn-atmosphere.svg"
+                   :obj="stel && stel.core.atmosphere"
+                   attr="visible">
+      </stel-button>
+      <stel-button label="Landscape"
+                   img="static/imgs/symbols/btn-landscape.svg"
+                   :obj="stel && stel.core.landscapes"
+                   attr="visible">
+      </stel-button>
+      <stel-button label="Azimuthal Grid"
+                   img="static/imgs/symbols/btn-azimuthal-grid.svg"
+                   :obj="stel && stel.core.lines.azimuthal"
+                   attr="visible">
+      </stel-button>
+      <stel-button label="Equatorial Grid"
+                   img="static/imgs/symbols/btn-equatorial-grid.svg"
+                   :obj="stel && stel.core.lines.equatorial"
+                   attr="visible">
+      </stel-button>
+      <stel-button label="Nebulae"
+                   img="static/imgs/symbols/btn-nebulae.svg"
+                   :obj="stel && stel.core.dsos"
+                   attr="visible">
+      </stel-button>
+      <stel-button label="DSS"
+                   img="static/imgs/symbols/btn-nebulae.svg"
+                   :obj="stel && stel.core.dss"
+                   attr="visible">
+      </stel-button>
+      <v-spacer></v-spacer>
+    </v-footer>
+
+    <div id="stel" class="w-100 h-100" style="position: fixed;">
+      <canvas id="stel-canvas" class="w-100 h-100"></canvas>
+    </div>
+
+  </v-app>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+<script src="static/js/stellarium-web-engine.js"></script>
+
+<!-- Button component -->
+<script type="text/x-template" id="stel-button-template">
+  <div class="stel-button shrink" :class="{'semi-transparent': !value}"
+       style="width:5rem; height:5rem;">
+    <a v-on:click='clicked'>
+      <img :src="img" class="w-100 h-100"/>
+    </a>
+  </div>
+</script>
+<script>
+  Vue.component('stel-button', {
+    template: '#stel-button-template',
+    props: ['label', 'img', 'obj', 'attr'],
+    computed: {
+      value: function() {
+        return this.obj && this.obj[this.attr]
+      }
+    },
+    methods: {
+      clicked: function() {
+        if (this.obj) this.obj[this.attr] = !this.obj[this.attr];
+      }
+    }
+  })
+</script>
+
+
+<script>
+  new Vue({
+    el: '#app',
+    data: {drawer: false, stel: null},
+    mounted: function() {
+      var that = this;
+      StelWebEngine({
+        wasmFile: 'static/js/stellarium-web-engine.wasm',
+        canvas: document.getElementById('stel-canvas'),
+        onReady: function(stel) {
+          that.stel = stel;
+          // Force ui update when there is any change.
+          stel.change(function(obj, attr) {
+            if (attr !== "hovered")
+              that.stel = Object.assign(Object.create(stel), {}, stel)
+          })
+        }
+      })
+    }
+  })
+</script>
