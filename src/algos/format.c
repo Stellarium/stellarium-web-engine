@@ -35,6 +35,25 @@ const char *format_time(char *buf, double t, double utcofs,
     return buf;
 }
 
+const char *format_angle(char *buf, double a, char type, int ndp,
+                         const char *fmt)
+{
+    int hmsf[4], dmsf[4];
+    char s[2] = {};
+    if (isnan(a)) return "NAN";
+    if (!fmt) ndp = 1;
+    if (type == 'h') {
+        fmt = fmt ?: "%s%02dh%02dm%02d.%01ds";
+        eraA2tf(ndp, a, &s, hmsf);
+        sprintf(buf, fmt, s, hmsf[0], hmsf[1], hmsf[2], hmsf[3]);
+    } else {
+        fmt = fmt ?: "%s%02d°%02d'%02d.%01d\"";
+        eraA2af(ndp, a, &s, dmsf);
+        sprintf(buf, fmt, s, dmsf[0], dmsf[1], dmsf[2], dmsf[3]);
+    }
+    return buf;
+}
+
 const char *format_hangle(char *buf, double a)
 {
     int hmsf[4];

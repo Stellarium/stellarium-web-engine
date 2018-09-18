@@ -111,6 +111,8 @@ double time_add_dtf(double utc, double utcoffset, int year,
  */
 const char *format_time(char *buf, double jdm, double utcoffset,
                         const char *format);
+const char *format_angle(char *buf, double a, char type, int ndp,
+                         const char *fmt);
 const char *format_dangle(char *buf, double a);
 const char *format_hangle(char *buf, double a);
 const char *format_dist(char *buf, double d); // d in AU.
