@@ -522,7 +522,7 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
         convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
                             obj->pvg[0], v);
         eraC2s(v, &az, &alt);
-        alt = eraAnp(alt);
+        alt = eraAnpm(alt);
         return args_value_new("f", "d_angle", alt);
     }
 
