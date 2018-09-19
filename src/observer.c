@@ -203,6 +203,8 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
     }
     obs->dirty = true;
     observer_recompute_hash(obs);
+    obj_changed(obj, "tt");
+    obj_changed(obj, "utc");
 }
 
 // Expose azalt vector to js.
