@@ -246,6 +246,8 @@ static obj_klass_t observer_klass = {
                  .on_changed = observer_on_changed),
         PROPERTY("refraction", "b", MEMBER(observer_t, refraction),
                  .on_changed = observer_on_changed),
+        PROPERTY("tt", "f", MEMBER(observer_t, tt),
+                 .hint = "mjd", .on_changed = observer_on_timeattr_changed),
         PROPERTY("ut1", "f", MEMBER(observer_t, ut1),
                  .hint = "mjd", .on_changed = observer_on_timeattr_changed),
         PROPERTY("utc", "f", MEMBER(observer_t, utc),
