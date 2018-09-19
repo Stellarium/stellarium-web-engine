@@ -132,17 +132,18 @@ for line in gzip.open(hip_file):
     hd = parse(line, 391, 396, type=int)
     if hd is None: continue
     hip = parse(line, 9, 14, type=int, required=True)
-    if hd in stars:
-        stars[hd] = stars[hd]._replace(hip=hip)
-        continue
     vmag = parse(line, 42, 46, zerobits=16, required=True)
     ra = parse(line, 52, 63, zerobits=8)
     de = parse(line, 65, 76, zerobits=8)
     if ra is None or de is None: continue
     plx = parse(line, 80, 86, default=0.0, zerobits=16)
+    plx /= 1000. # MAS to AS.
     bv = parse(line, 246, 251, default=0.0, zerobits=16)
-    stars[hd] = Star(hd=hd, hip=hip, vmag=vmag,
-                     ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv, sp=0)
+    # If the stars was in the HD catalog, we use the vmag from there.
+    if hd in stars: vmag = stars[hd].vmag
+    star = Star(hd=hd, hip=hip, vmag=vmag,
+                ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv, sp=0)
+    stars[hd] = star
 
 stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
 
