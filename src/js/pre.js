@@ -258,6 +258,11 @@ Module['c2s'] = function(v) {
   return [theta, phi];
 }
 
+Module['s2c'] = function(theta, phi) {
+  var cp = Math.cos(phi);
+  return [Math.cos(theta) * cp, Math.sin(theta) * cp, Math.sin(phi)];
+}
+
 // Normalize angle into the range 0 <= a < 2pi.
 Module['anp'] = function(a) {
   var v = a % (2 * Math.PI);
