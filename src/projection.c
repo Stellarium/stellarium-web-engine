@@ -24,6 +24,21 @@ void proj_perspective_init(projection_t *p, double fov, double aspect);
 void proj_stereographic_init(projection_t *p, double fov, double aspect);
 void proj_mercator_init(projection_t *p, double fov, double aspect);
 
+void proj_stereographic_compute_fov(double fov, double aspect,
+                                    double *fovx, double *fovy);
+
+void projection_compute_fovs(int type, double fov, double aspect,
+                             double *fovx, double *fovy)
+{
+    switch (type) {
+        case PROJ_STEREOGRAPHIC:
+            proj_stereographic_compute_fov(fov, aspect, fovx, fovy);
+            break;
+        default:
+            assert(false);
+    }
+}
+
 void projection_init(projection_t *p, int type, double fov, double aspect)
 {
     memset(p, 0, sizeof(*p));

@@ -194,6 +194,10 @@ struct core
         double      dst_fov;  // Destination fov (0 to ignore).
     } target;
 
+    // Auto computed from fov and screen aspect ratio.
+    double fovx;
+    double fovy;
+
     // Maintains a list of clickable/hoverable areas.
     areas_t         *areas;
 };

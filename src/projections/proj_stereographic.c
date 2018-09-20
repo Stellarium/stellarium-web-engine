@@ -64,13 +64,24 @@ static void proj_stereographic_backward(const projection_t *proj, int flags,
     vec3_mul(1.0 / (lqq + 1.0), p, out);
 }
 
-void proj_stereographic_init(projection_t *p, double fov, double aspect)
+void proj_stereographic_compute_fov(double fov, double aspect,
+                                    double *fovx, double *fovy)
+{
+    if (aspect < 1) {
+        *fovx = fov;
+        *fovy = 4 * atan(tan(fov / 4) / aspect);
+    } else {
+        *fovy = fov;
+        *fovx = 4 * atan(tan(fov / 4) * aspect);
+    }
+}
+
+void proj_stereographic_init(projection_t *p, double fovx, double aspect)
 {
     p->name          = "stereographic";
     p->type          = PROJ_STEREOGRAPHIC;
     p->project       = proj_stereographic_project;
     p->backward      = proj_stereographic_backward;
-    p->scaling[0]    = 2 * tan(fov / 4);
+    p->scaling[0]    = 2 * tan(fovx / 4);
     p->scaling[1]    = p->scaling[0] / aspect;
 }
-

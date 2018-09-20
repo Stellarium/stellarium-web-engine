@@ -82,7 +82,24 @@ struct projection
     void (*split)(const projection_t *proj, projection_t *out);
 };
 
-void projection_init(projection_t *proj, int type, double fov, double aspect);
+/*
+ * Function: projection_compute_fovs
+ * Compute the fov in x and y given the minimum fov and screen aspect ratio.
+ *
+ * This can be used before calling <projection_init> in order to compute
+ * fovx.
+ *
+ * Parameters:
+ *   proj_type  - One of the PROJ_TYPE value.
+ *   fov        - The minimum fov in x and y.
+ *   aspect     - The aspect ratio of the screen.
+ *   fovx       - Get the computed fov in x.
+ *   fovy       - Get the computed fov in y.
+ */
+void projection_compute_fovs(int proj_type, double fov, double aspect,
+                             double *fovx, double *fovy);
+
+void projection_init(projection_t *proj, int type, double fovx, double aspect);
 void projection_init_healpix(projection_t *proj, int nside, int pix,
                              bool swap, bool at_infinity);
 

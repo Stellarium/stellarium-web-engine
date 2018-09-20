@@ -166,7 +166,7 @@ static void mouse_to_observed(double x, double y, double p[3])
     double ratio = core->win_size[0] / core->win_size[1];
 
     mat4_invert(core->observer->ro2v, rv2o);
-    projection_init(&proj, core->proj, core->fov, ratio);
+    projection_init(&proj, core->proj, core->fovx, ratio);
 
     core_windows_to_ndc(pos, pos);
     project(&proj, PROJ_BACKWARD, 4, pos, pos);
@@ -388,6 +388,9 @@ static int core_update_direction(double dt)
 static int core_update(void)
 {
     bool r;
+    double aspect = core->win_size[0] / core->win_size[1];
+    projection_compute_fovs(core->proj, core->fov, aspect,
+                            &core->fovx, &core->fovy);
     observer_update(core->observer, true);
     // XXX: Ad-hoc formula!
     r = move_toward(&core->vmag_shift,
@@ -511,7 +514,7 @@ int core_render(int w, int h, double pixel_scale)
         core->fov *= ZOOM_FACTOR;
     core->observer->dirty = true;
 
-    projection_init(&proj, core->proj, core->fov, (float)w / h);
+    projection_init(&proj, core->proj, core->fovx, (double)w / h);
 
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");
