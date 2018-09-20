@@ -160,7 +160,8 @@ static void get_star_color(const char sp, double out[3])
 }
 
 static void star_render_name(const painter_t *painter, const star_data_t *s,
-                             const double pos[3], double size, double vmag)
+                             const double pos[3], double size, double vmag,
+                             double color[3])
 {
     const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
                            "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
@@ -168,7 +169,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     int bayer, bayer_n;
     const char *name = NULL;
     char tmp[8];
-    double label_color[4] = {1, 1, 1, 0.5};
+    double label_color[4] = {color[0], color[1], color[2], 0.5};
     if (!s->hip) return;
 
     name = identifiers_get(s->oid, "NAME");
@@ -223,7 +224,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
                             p, p);
         if (project(painter.proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE, 2, p, p))
-            star_render_name(&painter, s, p, size, mag);
+            star_render_name(&painter, s, p, size, mag, color);
     }
     return 0;
 }
@@ -578,7 +579,7 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         if (s->vmag <= painter.label_mag_max && !s->gaia)
-            star_render_name(&painter, s, p_ndc, size, mag);
+            star_render_name(&painter, s, p_ndc, size, mag, color);
     }
     paint_points(&painter, n, points, FRAME_VIEW);
     free(points);
