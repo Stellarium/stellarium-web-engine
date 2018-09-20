@@ -466,17 +466,23 @@ int core_render(int w, int h, double pixel_scale)
     int r;
     bool updated = false, cst_visible;
     double max_mag;
+    const double screen_area = (w / pixel_scale) * (h / pixel_scale);
 
     // Constants that define the magnitude needed to see objects, hints,
     // and labels.  Default values.
     const double max_hint_mag = 7.0;
-    const double max_label_mag = 3.0;
+    double max_label_mag;
 
     // XXX: Compute r_min and max_mag from the screen resolution.
     // I add a small security offset to max_mag to prevent bugs when we
     // zoom out.
     const float r_min = 0.01 * DD2R;
     max_mag = get_max_observed_mag(r_min) + 0.5;
+
+    // The number of labels we show is proportional to the screen area.
+    // I use my own screen (1920 * 1080) as a reference, with labels up
+    // to mag 3.
+    max_label_mag = 3.0 + 2.5 * log10(screen_area / (1920 * 1080));
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
