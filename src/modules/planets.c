@@ -86,6 +86,8 @@ typedef struct planets {
 
     // Earth shadow on a lunar eclipse.
     texture_t *earth_shadow_tex;
+    // Sun halo.
+    texture_t *halo_tex;
 
     // Status of the hipslist parsing.
     int         hipslist_parsed;
@@ -700,6 +702,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     point_t point;
     double hips_k = 2.0; // How soon we switch to the hips survey.
     char label[256];
+    planets_t *planets = (planets_t*)planet->obj.parent;
 
     if (planet->id == EARTH) return;
     if (planet->id != MOON && planet->obj.vmag > painter.mag_max) return;
@@ -757,10 +760,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
 
     if (mag <= painter.label_mag_max) {
-        mat4_mul_vec3(core->observer->ro2v, pos, pos);
+        mat4_mul_vec3(core->observer->ro2v, pos, vpos);
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
-                2, pos, pos)) {
+                2, vpos, vpos)) {
             if (r_scale == 1.0) strcpy(label, planet->name);
             else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
             labels_add(label, pos, point_r, 16, label_color, 0,
@@ -774,6 +777,13 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // hard to know in advance what depth range to use.  I leave this
     // disabled until I implement a deferred renderer.
     if ((0)) planet_render_orbit(planet, 1.0, &painter);
+
+    // Render the Sun halo.
+    if (planet->id == SUN) {
+        mat4_mul_vec3(core->observer->ro2v, pos, vpos);
+        project(painter.proj, PROJ_TO_NDC_SPACE, 2, vpos, vpos);
+        paint_texture(&painter, planets->halo_tex, NULL, vpos, 200.0, NULL, 0);
+    }
 }
 
 static int sort_cmp(const obj_t *a, const obj_t *b)
@@ -1031,6 +1041,8 @@ static int planets_init(obj_t *obj, json_value *args)
 
     planets->earth_shadow_tex =
         texture_from_url("asset://textures/earth_shadow.png", TF_LAZY_LOAD);
+    planets->halo_tex =
+        texture_from_url("asset://textures/halo.png", TF_LAZY_LOAD);
 
     return 0;
 }
