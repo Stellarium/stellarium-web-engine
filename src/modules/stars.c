@@ -71,11 +71,6 @@ typedef struct tile {
 } tile_t;
 
 
-static void star_render_name(const painter_t *painter, const star_data_t *s,
-                             const double pos[3], double size, double vmag);
-static void get_star_color(const char sp, double out[3]);
-
-
 // Precompute values about the star position to make rendering faster.
 static void compute_pv(double ra, double de,
                        double pra, double pde, double plx, star_data_t *s)
@@ -136,6 +131,59 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
     // Set speed to 0.
     obj->pvg[1][0] = obj->pvg[1][1] = 0;
     return 0;
+}
+
+static void get_star_color(const char sp, double out[3])
+{
+    int r, g, b;
+    switch (sp) {
+    case 'O':
+        r = 155; g = 176; b = 255; break;
+    case 'B':
+        r = 170; g = 191; b = 255; break;
+    case 'A':
+        r = 202; g = 215; b = 255; break;
+    case 'F':
+        r = 248; g = 247; b = 255; break;
+    case 'G':
+        r = 255; g = 244; b = 234; break;
+    case 'K':
+        r = 255; g = 210; b = 161; break;
+    case 'M':
+        r = 255; g = 204; b = 111; break;
+    default:
+        r = 255, g = 255, b = 255; break;
+    }
+    out[0] = r / 255.0;
+    out[1] = g / 255.0;
+    out[2] = b / 255.0;
+}
+
+static void star_render_name(const painter_t *painter, const star_data_t *s,
+                             const double pos[3], double size, double vmag)
+{
+    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
+                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
+                           "υ", "φ", "χ", "ψ", "ω"};
+    int bayer, bayer_n;
+    const char *name = NULL;
+    char tmp[8];
+    double label_color[4] = {1, 1, 1, 0.5};
+    if (!s->hip) return;
+
+    name = identifiers_get(s->oid, "NAME");
+    if (name) {
+        labels_add(name, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
+        return;
+    }
+    if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
+        bayer_get(s->hd, NULL, &bayer, &bayer_n);
+        if (bayer) {
+            sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
+            labels_add(tmp, pos, size, 13, label_color, 0, ANCHOR_AROUND,
+                       -vmag);
+        }
+    }
 }
 
 // Render a single star.
@@ -205,7 +253,6 @@ void star_get_designations(
 }
 
 void stars_load(const char *path, stars_t *stars);
-static void get_star_color(const char sp, double out[3]);
 
 static int stars_init(obj_t *obj, json_value *args);
 static int stars_render(const obj_t *obj, const painter_t *painter);
@@ -708,59 +755,6 @@ static obj_t *stars_add_res(obj_t *obj, json_value *val,
     if (!path) return NULL;
     sprintf(stars->survey_url, "%s/%s", base_path, path);
     return NULL;
-}
-
-static void star_render_name(const painter_t *painter, const star_data_t *s,
-                             const double pos[3], double size, double vmag)
-{
-    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
-                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
-                           "υ", "φ", "χ", "ψ", "ω"};
-    int bayer, bayer_n;
-    const char *name = NULL;
-    char tmp[8];
-    double label_color[4] = {1, 1, 1, 0.5};
-    if (!s->hip) return;
-
-    name = identifiers_get(s->oid, "NAME");
-    if (name) {
-        labels_add(name, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
-        return;
-    }
-    if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
-        bayer_get(s->hd, NULL, &bayer, &bayer_n);
-        if (bayer) {
-            sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add(tmp, pos, size, 13, label_color, 0, ANCHOR_AROUND,
-                       -vmag);
-        }
-    }
-}
-
-static void get_star_color(const char sp, double out[3])
-{
-    int r, g, b;
-    switch (sp) {
-    case 'O':
-        r = 155; g = 176; b = 255; break;
-    case 'B':
-        r = 170; g = 191; b = 255; break;
-    case 'A':
-        r = 202; g = 215; b = 255; break;
-    case 'F':
-        r = 248; g = 247; b = 255; break;
-    case 'G':
-        r = 255; g = 244; b = 234; break;
-    case 'K':
-        r = 255; g = 210; b = 161; break;
-    case 'M':
-        r = 255; g = 204; b = 111; break;
-    default:
-        r = 255, g = 255, b = 255; break;
-    }
-    out[0] = r / 255.0;
-    out[1] = g / 255.0;
-    out[2] = b / 255.0;
 }
 
 /*
