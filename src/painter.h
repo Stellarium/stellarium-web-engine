@@ -199,7 +199,7 @@ int paint_text(const painter_t *painter,
 // size in inch ?
 int paint_texture(const painter_t *painter,
                   texture_t *tex,
-                  double uv[4][2],
+                  const double uv[4][2],
                   const double pos[2],
                   double size,
                   const double color[4],

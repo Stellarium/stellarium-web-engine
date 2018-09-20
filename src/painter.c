@@ -151,14 +151,18 @@ int paint_text(const painter_t *painter, const char *text,
 
 int paint_texture(const painter_t *painter,
                   texture_t *tex,
-                  double uv[4][2],
+                  const double uv[4][2],
                   const double pos[2],
                   double size,
                   const double color[4],
                   double angle)
 {
     double c[4];
+    const double white[4] = {1, 1, 1, 1};
+    const double uv_full[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     if (!texture_load(tex, NULL)) return 0;
+    if (!color) color = white;
+    if (!uv) uv = uv_full;
     vec4_emul(painter->color, color, c);
     REND(painter->rend, texture, tex, uv, pos, size, c, angle);
     return 0;
