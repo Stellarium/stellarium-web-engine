@@ -97,20 +97,6 @@ void swe_gen_doc(void)
 
 #ifdef __EMSCRIPTEN__
 
-// Convenience angle format function that can be called from js.
-// For C code it is easier to use format_dangle and format_hangle directly.
-EMSCRIPTEN_KEEPALIVE
-const char *format_angle(double angle, const char *fmt)
-{
-    char *ret = calloc(1, 64);
-    if (strcmp(fmt, "dms") == 0)
-        format_dangle(ret, angle);
-    else if (strcmp(fmt, "hms") == 0)
-        format_hangle(ret, angle);
-    else assert(false);
-    return ret;
-}
-
 // Expose erfaA2tf to js.
 EMSCRIPTEN_KEEPALIVE
 char *a2tf_json(int resolution, double angle)
