@@ -333,6 +333,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     for (i = 0; i < con->count; i++) {
         convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0,
                             con->stars[i]->pvg[0], lines[i]);
+        lines[i][3] = 0; // To infinity.
         vec3_add(pos, lines[i], pos);
     }
     for (i = 0; i < con->count; i += 2) {
