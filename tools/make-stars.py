@@ -139,10 +139,13 @@ for line in gzip.open(hip_file):
     plx = parse(line, 80, 86, default=0.0, zerobits=16)
     plx /= 1000. # MAS to AS.
     bv = parse(line, 246, 251, default=0.0, zerobits=16)
-    # If the stars was in the HD catalog, we use the vmag from there.
-    if hd in stars: vmag = stars[hd].vmag
+    sp = 0
+    # If the stars was in the HD catalog, we use the vmag and sp from there.
+    if hd in stars:
+        vmag = stars[hd].vmag
+        sp = stars[hd].sp
     star = Star(hd=hd, hip=hip, vmag=vmag,
-                ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv, sp=0)
+                ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv, sp=sp)
     stars[hd] = star
 
 stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
