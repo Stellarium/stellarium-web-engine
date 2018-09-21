@@ -545,9 +545,12 @@ void dso_get_designations(
     char cat[128] = {};
     while (names && *names) {
         strncpy(cat, names, sizeof(cat) - 1);
-        if (!strchr(cat, ' ')) continue;
-        *strchr(cat, ' ') = '\0';
-        f(user, cat, names + strlen(cat) + 1);
+        if (!strchr(cat, ' ')) { // No catalog.
+            f(user, "", cat);
+        } else {
+            *strchr(cat, ' ') = '\0';
+            f(user, cat, names + strlen(cat) + 1);
+        }
         names += strlen(names) + 1;
     }
 }
