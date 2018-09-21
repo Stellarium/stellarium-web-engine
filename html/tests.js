@@ -227,23 +227,6 @@ var testCreate = function(stel) {
   assert(stel.getObj('NSID 0000000beefbeef2'));
 }
 
-var testFormat = function(stel) {
-  var angle = 15.0 * stel.D2R;
-  var o;
-  assert(stel.formatAngle(angle) == '+15°00\'00"');
-  assert(stel.formatAngle(angle, 'hms') == '+01h00m00s');
-  o = stel.a2tf(angle);
-  assert(JSON.stringify(o) === JSON.stringify({
-    sign: '+', hours: 1, minutes: 0, seconds: 0, fraction: 0}));
-  o = stel.a2af(angle);
-  assert(JSON.stringify(o) === JSON.stringify({
-    sign: '+', degrees: 15, arcminutes: 0, arcseconds: 0, fraction: 0}));
-  angle = 15.0001 * stel.D2R;
-  o = stel.a2af(angle, 2);
-  assert(JSON.stringify(o) === JSON.stringify({
-    sign: '+', degrees: 15, arcminutes: 0, arcseconds: 0, fraction: 36}));
-}
-
 var testPositions = function(stel) {
   var obs = stel.observer.clone();
   obs.utc = 55080.7083;
@@ -271,7 +254,6 @@ require('./static/js/stellarium-web-engine.js')({
     testCalendar(stel);
     testTree(stel);
     testCreate(stel);
-    testFormat(stel);
     testPositions(stel);
     console.log('All tests passed');
   }
