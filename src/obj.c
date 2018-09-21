@@ -225,6 +225,7 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     obj_t *child;
     char *sep;
     char tmp[128], tmp2[128];
+    uint64_t nsid;
 
     assert(flags == 0);
 
@@ -236,6 +237,10 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
         if (child) return child;
         query = sep + 1;
     }
+
+    // Special case for nsid.
+    if (sscanf(query, "NSID %" PRIx64, &nsid) == 1)
+        return obj_get_by_nsid(obj, nsid);
 
     identifiers_make_canonical(query, tmp2, sizeof(tmp2));
     query = tmp2;
@@ -279,9 +284,11 @@ obj_t *obj_get_by_nsid(const obj_t *obj, uint64_t nsid)
 {
     obj_t *child;
     obj = obj ?: (obj_t*)core;
+    if (!nsid) return NULL;
     if (obj->klass->get_by_nsid)
         return obj->klass->get_by_nsid(obj, nsid);
     // Default algo: search all the children.
+    // XXX: remove that: let the modules
     DL_FOREACH(obj->children, child) {
         if (child->nsid == nsid) {
             child->ref++;
