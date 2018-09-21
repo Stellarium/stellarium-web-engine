@@ -136,7 +136,8 @@ Module.afterInit(function() {
     var callback = Module.addFunction(function(cat, v, u) {
       cat = Module.Pointer_stringify(cat);
       v = Module.Pointer_stringify(v);
-      ret.push(cat + ' ' + v);
+      if (cat) ret.push(cat + ' ' + v);
+      else ret.push(v);
     }, 'viii');
     Module._obj_get_designations(this.v, callback, 0);
     Module.removeFunction(callback);

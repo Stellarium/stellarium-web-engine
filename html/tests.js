@@ -153,12 +153,13 @@ var testCreate = function(stel) {
       dimx: 60,
       dimy: 60,
     },
-    names: ['NAME 1', 'NAME 2']
+    names: ['NAME 1', 'NAME 2', 'NAME_SINGLE']
   });
   assert(obj1.nsid == '0000000beefbeef1');
   assert(obj1.names().includes('NSID 0000000beefbeef1'));
   assert(obj1.names().includes('NAME 1'));
   assert(obj1.names().includes('NAME 2'));
+  assert(obj1.names().includes('NAME_SINGLE'));
 
   var obj2 = stel.createObj('tle_satellite', {
     id: 'my sat',
