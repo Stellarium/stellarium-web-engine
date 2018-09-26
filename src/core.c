@@ -754,7 +754,7 @@ static inline double fast_pow(double a, double b)
 static double get_radius_for_mag(double mag)
 {
     const double r0 = 0.6 * DD2R;       // radius at mag = 0.
-    const double mi = 8.0;         // Max visible mag.
+    const double mi = 7.0;         // Max visible mag.
     double r;
 
     r = -r0 / mi * mag + r0;
