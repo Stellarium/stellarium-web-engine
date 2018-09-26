@@ -284,7 +284,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     double ph[3], pg[3];
     mplanet_t *mp = (mplanet_t*)obj;
 
-    orbit_compute_pv(obs->ut1, ph, NULL,
+    orbit_compute_pv(0, obs->ut1, ph, NULL,
             mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
             mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
             mp->orbit.od, mp->orbit.wd);

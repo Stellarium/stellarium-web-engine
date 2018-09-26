@@ -36,6 +36,17 @@ static double vec3_dot(const double a[3], const double b[3])
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
+static double kepler(double m, double de, double precision)
+{
+    double e0, e1;
+    e0 = m + de * sin(m) * (1.0 + de * cos(m));
+    do {
+        e1 = e0;
+        e0 = e1 - (e1 - de * sin(e1) - m) / (1.0 - de * cos(e1));
+    } while (fabs(e0 - e1) > precision);
+    return e0;
+}
+
 /*
  * Function: orbit_compute_pv
  * Compute position and speed from orbit elements.
@@ -59,6 +70,7 @@ static double vec3_dot(const double a[3], const double b[3])
  *   zero.
  */
 int orbit_compute_pv(
+        double precision,
         double mjd, double pos[3], double speed[3],
         double d,         // epoch date (MJD).
         double i,         // inclination (rad).
@@ -71,7 +83,7 @@ int orbit_compute_pv(
         double od,        // variation of o in time (rad/day).
         double wd)        // variation of w in time (rad/day).
 {
-    double m, v, r, rdot, rfdot, u;
+    double m, v, r, rdot, rfdot, u, ae, ae2;
     // Get the number of day since element date.
     d = mjd - d;
     // Compute the mean anomaly.
@@ -81,9 +93,15 @@ int orbit_compute_pv(
     // Compute true anomaly.
     // We use an proximation to solve the Kepler equation without a loop.
     // See: http://www.stargazing.net/kepler/ellipse.html
-    v = m + ((2.0 * e - pow(e, 3) / 4) * sin(m) +
-              5.0 / 4 * pow(e, 2) * sin(2 * m) +
-              13.0 / 12 * pow(e, 3) * sin(3 * m));
+    if (precision == 0.0) {
+        v = m + ((2.0 * e - pow(e, 3) / 4) * sin(m) +
+                  5.0 / 4 * pow(e, 2) * sin(2 * m) +
+                  13.0 / 12 * pow(e, 3) * sin(3 * m));
+    } else {
+        ae = kepler(m, e, precision);
+        ae2 = ae / 2.0;
+        v = 2.0 * atan2(sqrt((1.0 + e) / (1.0 - e)) * sin(ae2), cos(ae2));
+    }
 
     // Compute radius vector.
     o = o + d * od;

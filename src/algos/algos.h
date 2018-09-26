@@ -158,6 +158,8 @@ int find_constellation_at(const double pos[3], char id[4]);
  * Compute position and speed from orbit elements.
  *
  * Parameters:
+ *   precision - Precision for the kepler equation in rad.
+ *               set to 0.0 for a faster slow algo.
  *   mjd    - Time of the position (MJD).
  *   pos    - Get the computed position.
  *   speed  - Get the computed speed (can be NULL).
@@ -176,6 +178,7 @@ int find_constellation_at(const double pos[3], char id[4]);
  *   zero.
  */
 int orbit_compute_pv(
+        double precision,
         double mjd, double pos[3], double speed[3],
         double d,         // epoch date (MJD).
         double i,         // inclination (rad).

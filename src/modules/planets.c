@@ -315,7 +315,7 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     double rp;  // Distance to Sun (AU).
     double p[3], v[3];
     planet_update_(planet->parent, obs);
-    orbit_compute_pv(obs->tt, p, v,
+    orbit_compute_pv(0, obs->tt, p, v,
             planet->orbit.kepler.jd,
             planet->orbit.kepler.in,
             planet->orbit.kepler.om,

@@ -283,7 +283,7 @@ static void orbit_project(const projection_t *proj, int flags,
     double pos[4];
     double period = 2 * M_PI / o[5]; // Period in day.
     double mjd = o[0] + period * v[0];
-    orbit_compute_pv(mjd, pos, NULL,
+    orbit_compute_pv(0, mjd, pos, NULL,
                      o[0], o[1], o[2], o[3], o[4], o[5], o[6], o[7], 0.0, 0.0);
     vec3_copy(pos, out);
     out[3] = 1.0; // AU.
