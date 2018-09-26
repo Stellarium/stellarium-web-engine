@@ -257,8 +257,11 @@ static void points(renderer_t *rend_,
 
     for (i = 0; i < n; i++) {
         p = points[i];
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p.pos, p.pos);
-        project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
+        if (frame != FRAME_NDC) {
+            convert_coordinates(painter->obs, frame, FRAME_VIEW, 0,
+                                p.pos, p.pos);
+            project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
+        }
         for (j = 0; j < 4; j++) {
             idx = i * 4 + j;
             buf[idx].pos[3] = 1;

@@ -571,7 +571,7 @@ static int render_visitor(int order, int pix, void *user)
         core_get_point_for_mag(mag, &size, &luminance);
         get_star_color(s->sp, color);
         points[n] = (point_t) {
-            .pos = {p[0], p[1], p[2], 0},
+            .pos = {p_ndc[0], p_ndc[1], 0, 0},
             .size = size,
             .color = {color[0], color[1], color[2], luminance},
             .oid = s->oid,
@@ -580,7 +580,7 @@ static int render_visitor(int order, int pix, void *user)
         if (s->vmag <= painter.label_mag_max && !s->gaia)
             star_render_name(&painter, s, p_ndc, size, mag, color);
     }
-    paint_points(&painter, n, points, FRAME_VIEW);
+    paint_points(&painter, n, points, FRAME_NDC);
     free(points);
 
 end:

@@ -22,6 +22,7 @@ int convert_coordinates(const observer_t *obs,
     obs = obs ?: (observer_t*)core->observer;
     astrom = &obs->astrom;
     assert(dest >= origin); // Only forward transformations.
+    assert(dest < FRAME_NDC); // Can't convert to NDC space.
     assert(v[3] == 0 || v[3] == 1);
     vec4_copy(v, p);
 
