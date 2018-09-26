@@ -517,7 +517,7 @@ static int render_visitor(int order, int pix, void *user)
     int i, n = 0;
     star_data_t *s;
     double p[4], p_ndc[4], size, luminance, mag;
-    double color[3], viewport_cap[4];
+    double color[3], max_sep, fov, viewport_cap[4];
     bool loaded;
     bool debug_show_all = DEBUG ? debug_stars_show_all : false;
 
@@ -538,11 +538,10 @@ static int render_visitor(int order, int pix, void *user)
     // direction in ICRS and w the cosinus of the max separation between
     // a visible point and xyz.
     //
-    // XXX: this should probably already be available in the observer or
-    //      painter.
-    // XXX: compute it properly.  For the moment I just use some large
-    //      security values.
-    double max_sep = core->fov / 2.0 * 1.5 + 0.5 * DD2R;
+    // (This should probably already be available in the observer or
+    //  painter).
+    fov = max(core->fovx, core->fovy);
+    max_sep = fov / 2.0 * 1.5;
     eraS2c(painter.obs->azimuth, painter.obs->altitude, viewport_cap);
     mat4_mul_vec3(painter.obs->rh2i, viewport_cap, viewport_cap);
     viewport_cap[3] = cos(max_sep);
