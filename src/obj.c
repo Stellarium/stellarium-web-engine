@@ -224,7 +224,7 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
 {
     obj_t *child;
     char *sep;
-    char tmp[128], tmp2[128];
+    char tmp[128];
     uint64_t nsid;
 
     assert(flags == 0);
@@ -241,9 +241,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     // Special case for nsid.
     if (sscanf(query, "NSID %" PRIx64, &nsid) == 1)
         return obj_get_by_nsid(obj, nsid);
-
-    identifiers_make_canonical(query, tmp2, sizeof(tmp2));
-    query = tmp2;
 
     obj = obj ?: &g_root_obj;
     // If the id contains '.', it means we specified a sub object.
