@@ -16,10 +16,10 @@
 
 typedef struct
 {
-    int     start, end;
-    char    format[8];
-    char    name[16];
-    char    optional;   // Set to '?' if optional.
+    int         start, end;
+    char        format[8];
+    const char  *name;
+    char        optional;   // Set to '?' if optional.
     union {
         int     default_i;
         double  default_f;
