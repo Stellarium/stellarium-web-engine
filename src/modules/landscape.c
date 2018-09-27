@@ -147,8 +147,10 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
 
     brightness = get_global_brightness();
 
+    painter.color[3] *= 0.5;
     paint_quad(&painter, FRAME_OBSERVED, ls->fog, NULL,
                FULL_UV, &proj_spherical, div);
+    painter.color[3] /= 0.5;
 
     // Adjust the alpha to make the landscape transparent when we look down.
     painter.color[3] *= mix(1.0, 0.25,
