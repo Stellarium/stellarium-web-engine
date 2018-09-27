@@ -387,15 +387,25 @@ static int core_update_direction(double dt)
 
 static int core_update(void)
 {
-    bool r;
+    bool r, atm_visible;
     double aspect = core->win_size[0] / core->win_size[1];
+    double target_vmag_shift;
+    obj_t *atm;
+
+    atm = core_get_module("atmosphere");
+    assert(atm);
+    obj_get_attr(atm, "visible", "b", &atm_visible);
     projection_compute_fovs(core->proj, core->fov, aspect,
                             &core->fovx, &core->fovy);
     observer_update(core->observer, true);
-    // XXX: Ad-hoc formula!
-    r = move_toward(&core->vmag_shift,
-            max(0, -3 - core->max_vmag_in_fov) + core->manual_vmag_shift,
-            0, 64.0, 1.0 / 60);
+
+    // Eye adaptation, expressed as a global shift in all vmags.
+    target_vmag_shift = max(0, -3 - core->max_vmag_in_fov);
+    target_vmag_shift += core->manual_vmag_shift;
+    // If the atmosphere is not visible, we also shift the vmags a bit.
+    if (!atm_visible) target_vmag_shift -= 0.4;
+    r = move_toward(&core->vmag_shift, target_vmag_shift, 0, 64.0, 1.0 / 60);
+
     core->max_vmag_in_fov = INFINITY;
     progressbar_update();
     return r ? 1 : 0;
