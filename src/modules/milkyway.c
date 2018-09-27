@@ -68,7 +68,6 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     };
     double UV[][2] = {{0.0, 1.0}, {0.0, 0.0},
                       {1.0, 1.0}, {1.0, 0.0}};
-    double alpha = 0.3;
     const int div = 32;
     if (mw->visible.value == 0.0) return 0;
 
@@ -78,8 +77,8 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
                 "https:/data.stellarium.org/other/milkyway.webp", 0);
         assert(mw->tex);
     }
-    vec3_mul(alpha, painter.color, painter.color);
 
+    painter.color[3] *= 0.3; // Hardcoded base alpha value.
     // Adjust for eye adaptation.
     // Should this be done in the painter?
     painter.color[3] /= pow(2.5, 0.5 * core->vmag_shift);
