@@ -56,13 +56,16 @@ static double F(const double *lam , double theta, double gamma)
 }
 
 static render_data_t prepare_render_data(
-        const double sun_pos[3], double sun_vmag, double T)
+        const double sun_pos[3], double sun_vmag,
+        const double moon_pos[3], double moon_vmag,
+        double T)
 {
     render_data_t data;
     double thetaS;
     double X;
     double zx, zy, zY;
     const double base_sun_vmag = -26.74;
+    const double base_moon_vmag = -12.90;
 
     thetaS = acos(sun_pos[2]); // Zenith angle
     X = (4.0 / 9.0 - T / 120) * (M_PI - 2 * thetaS);
@@ -105,10 +108,15 @@ static render_data_t prepare_render_data(
     // XXX: I added the /30 to make the sky look OK, I don't understand why
     // I need that.
     data.kY = zY / F(data.PY, 0, thetaS) / 30;
-    data.ambient_lum = 0.02;
+    data.ambient_lum = 0.005;
     // Compute factor due to solar eclipse.
     // I am using an ad-hoc formula to make it look OK here.
     data.lum_factor = pow(2.512 * 0.48, base_sun_vmag - sun_vmag);
+
+    // Add ambient light from the moon.  Ad-hoc formula!
+    data.ambient_lum += 0.02 * smoothstep(0, 0.5, moon_pos[2]) *
+                                pow(4.0, base_moon_vmag - moon_vmag);
+
     return data;
 }
 
@@ -193,19 +201,23 @@ no_change:
 static int atmosphere_render(const obj_t *obj, const painter_t *painter)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
-    obj_t *sun;
-    double sun_pos[4], vmag, theta;
+    obj_t *sun, *moon;
+    double sun_pos[4], moon_pos[4], vmag, theta;
     render_data_t data;
     const double T = 5.0;
     const double base_sun_vmag = -26.74;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
+    moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
     assert(sun);
+    assert(moon);
     obj_get_pos_observed(sun, painter->obs, sun_pos);
+    obj_get_pos_observed(moon, painter->obs, moon_pos);
     vec3_normalize(sun_pos, sun_pos);
+    vec3_normalize(moon_pos, moon_pos);
     // XXX: this could be cached!
-    data = prepare_render_data(sun_pos, sun->vmag, T);
+    data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
     hips_traverse(USER_PASS(atm, painter, sun_pos, &data), render_visitor);
     vec3_copy(sun_pos, atm->last_state.sun_pos);
 
