@@ -15,23 +15,6 @@ typedef struct milkyway {
     texture_t       *tex;
 } milkyway_t;
 
-static int milkyway_init(obj_t *obj, json_value *args);
-static int milkyway_update(obj_t *obj, const observer_t *obs, double dt);
-static int milkyway_render(const obj_t *obj, const painter_t *painter);
-
-static obj_klass_t milkyway_klass = {
-    .id = "milkyway",
-    .size = sizeof(milkyway_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init = milkyway_init,
-    .update = milkyway_update,
-    .render = milkyway_render,
-    .render_order = 5,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(milkyway_t, visible.target)),
-        {}
-    },
-};
 
 static int milkyway_init(obj_t *obj, json_value *args)
 {
@@ -56,7 +39,7 @@ static void spherical_project(
     out[3] = 0; // At infinity.
 }
 
-static int milkyway_render(const obj_t *obj, const painter_t *painter)
+static int milkyway_render(const obj_t *obj, const painter_t *painter_)
 {
     /*
      * For the moment we use stellarium texture.  I guess we should get
@@ -78,7 +61,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter)
      *  ra:90°                 270°        0°       90°
      */
     milkyway_t *mw = (milkyway_t*)obj;
-    painter_t painter2;
+    painter_t painter = *painter_;
     projection_t proj_spherical = {
         .name       = "spherical",
         .backward   = spherical_project,
@@ -95,15 +78,32 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter)
                 "https:/data.stellarium.org/other/milkyway.webp", 0);
         assert(mw->tex);
     }
-    painter2 = *painter;
-    vec3_mul(alpha, painter2.color, painter2.color);
+    vec3_mul(alpha, painter.color, painter.color);
 
     // Adjust for eye adaptation.
     // Should this be done in the painter?
-    painter2.color[3] /= pow(2.5, 0.5 * core->vmag_shift);
+    painter.color[3] /= pow(2.5, 0.5 * core->vmag_shift);
 
-    paint_quad(&painter2, FRAME_ICRS, mw->tex, NULL, UV, &proj_spherical, div);
+    paint_quad(&painter, FRAME_ICRS, mw->tex, NULL, UV, &proj_spherical, div);
     return 0;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t milkyway_klass = {
+    .id = "milkyway",
+    .size = sizeof(milkyway_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = milkyway_init,
+    .update = milkyway_update,
+    .render = milkyway_render,
+    .render_order = 5,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(milkyway_t, visible.target)),
+        {}
+    },
+};
 
 OBJ_REGISTER(milkyway_klass)
