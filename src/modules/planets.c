@@ -232,7 +232,7 @@ static int moon_update(planet_t *planet, const observer_t *obs)
     double lambda, beta, dist;
     double rmatecl[3][3], rmatp[3][3];
     double obl;
-    double pos[3];
+    double pos[3], p_es[3], el;
     // Get ecliptic position of date.
     moon_pos(DJM0 + obs->tt, &lambda, &beta, &dist);
     dist *= 1000.0 / DAU; // km to AU.
@@ -253,6 +253,15 @@ static int moon_update(planet_t *planet, const observer_t *obs)
 
     i = eraSepp(planet->pvh[0], planet->pvg[0]);
     planet->phase = 0.5 * cos(i) + 0.5;
+
+    // Compute visual mag.
+    // This is based on the algo of pyephem.
+    // XXX: move into 'algos'.
+    vec3_sub(planet->pvg[0], planet->pvh[0], p_es);
+    el = eraSepp(planet->pvg[0], p_es); // Elongation.
+    planet->obj.vmag = -12.7 +
+        2.5 * (log10(M_PI) - log10(M_PI / 2.0 * (1.0 + 1.e-6 - cos(el)))) +
+        5.0 * log10(dist / .0025);
 
     // We don't know the speed.
     planet->pvg[1][0] = NAN;
