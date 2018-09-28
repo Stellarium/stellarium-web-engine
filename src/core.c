@@ -785,8 +785,8 @@ static double get_radius_for_mag(double mag)
  *
  * Parameters:
  *   mag       - The observed magnitude.
- *   radius    - Output radius.  Note: the fov is already taken into account
- *               in the output.
+ *   radius    - Output radius (rad).  Note: the fov is already taken into
+ *               account in the output.
  *   luminance - Output luminance.  Ignored if set to NULL.
  */
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
