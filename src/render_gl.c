@@ -240,7 +240,10 @@ static void points(renderer_t *rend_,
         n = MAX_POINTS;
     }
 
-    if (!(item = get_item(rend, ITEM_POINTS, n * 6, NULL))) {
+    item = get_item(rend, ITEM_POINTS, n * 6, NULL);
+    if (item && item->points.smooth != painter->points_smoothness)
+        item = NULL;
+    if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
         item->capacity = MAX_POINTS * 6;
