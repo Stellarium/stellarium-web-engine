@@ -234,6 +234,9 @@ static void points(renderer_t *rend_,
     int i, j, idx, ofs;
     const int MAX_POINTS = 4096;
     point_t p;
+    // Adjust size so that at any smoothness value the points look more or
+    // less at the same intensity.
+    double sm = 1.0 / (1.0 - 0.7 * painter->points_smoothness);
 
     if (n > MAX_POINTS) {
         LOG_E("Try to render more than %d points: %d", MAX_POINTS, n);
@@ -269,8 +272,8 @@ static void points(renderer_t *rend_,
             idx = i * 4 + j;
             buf[idx].pos[3] = 1;
             vec3_to_float(p.pos, buf[i * 4 + j].pos);
-            buf[idx].shift[0] = (j % 2 - 0.5) * 2 * p.size / 2 / s[0];
-            buf[idx].shift[1] = (j / 2 - 0.5) * 2 * p.size / 2 / s[1];
+            buf[idx].shift[0] = (j % 2 - 0.5) * 2 * p.size / 2 / s[0] * sm;
+            buf[idx].shift[1] = (j / 2 - 0.5) * 2 * p.size / 2 / s[1] * sm;
             buf[idx].tex_pos[0] = j % 2;
             buf[idx].tex_pos[1] = j / 2;
             buf[idx].color[0] = p.color[0] * 255;

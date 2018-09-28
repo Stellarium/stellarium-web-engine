@@ -640,6 +640,7 @@ void core_on_key(int key, int action)
 
     if (core->gui_want_capture_mouse) return;
     if (action != KEY_ACTION_DOWN) return;
+
     for (i = 0; i < ARRAY_SIZE(SC); i++) {
         if (SC[i][0][0] == key) {
             attr = SC[i][2] ?: "visible";
@@ -763,7 +764,7 @@ static inline double fast_pow(double a, double b)
  */
 static double get_radius_for_mag(double mag)
 {
-    const double r0 = 0.6 * DD2R;       // radius at mag = 0.
+    const double r0 = 0.3 * DD2R;       // radius at mag = 0.
     const double mi = 7.5;         // Max visible mag.
     double r;
 
@@ -793,7 +794,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     double l;                           // Luminance.
     double r;                           // Radius in rad.
     // XXX: this value should depend on the screen resolution.
-    const float r_min = 0.1 * DD2R; // Below this radius we lower luminance.
+    double r_min = 0.05 * DD2R; // Below this radius we lower luminance.
 
     r = get_radius_for_mag(mag);
 
