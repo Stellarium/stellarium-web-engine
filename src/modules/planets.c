@@ -755,6 +755,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
     color[3] *= point_luminance * (1.0 - hips_alpha);
 
+    // Lower point halo effect for objects with large radius.
+    // (Mostly for the Sun, but also affect planets at large fov).
+    painter.points_smoothness *= mix(1.0, 0.25,
+                                     smoothstep(0.5, 3.0, point_r * DR2D));
     point = (point_t) {
         .pos = {pos[0], pos[1], pos[2]},
         .size = point_r,
