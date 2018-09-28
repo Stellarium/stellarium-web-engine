@@ -31,6 +31,14 @@ var testBasic = function(stel) {
   sun.update();
   assert(isNear(sun.ra, 165.48 * stel.D2R, 0.01));
   assert(isNear(sun.dec,  6.20 * stel.D2R, 0.01));
+
+  // Test different possible values for passing NULL to the core.
+  stel.core.selection = null;
+  assert(!stel.core.selection);
+  stel.core.selection = undefined;
+  assert(!stel.core.selection);
+  stel.core.selection = 0;
+  assert(!stel.core.selection);
 };
 
 var testIds = function(stel) {

@@ -198,6 +198,10 @@ Module.afterInit(function() {
   SweObj.prototype._call = function(attr, args) {
     args = args || []
     args = Array.prototype.slice.call(args)
+    // Replace null and undefined to 0.
+    args = args.filter(function(x) {
+      return (x === undefined || x === null) ? 0 : x;
+    });
     args = JSON.stringify(args)
     var cret = obj_call_json_str(this.v, attr, args)
     var ret = Module.Pointer_stringify(cret)
