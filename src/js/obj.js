@@ -199,7 +199,7 @@ Module.afterInit(function() {
     args = args || []
     args = Array.prototype.slice.call(args)
     // Replace null and undefined to 0.
-    args = args.filter(function(x) {
+    args = args.map(function(x) {
       return (x === undefined || x === null) ? 0 : x;
     });
     args = JSON.stringify(args)
