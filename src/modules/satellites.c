@@ -120,7 +120,7 @@ static bool load_qsmag(satellites_t *sats)
     char *data, *line;
     qsmag_t *qsmag;
 
-    if (sats->qsmags_status / 100 == 2) return true;
+    if (sats->qsmags_status < 400) return true;
     if (sats->qsmags_status) return false;
     comp_data = asset_get_data(URL, &size, &sats->qsmags_status);
     if (sats->qsmags_status && !comp_data)
