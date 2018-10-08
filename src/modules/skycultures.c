@@ -91,7 +91,8 @@ static void skyculture_activate(skyculture_t *cult)
     for (i = 0; cult->names[i][0]; i++) {
         star = obj_get(NULL, cult->names[i][0], 0);
         if (!star) continue;
-        identifiers_add(star->oid, "NAME", cult->names[i][1], NULL, NULL);
+        identifiers_add("NAME", cult->names[i][1], star->oid, 0, star->type,
+                        star->vmag, NULL, NULL);
     }
 
     // Create all the constellations object.

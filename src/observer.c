@@ -153,7 +153,8 @@ static int city_get_choices(
     // We should have a way to index the objects by catalog in identifiers.
     const char *cat, *value, *search_str;
     uint64_t oid;
-    IDENTIFIERS_ITER(0, "NAME", &oid, &cat, &value, &search_str, NULL) {
+    IDENTIFIERS_ITER(0, "NAME", &oid, NULL, &cat, &value, &search_str, NULL,
+                     NULL, NULL) {
         if (oid_is_catalog(oid, "CITY"))
             if (f(value, oid, user)) return 0;
     }

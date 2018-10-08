@@ -118,7 +118,8 @@ static void add_cities(cities_t *cities)
         city->latitude = lat * DD2R;
         city->elevation = el;
         sprintf(id, "%s (%s)", name, country_code);
-        identifiers_add(city->obj.oid, "NAME", id, asciiname_upper, id);
+        identifiers_add("NAME", id, city->obj.oid, 0, "CITY", 0,
+                        asciiname_upper, id);
 #undef TOK
     }
     free(data);
@@ -168,7 +169,8 @@ obj_t *city_create(const char *name, const char *country_code,
     str_to_upper(name, asciiname_upper);
     city->obj.oid = oid_create("CITY", crc32(0, (void*)id, strlen(id)));
     sprintf(namebuf, "%s (%s)", name, country_code);
-    identifiers_add(city->obj.oid, "NAME", namebuf, asciiname_upper, id);
+    identifiers_add("NAME", namebuf, city->obj.oid, 0, "CITY", 0,
+                    asciiname_upper, id);
     return &city->obj;
 }
 

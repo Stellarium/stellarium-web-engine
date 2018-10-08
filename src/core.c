@@ -20,7 +20,8 @@ static int selection_get_choices(
     const char *cat, *value;
     int nb = 0, r;
     uint64_t oid;
-    IDENTIFIERS_ITER(0, NULL, &oid, &cat, &value, NULL, NULL) {
+    IDENTIFIERS_ITER(0, NULL, &oid, NULL, &cat, &value,
+                     NULL, NULL, NULL, NULL) {
         if      (oid_is_catalog(oid, "CITY")) continue;
         if      (str_equ(cat, "NAME"))  r = f(value, oid, user);
         else if (str_equ(cat, "BAYER")) r = f(value, oid, user);

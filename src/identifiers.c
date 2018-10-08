@@ -35,6 +35,9 @@ struct entry {
     entry_t *next, *prev; // Global id list, grouped by id.
     UT_hash_handle hh;    // Hash of id to first matching entry.
     uint64_t oid;
+    uint64_t hint;
+    double score;
+    char type[4];
     char *cat;
     char *value;
     char *search_value;
@@ -149,10 +152,6 @@ int identifiers_make_canonical(const char *v, char *out, int n)
     while (*tok) {
         r = regexec(&g_token_reg, tok, 1, &match, 0);
         if (r) break;
-        if (pout != out) { // Add a space between tokens.
-            *pout++ = ' ';
-            n -= 1;
-        }
         len = match.rm_eo - match.rm_so;
         tok += match.rm_so;
         can_len = len;
@@ -177,7 +176,9 @@ static bool is_valid_cat(const char *s)
 }
 #endif
 
-void identifiers_add(uint64_t oid, const char *cat, const char *value,
+void identifiers_add(const char *cat, const char *value,
+                     uint64_t oid, uint64_t hint, char type[4],
+                     double score,
                      const char *search_value, const char *show_value)
 {
     entry_t *entry, *group;
@@ -205,6 +206,9 @@ void identifiers_add(uint64_t oid, const char *cat, const char *value,
 
     entry = calloc(1, sizeof(*entry));
     entry->oid = oid;
+    entry->hint = hint;
+    memcpy(entry->type, type, 4);
+    entry->score = score;
     entry->cat = strdup(cat);
     entry->value = strdup(value);
     entry->show_value = strdup(show_value);
@@ -224,10 +228,13 @@ void identifiers_add(uint64_t oid, const char *cat, const char *value,
 
 bool identifiers_iter_(uint64_t oid, const char *catalog,
                        uint64_t *roid,
+                       uint64_t *rhint,
                        const char **rcat,
                        const char **rvalue,
                        const char **rcan,
                        const char **rshow,
+                       char type[4],
+                       double *score,
                        void **tmp)
 {
     entry_t *e = NULL;
@@ -246,10 +253,13 @@ bool identifiers_iter_(uint64_t oid, const char *catalog,
         e = e->next;
     }
     if (roid) *roid = e->oid;
+    if (rhint) *rhint = e->hint;
     if (rcat) *rcat = e->cat;
     if (rvalue) *rvalue = e->value;
     if (rcan) *rcan = e->search_value;
     if (rshow) *rshow = e->show_value;
+    if (type) memcpy(type, e->type, 4);
+    if (score) *score = e->score;
     e = e->next;
     // When we reach the end of the list, we cannot set tmp to NULL,
     // since NULL is the special value used for the first iteration.
@@ -262,7 +272,8 @@ const char *identifiers_get(uint64_t oid, const char *catalog)
 {
     const char *value;
     assert(is_valid_cat(catalog));
-    IDENTIFIERS_ITER(oid, catalog, NULL, NULL, &value, NULL, NULL) {
+    IDENTIFIERS_ITER(oid, catalog, NULL, NULL, NULL, &value, NULL, NULL,
+                     NULL, NULL) {
         return value;
     }
     return NULL;
@@ -301,14 +312,14 @@ static void test_identifiers(void)
     test_str(buff, "AB");
     // Test split words.
     identifiers_make_canonical("HIP 1000", buff, 64);
-    test_str(buff, "HIP 1000");
+    test_str(buff, "HIP1000");
     identifiers_make_canonical("HIP1000", buff, 64);
-    test_str(buff, "HIP 1000");
+    test_str(buff, "HIP1000");
     // Test greek letter.
     identifiers_make_canonical("α UMi", buff, 64);
-    test_str(buff, "ALF UMI");
+    test_str(buff, "ALFUMI");
     identifiers_make_canonical("alpha UMi", buff, 64);
-    test_str(buff, "ALF UMI");
+    test_str(buff, "ALFUMI");
     identifiers_make_canonical("DELTA", buff, 64);
     test_str(buff, "DEL");
     identifiers_make_canonical("DE", buff, 64);

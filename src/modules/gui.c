@@ -117,7 +117,8 @@ static void search_widget(void)
     uint64_t oid;
     if (strlen(buf) >= 3) {
         identifiers_make_canonical(buf, can, sizeof(can));
-        IDENTIFIERS_ITER(0, NULL, &oid, &cat, NULL, &canv, &value) {
+        IDENTIFIERS_ITER(0, NULL, &oid, NULL, &cat, NULL, &canv, &value,
+                         NULL, NULL) {
             if (oid_is_catalog(oid, "CITY")) continue;
             if (!strstr(canv, can)) continue;
             suggestions[i++] = value;
@@ -147,7 +148,8 @@ static void city_widget(void)
 
     if (strlen(buf) >= 3) {
         identifiers_make_canonical(buf, can, sizeof(can));
-        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, &canv, &value) {
+        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, NULL, &canv, &value,
+                         NULL, NULL) {
             if (!oid_is_catalog(oid, "CITY")) continue;
             if (!strstr(canv, can)) continue;
             suggestions[i++] = value;
@@ -156,7 +158,8 @@ static void city_widget(void)
     }
 
     if (gui_input("City", buf, 128, suggestions)) {
-        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, NULL, &value) {
+        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, NULL, NULL, &value,
+                         NULL, NULL) {
             if (oid_is_catalog(oid, "CITY") && str_equ(value, buf)) {
                 city = obj_get_by_oid(NULL, oid, 0);
                 obj_set_attr(&core->observer->obj, "city", "p", city);
@@ -320,7 +323,8 @@ static void info_widget(obj_t *obj)
     gui_text_unformatted(buf);
 
     gui_label("ID", obj->id); // XXX: to remove.
-    IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL)
+    IDENTIFIERS_ITER(obj->oid, NULL, NULL, NULL, &cat, &value,
+                     NULL, NULL, NULL, NULL)
         gui_label(cat, value);
 
     obj_get_attr(obj, "radec", "v4", icrs);

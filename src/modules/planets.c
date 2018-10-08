@@ -1036,7 +1036,8 @@ static int planets_init(obj_t *obj, json_value *args)
     // Add name identifiers:
     PLANETS_ITER(planets, p) {
         if (!p->obj.oid || !p->name) continue;
-        identifiers_add(p->obj.oid, "NAME", p->name, NULL, NULL);
+        identifiers_add("NAME", p->name, p->obj.oid, 0, p->obj.type,
+                        p->obj.vmag, NULL, NULL);
     }
 
     // Add rings textures from assets.

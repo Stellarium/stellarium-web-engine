@@ -338,7 +338,8 @@ double obj_get_render_order(const obj_t *obj)
 const char *obj_get_name(const obj_t *obj)
 {
     const char *value;
-    IDENTIFIERS_ITER(obj->oid, "NAME", NULL, NULL, &value, NULL, NULL) {
+    IDENTIFIERS_ITER(obj->oid, "NAME", NULL, NULL, NULL, &value, NULL, NULL,
+                     NULL, NULL) {
         return value;
     }
     return obj->id;
@@ -406,7 +407,8 @@ int obj_get_designations(const obj_t *obj, void *user,
     if (obj->klass->get_designations)
         obj->klass->get_designations(obj, USER_PASS(f, user, &nb), on_name);
     if (obj->oid) {
-        IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL) {
+        IDENTIFIERS_ITER(obj->oid, NULL, NULL, NULL, &cat, &value, NULL, NULL,
+                         NULL, NULL) {
             f(obj, user, cat, value);
             nb++;
         }

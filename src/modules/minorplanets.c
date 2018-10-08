@@ -228,8 +228,8 @@ static void load_data(mplanets_t *mplanets, const char *data) {
             strncpy(mplanet->name, readable + matches[2].rm_so,
                     matches[2].rm_eo - matches[2].rm_so);
             mplanet->name[matches[2].rm_eo - matches[2].rm_so] = '\0';
-            identifiers_add(mplanet->obj.oid, "NAME",
-                            mplanet->name, NULL, NULL);
+            identifiers_add("NAME", mplanet->name, mplanet->obj.oid,
+                            0, "MPl ", 0, NULL, NULL);
         }
     }
     regfree(&name_reg);

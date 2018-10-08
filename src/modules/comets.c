@@ -106,7 +106,8 @@ static void load_data(comets_t *comets, const char *data)
         strcpy(comet->name, name);
         str_rstrip(comet->name);
         comet->obj.oid = oid_create("Com ", line);
-        identifiers_add(comet->obj.oid, "NAME", comet->name, NULL, NULL);
+        identifiers_add("NAME", comet->name, comet->obj.oid, 0, "Com ",
+                        amag, NULL, NULL);
     }
 }
 
