@@ -284,10 +284,6 @@ static const void *dsos_create_tile(void *user, int order, int pix, void *data,
 static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
-    hips_settings_t survey_settings = {
-        .create_tile = dsos_create_tile,
-        .delete_tile = del_tile,
-    };
 
     fader_init(&dsos->visible, false);
 
@@ -305,7 +301,6 @@ static int dsos_init(obj_t *obj, json_value *args)
             REG_EXTENDED | REG_ICASE);
 
     sprintf(dsos->survey_url, "https://data.stellarium.org/surveys/dso");
-    dsos->survey = hips_create(dsos->survey_url, 0, &survey_settings);
     return 0;
 }
 
@@ -314,7 +309,13 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
                         bool *loading_complete)
 {
     int code, flags = 0;
+    hips_settings_t survey_settings = {
+        .create_tile = dsos_create_tile,
+        .delete_tile = del_tile,
+    };
     tile_t *tile;
+    if (!dsos->survey)
+        dsos->survey = hips_create(dsos->survey_url, 0, &survey_settings);
     if (!load) flags |= HIPS_CACHED_ONLY;
     tile = hips_get_tile(dsos->survey, order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
