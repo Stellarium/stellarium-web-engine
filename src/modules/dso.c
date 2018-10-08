@@ -193,12 +193,12 @@ static int on_file_tile_loaded(const char type[4],
 {
     tile_t *tile;
     dso_data_t *d;
-    int nb, i, version, data_ofs = 0, flags, row_size, order, pix;
-    char buff[16];
+    int nb, i, j, version, data_ofs = 0, flags, row_size, order, pix;
+    char ids[256] = {};
     double bmag, temp_mag;
     void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
-    eph_table_column_t columns[10] = {
+    eph_table_column_t columns[] = {
         {"nsid", 'Q'},
         {"type", 's', .size=4},
         {"vmag", 'f', EPH_VMAG},
@@ -209,6 +209,7 @@ static int on_file_tile_loaded(const char type[4],
         {"smin", 'f', EPH_ARCMIN},
         {"angl", 'f', EPH_DEG},
         {"snam", 's', .size=64},
+        {"ids",  's', .size=256},
     };
 
     if (strncmp(type, "DSO ", 4) != 0) return 0;
@@ -238,12 +239,12 @@ static int on_file_tile_loaded(const char type[4],
 
     for (i = 0; i < tile->nb; i++) {
         d = &tile->data[i];
-        eph_read_table_row(tile_data, size, &data_ofs, 10, columns,
+        eph_read_table_row(tile_data, size, &data_ofs,
+                           ARRAY_SIZE(columns), columns,
                            &d->id.nsid, d->type,
                            &d->vmag, &bmag, &d->ra, &d->de,
                            &d->smax, &d->smin, &d->angle,
-                           d->short_name);
-
+                           d->short_name, ids);
         assert(d->id.nsid);
         d->ra *= DD2R;
         d->de *= DD2R;
@@ -259,18 +260,11 @@ static int on_file_tile_loaded(const char type[4],
         tile->mag_max = max(tile->mag_max, temp_mag);
         d->id.oid = make_oid(d);
 
-        // Add the identifiers.
-        if (d->id.m) {
-            sprintf(buff, "M %d", d->id.m);
-            identifiers_add(d->id.oid, "M", buff + 2, buff, buff);
-        }
-        if (d->id.ngc) {
-            sprintf(buff, "NGC %d", d->id.ngc);
-            identifiers_add(d->id.oid, "NGC", buff + 4, buff, buff);
-        }
-        if (d->id.ic) {
-            sprintf(buff, "IC %d", d->id.ic);
-            identifiers_add(d->id.oid, "IC", buff + 3, buff, buff);
+        // Turn '|' separated ids into '\0' separated values.
+        if (*ids) {
+            d->names = calloc(1, 1 + strlen(ids));
+            for (j = 0; ids[j]; j++)
+                d->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
     }
     free(tile_data);
