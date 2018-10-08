@@ -127,10 +127,10 @@ static double vertical_align_event_func(const event_type_t *type,
                                         const obj_t *o1, const obj_t *o2)
 {
     const char types[4][2][4] = {
-        {"MOO ", "PLA "},
-        {"MOO ", "*   "},
-        {"PLA ", "PLA "},
-        {"PLA ", "*   "},
+        {"Moo ", "Pla "},
+        {"Moo ", "*   "},
+        {"Pla ", "Pla "},
+        {"Pla ", "*   "},
     };
     double sep;
     int i;
