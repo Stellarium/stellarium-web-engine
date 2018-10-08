@@ -691,6 +691,33 @@ static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     return d.ret;
 }
 
+static int dsos_list(const obj_t *obj, observer_t *obs,
+                     double max_mag, uint64_t hint, void *user,
+                     int (*f)(void *user, obj_t *obj))
+{
+    int order, pix, i, r, nb = 0;
+    dsos_t *dsos = (dsos_t*)obj;
+    dso_t *dso;
+    tile_t *tile;
+    // Don't support listing without hint for the moment.
+    if (!hint) return 0;
+    // Get tile from hint (as nuniq).
+    order = log2(hint / 4) / 2;
+    pix = hint - 4 * (1 << (2 * (order)));
+    tile = get_tile(dsos, order, pix, true, NULL);
+    if (!tile) return 0;
+    for (i = 0; i < tile->nb; i++) {
+        if (!f) continue;
+        nb++;
+        dso = dso_create(&tile->data[i]);
+        r = f(user, (obj_t*)dso);
+        obj_release((obj_t*)dso);
+        if (r) break;
+    }
+    return nb;
+}
+
+
 /*
  * Meta class declarations.
  */
@@ -732,6 +759,7 @@ static obj_klass_t dsos_klass = {
     .get    = dsos_get,
     .get_by_oid  = dsos_get_by_oid,
     .get_by_nsid = dsos_get_by_nsid,
+    .list   = dsos_list,
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(dsos_t, visible.target)),
