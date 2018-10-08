@@ -264,39 +264,12 @@ static obj_t *stars_add_res(obj_t *obj, json_value *val,
 
 static star_t *star_create(const star_data_t *data)
 {
-    char id[128], desgn[128];
     star_t *star;
-
-    // XXX: to remove: we don't need the id anymore.
-    if (data->hip) {
-        sprintf(id, "HIP %d", data->hip);
-    } else if (data->hd) {
-        sprintf(id, "HD %d", data->hd);
-    } else {
-        sprintf(id, "GAIA %" PRId64, data->gaia);
-    }
-
-    star = (star_t*)obj_create("star", id, NULL, NULL);
+    star = (star_t*)obj_create("star", NULL, NULL, NULL);
     strcpy(star->obj.type, "*");
     star->data = *data;
     star->obj.nsid = star->data.gaia;
     star->obj.oid = star->data.oid;
-
-    // Add all the identifers for this star.
-    // XXX: remove that.
-    if (data->hd) {
-        sprintf(desgn, "%d", data->hd);
-        identifiers_add(star->obj.oid, "HD", desgn, NULL, NULL);
-    }
-    if (data->hip) {
-        sprintf(desgn, "%d", data->hip);
-        identifiers_add(star->obj.oid, "HIP", desgn, NULL, NULL);
-    }
-    if (data->gaia) {
-        sprintf(desgn, "%" PRId64, data->gaia);
-        identifiers_add(star->obj.oid, "GAIA", desgn, NULL, NULL);
-    }
-
     return star;
 }
 
