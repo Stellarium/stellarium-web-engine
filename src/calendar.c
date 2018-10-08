@@ -375,13 +375,14 @@ static int event_cmp(const void *e1, const void *e2)
     return cmp(((const event_t*)e1)->time, ((const event_t*)e2)->time);
 }
 
-static int obj_add_f(const char *id, void *user)
+static int obj_add_f(void *user, obj_t *obj)
 {
     obj_t **objs = USER_GET(user, 0);
     int *i = USER_GET(user, 1);
-    if (strcmp(id, "EARTH") == 0) return 0;
+    if (obj->oid == oid_create("HORI", 399)) return 0; // Skip Earth.
     assert(objs[*i] == NULL);
-    objs[*i] = obj_get(NULL, id, 0);
+    objs[*i] = obj;
+    obj->ref++;
     // Extra data for observed position.
     objs[*i]->user = calloc(1, sizeof(extra_data_t));
     (*i)++;
@@ -404,11 +405,11 @@ calendar_t *calendar_create(const observer_t *obs,
 
     // Create all the objects.
     // -1 because we skip the earth.
-    cal->nb_objs = obj_list(&core->obj, &cal->obs, 2.0, NULL, NULL) - 1;
+    cal->nb_objs = obj_list(&core->obj, &cal->obs, 2.0, 0, NULL, NULL) - 1;
     cal->objs = calloc(cal->nb_objs, sizeof(*cal->objs));
     i = 0;
-    obj_list(&core->obj, &cal->obs, 2.0, USER_PASS(cal->objs, &i), obj_add_f);
-
+    obj_list(&core->obj, &cal->obs, 2.0, 0, USER_PASS(cal->objs, &i),
+             obj_add_f);
 
     cal->flags = flags;
     cal->start = start;

@@ -129,14 +129,14 @@ static obj_t *core_get_by_nsid(const obj_t *obj, uint64_t nsid)
 }
 
 static int core_list(const obj_t *obj, observer_t *obs,
-                     double max_mag, void *user,
-                     int (*f)(const char *id, void *user))
+                     double max_mag, uint64_t hint, void *user,
+                     int (*f)(void *user, obj_t *obj))
 {
     // XXX: won't stop if the callback return != 0.
     obj_t *module;
     int nb = 0;
     DL_FOREACH(core->obj.children, module) {
-        nb += obj_list(module, obs, max_mag, user, f);
+        nb += obj_list(module, obs, max_mag, hint, user, f);
     }
     return nb;
 }

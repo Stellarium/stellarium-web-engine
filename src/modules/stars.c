@@ -439,45 +439,6 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
     return tile;
 }
 
-// Much faster than using sprintf!
-// This is more less copied from stb_sprintf.
-static void make_id(char *buf, const char *prefix, uint64_t n64)
-{
-    uint32_t n;
-    char num[512], *p = buf, *o;
-    char *s = num + sizeof(num);
-    int num_size;
-
-    for (;;) {
-        o = s - 8;
-        if (n64 >= 100000000) {
-            n = (uint32_t)(n64 % 100000000);
-            n64 /= 100000000;
-        } else {
-            n = (uint32_t)n64;
-            n64 = 0;
-        }
-        while (n) {
-            *--s = (char)(n % 10) + '0';
-            n /= 10;
-        }
-        if (n64 == 0) {
-            if ((s != (num + sizeof(num)) && (s[0] == '0')))
-                ++s;
-            break;
-        }
-        while (s != o) *--s = '0';
-    }
-
-    num_size = num + sizeof(num) - s;
-    memcpy(p, prefix, strlen(prefix));
-    p += strlen(prefix);
-    *p++ = ' ';
-    memcpy(p, s, num_size);
-    p += num_size;
-    *p = '\0';
-}
-
 bool debug_stars_show_all = false;
 
 static int render_visitor(int order, int pix, void *user)
@@ -665,42 +626,39 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 // XXX: we can probably merge this with stars_get_visitor!
 static int stars_list_visitor(int order, int pix, void *user)
 {
-    int i;
-    char id[128];
+    int i, r;
+    star_t *star = NULL;
     struct {
         stars_t *stars;
         double max_mag;
         int nb;
-        int (*f)(const char *id, void *user);
+        int (*f)(void *user, obj_t *obj);
         void *user;
     } *d = user;
     tile_t *tile;
     tile = get_tile(d->stars, order, pix, false, NULL);
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
-        if (tile->stars[i].vmag <= d->max_mag) {
-            if (tile->stars[i].hip)
-                make_id(id, "HIP", tile->stars[i].hip);
-            else if (tile->stars[i].hd)
-                make_id(id, "HD", tile->stars[i].hd);
-            else
-                make_id(id, "GAIA", tile->stars[i].gaia);
-            d->nb++;
-            if (d->f && d->f(id, d->user)) return -1; // Stop here.
-        }
+        if (tile->stars[i].vmag > d->max_mag) continue;
+        d->nb++;
+        if (!d->f) continue;
+        star = star_create(&tile->stars[i]);
+        r = d->f(d->user, (obj_t*)star);
+        obj_release((obj_t*)star);
+        if (r) break;
     }
     return 1;
 }
 
 static int stars_list(const obj_t *obj, observer_t *obs,
-                      double max_mag, void *user,
-                      int (*f)(const char *id, void *user))
+                      double max_mag, uint64_t hint, void *user,
+                      int (*f)(void *user, obj_t *obj))
 {
     struct {
         stars_t *stars;
         double max_mag;
         int nb;
-        int (*f)(const char *id, void *user);
+        int (*f)(void *user, obj_t *obj);
         void *user;
     } d = {.stars=(void*)obj, .max_mag=max_mag, .f=f, .user=user};
 

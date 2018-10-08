@@ -1075,8 +1075,8 @@ static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
 }
 
 static int planets_list(const obj_t *obj, observer_t *obs,
-                        double max_mag, void *user,
-                        int (*f)(const char *id, void *user))
+                        double max_mag, uint64_t hint, void *user,
+                        int (*f)(void *user, obj_t *obj))
 {
     planet_t *p;
     int nb = 0;
@@ -1084,7 +1084,7 @@ static int planets_list(const obj_t *obj, observer_t *obs,
         obj_update((obj_t*)p, obs, 0);
         if (p->obj.vmag > max_mag) continue;
         nb++;
-        if (f && f(p->obj.id, user)) break;
+        if (f && f(user, &p->obj)) break;
     }
     return nb;
 }

@@ -422,11 +422,12 @@ int obj_get_designations(const obj_t *obj, void *user,
 }
 
 EMSCRIPTEN_KEEPALIVE
-int obj_list(const obj_t *obj, observer_t *obs, double max_mag, void *user,
-             int (*f)(const char *id, void *user))
+int obj_list(const obj_t *obj, observer_t *obs,
+             double max_mag, uint64_t hint, void *user,
+             int (*f)(void *user, obj_t *obj))
 {
     if (obj->klass->list)
-        return obj->klass->list(obj, obs, max_mag, user, f);
+        return obj->klass->list(obj, obs, max_mag, hint, user, f);
     return 0;
 }
 
