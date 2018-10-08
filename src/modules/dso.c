@@ -113,6 +113,7 @@ static dso_t *dso_create(const dso_data_t *data)
     memcpy(&dso->obj.type, data->type, 4);
     dso->obj.nsid = data->id.nsid;
     dso->obj.oid = data->id.oid;
+    dso->obj.vmag = data->vmag;
     return dso;
 }
 
