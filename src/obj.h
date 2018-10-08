@@ -107,7 +107,8 @@ struct obj_klass
 
     // List all the names associated with an object.
     void (*get_designations)(const obj_t *obj, void *user,
-                      int (*f)(void *user, const char *cat, const char *str));
+                      int (*f)(const obj_t *obj, void *user,
+                               const char *cat, const char *str));
 
     void (*gui)(obj_t *obj, int location);
 
@@ -407,9 +408,9 @@ const char *obj_get_name(const obj_t *obj);
  * Function: obj_get_designations
  * Return the list of all the identifiers of an object.
  */
-int obj_get_designations(const obj_t *obj,
-                  void (*f)(const char *cat, const char *value, void *user),
-                  void *user);
+int obj_get_designations(const obj_t *obj, void *user,
+                  void (*f)(const obj_t *obj, void *user,
+                            const char *cat, const char *value));
 
 /*
  * Function: obj_get_tree

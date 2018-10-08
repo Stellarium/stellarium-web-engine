@@ -353,7 +353,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
 void mplanet_get_designations(
     const obj_t *obj, void *user,
-    int (*f)(void *user, const char *cat, const char *str))
+    int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     mplanet_t *mplanet = (mplanet_t*)obj;
     char buf[32];
@@ -362,12 +362,12 @@ void mplanet_get_designations(
         // to the an id that is simply the MPC object number!
         // Remove when we can.
         sprintf(buf, "%d", mplanet->mpl_number);
-        f(user, "", buf);
+        f(obj, user, "", buf);
 
         sprintf(buf, "(%d)", mplanet->mpl_number);
-        f(user, "MPC", buf);
+        f(obj, user, "MPC", buf);
     }
-    if (*mplanet->name) f(user, "NAME", mplanet->name);
+    if (*mplanet->name) f(obj, user, "NAME", mplanet->name);
 }
 
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)

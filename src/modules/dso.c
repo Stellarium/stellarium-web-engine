@@ -532,19 +532,20 @@ static int dso_render(const obj_t *obj, const painter_t *painter)
 
 void dso_get_designations(
     const obj_t *obj, void *user,
-    int (*f)(void *user, const char *cat, const char *str))
+    int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     const dso_t *dso = (dso_t*)obj;
     const dso_data_t *d = &dso->data;
     const char *names = d->names;
     char cat[128] = {};
+    f(obj, user, "", d->short_name); // XXX: should extract cat.
     while (names && *names) {
         strncpy(cat, names, sizeof(cat) - 1);
         if (!strchr(cat, ' ')) { // No catalog.
-            f(user, "", cat);
+            f(obj, user, "", cat);
         } else {
             *strchr(cat, ' ') = '\0';
-            f(user, cat, names + strlen(cat) + 1);
+            f(obj, user, cat, names + strlen(cat) + 1);
         }
         names += strlen(names) + 1;
     }

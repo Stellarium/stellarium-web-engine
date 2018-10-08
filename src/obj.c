@@ -381,23 +381,25 @@ void obj_get_nsid_str(const obj_t *obj, char out[32])
     else out[0] = '\0';
 }
 
-static int on_name(void *user, const char *cat, const char *value)
+static int on_name(const obj_t *obj, void *user,
+                   const char *cat, const char *value)
 {
-    void (*f)(const char *cat, const char *value, void *user);
+    void (*f)(const obj_t *obj, void *user,
+              const char *cat, const char *value);
     void *u;
     int *nb;
     f = USER_GET(user, 0);
     u = USER_GET(user, 1);
     nb = USER_GET(user, 2);
-    f(cat, value, u);
+    f(obj, u, cat, value);
     nb++;
     return 0;
 }
 
 EMSCRIPTEN_KEEPALIVE
-int obj_get_designations(const obj_t *obj,
-                  void (*f)(const char *cat, const char *value, void *user),
-                  void *user)
+int obj_get_designations(const obj_t *obj, void *user,
+                  void (*f)(const obj_t *obj, void *user,
+                            const char *cat, const char *value))
 {
     const char *cat, *value, buf[128];
     int nb = 0;
@@ -405,13 +407,13 @@ int obj_get_designations(const obj_t *obj,
         obj->klass->get_designations(obj, USER_PASS(f, user, &nb), on_name);
     if (obj->oid) {
         IDENTIFIERS_ITER(obj->oid, NULL, NULL, &cat, &value, NULL, NULL) {
-            f(cat, value, user);
+            f(obj, user, cat, value);
             nb++;
         }
     }
     if (obj->nsid) {
         sprintf(buf, "%016" PRIx64, obj->nsid);
-        f("NSID", buf, user);
+        f(obj, user, "NSID", buf);
         nb++;
     }
     return nb;

@@ -359,11 +359,12 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
 void satellite_get_designations(
     const obj_t *obj, void *user,
-    int (*f)(void *user, const char *cat, const char *str))
+    int (*f)(const obj_t *obj, void *user,
+             const char *cat, const char *str))
 {
     char buf[32];
     sprintf(buf, "%05d", (int)(obj->oid));
-    f(user, "NORAD", buf);
+    f(obj, user, "NORAD", buf);
 }
 
 /*

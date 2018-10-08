@@ -232,24 +232,24 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
 
 void star_get_designations(
     const obj_t *obj, void *user,
-    int (*f)(void *user, const char *cat, const char *str))
+    int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
     char buf[128];
     if (s->hd) {
         sprintf(buf, "%d", s->hd);
-        f(user, "HD", buf);
+        f(obj, user, "HD", buf);
     }
     if (s->hip) {
         sprintf(buf, "%d", s->hip);
-        f(user, "HIP", buf);
+        f(obj, user, "HIP", buf);
     }
     if (s->gaia) {
         sprintf(buf, "%" PRId64, s->gaia);
-        f(user, "GAIA", buf);
+        f(obj, user, "GAIA", buf);
         sprintf(buf, "%016" PRIx64, s->gaia);
-        f(user, "NSID", buf);
+        f(obj, user, "NSID", buf);
     }
 }
 

@@ -122,24 +122,24 @@ Module.afterInit(function() {
 
   // XXX: deprecated: use names instead.
   SweObj.prototype.ids = function(f) {
-    var callback = Module.addFunction(function(k, v, u) {
+    var callback = Module.addFunction(function(o, u, k, v) {
       k = Module.Pointer_stringify(k);
       v = Module.Pointer_stringify(v);
       f(k, v);
-    }, 'viii');
-    Module._obj_get_designations(this.v, callback, 0);
+    }, 'viiii');
+    Module._obj_get_designations(this.v, 0, callback);
     Module.removeFunction(callback);
   };
 
   SweObj.prototype.names = function() {
     var ret = [];
-    var callback = Module.addFunction(function(cat, v, u) {
+    var callback = Module.addFunction(function(o, u, cat, v) {
       cat = Module.Pointer_stringify(cat);
       v = Module.Pointer_stringify(v);
       if (cat) ret.push(cat + ' ' + v);
       else ret.push(v);
-    }, 'viii');
-    Module._obj_get_designations(this.v, callback, 0);
+    }, 'viiii');
+    Module._obj_get_designations(this.v, 0, callback);
     Module.removeFunction(callback);
     // Remove duplicates.
     // This should be done in the C code, but for the moment it's simpler
