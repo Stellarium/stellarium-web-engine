@@ -110,7 +110,7 @@ static void skyculture_activate(skyculture_t *cult)
         args = json_object_new(0);
         json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
         obj_create("constellation", id, constellations, args);
-        json_value_free(args);
+        json_builder_free(args);
     }
 
     // Add the images.
