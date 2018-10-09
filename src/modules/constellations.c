@@ -338,11 +338,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
         vec3_add(pos, lines[i], pos);
     }
     for (i = 0; i < con->count; i += 2) {
-        // XXX: make vmag a default attribute of all objects.
-        obj_get_attr(con->stars[i + 0], "vmag", "f", &mag[0]);
-        obj_get_attr(con->stars[i + 1], "vmag", "f", &mag[1]);
-        mag[0] = core_get_observed_mag(mag[0]);
-        mag[1] = core_get_observed_mag(mag[1]);
+        mag[0] = core_get_observed_mag(con->stars[i + 0]->vmag);
+        mag[1] = core_get_observed_mag(con->stars[i + 1]->vmag);
         core_get_point_for_mag(mag[0], &radius[0], NULL);
         core_get_point_for_mag(mag[1], &radius[1], NULL);
         // Add some space, using ad-hoc formula.
