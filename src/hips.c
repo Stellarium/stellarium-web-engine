@@ -191,7 +191,10 @@ static int property_handler(void* user, const char* section,
              if (strstr(value, "webp")) hips->ext = "webp";
         else if (strstr(value, "jpeg")) hips->ext = "jpg";
         else if (strstr(value, "png"))  hips->ext = "png";
-        else if (strstr(value, "eph"))  hips->ext = "eph";
+        else if (strstr(value, "eph"))  {
+            hips->ext = "eph";
+            hips->allsky.not_available = true;
+        }
         else LOG_W("Unknown hips format: %s", value);
     }
     // Guillaume 2018 Aug 30: disable the hips_service_url, because
