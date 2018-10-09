@@ -250,8 +250,8 @@ static void points(renderer_t *rend_,
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
         item->capacity = MAX_POINTS * 6;
-        item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
-        item->indices = calloc(item->capacity, sizeof(*indices));
+        item->buf = malloc(item->capacity / 6 * 4 * sizeof(*buf));
+        item->indices = malloc(item->capacity * sizeof(*indices));
         vec4_copy(painter->color, item->color);
         item->points.smooth = painter->points_smoothness;
         DL_APPEND(rend->items, item);
