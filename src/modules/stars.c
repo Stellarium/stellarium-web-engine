@@ -11,7 +11,6 @@
 #include "ini.h"
 #include <regex.h>
 #include <zlib.h>
-#include "stb_sprintf.h"
 
 #define URL_MAX_SIZE 4096
 
@@ -239,17 +238,17 @@ void star_get_designations(
     const star_data_t *s = &star->data;
     char buf[128];
     if (s->hd) {
-        stbsp_sprintf(buf, "%d", s->hd);
+        sprintf(buf, "%d", s->hd);
         f(obj, user, "HD", buf);
     }
     if (s->hip) {
-        stbsp_sprintf(buf, "%d", s->hip);
+        sprintf(buf, "%d", s->hip);
         f(obj, user, "HIP", buf);
     }
     if (s->gaia) {
-        stbsp_sprintf(buf, "%" PRId64, s->gaia);
+        sprintf(buf, "%" PRId64, s->gaia);
         f(obj, user, "GAIA", buf);
-        stbsp_sprintf(buf, "%016" PRIx64, s->gaia);
+        sprintf(buf, "%016" PRIx64, s->gaia);
         f(obj, user, "NSID", buf);
     }
 }
