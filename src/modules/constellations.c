@@ -343,9 +343,11 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
         obj_get_attr(con->stars[i + 1], "vmag", "f", &mag[1]);
         mag[0] = core_get_observed_mag(mag[0]);
         mag[1] = core_get_observed_mag(mag[1]);
-        core_get_point_for_mag(mag[0] - 1, &radius[0], NULL);
-        core_get_point_for_mag(mag[1] - 1, &radius[1], NULL);
-        line_truncate(&lines[i], radius[0], radius[1]);
+        core_get_point_for_mag(mag[0], &radius[0], NULL);
+        core_get_point_for_mag(mag[1], &radius[1], NULL);
+        // Add some space, using ad-hoc formula.
+        line_truncate(&lines[i], radius[0] * 2 + 0.25 * DD2R,
+                                 radius[1] * 2 + 0.25 * DD2R);
     }
 
     vec3_normalize(pos, pos); // Middle pos.
