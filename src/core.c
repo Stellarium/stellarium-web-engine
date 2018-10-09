@@ -1008,9 +1008,11 @@ static void test_basic(void)
     // Test search bright star by HIP:
     obj = obj_get(NULL, "HIP 677", 0);
     assert(obj);
+    obj_release(obj);
     // Test obj_get with '|'
     obj = obj_get(NULL, "No result|Sun", 0);
     assert(obj);
+    obj_release(obj);
 }
 
 static void test_set_city(void)
