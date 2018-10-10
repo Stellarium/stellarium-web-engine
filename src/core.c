@@ -259,6 +259,14 @@ static int core_pinch(const gesture_t *gest, void *user)
     return 0;
 }
 
+static void core_add_default_sources(void)
+{
+    #define BASE_URL "https://data.stellarium.org/"
+    asset_set_alias(BASE_URL "landscapes", "asset://landscapes");
+    obj_add_data_source(NULL, BASE_URL "landscapes", NULL);
+    #undef BASE_URL
+}
+
 // Set the default init values.
 static void core_set_default(void)
 {
@@ -352,8 +360,8 @@ void core_init(void)
     core->areas = areas_create();
     progressbar_add_listener(on_progressbar);
 
+    core_add_default_sources();
     core_set_default();
-
 }
 
 void core_release(void)

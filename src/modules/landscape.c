@@ -9,9 +9,6 @@
 
 #include "swe.h"
 
-// URL where we get the landscapes list.
-#define BASE_URL "https://data.stellarium.org/landscapes"
-
 /*
  * Enum of all the data files we need to parse.
  */
@@ -204,41 +201,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
 static int landscapes_init(obj_t *obj, json_value *args)
 {
     landscapes_t *lss = (landscapes_t*)obj;
-    landscape_t *ls;
     fader_init(&lss->visible, true);
-    asset_set_alias(BASE_URL, "asset://landscapes");
-
-    // Add Guereins immediately.
-    ls = add_from_uri(lss, BASE_URL "/guereins", "guereins");
-    obj_set_attr((obj_t*)ls, "active", "b", true);
-    ls->visible.value = 1.0;
-    return 0;
-}
-
-// XXX: exact same code as in skycultures.c
-static int parse_index(landscapes_t *lss, const char *base_url,
-                       const char *data)
-{
-    json_value *json;
-    const char *key;
-    int i;
-    char url[1024];
-
-    json = json_parse(data, strlen(data));
-    if (!json || json->type != json_object) {
-        LOG_E("Cannot parse json file");
-        return -1;
-    }
-    for (i = 0; i < json->u.object.length; i++) {
-        if (json->u.object.values[i].value->type != json_object) continue;
-        key = json->u.object.values[i].name;
-        // Skip if we already have it.
-        if (obj_get((obj_t*)lss, key, 0)) continue;
-        sprintf(url, "%s/%s", base_url, key);
-        add_from_uri(lss, url, key);
-    }
-
-    json_value_free(json);
     return 0;
 }
 
@@ -246,17 +209,6 @@ static int landscapes_update(obj_t *obj, const observer_t *obs, double dt)
 {
     landscapes_t *lss = (landscapes_t*)obj;
     obj_t *ls;
-    const char *data;
-
-    if (!lss->loading_code) {
-        if ((data = asset_get_data(
-                    BASE_URL "/index.json",
-                    NULL, &lss->loading_code)))
-        {
-            parse_index(lss, BASE_URL, data);
-        }
-    }
-
     OBJ_ITER((obj_t*)lss, ls, "landscape") {
         obj_update(ls, obs, dt);
     }
@@ -291,6 +243,26 @@ static void landscapes_gui(obj_t *obj, int location)
     }
 }
 
+static int landscapes_add_data_source(
+        obj_t *obj, const char *url, const char *type)
+{
+    const char *key;
+    landscapes_t *lss = (landscapes_t*)obj;
+    landscape_t *ls;
+
+    if (!type || strcmp(type, "landscape") != 0) return 1;
+    key = strrchr(url, '/') + 1;
+    // Skip if we already have it.
+    if (obj_get((obj_t*)lss, key, 0)) return 0;
+    ls = add_from_uri(lss, url, key);
+    // If this is the first landscape, use it immediatly.
+    if (ls == (void*)lss->obj.children) {
+        obj_set_attr((obj_t*)ls, "active", "b", true);
+        ls->visible.value = 1.0;
+    }
+    return 0;
+}
+
 /*
  * Meta class declarations.
  */
@@ -323,6 +295,7 @@ static obj_klass_t landscapes_klass = {
     .update         = landscapes_update,
     .render         = landscapes_render,
     .gui            = landscapes_gui,
+    .add_data_source    = landscapes_add_data_source,
     .render_order   = 40,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(landscapes_t, visible.target)),
