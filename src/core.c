@@ -141,6 +141,19 @@ static int core_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
+static int core_add_data_source(obj_t *obj, const char *url, const char *type)
+{
+    obj_t *module;
+    int r;
+    DL_FOREACH(core->obj.children, module) {
+        if (!(module->klass->flags & OBJ_MODULE)) continue;
+        r = obj_add_data_source(module, url, type);
+        if (r == 1) continue; // Can't add here.
+        return r;
+    }
+    return 1;
+}
+
 static int modules_sort_cmp(void *a, void *b)
 {
     obj_t *at, *bt;
@@ -943,6 +956,7 @@ static obj_klass_t core_klass = {
     .get_by_oid = core_get_by_oid,
     .get_by_nsid = core_get_by_nsid,
     .list = core_list,
+    .add_data_source = core_add_data_source,
     .attributes = (attribute_t[]) {
         PROPERTY("utcoffset", "d", MEMBER(core_t, utc_offset),
                  .on_changed = core_on_utcoffset_changed),
