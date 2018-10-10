@@ -117,6 +117,9 @@ struct obj_klass
                 uint64_t hint, void *user,
                 int (*f)(void *user, obj_t *obj));
 
+    // Add a source of data.
+    int (*add_data_source)(obj_t *obj, const char *url, const char *type);
+
     // Return the render order.
     // By default this return the class attribute `render_order`.
     double (*get_render_order)(const obj_t *obj);
@@ -453,6 +456,22 @@ char *obj_get_path(const obj_t *obj, const obj_t *root);
 int obj_list(const obj_t *obj, observer_t *obs,
              double max_mag, uint64_t hint, void *user,
              int (*f)(void *user, obj_t *obj));
+
+/*
+ * Function: add_data_source
+ * Add a data source url to a module
+ *
+ * Parameters:
+ *   obj    - a module, or NULL for any module.
+ *   url    - base url of the data.
+ *   type   - type of data.  NULL for directory.
+ *
+ * Return:
+ *   0 if the source was accepted.
+ *   1 if the source was no recognised.
+ *   a negative error code otherwise.
+ */
+int obj_add_data_source(obj_t *obj, const char *url, const char *type);
 
 /*
  * Function: obj_add_global_listener

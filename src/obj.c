@@ -431,6 +431,15 @@ int obj_list(const obj_t *obj, observer_t *obs,
     return 0;
 }
 
+EMSCRIPTEN_KEEPALIVE
+int obj_add_data_source(obj_t *obj, const char *url, const char *type)
+{
+    if (!obj) obj = &core->obj;
+    if (obj->klass->add_data_source)
+        return obj->klass->add_data_source(obj, url, type);
+    return 1; // Not recognised.
+}
+
 static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
                                        const json_value *args)
 {
