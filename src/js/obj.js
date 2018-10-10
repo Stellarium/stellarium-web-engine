@@ -18,8 +18,6 @@ Module.afterInit(function() {
   var obj_get_id = Module.cwrap('obj_get_id', 'string', ['number']);
   var obj_get_nsid_str = Module.cwrap('obj_get_nsid_str',
     'void', ['number', 'number']);
-  var obj_add_res = Module.cwrap('obj_add_res', 'number',
-    ['number', 'string', 'string']);
   var obj_add = Module.cwrap('obj_add', null, ['number', 'number']);
   var args_format_json_str = Module.cwrap('args_format_json_str',
     'number', ['string']);
@@ -244,15 +242,6 @@ Module.afterInit(function() {
 
   Module['getTree'] = function(detailed) {
     return Module.core.getTree(detailed)
-  }
-
-  // XXX: deprecated
-  Module['add'] = function(data, base_path) {
-    var obj_add_res = Module.cwrap('obj_add_res', 'number',
-      ['number', 'string', 'string']);
-    data = JSON.stringify(data);
-    var ret = obj_add_res(Module.core.v, data, base_path);
-    return ret ? new SweObj(ret) : null;
   }
 
   // Create a new layer.

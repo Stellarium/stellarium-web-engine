@@ -259,8 +259,6 @@ static int stars_init(obj_t *obj, json_value *args);
 static int stars_render(const obj_t *obj, const painter_t *painter);
 static obj_t *stars_get(const obj_t *obj, const char *id, int flags);
 static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid);
-static obj_t *stars_add_res(obj_t *obj, json_value *val,
-                            const char *base_path);
 
 static star_t *star_create(const star_data_t *data)
 {
@@ -666,28 +664,6 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     return d.nb;
 }
 
-static obj_t *stars_add_res(obj_t *obj, json_value *val,
-                            const char *base_path)
-{
-    const char *type, *path;
-    stars_t *stars = (stars_t*)obj;
-
-    type = json_get_attr_s(val, "type");
-    if (!type || strcmp(type, "survey") != 0) return NULL;
-    val = json_get_attr(val, "survey", json_object);
-    if (!val) return NULL;
-    type = json_get_attr_s(val, "type");
-    if (!type || strcmp(type, "stars") != 0) return NULL;
-    if (*stars->survey_url) {
-        LOG_E("Only support one star survey");
-        return NULL;
-    }
-    path = json_get_attr_s(val, "path");
-    if (!path) return NULL;
-    sprintf(stars->survey_url, "%s/%s", base_path, path);
-    return NULL;
-}
-
 /*
  * Meta class declarations.
  */
@@ -728,7 +704,6 @@ static obj_klass_t stars_klass = {
     .get_by_oid     = stars_get_by_oid,
     .get_by_nsid    = stars_get_by_nsid,
     .list           = stars_list,
-    .add_res        = stars_add_res,
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY("max_mag", "f", MEMBER(stars_t, mag_max)),

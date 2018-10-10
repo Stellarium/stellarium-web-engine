@@ -75,7 +75,6 @@ Currently the methods we can define are:
     render      Called at each render.
     get         Used to find a sub object from a query string.
     gui         Used for the gui.
-    add_res     Attempt to register a new json resource to a module.
     list        List the sky object defined in a module.
 
 There are two special cases of object: sky object and modules.

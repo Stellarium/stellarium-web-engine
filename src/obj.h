@@ -81,7 +81,6 @@ typedef struct obj_klass obj_klass_t;
  *                  created in the right order.
  *
  * Module Methods:
- *   add_res - Try to register a resource from a json into the module.
  *   list    - List all the sky objects children from this module.
  *   get_render_order - Return the render order.
  */
@@ -113,8 +112,6 @@ struct obj_klass
     void (*gui)(obj_t *obj, int location);
 
     // For modules objects.
-    // Try to register a resource from a json file into this module.
-    obj_t *(*add_res)(obj_t *obj, json_value *value, const char *base_path);
     // List all the sky objects children from this module.
     int (*list)(const obj_t *obj, observer_t *obs, double max_mag,
                 uint64_t hint, void *user,
@@ -456,16 +453,6 @@ char *obj_get_path(const obj_t *obj, const obj_t *root);
 int obj_list(const obj_t *obj, observer_t *obs,
              double max_mag, uint64_t hint, void *user,
              int (*f)(void *user, obj_t *obj));
-
-/*
- * Function: obj_add_res
- * Register a new resource into an object.
- *
- * This is a bit experimental, maybe I will remove that.  The idea is that
- * we can just put resources into a public URL online and any module that
- * can handle it will automatically do so.
- */
-obj_t *obj_add_res(obj_t *obj, const char *data, const char *base_path);
 
 /*
  * Function: obj_add_global_listener

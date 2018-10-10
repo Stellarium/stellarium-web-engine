@@ -431,50 +431,6 @@ int obj_list(const obj_t *obj, observer_t *obs,
     return 0;
 }
 
-static obj_t *obj_add_res_(obj_t *obj, json_value *value,
-                           const char *base_path)
-{
-    obj_t *child, *r;
-    int i;
-
-    // XXX: I keep array support for the constellations, but I think we
-    // should eventually remove it since we can't return an array of
-    // objects.
-    if (value->type == json_array) {
-        for (i = 0; i < value->u.array.length; i++) {
-            obj_add_res_(obj, value->u.array.values[i], base_path);
-        }
-        return NULL;
-    }
-
-    if (obj->klass->add_res) {
-        r = obj->klass->add_res(obj, value, base_path);
-        if (r) return r;
-    }
-    DL_FOREACH(obj->children, child) {
-        if (!child->klass->add_res) continue;
-        r = child->klass->add_res(child, value, base_path);
-        if (r) return r;
-    }
-    return NULL;
-}
-
-EMSCRIPTEN_KEEPALIVE
-obj_t *obj_add_res(obj_t *obj, const char *data, const char *base_path)
-{
-    json_value *value;
-    obj_t *ret;
-    assert(data);
-    value = json_parse(data, strlen(data));
-    if (!value) {
-        LOG_W("malformed json");
-        return NULL;
-    }
-    ret = obj_add_res_(obj, value, base_path);
-    json_value_free(value);
-    return ret;
-}
-
 static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
                                        const json_value *args)
 {
