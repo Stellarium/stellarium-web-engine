@@ -41,6 +41,7 @@ Module['onRuntimeInitialized'] = function() {
   for (var i in Module.extendFns) { Module.extendFns[i]() }
 
   Module._core_init();
+  Module._core_add_default_sources();
   Module.core = Module.getObj('core');
   Module.observer = Module.getObj('core.observer');
   // Why is core init not doing this already?

@@ -228,6 +228,8 @@ enum {
 };
 
 void core_init(void);
+void core_add_default_sources(void);
+
 void core_release(void);
 int core_render(int w, int h, double pixel_scale);
 // x and y in screen coordinates.

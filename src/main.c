@@ -168,6 +168,7 @@ int main(int argc, char **argv)
     glfwSetInputMode(g_window, GLFW_STICKY_MOUSE_BUTTONS, false);
 
     core_init();
+    core_add_default_sources();
 
     if (DEFINED(COMPILE_TESTS)) {
         tests_run("auto"); // Run all the automatic tests.
