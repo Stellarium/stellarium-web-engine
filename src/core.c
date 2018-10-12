@@ -265,6 +265,8 @@ void core_add_default_sources(void)
     #define BASE_URL "https://data.stellarium.org/"
     asset_set_alias(BASE_URL "landscapes", "asset://landscapes");
     obj_add_data_source(NULL, BASE_URL "landscapes", NULL);
+    asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
+    obj_add_data_source(NULL, BASE_URL "skycultures", NULL);
     #undef BASE_URL
 }
 
