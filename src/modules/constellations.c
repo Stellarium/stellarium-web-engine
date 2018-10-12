@@ -24,6 +24,7 @@ typedef struct constellation {
     // Texture and associated projection matrix.
     texture_t   *img;
     double      mat[3][3];
+    int         error; // Set if we couldn't parse the stars.
 } constellation_t;
 
 /*
@@ -63,20 +64,23 @@ static int constellation_init(obj_t *obj, json_value *args)
 }
 
 // Get the list of the constellation stars.
-static void constellation_create_stars(constellation_t *cons)
+static int constellation_create_stars(constellation_t *cons)
 {
-    int i;
+    int i, err = 0;
     char star_id[128];
-    if (cons->stars) return;
+    if (cons->stars) return 0;
     cons->count = cons->info.nb_lines * 2;
     cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
         assert(cons->info.lines[i / 2][i % 2] != 0);
         sprintf(star_id, "HIP %d", cons->info.lines[i / 2][i % 2]);
         cons->stars[i] = obj_get(NULL, star_id, 0);
-        if (!cons->stars[i])
+        if (!cons->stars[i]) {
             LOG_W("Cannot find cst star: %s, %s", cons->info.id, star_id);
+            err = 1;
+        }
     }
+    return err;
 }
 
 // Still experimental.
@@ -143,6 +147,7 @@ static bool constellation_is_visible(const painter_t *painter,
     double (*pos)[4];
     const obj_t *s;
 
+    if (con->error) return false;
     pos = calloc(con->count, sizeof(*pos));
     for (i = 0; i < con->count; i++) {
         s = con->stars[i];
@@ -182,11 +187,16 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     constellation_t *con = (constellation_t*)obj;
     constellations_t *cons = (constellations_t*)obj->parent;
     double pos[4] = {0, 0, 0, 0};
-    int i;
+    int i, err;
+    if (con->error) return 0;
     // Optimization: don't update invisible constellation.
     if (con->visible.value == 0 && !con->visible.target) goto end;
 
-    constellation_create_stars(con);
+    err = constellation_create_stars(con);
+    if (err) {
+        con->error = err;
+        return 0;
+    }
     for (i = 0; i < con->count; i++) {
         obj_update(con->stars[i], obs, 0);
         vec3_add(pos, con->stars[i]->pvg[0], pos);
@@ -256,7 +266,8 @@ static bool constellation_is_selected(const constellation_t *con)
 
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
-    const constellation_t *con = (const constellation_t*)obj;
+    int err;
+    constellation_t *con = (const constellation_t*)obj;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
     painter_t painter = *_painter, painter2;
     bool selected = constellation_is_selected(con);
@@ -265,7 +276,12 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
         painter.color[3] *= cons->visible.value * con->visible.value;
     if (painter.color[3] == 0.0) return 0;
 
-    constellation_create_stars(con);
+    err = constellation_create_stars(con);
+    if (err) {
+        con->error = err;
+        return 0;
+    }
+
     if (!constellation_is_visible(&painter, con))
         return 0;
 
