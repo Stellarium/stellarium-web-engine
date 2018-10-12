@@ -253,29 +253,6 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
     return 0;
 }
 
-static int skycultures_init(obj_t *obj, json_value *args)
-{
-    const char *path;
-    const char *BASE_URL = "https://data.stellarium.org/skycultures";
-    char name[256], url[1024];
-    skycultures_t *cults = (void*)obj;
-    skyculture_t *cult;
-    asset_set_alias(BASE_URL, "asset://skycultures");
-
-    // Add all the skycultures available in the assets.
-    ASSET_ITER("asset://skycultures/", path) {
-        if (!str_endswith(path, "/info.ini")) continue;
-        strcpy(name, path + strlen("asset://skycultures/"));
-        *strchr(name, '/') = '\0';
-        sprintf(url, "%s/%s", BASE_URL, name);
-        cult = add_from_uri(cults, url, name);
-        // Immediately load the western skyculture.
-        if (strcmp(name, "western") == 0)
-            obj_set_attr((obj_t*)cult, "active", "b", true);
-    }
-    return 0;
-}
-
 static void skycultures_gui(obj_t *obj, int location)
 {
     skyculture_t *cult;
@@ -313,6 +290,9 @@ static int skycultures_add_data_source(
     if (obj_get((obj_t*)cults, key, 0)) return 0;
     cult = add_from_uri(cults, url, key);
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
+    // If it's the first one activate it immediately.
+    if (cult == (void*)cults->obj.children)
+        obj_set_attr((obj_t*)cult, "active", "b", true);
     return 0;
 }
 
@@ -340,7 +320,6 @@ static obj_klass_t skycultures_klass = {
     .id             = "skycultures",
     .size           = sizeof(skycultures_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init           = skycultures_init,
     .gui            = skycultures_gui,
     .update         = skycultures_update,
     .add_data_source    = skycultures_add_data_source,

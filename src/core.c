@@ -265,7 +265,11 @@ void core_add_default_sources(void)
     #define BASE_URL "https://data.stellarium.org/"
     asset_set_alias(BASE_URL "landscapes", "asset://landscapes");
     obj_add_data_source(NULL, BASE_URL "landscapes", NULL);
+
+    // Skyculture.  We load the western culture immediately so we don't have
+    // to wait to parse the online directory index.json file.
     asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
+    obj_add_data_source(NULL, BASE_URL "skycultures/western", "skyculture");
     obj_add_data_source(NULL, BASE_URL "skycultures", NULL);
     #undef BASE_URL
 }
