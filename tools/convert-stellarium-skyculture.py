@@ -25,6 +25,7 @@ import os
 import re
 import requests
 import requests_cache
+import shutil
 import sys
 
 assert len(sys.argv) == 3
@@ -42,6 +43,7 @@ if os.path.dirname(__file__) != "./tools":
     sys.exit(-1)
 
 if not os.path.exists('data-src'): os.makedirs('data-src')
+if not os.path.exists(output_dir): os.makedirs(output_dir)
 requests_cache.install_cache('data-src/cache')
 
 def download(url, md5=None):
@@ -87,13 +89,19 @@ for line in gzip.open(hip_file):
     vmag = float(line[41:46].strip() or 'nan')
     ra = float(line[51:63].strip() or 'nan')
     de = float(line[64:76].strip() or 'nan')
+    # Fallback to the hms value if the degree is not set.  Not sure why
+    # it happens.
+    if isnan(ra) or isnan(de):
+        ra_hms = [float(x) for x in line[17:28].split(' ')]
+        de_dms = [float(x) for x in line[29:40].split(' ')]
+        ra = ra_hms[0] * 15. + ra_hms[1] / 4. + ra_hms[2] / 240.
+        de = de_dms[0] + de_dms[1] / 60. + de_dms[2] / 3600.
     all_stars[hip] = Star(hip, hd, vmag, s2c(ra * DD2R, de * DD2R))
 
 # Compute list of bright stars we can use in the data files.
 bright_stars = [x for x in all_stars.values() if x.hd]
 bright_stars = sorted(bright_stars, key=lambda x: x.vmag)[:10000]
 bright_stars = {x.hip: x for x in bright_stars}
-
 
 def find_closest_brigh_star(hip):
     """Return the closest bright star hip index around a given hip star"""
@@ -174,3 +182,12 @@ print >>out, '\n'.join(comments)
 for cst in sorted(csts.values(), key=lambda x: x.abb):
     lines = ' '.join('-'.join(str(x) for x in seg) for seg in cst.lines)
     print >>out, '%s|%s|%s' % (cst.abb, cst.name, lines)
+
+# info.ini
+shutil.copy(os.path.join(input_dir, 'info.ini'),
+            os.path.join(output_dir, 'info.ini'))
+
+# Description files
+# Only english one for the moment.
+shutil.copy(os.path.join(input_dir, 'description.en.utf8'),
+            os.path.join(output_dir, 'description.en.html'))
