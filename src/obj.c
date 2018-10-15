@@ -56,10 +56,6 @@ static const attribute_t DEFAULT_ATTRIBUTES[] = {
       .desc = "Visual magnitude"},
     { "distance", "f", .hint = "dist", .fn = obj_fn_default_pos,
       .desc = "Distance (AU)." },
-    { "rise", "f", .hint = "mjd", .fn = obj_fn_default_pos,
-      .desc = "Rising time." },
-    { "set", "f", .hint = "mjd", .fn = obj_fn_default_pos,
-      .desc = "Setting time." },
     { "type", "S", .hint = "obj_type", MEMBER(obj_t, type),
       .desc = "Type id string as defined by Simbad."},
 };
@@ -449,7 +445,6 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
-    double time;
     double v[4] = {}, az, alt, ra, de;
     if (str_equ(attr->name, "distance")) {
         return args_value_new("f", "dist",
@@ -498,21 +493,6 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
         eraC2s(v, &az, &alt);
         alt = eraAnpm(alt);
         return args_value_new("f", "d_angle", alt);
-    }
-
-    if (str_equ(attr->name, "rise")) {
-        time = compute_event(core->observer, obj, EVENT_RISE,
-                             core->observer->tt - 1.0 / 2,
-                             core->observer->tt + 1.0 / 2,
-                             1.0 / 24 / 60 / 2);
-        return args_value_new("f", "jdm", time);
-    }
-    if (str_equ(attr->name, "set")) {
-        time = compute_event(core->observer, obj, EVENT_SET,
-                             core->observer->tt - 1.0 / 2,
-                             core->observer->tt + 1.0 / 2,
-                             1.0 / 24 / 60 / 2);
-        return args_value_new("f", "jdm", time);
     }
     assert(false);
     return NULL;

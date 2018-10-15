@@ -315,7 +315,7 @@ static void info_widget(obj_t *obj)
     const char *value, *cat;
     char buf[256], buf1[64], buf2[64];
     double icrs[4], cirs[4], observed[4];
-    double v, t, ra, dec, az, alt;
+    double v, ra, dec, az, alt;
 
     if (!obj) return;
     obj_update(obj, core->observer, 0);
@@ -359,21 +359,6 @@ static void info_widget(obj_t *obj)
         if (!isnan(v)) {
             sprintf(buf, "%.0f%%", v * 100);
             gui_label("PHASE", buf);
-        }
-    }
-
-    if (DEFINED(SWE_SHOW_SET_TIME)) {
-        if (    obj_has_attr(obj, "rise") &&
-                (obj_get_attr(obj, "rise", "f", &t) == 0)) {
-            sprintf(buf, "%s", format_time(buf1, t,
-                    core->utc_offset / 60. / 24., NULL));
-            gui_label("RISE", buf);
-        }
-        if (    obj_has_attr(obj, "set") &&
-                (obj_get_attr(obj, "set", "f", &t) == 0)) {
-            sprintf(buf, "%s", format_time(buf1, t,
-                    core->utc_offset / 60. / 24., NULL));
-            gui_label("SET", buf);
         }
     }
 }

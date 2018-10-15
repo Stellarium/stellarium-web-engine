@@ -40,8 +40,6 @@ extern "C" {
 // Imgui configs.
 #define IMGUI_INCLUDE_IMGUI_USER_INL
 
-#define SWE_SHOW_SET_TIME 1
-
 #ifndef SWE_GUI
 #   ifdef __EMSCRIPTEN__
 #      define SWE_GUI 0

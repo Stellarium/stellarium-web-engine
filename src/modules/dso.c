@@ -740,8 +740,6 @@ static obj_klass_t dso_klass = {
         PROPERTY("az"),
         PROPERTY("radec"),
         PROPERTY("azalt"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
         PROPERTY("vmag"),
         PROPERTY("type"),
         {},

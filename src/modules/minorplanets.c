@@ -422,8 +422,6 @@ static obj_klass_t mplanet_klass = {
         PROPERTY("az"),
         PROPERTY("radec"),
         PROPERTY("azalt"),
-        PROPERTY("rise"),
-        PROPERTY("set"),
         PROPERTY("vmag"),
         PROPERTY("type"),
         {},
