@@ -38,7 +38,7 @@ static const struct {
 static texture_t *get_texture(void)
 {
     if (!g_tex) {
-        g_tex = texture_from_url("asset://symbols.png", 0);
+        g_tex = texture_from_url("asset://symbols.png", TF_MIPMAP);
         assert(g_tex->tex_w == g_tex->w);
         assert(g_tex->tex_h == g_tex->h);
     }
