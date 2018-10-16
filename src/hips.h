@@ -141,6 +141,10 @@ texture_t *hips_get_tile_texture(
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete);
 
+int hips_parse_hipslist_from_mem(
+        const char *data, void *user,
+        int callback(void *user, const char *url, double release_date));
+
 /*
  * Function: hips_parse_hipslist
  * Parse a hipslist file.

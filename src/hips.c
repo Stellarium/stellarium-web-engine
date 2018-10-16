@@ -545,19 +545,15 @@ int hips_render_traverse(
     return 0;
 }
 
-
-int hips_parse_hipslist(
-        const char *url, void *user,
+int hips_parse_hipslist_from_mem(
+        const char *data, void *user,
         int callback(void *user, const char *url, double release_date))
 {
-    const char *data;
-    int code, len, nb = 0;
+    int len, nb = 0;
     char *line, *hips_service_url = NULL, *key, *value, *tmp = NULL;
     double hips_release_date = 0;
-    data = asset_get_data(url, NULL, &code);
-    if (code && !data) return -2;
-    if (!data) return -1; // Still loading.
 
+    assert(data);
     while (*data) {
         len = strchrnul(data, '\n') - data;
         asprintf(&line, "%.*s", len, data);
@@ -586,9 +582,19 @@ next:
             nb++;
         }
     }
-
-    free(hips_service_url);
     return nb;
+}
+
+int hips_parse_hipslist(
+        const char *url, void *user,
+        int callback(void *user, const char *url, double release_date))
+{
+    const char *data;
+    int code;
+    data = asset_get_data(url, NULL, &code);
+    if (code && !data) return -2;
+    if (!data) return -1; // Still loading.
+    return hips_parse_hipslist_from_mem(data, user, callback);
 }
 
 static int load_tile_worker(worker_t *worker)
