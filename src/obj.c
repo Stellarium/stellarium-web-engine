@@ -428,11 +428,12 @@ int obj_list(const obj_t *obj, observer_t *obs,
 }
 
 EMSCRIPTEN_KEEPALIVE
-int obj_add_data_source(obj_t *obj, const char *url, const char *type)
+int obj_add_data_source(obj_t *obj, const char *url, const char *type,
+                        json_value *args)
 {
     if (!obj) obj = &core->obj;
     if (obj->klass->add_data_source)
-        return obj->klass->add_data_source(obj, url, type);
+        return obj->klass->add_data_source(obj, url, type, args);
     return 1; // Not recognised.
 }
 

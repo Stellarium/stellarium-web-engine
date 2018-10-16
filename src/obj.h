@@ -118,7 +118,8 @@ struct obj_klass
                 int (*f)(void *user, obj_t *obj));
 
     // Add a source of data.
-    int (*add_data_source)(obj_t *obj, const char *url, const char *type);
+    int (*add_data_source)(obj_t *obj, const char *url, const char *type,
+                           json_value *args);
 
     // Return the render order.
     // By default this return the class attribute `render_order`.
@@ -465,13 +466,16 @@ int obj_list(const obj_t *obj, observer_t *obs,
  *   obj    - a module, or NULL for any module.
  *   url    - base url of the data.
  *   type   - type of data.  NULL for directory.
+ *   args   - additional arguments passed.  Can be used by the modules to
+ *            check if they can handle the source or not.
  *
  * Return:
  *   0 if the source was accepted.
  *   1 if the source was no recognised.
  *   a negative error code otherwise.
  */
-int obj_add_data_source(obj_t *obj, const char *url, const char *type);
+int obj_add_data_source(obj_t *obj, const char *url, const char *type,
+                        json_value *args);
 
 /*
  * Function: obj_add_global_listener

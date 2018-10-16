@@ -88,9 +88,6 @@ typedef struct planets {
     texture_t *earth_shadow_tex;
     // Sun halo.
     texture_t *halo_tex;
-
-    // Status of the hipslist parsing.
-    int         hipslist_parsed;
 } planets_t;
 
 
@@ -806,53 +803,10 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     return cmp(eraPm(pb->pvg[0]), eraPm(pa->pvg[0]));
 }
 
-static int on_hips(void *user, const char *url, double release_date)
-{
-    regex_t reg;
-    regmatch_t matches[3];
-    int r;
-    char name[128];
-    bool normalmap = false;
-    planets_t *planets = user;
-    planet_t *p;
-
-    // Determine the name of the survey from the url:
-    // some/thing/jupiter -> jupiter.
-    regcomp(&reg, ".*/([^/-]+)(-normal)?$", REG_EXTENDED);
-    r = regexec(&reg, url, 3, matches, 0);
-    if (r) goto end;
-    sprintf(name, "%.*s", (int)(matches[1].rm_eo - matches[1].rm_so),
-                          url + matches[1].rm_so);
-    normalmap = matches[2].rm_so >= 0;
-
-    // Check if the name correspond to a planet.
-    if ((p = planet_get_by_name(planets, name))) {
-        LOG_V("Assign hips '%s' to planet '%s'", url, name);
-        if (!normalmap) {
-            p->hips = hips_create(url, release_date, NULL);
-            hips_set_frame(p->hips, FRAME_ICRS);
-        }
-        else {
-            p->hips_normalmap = hips_create(url, release_date, NULL);
-            hips_set_frame(p->hips_normalmap, FRAME_ICRS);
-        }
-    }
-
-end:
-    regfree(&reg);
-    return 0;
-}
-
 static int planets_update(obj_t *obj, const observer_t *obs, double dt)
 {
     planets_t *planets = (planets_t*)obj;
     planet_t *p;
-
-    if (planets->hipslist_parsed == -1) {
-        planets->hipslist_parsed = hips_parse_hipslist(
-                "https://data.stellarium.org/surveys/hipslist",
-                planets, on_hips);
-    }
 
     PLANETS_ITER(planets, p) {
         obj_update((obj_t*)p, obs, dt);
@@ -1027,7 +981,6 @@ static int planets_init(obj_t *obj, json_value *args)
     regex_t reg;
     regmatch_t matches[2];
 
-    planets->hipslist_parsed = -1;
     data = asset_get_data("asset://planets.ini", NULL, NULL);
     ini_parse_string(data, planets_ini_handler, planets);
     assert(planets->sun);
@@ -1089,6 +1042,44 @@ static int planets_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
+static double parse_release_date(const char *str)
+{
+    int iy, im, id, ihr, imn;
+    double d1, d2;
+    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
+    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
+    return d1 - DJM0 + d2;
+}
+
+static int planets_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
+{
+    const char *args_type, *frame, *release_date_str;
+    double release_date = 0;
+    planets_t *planets = (void*)obj;
+    planet_t *p;
+
+    if (!type || !args || strcmp(type, "hips")) return 1;
+    args_type = json_get_attr_s(args, "type");
+    if (!args_type) return 1;
+    if (strcmp(args_type, "planet") && strcmp(args_type, "planet-normal"))
+        return 1;
+
+    frame = json_get_attr_s(args, "hips_frame");
+    if (!frame) return 1;
+    p = planet_get_by_name(planets, frame);
+    if (!p) return 1;
+    release_date_str = json_get_attr_s(args, "hips_release_date");
+    if (release_date_str)
+        release_date = parse_release_date(release_date_str);
+    if (strcmp(args_type, "planet") == 0)
+        p->hips = hips_create(url, release_date, NULL);
+    else
+        p->hips_normalmap = hips_create(url, release_date, NULL);
+    hips_set_frame(p->hips, FRAME_ICRS);
+    return 0;
+}
+
 
 /*
  * Meta class declarations.
@@ -1126,6 +1117,7 @@ static obj_klass_t planets_klass = {
     .get_by_oid = planets_get_by_oid,
     .get     = planets_get,
     .list    = planets_list,
+    .add_data_source = planets_add_data_source,
     .render_order = 30,
 };
 OBJ_REGISTER(planets_klass)

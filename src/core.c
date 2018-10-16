@@ -141,13 +141,14 @@ static int core_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
-static int core_add_data_source(obj_t *obj, const char *url, const char *type)
+static int core_add_data_source(obj_t *obj, const char *url, const char *type,
+                                json_value *args)
 {
     obj_t *module;
     int r;
     DL_FOREACH(core->obj.children, module) {
         if (!(module->klass->flags & OBJ_MODULE)) continue;
-        r = obj_add_data_source(module, url, type);
+        r = obj_add_data_source(module, url, type, args);
         if (r == 1) continue; // Can't add here.
         return r;
     }
@@ -264,13 +265,17 @@ void core_add_default_sources(void)
 {
     #define BASE_URL "https://data.stellarium.org/"
     asset_set_alias(BASE_URL "landscapes", "asset://landscapes");
-    obj_add_data_source(NULL, BASE_URL "landscapes", NULL);
+    obj_add_data_source(NULL, BASE_URL "landscapes", NULL, NULL);
 
     // Skyculture.  We load the western culture immediately so we don't have
     // to wait to parse the online directory index.json file.
     asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
-    obj_add_data_source(NULL, BASE_URL "skycultures/western", "skyculture");
-    obj_add_data_source(NULL, BASE_URL "skycultures", NULL);
+    obj_add_data_source(NULL, BASE_URL "skycultures/western", "skyculture",
+                        NULL);
+    obj_add_data_source(NULL, BASE_URL "skycultures", NULL, NULL);
+
+    // HiPS surveys.
+    obj_add_data_source(NULL, BASE_URL "surveys", "hipslist", NULL);
     #undef BASE_URL
 }
 

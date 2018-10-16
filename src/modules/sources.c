@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include "ini.h"
 
 /*
  * File: sources.c
@@ -21,9 +22,17 @@
  * module.
  */
 
+enum {
+    SOURCE_JSON = 0,
+    SOURCE_HIPSLIST,
+    SOURCE_HIPS,
+};
+
 typedef struct source source_t;
 struct source {
     char            *url;
+    int             type;
+    double          release_date;
     source_t        *next, *prev;
 };
 
@@ -32,15 +41,50 @@ typedef struct sources {
     source_t        *sources;
 } sources_t;
 
-static int add_data_source(obj_t *obj, const char *url, const char *type)
+static int add_data_source(obj_t *obj, const char *url, const char *type,
+                           json_value *args)
 {
-    source_t *source;
+    source_t *source = NULL;
     sources_t *sources = (sources_t*)obj;
-    if (type) return 1;
-    source = calloc(1, sizeof(*source));
-    source->url = strdup(url);
+    if (!type) {
+        source = calloc(1, sizeof(*source));
+        source->url = strdup(url);
+    } else if (strcmp(type, "hipslist") == 0) {
+        source = calloc(1, sizeof(*source));
+        source->url = strdup(url);
+        source->type = SOURCE_HIPSLIST;
+    }
+    if (!source) return 1;
     DL_APPEND(sources->sources, source);
     return 0;
+}
+
+static const char *get_data(const source_t *source, const char *file)
+{
+    char url[1024];
+    int code;
+    const char *data;
+
+    if (    source->release_date &&
+            (strncmp(source->url, "http://", 7) == 0 ||
+             strncmp(source->url, "https://", 8) == 0)) {
+        sprintf(url, "%s/%s?v=%d",
+                source->url, file, (int)source->release_date);
+    } else {
+        sprintf(url, "%s/%s", source->url, file);
+    }
+
+    data = asset_get_data(url, NULL, &code);
+    if (!code) return NULL;
+    if (!data) LOG_W("Cannot get %s", url);
+    return data;
+}
+
+static void release_data(const source_t *source, const char *file)
+{
+    char url[1024];
+    sprintf(url, "%s/%s", source->url, file);
+    asset_release(url);
 }
 
 static int parse_index(const char *base_url, const char *data)
@@ -60,31 +104,72 @@ static int parse_index(const char *base_url, const char *data)
         key = json->u.object.values[i].name;
         type = json_get_attr_s(json->u.object.values[i].value, "type");
         sprintf(url, "%s/%s", base_url, key);
-        obj_add_data_source(NULL, url, type);
+        obj_add_data_source(NULL, url, type, NULL);
     }
 
     json_value_free(json);
     return 0;
 }
 
+static int on_hips(void *user, const char *url, double release_date)
+{
+    sources_t *sources = (sources_t*)user;
+    source_t *source;
+    source = calloc(1, sizeof(*source));
+    source->url = strdup(url);
+    source->type = SOURCE_HIPS;
+    source->release_date = release_date;
+    DL_APPEND(sources->sources, source);
+    return 0;
+}
+
+static int hips_property_handler(void* user, const char* section,
+                                 const char* name, const char* value)
+{
+    json_value *args = user;
+    json_object_push(args, name, json_string_new(value));
+    return 0;
+}
+
+static int process_source(sources_t *sources, source_t *source)
+{
+    const char *data;
+    json_value *args;
+
+    switch (source->type) {
+    case SOURCE_JSON:
+        data = get_data(source, "index.json");
+        if (!data) return 0;
+        parse_index(source->url, data);
+        release_data(source, "index.json");
+        return 1;
+    case SOURCE_HIPSLIST:
+        data = get_data(source, "hipslist");
+        if (!data) return 0;
+        hips_parse_hipslist_from_mem(data, sources, on_hips);
+        release_data(source, "hipslist");
+        return 1;
+    case SOURCE_HIPS:
+        data = get_data(source, "properties");
+        if (!data) return 0;
+        args = json_object_new(0);
+        ini_parse_string(data, hips_property_handler, args);
+        obj_add_data_source(NULL, source->url, "hips", args);
+        json_builder_free(args);
+        return 1;
+    default:
+        assert(false);
+    }
+    return 1;
+}
+
 static int sources_update(obj_t *obj, const observer_t *obs, double dt)
 {
     sources_t *sources = (sources_t*)obj;
     source_t *source, *tmp;
-    char index_url[1024];
-    const char *data;
-    int code;
 
     DL_FOREACH_SAFE(sources->sources, source, tmp) {
-        sprintf(index_url, "%s/index.json", source->url);
-        data = asset_get_data(index_url, NULL, &code);
-        if (!code) continue;
-        if (data) {
-            parse_index(source->url, data);
-            asset_release(index_url);
-        } else {
-            LOG_W("Cannot get %s", index_url);
-        }
+        if (!process_source(sources, source)) continue;
         DL_DELETE(sources->sources, source);
         free(source->url);
         free(source);

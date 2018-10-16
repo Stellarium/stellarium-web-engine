@@ -244,7 +244,7 @@ static void landscapes_gui(obj_t *obj, int location)
 }
 
 static int landscapes_add_data_source(
-        obj_t *obj, const char *url, const char *type)
+        obj_t *obj, const char *url, const char *type, json_value *args)
 {
     const char *key;
     landscapes_t *lss = (landscapes_t*)obj;

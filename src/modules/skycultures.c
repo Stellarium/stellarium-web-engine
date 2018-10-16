@@ -278,7 +278,7 @@ static int skycultures_update(obj_t *obj, const observer_t *obs, double dt)
 }
 
 static int skycultures_add_data_source(
-        obj_t *obj, const char *url, const char *type)
+        obj_t *obj, const char *url, const char *type, json_value *args)
 {
     const char *key;
     skycultures_t *cults = (void*)obj;
