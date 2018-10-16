@@ -146,7 +146,7 @@ static int process_source(sources_t *sources, source_t *source)
     case SOURCE_HIPSLIST:
         data = get_data(source, "hipslist");
         if (!data) return 0;
-        hips_parse_hipslist_from_mem(data, sources, on_hips);
+        hips_parse_hipslist(data, sources, on_hips);
         release_data(source, "hipslist");
         return 1;
     case SOURCE_HIPS:
