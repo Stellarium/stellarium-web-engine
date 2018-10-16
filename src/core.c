@@ -511,11 +511,18 @@ int core_render(int w, int h, double pixel_scale)
     const double max_hint_mag = 7.0;
     double max_label_mag;
 
-    // XXX: Compute r_min and max_mag from the screen resolution.
-    // I add a small security offset to max_mag to prevent bugs when we
-    // zoom out.
-    const float r_min = 0.01 * DD2R;
-    max_mag = get_max_observed_mag(r_min) + 0.5;
+    /*
+     * Compute r_min and max_mag from the screen resolution.
+     *
+     * r_min is computed to match more or less one logical pixel of the
+     * screen.
+     *
+     * max_mag is computed so that we stop rendering after we reach a certain
+     * fraction of r_min.  I add a small security offset to max_mag to prevent
+     * bugs when we zoom out.
+     */
+    core->r_min = 60 * DD2R / sqrt(h / pixel_scale * w / pixel_scale);
+    max_mag = get_max_observed_mag(core->r_min / 5) + 0.5;
 
     // The number of labels we show is proportional to the screen area.
     // I use my own screen (1920 * 1080) as a reference, with labels up
@@ -821,8 +828,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double l;                           // Luminance.
     double r;                           // Radius in rad.
-    // XXX: this value should depend on the screen resolution.
-    double r_min = 0.05 * DD2R; // Below this radius we lower luminance.
+    double r_min = core->r_min;
 
     r = get_radius_for_mag(mag);
 

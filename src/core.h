@@ -200,6 +200,9 @@ struct core
 
     // Maintains a list of clickable/hoverable areas.
     areas_t         *areas;
+
+    // Computed min radius before we start to dim out stars brightness.
+    double r_min;
 };
 
 enum {
