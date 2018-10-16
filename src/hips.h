@@ -150,10 +150,9 @@ texture_t *hips_get_tile_texture(
  *    -1   if still loading.
  *    < -1 if error.
  */
-int hips_parse_hipslist(const char *url,
-                        int callback(const char *url, double release_date,
-                                     void *user),
-                        void *user);
+int hips_parse_hipslist(
+        const char *url, void *user,
+        int callback(void *user, const char *url, double release_date));
 
 /*
  * Function: hips_set_frame

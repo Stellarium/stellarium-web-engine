@@ -546,10 +546,9 @@ int hips_render_traverse(
 }
 
 
-int hips_parse_hipslist(const char *url,
-                        int callback(const char *url, double release_date,
-                                     void *user),
-                        void *user)
+int hips_parse_hipslist(
+        const char *url, void *user,
+        int callback(void *user, const char *url, double release_date))
 {
     const char *data;
     int code, len, nb = 0;
@@ -580,7 +579,7 @@ next:
 
         // Next survey.
         if ((*data == '\0' || *data == '\n') && hips_service_url) {
-            callback(hips_service_url, hips_release_date, user);
+            callback(user, hips_service_url, hips_release_date);
             free(hips_service_url);
             hips_service_url = NULL;
             hips_release_date = 0;

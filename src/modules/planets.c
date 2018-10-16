@@ -806,7 +806,7 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     return cmp(eraPm(pb->pvg[0]), eraPm(pa->pvg[0]));
 }
 
-static int on_hips(const char *url, double release_date, void *user)
+static int on_hips(void *user, const char *url, double release_date)
 {
     regex_t reg;
     regmatch_t matches[3];
@@ -851,7 +851,7 @@ static int planets_update(obj_t *obj, const observer_t *obs, double dt)
     if (planets->hipslist_parsed == -1) {
         planets->hipslist_parsed = hips_parse_hipslist(
                 "https://data.stellarium.org/surveys/hipslist",
-                on_hips, planets);
+                planets, on_hips);
     }
 
     PLANETS_ITER(planets, p) {
