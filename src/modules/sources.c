@@ -81,6 +81,7 @@ static int sources_update(obj_t *obj, const observer_t *obs, double dt)
         if (!code) continue;
         if (data) {
             parse_index(source->url, data);
+            asset_release(index_url);
         } else {
             LOG_W("Cannot get %s", index_url);
         }
