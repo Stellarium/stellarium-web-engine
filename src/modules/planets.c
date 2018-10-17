@@ -1072,11 +1072,13 @@ static int planets_add_data_source(
     release_date_str = json_get_attr_s(args, "hips_release_date");
     if (release_date_str)
         release_date = parse_release_date(release_date_str);
-    if (strcmp(args_type, "planet") == 0)
+    if (strcmp(args_type, "planet") == 0) {
         p->hips = hips_create(url, release_date, NULL);
-    else
+        hips_set_frame(p->hips, FRAME_ICRS);
+    } else {
         p->hips_normalmap = hips_create(url, release_date, NULL);
-    hips_set_frame(p->hips, FRAME_ICRS);
+        hips_set_frame(p->hips_normalmap, FRAME_ICRS);
+    }
     return 0;
 }
 
