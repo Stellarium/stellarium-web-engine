@@ -55,6 +55,19 @@ int sys_device_sensors(int enable, double acc[3], double mag[3]);
 int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
 
 /*
+ * Function: sys_translate
+ * Translate a string in current locale.
+ *
+ * Parameters:
+ *   domain - optional domain hint for the translator.
+ *   str    - the string to translate.
+ *
+ * Return:
+ *   The translated string.
+ */
+const char *sys_translate(const char *domain, const char *str);
+
+/*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
  */
@@ -66,6 +79,7 @@ typedef struct {
                           double acc[3], double mag[3]);
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
+    const char *(*translate)(void *user, const char *domain, const char *str);
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

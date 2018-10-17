@@ -62,3 +62,9 @@ int sys_get_position(double *lat, double *lon, double *alt, double *accuracy)
     return sys_callbacks.get_position(
                         sys_callbacks.user, lat, lon, alt, accuracy);
 }
+
+const char *sys_translate(const char *domain, const char *str)
+{
+    if (!sys_callbacks.translate) return str;
+    return sys_callbacks.translate(sys_callbacks.user, domain, str);
+}
