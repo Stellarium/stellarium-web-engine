@@ -23,8 +23,10 @@ extern "C" {
 #       pragma clang diagnostic ignored \
                 "-Wincompatible-pointer-types-discards-qualifiers"
 #   else
-#       pragma GCC diagnostic ignored "-Wdiscarded-array-qualifiers"
-#       pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#       if __GNUC__ >= 5
+#           pragma GCC diagnostic ignored "-Wdiscarded-array-qualifiers"
+#           pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#       endif
 #   endif
 #endif
 
