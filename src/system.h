@@ -67,6 +67,8 @@ int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
  */
 const char *sys_translate(const char *domain, const char *str);
 
+char *sys_render_text(const char *txt, float height, int *w, int *h);
+
 /*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
@@ -80,6 +82,8 @@ typedef struct {
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
+    char *(*render_text)(void *user, const char *txt,
+                         float height, int *w, int *h);
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

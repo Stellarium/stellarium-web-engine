@@ -601,7 +601,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         if (ctex->size == size && strcmp(ctex->text, text) == 0) break;
     }
     if (!ctex) {
-        img = font_render(text, size * oversample, &w, &h);
+        img = (void*)sys_render_text(text, size * oversample, &w, &h);
         ctex = calloc(1, sizeof(*ctex));
         ctex->size = size;
         ctex->text = strdup(text);

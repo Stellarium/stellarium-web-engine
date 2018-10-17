@@ -68,3 +68,10 @@ const char *sys_translate(const char *domain, const char *str)
     if (!sys_callbacks.translate) return str;
     return sys_callbacks.translate(sys_callbacks.user, domain, str);
 }
+
+char *sys_render_text(const char *txt, float height, int *w, int *h)
+{
+    if (!sys_callbacks.render_text)
+        return (void*)font_render(txt, height, w, h);
+    return sys_callbacks.render_text(sys_callbacks.user, txt, height, w, h);
+}
