@@ -194,6 +194,9 @@ struct core
         double      dst_fov;  // Destination fov (0 to ignore).
     } target;
 
+    // Zoom movement. -1 to zoom out, +1 to zoom in.
+    double zoom;
+
     // Auto computed from fov and screen aspect ratio.
     double fovx;
     double fovy;

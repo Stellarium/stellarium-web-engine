@@ -439,6 +439,9 @@ static int core_update(void)
     if (!atm_visible) target_vmag_shift -= 0.4;
     r = move_toward(&core->vmag_shift, target_vmag_shift, 0, 64.0, 1.0 / 60);
 
+    // Continuous zoom.
+    core->fov *= pow(1.05, -core->zoom);
+
     core->max_vmag_in_fov = INFINITY;
     progressbar_update();
     return r ? 1 : 0;
@@ -1000,6 +1003,7 @@ static obj_klass_t core_klass = {
         PROPERTY("fps", "f", MEMBER(core_t, prof.fps)),
         PROPERTY("clicks", "d", MEMBER(core_t, clicks)),
         PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
+        PROPERTY("zoom", "f", MEMBER(core_t, zoom)),
         FUNCTION("lookat", .fn = core_lookat),
         {}
     }
