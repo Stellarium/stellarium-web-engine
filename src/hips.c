@@ -334,7 +334,7 @@ texture_t *hips_get_tile_texture(
     if (!hips_is_ready(hips)) return NULL;
 
     tile = hips_get_tile(hips, order, pix, flags, &code);
-    if (!tile && code) { // The tile doesn't exists
+    if (!tile && code && code != 598) { // The tile doesn't exists
         if (loading_complete) *loading_complete = true;
         return NULL;
     }
@@ -661,9 +661,10 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
         }
         return NULL;
     }
+
     // Anything else that doesn't return the data is an actual error.
     if (!data) {
-        LOG_E("Cannot get url '%s'", url);
+        if (*code != 598) LOG_E("Cannot get url '%s'", url);
         return NULL;
     }
 
