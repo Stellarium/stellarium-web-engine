@@ -301,6 +301,9 @@ static void update(void)
             curl_easy_getinfo(handle, CURLINFO_PRIVATE, (char**)&req);
             curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE,
                                       &req->status_code);
+            // Convention: returns a server timeout if the connection failed.
+            if (!req->status_code && msg->data.result)
+                req->status_code = 598;
             g.nb--;
             curl_multi_remove_handle(g.curlm, handle);
             curl_easy_cleanup(handle);
