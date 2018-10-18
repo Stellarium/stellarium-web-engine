@@ -167,7 +167,6 @@ void asset_set_alias(const char *base, const char *alias)
     int i;
     assert(str_startswith(base, "http://") ||
            str_startswith(base, "https://"));
-    assert(str_startswith(alias, "asset://"));
     assert(!str_endswith(base, "/"));
     assert(!str_endswith(alias, "/"));
     for (i = 0; i < ARRAY_SIZE(g_alias); i++) {
