@@ -39,6 +39,18 @@ int sys_get_utc_offset(void);
 const char *sys_get_user_dir(void);
 
 /*
+ * Function: sys_make_dir
+ * Create all the directories parent of a given file path if they do not
+ * exist yet.
+ *
+ * For example, sys_make_dir("/a/b/c.txt") will create /a/ and /a/b/.
+ *
+ * Return:
+ *   0 in case of success, otherwise an error code.
+ */
+int sys_make_dir(const char *path);
+
+/*
  * Function: sys_device_sensors
  * Get the readings from the device accelerometers and magnetometer.
  *

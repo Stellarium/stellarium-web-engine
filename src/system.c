@@ -9,9 +9,14 @@
 
 #include "swe.h"
 
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
@@ -48,6 +53,20 @@ const char *sys_get_user_dir(void)
     } else {
         return ".";
     }
+}
+
+int sys_make_dir(const char *path)
+{
+    char tmp[PATH_MAX];
+    char *p;
+    strcpy(tmp, path);
+    for (p = tmp + 1; *p; p++) {
+        if (*p != '/') continue;
+        *p = '\0';
+        if ((mkdir(tmp, S_IRWXU) != 0) && (errno != EEXIST)) return -1;
+        *p = '/';
+    }
+    return 0;
 }
 
 int sys_device_sensors(int enable, double acc[3], double mag[3])
