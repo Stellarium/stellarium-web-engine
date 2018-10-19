@@ -1089,6 +1089,7 @@ static int planets_add_data_source(
 
 static obj_klass_t planet_klass = {
     .id = "planet",
+    .model = "jpl_sso",
     .size = sizeof(planet_t),
     .update = planet_update,
     .attributes = (attribute_t[]) {

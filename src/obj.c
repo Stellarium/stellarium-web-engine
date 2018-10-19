@@ -122,6 +122,7 @@ obj_t *obj_create(const char *type, const char *id, obj_t *parent,
 
     for (klass = g_klasses; klass; klass = klass->next) {
         if (klass->id && strcmp(klass->id, type) == 0) break;
+        if (klass->model && strcmp(klass->model, type) == 0) break;
     }
     assert(klass);
     obj = obj_create_(klass, id, parent, args);

@@ -86,7 +86,8 @@ typedef struct obj_klass obj_klass_t;
  */
 struct obj_klass
 {
-    const char  *id;
+    const char *id;
+    const char *model; // Model name in noctua server.
     size_t   size; // must be set to the size of the object struct.
     uint32_t flags;
     // Various methods to manipulate objects of this class.
