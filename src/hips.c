@@ -323,7 +323,8 @@ texture_t *hips_get_tile_texture(
     if (loading_complete) *loading_complete = false;
     if (fade) *fade = 1.0;
     if (proj) projection_init_healpix(proj, 1 << order, pix, true, outside);
-    if (split) *split = max(4, 12 >> order);
+    if (split)
+        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
     if (uv) {
         if (outside) memcpy(uv, UV_OUT, sizeof(UV_OUT));
         else memcpy(uv, UV_IN,  sizeof(UV_IN));
@@ -381,7 +382,8 @@ texture_t *hips_get_tile_texture(
     if (!tex) return NULL;
     if (proj) projection_init_healpix(
             proj, 1 << order, pix, true, outside);
-    if (split) *split = max(4, 12 >> order);
+    if (split)
+        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
     if (fade) *fade = 1.0;
     return tex;
 }
