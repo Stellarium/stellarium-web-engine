@@ -1,5 +1,14 @@
 // Auto generated from tools/makeassets.py
 
+static const unsigned char DATA_stars_properties[127] __attribute__((aligned(4))) =
+    "hips_order_min           = 0\n"
+    "hips_tile_format         = eph\n"
+    "max_vmag                 = 7.125\n"
+    "type                     = stars\n"
+    "";
+
+ASSET_REGISTER(stars_properties, "stars/properties", DATA_stars_properties, false)
+
 static const unsigned char DATA_stars_Norder0_Dir0_Npix0_eph[16114] __attribute__((aligned(4))) =
 {
     96,63,0,0,120,218,125,187,99,140,47,64,243,168,57,182,109,219,182,109,

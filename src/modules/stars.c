@@ -419,9 +419,11 @@ static int stars_init(obj_t *obj, json_value *args)
     // XXX: would probably be better to use two surveys here instead of
     // 'hips_add_manual_tile'.
     ASSET_ITER("asset://stars/", path) {
-        sscanf(path + 14, "Norder%d/Dir%d/Npix%d.eph", &order, &dir, &pix);
-        data = asset_get_data(path, &size, NULL);
-        hips_add_manual_tile(stars->survey, order, pix, data, size);
+        if (sscanf(path + 14, "Norder%d/Dir%d/Npix%d.eph",
+                   &order, &dir, &pix) == 3) {
+            data = asset_get_data(path, &size, NULL);
+            hips_add_manual_tile(stars->survey, order, pix, data, size);
+        }
     }
 
     return 0;

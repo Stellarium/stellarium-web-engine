@@ -154,6 +154,8 @@ stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
 # For each star, try to add to the lowest tile that is not already full.
 print 'create tiles'
 
+max_vmag_order0 = 0
+
 tiles = {}
 for s in stars:
     for order in range(8):
@@ -163,6 +165,7 @@ for s in stars:
         tile = tiles.setdefault(nuniq, [])
         if len(tile) >= MAX_SOURCES_PER_TILE: continue # Try higher order
         tile.append(s)
+        if order == 0: max_vmag_order0 = max(max_vmag_order0, s.vmag)
         break
 
 print 'save tiles'
@@ -219,3 +222,14 @@ for nuniq, stars in tiles.items():
 
     with open(path, 'wb') as out:
         out.write(ret)
+
+# Also generate the properties file.
+with open(os.path.join(out_dir, 'properties'), 'w') as out:
+    props = dict(
+        hips_order_min = 0,
+        max_vmag=max_vmag_order0,
+        type = 'stars',
+        hips_tile_format = 'eph',
+    )
+    for key, v in props.items():
+        print >>out, '{:<24} = {}'.format(key, v)
