@@ -87,21 +87,21 @@ static int constellation_create_stars(constellation_t *cons)
 static int parse_anchors(const char *str, double mat[3][3])
 {
     double uvs[3][3], tmp[3][3];
-    int i, hds[3], r;
+    int i, hips[3], r;
     double pos[3][3];
-    char hd_s[16];
+    char hip_s[16];
     obj_t *star;
 
     sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
-            &uvs[0][0], &uvs[0][1], &hds[0],
-            &uvs[1][0], &uvs[1][1], &hds[1],
-            &uvs[2][0], &uvs[2][1], &hds[2]);
+            &uvs[0][0], &uvs[0][1], &hips[0],
+            &uvs[1][0], &uvs[1][1], &hips[1],
+            &uvs[2][0], &uvs[2][1], &hips[2]);
     for (i = 0; i < 3; i++) {
         uvs[i][2] = 1.0;
-        sprintf(hd_s, "HD %d", hds[i]);
-        star = obj_get(NULL, hd_s, 0);
+        sprintf(hip_s, "HIP %d", hips[i]);
+        star = obj_get(NULL, hip_s, 0);
         if (!star) {
-            LOG_W("Cannot find star HD %d", hds[i]);
+            LOG_W("Cannot find star HIP %d", hips[i]);
             return -1;
         }
         // XXX: instead we should get the star g_ra and g_dec, since they
