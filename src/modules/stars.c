@@ -557,12 +557,17 @@ static int stars_get_visitor(int order, int pix, void *user)
         obj_t       *ret;
         int         cat;
         uint64_t    n;
+        int         survey;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, 0, order, pix, NULL);
+    tile = get_tile(d->stars, d->survey, order, pix, NULL);
+
     // If we are looking for a gaia star the id already gives us the tile.
-    if (d->cat == 2 && gaia_index_to_pix(order, d->n) != pix)
-        return 0;
+    if (d->cat == 2 || (d->cat == 3 && oid_is_gaia(d->n))) {
+        if (gaia_index_to_pix(order, d->n) != pix)
+            return 0;
+    }
+
     // Gaia survey has a min order of 3.
     // XXX: read the survey properties file instead of hard coding!
     if (!tile) return order < 3 ? 1 : 0;
@@ -580,7 +585,7 @@ static int stars_get_visitor(int order, int pix, void *user)
 
 static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
 {
-    int r, cat;
+    int r, cat, survey = 0;
     uint64_t n = 0;
     regmatch_t matches[3];
 
@@ -590,14 +595,16 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
     n = strtoull(id + matches[2].rm_so, NULL, 10);
     if (strncasecmp(id, "hip", 3) == 0) cat = 0;
     if (strncasecmp(id, "hd", 2) == 0) cat = 1;
-    if (strncasecmp(id, "gaia", 4) == 0) cat = 2;
+    if (strncasecmp(id, "gaia", 4) == 0) {cat = 2; survey = 1;}
 
     struct {
         stars_t  *stars;
         obj_t    *ret;
         int      cat;
         uint64_t n;
-    } d = {.stars=(void*)obj, .cat=cat, .n=n};
+        int      survey;
+    } d = {.stars=(void*)obj, .cat=cat, .n=n, .survey=survey};
+
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
 }
@@ -609,7 +616,8 @@ static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid)
         obj_t    *ret;
         int      cat;
         uint64_t n;
-    } d = {.stars=(void*)obj, .cat=2, .n=nsid};
+        int      survey;
+    } d = {.stars=(void*)obj, .cat=2, .n=nsid, .survey=1};
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
 }
@@ -621,11 +629,13 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         obj_t    *ret;
         int      cat;
         uint64_t n;
+        int      survey;
     } d = {.stars=(void*)obj, .cat=3, .n=oid};
     if (    !oid_is_catalog(oid, "HD  ") &&
             !oid_is_catalog(oid, "HIP ") &&
             !oid_is_gaia(oid))
         return NULL;
+    if (oid_is_gaia(oid)) d.survey = 1;
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
 }
