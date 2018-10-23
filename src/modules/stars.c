@@ -263,7 +263,6 @@ void stars_load(const char *path, stars_t *stars);
 static int stars_init(obj_t *obj, json_value *args);
 static int stars_render(const obj_t *obj, const painter_t *painter);
 static obj_t *stars_get(const obj_t *obj, const char *id, int flags);
-static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid);
 
 static star_t *star_create(const star_data_t *data)
 {
@@ -609,19 +608,6 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
     return d.ret;
 }
 
-static obj_t *stars_get_by_nsid(const obj_t *obj, uint64_t nsid)
-{
-    struct {
-        stars_t  *stars;
-        obj_t    *ret;
-        int      cat;
-        uint64_t n;
-        int      survey;
-    } d = {.stars=(void*)obj, .cat=2, .n=nsid, .survey=1};
-    hips_traverse(&d, stars_get_visitor);
-    return d.ret;
-}
-
 static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     struct {
@@ -719,7 +705,6 @@ static obj_klass_t stars_klass = {
     .render         = stars_render,
     .get            = stars_get,
     .get_by_oid     = stars_get_by_oid,
-    .get_by_nsid    = stars_get_by_nsid,
     .list           = stars_list,
     .render_order   = 20,
     .attributes = (attribute_t[]) {
