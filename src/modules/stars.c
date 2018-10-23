@@ -117,6 +117,7 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
     eraASTROM *astrom = (void*)&obs->astrom;
     eraPmpx(star->data.ra, star->data.de, 0, 0, star->data.plx, 0,
             astrom->pmt, astrom->eb, obj->pvg[0]);
+    assert(!isnan(obj->pvg[0][0]));
 
     // Multiply by distance in AU:
     // XXX: we can do that a single time at the star creation!
@@ -347,6 +348,9 @@ static int on_file_tile_loaded(const char type[4],
                 &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
                 &pra, &pde, &bv);
 
+        assert(!isnan(ra));
+        assert(!isnan(de));
+        assert(!isnan(plx));
         // If the stars was already in the bundled data, skip it.
         if (is_gaia && vmag < stars->bundled_max_vmag)
             continue;
