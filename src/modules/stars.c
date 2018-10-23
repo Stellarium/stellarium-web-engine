@@ -427,7 +427,7 @@ static int stars_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
+static tile_t *get_tile(stars_t *stars, int order, int pix,
                         bool *loading_complete)
 {
     int code, flags = 0;
@@ -435,7 +435,6 @@ static tile_t *get_tile(stars_t *stars, int order, int pix, bool load,
     // Immediate load of the level 0 stars (they are needed for the
     // constellations).  The other tiles can be loaded in a thread.
     if (order > 0) flags |= HIPS_LOAD_IN_THREAD;
-    if (!load) flags |= HIPS_CACHED_ONLY;
     tile = hips_get_tile(stars->survey, order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
     return tile;
@@ -463,7 +462,7 @@ static int render_visitor(int order, int pix, void *user)
         return 0;
 
     (*nb_tot)++;
-    tile = get_tile(stars, order, pix, true, &loaded);
+    tile = get_tile(stars, order, pix, &loaded);
     if (loaded) (*nb_loaded)++;
 
     if (!tile) goto end;
@@ -554,7 +553,7 @@ static int stars_get_visitor(int order, int pix, void *user)
         uint64_t    n;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, order, pix, false, NULL);
+    tile = get_tile(d->stars, order, pix, NULL);
     // If we are looking for a gaia star the id already gives us the tile.
     if (d->cat == 2 && gaia_index_to_pix(order, d->n) != pix)
         return 0;
@@ -638,7 +637,7 @@ static int stars_list_visitor(int order, int pix, void *user)
         void *user;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, order, pix, false, NULL);
+    tile = get_tile(d->stars, order, pix, NULL);
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
         if (tile->stars[i].vmag > d->max_mag) continue;
