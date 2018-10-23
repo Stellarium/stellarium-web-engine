@@ -49,13 +49,17 @@ struct stars {
     obj_t           obj;
     double          mag_max;
     regex_t         search_reg;
-    hips_t          *survey;
-    char            survey_url[URL_MAX_SIZE - 256];
+
+    // The stars module supports up to two surveys.
+    // One for the bundled stars, and one for the online gaia survey.
+    struct {
+        stars_t *stars;
+        hips_t  *hips;
+        char    url[URL_MAX_SIZE - 256];
+        double  min_vmag; // Don't render stars below this mag.
+    } surveys[2];
+
     bool            visible;
-    // Keep the max vmag of the bundled stars, so that we don't render them
-    // twice if they are also in the gaia survey.
-    // XXX: would be better to check their gaia id instead.
-    double          bundled_max_vmag;
 };
 
 /*
@@ -291,7 +295,7 @@ static int on_file_tile_loaded(const char type[4],
 {
     int version, nb, sp, data_ofs = 0, row_size, flags, i, order, pix;
     double vmag, ra, de, pra, pde, plx, bv;
-    stars_t *stars = USER_GET(user, 0);
+    typeof(((stars_t*)0)->surveys[0]) *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
     bool is_gaia = strncmp(type, "GAIA", 4) == 0;
@@ -351,9 +355,8 @@ static int on_file_tile_loaded(const char type[4],
         assert(!isnan(ra));
         assert(!isnan(de));
         assert(!isnan(plx));
-        // If the stars was already in the bundled data, skip it.
-        if (is_gaia && vmag < stars->bundled_max_vmag)
-            continue;
+
+        if (!isnan(survey->min_vmag) && (vmag < survey->min_vmag)) continue;
         if (!is_gaia) assert(!s->gaia);
         s->sp = sp;
         s->vmag = vmag;
@@ -376,8 +379,6 @@ static int on_file_tile_loaded(const char type[4],
     // Sort the data by vmag, so that we can early exit during render.
     qsort(tile->stars, tile->nb, sizeof(*tile->stars), star_data_cmp);
     free(table_data);
-    if (!is_gaia)
-        stars->bundled_max_vmag = max(stars->bundled_max_vmag, tile->mag_max);
 
     *out = tile;
     return 0;
@@ -388,22 +389,18 @@ static const void *stars_create_tile(
         int *cost, int *transparency)
 {
     tile_t *tile;
-    stars_t *stars = user;
-    eph_load(data, size, USER_PASS(stars, &tile), on_file_tile_loaded);
+    typeof(((stars_t*)0)->surveys[0]) *survey = user;
+    eph_load(data, size, USER_PASS(survey, &tile), on_file_tile_loaded);
     if (tile) *cost = tile->nb * sizeof(*tile->stars);
     return tile;
 }
 
 static int stars_init(obj_t *obj, json_value *args)
 {
-    const char *path;
-    int order, dir, pix, size;
-    const char *data;
     stars_t *stars = (stars_t*)obj;
     hips_settings_t survey_settings = {
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
-        .user = stars,
     };
 
     stars->visible = true;
@@ -412,24 +409,25 @@ static int stars_init(obj_t *obj, json_value *args)
     regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    sprintf(stars->survey_url, "https://data.stellarium.org/surveys/gaia_dr2");
-    stars->survey = hips_create(stars->survey_url, 0, &survey_settings);
+    // Default bundled survey.
+    survey_settings.user = &stars->surveys[0];
+    sprintf(stars->surveys[0].url, "asset://stars");
+    stars->surveys[0].hips = hips_create(
+            stars->surveys[0].url, 0, &survey_settings);
+    stars->surveys[0].min_vmag = NAN;
 
-    // Load all tile files that we have in the assets.
-    // XXX: would probably be better to use two surveys here instead of
-    // 'hips_add_manual_tile'.
-    ASSET_ITER("asset://stars/", path) {
-        if (sscanf(path + 14, "Norder%d/Dir%d/Npix%d.eph",
-                   &order, &dir, &pix) == 3) {
-            data = asset_get_data(path, &size, NULL);
-            hips_add_manual_tile(stars->survey, order, pix, data, size);
-        }
-    }
+    // Online gaia survey.
+    survey_settings.user = &stars->surveys[1];
+    sprintf(stars->surveys[1].url,
+            "https://data.stellarium.org/surveys/gaia_dr2");
+    stars->surveys[1].hips = hips_create(
+            stars->surveys[1].url, 0, &survey_settings);
+    stars->surveys[1].min_vmag = 7.125; // Max from bundled stars.
 
     return 0;
 }
 
-static tile_t *get_tile(stars_t *stars, int order, int pix,
+static tile_t *get_tile(stars_t *stars, int survey, int order, int pix,
                         bool *loading_complete)
 {
     int code, flags = 0;
@@ -437,7 +435,8 @@ static tile_t *get_tile(stars_t *stars, int order, int pix,
     // Immediate load of the level 0 stars (they are needed for the
     // constellations).  The other tiles can be loaded in a thread.
     if (order > 0) flags |= HIPS_LOAD_IN_THREAD;
-    tile = hips_get_tile(stars->survey, order, pix, flags, &code);
+    tile = hips_get_tile(stars->surveys[survey].hips,
+                         order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
     return tile;
 }
@@ -447,9 +446,10 @@ bool debug_stars_show_all = false;
 static int render_visitor(int order, int pix, void *user)
 {
     stars_t *stars = USER_GET(user, 0);
-    painter_t painter = *(const painter_t*)USER_GET(user, 1);
-    int *nb_tot = USER_GET(user, 2);
-    int *nb_loaded = USER_GET(user, 3);
+    int survey = *((int*)USER_GET(user, 1));
+    painter_t painter = *(const painter_t*)USER_GET(user, 2);
+    int *nb_tot = USER_GET(user, 3);
+    int *nb_loaded = USER_GET(user, 4);
     tile_t *tile;
     int i, n = 0;
     star_data_t *s;
@@ -464,7 +464,7 @@ static int render_visitor(int order, int pix, void *user)
         return 0;
 
     (*nb_tot)++;
-    tile = get_tile(stars, order, pix, &loaded);
+    tile = get_tile(stars, survey, order, pix, &loaded);
     if (loaded) (*nb_loaded)++;
 
     if (!tile) goto end;
@@ -535,12 +535,16 @@ end:
 static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
     stars_t *stars = (stars_t*)obj;
-    int nb_tot = 0, nb_loaded = 0;
+    int i, nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;
 
     if (!stars->visible) return 0;
-    hips_traverse(USER_PASS(stars, &painter, &nb_tot, &nb_loaded),
-                  render_visitor);
+
+    for (i = 0; i < ARRAY_SIZE(stars->surveys); i++) {
+        if (!stars->surveys[i].hips) break;
+        hips_traverse(USER_PASS(stars, &i, &painter, &nb_tot, &nb_loaded),
+                      render_visitor);
+    }
     progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);
     return 0;
 }
@@ -555,7 +559,7 @@ static int stars_get_visitor(int order, int pix, void *user)
         uint64_t    n;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, order, pix, NULL);
+    tile = get_tile(d->stars, 0, order, pix, NULL);
     // If we are looking for a gaia star the id already gives us the tile.
     if (d->cat == 2 && gaia_index_to_pix(order, d->n) != pix)
         return 0;
@@ -639,7 +643,7 @@ static int stars_list_visitor(int order, int pix, void *user)
         void *user;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, order, pix, NULL);
+    tile = get_tile(d->stars, 0, order, pix, NULL);
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
         if (tile->stars[i].vmag > d->max_mag) continue;
