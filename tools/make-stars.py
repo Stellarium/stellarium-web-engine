@@ -41,7 +41,7 @@ EPH_RAD_PER_YEAR    = 7 << 16
 
 
 Star = collections.namedtuple('Star',
-        ['hd', 'hip', 'vmag', 'ra', 'de', 'plx', 'bv', 'sp'])
+        ['hd', 'hip', 'vmag', 'ra', 'de', 'plx', 'bv'])
 
 if os.path.dirname(__file__) != "./tools":
     print "Should be run from root directory"
@@ -81,9 +81,6 @@ print 'parse stars'
 hip_file = download(
         'http://cdsarc.u-strasbg.fr/ftp/pub/cats/I/239/hip_main.dat.gz',
         md5='7b50b051364b3f846ba8d6cdf81a4fcb')
-bsc_file = download(
-        'http://cdsarc.u-strasbg.fr/ftp/pub/cats/V/50/catalog.gz',
-        md5='2f0662e53aa4e563acb8b2705f45c1a3')
 
 def float_trunc(v, zerobits):
     """Truncate a float value so that it can be better compressed"""
@@ -105,29 +102,6 @@ def parse(line, start, end, type=float, default=None, required=False,
 
 stars = {}
 
-for line in gzip.open(bsc_file):
-    hd = parse(line, 26, 31, type=int)
-    if hd is None: continue
-    ra_hour = parse(line, 76, 77, required=True)
-    ra_min = parse(line, 78, 79, required=True)
-    ra_sec = parse(line, 80, 83, required=True)
-    ra = (60 * ((60 * ra_hour) + ra_min) + ra_sec) * DS2R
-    ra = float_trunc(ra, 8)
-    de_s = parse(line, 84, 84, type=str, required=True)
-    de_deg = parse(line, 85, 86, type=int, required=True)
-    de_min = parse(line, 87, 88, type=int, required=True)
-    de_sec = parse(line, 89, 90, type=int, required=True)
-    de = (60 * ((60 * de_deg) + de_min) + de_sec) * DAS2R
-    if de_s == '-': de = -de
-    de = float_trunc(de, 8)
-    vmag = parse(line, 103, 107, zerobits=16, required=True)
-    bv = parse(line, 110, 114, default=0.0, zerobits=16)
-    plx = parse(line, 162, 166, default=0.0, zerobits=16)
-    sp = parse(line, 130, 130, type=str)
-    stars[hd] = Star(hd=hd, hip=0, vmag=vmag,
-                     ra=ra, de=de, plx=plx, bv=bv, sp=ord(sp))
-
-
 for line in gzip.open(hip_file):
     hd = parse(line, 391, 396, type=int)
     if hd is None: continue
@@ -139,13 +113,8 @@ for line in gzip.open(hip_file):
     plx = parse(line, 80, 86, default=0.0, zerobits=16)
     plx /= 1000. # MAS to AS.
     bv = parse(line, 246, 251, default=0.0, zerobits=16)
-    sp = 0
-    # If the stars was in the HD catalog, we use the vmag and sp from there.
-    if hd in stars:
-        vmag = stars[hd].vmag
-        sp = stars[hd].sp
     star = Star(hd=hd, hip=hip, vmag=vmag,
-                ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv, sp=sp)
+                ra=ra * DD2R, de=de * DD2R, plx=plx, bv=bv)
     stars[hd] = star
 
 stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
@@ -182,25 +151,24 @@ for nuniq, stars in tiles.items():
 
     # Header:
     header = ''
-    # shuffle, 40 bytes, 10 columns, <nb> rows
-    header += struct.pack('iiii', 1, 40, 10, len(stars))
+    # shuffle, 36 bytes, 9 columns, <nb> rows
+    header += struct.pack('iiii', 1, 36, 9, len(stars))
     header += struct.pack('4s4siii', 'hip',  'i', 0, 0,  4)
     header += struct.pack('4s4siii', 'hd',   'i', 0, 4,  4)
-    header += struct.pack('4s4siii', 'sp',   'i', 0, 8,  4)
-    header += struct.pack('4s4siii', 'vmag', 'f', EPH_VMAG, 12, 4)
-    header += struct.pack('4s4siii', 'ra',   'f', EPH_RAD, 16, 4)
-    header += struct.pack('4s4siii', 'de',   'f', EPH_RAD, 20, 4)
-    header += struct.pack('4s4siii', 'plx',  'f', EPH_ARCSEC, 24, 4)
-    header += struct.pack('4s4siii', 'pra',  'f', EPH_RAD_PER_YEAR, 28, 4)
-    header += struct.pack('4s4siii', 'pde',  'f', EPH_RAD_PER_YEAR, 32, 4)
-    header += struct.pack('4s4siii', 'bv',   'f', 0, 36, 4)
+    header += struct.pack('4s4siii', 'vmag', 'f', EPH_VMAG, 8, 4)
+    header += struct.pack('4s4siii', 'ra',   'f', EPH_RAD, 12, 4)
+    header += struct.pack('4s4siii', 'de',   'f', EPH_RAD, 16, 4)
+    header += struct.pack('4s4siii', 'plx',  'f', EPH_ARCSEC, 20, 4)
+    header += struct.pack('4s4siii', 'pra',  'f', EPH_RAD_PER_YEAR, 24, 4)
+    header += struct.pack('4s4siii', 'pde',  'f', EPH_RAD_PER_YEAR, 28, 4)
+    header += struct.pack('4s4siii', 'bv',   'f', 0, 32, 4)
 
     data = ''
     for s in stars:
-        line = struct.pack('iiifffffff',
-                s.hip, s.hd, s.sp, s.vmag, s.ra, s.de, s.plx, 0.0, 0.0, s.bv)
+        line = struct.pack('iifffffff',
+                s.hip, s.hd, s.vmag, s.ra, s.de, s.plx, 0.0, 0.0, s.bv)
         data += line
-    data = shuffle_bytes(data, 10 * 4)
+    data = shuffle_bytes(data, 36)
     comp_data = zlib.compress(data)
 
     ret = 'EPHE'

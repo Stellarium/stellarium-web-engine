@@ -23,7 +23,6 @@ typedef struct {
     uint64_t gaia;  // Gaia source id (0 if none)
     int     hip;    // HIP number.
     int     hd;     // HD number.
-    char    sp;
     float   vmag;
     float   ra;     // ICRS RA  J2000.0 (rad)
     float   de;     // ICRS Dec J2000.0 (rad)
@@ -266,7 +265,7 @@ static int star_data_cmp(const void *a, const void *b)
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
-    int version, nb, sp, data_ofs = 0, row_size, flags, i, order, pix;
+    int version, nb, data_ofs = 0, row_size, flags, i, order, pix;
     double vmag, ra, de, pra, pde, plx, bv;
     typeof(((stars_t*)0)->surveys[0]) *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
@@ -280,7 +279,6 @@ static int on_file_tile_loaded(const char type[4],
         {"gaia", 'Q'},
         {"hip",  'i'},
         {"hd",   'i'},
-        {"sp",   'i'},
         {"vmag", 'f', EPH_VMAG},
         {"ra",   'f', EPH_RAD},
         {"de",   'f', EPH_RAD},
@@ -322,7 +320,7 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->stars[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                &s->gaia, &s->hip, &s->hd, &sp, &vmag, &ra, &de, &plx,
+                &s->gaia, &s->hip, &s->hd, &vmag, &ra, &de, &plx,
                 &pra, &pde, &bv);
 
         assert(!isnan(ra));
@@ -331,7 +329,6 @@ static int on_file_tile_loaded(const char type[4],
 
         if (!isnan(survey->min_vmag) && (vmag < survey->min_vmag)) continue;
         if (!is_gaia) assert(!s->gaia);
-        s->sp = sp;
         s->vmag = vmag;
         s->ra = ra;
         s->de = de;
