@@ -218,3 +218,9 @@ int orbit_elements_from_pv(const double p[3], const double v[3], double mu,
                            double *n,
                            double *e,
                            double *ma);
+
+/*
+ * Function: bv_to_rgb
+ * Convert a B-V color index value to an RGB color.
+ */
+void bv_to_rgb(double bv, double rgb[3]);

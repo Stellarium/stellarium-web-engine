@@ -138,32 +138,6 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
     return 0;
 }
 
-static void get_star_color(const char sp, double out[3])
-{
-    int r, g, b;
-    switch (sp) {
-    case 'O':
-        r = 155; g = 176; b = 255; break;
-    case 'B':
-        r = 170; g = 191; b = 255; break;
-    case 'A':
-        r = 202; g = 215; b = 255; break;
-    case 'F':
-        r = 248; g = 247; b = 255; break;
-    case 'G':
-        r = 255; g = 244; b = 234; break;
-    case 'K':
-        r = 255; g = 210; b = 161; break;
-    case 'M':
-        r = 255; g = 204; b = 111; break;
-    default:
-        r = 255, g = 255, b = 255; break;
-    }
-    out[0] = r / 255.0;
-    out[1] = g / 255.0;
-    out[2] = b / 255.0;
-}
-
 static void star_render_name(const painter_t *painter, const star_data_t *s,
                              const double pos[3], double size, double vmag,
                              double color[3])
@@ -215,7 +189,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     eraS2c(aob, 90 * DD2R - zob, p);
     mag = core_get_observed_mag(s->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
-    get_star_color(s->sp, color);
+    bv_to_rgb(s->bv, color);
     point = (point_t) {
         .pos = {p[0], p[1], p[2]},
         .size = size,
@@ -505,7 +479,7 @@ static int render_visitor(int order, int pix, void *user)
         mag = core_get_observed_mag(s->vmag);
         if (debug_show_all) mag = 4.0;
         core_get_point_for_mag(mag, &size, &luminance);
-        get_star_color(s->sp, color);
+        bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
             .pos = {p_ndc[0], p_ndc[1], 0, 0},
             .size = size,
