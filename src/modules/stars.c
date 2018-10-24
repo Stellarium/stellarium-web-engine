@@ -337,7 +337,6 @@ static int on_file_tile_loaded(const char type[4],
         s->plx = plx;
         s->bv = bv;
         s->oid = s->hip ? oid_create("HIP ", s->hip) :
-                 s->hd  ? oid_create("HD  ", s->hd) :
                  s->gaia;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
@@ -588,9 +587,7 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         uint64_t n;
         int      survey;
     } d = {.stars=(void*)obj, .cat=3, .n=oid};
-    if (    !oid_is_catalog(oid, "HD  ") &&
-            !oid_is_catalog(oid, "HIP ") &&
-            !oid_is_gaia(oid))
+    if (!oid_is_catalog(oid, "HIP ") && !oid_is_gaia(oid))
         return NULL;
     if (oid_is_gaia(oid)) d.survey = 1;
     hips_traverse(&d, stars_get_visitor);
