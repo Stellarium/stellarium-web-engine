@@ -21,6 +21,7 @@ typedef struct stars stars_t;
 typedef struct {
     uint64_t oid;
     uint64_t gaia;  // Gaia source id (0 if none)
+    uint64_t tyc;   // Tycho2 id (t1 * 1000000 + t2 * 10 + t3).
     int     hip;    // HIP number.
     int     hd;     // HD number.
     float   vmag;
@@ -270,7 +271,6 @@ static int on_file_tile_loaded(const char type[4],
     typeof(((stars_t*)0)->surveys[0]) *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
-    bool is_gaia = strncmp(type, "GAIA", 4) == 0;
     void *table_data;
     star_data_t *s;
 
@@ -279,6 +279,7 @@ static int on_file_tile_loaded(const char type[4],
         {"gaia", 'Q'},
         {"hip",  'i'},
         {"hd",   'i'},
+        {"tyc",  'Q'},
         {"vmag", 'f', EPH_VMAG},
         {"ra",   'f', EPH_RAD},
         {"de",   'f', EPH_RAD},
@@ -320,7 +321,7 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->stars[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                &s->gaia, &s->hip, &s->hd, &vmag, &ra, &de, &plx,
+                &s->gaia, &s->hip, &s->hd, &s->tyc, &vmag, &ra, &de, &plx,
                 &pra, &pde, &bv);
 
         assert(!isnan(ra));
@@ -328,7 +329,6 @@ static int on_file_tile_loaded(const char type[4],
         assert(!isnan(plx));
 
         if (!isnan(survey->min_vmag) && (vmag < survey->min_vmag)) continue;
-        if (!is_gaia) assert(!s->gaia);
         s->vmag = vmag;
         s->ra = ra;
         s->de = de;
@@ -337,6 +337,7 @@ static int on_file_tile_loaded(const char type[4],
         s->plx = plx;
         s->bv = bv;
         s->oid = s->hip ? oid_create("HIP ", s->hip) :
+                 s->tyc ? oid_create("TYC ", s->tyc) :
                  s->gaia;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
@@ -587,8 +588,9 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         uint64_t n;
         int      survey;
     } d = {.stars=(void*)obj, .cat=3, .n=oid};
-    if (!oid_is_catalog(oid, "HIP ") && !oid_is_gaia(oid))
-        return NULL;
+    if (    !oid_is_catalog(oid, "HIP ") &&
+            !oid_is_catalog(oid, "TYC ") &&
+            !oid_is_gaia(oid)) return NULL;
     if (oid_is_gaia(oid)) d.survey = 1;
     hips_traverse(&d, stars_get_visitor);
     return d.ret;
