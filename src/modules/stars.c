@@ -21,7 +21,7 @@ typedef struct stars stars_t;
 typedef struct {
     uint64_t oid;
     uint64_t gaia;  // Gaia source id (0 if none)
-    uint64_t tyc;   // Tycho2 id (t1 * 1000000 + t2 * 10 + t3).
+    uint32_t tyc;   // Tycho2 id.
     int     hip;    // HIP number.
     int     hd;     // HD number.
     float   vmag;
@@ -279,7 +279,7 @@ static int on_file_tile_loaded(const char type[4],
         {"gaia", 'Q'},
         {"hip",  'i'},
         {"hd",   'i'},
-        {"tyc",  'Q'},
+        {"tyc",  'i'},
         {"vmag", 'f', EPH_VMAG},
         {"ra",   'f', EPH_RAD},
         {"de",   'f', EPH_RAD},
