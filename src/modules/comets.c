@@ -263,7 +263,7 @@ static int comets_update(obj_t *obj, const observer_t *obs, double dt)
         }
         i++;
     }
-    comets->update_range = (comets->update_range + update_nb) % nb;
+    comets->update_range = nb ? (comets->update_range + update_nb) % nb : 0;
     return 0;
 }
 
