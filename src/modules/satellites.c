@@ -315,7 +315,7 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
  */
 static int satellite_render(const obj_t *obj, const painter_t *painter_)
 {
-    double mag, size, luminance, p[4] = {0, 0, 0, 1}, p_ndc[4];
+    double mag, size, luminance, p[4] = {0, 0, 0, 1}, p_win[4];
     painter_t painter = *painter_;
     point_t point;
     double color[3] = {1, 1, 1};
@@ -327,30 +327,30 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0, p, p);
 
     // Skip if not visible.
-    if (!project(painter.proj, PROJ_TO_NDC_SPACE, 2, p, p_ndc)) return 0;
+    if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;
     mag = core_get_observed_mag(obj->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
 
     // Render symbol if needed.  For the moment we always do it if the
     // mag is lower than 7.  We probably need an option to control that.
     if (mag < 7.0) {
-        symbols_paint(&painter, "Ast", p_ndc, 12.0, label_color, 0.0);
+        symbols_paint(&painter, "Ast", p_win, 12.0, label_color, 0.0);
         // Still render an invisible point for the selection.
         // XXX: should be done in symbols_paint!
         luminance = 0;
     }
 
     point = (point_t) {
-        .pos = {p[0], p[1], p[2], p[3]},
+        .pos = {p_win[0], p_win[1]},
         .size = size,
         .color = {color[0], color[1], color[2], luminance},
         .oid = obj->oid,
     };
-    paint_points(&painter, 1, &point, FRAME_VIEW);
+    paint_points(&painter, 1, &point, FRAME_WINDOW);
 
     // Render name if needed.
     if (*sat->name && obj->vmag <= painter.label_mag_max) {
-        labels_add(sat->name, FRAME_NDC, p_ndc, size, 13, label_color, 0,
+        labels_add(sat->name, FRAME_WINDOW, p_win, size, 13, label_color, 0,
                    ANCHOR_AROUND, 0);
     }
 
