@@ -292,7 +292,7 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
 
     vec4_copy(painter->color, color);
     color[3] = 1.0;
-    labels_add(buff, FRAME_WINDOW, pos, 0, 13, color, label_angle,
+    labels_add(buff, pos, 0, 13, color, label_angle,
                ANCHOR_FIXED | ANCHOR_CENTER, 0);
 }
 

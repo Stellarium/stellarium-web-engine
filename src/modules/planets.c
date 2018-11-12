@@ -776,7 +776,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                 2, vpos, vpos)) {
             if (r_scale == 1.0) strcpy(label, planet->name);
             else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
-            labels_add(label, FRAME_WINDOW, vpos, point_r, 16, label_color, 0,
+            labels_add(label, vpos, point_r, 16, label_color, 0,
                        ANCHOR_AROUND, -mag);
         }
     }

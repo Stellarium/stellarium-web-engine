@@ -118,7 +118,7 @@ enum {
 };
 
 void labels_reset(void);
-label_t *labels_add(const char *text, int frame, const double pos[2],
+label_t *labels_add(const char *text, const double win_pos[2],
                     double radius, double size, const double color[4],
                     double angle, int flags, double priority);
 

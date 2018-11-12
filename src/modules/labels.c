@@ -159,7 +159,7 @@ skip:;
     return 0;
 }
 
-label_t *labels_add(const char *text, int frame, const double pos[2],
+label_t *labels_add(const char *text, const double pos[2],
                     double radius, double size, const double color[4],
                     double angle, int flags, double priority)
 {
@@ -178,11 +178,9 @@ label_t *labels_add(const char *text, int frame, const double pos[2],
         .flags = flags,
         .priority = priority,
     };
-    assert(frame == FRAME_WINDOW || frame == FRAME_NDC);
-    if (frame == FRAME_WINDOW) {
-        label->pos[0] = label->pos[0] / core->win_size[0] * 2 - 1;
-        label->pos[1] = 1 - label->pos[1] / core->win_size[1] * 2;
-    }
+    // XXX: directly use windows pos instead of NDC!
+    label->pos[0] = label->pos[0] / core->win_size[0] * 2 - 1;
+    label->pos[1] = 1 - label->pos[1] / core->win_size[1] * 2;
 
     DL_APPEND(g_labels, label);
     return label;

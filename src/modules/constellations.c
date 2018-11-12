@@ -373,8 +373,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos)) {
-        labels_add(con->name, FRAME_WINDOW, pos, 0, 16, lines_color, 0,
-                   ANCHOR_CENTER, 0);
+        labels_add(con->name, pos, 0, 16, lines_color, 0, ANCHOR_CENTER, 0);
     }
     return 0;
 }
