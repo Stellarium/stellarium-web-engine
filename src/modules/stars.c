@@ -153,15 +153,16 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
 
     name = identifiers_get(s->oid, "NAME");
     if (name) {
-        labels_add(name, pos, size, 13, label_color, 0, ANCHOR_AROUND, -vmag);
+        labels_add(name, FRAME_NDC, pos, size, 13, label_color, 0,
+                   ANCHOR_AROUND, -vmag);
         return;
     }
     if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
         bayer_get(s->hd, NULL, &bayer, &bayer_n);
         if (bayer) {
             sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add(tmp, pos, size, 13, label_color, 0, ANCHOR_AROUND,
-                       -vmag);
+            labels_add(tmp, FRAME_NDC, pos, size, 13, label_color, 0,
+                       ANCHOR_AROUND, -vmag);
         }
     }
 }

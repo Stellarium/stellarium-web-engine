@@ -24,6 +24,8 @@ typedef struct observer observer_t;
  * FRAME_VIEW     - Observed frame rotated in the observer view direction.
  * FRAME_NDC      - Normalized device coordinates.  Only used as a flag to
  *                  the painter when we have already projected coordinates.
+ * FRAME_WINDOW   - Window coordinates.  Only used as a flag to
+ *                  the painter when we have already projected coordinates.
  */
 enum {
     FRAME_ICRS                = 1,
@@ -31,6 +33,7 @@ enum {
     FRAME_OBSERVED            = 3,
     FRAME_VIEW                = 4,
     FRAME_NDC                 = 5,
+    FRAME_WINDOW              = 6,
 };
 
 /* Function: convert_coordinates

@@ -342,10 +342,10 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     if (*mplanet->name && mplanet->obj.vmag <= painter->label_mag_max) {
         mat4_mul_vec3(core->observer->ro2v, pos, pos);
         if (project(painter->proj,
-                    PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
+                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                     2, pos, pos)) {
-            labels_add(mplanet->name, pos, size, 13, label_color, 0,
-                ANCHOR_AROUND, 0);
+            labels_add(mplanet->name, FRAME_WINDOW, pos, size, 13,
+                       label_color, 0, ANCHOR_AROUND, 0);
         }
     }
     return 0;

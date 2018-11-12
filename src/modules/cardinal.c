@@ -45,10 +45,10 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     for (i = 0; i < ARRAY_SIZE(POINTS); i++) {
         mat4_mul_vec3(core->observer->ro2v, POINTS[i].pos, pos);
         if (    !project(painter->proj,
-                PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE,
+                PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos))
             continue;
-        labels_add(POINTS[i].text, pos, 0, size, color, 0,
+        labels_add(POINTS[i].text, FRAME_WINDOW, pos, 0, size, color, 0,
                    ANCHOR_CENTER | ANCHOR_FIXED, 0);
     }
     return 0;
