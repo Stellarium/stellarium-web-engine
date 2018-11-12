@@ -60,26 +60,24 @@ static void label_get_box(const painter_t *painter, const label_t *label,
     double borders[2];
     double pos[2];
     int size[2];
-    double border = 8;
+    double border = 4;
 
     vec2_copy(label->pos, pos);
     paint_text_size(painter, label->text, label->size, size);
     borders[0] = tan(label->radius / 2) / painter->proj->scaling[0];
     borders[1] = tan(label->radius / 2) / painter->proj->scaling[1];
+    borders[0] *= painter->fb_size[0] / painter->pixel_scale;
+    borders[1] *= painter->fb_size[1] / painter->pixel_scale;
 
-    if (anchor & ANCHOR_LEFT)
-        pos[0] += (size[0] + border) / painter->fb_size[0] + borders[0];
-    if (anchor & ANCHOR_RIGHT)
-        pos[0] -= (size[0] + border) / painter->fb_size[0] + borders[0];
-    if (anchor & ANCHOR_BOTTOM)
-        pos[1] += (size[1] + border)  / painter->fb_size[1] + borders[1];
-    if (anchor & ANCHOR_TOP)
-        pos[1] -= (size[1] + border)  / painter->fb_size[1] + borders[1];
+    if (anchor & ANCHOR_LEFT) pos[0] += size[0] / 2 + border + borders[0];
+    if (anchor & ANCHOR_RIGHT) pos[0] -= size[0] / 2 + border + borders[0];
+    if (anchor & ANCHOR_BOTTOM) pos[1] -= size[1] / 2 + border + borders[1];
+    if (anchor & ANCHOR_TOP) pos[1] += size[1] / 2 + border + borders[1];
 
-    box[0] = pos[0] - (double)size[0] / painter->fb_size[0];
-    box[1] = pos[1] - (double)size[1] / painter->fb_size[1];
-    box[2] = pos[0] + (double)size[0] / painter->fb_size[0];
-    box[3] = pos[1] + (double)size[1] / painter->fb_size[1];
+    box[0] = pos[0] - size[0];
+    box[1] = pos[1] - size[1];
+    box[2] = pos[0] + size[0];
+    box[3] = pos[1] + size[1];
 }
 
 static bool label_get_boxes(const painter_t *painter, const label_t *label,
@@ -147,10 +145,6 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
         pos[0] = (label->box[0] + label->box[2]) / 2;
         pos[1] = (label->box[1] + label->box[3]) / 2;
 
-        // Convert to windows coordinates.
-        // XXX: to remove, we should already take pos in windows coordinates.
-        pos[0] = (+pos[0] + 1) / 2 * core->win_size[0];
-        pos[1] = (-pos[1] + 1) / 2 * core->win_size[1];
         paint_text(painter, label->text, pos, label->size,
                    label->color, label->angle);
         label->flags &= ~SKIPPED;
@@ -178,10 +172,6 @@ label_t *labels_add(const char *text, const double pos[2],
         .flags = flags,
         .priority = priority,
     };
-    // XXX: directly use windows pos instead of NDC!
-    label->pos[0] = label->pos[0] / core->win_size[0] * 2 - 1;
-    label->pos[1] = 1 - label->pos[1] / core->win_size[1] * 2;
-
     DL_APPEND(g_labels, label);
     return label;
 }

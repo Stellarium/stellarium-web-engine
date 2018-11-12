@@ -104,6 +104,7 @@ struct painter
 
     double          color[4];       // Global color.
     int             fb_size[2];     // Size of the render buffer.
+    double          pixel_scale;
                                     // rendered.
     int             flags;
     double          contrast;       // Contrast effect when rendering tex.
