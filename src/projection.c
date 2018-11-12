@@ -39,9 +39,13 @@ void projection_compute_fovs(int type, double fov, double aspect,
     }
 }
 
-void projection_init(projection_t *p, int type, double fov, double aspect)
+void projection_init(projection_t *p, int type, double fov,
+                     double w, double h)
 {
+    double aspect = w / h;
     memset(p, 0, sizeof(*p));
+    p->window_size[0] = w;
+    p->window_size[1] = h;
     switch (type) {
         case PROJ_PERSPECTIVE:
             proj_perspective_init(p, fov, aspect);
@@ -76,7 +80,7 @@ bool project(const projection_t *proj, int flags, int out_dim,
         assert(fabs(vec3_norm(p) - 1.0) < 0.00000001);
     proj->project(proj, flags, v, p);
 
-    if (!(flags & PROJ_TO_NDC_SPACE)) {
+    if (!(flags & (PROJ_TO_NDC_SPACE | PROJ_TO_WINDOW_SPACE))) {
         memcpy(out, p, out_dim * sizeof(double));
         return true;
     }
@@ -87,6 +91,10 @@ bool project(const projection_t *proj, int flags, int out_dim,
     if (p[3])
         vec3_mul(1.0 / p[3], p, p);
     p[3] = visible ? 1.0 : 0.0; // Not sure this is proper...
+    if (flags & PROJ_TO_WINDOW_SPACE) {
+        p[0] = (+p[0] + 1) / 2 * proj->window_size[0];
+        p[1] = (-p[1] + 1) / 2 * proj->window_size[1];
+    }
     memcpy(out, p, out_dim * sizeof(double));
     return visible;
 }
@@ -118,7 +126,7 @@ static void test_projs(void)
     double a[3] = {1, 0, -1};
     double b[3], c[4];
     projection_t proj;
-    projection_init(&proj, PROJ_PERSPECTIVE, 90 * DD2R, 1);
+    projection_init(&proj, PROJ_PERSPECTIVE, 90 * DD2R, 1, 1);
     project(&proj, 0, 3, a, b);
     assert(vec3_dist(b, VEC(1, 0, 1)) < 0.0001);
     project(&proj, PROJ_BACKWARD, 4, b, c);

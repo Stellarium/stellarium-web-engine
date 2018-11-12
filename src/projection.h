@@ -33,7 +33,8 @@ enum {
     PROJ_NO_CLIP            = 1 << 0,
     PROJ_BACKWARD           = 1 << 1,
     PROJ_TO_NDC_SPACE       = 1 << 2,
-    PROJ_ALREADY_NORMALIZED = 1 << 3,
+    PROJ_TO_WINDOW_SPACE    = 1 << 3,
+    PROJ_ALREADY_NORMALIZED = 1 << 4,
 };
 
 // Returns from intersect_discontinuity.
@@ -61,6 +62,8 @@ struct projection
     // Use by some projs to define if we back project into the unit sphere
     // or into the sphere at infinity.
     bool   at_infinity;
+    // Window size (screen size / screen density).
+    double window_size[2];
 
     union {
         int shift;              // Only used by the mercator projection.
@@ -99,7 +102,18 @@ struct projection
 void projection_compute_fovs(int proj_type, double fov, double aspect,
                              double *fovx, double *fovy);
 
-void projection_init(projection_t *proj, int type, double fovx, double aspect);
+/*
+ * Function: projection_init
+ * Init a standard project.
+ *
+ * Parameters:
+ *   type   - One of the <PROJ_TYPE> value.
+ *   fovx   - The fov in x direction (rad).
+ *   w      - Window size in X (not framebuffer size).
+ *   h      - Window size in Y (not framebuffer size).
+ */
+void projection_init(projection_t *proj, int type, double fovx,
+                     double w, double h);
 void projection_init_healpix(projection_t *proj, int nside, int pix,
                              bool swap, bool at_infinity);
 
