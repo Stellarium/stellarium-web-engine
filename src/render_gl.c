@@ -603,7 +603,6 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     double p[2];
     const double oversample = 2;
     uint8_t *img;
-    const int *fb_size = rend->fb_size;
     int i, w, h;
     tex_cache_t *ctex;
     texture_t *tex;
@@ -636,12 +635,11 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         uv[i][0] = ((i % 2) * tex->w) / (double)tex->tex_w;
         uv[i][1] = ((i / 2) * tex->h) / (double)tex->tex_h;
         verts[i][0] = (i % 2 - 0.5) * tex->w / oversample;
-        verts[i][1] = (i / 2 - 0.5) * tex->h / oversample;
+        verts[i][1] = (0.5 - i / 2) * tex->h / oversample;
         vec2_rotate(angle, verts[i], verts[i]);
-        verts[i][0] += p[0] * fb_size[0] / 2.0;
-        verts[i][1] += p[1] * fb_size[1] / 2.0;
-        verts[i][0] = verts[i][0] / (fb_size[0] / 2);
-        verts[i][1] = verts[i][1] / (fb_size[1] / 2);
+        verts[i][0] += p[0];
+        verts[i][1] += p[1];
+        window_to_ndc(rend, verts[i], verts[i]);
     }
 
     texture2(rend, tex, uv, verts, color);

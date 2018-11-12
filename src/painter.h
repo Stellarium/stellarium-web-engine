@@ -191,8 +191,8 @@ int paint_lines(const painter_t *painter,
 int paint_text_size(const painter_t *painter, const char *text, double size,
                     int out[2]);
 
-// Pos in NDC coordinates (-1 to 1)
-// size in inch ??
+// Pos in window coordinate.
+// size in window coordinate too.
 int paint_text(const painter_t *painter,
                const char *text, const double pos[2],
                double size, const double color[4], double angle);

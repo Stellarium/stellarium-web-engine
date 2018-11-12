@@ -146,6 +146,11 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
         }
         pos[0] = (label->box[0] + label->box[2]) / 2;
         pos[1] = (label->box[1] + label->box[3]) / 2;
+
+        // Convert to windows coordinates.
+        // XXX: to remove, we should already take pos in windows coordinates.
+        pos[0] = (+pos[0] + 1) / 2 * core->win_size[0];
+        pos[1] = (-pos[1] + 1) / 2 * core->win_size[1];
         paint_text(painter, label->text, pos, label->size,
                    label->color, label->angle);
         label->flags &= ~SKIPPED;
