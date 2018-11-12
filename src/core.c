@@ -163,12 +163,6 @@ static int modules_sort_cmp(void *a, void *b)
     return cmp(obj_get_render_order(at), obj_get_render_order(bt));
 }
 
-static void core_windows_to_ndc(const double p[2], double out[2])
-{
-    out[0] = p[0] * core->win_pixels_scale / core->win_size[0] * 2 - 1;
-    out[1] = -1 * (p[1] * core->win_pixels_scale / core->win_size[1] * 2 - 1);
-}
-
 static int core_update(void);
 static int core_update_direction(double dt);
 
@@ -182,8 +176,10 @@ static void mouse_to_observed(double x, double y, double p[3])
     mat4_invert(core->observer->ro2v, rv2o);
     projection_init(&proj, core->proj, core->fovx,
                     core->win_size[0], core->win_size[1]);
-
-    core_windows_to_ndc(pos, pos);
+    // Convert to NDC coordinates.
+    // Could be done in the projector?
+    pos[0] = pos[0] / core->win_size[0] * 2 - 1;
+    pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
     project(&proj, PROJ_BACKWARD, 4, pos, pos);
     mat4_mul_vec3(rv2o, pos, pos);
     vec3_copy(pos, p);
