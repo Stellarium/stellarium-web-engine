@@ -180,6 +180,13 @@ static bool color_is_white(const double c[4])
     return c[0] == 1.0 && c[1] == 1.0 && c[2] == 1.0 && c[3] == 1.0;
 }
 
+static void window_to_ndc(renderer_gl_t *rend,
+                          const double win[2], double ndc[2])
+{
+    ndc[0] = (win[0] * rend->scale / rend->fb_size[0]) * 2 - 1;
+    ndc[1] = 1 - (win[1] * rend->scale / rend->fb_size[1]) * 2;
+}
+
 static void prepare(renderer_t *rend_, double win_w, double win_h,
                     double scale)
 {
@@ -267,7 +274,9 @@ static void points(renderer_t *rend_,
 
     for (i = 0; i < n; i++) {
         p = points[i];
-        if (frame != FRAME_NDC) {
+        if (frame == FRAME_WINDOW) {
+            window_to_ndc(rend, p.pos, p.pos);
+        } else if (frame != FRAME_NDC) {
             convert_coordinates(painter->obs, frame, FRAME_VIEW, 0,
                                 p.pos, p.pos);
             project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
@@ -561,13 +570,6 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
 
     item->buf_size += 4 * sizeof(texture_buf_t);
     item->nb += 6;
-}
-
-static void window_to_ndc(renderer_gl_t *rend,
-                          const double win[2], double ndc[2])
-{
-    ndc[0] = (win[0] * rend->scale / rend->fb_size[0]) * 2 - 1;
-    ndc[1] = 1 - (win[1] * rend->scale / rend->fb_size[1]) * 2;
 }
 
 static void texture(renderer_t *rend_,

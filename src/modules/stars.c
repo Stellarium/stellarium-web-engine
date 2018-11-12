@@ -153,7 +153,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
 
     name = identifiers_get(s->oid, "NAME");
     if (name) {
-        labels_add(name, FRAME_NDC, pos, size, 13, label_color, 0,
+        labels_add(name, FRAME_WINDOW, pos, size, 13, label_color, 0,
                    ANCHOR_AROUND, -vmag);
         return;
     }
@@ -161,7 +161,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         bayer_get(s->hd, NULL, &bayer, &bayer_n);
         if (bayer) {
             sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add(tmp, FRAME_NDC, pos, size, 13, label_color, 0,
+            labels_add(tmp, FRAME_WINDOW, pos, size, 13, label_color, 0,
                        ANCHOR_AROUND, -vmag);
         }
     }
@@ -203,7 +203,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
         convert_coordinates(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0,
                             p, p);
         if (project(painter.proj,
-                    PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE, 2, p, p))
+                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
             star_render_name(&painter, s, p, size, mag, color);
     }
     return 0;
@@ -424,7 +424,7 @@ static int render_visitor(int order, int pix, void *user)
     tile_t *tile;
     int i, n = 0;
     star_data_t *s;
-    double p[4], p_ndc[4], size, luminance, mag;
+    double p[4], p_win[4], size, luminance, mag;
     double color[3], max_sep, fov, viewport_cap[4];
     bool loaded;
     bool debug_show_all = DEBUG ? debug_stars_show_all : false;
@@ -471,7 +471,7 @@ static int render_visitor(int order, int pix, void *user)
         // Skip if not visible.
         convert_coordinates(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0,
                             p, p);
-        if (!project(painter.proj, PROJ_TO_NDC_SPACE, 2, p, p_ndc))
+        if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win))
             continue;
 
         mag = core_get_observed_mag(s->vmag);
@@ -479,16 +479,16 @@ static int render_visitor(int order, int pix, void *user)
         core_get_point_for_mag(mag, &size, &luminance);
         bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
-            .pos = {p_ndc[0], p_ndc[1], 0, 0},
+            .pos = {p_win[0], p_win[1], 0, 0},
             .size = size,
             .color = {color[0], color[1], color[2], luminance},
             .oid = s->oid,
         };
         n++;
         if (s->vmag <= painter.label_mag_max && !s->gaia)
-            star_render_name(&painter, s, p_ndc, size, mag, color);
+            star_render_name(&painter, s, p_win, size, mag, color);
     }
-    paint_points(&painter, n, points, FRAME_NDC);
+    paint_points(&painter, n, points, FRAME_WINDOW);
     free(points);
 
 end:
