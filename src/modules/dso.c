@@ -336,8 +336,8 @@ static void dso_render_name(const painter_t *painter, const dso_data_t *d,
     else if (d->id.ic)
         sprintf(buff, "IC %d", d->id.ic);
     if (buff[0])
-        labels_add(buff, FRAME_NDC, pos, size, 13, painter->color, 0, anchor,
-                   -vmag);
+        labels_add(buff, FRAME_WINDOW, pos, size, 13, painter->color, 0,
+                   anchor, -vmag);
 }
 
 // Project from UV to the annotation contour ellipse.
@@ -393,8 +393,8 @@ static void render_contour(const dso_data_t *data,
             contour_project(&proj, 0, v, tmp);
             convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0,
                                 tmp, tmp);
-            project(painter.proj, PROJ_TO_NDC_SPACE, 2, tmp, tmp);
-            if (tmp[1] > p[1]) vec2_copy(tmp, p);
+            project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, tmp, tmp);
+            if (tmp[1] < p[1]) vec2_copy(tmp, p);
         }
     }
 
