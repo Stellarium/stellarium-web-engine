@@ -405,25 +405,19 @@ static void render_contour(const dso_data_t *data,
     v[0] = v[1] = 0;
     contour_project(&proj, 0, v, c);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, c, c);
-    project(painter.proj, PROJ_TO_NDC_SPACE, 2, c, c);
-    c[0] = (+c[0] + 1) / 2 * core->win_size[0];
-    c[1] = (-c[1] + 1) / 2 * core->win_size[1];
+    project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, c, c);
     // 2. Semi major.
     v[1] = 1;
     v[0] = 0;
     contour_project(&proj, 0, v, a);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, a, a);
-    project(painter.proj, PROJ_TO_NDC_SPACE, 2, a, a);
-    a[0] = (+a[0] + 1) / 2 * core->win_size[0];
-    a[1] = (-a[1] + 1) / 2 * core->win_size[1];
+    project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, a, a);
     // 3. Semi minor.
     v[1] = 1;
     v[0] = 0.25;
     contour_project(&proj, 0, v, b);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, b, b);
-    project(painter.proj, PROJ_TO_NDC_SPACE, 2, b, b);
-    b[0] = (+b[0] + 1) / 2 * core->win_size[0];
-    b[1] = (-b[1] + 1) / 2 * core->win_size[1];
+    project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, b, b);
 
     angle = atan2(a[1] - c[1], a[0] - c[0]);
     areas_add_ellipse(core->areas, c, angle,
@@ -445,17 +439,13 @@ static double get_screen_angle(const dso_data_t *d, const painter_t *painter)
     v[0] = v[1] = 0;
     contour_project(&proj, 0, v, c);
     convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, c, c);
-    project(painter->proj, PROJ_TO_NDC_SPACE, 2, c, c);
-    c[0] = (+c[0] + 1) / 2 * core->win_size[0];
-    c[1] = (-c[1] + 1) / 2 * core->win_size[1];
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, c, c);
     // 2. Semi major.
     v[1] = 1;
     v[0] = 0;
     contour_project(&proj, 0, v, a);
     convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, a, a);
-    project(painter->proj, PROJ_TO_NDC_SPACE, 2, a, a);
-    a[0] = (+a[0] + 1) / 2 * core->win_size[0];
-    a[1] = (-a[1] + 1) / 2 * core->win_size[1];
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, a, a);
     return atan2(a[1] - c[1], a[0] - c[0]);
 }
 
