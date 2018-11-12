@@ -192,14 +192,27 @@ int paint_lines(const painter_t *painter,
 int paint_text_size(const painter_t *painter, const char *text, double size,
                     int out[2]);
 
-// Pos in window coordinate.
-// size in window coordinate too.
+/*
+ * Function: paint_text
+ * Render text
+ *
+ * Parameters:
+ *   text   - the text to render.
+ *   pos    - text position in window coordinates.
+ *   size   - text size in window unit.
+ */
 int paint_text(const painter_t *painter,
                const char *text, const double pos[2],
                double size, const double color[4], double angle);
 
-// Pos in window coordinates.
-// size in window coordinates too.
+/*
+ * Function: paint_texture
+ * Render a 2d texture
+ *
+ * Parameters:
+ *   pos    - Center position in window coordinates.
+ *   size   - Texture size in window unit.
+ */
 int paint_texture(const painter_t *painter,
                   texture_t *tex,
                   const double uv[4][2],
