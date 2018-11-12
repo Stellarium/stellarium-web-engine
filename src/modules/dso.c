@@ -487,7 +487,7 @@ static int dso_render_from_data(const dso_data_t *d,
 
     convert_coordinates(painter.obs, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
     if (!project(painter.proj,
-                 PROJ_ALREADY_NORMALIZED | PROJ_TO_NDC_SPACE, 2, p, p))
+                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
         return 0;
 
     show_contour = !isnan(d->smax) && d->smax > min_circle_size;
@@ -508,10 +508,7 @@ static int dso_render_from_data(const dso_data_t *d,
         // Add the dso in the global list of rendered objects.
         // XXX: we could move this into symbols_paint.
         point = (point_t) {
-            .pos = {
-                (+p[0] + 1) / 2 * core->win_size[0],
-                (-p[1] + 1) / 2 * core->win_size[1],
-            },
+            .pos = {p[0], p[1]},
             .size = 8,
             .oid = d->id.oid,
         };

@@ -29,8 +29,8 @@ areas_t *areas_create(void);
  *
  * Parameters:
  *   areas  - an areas instance.
- *   pos    - a 2d position in screen space.
- *   r      - radius in screen space.
+ *   pos    - a 2d position in window space.
+ *   r      - radius in window space.
  *   oid    - oid associated with the circle.
  *   hint   - hint associated with the circle.
  */

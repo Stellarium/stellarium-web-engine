@@ -237,7 +237,7 @@ void core_init(void);
 void core_add_default_sources(void);
 
 void core_release(void);
-int core_render(int w, int h, double pixel_scale);
+int core_render(double win_w, double win_h, double pixel_scale);
 // x and y in screen coordinates.
 void core_on_mouse(int id, int state, double x, double y);
 void core_on_key(int key, int action);

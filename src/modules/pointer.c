@@ -25,6 +25,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     double mag, size, luminance, radius = NAN;
     double white[4] = {1, 1, 1, 1};
     const double T = 2.0;    // Animation period.
+    double p[2], r;
     obj_t *selection = core->selection;
     painter_t painter = *painter_;
     vec4_set(painter.color, 0.34, 0.59, 1.0, 0.9);
@@ -38,7 +39,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
 
     obj_get_pos_observed(selection, painter.obs, pos);
     mat4_mul_vec3(painter.obs->ro2v, pos, pos);
-    if (!project(painter.proj, PROJ_TO_NDC_SPACE, 2, pos, pos2d))
+    if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, pos, pos2d))
         return 0;
 
     // Empirical formula to compute the pointer size.
@@ -56,17 +57,12 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
         symbols_paint(&painter, "POIN", pos2d, size, white, 0);
     } else {
         // Draw four strokes around the object.
-        // XXX: a bit ugly code.
         for (i = 0; i < 4; i++) {
-            double p[2] = {1, 0};
-            double r;
-            double scaling = painter.proj->scaling[0] /
-                             painter.proj->scaling[1];
-            r = size / core->fov * 2 + 0.02;
-            r = max(r, 0.04);
+            vec2_set(p, 1, 0);
+            r = size / core->fov * core->win_size[0] + 5;
+            r = max(r, 16);
             vec2_rotate(i * 90 * DD2R, p, p);
-            r += 0.005 * (sin(sys_get_unix_time() / T * 2 * M_PI) + 1);
-            p[1] *= scaling;
+            r += 0.8 * (sin(sys_get_unix_time() / T * 2 * M_PI) + 1);
             vec2_addk(pos2d, p, r, p);
             symbols_paint(&painter, "POIN2", p, 16, white, i * 90 * DD2R);
         }

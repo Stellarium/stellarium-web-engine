@@ -15,10 +15,11 @@ static bool g_debug = false;
         if ((rend)->f) (rend)->f((rend), ##__VA_ARGS__); \
     } while (0)
 
-int paint_prepare(const painter_t *painter, int w, int h)
+int paint_prepare(const painter_t *painter, double win_w, double win_h,
+                  double scale)
 {
     areas_clear_all(core->areas);
-    REND(painter->rend, prepare, w, h);
+    REND(painter->rend, prepare, win_w, win_h, scale);
     return 0;
 }
 

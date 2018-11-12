@@ -791,7 +791,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // Render the Sun halo.
     if (planet->id == SUN) {
         mat4_mul_vec3(core->observer->ro2v, pos, vpos);
-        project(painter.proj, PROJ_TO_NDC_SPACE, 2, vpos, vpos);
+        project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, vpos);
         paint_texture(&painter, planets->halo_tex, NULL, vpos, 200.0, NULL, 0);
     }
 }

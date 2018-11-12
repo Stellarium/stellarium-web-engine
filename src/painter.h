@@ -22,7 +22,8 @@ typedef struct texture texture_t;
 
 struct renderer
 {
-    void (*prepare)(renderer_t *rend, int w, int h);
+    void (*prepare)(renderer_t *rend,
+                    double win_w, double win_h, double scale);
     void (*finish)(renderer_t *rend);
     void (*flush)(renderer_t *rend);
 
@@ -125,7 +126,8 @@ struct painter
     texture_t       *shadow_color_tex; // Used for lunar eclipses.
 };
 
-int paint_prepare(const painter_t *painter, int w, int h);
+int paint_prepare(const painter_t *painter, double win_w, double win_h,
+                  double scale);
 int paint_finish(const painter_t *painter);
 int paint_flush(const painter_t *painter);
 int paint_points(const painter_t *painter, int n, const point_t *points,
@@ -195,8 +197,8 @@ int paint_text(const painter_t *painter,
                const char *text, const double pos[2],
                double size, const double color[4], double angle);
 
-// Pos in NDC coordinates (-1 to 1)
-// size in inch ?
+// Pos in window coordinates.
+// size in window coordinates too.
 int paint_texture(const painter_t *painter,
                   texture_t *tex,
                   const double uv[4][2],

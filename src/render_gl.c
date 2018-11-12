@@ -153,6 +153,7 @@ typedef struct renderer_gl {
     renderer_t  rend;
 
     int     fb_size[2];
+    double  scale;
 
     struct {
         prog_t  points;
@@ -179,11 +180,13 @@ static bool color_is_white(const double c[4])
     return c[0] == 1.0 && c[1] == 1.0 && c[2] == 1.0 && c[3] == 1.0;
 }
 
-static void prepare(renderer_t *rend_, int w, int h)
+static void prepare(renderer_t *rend_, double win_w, double win_h,
+                    double scale)
 {
     renderer_gl_t *rend = (void*)rend_;
     tex_cache_t *ctex, *tmp;
 
+    assert(scale);
     DL_FOREACH_SAFE(rend->tex_cache, ctex, tmp) {
         if (!ctex->in_use) {
             DL_DELETE(rend->tex_cache, ctex);
@@ -195,9 +198,10 @@ static void prepare(renderer_t *rend_, int w, int h)
 
     GL(glClearColor(0.0, 0.0, 0.0, 1.0));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    GL(glViewport(0, 0, w, h));
-    rend->fb_size[0] = w;
-    rend->fb_size[1] = h;
+    GL(glViewport(0, 0, win_w * scale, win_h * scale));
+    rend->fb_size[0] = win_w * scale;
+    rend->fb_size[1] = win_h * scale;
+    rend->scale = scale;
 
     DL_FOREACH(rend->tex_cache, ctex)
         ctex->in_use = false;
@@ -559,6 +563,13 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     item->nb += 6;
 }
 
+static void window_to_ndc(renderer_gl_t *rend,
+                          const double win[2], double ndc[2])
+{
+    ndc[0] = (win[0] * rend->scale / rend->fb_size[0]) * 2 - 1;
+    ndc[1] = 1 - (win[1] * rend->scale / rend->fb_size[1]) * 2;
+}
+
 static void texture(renderer_t *rend_,
                     const texture_t *tex,
                     double uv[4][2],
@@ -573,11 +584,12 @@ static void texture(renderer_t *rend_,
     w = size;
     h = size * tex->h / tex->w;
     for (i = 0; i < 4; i++) {
-        verts[i][0] = (i % 2 - 0.5);
-        verts[i][1] = (i / 2 - 0.5);
-        if (angle != 0.0) vec2_rotate(angle, verts[i], verts[i]);
-        verts[i][0] = pos[0] + verts[i][0] * w / rend->fb_size[0] * 2;
-        verts[i][1] = pos[1] + verts[i][1] * h / rend->fb_size[1] * 2;
+        verts[i][0] = (i % 2 - 0.5) * w;
+        verts[i][1] = (0.5 - i / 2) * h;
+        if (angle != 0.0) vec2_rotate(-angle, verts[i], verts[i]);
+        verts[i][0] = pos[0] + verts[i][0];
+        verts[i][1] = pos[1] + verts[i][1];
+        window_to_ndc(rend, verts[i], verts[i]);
     }
     texture2(rend, tex, uv, verts, color);
 }

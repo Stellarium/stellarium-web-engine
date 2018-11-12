@@ -503,7 +503,7 @@ static double get_absolute_mag(double value, double observed_mag)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int core_render(int w, int h, double pixel_scale)
+int core_render(double win_w, double win_h, double pixel_scale)
 {
     obj_t *module;
     projection_t proj;
@@ -512,7 +512,7 @@ int core_render(int w, int h, double pixel_scale)
     int r;
     bool updated = false, cst_visible;
     double max_mag;
-    const double screen_area = (w / pixel_scale) * (h / pixel_scale);
+    const double win_area = win_w * win_h;
 
     // Constants that define the magnitude needed to see objects, hints,
     // and labels.  Default values.
@@ -529,13 +529,13 @@ int core_render(int w, int h, double pixel_scale)
      * fraction of r_min.  I add a small security offset to max_mag to prevent
      * bugs when we zoom out.
      */
-    core->r_min = 60 * DD2R / sqrt(h / pixel_scale * w / pixel_scale);
+    core->r_min = 60 * DD2R / sqrt(win_area);
     max_mag = get_max_observed_mag(core->r_min / 5) + 0.5;
 
     // The number of labels we show is proportional to the screen area.
     // I use my own screen (1920 * 1080) as a reference, with labels up
     // to mag 3.
-    max_label_mag = 3.0 + 2.5 * log10(screen_area / (1920 * 1080));
+    max_label_mag = 3.0 + 2.5 * log10(win_area / (1920 * 1080));
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
@@ -549,8 +549,8 @@ int core_render(int w, int h, double pixel_scale)
 
     if (!core->rend)
         core->rend = render_gl_create();
-    core->win_size[0] = w;
-    core->win_size[1] = h;
+    core->win_size[0] = win_w;
+    core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     labels_reset();
     r = core_update();
@@ -573,7 +573,7 @@ int core_render(int w, int h, double pixel_scale)
         core->fov *= ZOOM_FACTOR;
     core->observer->dirty = true;
 
-    projection_init(&proj, core->proj, core->fovx, w, h);
+    projection_init(&proj, core->proj, core->fovx, win_w, win_h);
 
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");
@@ -584,7 +584,7 @@ int core_render(int w, int h, double pixel_scale)
         .rend = core->rend,
         .obs = core->observer,
         .transform = &mat4_identity,
-        .fb_size = {w, h},
+        .fb_size = {win_w * pixel_scale, win_h * pixel_scale},
         .proj = &proj,
         .mag_max = get_absolute_mag(NAN, max_mag),
         .hint_mag_max = get_absolute_mag(core->hints_mag_max, max_hint_mag),
@@ -615,7 +615,7 @@ int core_render(int w, int h, double pixel_scale)
         }
     }
 
-    paint_prepare(&painter, w, h);
+    paint_prepare(&painter, win_w, win_h, pixel_scale);
     DL_FOREACH(core->obj.children, module) {
         obj_render(module, &painter);
     }

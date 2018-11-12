@@ -109,11 +109,11 @@ void projection_compute_fovs(int proj_type, double fov, double aspect,
  * Parameters:
  *   type   - One of the <PROJ_TYPE> value.
  *   fovx   - The fov in x direction (rad).
- *   w      - Window size in X (not framebuffer size).
- *   h      - Window size in Y (not framebuffer size).
+ *   win_w  - Window size in X (not framebuffer size).
+ *   win_h  - Window size in Y (not framebuffer size).
  */
 void projection_init(projection_t *proj, int type, double fovx,
-                     double w, double h);
+                     double win_w, double win_h);
 void projection_init_healpix(projection_t *proj, int nside, int pix,
                              bool swap, bool at_infinity);
 

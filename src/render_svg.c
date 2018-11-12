@@ -17,7 +17,7 @@ typedef struct {
     FILE        *out;
 } renderer_svg_t;
 
-static void prepare(renderer_t *rend_, int w, int h)
+static void prepare(renderer_t *rend_, double w, double h, double scale)
 {
     renderer_svg_t *rend = (void*)rend_;
     fprintf(rend->out,
