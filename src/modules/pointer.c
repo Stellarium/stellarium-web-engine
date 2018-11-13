@@ -25,7 +25,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     double mag, size, luminance, radius = NAN;
     double white[4] = {1, 1, 1, 1};
     const double T = 2.0;    // Animation period.
-    double p[2], r;
+    double r, transf[4][4];
     obj_t *selection = core->selection;
     painter_t painter = *painter_;
     vec4_set(painter.color, 0.34, 0.59, 1.0, 0.9);
@@ -58,13 +58,15 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     } else {
         // Draw four strokes around the object.
         for (i = 0; i < 4; i++) {
-            vec2_set(p, 1, 0);
             r = size / core->fov * core->win_size[0] + 5;
-            r = max(r, 16);
-            vec2_rotate(i * 90 * DD2R, p, p);
+            r = max(r, 8);
             r += 0.8 * (sin(sys_get_unix_time() / T * 2 * M_PI) + 1);
-            vec2_addk(pos2d, p, r, p);
-            symbols_paint(&painter, "POIN2", p, 16, white, i * 90 * DD2R);
+            mat4_set_identity(transf);
+            mat4_itranslate(transf, pos2d[0], pos2d[1], 0);
+            mat4_rz(i * 90 * DD2R, transf, transf);
+            mat4_itranslate(transf, r, 0, 0);
+            mat4_iscale(transf, 8, 1, 1);
+            paint_2d_line(&painter, transf, VEC(0, 0), VEC(1, 0));
         }
     }
     return 0;
