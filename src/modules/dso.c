@@ -372,55 +372,92 @@ static void contour_project(const projection_t *proj, int flags,
     vec4_copy(p, out);
 }
 
+static void compute_hint_transformation(
+        const painter_t *painter,
+        double ra, double de, double angle,
+        double size_x, double size_y, double min_pixel_size,
+        double out[4][4])
+{
+    double p[4], mat[3][3], c[2], a[2], b[2], scale = 1.0;
+
+    assert(!isnan(ra));
+    assert(!isnan(de));
+    assert(!isnan(angle));
+    assert(!isnan(size_x));
+    if (size_x == 0) size_x = 0.000001;
+    if (size_y == 0) size_y = 0.000001;
+
+    // 1. Center.
+    vec4_set(p, 1, 0, 0, 0);
+    mat3_set_identity(mat);
+    mat3_rz(ra, mat, mat);
+    mat3_ry(-de, mat, mat);
+    mat3_rx(-angle, mat, mat);
+    mat3_iscale(mat, 1.0, size_x / size_y, 1.0);
+    mat3_mul_vec3(mat, p, p);
+    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
+    // 2. Semi major.
+    vec4_set(p, 1, 0, 0, 0);
+    mat3_set_identity(mat);
+    mat3_rz(ra, mat, mat);
+    mat3_ry(-de, mat, mat);
+    mat3_rx(-angle, mat, mat);
+    mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
+    mat3_rz(size_x / 2.0, mat, mat);
+    mat3_mul_vec3(mat, p, p);
+    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
+    // 3. Semi minor.
+    vec4_set(p, 1, 0, 0, 0);
+    mat3_set_identity(mat);
+    mat3_rz(ra, mat, mat);
+    mat3_ry(-de, mat, mat);
+    mat3_rx(-angle, mat, mat);
+    mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
+    mat3_rx(-M_PI / 2, mat, mat);
+    mat3_rz(size_x / 2.0, mat, mat);
+    mat3_mul_vec3(mat, p, p);
+    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
+
+    mat4_set_identity(out);
+    vec2_copy(c, out[3]);
+    vec2_sub(a, c, out[0]);
+    vec2_sub(b, c, out[1]);
+
+    // Compute scale for the min pixel size.
+    if (vec2_dist(c, a) < min_pixel_size) {
+        scale = min_pixel_size / vec2_dist(c, a);
+        mat4_iscale(out, scale, scale, 1);
+    }
+}
+
 static void render_contour(const dso_data_t *data,
                            const painter_t *painter_,
                            double p[4])
 {
-    double v[2] = {0, 1}, tmp[4], c[4], a[4], b[4], angle;
+    double angle;
     painter_t painter = *painter_;
-    projection_t proj;
-    painter.lines_stripes = 10.0;
-    proj = (projection_t) {
-        .backward   = contour_project,
-        .user       = data,
-    };
-    paint_quad_contour(&painter, FRAME_ICRS, &proj, 64, 4);
-
-    // Find the new position for the label:
-    if (p) {
-        for (v[0] = 0; v[0] < 1; v[0] += 1.0 / 16) {
-            contour_project(&proj, 0, v, tmp);
-            convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0,
-                                tmp, tmp);
-            project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, tmp, tmp);
-            if (tmp[1] < p[1]) vec2_copy(tmp, p);
-        }
+    double transf[4][4], smax, smin;
+    smax = data->smax;
+    smin = data->smin;
+    angle = data->angle;
+    if (isnan(angle) || isnan(smin)) {
+        angle = 0.0;
+        smin = smax;
     }
+    if (strcmp(data->type, "G") == 0)
+        smin = mix(smax / 2, smin, smoothstep(20, 5, core->fov * DR2D));
+    compute_hint_transformation(&painter, data->ra, data->de,
+                                angle, smax, smin, 4.0, transf);
+    paint_2d_ellipse(&painter, transf, 1, 0, p);
 
-    // Compute ellipse in screen frame and add it to the clickable areas.
-    // XXX: All of this should be done in the painter.
-    //
-    // 1. Center
-    v[0] = v[1] = 0;
-    contour_project(&proj, 0, v, c);
-    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, c, c);
-    project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, c, c);
-    // 2. Semi major.
-    v[1] = 1;
-    v[0] = 0;
-    contour_project(&proj, 0, v, a);
-    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, a, a);
-    project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, a, a);
-    // 3. Semi minor.
-    v[1] = 1;
-    v[0] = 0.25;
-    contour_project(&proj, 0, v, b);
-    convert_coordinates(painter.obs, FRAME_ICRS, FRAME_VIEW, 0, b, b);
-    project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, b, b);
-
-    angle = atan2(a[1] - c[1], a[0] - c[0]);
-    areas_add_ellipse(core->areas, c, angle,
-                      vec2_dist(a, c), vec2_dist(b, c), data->id.oid, 0);
+    // Add clickable area.
+    angle = atan2(transf[0][1], transf[0][0]);
+    areas_add_ellipse(core->areas, transf[3], angle,
+                      vec2_norm(transf[0]), vec2_norm(transf[1]),
+                      data->id.oid, 0);
 }
 
 /*
