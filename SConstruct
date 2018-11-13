@@ -74,6 +74,9 @@ env.Append(CFLAGS=['-DHAVE_UNISTD_H'])
 sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
 
+sources += glob.glob('ext_src/nanovg/*.c')
+env.Append(CPPPATH=['ext_src/nanovg'])
+
 # Add webp
 sources += (glob.glob('ext_src/webp/src/dec/*.c') +
             glob.glob('ext_src/webp/src/dsp/*.c') +
