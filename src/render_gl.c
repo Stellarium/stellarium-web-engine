@@ -127,6 +127,7 @@ struct item
             double pos[2];
             double size[2];
             double angle;
+            double dashes;
         } vg;
     };
 
@@ -784,13 +785,23 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
 
 static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 {
+    double a, da;
     nvgBeginFrame(rend->vg, rend->fb_size[0], rend->fb_size[1], 1);
     nvgSave(rend->vg);
     nvgTranslate(rend->vg, item->vg.pos[0], item->vg.pos[1]);
     nvgRotate(rend->vg, item->vg.angle);
     nvgBeginPath(rend->vg);
-    if (item->type == ITEM_VG_ELLIPSE)
+    if (item->type == ITEM_VG_ELLIPSE && !item->vg.dashes)
         nvgEllipse(rend->vg, 0, 0, item->vg.size[0], item->vg.size[1]);
+    if (item->type == ITEM_VG_ELLIPSE && item->vg.dashes) {
+        da = 2 * M_PI / item->vg.dashes;
+        for (a = 0; a < 2 * M_PI; a += da) {
+            nvgMoveTo(rend->vg, item->vg.size[0] * cos(a),
+                                item->vg.size[1] * sin(a));
+            nvgLineTo(rend->vg, item->vg.size[0] * cos(a + da / 2),
+                                item->vg.size[1] * sin(a + da / 2));
+        }
+    }
     if (item->type == ITEM_VG_RECT)
         nvgRect(rend->vg, -item->vg.size[0], -item->vg.size[1],
                 2 * item->vg.size[0], 2 * item->vg.size[1]);
@@ -1180,6 +1191,7 @@ void ellipse_2d(renderer_t        *rend_,
     vec2_copy(size, item->vg.size);
     vec4_copy(painter->color, item->color);
     item->vg.angle = angle;
+    item->vg.dashes = painter->lines_stripes;
     DL_APPEND(rend->items, item);
 }
 
