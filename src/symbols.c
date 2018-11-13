@@ -26,17 +26,15 @@ static const struct {
     uint32_t    color;
     void        (*paint)(const painter_t *painter, const double transf[4][4]);
 } ENTRIES[] = {
-    {"POIN", 0x4CFF4CFF},
-    {"Ast", 0xff00ffff},
-
-    {"OpC" , 0xF2E9267F, opc_paint},
-    {"GlC" , 0xF2E9267F, glc_paint},
-    {"G"   , 0xFF930E7F,   g_paint},
-    {"PN"  , 0xF2E9267F,  pn_paint},
-    {"ISM" , 0xF2E9267F, ism_paint},
-    {"BNe" , 0x89ff5f7f, bne_paint},
-    {"Cl*" , 0x89ff5f7f, cls_paint},
-
+    [SYMBOL_POINTER]                = {"POIN", 0x4CFF4CFF},
+    [SYMBOL_ARTIFICIAL_SATELLITE]   = {"Ast",  0xff00ffff},
+    [SYMBOL_OPEN_GALACTIC_CLUSTER]  = {"OpC" , 0xF2E9267F, opc_paint},
+    [SYMBOL_GLOBULAR_CLUSTER]       = {"GlC" , 0xF2E9267F, glc_paint},
+    [SYMBOL_GALAXY]                 = {"G"   , 0xFF930E7F,   g_paint},
+    [SYMBOL_PLANETARY_NEBULA]       = {"PN"  , 0xF2E9267F,  pn_paint},
+    [SYMBOL_INTERSTELLAR_MATTER]    = {"ISM" , 0xF2E9267F, ism_paint},
+    [SYMBOL_BRIGHT_NEBULA]          = {"BNe" , 0x89ff5f7f, bne_paint},
+    [SYMBOL_CLUSTER_OF_STARS]       = {"Cl*" , 0x89ff5f7f, cls_paint},
 };
 
 static texture_t *get_texture(void)
@@ -49,25 +47,27 @@ static texture_t *get_texture(void)
     return g_tex;
 }
 
-static int get_index(const char *id)
+/*
+ * Function: symbols_get_for_otype
+ * Return the best available symbol we can use for a given object type.
+ *
+ * Parameters:
+ *   type   - A simbad type name.
+ *
+ * Return:
+ *   One of the <SYMBOL_ENUM> value, or zero if no symbol matches the type.
+ */
+int symbols_get_for_otype(const char *type)
 {
     int i;
-    assert(id);
-    for (i = 0; i < ARRAY_SIZE(ENTRIES); i++)
-        if (str_equ(ENTRIES[i].id, id)) return i;
-    return -1;
-}
-
-texture_t *symbols_get(const char *id, double rect[2][2])
-{
-    int index;
-    index = get_index(id);
-    if (index < 0) return NULL;
-    if (rect) {
-        vec2_set(rect[0], (index % 8) / 8.0, (index / 8) / 8.0);
-        vec2_set(rect[1], rect[0][0] + 1 / 8.0, rect[0][1] + 1 / 8.0);
+    while (true) {
+        for (i = 1; i < ARRAY_SIZE(ENTRIES); i++) {
+            if (str_equ(ENTRIES[i].id, type)) return i;
+        }
+        type = otypes_get_parent(type);
+        if (!type) break;
     }
-    return get_texture();
+    return 0;
 }
 
 static void opc_paint(const painter_t *painter, const double transf[4][4])
@@ -125,33 +125,34 @@ static void glc_paint(const painter_t *painter, const double transf[4][4])
     paint_2d_line(painter, transf, VEC(0, -1), VEC(0, 1));
 }
 
-int symbols_paint(const painter_t *painter_,
-                  const char *id,
+int symbols_paint(const painter_t *painter_, int symbol,
                   const double pos[2], double size, const double color[4],
                   double angle)
 {
-    int index, i;
+    int i;
     double uv[4][2], c[4], transf[4][4];
     painter_t painter = *painter_;
-    index = get_index(id);
-    if (index == -1) return -1;
-    assert(index >= 0);
-    for (i = 0; i < 4; i++) {
-        uv[i][0] = ((index % 8) + (i % 2)) / 8.0;
-        uv[i][1] = ((index / 8) + (i / 2)) / 8.0;
-    }
+    assert(symbol >= 0);
+    if (!symbol) return 0;
     if (!color) {
-        hex_to_rgba(ENTRIES[index].color, c);
+        hex_to_rgba(ENTRIES[symbol].color, c);
         color = c;
     }
-    if (ENTRIES[index].paint) {
+    // Procedural symbol.
+    if (ENTRIES[symbol].paint) {
         vec4_copy(color, painter.color);
         mat4_set_identity(transf);
         mat4_itranslate(transf, pos[0], pos[1], 0);
         mat4_rz(angle, transf, transf);
         mat4_iscale(transf, size / 2, size / 2, 1);
-        ENTRIES[index].paint(&painter, transf);
+        ENTRIES[symbol].paint(&painter, transf);
         return 0;
+    }
+
+    // Png symbol.
+    for (i = 0; i < 4; i++) {
+        uv[i][0] = (((symbol - 1) % 8) + (i % 2)) / 8.0;
+        uv[i][1] = (((symbol - 1) / 8) + (i / 2)) / 8.0;
     }
     return paint_texture(&painter, get_texture(), uv, pos, size, color, angle);
 }

@@ -54,7 +54,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
         size = 4000.0 * size / core->fov;
         size = max(size, 32);
         size *= 1 + 0.05 * (sin(sys_get_unix_time() / T * 2 * M_PI) + 1);
-        symbols_paint(&painter, "POIN", pos2d, size, white, 0);
+        symbols_paint(&painter, SYMBOL_POINTER, pos2d, size, white, 0);
     } else {
         // Draw four strokes around the object.
         for (i = 0; i < 4; i++) {

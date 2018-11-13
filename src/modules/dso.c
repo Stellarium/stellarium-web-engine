@@ -492,10 +492,9 @@ static int dso_render_from_data(const dso_data_t *d,
 {
     double p[4] = {}, size, luminance, mag, temp_mag;
     point_t point;
-    const char *symbol;
     painter_t painter = *painter_;
     double min_circle_size, circle_size = 0, angle;
-    int label_anchor = ANCHOR_AROUND;
+    int label_anchor = ANCHOR_AROUND, symbol;
     bool show_contour;
 
     min_circle_size = core->fov / 20;
@@ -524,12 +523,9 @@ static int dso_render_from_data(const dso_data_t *d,
         label_anchor = ANCHOR_BOTTOM | ANCHOR_HCENTER | ANCHOR_FIXED;
     } else {
         vec4_set(painter.color, 1, 1, 1, 0.5);
-        symbol = d->type;
-        while (symbol && !symbols_get(symbol, NULL))
-            symbol = otypes_get_parent(symbol);
-        symbol = symbol ?: "ISM";
+        symbol = symbols_get_for_otype(d->type);
         angle = 0;
-        if (strcmp(symbol, "G") == 0 && !isnan(d->angle) && d->smax > 0)
+        if (symbol == SYMBOL_GALAXY && !isnan(d->angle) && d->smax > 0)
             angle = get_screen_angle(d, &painter);
         symbols_paint(&painter, symbol, p, 12.0, NULL, angle);
         // Add the dso in the global list of rendered objects.

@@ -12,12 +12,57 @@
 
 #include "painter.h"
 
+/*
+ * Module: symbols
+ * Support for rendering 2d symbols on screen.
+ */
+
+/*
+ * Enum: SYMBOL_ENUM
+ * List of all the supported symbols.
+ */
+enum {
+    SYMBOL_POINTER = 1,
+
+    // All the otype symbols.
+    SYMBOL_ARTIFICIAL_SATELLITE,
+    SYMBOL_OPEN_GALACTIC_CLUSTER,
+    SYMBOL_GLOBULAR_CLUSTER,
+    SYMBOL_GALAXY,
+    SYMBOL_PLANETARY_NEBULA,
+    SYMBOL_INTERSTELLAR_MATTER,
+    SYMBOL_BRIGHT_NEBULA,
+    SYMBOL_CLUSTER_OF_STARS,
+};
+
 void symbols_init(void);
 
-texture_t *symbols_get(const char *id, double rect[2][2]);
+/*
+ * Function: symbols_get_for_otype
+ * Return the best available symbol we can use for a given object type.
+ *
+ * Parameters:
+ *   type   - A simbad type name.
+ *
+ * Return:
+ *   One of the <SYMBOL_ENUM> value, or zero if no symbol matches the type.
+ */
+int symbols_get_for_otype(const char *type);
 
-int symbols_paint(const painter_t *painter,
-                  const char *id,
+/*
+ * Function: symbols_paint
+ * Render a given symbol
+ *
+ * Parameters:
+ *   painter    - A painter.
+ *   symbol     - One of the <SYMBOL_ENUM> value.
+ *   pos        - Position in window coordinates.
+ *   size       - Size in logical pixel.
+ *   color      - Color to use.  If NULL we use the default defined color
+ *                for the symbol.
+ *   angle      - Angle (rad).
+ */
+int symbols_paint(const painter_t *painter, int symbol,
                   const double pos[2], double size, const double color[4],
                   double angle);
 

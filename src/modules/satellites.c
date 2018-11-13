@@ -334,7 +334,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     // Render symbol if needed.  For the moment we always do it if the
     // mag is lower than 7.  We probably need an option to control that.
     if (mag < 7.0) {
-        symbols_paint(&painter, "Ast", p_win, 12.0, label_color, 0.0);
+        symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win, 12.0,
+                      label_color, 0.0);
         // Still render an invisible point for the selection.
         // XXX: should be done in symbols_paint!
         luminance = 0;
