@@ -74,7 +74,7 @@ bool gui_item(const gui_item_t *item)
         attr = obj_get_attr_(item->obj, item->attr);
         if (attr->type[0] == 'b') { // Boolean attribute
             obj_get_attr(item->obj, item->attr, "b", &b);
-            ret = gui_toggle(item->label, &b, item->symbol);
+            ret = gui_toggle(item->label, &b);
             if (ret) obj_set_attr(item->obj, item->attr, "b", b);
             return ret;
         }
@@ -184,16 +184,16 @@ static void menu_main(void *user)
     double size[2] = {300, 0};
 
     // XXX: replace all by modules gui hook method.
-    const char *modules[][4] = {
-        {"core.atmosphere", "visible", "Atmosphere", "btn_atmosphere"},
-        {"core.landscapes", "visible", "Landscape", "btn_landscape"},
-        {"core.milkyway", "visible", "Milkyway", "btn_landscape"},
-        {"core.constellations.lines", "visible", "Cst Lines", "btn_cst_lines"},
-        {"core.constellations.images", "visible", "Cst Art", NULL},
-        {"core.constellations.bounds", "visible", "Cst Bounds", NULL},
-        {"core.constellations", "show_all", "Cst show all", NULL},
-        {"core.dsos", "visible", "DSO", NULL},
-        {"core.dss",  "visible", "DSS", NULL},
+    const char *modules[][3] = {
+        {"core.atmosphere", "visible", "Atmosphere"},
+        {"core.landscapes", "visible", "Landscape"},
+        {"core.milkyway", "visible", "Milkyway"},
+        {"core.constellations.lines", "visible", "Cst Lines"},
+        {"core.constellations.images", "visible", "Cst Art"},
+        {"core.constellations.bounds", "visible", "Cst Bounds"},
+        {"core.constellations", "show_all", "Cst show all"},
+        {"core.dsos", "visible", "DSO"},
+        {"core.dss",  "visible", "DSS"},
     };
 
     gui_panel_begin("main", pos, size);
@@ -225,7 +225,6 @@ static void menu_main(void *user)
         for (i = 0; i < ARRAY_SIZE(modules); i++) {
             gui_item(&(gui_item_t){
                     .label = modules[i][2],
-                    .symbol = modules[i][3],
                     .obj = obj_get(NULL, modules[i][0], 0),
                     .attr = modules[i][1]});
         }
@@ -249,7 +248,7 @@ static void menu_main(void *user)
     }
     if (DEBUG && gui_tab("Debug")) {
         extern bool debug_stars_show_all;
-        gui_toggle("Stars show all", &debug_stars_show_all, NULL);
+        gui_toggle("Stars show all", &debug_stars_show_all);
         gui_text("Progress:");
         progressbar_list(NULL, on_progressbar);
         gui_tab_end();

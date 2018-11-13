@@ -274,17 +274,16 @@ void gui_release(void)
 }
 
 // Function that create a base widget.
-// +------+------------+-------+--------+
-// | img  | label      |   sub | widget |
-// +------+------------+-------+--------+
-static bool gui_base_widget(const char *symbol, const char *label,
+// +------------+-------+--------+
+// | label      |   sub | widget |
+// +------------+-------+--------+
+static bool gui_base_widget(const char *label,
                             const char *sublabel, double ws,
                             bool button = false)
 {
     const ImGuiStyle& style = ImGui::GetStyle();
-    texture_t *tex;
     ImGui::PushID(label);
-    double width, height, spacing, img_rect[2][2];
+    double width, height, spacing;
     ImVec2 label_size, pos;
     bool ret = false;
 
@@ -300,15 +299,7 @@ static bool gui_base_widget(const char *symbol, const char *label,
         ImGui::SetCursorPos(pos);
     }
 
-    if (symbol) {
-        tex = symbols_get(symbol, img_rect);
-        assert(tex);
-        ImGui::Image((void*)tex, ImVec2(height, height),
-                ImVec2(img_rect[0][0], img_rect[0][1]),
-                ImVec2(img_rect[1][0], img_rect[1][1]));
-    } else {
-        ImGui::Dummy(ImVec2(1, height));
-    }
+    ImGui::Dummy(ImVec2(1, height));
     ImGui::SameLine();
     ImGui::AlignFirstTextHeightToWidgets();
     ImGui::Text("%s", label);
@@ -464,10 +455,10 @@ void gui_label(const char *label, const char *value)
     ImGui::PopStyleVar();
 }
 
-bool gui_toggle(const char *label, bool *v, const char *symbol)
+bool gui_toggle(const char *label, bool *v)
 {
     bool ret;
-    gui_base_widget(symbol, label, NULL, 1);
+    gui_base_widget(label, NULL, 1);
     ret = ImGui::Checkbox("", v);
     gui_base_widget_end();
     return ret;
@@ -476,7 +467,7 @@ bool gui_toggle(const char *label, bool *v, const char *symbol)
 bool gui_link(const char *label, const char *sublabel)
 {
     bool ret;
-    ret = gui_base_widget(NULL, label, sublabel, 0.1, true);
+    ret = gui_base_widget(label, sublabel, 0.1, true);
     ImGui::Text("❯");
     gui_base_widget_end();
     return ret;
@@ -485,7 +476,7 @@ bool gui_link(const char *label, const char *sublabel)
 bool gui_int(const char *label, int *v)
 {
     bool ret;
-    gui_base_widget(NULL, label, NULL, 8);
+    gui_base_widget(label, NULL, 8);
     ret = ImGui::InputInt("##l", v);
     gui_base_widget_end();
     return ret;
@@ -496,7 +487,7 @@ bool gui_double(const char *label, double *v, double default_value)
     bool ret, b;
     double height;
     float f = *v;
-    gui_base_widget(NULL, label, NULL, 10);
+    gui_base_widget(label, NULL, 10);
 
     if (!isnan(default_value) && isnan(f)) {
         f = ImGui::GetStateStorage()->GetFloat(

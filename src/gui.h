@@ -14,7 +14,6 @@ struct gui_item
     const char  *id;       // If not set, we use the label.
     const char  *label;
     const char  *sub_label;
-    const char  *symbol;
     bool        small;
 
     // If set the item will allow to edit the attribute of the object.
@@ -49,7 +48,7 @@ void gui_text(const char *label, ...);
 // and html backend.
 void gui_text_unformatted(const char *text);
 void gui_label(const char *label, const char *value);
-bool gui_toggle(const char *label, bool *v, const char *symbol);
+bool gui_toggle(const char *label, bool *v);
 bool gui_button(const char *label, double size);
 bool gui_link(const char *label, const char *sublabel);
 bool gui_int(const char *label, int *v);
