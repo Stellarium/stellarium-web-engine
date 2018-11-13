@@ -112,6 +112,7 @@ void swe_gen_doc(void);
 #include "obj.h"
 #include "core.h"
 #include "gui.h"
+#include "symbols.h"
 #include "system.h"
 
 #endif // SWE_H

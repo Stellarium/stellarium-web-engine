@@ -279,14 +279,6 @@ const char *type_to_str(const char type[4]);
 int dump_catalog(const char *path);
 
 
-/***** Symbol rendering **************************************************/
-void symbols_init(void);
-texture_t *symbols_get(const char *id, double rect[2][2]);
-int symbols_paint(const painter_t *painter,
-                  const char *id,
-                  const double pos[2], double size, const double color[4],
-                  double angle);
-
 // Create or get a city.
 obj_t *city_create(const char *name, const char *country_code,
                    const char *timezone,
