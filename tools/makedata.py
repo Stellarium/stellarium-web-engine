@@ -121,12 +121,6 @@ def make_symbols():
     files = [
         'pointer.svg',
         'artificial-satellite.svg',
-        'btn-atmosphere.svg',
-        'btn-cst-lines.svg',
-        'btn-landscape.svg',
-        'btn-equatorial-grid.svg',
-        'btn-azimuthal-grid.svg',
-        'btn-nebulae.svg',
     ]
     dst = 'data/symbols.png'
     if check_uptodate(['symbols/{}'.format(x) for x in files], dst):
@@ -163,4 +157,4 @@ def make_mpc():
 make_cities()
 make_font()
 make_symbols()
- make_mpc()
+make_mpc()

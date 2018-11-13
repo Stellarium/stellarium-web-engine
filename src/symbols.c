@@ -28,9 +28,6 @@ static const struct {
 } ENTRIES[] = {
     {"POIN", 0x4CFF4CFF},
     {"Ast", 0xff00ffff},
-    {"btn_landscape", 0xffffffff},
-    {"btn_atmosphere", 0xffffffff},
-    {"btn_cst_lines", 0xffffffff},
 
     {"OpC" , 0xF2E9267F, opc_paint},
     {"GlC" , 0xF2E9267F, glc_paint},
