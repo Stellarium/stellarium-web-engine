@@ -530,7 +530,7 @@ static int dso_render_from_data(const dso_data_t *d,
         symbol = symbol ?: "ISM";
         angle = 0;
         if (strcmp(symbol, "G") == 0 && !isnan(d->angle) && d->smax > 0)
-            angle = 45 * DD2R - get_screen_angle(d, &painter);
+            angle = get_screen_angle(d, &painter);
         symbols_paint(&painter, symbol, p, 12.0, NULL, angle);
         // Add the dso in the global list of rendered objects.
         // XXX: we could move this into symbols_paint.
