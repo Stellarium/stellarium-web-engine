@@ -77,6 +77,11 @@ struct renderer
                     const double        pos[2],
                     const double        size[2],
                     double              angle);
+
+    void (*line_2d)(renderer_t          *rend,
+                    const painter_t     *painter,
+                    const double        p1[2],
+                    const double        p2[2]);
 };
 
 renderer_t* render_gl_create(void);
@@ -303,5 +308,19 @@ int paint_2d_ellipse(const painter_t *painter,
  *                the shape position, orientation and scale.
  */
 int paint_2d_rect(const painter_t *painter, const double transf[4][4]);
+
+/*
+ * Function: paint_2d_line
+ * Paint a line in 2d.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   transf     - Transformation from unit into window space that defines
+ *                the shape position, orientation and scale.
+ *   p1         - First pos, in unit coordinates (-1 to 1).
+ *   p2         - Second pos, in unit coordinates (-1 to 1).
+ */
+int paint_2d_line(const painter_t *painter, const double transf[4][4],
+                  const double p1[2], const double p2[2]);
 
 #endif // PAINTER_H

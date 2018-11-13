@@ -395,3 +395,25 @@ int paint_2d_rect(const painter_t *painter, const double transf[4][4])
     REND(painter->rend, rect_2d, painter, pos, size, angle);
     return 0;
 }
+
+/*
+ * Function: paint_2d_line
+ * Paint a line in 2d.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   transf     - Transformation from unit into window space that defines
+ *                the shape position, orientation and scale.
+ *   p1         - First pos, in unit coordinates (-1 to 1).
+ *   p2         - Second pos, in unit coordinates (-1 to 1).
+ */
+int paint_2d_line(const painter_t *painter, const double transf[4][4],
+                  const double p1[2], const double p2[2])
+{
+    double p1_win[4] = {p1[0], p1[1], 0, 1};
+    double p2_win[4] = {p2[0], p2[1], 0, 1};
+    mat4_mul_vec4(transf, p1_win, p1_win);
+    mat4_mul_vec4(transf, p2_win, p2_win);
+    REND(painter->rend, line_2d, painter, p1_win, p2_win);
+    return 0;
+}

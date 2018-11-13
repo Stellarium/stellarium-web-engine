@@ -85,6 +85,7 @@ enum {
     ITEM_PLANET,
     ITEM_VG_ELLIPSE,
     ITEM_VG_RECT,
+    ITEM_VG_LINE,
 };
 
 typedef struct item item_t;
@@ -125,6 +126,7 @@ struct item
 
         struct {
             double pos[2];
+            double pos2[2];
             double size[2];
             double angle;
             double dashes;
@@ -791,8 +793,10 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
     nvgTranslate(rend->vg, item->vg.pos[0], item->vg.pos[1]);
     nvgRotate(rend->vg, item->vg.angle);
     nvgBeginPath(rend->vg);
+
     if (item->type == ITEM_VG_ELLIPSE && !item->vg.dashes)
         nvgEllipse(rend->vg, 0, 0, item->vg.size[0], item->vg.size[1]);
+
     if (item->type == ITEM_VG_ELLIPSE && item->vg.dashes) {
         da = 2 * M_PI / item->vg.dashes;
         for (a = 0; a < 2 * M_PI; a += da) {
@@ -802,9 +806,17 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
                                 item->vg.size[1] * sin(a + da / 2));
         }
     }
+
     if (item->type == ITEM_VG_RECT)
         nvgRect(rend->vg, -item->vg.size[0], -item->vg.size[1],
                 2 * item->vg.size[0], 2 * item->vg.size[1]);
+
+    if (item->type == ITEM_VG_LINE) {
+        nvgMoveTo(rend->vg, 0, 0);
+        nvgLineTo(rend->vg, item->vg.pos2[0] - item->vg.pos[0],
+                            item->vg.pos2[1] - item->vg.pos[1]);
+    }
+
     nvgStrokeColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                      item->color[1] * 255,
                                      item->color[2] * 255,
@@ -1107,6 +1119,7 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_PLANET) item_planet_render(rend, item);
         if (item->type == ITEM_VG_ELLIPSE) item_vg_render(rend, item);
         if (item->type == ITEM_VG_RECT) item_vg_render(rend, item);
+        if (item->type == ITEM_VG_LINE) item_vg_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
         free(item->indices);
@@ -1210,6 +1223,21 @@ void rect_2d(renderer_t        *rend_,
     DL_APPEND(rend->items, item);
 }
 
+void line_2d(renderer_t          *rend_,
+             const painter_t     *painter,
+             const double        p1[2],
+             const double        p2[2])
+{
+    renderer_gl_t *rend = (void*)rend_;
+    item_t *item;
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_VG_LINE;
+    vec2_copy(p1, item->vg.pos);
+    vec2_copy(p2, item->vg.pos2);
+    vec4_copy(painter->color, item->color);
+    DL_APPEND(rend->items, item);
+}
+
 static void init_prog(prog_t *p, const char *vert, const char *frag,
                       const char *include)
 {
@@ -1294,6 +1322,7 @@ renderer_t* render_gl_create(void)
     rend->rend.line = line;
     rend->rend.ellipse_2d = ellipse_2d;
     rend->rend.rect_2d = rect_2d;
+    rend->rend.line_2d = line_2d;
 
     return &rend->rend;
 }
