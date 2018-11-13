@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include <float.h>
 
 static bool g_debug = false;
 
@@ -325,5 +326,53 @@ int paint_orbit(const painter_t *painter, int frame,
     // We only support ICRS for the moment to make things simpler.
     assert(frame == FRAME_ICRS);
     paint_line(painter, frame, line, &orbit_proj, 128, 1);
+    return 0;
+}
+
+/*
+ * Function: paint_2d_ellipse
+ * Paint an ellipse in 2d.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   transf     - Transformation from unit into window space that defines
+ *                the shape position, orientation and scale.
+ *   width      - Line width.
+ *   dashes     - Size of the dashes (0 for a plain line).
+ *   label_pos  - Output the position that could be used for a label.  Can
+ *                be NULL.
+ */
+int paint_2d_ellipse(const painter_t *painter_,
+                     const double transf[4][4],
+                     double width, double dashes,
+                     double label_pos[2])
+{
+    double a2, b2, perimeter, pos[4], size[2], angle, a;
+    painter_t painter = *painter_;
+
+    a2 = vec2_norm2(transf[0]);
+    b2 = vec2_norm2(transf[1]);
+
+    // Estimate the number of dashes.
+    painter.lines_stripes = 0;
+    if (dashes) {
+        perimeter = 2 * M_PI * sqrt((a2 + b2) / 2);
+        painter.lines_stripes = perimeter / dashes;
+    }
+
+    vec2_copy(transf[3], pos);
+    size[0] = sqrt(a2);
+    size[1] = sqrt(b2);
+    angle = atan2(transf[0][1], transf[0][0]);
+    REND(painter.rend, ellipse_2d, &painter, pos, size, angle);
+
+    if (label_pos) {
+        label_pos[1] = DBL_MAX;
+        for (a = 0; a < 2 * M_PI / 2; a += 2 * M_PI / 16) {
+            vec4_set(pos, cos(a), sin(a), 0, 1);
+            mat4_mul_vec4(transf, pos, pos);
+            if (pos[1] < label_pos[1]) vec2_copy(pos, label_pos);
+        }
+    }
     return 0;
 }

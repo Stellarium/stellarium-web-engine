@@ -10,6 +10,10 @@
 #include "swe.h"
 #include "utils/gl.h"
 
+#define NANOVG_GLES2_IMPLEMENTATION
+#include "nanovg.h"
+#include "nanovg_gl.h"
+
 #include <float.h>
 
 // We keep all the text textures in a cache so that we don't have to recreate
@@ -79,6 +83,7 @@ enum {
     ITEM_ALPHA_TEXTURE,
     ITEM_TEXTURE,
     ITEM_PLANET,
+    ITEM_VG_ELLIPSE,
 };
 
 typedef struct item item_t;
@@ -116,6 +121,12 @@ struct item
             double shadow_spheres[4][4]; // (pos + radius) * 4
             int    material;
         } planet;
+
+        struct {
+            double pos[2];
+            double size[2];
+            double angle;
+        } vg_ellipse;
     };
 
     item_t *next, *prev;
@@ -167,6 +178,7 @@ typedef struct renderer_gl {
 
     texture_t   *white_tex;
     tex_cache_t *tex_cache;
+    NVGcontext *vg;
 
     item_t  *items;
 } renderer_gl_t;
@@ -769,6 +781,25 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+static void item_vg_ellipse_render(renderer_gl_t *rend, const item_t *item)
+{
+    nvgBeginFrame(rend->vg, rend->fb_size[0], rend->fb_size[1], 1);
+    nvgSave(rend->vg);
+    nvgTranslate(rend->vg, item->vg_ellipse.pos[0], item->vg_ellipse.pos[1]);
+    nvgRotate(rend->vg, item->vg_ellipse.angle);
+    nvgBeginPath(rend->vg);
+    nvgEllipse(rend->vg, 0, 0,
+               item->vg_ellipse.size[0], item->vg_ellipse.size[1]);
+    nvgStrokeColor(rend->vg, nvgRGBA(item->color[0] * 255,
+                                     item->color[1] * 255,
+                                     item->color[2] * 255,
+                                     item->color[3] * 255));
+    nvgStrokeWidth(rend->vg, 1);
+    nvgStroke(rend->vg);
+    nvgRestore(rend->vg);
+    nvgEndFrame(rend->vg);
+}
+
 static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
 {
     prog_t *prog;
@@ -1059,6 +1090,7 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_TEXTURE)
             item_texture_render(rend, item);
         if (item->type == ITEM_PLANET) item_planet_render(rend, item);
+        if (item->type == ITEM_VG_ELLIPSE) item_vg_ellipse_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
         free(item->indices);
@@ -1131,6 +1163,21 @@ static void line(renderer_t           *rend_,
     item->nb += nb_segs * 2;
 }
 
+void ellipse_2d(renderer_t        *rend_,
+                const painter_t   *painter,
+                const double pos[2], const double size[2], double angle)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    item_t *item;
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_VG_ELLIPSE;
+    vec2_copy(pos, item->vg_ellipse.pos);
+    vec2_copy(size, item->vg_ellipse.size);
+    vec4_copy(painter->color, item->color);
+    item->vg_ellipse.angle = angle;
+    DL_APPEND(rend->items, item);
+}
+
 static void init_prog(prog_t *p, const char *vert, const char *frag,
                       const char *include)
 {
@@ -1188,6 +1235,7 @@ renderer_t* render_gl_create(void)
     renderer_gl_t *rend;
     rend = calloc(1, sizeof(*rend));
     rend->white_tex = create_white_texture(16, 16);
+    rend->vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 
     // Create all the shaders programs.
     init_prog(&rend->progs.points,
@@ -1212,6 +1260,7 @@ renderer_t* render_gl_create(void)
     rend->rend.texture = texture;
     rend->rend.text = text;
     rend->rend.line = line;
+    rend->rend.ellipse_2d = ellipse_2d;
 
     return &rend->rend;
 }
