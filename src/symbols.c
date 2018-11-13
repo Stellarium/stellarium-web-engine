@@ -27,7 +27,10 @@ static const struct {
     void        (*paint)(const painter_t *painter, const double transf[4][4]);
 } ENTRIES[] = {
     {"POIN", 0x4CFF4CFF},
-    {"POIN2",0x4CFF4CFF},
+    {"Ast", 0xff00ffff},
+    {"btn_landscape", 0xffffffff},
+    {"btn_atmosphere", 0xffffffff},
+    {"btn_cst_lines", 0xffffffff},
 
     {"OpC" , 0xF2E9267F, opc_paint},
     {"GlC" , 0xF2E9267F, glc_paint},
@@ -37,11 +40,6 @@ static const struct {
     {"BNe" , 0x89ff5f7f, bne_paint},
     {"Cl*" , 0x89ff5f7f, cls_paint},
 
-    {"Ast", 0xff00ffff},
-
-    {"btn_landscape", 0xffffffff},
-    {"btn_atmosphere", 0xffffffff},
-    {"btn_cst_lines", 0xffffffff},
 };
 
 static texture_t *get_texture(void)

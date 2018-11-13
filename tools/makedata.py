@@ -120,16 +120,7 @@ def make_font():
 def make_symbols():
     files = [
         'pointer.svg',
-        'pointer2.svg',
-
-        'neb-open-star-cluster.svg',
-        'neb-globular-star-cluster.svg',
-        'neb-galaxy.svg',
-        'neb-planetary-nebula.svg',
-        'neb-default.svg',
-        'neb-bright-emission-nebula.svg',
-        'neb-cluster-nebula.svg',
-
+        'artificial-satellite.svg',
         'btn-atmosphere.svg',
         'btn-cst-lines.svg',
         'btn-landscape.svg',
@@ -172,4 +163,4 @@ def make_mpc():
 make_cities()
 make_font()
 make_symbols()
-make_mpc()
+ make_mpc()
