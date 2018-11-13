@@ -451,7 +451,7 @@ static void render_contour(const dso_data_t *data,
         smin = mix(smax / 2, smin, smoothstep(20, 5, core->fov * DR2D));
     compute_hint_transformation(&painter, data->ra, data->de,
                                 angle, smax, smin, 4.0, transf);
-    paint_2d_ellipse(&painter, transf, 1, 0, p);
+    paint_2d_ellipse(&painter, transf, 0, p);
 
     // Add clickable area.
     angle = atan2(transf[0][1], transf[0][0]);

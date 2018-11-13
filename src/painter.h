@@ -285,14 +285,12 @@ int paint_orbit(const painter_t *painter, int frame,
  *   painter    - The painter.
  *   transf     - Transformation from unit into window space that defines
  *                the shape position, orientation and scale.
- *   width      - Line width.
  *   dashes     - Size of the dashes (0 for a plain line).
  *   label_pos  - Output the position that could be used for a label.  Can
  *                be NULL.
  */
 int paint_2d_ellipse(const painter_t *painter,
-                     const double transf[4][4],
-                     double width, double dashes,
+                     const double transf[4][4], double dashes,
                      double label_pos[2]);
 
 /*
