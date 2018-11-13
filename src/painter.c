@@ -376,3 +376,24 @@ int paint_2d_ellipse(const painter_t *painter_,
     }
     return 0;
 }
+
+/*
+ * Function: paint_2d_rect
+ * Paint a rect in 2d.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   transf     - Transformation from unit into window space that defines
+ *                the shape position, orientation and scale.
+ */
+int paint_2d_rect(const painter_t *painter, const double transf[4][4])
+{
+    double pos[4], size[2], angle;
+
+    vec2_copy(transf[3], pos);
+    size[0] = vec2_norm(transf[0]);
+    size[1] = vec2_norm(transf[1]);
+    angle = atan2(transf[0][1], transf[0][0]);
+    REND(painter->rend, rect_2d, painter, pos, size, angle);
+    return 0;
+}

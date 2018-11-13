@@ -71,6 +71,12 @@ struct renderer
                        const double     pos[2],
                        const double     size[2],
                        double           angle);
+
+    void (*rect_2d)(renderer_t          *rend,
+                    const painter_t     *painter,
+                    const double        pos[2],
+                    const double        size[2],
+                    double              angle);
 };
 
 renderer_t* render_gl_create(void);
@@ -288,5 +294,16 @@ int paint_2d_ellipse(const painter_t *painter,
                      const double transf[4][4],
                      double width, double dashes,
                      double label_pos[2]);
+
+/*
+ * Function: paint_2d_rect
+ * Paint a rect in 2d.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   transf     - Transformation from unit into window space that defines
+ *                the shape position, orientation and scale.
+ */
+int paint_2d_rect(const painter_t *painter, const double transf[4][4]);
 
 #endif // PAINTER_H

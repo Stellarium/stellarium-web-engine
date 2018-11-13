@@ -84,6 +84,7 @@ enum {
     ITEM_TEXTURE,
     ITEM_PLANET,
     ITEM_VG_ELLIPSE,
+    ITEM_VG_RECT,
 };
 
 typedef struct item item_t;
@@ -126,7 +127,7 @@ struct item
             double pos[2];
             double size[2];
             double angle;
-        } vg_ellipse;
+        } vg;
     };
 
     item_t *next, *prev;
@@ -781,15 +782,18 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
-static void item_vg_ellipse_render(renderer_gl_t *rend, const item_t *item)
+static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 {
     nvgBeginFrame(rend->vg, rend->fb_size[0], rend->fb_size[1], 1);
     nvgSave(rend->vg);
-    nvgTranslate(rend->vg, item->vg_ellipse.pos[0], item->vg_ellipse.pos[1]);
-    nvgRotate(rend->vg, item->vg_ellipse.angle);
+    nvgTranslate(rend->vg, item->vg.pos[0], item->vg.pos[1]);
+    nvgRotate(rend->vg, item->vg.angle);
     nvgBeginPath(rend->vg);
-    nvgEllipse(rend->vg, 0, 0,
-               item->vg_ellipse.size[0], item->vg_ellipse.size[1]);
+    if (item->type == ITEM_VG_ELLIPSE)
+        nvgEllipse(rend->vg, 0, 0, item->vg.size[0], item->vg.size[1]);
+    if (item->type == ITEM_VG_RECT)
+        nvgRect(rend->vg, -item->vg.size[0], -item->vg.size[1],
+                2 * item->vg.size[0], 2 * item->vg.size[1]);
     nvgStrokeColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                      item->color[1] * 255,
                                      item->color[2] * 255,
@@ -1090,7 +1094,8 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_TEXTURE)
             item_texture_render(rend, item);
         if (item->type == ITEM_PLANET) item_planet_render(rend, item);
-        if (item->type == ITEM_VG_ELLIPSE) item_vg_ellipse_render(rend, item);
+        if (item->type == ITEM_VG_ELLIPSE) item_vg_render(rend, item);
+        if (item->type == ITEM_VG_RECT) item_vg_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
         free(item->indices);
@@ -1171,10 +1176,25 @@ void ellipse_2d(renderer_t        *rend_,
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_ELLIPSE;
-    vec2_copy(pos, item->vg_ellipse.pos);
-    vec2_copy(size, item->vg_ellipse.size);
+    vec2_copy(pos, item->vg.pos);
+    vec2_copy(size, item->vg.size);
     vec4_copy(painter->color, item->color);
-    item->vg_ellipse.angle = angle;
+    item->vg.angle = angle;
+    DL_APPEND(rend->items, item);
+}
+
+void rect_2d(renderer_t        *rend_,
+             const painter_t   *painter,
+             const double pos[2], const double size[2], double angle)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    item_t *item;
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_VG_RECT;
+    vec2_copy(pos, item->vg.pos);
+    vec2_copy(size, item->vg.size);
+    vec4_copy(painter->color, item->color);
+    item->vg.angle = angle;
     DL_APPEND(rend->items, item);
 }
 
@@ -1261,6 +1281,7 @@ renderer_t* render_gl_create(void)
     rend->rend.text = text;
     rend->rend.line = line;
     rend->rend.ellipse_2d = ellipse_2d;
+    rend->rend.rect_2d = rect_2d;
 
     return &rend->rend;
 }
