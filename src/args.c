@@ -151,7 +151,7 @@ int args_get(const json_value *args, const char *name, int pos,
     return ret;
 }
 
-json_value *args_vvalue_new(const char *type, const char *hint, va_list ap)
+json_value *args_vvalue_new(const char *type, const char *hint, va_list *ap)
 {
     json_value *ret, *val;
     double f;
@@ -164,11 +164,11 @@ json_value *args_vvalue_new(const char *type, const char *hint, va_list ap)
     if (hint) json_object_push(ret, "hint", json_string_new(hint));
 
     if (strcmp(type, "b") == 0)
-        val = json_boolean_new(va_arg(ap, int));
+        val = json_boolean_new(va_arg(*ap, int));
     else if (strcmp(type, "d") == 0)
-        val = json_integer_new(va_arg(ap, int));
+        val = json_integer_new(va_arg(*ap, int));
     else if (strcmp(type, "f") == 0) {
-        f = va_arg(ap, double);
+        f = va_arg(*ap, double);
         if (isfinite(f)) {
             val = json_double_new(f);
         } else {
@@ -177,24 +177,24 @@ json_value *args_vvalue_new(const char *type, const char *hint, va_list ap)
         }
     }
     else if (strcmp(type, "s") == 0 || strcmp(type, "S") == 0)
-        val = json_string_new(va_arg(ap, char*) ?: "");
+        val = json_string_new(va_arg(*ap, char*) ?: "");
     else if (strcmp(type, "p") == 0)
-        val = json_integer_new((uintptr_t)va_arg(ap, void*));
+        val = json_integer_new((uintptr_t)va_arg(*ap, void*));
     else if (strcmp(type, "v2") == 0) {
-        v = va_arg(ap, double*);
+        v = va_arg(*ap, double*);
         val = json_array_new(2);
         json_array_push(val, json_double_new(v[0]));
         json_array_push(val, json_double_new(v[1]));
     }
     else if (strcmp(type, "v3") == 0) {
-        v = va_arg(ap, double*);
+        v = va_arg(*ap, double*);
         val = json_array_new(3);
         json_array_push(val, json_double_new(v[0]));
         json_array_push(val, json_double_new(v[1]));
         json_array_push(val, json_double_new(v[2]));
     }
     else if (strcmp(type, "v4") == 0) {
-        v = va_arg(ap, double*);
+        v = va_arg(*ap, double*);
         val = json_array_new(4);
         json_array_push(val, json_double_new(v[0]));
         json_array_push(val, json_double_new(v[1]));
@@ -215,7 +215,7 @@ json_value *args_value_new(const char *type, const char *hint, ...)
     va_list ap;
     json_value *ret;
     va_start(ap, hint);
-    ret = args_vvalue_new(type, hint, ap);
+    ret = args_vvalue_new(type, hint, &ap);
     va_end(ap);
     return ret;
 }

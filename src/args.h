@@ -69,5 +69,5 @@ int args_vget(const json_value *args, const char *name, int pos,
  *  }
  */
 json_value *args_value_new(const char *type, const char *hint, ...);
-json_value *args_vvalue_new(const char *type, const char *hint, va_list ap);
+json_value *args_vvalue_new(const char *type, const char *hint, va_list *ap);
 

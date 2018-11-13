@@ -642,7 +642,7 @@ int obj_call(obj_t *obj, const char *attr, const char *sig, ...)
     nb_args = split_types(sig, types);
     args = json_array_new(nb_args);
     for (i = 0; i < nb_args; i++)
-        json_array_push(args, args_vvalue_new(types[i], NULL, ap));
+        json_array_push(args, args_vvalue_new(types[i], NULL, &ap));
     ret = obj_call_json(obj, attr, args);
     json_builder_free(args);
     json_builder_free(ret);
@@ -684,7 +684,7 @@ int obj_set_attr(const obj_t *obj, const char *name, const char *type, ...)
     json_value *arg, *ret;
     va_list ap;
     va_start(ap, type);
-    arg = args_vvalue_new(type, NULL, ap);
+    arg = args_vvalue_new(type, NULL, &ap);
     ret = obj_call_json(obj, name, arg);
     json_builder_free(arg);
     json_builder_free(ret);
