@@ -225,9 +225,7 @@ static int core_click(const gesture_t *g, void *user)
 {
     obj_t *obj;
     if (!core->ignore_clicks) {
-        obj = get_obj_at(g->pos[0] * core->win_pixels_scale,
-                         g->pos[1] * core->win_pixels_scale,
-                         18 * core->win_pixels_scale);
+        obj = get_obj_at(g->pos[0], g->pos[1], 18);
         obj_set_attr(&core->obj, "selection", "p", obj);
         obj_release(obj);
     }

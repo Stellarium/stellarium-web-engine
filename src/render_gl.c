@@ -788,7 +788,8 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
 static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 {
     double a, da;
-    nvgBeginFrame(rend->vg, rend->fb_size[0], rend->fb_size[1], 1);
+    nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
+                            rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
     nvgTranslate(rend->vg, item->vg.pos[0], item->vg.pos[1]);
     nvgRotate(rend->vg, item->vg.angle);
