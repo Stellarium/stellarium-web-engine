@@ -56,9 +56,9 @@ static int constellation_init(obj_t *obj, json_value *args)
     cons->name = strdup(info->name);
     cons->obj.oid = oid_create("CST ",
                             crc32(0, (void*)info->id, strlen(info->id)));
-    identifiers_add("CST", info->id, cons->obj.oid, 0, "CST ", 0,
+    identifiers_add("CST", info->id, cons->obj.oid, 0, "Con ", 0,
                     NULL, NULL);
-    identifiers_add("NAME", info->name, cons->obj.oid, 0, "CST ", 0,
+    identifiers_add("NAME", info->name, cons->obj.oid, 0, "Con ", 0,
                     NULL, NULL);
     return 0;
 }
