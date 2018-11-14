@@ -55,7 +55,7 @@
 int args_get(const json_value *args, const char *name, int pos,
              const char *type, const char *hint, ...);
 int args_vget(const json_value *args, const char *name, int pos,
-              const char *type, const char *hint, va_list ap);
+              const char *type, const char *hint, va_list* ap);
 
 /*
  * Function: args_value_new

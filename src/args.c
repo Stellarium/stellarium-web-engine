@@ -57,7 +57,7 @@ static int convert_to_s(const json_value *val, const char *hint, char **out)
 }
 
 int args_vget(const json_value *args, const char *name, int pos,
-              const char *type, const char *hint, va_list ap)
+              const char *type, const char *hint, va_list* ap)
 {
     const json_value *val;
     assert(args);
@@ -95,42 +95,42 @@ int args_vget(const json_value *args, const char *name, int pos,
 
     if (strcmp(type, "b") == 0) {
         assert(val->type == json_boolean);
-        *va_arg(ap, bool*) = val->u.boolean;
+        *va_arg(*ap, bool*) = val->u.boolean;
     }
     else if (strcmp(type, "d") == 0) {
         assert(val->type == json_integer);
-        *va_arg(ap, int*) = val->u.integer;
+        *va_arg(*ap, int*) = val->u.integer;
     }
     else if (strcmp(type, "f") == 0) {
-        convert_to_f(val, hint, va_arg(ap, double*));
+        convert_to_f(val, hint, va_arg(*ap, double*));
     }
     else if (strcmp(type, "v2") == 0) {
-        v = va_arg(ap, double*);
+        v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 2);
         for (i = 0; i < 2; i++)
             args_get(val->u.array.values[i], NULL, 0, "f", NULL, &v[i]);
     }
     else if (strcmp(type, "v3") == 0) {
-        v = va_arg(ap, double*);
+        v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 3);
         for (i = 0; i < 3; i++)
             args_get(val->u.array.values[i], NULL, 0, "f", NULL, &v[i]);
     }
     else if (strcmp(type, "v4") == 0) {
-        v = va_arg(ap, double*);
+        v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 4);
         for (i = 0; i < 4; i++)
             args_get(val->u.array.values[i], NULL, 0, "f", NULL, &v[i]);
     }
     else if (strcmp(type, "p") == 0) {
-        convert_to_p(val, hint, va_arg(ap, void**));
+        convert_to_p(val, hint, va_arg(*ap, void**));
     }
     else if (strcmp(type, "s") == 0 || strcmp(type, "S") == 0) {
         convert_to_s(val, hint, &str);
-        strcpy(va_arg(ap, char*), str);
+        strcpy(va_arg(*ap, char*), str);
         free(str);
     }
     else {
@@ -146,7 +146,7 @@ int args_get(const json_value *args, const char *name, int pos,
     va_list ap;
     int ret;
     va_start(ap, hint);
-    ret = args_vget(args, name, pos, type, hint, ap);
+    ret = args_vget(args, name, pos, type, hint, &ap);
     va_end(ap);
     return ret;
 }

@@ -673,7 +673,7 @@ int obj_get_attr(const obj_t *obj, const char *name, const char *type, ...)
     va_start(ap, type);
     ret = obj_call_json(obj, name, NULL);
     assert(ret);
-    args_vget(ret, NULL, 1, type, NULL, ap);
+    args_vget(ret, NULL, 1, type, NULL, &ap);
     json_builder_free(ret);
     va_end(ap);
     return 0;
