@@ -461,6 +461,17 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
+static obj_t *constellations_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *con;
+    OBJ_ITER(obj, con, "constellation") {
+        if (con->oid == oid) {
+            con->ref++;
+            return con;
+        }
+    }
+    return NULL;
+}
 
 /*
  * Meta class declarations.
@@ -500,6 +511,7 @@ static obj_klass_t constellations_klass = {
     .update = constellations_update,
     .render = constellations_render,
     .get    = constellations_get,
+    .get_by_oid = constellations_get_by_oid,
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b",
