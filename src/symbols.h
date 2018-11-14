@@ -57,13 +57,13 @@ int symbols_get_for_otype(const char *type);
  *   painter    - A painter.
  *   symbol     - One of the <SYMBOL_ENUM> value.
  *   pos        - Position in window coordinates.
- *   size       - Size in logical pixel.
+ *   size       - Size in window coordinates.
  *   color      - Color to use.  If NULL we use the default defined color
  *                for the symbol.
- *   angle      - Angle (rad).
+ *   angle      - Angle, clockwise (rad).
  */
 int symbols_paint(const painter_t *painter, int symbol,
-                  const double pos[2], double size, const double color[4],
-                  double angle);
+                  const double pos[2], const double size[2],
+                  const double color[4], double angle);
 
 #endif // SYMBOLS_H

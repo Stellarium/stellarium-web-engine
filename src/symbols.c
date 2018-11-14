@@ -126,7 +126,8 @@ static void glc_paint(const painter_t *painter, const double transf[4][4])
 }
 
 int symbols_paint(const painter_t *painter_, int symbol,
-                  const double pos[2], double size, const double color[4],
+                  const double pos[2], const double size[2],
+                  const double color[4],
                   double angle)
 {
     int i;
@@ -144,7 +145,7 @@ int symbols_paint(const painter_t *painter_, int symbol,
         mat4_set_identity(transf);
         mat4_itranslate(transf, pos[0], pos[1], 0);
         mat4_rz(angle, transf, transf);
-        mat4_iscale(transf, size / 2, size / 2, 1);
+        mat4_iscale(transf, size[0] / 2, size[1] / 2, 1);
         ENTRIES[symbol].paint(&painter, transf);
         return 0;
     }
@@ -154,5 +155,6 @@ int symbols_paint(const painter_t *painter_, int symbol,
         uv[i][0] = (((symbol - 1) % 8) + (i % 2)) / 8.0;
         uv[i][1] = (((symbol - 1) / 8) + (i / 2)) / 8.0;
     }
-    return paint_texture(&painter, get_texture(), uv, pos, size, color, angle);
+    return paint_texture(&painter, get_texture(), uv, pos, size[0],
+                         color, angle);
 }
