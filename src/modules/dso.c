@@ -250,7 +250,10 @@ static int on_file_tile_loaded(const char type[4],
         d->de *= DD2R;
         d->smax *= DAM2R;
         d->smin *= DAM2R;
-        if (!d->smin && d->smax) d->smin = d->smax;
+        if (!d->smin && d->smax) {
+            d->smin = d->smax;
+            d->angle = NAN;
+        }
         d->angle *= DD2R;
         // For the moment use bmag as fallback vmag value
         if (isnan(d->vmag)) d->vmag = bmag;
@@ -339,70 +342,46 @@ static void dso_render_name(const painter_t *painter, const dso_data_t *d,
         labels_add(buff, pos, size, 13, painter->color, 0, anchor, -vmag);
 }
 
-// Project from UV to the annotation contour ellipse.
-// XXX: Should probably add a painter functions to render shapes from ICRS
-// coordinate + size so that we don't have to do this everywhere!
-static void contour_project(const projection_t *proj, int flags,
-                            const double *v, double *out)
-{
-    // XXX: most of the mat computation should be done in advance.
-    const dso_data_t *data = proj->user;
-    double theta, r, mat[3][3], p[4] = {1, 0, 0, 0};
-    theta = v[0] * 2 * M_PI;
-    double smax = data->smax;
-    double smin = data->smin;
-    double angle = data->angle;
-    r = v[1] * smax / 2;
-
-    if (isnan(angle) || isnan(smin)) {
-        angle = 0.0;
-        smin = smax;
-    }
-
-    mat3_set_identity(mat);
-    mat3_rz(data->ra, mat, mat);
-    mat3_ry(-data->de, mat, mat);
-    mat3_rx(-angle, mat, mat);
-    mat3_iscale(mat, 1.0, smin / smax, 1.0);
-    mat3_rx(-theta, mat, mat);
-    mat3_rz(r, mat, mat);
-
-    mat3_mul_vec3(mat, p, p);
-    out[3] = 0;
-    vec4_copy(p, out);
-}
 
 static void compute_hint_transformation(
         const painter_t *painter,
         double ra, double de, double angle,
-        double size_x, double size_y, double min_pixel_size,
-        double out[4][4])
+        double size_x, double size_y,
+        double win_pos[2], double win_size[2], double *win_angle)
 {
-    double p[4], mat[3][3], c[2], a[2], b[2], scale = 1.0;
+    double p[4], c[2], a[2], b[2], mat[3][3];
 
     assert(!isnan(ra));
     assert(!isnan(de));
-    assert(!isnan(angle));
     assert(!isnan(size_x));
-    if (size_x == 0) size_x = 0.000001;
-    if (size_y == 0) size_y = 0.000001;
+
+    if (isnan(size_y)) {
+        size_y = size_x;
+    }
 
     // 1. Center.
     vec4_set(p, 1, 0, 0, 0);
     mat3_set_identity(mat);
     mat3_rz(ra, mat, mat);
     mat3_ry(-de, mat, mat);
-    mat3_rx(-angle, mat, mat);
-    mat3_iscale(mat, 1.0, size_x / size_y, 1.0);
     mat3_mul_vec3(mat, p, p);
     convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
+
+    // Point dso.
+    if (size_x == 0) {
+        vec2_copy(c, win_pos);
+        vec2_set(win_size, 0, 0);
+        *win_angle = 0;
+        return;
+    }
+
     // 2. Semi major.
     vec4_set(p, 1, 0, 0, 0);
     mat3_set_identity(mat);
     mat3_rz(ra, mat, mat);
     mat3_ry(-de, mat, mat);
-    mat3_rx(-angle, mat, mat);
+    if (!isnan(angle)) mat3_rx(-angle, mat, mat);
     mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
@@ -413,7 +392,7 @@ static void compute_hint_transformation(
     mat3_set_identity(mat);
     mat3_rz(ra, mat, mat);
     mat3_ry(-de, mat, mat);
-    mat3_rx(-angle, mat, mat);
+    if (!isnan(angle)) mat3_rx(-angle, mat, mat);
     mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
     mat3_rx(-M_PI / 2, mat, mat);
     mat3_rz(size_x / 2.0, mat, mat);
@@ -421,69 +400,41 @@ static void compute_hint_transformation(
     convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
 
-    mat4_set_identity(out);
-    vec2_copy(c, out[3]);
-    vec2_sub(a, c, out[0]);
-    vec2_sub(b, c, out[1]);
-
-    // Compute scale for the min pixel size.
-    if (vec2_dist(c, a) < min_pixel_size) {
-        scale = min_pixel_size / vec2_dist(c, a);
-        mat4_iscale(out, scale, scale, 1);
-    }
-}
-
-static void render_contour(const dso_data_t *data,
-                           const painter_t *painter_,
-                           double p[4])
-{
-    double angle;
-    painter_t painter = *painter_;
-    double transf[4][4], smax, smin;
-    smax = data->smax;
-    smin = data->smin;
-    angle = data->angle;
-    if (isnan(angle) || isnan(smin)) {
-        angle = 0.0;
-        smin = smax;
-    }
-    if (strcmp(data->type, "G") == 0)
-        smin = mix(smax / 2, smin, smoothstep(20, 5, core->fov * DR2D));
-    compute_hint_transformation(&painter, data->ra, data->de,
-                                angle, smax, smin, 4.0, transf);
-    paint_2d_ellipse(&painter, transf, 0, p);
-
-    // Add clickable area.
-    angle = atan2(transf[0][1], transf[0][0]);
-    areas_add_ellipse(core->areas, transf[3], angle,
-                      vec2_norm(transf[0]), vec2_norm(transf[1]),
-                      data->id.oid, 0);
+    vec2_copy(c, win_pos);
+    vec2_sub(a, c, a);
+    vec2_sub(b, c, b);
+    *win_angle = isnan(angle) ? 0 : atan2(a[1], a[0]);
+    win_size[0] = 2 * vec2_norm(a);
+    win_size[1] = 2 * vec2_norm(b);
 }
 
 /*
- * Return the dso angle in screen coordinates.
+ * Compute the position to put the label next to an ellipse
  */
-static double get_screen_angle(const dso_data_t *d, const painter_t *painter)
+static void compute_ellipse_label_pos(
+        const double pos[2], const double size[2], double angle,
+        double out[2], int *anchor)
 {
-    projection_t proj;
-    double v[2], c[4], a[4];
-    proj = (projection_t) {
-        .backward   = contour_project,
-        .user       = d,
-    };
-    // 1. Center
-    v[0] = v[1] = 0;
-    contour_project(&proj, 0, v, c);
-    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, c, c);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, c, c);
-    // 2. Semi major.
-    v[1] = 1;
-    v[0] = 0;
-    contour_project(&proj, 0, v, a);
-    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, a, a);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, a, a);
-    return atan2(a[1] - c[1], a[0] - c[0]);
+    double a, m[4][4], p[4];
+    // Small ellipse, use the middle pos:
+    if (size[0] <= 12 && size[1] <= 12) {
+        vec2_copy(pos, out);
+        *anchor = ANCHOR_AROUND;
+        return;
+    }
+    *anchor = ANCHOR_LEFT | ANCHOR_FIXED;
+    out[1] = 100000;
+    mat4_set_identity(m);
+    mat4_itranslate(m, pos[0], pos[1], 0);
+    mat4_rz(angle, m, m);
+    mat4_iscale(m, size[0] / 2, size[1] / 2, 1);
+    for (a = 0; a < 2 * M_PI; a += 2 * M_PI / 16) {
+        vec4_set(p, cos(a), sin(a), 0, 1);
+        mat4_mul_vec4(m, p, p);
+        if (p[0] - p[1] > out[0] - out[1]) vec2_copy(p, out);
+    }
 }
+
 
 // Render a DSO from its data.
 static int dso_render_from_data(const dso_data_t *d,
@@ -491,13 +442,9 @@ static int dso_render_from_data(const dso_data_t *d,
                                 const painter_t *painter_)
 {
     double p[4] = {}, size, luminance, mag, temp_mag;
-    point_t point;
     painter_t painter = *painter_;
-    double min_circle_size, circle_size = 0, angle;
-    int label_anchor = ANCHOR_AROUND, symbol;
-    bool show_contour;
+    int label_anchor, symbol;
 
-    min_circle_size = core->fov / 20;
     temp_mag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
 
     if (temp_mag > painter.hint_mag_max) return 0;
@@ -516,32 +463,24 @@ static int dso_render_from_data(const dso_data_t *d,
                  PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
         return 0;
 
-    show_contour = !isnan(d->smax) && d->smax > min_circle_size;
-    if (show_contour) {
+    double win_pos[2], win_size[2], win_angle;
+
+    symbol = symbols_get_for_otype(d->type);
+    compute_hint_transformation(&painter, d->ra, d->de, d->angle,
+            d->smax, d->smin, win_pos, win_size, &win_angle);
+
+    win_size[0] = max(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
+    win_size[1] = max(win_size[1], 12);
+    symbols_paint(&painter, symbol, win_pos, win_size, NULL, win_angle);
+    areas_add_ellipse(core->areas, win_pos, win_angle,
+                      win_size[0] / 2, win_size[1] / 2, d->id.oid, 0);
+
+    if (temp_mag <= painter.label_mag_max) {
+        compute_ellipse_label_pos(win_pos, win_size, win_angle, p,
+                                  &label_anchor);
         vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
-        render_contour(d, &painter, p);
-        label_anchor = ANCHOR_BOTTOM | ANCHOR_HCENTER | ANCHOR_FIXED;
-    } else {
-        vec4_set(painter.color, 1, 1, 1, 0.5);
-        symbol = symbols_get_for_otype(d->type);
-        angle = 0;
-        if (symbol == SYMBOL_GALAXY && !isnan(d->angle) && d->smax > 0)
-            angle = get_screen_angle(d, &painter);
-        symbols_paint(&painter, symbol, p, VEC(12.0, 12.0), NULL, angle);
-        // Add the dso in the global list of rendered objects.
-        // XXX: we could move this into symbols_paint.
-        point = (point_t) {
-            .pos = {p[0], p[1]},
-            .size = 8,
-            .oid = d->id.oid,
-        };
-        areas_add_circle(core->areas, point.pos, point.size, point.oid, 0);
+        dso_render_name(&painter, d, p, size, mag, label_anchor);
     }
-
-    if (temp_mag <= painter.label_mag_max || show_contour)
-        dso_render_name(&painter, d, p, max(size, circle_size), mag,
-                        label_anchor);
-
     return 0;
 }
 
@@ -576,10 +515,15 @@ static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (dso_t*)obj;
     double min_circle_size;
+    const dso_data_t *d = &dso->data;
+    double win_pos[2], win_size[2], win_angle;
 
     min_circle_size = core->fov / 20;
     if (isnan(dso->data.smax) || dso->data.smax <= min_circle_size) return 1;
-    render_contour(&dso->data, painter, NULL);
+    compute_hint_transformation(painter, d->ra, d->de, d->angle,
+            d->smax, d->smin, win_pos, win_size, &win_angle);
+    symbols_paint(painter, SYMBOL_GALAXY, win_pos, win_size, painter->color,
+                  win_angle);
     return 0;
 }
 
