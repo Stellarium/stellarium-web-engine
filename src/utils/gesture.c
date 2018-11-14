@@ -22,10 +22,11 @@ struct inputs {
 };
 static inputs_t g_inputs = {};
 
-// XXX: this value should be set depending on the screen resolution.
-static double g_start_dist = 8;
+// Minimum distance for pan and pinch gestures.  In window pixel unit.
+// For the moment this is hard coded.
+static double g_start_dist = 6.0;
 
-
+static double sqr(double x) { return x * x; }
 
 static int pan_on_mouse(gesture_t *g, const inputs_t *in)
 {
@@ -35,7 +36,7 @@ static int pan_on_mouse(gesture_t *g, const inputs_t *in)
         vec2_copy(g->pos, g->start_pos[0]);
     }
     if (g->state == GESTURE_RECOGNISED && in->ts[0].down[0]) {
-        if (vec2_dist2(g->start_pos[0], g->pos) > g_start_dist) {
+        if (vec2_dist2(g->start_pos[0], g->pos) > sqr(g_start_dist)) {
             g->state = GESTURE_BEGIN;
             g->callback(g, NULL);
             g->state = GESTURE_UPDATE;
@@ -59,7 +60,7 @@ static int pinch_on_mouse(gesture_t *g, const inputs_t *in)
     switch (g->state) {
     case GESTURE_POSSIBLE:
         if (in->ts[0].down[0] && in->ts[1].down[0]) {
-            if (vec2_dist(in->ts[0].pos, in->ts[1].pos) < g_start_dist)
+            if (vec2_dist(in->ts[0].pos, in->ts[1].pos) < sqr(g_start_dist))
                 return 0;
             g->state = GESTURE_BEGIN;
             vec2_copy(in->ts[0].pos, g->start_pos[0]);
