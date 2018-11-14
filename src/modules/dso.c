@@ -706,6 +706,8 @@ static obj_klass_t dso_klass = {
         PROPERTY("azalt"),
         PROPERTY("vmag"),
         PROPERTY("type"),
+        PROPERTY("smin", "f", MEMBER(dso_t, data.smin)),
+        PROPERTY("smax", "f", MEMBER(dso_t, data.smax)),
         {},
     },
 };
