@@ -31,8 +31,10 @@ static const struct {
     [SYMBOL_OPEN_GALACTIC_CLUSTER]  = {"OpC" , 0xF2E9267F, opc_paint},
     [SYMBOL_GLOBULAR_CLUSTER]       = {"GlC" , 0xF2E9267F, glc_paint},
     [SYMBOL_GALAXY]                 = {"G"   , 0xFF930E7F,   g_paint},
+    [SYMBOL_INTERACTING_GALAXIES]   = {"IG"  , 0xFF930E7F,   g_paint},
     [SYMBOL_PLANETARY_NEBULA]       = {"PN"  , 0xF2E9267F,  pn_paint},
     [SYMBOL_INTERSTELLAR_MATTER]    = {"ISM" , 0xF2E9267F, ism_paint},
+    [SYMBOL_UNKNOWN]                = {"?"   , 0xF2E9267F, ism_paint},
     [SYMBOL_BRIGHT_NEBULA]          = {"BNe" , 0x89ff5f7f, bne_paint},
     [SYMBOL_CLUSTER_OF_STARS]       = {"Cl*" , 0x89ff5f7f, cls_paint},
 };
@@ -86,11 +88,11 @@ static void cls_paint(const painter_t *painter, const double transf_[4][4])
     paint_2d_ellipse(painter, transf, dashes, NULL);
 }
 
-static void g_paint(const painter_t *painter, const double transf_[4][4])
+static void g_paint(const painter_t *painter, const double transf[4][4])
 {
-    double transf[4][4];
-    mat4_copy(transf_, transf);
-    mat4_iscale(transf, 0.5, 1, 1);
+    // double transf[4][4];
+    // mat4_copy(transf_, transf);
+    // mat4_iscale(transf, 0.5, 1, 1);
     paint_2d_ellipse(painter, transf, 0, NULL);
 }
 
