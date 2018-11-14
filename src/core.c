@@ -448,9 +448,6 @@ static int core_update(void)
     if (!atm_visible) target_vmag_shift -= 0.4;
     r = move_toward(&core->vmag_shift, target_vmag_shift, 0, 64.0, 1.0 / 60);
 
-    // Continuous zoom.
-    core->fov *= pow(1.05, -core->zoom);
-
     core->max_vmag_in_fov = INFINITY;
     progressbar_update();
     return r ? 1 : 0;
@@ -565,6 +562,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
     r = core_update();
     if (r) updated = true;
 
+    projection_init(&proj, core->proj, core->fovx, win_w, win_h);
+
     const double ZOOM_FACTOR = 1.05;
     const double MOVE_SPEED  = 1 * DD2R;
 
@@ -580,9 +579,16 @@ int core_render(double win_w, double win_h, double pixel_scale)
         core->fov /= ZOOM_FACTOR;
     if (core->inputs.keys[KEY_PAGE_DOWN])
         core->fov *= ZOOM_FACTOR;
-    core->observer->dirty = true;
 
-    projection_init(&proj, core->proj, core->fovx, win_w, win_h);
+    // Continuous zoom.
+    if (core->zoom) {
+        core->fov *= pow(ZOOM_FACTOR, -core->zoom);
+        if (core->fov > proj.max_fov)
+            core->fov = proj.max_fov;
+        obj_changed((obj_t*)core, "fov");
+    }
+
+    core->observer->dirty = true;
 
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");

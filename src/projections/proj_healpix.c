@@ -39,6 +39,7 @@ void projection_init_healpix(projection_t *proj, int nside, int pix,
     proj->type = PROJ_HEALPIX;
     proj->nside = nside;
     proj->pix = pix;
+    proj->max_fov = 360;
     healpix_get_mat3(nside, pix, proj->mat3);
     if (swap) {
         vec3_copy(proj->mat3[0], tmp);

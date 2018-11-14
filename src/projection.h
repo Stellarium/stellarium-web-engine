@@ -65,6 +65,9 @@ struct projection
     // Window size (screen size / screen density).
     double window_size[2];
 
+    // Maximum FOV at which we can display
+    double max_fov;
+
     union {
         int shift;              // Only used by the mercator projection.
         struct {

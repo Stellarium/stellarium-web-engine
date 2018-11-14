@@ -10,6 +10,9 @@
 #include "projection.h"
 #include "utils/vec.h"
 
+/* Degrees to radians */
+#define DD2R (1.745329251994329576923691e-2)
+
 static void proj_mercator_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
@@ -88,6 +91,7 @@ void proj_mercator_init(projection_t *p, double fov, double aspect)
 {
     p->name                      = "mercator";
     p->type                      = PROJ_MERCATOR;
+    p->max_fov                   = 175.0 * aspect * DD2R;
     p->project                   = proj_mercator_project;
     p->backward                  = proj_mercator_backward;
     p->intersect_discontinuity   = proj_mercator_intersect_discontinuity;

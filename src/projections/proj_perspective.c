@@ -44,6 +44,7 @@ void proj_perspective_init(projection_t *p, double fov, double aspect)
     mat4_perspective(p->mat, fovy / DD2R, aspect, 0, 256);
     p->name = "perspective";
     p->type = PROJ_PERSPECTIVE;
+    p->max_fov = 120. * DD2R;
     p->project = proj_perspective_project;
     p->backward = proj_perspective_backward;
     p->scaling[0] = tan(fov / 2);
