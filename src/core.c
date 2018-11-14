@@ -386,9 +386,20 @@ static int core_update_direction(double dt)
         t = smoothstep(0.0, 1.0, core->target.t);
         // Make sure we finish on an exact value.
         if (core->target.t >= 1.0) t = 1.0;
-        quat_slerp(core->target.src_q, core->target.dst_q, t, q);
-        quat_mul_vec3(q, v, v);
-        eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
+        if (core->target.lock && core->target.move_to_lock) {
+            // We are moving toward a potentially moving target, adjust the destination
+            double az, al, vv[4];
+            obj_get_pos_observed(core->target.lock, core->observer, vv);
+            eraC2s((double*)vv, &az, &al);
+            quat_set_identity(core->target.dst_q);
+            quat_rz(az, core->target.dst_q, core->target.dst_q);
+            quat_ry(-al, core->target.dst_q, core->target.dst_q);
+        }
+        if (!core->target.lock || (core->target.lock && core->target.move_to_lock)) {
+            quat_slerp(core->target.src_q, core->target.dst_q, t, q);
+            quat_mul_vec3(q, v, v);
+            eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
+        }
         if (core->target.dst_fov) {
             core->fov = mix(core->target.src_fov, core->target.dst_fov, t);
             obj_changed(&core->obj, "fov");
@@ -398,15 +409,19 @@ static int core_update_direction(double dt)
             core->target.speed = 0.0;
             core->target.t = 0.0;
             core->target.dst_fov = 0.0;
+            core->target.move_to_lock = false;
         }
         // Notify the changes.
         obj_changed(&core->observer->obj, "altitude");
         obj_changed(&core->observer->obj, "azimuth");
     }
 
-    if (core->target.lock && !core->target.t) {
+    if (core->target.lock && !core->target.move_to_lock) {
         obj_get_pos_observed(core->target.lock, core->observer, v);
-        obj_call(&core->obj, "lookat", "v3f", v, 0.0);
+        eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
+        core->observer->dirty = true;
+        core->observer->force_full_update = true;
+        observer_recompute_hash(core->observer);
     }
 
     return 1;
@@ -876,16 +891,8 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
     core->max_vmag_in_fov = min(core->max_vmag_in_fov, vmag);
 }
 
-
-static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
-                               const json_value *args)
-{
-    // XXX find a better way to create a rot quaternion from a direction?
-    double az, al, speed = 1.0, pos[3], fov = 0.0;
-
-    args_get(args, "target", 1, "v3", "azalt", pos);
-    args_get(args, "speed", 2, "f", NULL, &speed);
-    args_get(args, "fov", 3, "f", NULL, &fov);
+static int do_core_lookat(double* pos, double speed, double fov) {
+    double az, al;
 
     // Direct lookat.
     if (speed == 0.0) {
@@ -911,6 +918,37 @@ static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
     core->target.speed = speed;
     core->target.t = 0.0;
     core->fast_mode = true;
+    return 0;
+}
+
+static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
+                               const json_value *args)
+{
+    double v[4], speed = 1.0, fov = 0.0;
+    obj_t* target_obj;
+    args_get(args, "target", 1, "p", "obj", &target_obj);
+    args_get(args, "speed", 2, "f", NULL, &speed);
+    args_get(args, "fov", 3, "f", NULL, &fov);
+
+    obj_set_attr(&core->obj, "lock", "p", target_obj);
+
+    obj_get_pos_observed(core->target.lock, core->observer, v);
+    do_core_lookat(v, speed, fov ? fov : core->fov);
+    core->target.move_to_lock = true;
+    return NULL;
+}
+
+static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
+                               const json_value *args)
+{
+    // XXX find a better way to create a rot quaternion from a direction?
+    double speed = 1.0, pos[3], fov = 0.0;
+
+    args_get(args, "target", 1, "v3", "azalt", pos);
+    args_get(args, "speed", 2, "f", NULL, &speed);
+    args_get(args, "fov", 3, "f", NULL, &fov);
+
+    do_core_lookat(pos, speed, fov);
     return NULL;
 }
 
@@ -1000,6 +1038,7 @@ static obj_klass_t core_klass = {
         PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
         PROPERTY("zoom", "f", MEMBER(core_t, zoom)),
         FUNCTION("lookat", .fn = core_lookat),
+        FUNCTION("point_and_lock", .fn = core_point_and_lock),
         {}
     }
 };

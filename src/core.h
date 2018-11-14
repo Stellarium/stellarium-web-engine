@@ -192,6 +192,7 @@ struct core
         double      speed;
         double      src_fov;  // Initial fov.
         double      dst_fov;  // Destination fov (0 to ignore).
+        bool        move_to_lock;  // Set to true if the move is toward newly locked object
     } target;
 
     // Zoom movement. -1 to zoom out, +1 to zoom in.
