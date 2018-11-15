@@ -11,8 +11,10 @@
 
 # Some utils functions that can be used by the other scripts.
 
+import gzip
 import hashlib
 import os
+import requests
 import struct
 import sys
 
@@ -35,7 +37,7 @@ def ensure_dir(file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def download(url, md5=None):
+def download(url, md5=None, unpacked_md5=False):
     '''download a file into data-src and return a path to it'''
     filename = os.path.basename(url)
     outpath = 'data-src/{}'.format(filename)
@@ -47,6 +49,10 @@ def download(url, md5=None):
             out.write(r.content)
     if md5:
         assert hashlib.md5(open(outpath).read()).hexdigest() == md5
+    if unpacked_md5:
+        data_md5 = hashlib.md5(gzip.open(outpath).read()).hexdigest()
+        assert data_md5 == unpacked_md5
+
     return outpath
 
 
@@ -60,3 +66,27 @@ def parse(line, start, end, type=float, default=None, required=False,
     ret = type(line)
     if conv is not None: ret *= conv
     return ret
+
+
+def shuffle_bytes(data, size):
+    assert len(data) % size == 0
+    ret = ''
+    for i in range(size):
+        for j in range(len(data) / size):
+            ret += data[j * size + i]
+    return ret
+
+def compute_dir_md5(path):
+    """Compute the md5 of all the files and dir of a directory
+       The computation takes into account both the files content and the
+       directories and file names.
+    """
+    m = hashlib.md5()
+    for dirpath, dirnames, filenames in os.walk(path):
+        dirnames[:] = sorted(dirnames)
+        filenames[:] = sorted(filenames)
+        for d in dirnames:
+            m.update(d)
+        for f in filenames:
+            m.update(open(os.path.join(dirpath, f)).read())
+    return m.hexdigest()
