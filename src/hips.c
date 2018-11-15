@@ -666,7 +666,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     // Anything else that doesn't return the data is an actual error.
     if (!data) {
-        if (*code != 598) LOG_E("Cannot get url '%s'", url);
+        if (*code != 598) LOG_E("Cannot get url '%s' (%d)", url, *code);
         return NULL;
     }
 
