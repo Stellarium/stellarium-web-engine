@@ -461,7 +461,8 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static obj_t *constellations_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+static obj_t *constellations_get_by_oid(const obj_t *obj, uint64_t oid,
+                                        uint64_t hint)
 {
     obj_t *con;
     OBJ_ITER(obj, con, "constellation") {

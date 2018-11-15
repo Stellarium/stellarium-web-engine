@@ -379,7 +379,7 @@ void core_release(void)
 
 static int core_update_direction(double dt)
 {
-    double v[4] = {1, 0, 0, 0}, q[4], t;
+    double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
 
     if (core->target.speed) {
         core->target.t += dt / core->target.speed;
@@ -387,15 +387,15 @@ static int core_update_direction(double dt)
         // Make sure we finish on an exact value.
         if (core->target.t >= 1.0) t = 1.0;
         if (core->target.lock && core->target.move_to_lock) {
-            // We are moving toward a potentially moving target, adjust the destination
-            double az, al, vv[4];
+            // We are moving toward a potentially moving target, adjust the
+            // destination
             obj_get_pos_observed(core->target.lock, core->observer, vv);
             eraC2s((double*)vv, &az, &al);
             quat_set_identity(core->target.dst_q);
             quat_rz(az, core->target.dst_q, core->target.dst_q);
             quat_ry(-al, core->target.dst_q, core->target.dst_q);
         }
-        if (!core->target.lock || (core->target.lock && core->target.move_to_lock)) {
+        if (!core->target.lock || core->target.move_to_lock) {
             quat_slerp(core->target.src_q, core->target.dst_q, t, q);
             quat_mul_vec3(q, v, v);
             eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
