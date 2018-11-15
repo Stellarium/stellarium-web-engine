@@ -27,15 +27,6 @@ def ensure_dir(file_path):
         os.makedirs(directory)
 
 
-def numpy_to_type(s):
-    s = s.char
-    if s == 'I': return 'i'
-    if s == 'L': return 'Q'
-    if s == 'f': return 'f'
-    if s == 'S': return 's'
-    raise ValueError('cannot convert numpy type %s' % s)
-
-
 def shuffle_bytes(data, size):
     assert len(data) % size == 0
     ret = ''
@@ -55,33 +46,45 @@ def float_trunc(v, zerobits):
     return struct.unpack('f', struct.pack('I', v))[0]
 
 
-def preprocess(data, infos):
-    for name, inf in infos.items():
-        zerobits = inf.get('zerobits', 0)
-        if zerobits:
-            for i in range(len(data)):
-                data[i][name] = float_trunc(data[i][name], zerobits)
+def col_get_size(col):
+    if 'size' in col: return col['size']
+    t = col['type']
+    if t in ['i', 'f']: return 4
+    if t in ['Q']: return 8
+    assert False
 
 
-def create_tile(data, chunk_type, nuniq, path, infos={}):
-    data = data[:]
-    preprocess(data, infos)
+def create_tile(data, chunk_type, nuniq, path, columns):
     order = int(log(nuniq / 4, 2) / 2);
     pix = nuniq - 4 * (1 << (2 * order));
     path = '%s/Norder%d/Dir%d/Npix%d.eph' % (
             path, order, (pix / 10000) * 10000, pix)
     ensure_dir(path)
-    row_size = data.nbytes / data.size
+    row_size = sum(col_get_size(x) for x in columns)
     # Header:
     header = ''
-    header += struct.pack('iiii', 1, row_size, len(data.dtype), len(data))
-    for d in data.dtype.fields.items():
-        t = numpy_to_type(d[1][0])
-        s = d[1][0].itemsize
-        unit = infos.get(d[0], {}).get('unit', 0)
-        header += struct.pack('4s4siii', d[0], t, unit, d[1][1], s)
+    header += struct.pack('iiii', 1, row_size, len(columns), len(data))
+    ofs = 0
+    for col in columns:
+        t = col['type']
+        s = col_get_size(col)
+        unit = col.get('unit', 0)
+        header += struct.pack('4s4siii', col['id'], t, unit, ofs, s)
+        ofs += s
 
-    data = shuffle_bytes(data.data, row_size)
+    # Create packed binary data table.
+    buf = ''
+    for d in data:
+        if hasattr(d, '_asdict'): d = d._asdict() # For named tuple.
+        for col in columns:
+            v = d[col['id']]
+            t = col['type']
+            if t == 's': t = '%ds' % col['size']
+            zerobits = col.get('zerobits', 0)
+            if zerobits: v = float_trunc(v, zerobits)
+            buf += struct.pack(t, v)
+    data = shuffle_bytes(buf, row_size)
+
     comp_data = zlib.compress(data)
 
     ret = 'EPHE'

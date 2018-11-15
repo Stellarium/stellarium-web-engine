@@ -16,7 +16,6 @@ import collections
 import gzip
 import hashlib
 import healpy
-import numpy as np
 import os
 import requests
 import struct
@@ -72,23 +71,22 @@ for s in stars:
 
 print 'save tiles'
 out_dir = './data/stars/'
-dtype=[('hip', 'uint32'), ('hd', 'uint32'), ('vmag', 'float32'),
-       ('ra', 'float32'), ('de', 'float32'), ('plx', 'float32'),
-       ('pra', 'float32'), ('pde', 'float32'), ('bv', 'float32')]
-infos = {
-    'vmag': {'unit': eph.UNIT_VMAG, 'zerobits': 16},
-    'ra':   {'unit': eph.UNIT_RAD, 'zerobits': 8},
-    'de':   {'unit': eph.UNIT_RAD, 'zerobits': 8},
-    'plx':  {'unit': eph.UNIT_ARCSEC, 'zerobits': 16},
-    'pra':  {'unit': eph.UNIT_RAD_PER_YEAR, 'zerobits': 16},
-    'pde':  {'unit': eph.UNIT_RAD_PER_YEAR, 'zerobits': 16},
-}
+COLUMNS = [
+    {'id': 'hip',  'type': 'i'},
+    {'id': 'hd',   'type': 'i'},
+    {'id': 'vmag', 'type': 'f', 'unit': eph.UNIT_VMAG, 'zerobits': 16},
+    {'id': 'ra',   'type': 'f', 'unit': eph.UNIT_RAD, 'zerobits': 8},
+    {'id': 'de',   'type': 'f', 'unit': eph.UNIT_RAD, 'zerobits': 8},
+    {'id': 'plx',  'type': 'f', 'unit': eph.UNIT_ARCSEC, 'zerobits': 16},
+    {'id': 'pra',  'type': 'f', 'unit': eph.UNIT_RAD_PER_YEAR, 'zerobits': 16},
+    {'id': 'pde',  'type': 'f', 'unit': eph.UNIT_RAD_PER_YEAR, 'zerobits': 16},
+    {'id': 'bv',   'type': 'f'},
+]
 
 for nuniq, stars in tiles.items():
     stars = sorted(stars, key=lambda x: x.hip * 1000000 + x.hd)
-    stars = np.array(stars, dtype)
     eph.create_tile(stars, chunk_type='STAR', nuniq=nuniq, path=out_dir,
-                    infos=infos)
+                    columns=COLUMNS)
 
 # Also generate the properties file.
 with open(os.path.join(out_dir, 'properties'), 'w') as out:
