@@ -178,15 +178,19 @@ static int render_visitor(int order, int pix, void *user)
     tex_data = malloc(TEX_SIZE * TEX_SIZE * 3);
     for (i = 0; i < TEX_SIZE; i++)
     for (j = 0; j < TEX_SIZE; j++) {
-        vec2_set(pos, (j + 0.5) / TEX_SIZE, (i + 0.5) / TEX_SIZE);
+        vec2_set(pos, j / (TEX_SIZE - 1.0), i / (TEX_SIZE - 1.0));
         project(&proj, PROJ_BACKWARD, 4, pos, pos);
         compute_point_color(data, pos, sun_pos, T, color);
         tex_data[(i * TEX_SIZE + j) * 3 + 0] = clamp(color[0], 0, 1) * 255;
         tex_data[(i * TEX_SIZE + j) * 3 + 1] = clamp(color[1], 0, 1) * 255;
         tex_data[(i * TEX_SIZE + j) * 3 + 2] = clamp(color[2], 0, 1) * 255;
     }
-    if (!atm->tiles[pix])
+    if (!atm->tiles[pix]) {
         atm->tiles[pix] = texture_create(TEX_SIZE, TEX_SIZE, 3);
+        // Add one pixel border to prevent error in the interpolation on the
+        // side.
+        atm->tiles[pix]->border = 1;
+    }
     texture_set_data(atm->tiles[pix], tex_data, TEX_SIZE, TEX_SIZE, 3);
     free(tex_data);
 
