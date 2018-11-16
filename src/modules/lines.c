@@ -230,6 +230,15 @@ static bool check_borders(double a[3], double b[3],
                           double p[2], double u[2],
                           double v[2]);
 
+/*
+ * Function: render_label
+ * Render the border label
+ *
+ * Parameters:
+ *   p      - Position of the border intersection.
+ *   u      - Direction of the line.
+ *   v      - Normal of the window border inward.
+ */
 static void render_label(double p[2], double u[2], double v[2], double uv[2],
                          int i, line_t *line, int step,
                          const painter_t *painter)
@@ -239,23 +248,20 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
     double a, color[4], label_angle;
     char s;
     int h[4];
-    double uw[2], n[2];
+    double n[2];
     int size[2];
 
-    // Line direction vector in windows coordinates.
-    uw[0] = u[0] * core->win_size[0];
-    uw[1] = u[1] * core->win_size[1];
+    vec2_normalize(u, n);
 
-    vec2_normalize(uw, n);
     // Give up if angle with screen is too acute.
     if (fabs(vec2_dot(n, v)) < 0.25) return;
 
     if (vec2_dot(n, v) < 0) {
-        vec2_mul(-1, uw, uw);
+        vec2_mul(-1, u, u);
         vec2_mul(-1, n, n);
     }
 
-    label_angle = atan2(uw[1], uw[0]);
+    label_angle = atan2(u[1], u[0]);
     if (fabs(label_angle) > M_PI / 2) label_angle += M_PI;
 
     if (i == 0) a = mix(-90, +90 , uv[1]) * DD2R;
@@ -278,17 +284,12 @@ static void render_label(double p[2], double u[2], double v[2], double uv[2],
             sprintf(buff, "%c%dh%2dm%2ds", s, h[0], h[1], h[2]);
     }
 
-    // Need to be careful how we compute the position since the input
-    // and labels_add positions are in NDC coordinates, but it's more natural
-    // to do the computations in screen coordinates.
     paint_text_size(painter, buff, 13, size);
-    vec2_normalize(uw, n);
-    pos[0] = p[0] * core->win_size[0] + n[0] * size[0];
-    pos[1] = p[1] * core->win_size[1] + n[1] * size[0];
+    vec2_normalize(u, n);
+    pos[0] = p[0] + n[0] * size[0] / 2 + v[0] * 4;
+    pos[1] = p[1] + n[1] * size[0] / 2 + v[1] * 4;
     pos[0] += fabs(v[1]) * size[1] * 1.5;
     pos[1] += fabs(v[0]) * size[1] * 1.5;
-    pos[0] /= core->win_size[0];
-    pos[1] /= core->win_size[1];
 
     vec4_copy(painter->color, color);
     color[3] = 1.0;
@@ -478,22 +479,32 @@ static double seg_intersect(const double a[2], const double b[2], int *border)
     return ret;
 }
 
+static void ndc_to_win(const projection_t *proj, const double ndc[2],
+                       double win[2])
+{
+    win[0] = (+ndc[0] + 1) / 2 * proj->window_size[0];
+    win[1] = (-ndc[1] + 1) / 2 * proj->window_size[1];
+}
+
 static bool check_borders(double a[3], double b[3],
                           const projection_t *proj,
-                          double p[2], // NDC pos on the border.
-                          double u[2], // NDC direction of the line.
-                          double v[2]) // NDC Norm of the border.
+                          double p[2], // Window pos on the border.
+                          double u[2], // Window direction of the line.
+                          double v[2]) // Window Norm of the border.
 {
     double pos[2][3], q;
     bool visible[2];
     int border;
-    const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, +1}, {0, -1}};
+    const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
     visible[0] = project(proj, PROJ_TO_NDC_SPACE, 3, a, pos[0]);
     visible[1] = project(proj, PROJ_TO_NDC_SPACE, 3, b, pos[1]);
     if (visible[0] != visible[1]) {
         q = seg_intersect(pos[0], pos[1], &border);
         if (q == INFINITY) return false;
         vec2_mix(pos[0], pos[1], q, p);
+        ndc_to_win(proj, p, p);
+        ndc_to_win(proj, pos[0], pos[0]);
+        ndc_to_win(proj, pos[1], pos[1]);
         vec2_sub(pos[1], pos[0], u);
         vec2_copy(VS[border], v);
         return true;
