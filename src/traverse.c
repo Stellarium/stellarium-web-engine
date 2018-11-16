@@ -79,7 +79,6 @@ static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
 // To simplify the code, I put all the constant attributes of split_quad
 // into a struct.
 typedef struct {
-    double umin, vmin, umax, vmax;
     double uv[4][2];
     void *user;
     const projection_t *proj;
@@ -190,11 +189,6 @@ int traverse_surface(qtree_node_t *nodes, int nb_nodes,
         .f = f,
     };
     memcpy(d.uv, uv, sizeof(d.uv));
-    // XXX: make sure uv rect is orthonormal
-    d.umin = uv[0][0];
-    d.umax = uv[1][0];
-    d.vmin = uv[0][1];
-    d.vmax = uv[2][1];
     return qtree_traverse(nodes, nb_nodes, mode, &d, on_node);
 }
 
