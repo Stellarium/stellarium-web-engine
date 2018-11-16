@@ -485,7 +485,7 @@ static void quad(renderer_t          *rend_,
     int n, i, j, k;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
-    double p[4], duvx[2], duvy[2];
+    double p[4], tex_pos[2], duvx[2], duvy[2];
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
@@ -516,10 +516,15 @@ static void quad(renderer_t          *rend_,
         vec4_set(p, uv[0][0], uv[0][1], 0, 1);
         vec2_addk(p, duvx, (double)j / grid_size, p);
         vec2_addk(p, duvy, (double)i / grid_size, p);
-        buf[i * n + j].tex_pos[0] = p[0] * tex->w / tex->tex_w;
-        buf[i * n + j].tex_pos[1] = p[1] * tex->h / tex->tex_h;
-        if (tex->flags & TF_FLIPPED)
-            buf[i * n + j].tex_pos[1] = 1.0 - buf[i * n + j].tex_pos[1];
+        tex_pos[0] = p[0] * tex->w / tex->tex_w;
+        tex_pos[1] = p[1] * tex->h / tex->tex_h;
+        if (tex->border) {
+            assert(tex->border == 1);
+            tex_pos[0] = mix(0.5 / tex->w, 1.0 - 0.5 / tex->w, tex_pos[0]);
+            tex_pos[1] = mix(0.5 / tex->w, 1.0 - 0.5 / tex->h, tex_pos[1]);
+        }
+        if (tex->flags & TF_FLIPPED) tex_pos[1] = 1.0 - tex_pos[1];
+        vec2_to_float(tex_pos, buf[i * n + j].tex_pos);
 
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);

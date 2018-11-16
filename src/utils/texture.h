@@ -36,6 +36,8 @@ enum {
  *   format - OpenGL format.
  *   flags  - Configuration bit flags
  *   url    - For async texture: url source of the image.
+ *   border - Set to 1 to use a UV mapping that does not include the last
+ *            pixel.  (experimental).
  */
 typedef struct texture {
     uint32_t        id;
@@ -44,6 +46,7 @@ typedef struct texture {
     int             format;
     int             flags;
     char            *url;
+    int             border;
 } texture_t;
 
 /*
