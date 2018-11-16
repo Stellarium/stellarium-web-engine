@@ -225,7 +225,7 @@ static void spherical_project(
     out[3] = 0; // Project to infinity.
 }
 
-static bool check_borders(double a[3], double b[3],
+static bool check_borders(const double a[3], const double b[3],
                           const projection_t *proj,
                           double p[2], double u[2],
                           double v[2]);
@@ -239,7 +239,8 @@ static bool check_borders(double a[3], double b[3],
  *   u      - Direction of the line.
  *   v      - Normal of the window border inward.
  */
-static void render_label(double p[2], double u[2], double v[2], double uv[2],
+static void render_label(const double p[2], const double u[2],
+                         const double v[2], const double uv[2],
                          int i, line_t *line, int step,
                          const painter_t *painter)
 {
@@ -486,7 +487,7 @@ static void ndc_to_win(const projection_t *proj, const double ndc[2],
     win[1] = (-ndc[1] + 1) / 2 * proj->window_size[1];
 }
 
-static bool check_borders(double a[3], double b[3],
+static bool check_borders(const double a[3], const double b[3],
                           const projection_t *proj,
                           double p[2], // Window pos on the border.
                           double u[2], // Window direction of the line.
