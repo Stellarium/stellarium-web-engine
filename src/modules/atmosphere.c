@@ -15,7 +15,7 @@
  *
  */
 
-static const int TEX_SIZE = 64;
+static const int TEX_SIZE = 8;
 
 /*
  * Type: atmosphere_t
