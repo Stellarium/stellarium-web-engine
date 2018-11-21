@@ -8,12 +8,17 @@
  */
 
 #include "swe.h"
+#include "skybrightness.h"
 
 /*
  * This is all based on the paper: "A Practical Analytic Model for Daylight" by
  * A. J. Preetham, Peter Shirley and Brian Smits.
  *
  */
+
+// Set to 1 to compute the brightness using skybrightness.h code.
+// Disabled for the moment because this is still experimental.
+#define USE_SKYBRIGHTNESS 0
 
 static const int TEX_SIZE = 8;
 
@@ -35,12 +40,20 @@ typedef struct atmosphere {
 
 // All the precomputed data
 typedef struct {
+    double sun_pos[3];
+    double moon_pos[3];
+
+    // Precomputed factors for A. J. Preetham model.
     double Px[5];
     double Py[5];
     double PY[5];
     double kx, ky, kY;
+
     double ambient_lum; // Constant added to the color lum.
     double lum_factor;  // For solar eclipse adjustement.
+
+    // Skybrightness model.
+    skybrightness_t skybrightness;
 } render_data_t;
 
 static double F2(const double *lam, double cos_theta,
@@ -117,12 +130,33 @@ static render_data_t prepare_render_data(
     data.ambient_lum += 0.02 * smoothstep(0, 0.5, moon_pos[2]) *
                                 pow(4.0, base_moon_vmag - moon_vmag);
 
+    vec3_copy(sun_pos, data.sun_pos);
+    vec3_copy(moon_pos, data.moon_pos);
     return data;
+}
+
+static void prepare_skybrightness(
+        skybrightness_t *sb, const painter_t *painter,
+        const double moon_pos[3], const double sun_pos[3])
+{
+    int year, month, day, ihmsf[4];
+    const observer_t *obs = painter->obs;
+    double moon_phase, moon_mag;
+    // XXX: TODO: compute moon phase!
+    moon_phase = 0;
+    moon_mag = 0;
+    eraD2dtf("UTC", 0, DJM0, obs->utc, &year, &month, &day, ihmsf);
+    skybrightness_prepare(sb, year, month,
+                          moon_phase, moon_mag,
+                          obs->phi, obs->hm,
+                          15, 40, // Temp & humidity (15°, 40%)
+                          moon_pos[2], sun_pos[2]);
 }
 
 static void compute_point_color(const render_data_t *d,
                                 const double pos[3],
                                 const double sun_pos[3],
+                                const double moon_pos[3],
                                 double T,
                                 double color[3])
 {
@@ -138,6 +172,11 @@ static void compute_point_color(const render_data_t *d,
     color[1] = F2(d->Py, cos_theta, gamma, cos_gamma) * d->ky;
     color[2] = F2(d->PY, cos_theta, gamma, cos_gamma) * d->kY;
     color[2] = max(color[2], 0.0) * d->lum_factor + d->ambient_lum;
+    if (USE_SKYBRIGHTNESS) {
+        color[2] = skybrightness_get_luminance(&d->skybrightness,
+                        vec3_dot(p, moon_pos), cos_gamma, cos_theta);
+        color[2] /= 30000; // Fake eye adaptation, until we get a proper one.
+    }
     // Scotopic vision adjustment with blue shift (xy = 0.25, 0.25)
     // Algo inspired from Stellarium.
     if (color[2] < 3.9) {
@@ -160,8 +199,9 @@ static int render_visitor(int order, int pix, void *user)
     assert(order == 0); // We only do level 0.
     atmosphere_t *atm = USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);
-    const double *sun_pos = USER_GET(user, 2);
-    const render_data_t *data = USER_GET(user, 3);
+    const render_data_t *data = USER_GET(user, 2);
+    const double *sun_pos = data->sun_pos;
+    const double *moon_pos = data->moon_pos;
     uint8_t *tex_data;
     double pos[4], color[3];
     projection_t proj;
@@ -180,7 +220,7 @@ static int render_visitor(int order, int pix, void *user)
     for (j = 0; j < TEX_SIZE; j++) {
         vec2_set(pos, j / (TEX_SIZE - 1.0), i / (TEX_SIZE - 1.0));
         project(&proj, PROJ_BACKWARD, 4, pos, pos);
-        compute_point_color(data, pos, sun_pos, T, color);
+        compute_point_color(data, pos, sun_pos, moon_pos, T, color);
         tex_data[(i * TEX_SIZE + j) * 3 + 0] = clamp(color[0], 0, 1) * 255;
         tex_data[(i * TEX_SIZE + j) * 3 + 1] = clamp(color[1], 0, 1) * 255;
         tex_data[(i * TEX_SIZE + j) * 3 + 2] = clamp(color[2], 0, 1) * 255;
@@ -222,7 +262,9 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
     vec3_normalize(moon_pos, moon_pos);
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
-    hips_traverse(USER_PASS(atm, painter, sun_pos, &data), render_visitor);
+    if (USE_SKYBRIGHTNESS)
+        prepare_skybrightness(&data.skybrightness, painter, moon_pos, sun_pos);
+    hips_traverse(USER_PASS(atm, painter, &data), render_visitor);
     vec3_copy(sun_pos, atm->last_state.sun_pos);
 
     // XXX: ad-hoc formula to get the visible vmag.  Need to implement
