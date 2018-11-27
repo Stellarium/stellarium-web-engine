@@ -215,9 +215,6 @@ static void test_events(void)
  * a_ra, a_dec - Astrometric Geocentric Position for the star atlas epoch.
  * g_ra, g_dec - Apparent Geocentric Position for the epoch-of-date.
  * ra, dec - Apparent Topocentric Position for the epoch-of-date
- *
- * In swe we only use Astrometric Geocentric Position with J2000 epoch,
- * aka ICRS.  So our ra/dec correspond to pyephem a_ra/a_dec.
  */
 static void test_ephemeris(void)
 {
@@ -248,9 +245,13 @@ static void test_ephemeris(void)
          321.88, -16.14, 322.03, -16.10, -68.04, 40.05},
     };
     int i;
-    struct { double icrs[4], cirs[4], observed[4]; } got;
-    struct { double icrs[4], cirs[4], observed[4]; } expected;
-    const double precision = 0.15 * DD2R;
+    struct { double apparent_radec[4], apparent_azalt[4]; } got;
+    struct { double apparent_radec[4], apparent_azalt[4]; } expected;
+    // 40 arcsec, limited by test data truncation after 2 digits..
+    const double precisionRadec = 40.0 / 3600;
+    // 2 arcmin, limited by refraction settings
+    const double precisionAzAlt = 2.0 / 60;
+    double sep, apparent_radec_icrf[4];
 
     core_init();
     for (i = 0; i < ARRAY_SIZE(ephs); i++) {
@@ -258,32 +259,38 @@ static void test_ephemeris(void)
         obj_set_attr((obj_t*)obs, "utc", "f", ephs[i].date);
         obj_set_attr((obj_t*)obs, "longitude", "f", ephs[i].lon * DD2R);
         obj_set_attr((obj_t*)obs, "latitude", "f", ephs[i].lat * DD2R);
+        obs->refraction = false;
+        observer_update(obs, false);
         obj = obj_get(NULL, ephs[i].name, 0);
         assert(obj);
 
         obj_update(obj, core->observer, 0);
-        // XXX: I should rename the attribute to icrs.
-        obj_get_attr(obj, "radec", "v4", got.icrs);
-        convert_coordinates(obs, FRAME_ICRS, FRAME_CIRS, 0,
-                            got.icrs, got.cirs);
-        convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            got.icrs, got.observed);
+        obj_get_attr(obj, "radec", "v4", apparent_radec_icrf);
+        convert_direction(obs, FRAME_ICRS, FRAME_JNOW, 0,
+                          apparent_radec_icrf, got.apparent_radec);
+        convert_direction(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                          apparent_radec_icrf, got.apparent_azalt);
 
-        eraS2c(ephs[i].a_ra * DD2R, ephs[i].a_dec * DD2R, expected.icrs);
-        eraS2c(ephs[i].ra * DD2R, ephs[i].dec * DD2R, expected.cirs);
-        eraS2c(ephs[i].az * DD2R, ephs[i].alt * DD2R, expected.observed);
+        eraS2c(ephs[i].ra * DD2R, ephs[i].dec * DD2R, expected.apparent_radec);
+        eraS2c(ephs[i].az * DD2R, ephs[i].alt * DD2R, expected.apparent_azalt);
 
-        if (    (eraSepp(got.icrs, expected.icrs) > precision) ||
-                (eraSepp(got.cirs, expected.cirs) > precision) ||
-                (eraSepp(got.observed, expected.observed) > precision))
-        {
+        sep = eraSepp(got.apparent_radec, expected.apparent_radec) * DR2D;
+        if (sep > precisionRadec) {
             LOG_E("Error: %s", ephs[i].name);
-            LOG_E("icrs error: %.2f°",
-                    eraSepp(got.icrs, expected.icrs) * DR2D);
-            LOG_E("cirs error: %.2f°",
-                    eraSepp(got.cirs, expected.cirs) * DR2D);
-            LOG_E("observed error: %.2f°",
-                    eraSepp(got.observed, expected.observed) * DR2D);
+            LOG_E("Apparent radec JNow error: %.5f°", sep);
+            assert(false);
+        }
+        sep = eraSepp(got.apparent_azalt, expected.apparent_azalt) * DR2D;
+        if (sep > precisionAzAlt) {
+            LOG_E("Error: %s", ephs[i].name);
+            LOG_E("Apparent azalt error: %.5f°", sep);
+            double az, alt, dist;
+            eraP2s(expected.apparent_azalt, &az, &alt, &dist);
+            az = eraAnp(az);
+            LOG_E("Ref az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
+            eraP2s(got.apparent_azalt, &az, &alt, &dist);
+            az = eraAnp(az);
+            LOG_E("Tst az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
             assert(false);
         }
         obj_release(obj);

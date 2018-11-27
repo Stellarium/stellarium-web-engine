@@ -114,7 +114,7 @@ static void load_data(comets_t *comets, const char *data)
 static int comet_update(obj_t *obj, const observer_t *obs, double dt)
 {
     comet_t *comet = (comet_t*)obj;
-    double a, p, n, ph[3], pg[3], or, sr, b, v, w, r, o, u, i;
+    double a, p, n, ph[2][3], or, sr, b, v, w, r, o, u, i;
     const double K = 0.01720209895; // AU, day
 
     // Position algo for elliptical comets.
@@ -127,7 +127,7 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
         n = 2 * M_PI / p;
 
         orbit_compute_pv(0.005 * DD2R,
-                         obs->tt, ph, NULL, comet->orbit.d, comet->orbit.i,
+                         obs->tt, ph[0], NULL, comet->orbit.d, comet->orbit.i,
                          comet->orbit.o, comet->orbit.w, a, n, comet->orbit.e,
                          0, 0, 0);
     } else {
@@ -144,21 +144,26 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
         o = comet->orbit.o;
         u = v + comet->orbit.w;
         i = comet->orbit.i;
-        ph[0] = r * (cos(o) * cos(u) - sin(o) * sin(u) * cos(i));
-        ph[1] = r * (sin(o) * cos(u) + cos(o) * sin(u) * cos(i));
-        ph[2] = r * (sin(u) * sin(i));
+        ph[0][0] = r * (cos(o) * cos(u) - sin(o) * sin(u) * cos(i));
+        ph[0][1] = r * (sin(o) * cos(u) + cos(o) * sin(u) * cos(i));
+        ph[0][2] = r * (sin(u) * sin(i));
     }
 
-    mat4_mul_vec3(obs->re2i, ph, ph);
-    vec3_sub(ph, obs->earth_pvh[0], pg);
-    vec3_copy(pg, obj->pvg[0]);
-    obj->pvg[0][3] = 1.0; // AU unit.
+    mat4_mul_vec3(obs->re2i, ph[0], ph[0]);
+    sr = vec3_norm(ph[0]);
+
+    vec3_set(ph[1], 0, 0, 0);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, ph);
+    vec3_copy(ph[0], obj->pvo[0]);
+    obj->pvo[0][3] = 1;
+    vec3_copy(ph[1], obj->pvo[1]);
+    obj->pvo[1][3] = 0;
 
     // Compute vmag.
     // We use the g,k model: m = g + 5*log10(D) + 2.5*k*log10(r)
     // (http://www.clearskyinstitute.com/xephem/help/xephem.html)
-    sr = vec3_norm(ph);
-    or = vec3_norm(pg);
+    sr = vec3_norm(ph[0]);
+    or = vec3_norm(obj->pvo[0]);
     comet->obj.vmag = comet->amag + 5 * log10(or) +
                       2.5 * comet->slope_param * log10(sr);
     return 0;
@@ -174,11 +179,12 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
 
     if (vmag > painter->mag_max) return 0;
     if (isnan(obj->pvg[0][0])) return 0; // For the moment!
-    convert_coordinates(painter->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                        obj->pvg[0], pos);
+    convert_direction(painter->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                        obj->pvo[0], pos);
+
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
-    convert_coordinates(painter->obs, FRAME_OBSERVED, FRAME_VIEW, 0, pos, pos);
+    convert_direction(painter->obs, FRAME_OBSERVED, FRAME_VIEW, 0, pos, pos);
     if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, win_pos))
         return 0;
 

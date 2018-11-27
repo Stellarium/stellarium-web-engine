@@ -184,7 +184,8 @@ struct obj
 
     // Must be up to date after a call to obj_update.
     double      vmag;
-    double      pvg[2][4];   // ICRS pos and speed in xyzw.
+    // Barycentric position/velocity in ICRF as seen from observer
+    double      pvo[2][4];
 };
 
 /*

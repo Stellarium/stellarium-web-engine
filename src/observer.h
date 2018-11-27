@@ -20,8 +20,8 @@
 struct observer
 {
     obj_t  obj;
-    double elong;
-    double phi;
+    double elong;       // Observer longitude
+    double phi;         // Observer latitude
     double hm;          // height above ellipsoid (m)
     double horizon;     // altitude of horizon (used for rising/setting).
     double pressure;    // Set to NAN to compute it from the altitude.
@@ -48,8 +48,21 @@ struct observer
 
     double eo;  // Equation of origin.
     eraASTROM astrom;
-    // Position and speed of the earth. equ, J2000.0, AU heliocentric.
+    // Heliocentric position/speed of the earth in ICRF reference frame and in
+    // BCRS reference system. AU, AU/day.
     double earth_pvh[2][3];
+    // Barycentric position/speed of the earth in ICRS, i.e. as seen from the
+    // SSB in ICRF reference frame and in BCRS reference system. AU, AU/day.
+    double earth_pvb[2][3];
+    // Barycentric position/speed of the sun in ICRS, i.e. as seen from the SSB
+    // in ICRF reference frame and in BCRS reference system. AU, AU/day.
+    double sun_pvb[2][3];
+    // Apparent position/speed of the sun (as seen from the observer) in ICRF
+    // reference frame, in local reference system. AU, AU/day.
+    double sun_pvo[2][3];
+    // Barycentric position/speed of the observer in ICRS, i.e. as seen from the
+    // SSB in ICRF reference frame and in BCRS reference system. AU, AU/day.
+    double obs_pvb[2][3];
 
     // The pointed position and constellation.
     struct {

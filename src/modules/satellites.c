@@ -37,6 +37,7 @@ typedef struct satellite {
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag; // Taken from the qsmag data.
+    double pvg[3];
 } satellite_t;
 
 // Module class.
@@ -209,8 +210,9 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
     const double SUN_RADIUS = 695508000; // (m).
     const double EARTH_RADIUS = 6371000; // (m).
 
-    vec3_mul(-DAU, sat->obj.pvg[0], e_pos);
-    vec3_add(obs->earth_pvh[0], sat->obj.pvg[0], s_pos);
+
+    vec3_mul(-DAU, sat->pvg, e_pos);
+    vec3_add(obs->earth_pvh[0], sat->pvg, s_pos);
     vec3_mul(-DAU, s_pos, s_pos);
     elong = eraSepp(e_pos, s_pos);
     e_r = asin(EARTH_RADIUS / vec3_norm(e_pos));
@@ -225,11 +227,11 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
 static double satellite_compute_vmag(const satellite_t *sat,
                                      const observer_t *obs)
 {
-    double illumination, fracil, elong, sun_pos[4], sat_pos[4], range;
-    double observed[4];
+    double illumination, fracil, elong, range;
+    double observed[3];
 
-    convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
-                        sat->obj.pvg[0], observed);
+    convert_direction(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+                        sat->obj.pvo[0], observed);
     if (observed[2] < 0.0) return 99; // Below horizon.
     illumination = satellite_compute_earth_shadow(sat, obs);
     if (illumination == 0.0) {
@@ -247,16 +249,8 @@ static double satellite_compute_vmag(const satellite_t *sat,
     //                  [ 0 <= fracil <= 1 ]
     // (https://www.prismnet.com/~mmccants/tles/mccdesc.html)
 
-    // Sun position from earth, CIRS.
-    vec3_mul(-1, obs->earth_pvh[0], sun_pos);
-    sun_pos[3] = 1.0;
-    convert_coordinates(obs, FRAME_ICRS, FRAME_ICRS, 0, sun_pos, sun_pos);
-
-    vec4_copy(sat->obj.pvg[0], sat_pos);
-    convert_coordinates(obs, FRAME_ICRS, FRAME_ICRS, 0, sat_pos, sat_pos);
-
-    range = vec3_norm(sat_pos) * DAU / 1000; // Distance in km.
-    elong = eraSepp(sun_pos, sat_pos);
+    range = vec3_norm(sat->obj.pvo[0]) * DAU / 1000; // Distance in km.
+    elong = eraSepp(obs->sun_pvo[0], sat->obj.pvo[0]);
     fracil = 0.5 * (1. + cos(elong));
     return sat->stdmag - 15.75 + 2.5 * log10(range * range / fracil);
 }
@@ -295,16 +289,20 @@ static int satellite_init(obj_t *obj, json_value *args)
  */
 static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    double p[3], v[3];
+    double pv[2][3];
     satellite_t *sat = (satellite_t*)obj;
-    sgp4(sat->elsetrec, obs->tt, p,  v); // Orbit computation.
+    sgp4(sat->elsetrec, obs->tt, pv[0],  pv[1]); // Orbit computation.
 
-    vec3_mul(1000.0 / DAU, p, p);
-    vec3_mul(1000.0 / DAU, v, v);
+    vec3_mul(1000.0 / DAU, pv[0], pv[0]);
+    vec3_mul(1000.0 / DAU, pv[1], pv[1]);
 
-    vec3_copy(p, obj->pvg[0]);
-    vec3_copy(v, obj->pvg[1]);
-    obj->pvg[0][3] = obj->pvg[1][3] = 1.0; // AU.
+    vec3_copy(pv[0], sat->pvg);
+
+    position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
+    vec3_copy(pv[0], obj->pvo[0]);
+    vec3_copy(pv[1], obj->pvo[1]);
+    obj->pvo[0][3] = 1.0; // AU
+    obj->pvo[1][3] = 1.0;
 
     sat->obj.vmag = satellite_compute_vmag(sat, obs);
     return 0;
@@ -324,8 +322,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     vmag = obj->vmag;
     if (vmag > painter.mag_max) return 0;
-    vec3_copy(obj->pvg[0], p);
-    convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    vec3_copy(obj->pvo[0], p);
+    convert_direction(core->observer, FRAME_ICRS, FRAME_VIEW, 0, p, p);
 
     // Skip if not visible.
     if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;

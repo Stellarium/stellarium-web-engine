@@ -450,48 +450,43 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     double v[4] = {}, az, alt, ra, de;
     if (str_equ(attr->name, "distance")) {
         return args_value_new("f", "dist",
-                obj->pvg[0][3] == 0 ? NAN :
-                vec3_norm(obj->pvg[0]));
+                obj->pvo[0][3] == 0 ? NAN :
+                vec3_norm(obj->pvo[0]));
     }
-    // XXX: not correct!  radec should be in CIRS, not ICRS!
+    // Radec is in local ICRS, i.e. equatorial J2000 observer centered
     if (str_equ(attr->name, "radec")) {
-        vec4_copy(obj->pvg[0], v);
-        return args_value_new("v4", "radec", v);
+        return args_value_new("v4", "radec", obj->pvo[0]);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "ra")) {
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_CIRS, 0,
-                            obj->pvg[0], v);
-        eraC2s(v, &ra, &de);
+        eraC2s(obj->pvo[0], &ra, &de);
         ra = eraAnp(ra);
         return args_value_new("f", "h_angle", ra);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "dec")) {
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_CIRS, 0,
-                            obj->pvg[0], v);
-        eraC2s(v, &ra, &de);
+        eraC2s(obj->pvo[0], &ra, &de);
         de = eraAnpm(de);
         return args_value_new("f", "d_angle", de);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "azalt")) {
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            obj->pvg[0], v);
+        convert_direction(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            obj->pvo[0], v);
         return args_value_new("v3", "azalt", v);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "az")) {
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            obj->pvg[0], v);
+        convert_direction(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            obj->pvo[0], v);
         eraC2s(v, &az, &alt);
         az = eraAnp(az);
         return args_value_new("f", "d_angle", az);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "alt")) {
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            obj->pvg[0], v);
+        convert_direction(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
+                            obj->pvo[0], v);
         eraC2s(v, &az, &alt);
         alt = eraAnpm(alt);
         return args_value_new("f", "d_angle", alt);
@@ -855,14 +850,14 @@ obj_klass_t *obj_get_klass_by_name(const char *name)
 void obj_get_pos_icrs(obj_t *obj, observer_t *obs, double pos[4])
 {
     obj_update(obj, obs, 0);
-    vec4_copy(obj->pvg[0], pos);
+    vec4_copy(obj->pvo[0], pos);
 }
 
 void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])
 {
     double p[4];
     obj_get_pos_icrs(obj, obs, p);
-    convert_coordinates(obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
+    convert_direction(obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
     vec4_copy(p, pos);
 }
 

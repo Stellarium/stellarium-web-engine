@@ -112,8 +112,8 @@ static double conjunction_func(const event_type_t *type,
         s4toi(sun->type) != s4toi("SUN ")) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
-    mat4_mul_vec3(obs->ri2e, o1->pvg[0], ohpos);
-    mat4_mul_vec3(obs->ri2e, sun->pvg[0], shpos);
+    mat4_mul_vec3(obs->ri2e, o1->pvo[0], ohpos);
+    mat4_mul_vec3(obs->ri2e, sun->pvo[0], shpos);
     eraC2s(ohpos, &olon, &lat);
     eraC2s(shpos, &slon, &lat);
 
@@ -144,7 +144,7 @@ static double vertical_align_event_func(const event_type_t *type,
     }
     if (i == ARRAY_SIZE(types)) return NAN;
 
-    sep = eraSepp(o1->pvg[0], o2->pvg[0]);
+    sep = eraSepp(o1->pvo[0], o2->pvo[0]);
     if (sep > 5 * DD2R) return NAN;
     return eraAnpm(extra1->ra - extra2->ra);
 }
@@ -439,7 +439,7 @@ void calendar_delete(calendar_t *cal)
 EMSCRIPTEN_KEEPALIVE
 int calendar_compute(calendar_t *cal)
 {
-    double step = DHOUR, p[4], ra, de;
+    double step = DHOUR, p[3], ra, de;
     int i, j;
     obj_t *o1, *o2;
     const event_type_t *ev_type;
@@ -455,12 +455,11 @@ int calendar_compute(calendar_t *cal)
         obj_update(cal->objs[i], &cal->obs, 0);
         // Compute extra dat.
         extra = cal->objs[i]->user;
-        vec4_copy(cal->objs[i]->pvg[0], p);
-        convert_coordinates(&cal->obs, FRAME_ICRS, FRAME_CIRS, 0, p, p);
+        vec3_copy(cal->objs[i]->pvo[0], p);
         eraC2s(p, &ra, &de);
         extra->ra = eraAnp(ra);
         extra->de = eraAnp(de);
-        convert_coordinates(&cal->obs, FRAME_CIRS, FRAME_OBSERVED, 0, p, p);
+        convert_direction(&cal->obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
         extra->obs_z = p[2];
     }
     // Check two bodies events.

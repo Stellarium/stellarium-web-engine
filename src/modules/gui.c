@@ -337,8 +337,8 @@ static void info_widget(obj_t *obj)
         gui_label(cat, value);
 
     obj_get_attr(obj, "radec", "v4", icrs);
-    convert_coordinates(NULL, FRAME_ICRS, FRAME_CIRS, 0, icrs, cirs);
-    convert_coordinates(NULL, FRAME_ICRS, FRAME_OBSERVED, 0, icrs, observed);
+    convert_direction(NULL, FRAME_ICRS, FRAME_CIRS, 0, icrs, cirs);
+    convert_direction(NULL, FRAME_ICRS, FRAME_OBSERVED, 0, icrs, observed);
     eraC2s(cirs, &ra, &dec);
     ra = eraAnp(ra);
     dec = eraAnpm(dec);
@@ -358,7 +358,7 @@ static void info_widget(obj_t *obj)
     sprintf(buf, "%s/%s", format_dangle(buf1, az), format_dangle(buf2, alt));
     gui_label("AZ/AL", buf);
 
-    find_constellation_at(obj->pvg[0], buf);
+    find_constellation_at(obj->pvo[0], buf);
     gui_label("CST", buf);
 
     if (obj_has_attr(obj, "phase")) {

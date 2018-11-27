@@ -95,7 +95,6 @@ void observer_update(observer_t *obs, bool fast)
 {
     double utc1, utc2, ut11, ut12, tai1, tai2;
     double dt, dut1 = 0;
-    double pvb[2][3];
     double p[4] = {0};
 
     if (!fast || obs->force_full_update) obs->dirty = true;
@@ -117,6 +116,7 @@ void observer_update(observer_t *obs, bool fast)
     if (fast) {
         eraAper13(DJM0, obs->ut1, &obs->astrom);
         eraPvu(obs->tt - obs->last_update, obs->earth_pvh, obs->earth_pvh);
+        eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
     } else {
         eraApco13(DJM0, obs->utc, dut1,
                 obs->elong, obs->phi,
@@ -129,10 +129,15 @@ void observer_update(observer_t *obs, bool fast)
                 &obs->astrom,
                 &obs->eo);
         // Update earth position.
-        eraEpv00(DJM0, obs->tt, obs->earth_pvh, pvb);
+        eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
         obs->last_full_update = obs->tt;
     }
+    eraPvmpv(obs->earth_pvb, obs->earth_pvh, obs->sun_pvb);
+    eraCp(obs->astrom.eb, obs->obs_pvb[0]);
+    vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
 
+    position_to_apparent(obs, ORIGIN_BARYCENTRIC, false, obs->sun_pvb,
+                         obs->sun_pvo);
     obs->last_update = obs->tt;
     update_matrices(obs);
 

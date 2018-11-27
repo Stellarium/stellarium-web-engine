@@ -246,7 +246,7 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         mat3_mul_vec3(mat3, quad[i], quad[i]);
         healpix_xy2vec(quad[i], quad[i]);
         mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0,
+        convert_direction(painter->obs, frame, FRAME_VIEW, 0,
                             quad[i], quad[i]);
         project(painter->proj, 0, 4, quad[i], quad[i]);
     }

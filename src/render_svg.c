@@ -43,7 +43,7 @@ static void points(renderer_t *rend_, const painter_t *painter,
     const double scale = 320;
     for (i = 0; i < n; i++) {
         p = points[i];
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p.pos, p.pos);
+        convert_direction(painter->obs, frame, FRAME_VIEW, 0, p.pos, p.pos);
         if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos)) continue;
         pos[0] = (pos[0] + 1.0) * scale;
         pos[1] = (pos[1] + 1.0) * scale;
@@ -98,7 +98,7 @@ static void line(renderer_t           *rend_,
         if (line_proj)
             project(line_proj, PROJ_BACKWARD, 4, pos, pos);
         mat4_mul_vec3(*painter->transform, pos, pos);
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
+        convert_direction(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
         if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos))
             segs_clipped[i / 2] = true;
         pos[0] = (pos[0] + 1.0) * scale;

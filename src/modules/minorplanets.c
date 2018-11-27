@@ -281,19 +281,21 @@ static int mplanet_init(obj_t *obj, json_value *args)
 
 static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    double ph[3], pg[3];
+    double ph[2][3], po[2][3];
     mplanet_t *mp = (mplanet_t*)obj;
 
-    orbit_compute_pv(0, obs->ut1, ph, NULL,
+    orbit_compute_pv(0, obs->ut1, ph[0], ph[1],
             mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
             mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
             mp->orbit.od, mp->orbit.wd);
 
-    mat4_mul_vec3(obs->re2i, ph, ph);
-    vec3_sub(ph, obs->earth_pvh[0], pg);
-    vec3_copy(pg, obj->pvg[0]);
-    obj->pvg[0][3] = 1.0; // AU unit.
-
+    mat4_mul_vec3(obs->re2i, ph[0], ph[0]);
+    mat4_mul_vec3(obs->re2i, ph[1], ph[1]);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, po);
+    vec3_copy(po[0], obj->pvo[0]);
+    vec3_copy(po[1], obj->pvo[1]);
+    obj->pvo[0][3] = 1.0; // AU unit.
+    obj->pvo[1][3] = 1.0;
     // Compute vmag.
     // XXX: move this into algo.
     // http://www.britastro.org/asteroids/dymock4.pdf
@@ -304,9 +306,9 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
     h = mp->h;
     g = mp->g;
-    r = vec3_norm(ph);
-    delta = vec3_norm(pg);
-    alpha = eraSepp(ph, pg);
+    r = vec3_norm(ph[0]);
+    delta = vec3_norm(po[0]);
+    alpha = eraSepp(ph[0], po[0]);
     phi1 = exp(-3.33 * pow(tan(0.5 * alpha), 0.63));
     phi2 = exp(-1.87 * pow(tan(0.5 * alpha), 1.22));
     ha = h - 2.5 * log10((1 - g) * phi1 + g * phi2);

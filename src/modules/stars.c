@@ -120,21 +120,22 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
     double dist;
     eraASTROM *astrom = (void*)&obs->astrom;
     eraPmpx(star->data.ra, star->data.de, 0, 0, star->data.plx, 0,
-            astrom->pmt, astrom->eb, obj->pvg[0]);
-    assert(!isnan(obj->pvg[0][0]));
+            astrom->pmt, astrom->eb, obj->pvo[0]);
+    assert(!isnan(obj->pvo[0][0]));
 
     // Multiply by distance in AU:
     // XXX: we can do that a single time at the star creation!
     if (star->data.plx > 0.001) {
         dist = 1.0 / (star->data.plx) * PARSEC_IN_METER / DAU;
-        eraSxp(dist, obj->pvg[0], obj->pvg[0]);
-        obj->pvg[0][3] = 1.0;
+        eraSxp(dist, obj->pvo[0], obj->pvo[0]);
+        obj->pvo[0][3] = 1.0;
     } else {
-        obj->pvg[0][3] = 0.0;
+        obj->pvo[0][3] = 0.0;
     }
     obj->vmag = star->data.vmag;
     // Set speed to 0.
-    obj->pvg[1][0] = obj->pvg[1][1] = 0;
+    obj->pvo[1][0] = obj->pvo[1][1] = obj->pvo[1][2] = 0;
+    astrometric_to_apparent(obs, obj->pvo[0], true, obj->pvo[0]);
     return 0;
 }
 
@@ -198,8 +199,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (s->vmag <= painter.label_mag_max) {
-        convert_coordinates(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0,
-                            p, p);
+        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
         if (project(painter.proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
             star_render_name(&painter, s, p, size, s->vmag, color);
@@ -460,14 +460,13 @@ static int render_visitor(int order, int pix, void *user)
         // Compute star observed and screen pos.
         vec3_copy(s->pos, p);
         p[3] = 0;
-        convert_coordinates(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0,
-                            p, p);
+        astrometric_to_apparent(core->observer, p, true, p);
+        convert_direction(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
         // Skip if below horizon.
         if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
             continue;
         // Skip if not visible.
-        convert_coordinates(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0,
-                            p, p);
+        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
         if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win))
             continue;
 

@@ -295,7 +295,7 @@ static void points(renderer_t *rend_,
         if (frame == FRAME_WINDOW) {
             window_to_ndc(rend, p.pos, p.pos);
         } else if (frame != FRAME_NDC) {
-            convert_coordinates(painter->obs, frame, FRAME_VIEW, 0,
+            convert_direction(painter->obs, frame, FRAME_VIEW, 0,
                                 p.pos, p.pos);
             project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
         }
@@ -445,7 +445,7 @@ static void quad_planet(
 
         mat4_mul_vec4(*painter->transform, p, p);
         vec4_to_float(p, buf[i * n + j].mpos);
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
+        convert_direction(painter->obs, frame, FRAME_VIEW, 0, p, p);
         z = p[2];
         project(painter->proj, 0, 4, p, p);
         if (painter->depth_range) {
@@ -530,7 +530,7 @@ static void quad(renderer_t          *rend_,
 
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, p, p);
+        convert_direction(painter->obs, frame, FRAME_VIEW, 0, p, p);
         project(painter->proj, 0, 4, p, p);
         vec2_to_float(p, buf[i * n + j].pos);
         memcpy(buf[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
@@ -1186,7 +1186,7 @@ static void line(renderer_t           *rend_,
         if (line_proj)
             project(line_proj, PROJ_BACKWARD, 4, pos, pos);
         mat4_mul_vec4(*painter->transform, pos, pos);
-        convert_coordinates(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
+        convert_direction(painter->obs, frame, FRAME_VIEW, 0, pos, pos);
         pos[3] = 1.0;
         project(painter->proj, 0, 4, pos, pos);
         vec4_to_float(pos, buf[i].pos);
