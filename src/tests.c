@@ -57,4 +57,31 @@ void tests_run(const char *filter)
     }
 }
 
+bool tests_compare_time(double t, double ref, double max_delta_ms)
+{
+    double err = fabs(t - ref) * ERFA_DAYSEC * 1000;
+    if (err > max_delta_ms) {
+        LOG_E("Time delta: %.15f ms > %f ms", err, max_delta_ms);
+        return false;
+    }
+    return true;
+}
+
+bool tests_compare_pv(const double pv[2][3], const double ref[2][3],
+                       double max_delta_position,
+                       double max_delta_velocity)
+{
+    double err[2][3], dp, dv;
+    eraPvmpv(pv, ref, err);
+    vec3_mul(ERFA_DAU / 1000, err[0], err[0]);
+    vec3_mul(ERFA_DAU * 1000 / ERFA_DAYSEC, err[1], err[1]);
+    dp = vec3_norm(err[0]);
+    dv = vec3_norm(err[1]);
+    if (dp > max_delta_position || dv > max_delta_velocity) {
+        LOG_E("Position/Velocity delta: %.10f km, %.10f mm/s", dp, dv);
+        return false;
+    }
+    return true;
+}
+
 #endif

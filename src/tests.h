@@ -20,6 +20,11 @@ void tests_register(const char *name, const char *file,
 
 void tests_run(const char *filter);
 
+bool tests_compare_time(double t, double ref, double max_delta_ms);
+bool tests_compare_pv(const double pv[2][3], const double ref[2][3],
+                       double max_delta_position,
+                       double max_delta_velocity);
+
 #define test_str(v, expected) do { \
     if (strcmp(v, expected) != 0) { \
         LOG_E("Expected '%s', got '%s'", expected, v); \
