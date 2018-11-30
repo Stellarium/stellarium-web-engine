@@ -93,7 +93,7 @@ void observer_recompute_hash(observer_t *obs)
 
 void observer_update(observer_t *obs, bool fast)
 {
-    double utc1, utc2, ut11, ut12;
+    double utc1, utc2, ut11, ut12, tai1, tai2;
     double dt, dut1 = 0;
     double pvb[2][3];
     double p[4] = {0};
@@ -106,7 +106,8 @@ void observer_update(observer_t *obs, bool fast)
     dt = deltat(obs->tt);
     dut1 = 0;
     eraTtut1(DJM0, obs->tt, dt, &ut11, &ut12);
-    eraUt1utc(ut11, ut12, dut1, &utc1, &utc2);
+    eraTttai(DJM0, obs->tt, &tai1, &tai2);
+    eraTaiutc(tai1, tai2, &utc1, &utc2);
     obs->ut1 = ut11 - DJM0 + ut12;
     obs->utc = utc1 - DJM0 + utc2;
 
@@ -189,13 +190,16 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
 {
     // Make sure that the TT is synced.
     observer_t *obs = (observer_t*)obj;
-    double ut11, ut12, tt1, tt2, dt, dut1 = 0;
+    double ut11, ut12, tai1, tai2, tt1, tt2, dt = 0;
     if (strcmp(attr->name, "utc") == 0) {
-        dt = deltat(obs->utc);
-        eraUtcut1(DJM0, obs->utc, dut1, &ut11, &ut12);
-        eraUt1tt(ut11, ut12, dt, &tt1, &tt2);
-        obs->ut1 = ut11 - DJM0 + ut12;
+        // First compute TUC -> TAI -> TT (no deltaT involved)
+        eraUtctai(DJM0, obs->utc, &tai1, &tai2);
+        eraTaitt(tai1, tai2, &tt1, &tt2);
         obs->tt = tt1 - DJM0 + tt2;
+
+        dt = deltat(obs->utc);
+        eraTtut1(tt1, tt2, dt, &ut11, &ut12);
+        obs->ut1 = ut11 - DJM0 + ut12;
     }
     if (strcmp(attr->name, "ut1") == 0) {
         dt = deltat(obs->ut1);
