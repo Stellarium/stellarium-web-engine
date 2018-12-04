@@ -318,7 +318,7 @@ static void test_convert_origin(void)
 
         position_to_apparent(obs, ORIGIN_BARYCENTRIC, false,
                              planet->pv_bary, out);
-        convert_direction(obs, FRAME_ICRS, FRAME_OBSERVED, 0, out[0], p);
+        convert_direction(obs, FRAME_ICRF, FRAME_OBSERVED, 0, out[0], p);
 
         eraS2p(planet->altazd[1] * DD2R, planet->altazd[0] * DD2R,
                planet->altazd[2], pref);

@@ -86,7 +86,7 @@ struct hips {
     double      release_date; // release date as jd value.
     int         error; // Set if an error occurred.
     char        *label; // Short label used in the progressbar.
-    int         frame; // FRAME_ICRS | FRAME_OBSERVED.
+    int         frame; // FRAME_ICRF | FRAME_OBSERVED.
     uint32_t    hash; // Hash of the url.
 
     // Stores the allsky image if available.
@@ -128,7 +128,7 @@ hips_t *hips_create(const char *url, double release_date,
     hips->ext = "jpg";
     hips->order_min = 3;
     hips->release_date = release_date;
-    hips->frame = FRAME_ICRS;
+    hips->frame = FRAME_ICRF;
     hips->hash = crc64(0, url, strlen(url)) & 0xffffffff;
     return hips;
 }

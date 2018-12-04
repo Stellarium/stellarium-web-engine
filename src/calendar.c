@@ -459,7 +459,7 @@ int calendar_compute(calendar_t *cal)
         eraC2s(p, &ra, &de);
         extra->ra = eraAnp(ra);
         extra->de = eraAnp(de);
-        convert_direction(&cal->obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
+        convert_direction(&cal->obs, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
         extra->obs_z = p[2];
     }
     // Check two bodies events.

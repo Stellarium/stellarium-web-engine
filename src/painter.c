@@ -297,7 +297,7 @@ static void orbit_project(const projection_t *proj, int flags,
  *
  * Parameters:
  *   painter    - The painter.
- *   frame      - Need to be FRAME_ICRS.
+ *   frame      - Need to be FRAME_ICRF.
  *   k_jd       - Orbit epoch date (MJD).
  *   k_in       - Inclination (rad).
  *   k_om       - Longitude of the Ascending Node (rad).
@@ -324,7 +324,7 @@ int paint_orbit(const painter_t *painter, int frame,
     };
     double line[2][4] = {{0}, {1}};
     // We only support ICRS for the moment to make things simpler.
-    assert(frame == FRAME_ICRS);
+    assert(frame == FRAME_ICRF);
     paint_line(painter, frame, line, &orbit_proj, 128, 1);
     return 0;
 }

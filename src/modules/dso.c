@@ -366,7 +366,7 @@ static void compute_hint_transformation(
     mat3_rz(ra, mat, mat);
     mat3_ry(-de, mat, mat);
     mat3_mul_vec3(mat, p, p);
-    convert_direction(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    convert_direction(painter->obs, FRAME_ICRF, FRAME_VIEW, 0, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
 
     // Point dso.
@@ -386,7 +386,7 @@ static void compute_hint_transformation(
     mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
-    convert_direction(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    convert_direction(painter->obs, FRAME_ICRF, FRAME_VIEW, 0, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
     // 3. Semi minor.
     vec4_set(p, 1, 0, 0, 0);
@@ -398,7 +398,7 @@ static void compute_hint_transformation(
     mat3_rx(-M_PI / 2, mat, mat);
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
-    convert_direction(painter->obs, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    convert_direction(painter->obs, FRAME_ICRF, FRAME_VIEW, 0, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
 
     vec2_copy(c, win_pos);
@@ -452,7 +452,7 @@ static int dso_render_from_data(const dso_data_t *d,
 
     eraS2c(d->ra, d->de, p);
     astrometric_to_apparent(painter.obs, p, true, p);
-    convert_direction(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
+    convert_direction(painter.obs, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
     // Skip if below horizon.
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
         return 0;
@@ -542,7 +542,7 @@ static int render_visitor(int order, int pix, void *user)
     // (don't test at order 0 because is_tile_clipped doesn't work very
     //  well in that case!).
     if (    order > 0 &&
-            painter_is_tile_clipped(&painter, FRAME_ICRS, order, pix, true))
+            painter_is_tile_clipped(&painter, FRAME_ICRF, order, pix, true))
         return 0;
 
     (*nb_tot)++;

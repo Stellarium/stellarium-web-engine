@@ -483,7 +483,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     if (planet->id == MOON)
         vec3_mul(1.8, painter.color, painter.color);
 
-    paint_quad(&painter, FRAME_ICRS, tex, normalmap, uv, &proj, split);
+    paint_quad(&painter, FRAME_ICRF, tex, normalmap, uv, &proj, split);
     return 0;
 }
 
@@ -526,7 +526,7 @@ static void render_rings(const planet_t *planet,
     painter.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_RING_SHADER;
-    paint_quad(&painter, FRAME_ICRS, tex, NULL, NULL, &proj, 64);
+    paint_quad(&painter, FRAME_ICRF, tex, NULL, NULL, &proj, 64);
 }
 
 /*
@@ -692,7 +692,7 @@ static void planet_render_orbit(const planet_t *planet,
     painter.depth_range = &depth_range;
 
     painter.lines_width = 1.5;
-    paint_orbit(&painter, FRAME_ICRS, painter.obs->tt,
+    paint_orbit(&painter, FRAME_ICRF, painter.obs->tt,
                 in, om, w, a, n, ec, ma);
 }
 
@@ -722,7 +722,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (planet->id != MOON && vmag > painter.mag_max) return;
 
     vec4_copy(planet->obj.pvo[0], pos);
-    convert_direction(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
+    convert_direction(painter.obs, FRAME_ICRF, FRAME_OBSERVED, 0, pos, pos);
 
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
     point_r = core_get_apparent_angle_for_point(&painter, point_size);
@@ -1088,10 +1088,10 @@ static int planets_add_data_source(
         release_date = parse_release_date(release_date_str);
     if (strcmp(args_type, "planet") == 0) {
         p->hips = hips_create(url, release_date, NULL);
-        hips_set_frame(p->hips, FRAME_ICRS);
+        hips_set_frame(p->hips, FRAME_ICRF);
     } else {
         p->hips_normalmap = hips_create(url, release_date, NULL);
-        hips_set_frame(p->hips_normalmap, FRAME_ICRS);
+        hips_set_frame(p->hips_normalmap, FRAME_ICRF);
     }
     return 0;
 }

@@ -428,7 +428,7 @@ static int render_visitor(int order, int pix, void *user)
 
     painter.mag_max = min(painter.mag_max, stars->mag_max);
     // Early exit if the tile is clipped.
-    if (painter_is_tile_clipped(&painter, FRAME_ICRS, order, pix, true))
+    if (painter_is_tile_clipped(&painter, FRAME_ICRF, order, pix, true))
         return 0;
 
     (*nb_tot)++;
@@ -461,7 +461,7 @@ static int render_visitor(int order, int pix, void *user)
         vec3_copy(s->pos, p);
         p[3] = 0;
         astrometric_to_apparent(core->observer, p, true, p);
-        convert_direction(core->observer, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
+        convert_direction(core->observer, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
         // Skip if below horizon.
         if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
             continue;

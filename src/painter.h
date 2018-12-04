@@ -268,7 +268,7 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
  *
  * Parameters:
  *   painter    - The painter.
- *   frame      - Need to be FRAME_ICRS.
+ *   frame      - Need to be FRAME_ICRF.
  *   k_jd       - Orbit epoch date (MJD).
  *   k_in       - Inclination (rad).
  *   k_om       - Longitude of the Ascending Node (rad).

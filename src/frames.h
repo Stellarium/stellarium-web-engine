@@ -16,20 +16,16 @@
 typedef struct observer observer_t;
 
 /* Enum: FRAME
- * Represent a frame of reference.
+ * Represent a reference frame. A reference frame is independent of the origin,
+ * it just defines the direction of the x,y and z axes.
  *
- * FRAME_ICRS     - ICRS frame. Centered on Solar System Barycenter (SSB) with
- *                  axes (almost) aligned to equatorial J2000.0.
- *                  Use this frame for ephemerides of solar system objects and
- *                  astrometric reference data on galactic and extragalactic
- *                  objects, i.e., the data in astrometric star catalogs.
- * FRAME_GCRS     - GCRS frame. Like ICRS, but centered on earth geocenter.
- *                  Use this frame to describe the rotation of the Earth, the
- *                  orbits of Earth satellites, and geodetic quantities such as
- *                  instrument locations and baselines.
+ * FRAME_ICRF     - ICRF frame. Axes (almost) aligned to equatorial J2000.0.
+ *                  This frame is used for all 3D positions/velocities for
+ *                  ephemerides of solar system objects or astrometric reference
+ *                  data on galactic and extragalactic objects, i.e., the data
+ *                  in astrometric star catalogs.
  * FRAME_JNOW     - Equatorial of date frame (=JNow or Geocentric Apparent).
- *                  Centered on earth geocenter. It is the true equator and
- *                  equinox of date equatorial frame.
+ *                  It is the true equator and equinox of date equatorial frame.
  *                  Use this frame to describe apparent directions of
  *                  astronomical objects as seen from the Earth.
  * FRAME_CIRS     - CIRS frame. Like Equatorial of date but with the origin of
@@ -37,8 +33,8 @@ typedef struct observer observer_t;
  *                  (CIO) instead of the true equinox.
  *                  Also use this frame to describe apparent directions of
  *                  astronomical objects as seen from the Earth.
- * FRAME_OBSERVED - Observed frame (the frame of alt/az). Centered on observer.
- *                  Includes atmospheric refraction.
+ * FRAME_OBSERVED - Observed frame (the frame of alt/az). Includes atmospheric
+ *                  refraction.
  * FRAME_VIEW     - Observed frame rotated in the observer view direction.
  * FRAME_NDC      - Normalized device coordinates.  Only used as a flag to
  *                  the painter when we have already projected coordinates.
@@ -46,7 +42,7 @@ typedef struct observer observer_t;
  *                  the painter when we have already projected coordinates.
  */
 enum {
-    FRAME_ICRS                = 0,
+    FRAME_ICRF                = 0,
     FRAME_CIRS                = 1,
     FRAME_JNOW                = 2,
     FRAME_OBSERVED            = 3,
@@ -82,15 +78,25 @@ int convert_direction(const observer_t *obs,
                         const double in[3], double out[3]);
 
 /* Enum: ORIGIN
- * Represent a frame origin
+ * Represent a reference system, i.e. the origin of a reference frame and the
+ * associated intertial frame.
  *
+ * ORIGIN_BARYCENTRIC     - BCRS: a coordinate origin whose relativistic frame
+ *    of reference is the one that was carefully defined in IAU 2000 Resolution
+ *    B1.3 which puts the coordinate origin at the gravitational center of the
+ *    Solar System (the SSB).
+ * ORIGIN_HELIOCENTRIC    - like BCRS but centered on the sun's center instead
+ *    of SSB.
+ * ORIGIN_GEOCENTRIC      - a coordinate origin in the GCRS relativistic frame
+ *    of reference and with origin at the center of earth.
+ * ORIGIN_OBSERVERCENTRIC - a coordinate origin with origin at the observer's
+ *    position, and local relativistic frame of reference of the observer.
  */
 enum {
-    ORIGIN_BARYCENTRIC        = 0,  // Centered on Solar System Barycenter (SSB)
-    ORIGIN_HELIOCENTRIC       = 1,  // Centered on the Sun
-    ORIGIN_GEOCENTRIC         = 2,  // Centered on earth center
-    ORIGIN_OBSERVERCENTRIC    = 3   // Centered on observer (=topocentric when
-                                    // on earth)
+    ORIGIN_BARYCENTRIC        = 0,
+    ORIGIN_HELIOCENTRIC       = 1,
+    ORIGIN_GEOCENTRIC         = 2,
+    ORIGIN_OBSERVERCENTRIC    = 3
 };
 
 /* Function: position_to_apparent

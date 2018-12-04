@@ -404,7 +404,7 @@ static void quad_planet(
     mat4_set_identity(item->planet.mv);
     if (frame == FRAME_OBSERVED)
         mat4_mul(item->planet.mv, painter->obs->ro2v, item->planet.mv);
-    if (frame == FRAME_ICRS)
+    if (frame == FRAME_ICRF)
         mat4_mul(item->planet.mv, painter->obs->ri2v, item->planet.mv);
     mat4_mul(item->planet.mv, *painter->transform, item->planet.mv);
 

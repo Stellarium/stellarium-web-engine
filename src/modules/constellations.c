@@ -253,7 +253,7 @@ static int render_bounds(const constellation_t *con,
         memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
         memcpy(line[1], info->edges[i][1], 2 * sizeof(double));
         if (line[1][0] < line[0][0]) line[1][0] += 2 * M_PI;
-        paint_lines(&painter, FRAME_ICRS, 2, line, &proj, 8, 2);
+        paint_lines(&painter, FRAME_ICRF, 2, line, &proj, 8, 2);
     }
     return 0;
 }
@@ -348,7 +348,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
-        convert_direction(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+        convert_direction(painter.obs, FRAME_ICRF, FRAME_OBSERVED, 0,
                             con->stars[i]->pvo[0], lines[i]);
         lines[i][3] = 0; // To infinity.
         vec3_add(pos, lines[i], pos);
@@ -392,7 +392,7 @@ static int render_img(const constellation_t *con, const painter_t *painter)
     painter2.color[3] *= 0.5;
     mat3_copy(con->mat, proj.mat3);
     proj.backward = proj_backward;
-    paint_quad(&painter2, FRAME_ICRS, con->img, NULL, NULL, &proj, 4);
+    paint_quad(&painter2, FRAME_ICRF, con->img, NULL, NULL, &proj, 4);
     return 0;
 }
 

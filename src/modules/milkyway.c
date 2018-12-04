@@ -86,7 +86,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     c = clamp(c, 0, 1) * 0.35;
     painter.color[3] *= c;
 
-    paint_quad(&painter, FRAME_ICRS, mw->tex, NULL, UV, &proj_spherical, div);
+    paint_quad(&painter, FRAME_ICRF, mw->tex, NULL, UV, &proj_spherical, div);
     return 0;
 }
 

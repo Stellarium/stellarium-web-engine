@@ -26,7 +26,7 @@ static int circle_init(obj_t *obj, json_value *args)
     circle_t *circle = (circle_t *)obj;
     vec4_set(circle->pos, 0, 0, 1, 0);
     vec2_set(circle->size, 5 * DD2R, 5 * DD2R);
-    circle->frame = FRAME_ICRS;
+    circle->frame = FRAME_ICRF;
     vec4_set(circle->color, 1, 1, 1, 0.25);
     vec4_set(circle->border_color, 1, 1, 1, 1);
     return 0;
@@ -110,7 +110,7 @@ static int rect_init(obj_t *obj, json_value *args)
     rect_t *rect = (rect_t *)obj;
     vec4_set(rect->pos, 0, 0, 1, 0);
     vec2_set(rect->size, 5 * DD2R, 5 * DD2R);
-    rect->frame = FRAME_ICRS;
+    rect->frame = FRAME_ICRF;
     vec4_set(rect->color, 1, 1, 1, 0.25);
     vec4_set(rect->border_color, 1, 1, 1, 1);
     return 0;

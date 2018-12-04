@@ -159,7 +159,7 @@ int hips_parse_hipslist(
  *
  * Parameters:
  *   hips  - A hips survey.
- *   frame - FRAME_ICRS or FRAME_OBSERVED.
+ *   frame - FRAME_ICRF or FRAME_OBSERVED.
  */
 void hips_set_frame(hips_t *hips, int frame);
 

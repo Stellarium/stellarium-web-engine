@@ -230,7 +230,7 @@ static double satellite_compute_vmag(const satellite_t *sat,
     double illumination, fracil, elong, range;
     double observed[3];
 
-    convert_direction(obs, FRAME_ICRS, FRAME_OBSERVED, 0,
+    convert_direction(obs, FRAME_ICRF, FRAME_OBSERVED, 0,
                         sat->obj.pvo[0], observed);
     if (observed[2] < 0.0) return 99; // Below horizon.
     illumination = satellite_compute_earth_shadow(sat, obs);
@@ -323,7 +323,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     vmag = obj->vmag;
     if (vmag > painter.mag_max) return 0;
     vec3_copy(obj->pvo[0], p);
-    convert_direction(core->observer, FRAME_ICRS, FRAME_VIEW, 0, p, p);
+    convert_direction(core->observer, FRAME_ICRF, FRAME_VIEW, 0, p, p);
 
     // Skip if not visible.
     if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;
