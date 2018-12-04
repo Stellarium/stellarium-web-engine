@@ -136,18 +136,6 @@ static void prepare_skybrightness(
                           0.01);
 }
 
-/* Convert a xyY value to sRGB, using analgo that is not actually correct
- * but looks better than doing it correctly!  */
-static inline void xyY_to_srgb2(const double color[3], double rgb[3])
-{
-    double y = pow(color[2], 1. / 2.2);
-    double x = color[0] * y / color[1];
-    double z = (1. - color[0] - color[1]) * y / color[1];
-    rgb[0] = 2.04148   * x - 0.564977 * y - 0.344713  * z;
-    rgb[1] = -0.969258 * x + 1.87599  * y + 0.0415557 * z;
-    rgb[2] = 0.0134455 * x - 0.118373 * y + 1.01527   * z;
-}
-
 static double compute_point_color(const render_data_t *d,
                                   const double pos[3],
                                   const double sun_pos[3],
