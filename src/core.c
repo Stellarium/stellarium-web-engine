@@ -872,6 +872,18 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     if (luminance) *luminance = l;
 }
 
+double core_get_radius_for_angle(const painter_t *painter, double r)
+{
+    const double win_w = painter->fb_size[0] / painter->pixel_scale;
+    return r / painter->proj->scaling[0] * win_w / 2;
+}
+
+double core_get_apparent_angle_for_point(const painter_t *painter, double r)
+{
+    const double win_w = painter->fb_size[0] / painter->pixel_scale;
+    return r * painter->proj->scaling[0] / win_w * 2;
+}
+
 /*
  * Function: core_report_vmag_in_fov
  * Inform the core that an object with a given vmag is visible.

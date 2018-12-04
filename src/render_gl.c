@@ -257,7 +257,9 @@ static void points(renderer_t *rend_,
     points_buf_t *buf;
     uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
-    const double *s = painter->proj->scaling;
+    // Scale size from window to NDC.
+    double s[2] = {2 * rend->scale / rend->fb_size[0],
+                   2 * rend->scale / rend->fb_size[1]};
     int i, j, idx, ofs;
     const int MAX_POINTS = 4096;
     point_t p;
@@ -301,8 +303,8 @@ static void points(renderer_t *rend_,
             idx = i * 4 + j;
             buf[idx].pos[3] = 1;
             vec3_to_float(p.pos, buf[i * 4 + j].pos);
-            buf[idx].shift[0] = (j % 2 - 0.5) * 2 * p.size / 2 / s[0] * sm;
-            buf[idx].shift[1] = (j / 2 - 0.5) * 2 * p.size / 2 / s[1] * sm;
+            buf[idx].shift[0] = (j % 2 - 0.5) * p.size * s[0] * sm;
+            buf[idx].shift[1] = (j / 2 - 0.5) * p.size * s[1] * sm;
             buf[idx].tex_pos[0] = j % 2;
             buf[idx].tex_pos[1] = j / 2;
             buf[idx].color[0] = p.color[0] * 255;
@@ -315,7 +317,6 @@ static void points(renderer_t *rend_,
         if (p.oid) {
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
-            p.size = p.size / 2 / s[0] * core->win_size[0];
             areas_add_circle(core->areas, p.pos, p.size, p.oid, p.hint);
         }
     }
@@ -519,9 +520,10 @@ static void quad(renderer_t          *rend_,
         tex_pos[0] = p[0] * tex->w / tex->tex_w;
         tex_pos[1] = p[1] * tex->h / tex->tex_h;
         if (tex->border) {
-            assert(tex->border == 1);
-            tex_pos[0] = mix(0.5 / tex->w, 1.0 - 0.5 / tex->w, tex_pos[0]);
-            tex_pos[1] = mix(0.5 / tex->w, 1.0 - 0.5 / tex->h, tex_pos[1]);
+            tex_pos[0] = mix((tex->border - 0.5) / tex->w,
+                             1.0 - (tex->border - 0.5) / tex->w, tex_pos[0]);
+            tex_pos[1] = mix((tex->border - 0.5) / tex->w,
+                             1.0 - (tex->border - 0.5) / tex->h, tex_pos[1]);
         }
         if (tex->flags & TF_FLIPPED) tex_pos[1] = 1.0 - tex_pos[1];
         vec2_to_float(tex_pos, buf[i * n + j].tex_pos);

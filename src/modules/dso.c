@@ -457,6 +457,7 @@ static int dso_render_from_data(const dso_data_t *d,
 
     mag = core_get_observed_mag(temp_mag);
     core_get_point_for_mag(mag, &size, &luminance);
+    size = core_get_radius_for_angle(&painter, size);
 
     convert_coordinates(painter.obs, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
     if (!project(painter.proj,

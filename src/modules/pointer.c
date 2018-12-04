@@ -45,6 +45,8 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     // Empirical formula to compute the pointer size.
     mag = core_get_observed_mag(selection->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
+    size = core_get_radius_for_angle(&painter, size);
+
     if (obj_has_attr(selection, "radius")) {
         obj_get_attr(selection, "radius", "f", &radius);
         size = max(size, radius);

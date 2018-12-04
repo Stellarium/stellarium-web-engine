@@ -18,7 +18,7 @@ struct label
     label_t *next, *prev;
     char    *text;
     double  pos[2];
-    double  radius;     // Radius of the object.
+    double  radius;     // Radius of the object (pixel).
     double  size;
     double  color[4];
     double  angle;
@@ -64,10 +64,9 @@ static void label_get_box(const painter_t *painter, const label_t *label,
 
     vec2_copy(label->pos, pos);
     paint_text_size(painter, label->text, label->size, size);
-    borders[0] = tan(label->radius / 2) / painter->proj->scaling[0];
-    borders[1] = tan(label->radius / 2) / painter->proj->scaling[1];
-    borders[0] *= painter->fb_size[0] / painter->pixel_scale;
-    borders[1] *= painter->fb_size[1] / painter->pixel_scale;
+
+    borders[0] = label->radius;
+    borders[1] = label->radius;
 
     if (anchor & ANCHOR_LEFT) pos[0] += size[0] / 2 + border + borders[0];
     if (anchor & ANCHOR_RIGHT) pos[0] -= size[0] / 2 + border + borders[0];

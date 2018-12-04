@@ -189,6 +189,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     eraS2c(aob, 90 * DD2R - zob, p);
     mag = core_get_observed_mag(s->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
+    size = core_get_radius_for_angle(&painter, size);
+
     bv_to_rgb(s->bv, color);
     point = (point_t) {
         .pos = {p[0], p[1], p[2]},
@@ -476,6 +478,8 @@ static int render_visitor(int order, int pix, void *user)
         mag = core_get_observed_mag(s->vmag);
         if (debug_show_all) mag = 4.0;
         core_get_point_for_mag(mag, &size, &luminance);
+        size = core_get_radius_for_angle(&painter, size);
+
         bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
             .pos = {p_win[0], p_win[1], 0, 0},

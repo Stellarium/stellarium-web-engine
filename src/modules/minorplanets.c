@@ -329,6 +329,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     vec3_normalize(pos, pos);
     mag = core_get_observed_mag(mplanet->obj.vmag);
     core_get_point_for_mag(mag, &size, &luminance);
+    size = core_get_radius_for_angle(painter, size);
 
     point = (point_t) {
         .pos = {pos[0], pos[1], pos[2], 0},

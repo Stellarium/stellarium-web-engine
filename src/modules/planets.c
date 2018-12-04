@@ -718,6 +718,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     mag = core_get_observed_mag(planet->obj.vmag);
     core_get_point_for_mag(mag, &point_r, &point_luminance);
+    point_r = core_get_radius_for_angle(&painter, point_r);
+
     radius = planet->radius_m / DAU;
 
     // Artificially increase the moon size when we are zoomed out, so that

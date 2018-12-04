@@ -330,6 +330,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;
     mag = core_get_observed_mag(obj->vmag);
     core_get_point_for_mag(mag, &size, &luminance);
+    size = core_get_radius_for_angle(&painter, size);
 
     // Render symbol if needed.  For the moment we always do it if the
     // mag is lower than 7.  We probably need an option to control that.

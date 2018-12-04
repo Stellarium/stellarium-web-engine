@@ -184,6 +184,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     comet->on_screen_timer = 100; // Keep the comet 'alive' for 100 frames.
     mag = core_get_observed_mag(comet->obj.vmag);
     core_get_point_for_mag(mag, &size, &luminance);
+    size = core_get_radius_for_angle(painter, size);
 
     point = (point_t) {
         .pos = {win_pos[0], win_pos[1], 0, 0},

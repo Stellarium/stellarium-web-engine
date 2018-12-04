@@ -274,6 +274,23 @@ double core_get_observed_mag(double vmag);
 // observed magnitude.
 void core_get_point_for_mag(double mag, double *radius, double *luminance);
 
+// Convert an angular radius to screen pixel radius.
+// XXX: to be removed.
+double core_get_radius_for_angle(const painter_t *painter, double r);
+
+/*
+ * Function: core_get_apparent_angle_for_point.
+ * Convert between screen radius to angular radius.
+ *
+ * Parameters:
+ *   painter    - a painter.
+ *   r          - an angle in pixel.
+ *
+ * Return:
+ *   An angle radius in rad.
+ */
+double core_get_apparent_angle_for_point(const painter_t *painter, double r);
+
 // Return a static string representation of an object type id.
 const char *type_to_str(const char type[4]);
 
