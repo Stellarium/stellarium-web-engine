@@ -42,10 +42,58 @@ X(0),X(8),X(2048),X(2056)
 #undef Z
 };
 
+static const int NB_XOFFSET[] = { -1,-1, 0, 1, 1, 1, 0,-1 };
+static const int NB_YOFFSET[] = {  0, 1, 1, 1, 0,-1,-1,-1 };
+
 // Position of the healpix faces.
 static const int FACES[12][2] = {{1,  0}, {3,  0}, {5,  0}, {7,  0},
                                  {0, -1}, {2, -1}, {4, -1}, {6, -1},
                                  {1, -2}, {3, -2}, {5, -2}, {7, -2}};
+
+static const int NB_FACEARRAY[][12] =
+  { {  8, 9,10,11,-1,-1,-1,-1,10,11, 8, 9 },   // S
+    {  5, 6, 7, 4, 8, 9,10,11, 9,10,11, 8 },   // SE
+    { -1,-1,-1,-1, 5, 6, 7, 4,-1,-1,-1,-1 },   // E
+    {  4, 5, 6, 7,11, 8, 9,10,11, 8, 9,10 },   // SW
+    {  0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 },   // center
+    {  1, 2, 3, 0, 0, 1, 2, 3, 5, 6, 7, 4 },   // NE
+    { -1,-1,-1,-1, 7, 4, 5, 6,-1,-1,-1,-1 },   // W
+    {  3, 0, 1, 2, 3, 0, 1, 2, 4, 5, 6, 7 },   // NW
+    {  2, 3, 0, 1,-1,-1,-1,-1, 0, 1, 2, 3 } }; // N
+
+static const int NB_SWAPARRAY[][3] =
+  { { 0,0,3 },   // S
+    { 0,0,6 },   // SE
+    { 0,0,0 },   // E
+    { 0,0,5 },   // SW
+    { 0,0,0 },   // center
+    { 5,0,0 },   // NE
+    { 0,0,0 },   // W
+    { 6,0,0 },   // NW
+    { 3,0,0 } }; // N
+
+static int ilog2(int arg)
+{
+    int res=0;
+    while (arg > 0xFFFF) { res += 16; arg >>= 16; }
+    if (arg > 0x00FF) { res |= 8; arg >>= 8; }
+    if (arg > 0x000F) { res |= 4; arg >>= 4; }
+    if (arg > 0x0003) { res |= 2; arg >>= 2; }
+    if (arg > 0x0001) { res |= 1; }
+    return res;
+}
+
+static int spread_bits(int v)
+{
+    return utab[v & 0xff] | (utab[(v >> 8) & 0xff] << 16);
+}
+
+#define SWAP(x, y) do { \
+    typeof(x) tmp_ = x; \
+    x = y; \
+    y = tmp_; \
+} while (0)
+
 
 /*! Returns the remainder of the division \a v1/v2.
     The result is non-negative.
@@ -65,7 +113,7 @@ int healpix_xyf2nest(int nside, int ix, int iy, int face_num)
     | (utab[iy&0xff]<<1) | (utab[iy>>8]<<17));
 }
 
-static void nest2xyf(int nside, int pix, int *ix, int *iy, int *face_num)
+void healpix_nest2xyf(int nside, int pix, int *ix, int *iy, int *face_num)
 {
     int npface_ = nside * nside, raw;
     *face_num = pix / npface_;
@@ -80,7 +128,7 @@ static void nest2xyf(int nside, int pix, int *ix, int *iy, int *face_num)
 void healpix_get_mat3(int nside, int pix, double out[3][3])
 {
     int ix, iy, face;
-    nest2xyf(nside, pix, &ix, &iy, &face);
+    healpix_nest2xyf(nside, pix, &ix, &iy, &face);
     out[0][0] = +M_PI / 4 / nside;
     out[0][1] = +M_PI / 4 / nside;
     out[0][2] = 0;
@@ -131,7 +179,7 @@ void healpix_pix2vec(int nside, int pix, double out[3])
 {
     int ix, iy, face;
     double xy[2];
-    nest2xyf(nside, pix, &ix, &iy, &face);
+    healpix_nest2xyf(nside, pix, &ix, &iy, &face);
     xy[0] = (FACES[face][0] + (ix - iy + 0.0) / nside) * M_PI / 4;
     xy[1] = (FACES[face][1] + (ix + iy + 1.0) / nside) * M_PI / 4;
     healpix_xy2vec(xy, out);
@@ -141,7 +189,7 @@ void healpix_pix2ang(int nside, int pix, double *theta, double *phi)
 {
     int ix, iy, face;
     double xy[2];
-    nest2xyf(nside, pix, &ix, &iy, &face);
+    healpix_nest2xyf(nside, pix, &ix, &iy, &face);
     xy[0] = (FACES[face][0] + (ix - iy + 0.0) / nside) * M_PI / 4;
     xy[1] = (FACES[face][1] + (ix + iy + 1.0) / nside) * M_PI / 4;
     healpix_xy2ang(xy, theta, phi);
@@ -198,4 +246,45 @@ void healpix_ang2pix(int nside, double theta, double phi, int *pix)
 {
     assert(theta >= 0 && theta <= M_PI);
     *pix = ang2pix_nest_z_phi(nside, cos(theta), phi);
+}
+
+void healpix_get_neighbours(int nside, int pix, int out[8])
+{
+    int i, x, y, ix, iy, face_num, nsm1, fpix, order, nbnum, f, bits;
+    int px0, py0, pxp, pyp, pxm, pym;
+
+    order = ilog2(nside);
+    healpix_nest2xyf(nside, pix, &ix, &iy, &face_num);
+    nsm1 = nside - 1;
+    if ((ix > 0) && (ix < nsm1) && (iy >0) && (iy < nsm1)) {
+        fpix = face_num << (2 * order);
+        px0 = spread_bits(ix  ), py0 = spread_bits(iy  ) << 1,
+        pxp = spread_bits(ix+1), pyp = spread_bits(iy+1) << 1,
+        pxm = spread_bits(ix-1), pym = spread_bits(iy-1) << 1;
+        out[0] = fpix + pxm +py0; out[1] = fpix + pxm + pyp;
+        out[2] = fpix + px0 +pyp; out[3] = fpix + pxp + pyp;
+        out[4] = fpix + pxp +py0; out[5] = fpix + pxp + pym;
+        out[6] = fpix + px0 +pym; out[7] = fpix + pxm + pym;
+    } else {
+
+        for (i = 0; i < 8; i++) {
+            x = ix + NB_XOFFSET[i];
+            y = iy + NB_YOFFSET[i];
+            nbnum = 4;
+            if (x < 0) { x += nside; nbnum -= 1; }
+            else if (x >= nside) { x -= nside; nbnum += 1; }
+            if (y < 0) { y += nside; nbnum -= 3; }
+            else if (y >= nside) { y -= nside; nbnum += 3; }
+            f = NB_FACEARRAY[nbnum][face_num];
+            if (f >= 0) {
+                bits = NB_SWAPARRAY[nbnum][face_num >> 2];
+                if (bits & 1) x = nside - x - 1;
+                if (bits & 2) y = nside - y - 1;
+                if (bits & 4) SWAP(x, y);
+                out[i] = healpix_xyf2nest(nside, x, y, f);
+            } else {
+                out[i] = -1;
+            }
+        }
+    }
 }

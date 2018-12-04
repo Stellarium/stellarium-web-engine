@@ -23,6 +23,9 @@ void healpix_xy2vec(const double xy[2], double out[3]);
 /* Convert healpix xyf coordinate to a nest pix index. */
 int healpix_xyf2nest(int nside, int ix, int iy, int face_num);
 
+/* Convert healpix nest coordinate to xyf coordinates. */
+int healpix_nest2xyf(int nside, int pix, int *ix, int *iy, int *face_num);
+
 /* Convert healpix nest index to cartesian 3d vector. */
 void healpix_pix2vec(int nside, int pix, double out[3]);
 
@@ -39,6 +42,17 @@ void healpix_pix2ang(int nside, int pix, double *theta, double *phi);
  *   pix    - Pix index output.
  */
 void healpix_ang2pix(int nside, double theta, double phi, int *pix);
+
+/*
+ * Function: healpix_get_neighbours
+ * Returns the neighboring pixels of nest pixel
+ *
+ * On exit, out contains (in this order)
+ * the pixel numbers of the SW, W, NW, N, NE, E, SE and S neighbor
+ * of pix.  If a neighbor does not exist (this can only be the case
+ * for the W, N, E and S neighbors), its entry is set to -1.
+ */
+void healpix_get_neighbours(int nside, int pix, int out[8]);
 
 /* Compute moon position.
  *
