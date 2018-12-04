@@ -49,14 +49,19 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     double visibility;
     dss_t *dss = (dss_t*)obj;
     painter_t painter2 = *painter;
+    double lum, c;
 
     if (dss->visible.value == 0.0) return 0;
     // Fade the survey between 20° and 10° fov.
     visibility = smoothstep(20 * DD2R, 10 * DD2R, core->fov);
     painter2.color[3] *= dss->visible.value * visibility;
+
     // Adjust for eye adaptation.
-    // Should this be done in the painter?
-    painter2.color[3] /= pow(2.5, 0.5 * core->vmag_shift);
+    lum = 1;
+    c = tonemapper_map(core->tonemapper, lum);
+    c = clamp(c, 0, 1);
+    painter2.color[3] *= c;
+
     if (painter2.color[3] == 0.0) return 0;
     return hips_render(dss->hips, &painter2, 2 * M_PI);
 }

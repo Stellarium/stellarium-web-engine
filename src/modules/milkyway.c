@@ -69,6 +69,8 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     double UV[][2] = {{0.0, 1.0}, {0.0, 0.0},
                       {1.0, 1.0}, {1.0, 0.0}};
     const int div = 32;
+    double lum, c;
+
     if (mw->visible.value == 0.0) return 0;
 
     if (!mw->tex) {
@@ -78,10 +80,11 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
         assert(mw->tex);
     }
 
-    painter.color[3] *= 0.3; // Hardcoded base alpha value.
-    // Adjust for eye adaptation.
-    // Should this be done in the painter?
-    painter.color[3] /= pow(2.5, 0.5 * core->vmag_shift);
+    // Ad-hock formula for tone mapping.
+    lum = 2.4;
+    c = tonemapper_map(core->tonemapper, lum);
+    c = clamp(c, 0, 1) * 0.35;
+    painter.color[3] *= c;
 
     paint_quad(&painter, FRAME_ICRS, mw->tex, NULL, UV, &proj_spherical, div);
     return 0;

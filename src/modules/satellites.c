@@ -315,26 +315,24 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
  */
 static int satellite_render(const obj_t *obj, const painter_t *painter_)
 {
-    double mag, size, luminance, p[4] = {0, 0, 0, 1}, p_win[4];
+    double vmag, size, luminance, p[4] = {0, 0, 0, 1}, p_win[4];
     painter_t painter = *painter_;
     point_t point;
     double color[3] = {1, 1, 1};
     double label_color[4] = RGBA(124, 255, 124, 255);
     satellite_t *sat = (satellite_t*)obj;
 
-    if (obj->vmag > painter.mag_max) return 0;
+    vmag = obj->vmag;
+    if (vmag > painter.mag_max) return 0;
     vec3_copy(obj->pvg[0], p);
     convert_coordinates(core->observer, FRAME_ICRS, FRAME_VIEW, 0, p, p);
 
     // Skip if not visible.
     if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;
-    mag = core_get_observed_mag(obj->vmag);
-    core_get_point_for_mag(mag, &size, &luminance);
-    size = core_get_radius_for_angle(&painter, size);
+    core_get_point_for_mag(vmag, &size, &luminance);
 
-    // Render symbol if needed.  For the moment we always do it if the
-    // mag is lower than 7.  We probably need an option to control that.
-    if (mag < 7.0) {
+    // Render symbol if needed.
+    if (vmag < painter.hint_mag_max) {
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
                       VEC(12.0, 12.0), label_color, 0.0);
         // Still render an invisible point for the selection.
@@ -351,7 +349,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_WINDOW);
 
     // Render name if needed.
-    if (*sat->name && obj->vmag <= painter.label_mag_max) {
+    if (*sat->name && vmag <= painter.label_mag_max) {
         labels_add(sat->name, p_win, size, 13, label_color, 0,
                    ANCHOR_AROUND, 0);
     }

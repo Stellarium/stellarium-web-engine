@@ -16,11 +16,7 @@
  *
  */
 
-// Set to 1 to compute the brightness using skybrightness.h code.
-// Disabled for the moment because this is still experimental.
-#define USE_SKYBRIGHTNESS 0
-
-static const int TEX_SIZE = 8;
+static const int TEX_SIZE = 64;
 
 /*
  * Type: atmosphere_t
@@ -28,14 +24,14 @@ static const int TEX_SIZE = 8;
  */
 typedef struct atmosphere {
     obj_t           obj;
-    // The twelves tile textures of healpix at order 0.
-    texture_t       *tiles[12];
-    fader_t         visible;
-
-    // Used to prevent recomputing if no change.
+    // The twelves tile textures of healpix at order 0 and construction bufs.
     struct {
-        double sun_pos[3];
-    } last_state;
+        texture_t       *tex;
+        float           (*buf)[3];  // color buffer (in xyY).
+        int             border;
+        bool            visible;
+    } tiles[12];
+    fader_t         visible;
 } atmosphere_t;
 
 // All the precomputed data
@@ -48,9 +44,6 @@ typedef struct {
     double Py[5];
     double PY[5];
     double kx, ky, kY;
-
-    double ambient_lum; // Constant added to the color lum.
-    double lum_factor;  // For solar eclipse adjustement.
 
     // Skybrightness model.
     skybrightness_t skybrightness;
@@ -77,8 +70,6 @@ static render_data_t prepare_render_data(
     double thetaS;
     double X;
     double zx, zy, zY;
-    const double base_sun_vmag = -26.74;
-    const double base_moon_vmag = -12.90;
 
     thetaS = acos(sun_pos[2]); // Zenith angle
     X = (4.0 / 9.0 - T / 120) * (M_PI - 2 * thetaS);
@@ -118,17 +109,7 @@ static render_data_t prepare_render_data(
 
     data.kx = zx / F(data.Px, 0, thetaS);
     data.ky = zy / F(data.Py, 0, thetaS);
-    // XXX: I added the /30 to make the sky look OK, I don't understand why
-    // I need that.
-    data.kY = zY / F(data.PY, 0, thetaS) / 30;
-    data.ambient_lum = 0.005;
-    // Compute factor due to solar eclipse.
-    // I am using an ad-hoc formula to make it look OK here.
-    data.lum_factor = pow(2.512 * 0.48, base_sun_vmag - sun_vmag);
-
-    // Add ambient light from the moon.  Ad-hoc formula!
-    data.ambient_lum += 0.02 * smoothstep(0, 0.5, moon_pos[2]) *
-                                pow(4.0, base_moon_vmag - moon_vmag);
+    data.kY = zY / F(data.PY, 0, thetaS);
 
     vec3_copy(sun_pos, data.sun_pos);
     vec3_copy(moon_pos, data.moon_pos);
@@ -137,46 +118,64 @@ static render_data_t prepare_render_data(
 
 static void prepare_skybrightness(
         skybrightness_t *sb, const painter_t *painter,
-        const double moon_pos[3], const double sun_pos[3])
+        const double sun_pos[3], const double moon_pos[3], double moon_vmag,
+        double moon_phase)
 {
     int year, month, day, ihmsf[4];
     const observer_t *obs = painter->obs;
-    double moon_phase, moon_mag;
-    // XXX: TODO: compute moon phase!
-    moon_phase = 0;
-    moon_mag = 0;
+    const double zenith[3] = {0, 0, 1};
+    // Convert moon phase to sun/moon/earth separation.
+    moon_phase = acos(2 * (moon_phase - 0.5));
     eraD2dtf("UTC", 0, DJM0, obs->utc, &year, &month, &day, ihmsf);
     skybrightness_prepare(sb, year, month,
-                          moon_phase, moon_mag,
+                          moon_phase,
                           obs->phi, obs->hm,
-                          15, 40, // Temp & humidity (15°, 40%)
-                          moon_pos[2], sun_pos[2]);
+                          15, 40,
+                          eraSepp(moon_pos, zenith),
+                          eraSepp(sun_pos, zenith),
+                          0.01);
 }
 
-static void compute_point_color(const render_data_t *d,
-                                const double pos[3],
-                                const double sun_pos[3],
-                                const double moon_pos[3],
-                                double T,
-                                double color[3])
+/* Convert a xyY value to sRGB, using analgo that is not actually correct
+ * but looks better than doing it correctly!  */
+static inline void xyY_to_srgb2(const double color[3], double rgb[3])
 {
-    double cos_theta, gamma, cos_gamma, s;
-    double p[3] = {pos[0], pos[1], pos[2]};
+    double y = pow(color[2], 1. / 2.2);
+    double x = color[0] * y / color[1];
+    double z = (1. - color[0] - color[1]) * y / color[1];
+    rgb[0] = 2.04148   * x - 0.564977 * y - 0.344713  * z;
+    rgb[1] = -0.969258 * x + 1.87599  * y + 0.0415557 * z;
+    rgb[2] = 0.0134455 * x - 0.118373 * y + 1.01527   * z;
+}
 
-    p[2] = max(p[2], 0); // Our formula does not work below the horizon.
+static double compute_point_color(const render_data_t *d,
+                                  const double pos[3],
+                                  const double sun_pos[3],
+                                  const double moon_pos[3],
+                                  double T,
+                                  double color[3])
+{
+    double cos_theta, gamma, cos_gamma, s, lum, v;
+    double p[3] = {pos[0], pos[1], pos[2]};
+    const double zenith[3] = {0, 0, 1};
+
+    // Our formula does not work below the horizon.
+    p[2] = fabs(p[2]);
     cos_theta  = p[2];
     cos_gamma = vec3_dot(p, sun_pos);
     gamma = acos(cos_gamma);
 
+    lum = skybrightness_get_luminance(&d->skybrightness,
+            eraSepp(p, moon_pos),
+            eraSepp(p, sun_pos),
+            eraSepp(p, zenith));
+    assert(lum > 0);
+
+    if (!color) return lum;
     color[0] = F2(d->Px, cos_theta, gamma, cos_gamma) * d->kx;
     color[1] = F2(d->Py, cos_theta, gamma, cos_gamma) * d->ky;
-    color[2] = F2(d->PY, cos_theta, gamma, cos_gamma) * d->kY;
-    color[2] = max(color[2], 0.0) * d->lum_factor + d->ambient_lum;
-    if (USE_SKYBRIGHTNESS) {
-        color[2] = skybrightness_get_luminance(&d->skybrightness,
-                        vec3_dot(p, moon_pos), cos_gamma, cos_theta);
-        color[2] /= 30000; // Fake eye adaptation, until we get a proper one.
-    }
+    color[2] = lum;
+
     // Scotopic vision adjustment with blue shift (xy = 0.25, 0.25)
     // Algo inspired from Stellarium.
     if (color[2] < 3.9) {
@@ -184,8 +183,12 @@ static void compute_point_color(const render_data_t *d,
         s = smoothstep(0, 1, (log(color[2]) / log(10) + 2.) / 2.6);
         color[0] = mix(0.25, color[0], s);
         color[1] = mix(0.25, color[1], s);
+        v = color[2] * (1.33 * (1. + color[1] / color[0] + color[0] *
+                    (1. - color[0] - color[1])) - 1.68);
+        color[2] = 0.4468 * (1. - s) * v + s * color[2];
     }
-    xyY_to_rgb(color, color);
+
+    return lum;
 }
 
 static int atmosphere_update(obj_t *obj, const observer_t *obs, double dt)
@@ -194,62 +197,171 @@ static int atmosphere_update(obj_t *obj, const observer_t *obs, double dt)
     return fader_update(&atm->visible, dt);
 }
 
-static int render_visitor(int order, int pix, void *user)
+static bool is_tile_clipped(const painter_t *painter, int order, int pix)
 {
-    assert(order == 0); // We only do level 0.
-    atmosphere_t *atm = USER_GET(user, 0);
-    painter_t painter = *(painter_t*)USER_GET(user, 1);
-    const render_data_t *data = USER_GET(user, 2);
+    int neighbours[8], i;
+    if (!painter_is_tile_clipped(painter, FRAME_OBSERVED, order, pix, true))
+        return false;
+    // Also check the neighbours tiles.
+    healpix_get_neighbours(1 << order, pix, neighbours);
+    for (i = 0; i < 8; i++) {
+        if (neighbours[i] == -1) continue;
+        if (!painter_is_tile_clipped(
+                    painter, FRAME_OBSERVED, order, neighbours[i], true))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/*
+ * Update part of an order zero tile texture data.
+ *
+ * Parameters:
+ *   size       - size of the buffer (pixel).
+ *   border     - border of the buffer (pixel).
+ *   order      - order of the part to be filled.
+ *   pix        - pix of the part to be filled.
+ *   out_nb     - Number of pixel set.
+ *   out_sum    - Sum of luminance (cd/m²).
+ */
+static void fill_texture(float (*buf)[3], int size, int border,
+                         int order, int pix,
+                         const painter_t *painter,
+                         const render_data_t *data,
+                         int *out_nb, double *out_sum)
+{
+    int i, j, ix, iy, f, nb, x, y;
+    double pos[4], lum, color[3], sum, ndc_pos[4];
+    projection_t proj;
     const double *sun_pos = data->sun_pos;
     const double *moon_pos = data->moon_pos;
-    uint8_t *tex_data;
-    double pos[4], color[3];
-    projection_t proj;
-    double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
-    int i, j, split;
     const double T = 5.0;
+    int fsize = size - 2 * (border - 1); // Actual texture size minus border.
+    // Size in pixel we are going to fill.
+    int s = ceil((double)fsize / (1 << order));
 
-    painter.color[3] = atm->visible.value;
-    projection_init_healpix(&proj, 1 << order, pix, true, true);
+    *out_nb = 0;
+    *out_sum = 0;
 
-    if (vec3_equal(sun_pos, atm->last_state.sun_pos)) goto no_change;
+    if (is_tile_clipped(painter, order, pix)) return;
+    /* If the size of the rect to fill is high, we fill the children healpix
+     * pixels, so we get a chance to skip the non visible child.  */
+    if (s >= 8) goto go_down;
 
-    // Compute the atmosphere texture.
-    tex_data = malloc(TEX_SIZE * TEX_SIZE * 3);
-    for (i = 0; i < TEX_SIZE; i++)
-    for (j = 0; j < TEX_SIZE; j++) {
-        vec2_set(pos, j / (TEX_SIZE - 1.0), i / (TEX_SIZE - 1.0));
+    healpix_nest2xyf(1 << order, pix, &ix, &iy, &f);
+    projection_init_healpix(&proj, 1, f, true, true);
+
+    for (y = 0; y < s; y++)
+    for (x = 0; x < s; x++) {
+        i = ix * s + x;
+        j = iy * s + y;
+        vec2_set(pos, j / (fsize - 1.0), i / (fsize - 1.0));
         project(&proj, PROJ_BACKWARD, 4, pos, pos);
-        compute_point_color(data, pos, sun_pos, moon_pos, T, color);
-        tex_data[(i * TEX_SIZE + j) * 3 + 0] = clamp(color[0], 0, 1) * 255;
-        tex_data[(i * TEX_SIZE + j) * 3 + 1] = clamp(color[1], 0, 1) * 255;
-        tex_data[(i * TEX_SIZE + j) * 3 + 2] = clamp(color[2], 0, 1) * 255;
-    }
-    if (!atm->tiles[pix]) {
-        atm->tiles[pix] = texture_create(TEX_SIZE, TEX_SIZE, 3);
-        // Add one pixel border to prevent error in the interpolation on the
-        // side.
-        atm->tiles[pix]->border = 1;
-    }
-    texture_set_data(atm->tiles[pix], tex_data, TEX_SIZE, TEX_SIZE, 3);
-    free(tex_data);
 
-no_change:
+        lum = compute_point_color(data, pos, sun_pos, moon_pos, T, color);
+        i += border - 1;
+        j += border - 1;
+        // Prevent error if s doesn't divide size properly.
+        if (i >= size || j >= size) continue;
+        buf[(i * size + j)][0] = color[0];
+        buf[(i * size + j)][1] = color[1];
+        buf[(i * size + j)][2] = color[2];
+        // If the pixel is probably not visible, don't add it to the lum.
+        convert_coordinates(painter->obs, FRAME_OBSERVED, FRAME_VIEW, 0,
+                            pos, ndc_pos);
+        if (project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_pos, ndc_pos)) {
+            *out_sum += lum;
+            *out_nb += 1;
+        }
+    }
+    return;
+
+go_down:
+    for (i = 0; i < 4; i++) {
+        fill_texture(buf, size, border, order + 1, pix * 4 + i, painter, data,
+                     &nb, &sum);
+        *out_nb += nb;
+        *out_sum += sum;
+    }
+    return;
+}
+
+/*
+ * Update an order zero tile of the atmosphere.
+ *
+ * Parameters:
+ *   nb     - Output number of pixel set.
+ *   sum    - Output sum of luminance (cd/m²).
+ */
+static void prepare_tile(atmosphere_t *atm, const painter_t *painter,
+                         const render_data_t *data, int pix,
+                         int *nb, double *sum)
+{
+    projection_t proj;
+    int size;
+    typeof(atm->tiles[pix]) *tile = &atm->tiles[pix];
+
+    // Compute the actual size we use in the texture depending on the fov.
+    size = clamp(8 / painter->proj->scaling[0], 8, 64);
+    tile->border = (TEX_SIZE - size) / 2;
+    tile->border = tile->border / 2 * 2 + 1; // make sure border is odd.
+    if (!tile->buf)
+        tile->buf = malloc(TEX_SIZE * TEX_SIZE * sizeof(*tile->buf));
+    projection_init_healpix(&proj, 1, pix, true, true);
+    fill_texture(tile->buf, TEX_SIZE, tile->border, 0, pix, painter,
+                 data, nb, sum);
+    atm->tiles[pix].visible = (*nb) != 0;
+}
+
+static void render_tile(atmosphere_t *atm, const painter_t *painter_,
+                        int pix, uint8_t *buf)
+{
+    int split, i, j;
+    double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    double color[3];
+    projection_t proj;
+    typeof(atm->tiles[pix]) *tile = &atm->tiles[pix];
+
+    if (!tile->visible) return;
+    if (!tile->tex)
+        tile->tex = texture_create(TEX_SIZE, TEX_SIZE, 3);
+
+    // Convert the tile data to RGB.
+    // Could be dont in a shader.
+    for (i = tile->border - 1; i < TEX_SIZE - tile->border + 1; i++)
+    for (j = tile->border - 1; j < TEX_SIZE - tile->border + 1; j++) {
+        color[0] = tile->buf[i * TEX_SIZE + j][0];
+        color[1] = tile->buf[i * TEX_SIZE + j][1];
+        color[2] = tile->buf[i * TEX_SIZE + j][2];
+        color[2] = tonemapper_map(core->tonemapper, color[2]);
+        xyY_to_srgb(color, color);
+        buf[(i * TEX_SIZE + j) * 3 + 0] = clamp(color[0], 0, 1) * 255;
+        buf[(i * TEX_SIZE + j) * 3 + 1] = clamp(color[1], 0, 1) * 255;
+        buf[(i * TEX_SIZE + j) * 3 + 2] = clamp(color[2], 0, 1) * 255;
+    }
+
+    projection_init_healpix(&proj, 1, pix, true, true);
+    texture_set_data(tile->tex, buf, TEX_SIZE, TEX_SIZE, 3);
+    painter_t painter = *painter_;
+    painter.color[3] = atm->visible.value;
     painter.flags |= PAINTER_ADD;
-    split = max(4, 12 >> order); // Adhoc split computation.
-    paint_quad(&painter, FRAME_OBSERVED, atm->tiles[pix], NULL,
-               uv, &proj, split);
-    return 0;
+    split = 4; // Adhoc split computation.
+    tile->tex->border = tile->border;
+    paint_quad(&painter, FRAME_OBSERVED, tile->tex, NULL, uv, &proj, split);
 }
 
 static int atmosphere_render(const obj_t *obj, const painter_t *painter)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun, *moon;
-    double sun_pos[4], moon_pos[4], vmag, theta;
+    double sun_pos[4], moon_pos[4], avg_lum, moon_phase;
+    double sum, sum_lum = 0;
     render_data_t data;
     const double T = 5.0;
-    const double base_sun_vmag = -26.74;
+    int i, nb, nb_lum = 0;
+    uint8_t *buf;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
@@ -262,18 +374,28 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
     vec3_normalize(moon_pos, moon_pos);
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
-    if (USE_SKYBRIGHTNESS)
-        prepare_skybrightness(&data.skybrightness, painter, moon_pos, sun_pos);
-    hips_traverse(USER_PASS(atm, painter, &data), render_visitor);
-    vec3_copy(sun_pos, atm->last_state.sun_pos);
+    obj_get_attr(moon, "phase", "f", &moon_phase);
 
-    // XXX: ad-hoc formula to get the visible vmag.  Need to implement
-    // something better.
-    theta = acos(sun_pos[2]) - 0.83 * DD2R; // Zenith angle of top of Sun
-    vmag = mix(-13 + (sun->vmag - base_sun_vmag) * 0.49, 0,
-               smoothstep(85 * DD2R, 95 * DD2R, theta));
-    core_report_vmag_in_fov(vmag, 360 * DD2R, 0);
+    prepare_skybrightness(&data.skybrightness,
+            painter, sun_pos, moon_pos, moon->vmag, moon_phase);
 
+    for (i = 0; i < 12; i++) {
+        prepare_tile(atm, painter, &data, i, &nb, &sum);
+        nb_lum += nb;
+        sum_lum += sum;
+    }
+
+    // Report luminance before we render the tiles, so that the tonemapping
+    // has time to adjust.
+    avg_lum = 0;
+    if (nb_lum) avg_lum = sum_lum / nb_lum;
+    core_report_luminance_in_fov(avg_lum + 0.001, true);
+
+    buf = malloc(TEX_SIZE * TEX_SIZE * 3);
+    for (i = 0; i < 12; i++) {
+        render_tile(atm, painter, i, buf);
+    }
+    free(buf);
     return 0;
 }
 

@@ -317,19 +317,18 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[4], mag, size, luminance;
+    double pos[4], vmag, size, luminance;
     double label_color[4] = RGBA(255, 124, 124, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
 
-    if (mplanet->obj.vmag > painter->mag_max) return 0;
+    vmag = mplanet->obj.vmag;
+    if (vmag > painter->mag_max) return 0;
     obj_get_pos_observed(obj, painter->obs, pos);
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
     vec3_normalize(pos, pos);
-    mag = core_get_observed_mag(mplanet->obj.vmag);
-    core_get_point_for_mag(mag, &size, &luminance);
-    size = core_get_radius_for_angle(painter, size);
+    core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
         .pos = {pos[0], pos[1], pos[2], 0},
@@ -340,7 +339,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     paint_points(painter, 1, &point, FRAME_OBSERVED);
 
     // Render name if needed.
-    if (*mplanet->name && mplanet->obj.vmag <= painter->label_mag_max) {
+    if (*mplanet->name && vmag <= painter->label_mag_max) {
         mat4_mul_vec3(core->observer->ro2v, pos, pos);
         if (project(painter->proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,

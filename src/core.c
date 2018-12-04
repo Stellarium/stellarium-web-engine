@@ -294,7 +294,11 @@ static void core_set_default(void)
 
     core->proj = PROJ_STEREOGRAPHIC;
     obs->force_full_update = true;
-    core->contrast = 0.9;
+
+    core->star_relative_scale = 2;
+    core->star_linear_scale = 2;
+    core->telescope_auto = true;
+
     core_update();
 }
 
@@ -339,6 +343,12 @@ void core_init(void)
 
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
+
+    // Set initial word adaptation luminance to 5 kcd/m², full sunlight.
+    core->lwa = core->lwa_target = 5000;
+    core->tonemapper = tonemapper_create(86, 35, false);
+
+    tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
 
     core->gest_pan = (gesture_t) {
         .type = GESTURE_PAN,
@@ -429,9 +439,8 @@ static int core_update_direction(double dt)
 
 static int core_update(void)
 {
-    bool r, atm_visible;
+    bool atm_visible;
     double aspect = core->win_size[0] / core->win_size[1];
-    double target_vmag_shift;
     obj_t *atm;
 
     atm = core_get_module("atmosphere");
@@ -440,17 +449,18 @@ static int core_update(void)
     projection_compute_fovs(core->proj, core->fov, aspect,
                             &core->fovx, &core->fovy);
     observer_update(core->observer, true);
-
-    // Eye adaptation, expressed as a global shift in all vmags.
-    target_vmag_shift = max(0, -3 - core->max_vmag_in_fov);
-    target_vmag_shift += core->manual_vmag_shift;
-    // If the atmosphere is not visible, we also shift the vmags a bit.
-    if (!atm_visible) target_vmag_shift -= 0.4;
-    r = move_toward(&core->vmag_shift, target_vmag_shift, 0, 64.0, 1.0 / 60);
-
-    core->max_vmag_in_fov = INFINITY;
+    // Update telescope according to the fov.
+    if (core->telescope_auto)
+        telescope_auto(&core->telescope, core->fov);
     progressbar_update();
-    return r ? 1 : 0;
+
+    // Update eye adaptation.
+    core->lwa = exp(log(core->lwa) +
+                (log(core->lwa_target) - log(core->lwa)) * 0.1);
+    tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
+    core->lwa_target = 0.001; // Reset for next frame.
+
+    return 0;
 }
 
 // Test whether the landscape hides the view below the horizon.
@@ -465,48 +475,54 @@ static bool is_below_horizon_hidden(void)
     return (visible && core->observer->altitude >= 0);
 }
 
-static double get_radius_for_mag(double mag);
-// Compute the maximum *observed* magnitude that can be rendered on screen.
-static double get_max_observed_mag(double min_radius)
+/*
+ * Compute the magnitude of the dimmest visible star.
+ */
+static double compute_max_vmag(void)
 {
     // Compute by dichotomy.
-    const int max_iter = 128;
-    const double eps = 0.001 * DD2R;
-    double m1 = 0.0, m2 = 128.0;
-    double v, ret;
+    const int max_iter = 16;
+    const double min_l = 0.1;
+    double m = 0, m1 = 0.0, m2 = 128.0;
+    double r, l;
     int i;
 
+    core_get_point_for_mag(m1, &r, &l);
+    if (r == 0) return m1;
+
     for (i = 0; i < max_iter; i++) {
-        ret = (m1 + m2) / 2;
-        v = get_radius_for_mag(ret);
-        if (fabs(v - min_radius) < eps) break;
-        *((v < min_radius) ? &m2 : &m1) = ret;
+        m = (m1 + m2) / 2;
+        core_get_point_for_mag(m, &r, &l);
+        if (r && l < min_l) return m;
+        *(r ? &m1 : &m2) = m;
     }
-    if (i >= max_iter) LOG_W("Too many iterations! (%f)", ret);
-    return ret;
+    // if (i >= max_iter) LOG_W("Too many iterations! (%f)", m);
+    return m;
 }
 
-// Helper function to compute the magnitude limits when we set up the painter.
-// If <value> is not NAN, just return it, otherwise compute the best value
-// To obtain <observed_mag>.
-static double get_absolute_mag(double value, double observed_mag)
+/*
+ * Compute the magnitude a stars need to have to have a given radius on screen.
+ *
+ * Parameters:
+ *   target     - The target radius (pixel).
+ */
+static double compute_vmag_for_radius(double target)
 {
     // Compute by dichotomy.
-    double min_v = -128.0, max_v = 128.0, ret, v;
-    const double eps = 0.001;
-    const int max_iter = 128;
+    const int max_iter = 32;
+    double m = 0, m1 = -128.0, m2 = 128.0;
+    double r, l;
     int i;
-
-    if (!isnan(value)) return value;
     for (i = 0; i < max_iter; i++) {
-        ret = mix(min_v, max_v, 0.5);
-        v = core_get_observed_mag(ret);
-        if (fabs(v - observed_mag) < eps) break;
-        *((v < observed_mag) ? &min_v : &max_v) = ret;
+        m = (m1 + m2) / 2;
+        core_get_point_for_mag(m, &r, &l);
+        if (r && fabs(r - target) < 0.1) return m;
+        *((r > target) ? &m1 : &m2) = m;
     }
-    if (i >= max_iter) LOG_W("Too many iterations!");
-    return ret;
+    if (i >= max_iter) LOG_W("Too many iterations! (%f)", m);
+    return m;
 }
+
 
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
@@ -517,31 +533,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
     double dt = 1.0 / 16.0;
     int r;
     bool updated = false, cst_visible;
-    double max_mag;
-    const double win_area = win_w * win_h;
+    double max_vmag;
 
-    // Constants that define the magnitude needed to see objects, hints,
-    // and labels.  Default values.
-    const double max_hint_mag = 7.0;
-    double max_label_mag;
 
-    /*
-     * Compute r_min and max_mag from the screen resolution.
-     *
-     * r_min is computed to match more or less one logical pixel of the
-     * screen.
-     *
-     * max_mag is computed so that we stop rendering after we reach a certain
-     * fraction of r_min.  I add a small security offset to max_mag to prevent
-     * bugs when we zoom out.
-     */
-    core->r_min = 60 * DD2R / sqrt(win_area);
-    max_mag = get_max_observed_mag(core->r_min / 5) + 0.5;
-
-    // The number of labels we show is proportional to the screen area.
-    // I use my own screen (1920 * 1080) as a reference, with labels up
-    // to mag 3.
-    max_label_mag = 3.0 + 2.5 * log10(win_area / (1920 * 1080));
+    max_vmag = compute_max_vmag();
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
@@ -602,9 +597,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .fb_size = {win_w * pixel_scale, win_h * pixel_scale},
         .pixel_scale = pixel_scale,
         .proj = &proj,
-        .mag_max = get_absolute_mag(NAN, max_mag),
-        .hint_mag_max = get_absolute_mag(core->hints_mag_max, max_hint_mag),
-        .label_mag_max = get_absolute_mag(NAN, max_label_mag),
+        .mag_max = max_vmag,
+        .hint_mag_max = (!isnan(core->hints_mag_max)) ? core->hints_mag_max :
+                        compute_vmag_for_radius(1),
+        .label_mag_max = compute_vmag_for_radius(2),
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
@@ -613,11 +609,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
             (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
             (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
     };
-    // Limit the number of labels when we zoom out, so that we don't make
-    // the screen filled with text.
-    // XXX: in fact this should depend on the labels size relative to the
-    // screen size.
-    // painter.label_mag_max = smoothstep(720, 60, core->fov * DR2D) * 4.0;
 
     r = core_update_direction(dt);
     if (r) updated = true;
@@ -754,84 +745,6 @@ void core_on_zoom(double k, double x, double y)
     obj_changed(&core->observer->obj, "azimuth");
 }
 
-/*
- * Function: compute_observed_mag
- * Compute the observed magnitude by simulating the optic.
- *
- * Parameters:
- *   vmag       - The source input magnitude.
- *   fov        - Viewer fov (rad).
- *
- * Returns:
- *   The observed magnitude.
- */
-static double compute_observed_mag(double vmag, double fov)
-{
-    // I use upercases variable names to stay consistent with the notations
-    // used in:
-    // http://www.rocketmime.com/astronomy/Telescope/MagnitudeGain.html
-    double Dep = 6.3; // Diameter of the eye pupil, for an average person.
-    double M;    // Magnification.
-    double Do;   // Objective diameter.
-    double Gmag; // Light grasp magnitude.
-
-    // When fov is larger than 60deg, we are not in telescope mode anymore,
-    // so we change the point size linearly.
-    if (fov < 60 * DD2R) {
-        // XXX: Objective diameter chosen so that at 60 fov, Gmag = 0.
-        M = 60 * DD2R / fov;
-        Do = M * Dep;
-        Gmag = 5 * log10(Do) - 4;
-        vmag -= Gmag;
-    } else {
-        // Non telescope mode: vmag changes proportionally to the
-        // magnification.  I chose the value 0.4 after some tests.
-        M = 60 * DD2R / fov;
-        vmag /= 1.0 - 0.4 * (1.0 - M);
-    }
-
-    return vmag;
-}
-
-// Compute the observed magnitude of an object after adjustment for the
-// optic and eye adaptation.
-double core_get_observed_mag(double vmag)
-{
-    vmag = compute_observed_mag(vmag, core->fov);
-    // Shift due to exposure.
-    vmag += core->vmag_shift;
-    return vmag;
-}
-
-/*
- * Fast pow approximation from Martin Ankerl.
- */
-static inline double fast_pow(double a, double b)
-{
-    union {
-        double d;
-        int x[2];
-    } u = { a };
-    u.x[1] = (int)(b * (u.x[1] - 1072632447) + 1072632447);
-    u.x[0] = 0;
-    return u.d;
-}
-
-/*
- * Function: get_radius_for_mag
- * Compute the rendered radius for a given magnitude.
- */
-static double get_radius_for_mag(double mag)
-{
-    const double r0 = 0.3 * DD2R;       // radius at mag = 0.
-    const double mi = 7.5;         // Max visible mag.
-    double r;
-
-    r = -r0 / mi * mag + r0;
-    if (r <= 0.0) return 0.0;
-    r *= fast_pow(smoothstep(0.0, r0, r), core->contrast);
-    return r;
-}
 
 /*
  * Function: core_get_point_for_mag
@@ -846,37 +759,86 @@ static double get_radius_for_mag(double mag)
  *   mag       - The observed magnitude.
  *   radius    - Output radius (rad).  Note: the fov is already taken into
  *               account in the output.
- *   luminance - Output luminance.  Ignored if set to NULL.
+ *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
+ *               set to NULL.
  */
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
-    double l;                           // Luminance.
-    double r;                           // Radius in rad.
-    double r_min = core->r_min;
 
-    r = get_radius_for_mag(mag);
+    /*
+     * Use the formulas from:
+     * https://en.wikipedia.org/wiki/Surface_brightness
+     */
 
-    if (r == 0) {
-        *radius = 0;
-        if (luminance) *luminance = 0;
-        return;
+    const double foveye = 60 * DD2R;
+    double log_lf, log_lw, ld, r, s, pr;
+    const telescope_t *tel = &core->telescope;
+    const double s_linear = core->star_linear_scale;
+    const double s_relative = core->star_relative_scale;
+    const double r_min = 0.5;
+
+    /*
+     * Compute luminous flux (in lumen = cd . sr)
+     * Get log10 of the value for optimisation.
+     *
+     * S = m + 2.5 * log10(A)         | S: vmag/arcmin², A: arcmin²
+     * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: cd/m²
+     * F = L * A                      | F: lm (= cd.sr), A: sr, L: cd/m²
+     *
+     * F = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
+     * log10(F) = log10(10.8e4 / R2AS^2) - 0.4 * m
+     */
+    log_lf = log10(10.8e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
+
+    /*
+     * Apply optic from telescope light grasp.
+     *
+     * F' = F * Gl
+     * Gmag = 2.5 * log10(Gl)
+     *
+     * Log10(F') = Log10(F) + Gmag / 2.5
+     */
+    log_lf += tel->gain_mag / 2.5;
+
+    /*
+     * Compute luminance assuming a point radius of 2.5 arcmin.
+     *
+     * L = F / (pi * R^2)
+     * Log10(L) = Log10(F) - Log10(pi * R^2)
+     */
+    pr = 2.5 / 60 * DD2R;
+    log_lw = log_lf - log10(M_PI * pr * pr);
+
+    // Apply eye adaptation.
+    ld = tonemapper_map_log10(core->tonemapper, log_lw);
+    if (ld < 0) ld = 0; // Prevent math error.
+
+    // Extra scale if the telescope magnification is not enough to reach the
+    // current zoom level.
+    s = (foveye / core->fov) / tel->magnification;
+    // Compute r, using both manual adjustement factors.
+    r = s_linear * pow(ld, s_relative / 2.0) * s;
+
+    // If the radius is really too small, we don't render the star.
+    if (r < r_min / 4) {
+        r = 0;
+        ld = 0;
     }
 
-    l = 1.0;        // Full luminance.
+    // If the radius is too small, we adjust the luminance.
     if (r > 0 && r < r_min) {
-        l *= r / r_min;
+        ld *= (r / r_min) * (r / r_min) * (r / r_min);
         r = r_min;
     }
-    r /= (60 * DD2R / core->fov);
+
+    ld = pow(ld, 1 / 2.2); // Gama correction.
+    // Saturate radius after a certain point.
+    // XXX: make it smooth.
+    r = min(r, 8.0);
     *radius = r;
-    if (luminance) *luminance = l;
+    if (luminance) *luminance = clamp(ld, 0, 1);
 }
 
-double core_get_radius_for_angle(const painter_t *painter, double r)
-{
-    const double win_w = painter->fb_size[0] / painter->pixel_scale;
-    return r / painter->proj->scaling[0] * win_w / 2;
-}
 
 double core_get_apparent_angle_for_point(const painter_t *painter, double r)
 {
@@ -898,15 +860,27 @@ double core_get_apparent_angle_for_point(const painter_t *painter, double r)
  */
 void core_report_vmag_in_fov(double vmag, double r, double sep)
 {
-    if (sep - r > core->fov) return; // Not visible at all.
-    // Here we use an heuristic so that objects that are small or not
-    // centered don't affect the eye adaptation too much.
-    if (r < 360 * DD2R) { // Not for atmosphere.
-        vmag = compute_observed_mag(vmag, core->fov);
-        vmag *= smoothstep(0, core->fov / 32.0, r);
-        vmag *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
+    double lf, lum, r2;
+
+    // Compute flux and luminance.
+    vmag -= core->telescope.gain_mag;
+    lf = 10.8e4 / (ERFA_DR2AS * ERFA_DR2AS) * pow(10, -0.4 * vmag);
+    lum = lf / (M_PI * r * r);
+
+    lum = min(lum, 700);
+    r2 = r * (60 * DD2R / core->fov);
+    lum *= pow(r2 / (60 * DD2R), 2);
+    lum *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
+    core_report_luminance_in_fov(lum, false);
+}
+
+void core_report_luminance_in_fov(double lum, bool fast_adaptation)
+{
+    core->lwa_target = max(core->lwa_target, lum);
+    if (fast_adaptation && core->lwa_target > core->lwa) {
+        core->lwa = core->lwa_target;
+        tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
     }
-    core->max_vmag_in_fov = min(core->max_vmag_in_fov, vmag);
 }
 
 static int do_core_lookat(double* pos, double speed, double fov) {

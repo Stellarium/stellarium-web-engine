@@ -216,8 +216,18 @@ static void menu_main(void *user)
             f *= DD2R;
             obj_set_attr(&core->obj, "fov", "f", f);
         }
-        gui_double("Contrast", &core->contrast, NAN);
-        gui_double("VMag shift", &core->manual_vmag_shift, NAN);
+        gui_tab_end();
+    }
+
+    if (gui_tab("telescope")) {
+        gui_double("s linear", &core->star_linear_scale, NAN);
+        gui_double("s relative", &core->star_relative_scale, NAN);
+
+        gui_text("Telescope:");
+        gui_text("diameter: %.0fmm", core->telescope.diameter);
+        gui_text("f-ratio: %.1f",
+                core->telescope.focal_e / core->telescope.diameter);
+        gui_toggle("auto", &core->telescope_auto);
         gui_tab_end();
     }
 
@@ -339,8 +349,6 @@ static void info_widget(obj_t *obj)
     if (obj_get_attr(obj, "vmag", "f", &v) == 0) {
         sprintf(buf, "%f", v);
         gui_label("VMAG", buf);
-        sprintf(buf, "%f", core_get_observed_mag(v));
-        gui_label("OBSERVED VMAG", buf);
     }
     if (obj_get_attr(obj, "distance", "s", buf) == 0)
         gui_label("DIST", buf);
@@ -412,7 +420,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_same_line();
     gui_text("FPS: %.0f", core->prof.fps);
     gui_same_line();
-    gui_text("vshift: %.1f", core->vmag_shift);
+    gui_text("lwa: %f cd/m2", core->lwa);
     gui_same_line();
     gui_text("cst: %s", core->observer->pointer.cst);
     gui_panel_end();

@@ -20,6 +20,8 @@
 #include "observer.h"
 #include "obj.h"
 #include "bayer.h"
+#include "telescope.h"
+#include "tonemapper.h"
 
 
 typedef struct core core_t;
@@ -137,16 +139,20 @@ struct core
     // Global utc offset used when rendering the time (min)
     int             utc_offset;
 
-    // Used to compute eyes adaptation.  It's not very good for the moment,
-    // just enough to hide the stars during daytime.
-    double          max_vmag_in_fov;
-    double          vmag_shift;
-    // For debugging: allow to manually set a vmag shift.
-    double          manual_vmag_shift;
+    // Two parameters to manually adjust the size of the stars.
+    double          star_linear_scale;
+    double          star_relative_scale;
 
     // Set the hints max magnitude.
     double          hints_mag_max;
     double          contrast; // Apply contrast to the rendered stars.
+
+    tonemapper_t    *tonemapper;
+    double          lwa; // Luminance adaptation.
+    double          lwa_target; // The target lwa.
+
+    telescope_t     telescope;
+    bool            telescope_auto; // Auto adjust telescope.
 
     renderer_t      *rend;
     int             proj;
@@ -266,30 +272,23 @@ obj_t *core_get_module(const char *id);
  */
 void core_report_vmag_in_fov(double vmag, double r, double sep);
 
-// Compute the observed magnitude of an object after adjustment for the
-// optic and eye adaptation.
-double core_get_observed_mag(double vmag);
-
-// Compute the radius angle (in radiant) and luminance (0 to 1) for a given
-// observed magnitude.
-void core_get_point_for_mag(double mag, double *radius, double *luminance);
-
-// Convert an angular radius to screen pixel radius.
-// XXX: to be removed.
-double core_get_radius_for_angle(const painter_t *painter, double r);
+void core_report_luminance_in_fov(double lum, bool fast_adaptation);
 
 /*
- * Function: core_get_apparent_angle_for_point.
- * Convert between screen radius to angular radius.
+ * Function: core_get_point_for_mag
+ * Compute a point radius and luminosity from a visual magnitude.
  *
  * Parameters:
- *   painter    - a painter.
- *   r          - an angle in pixel.
- *
- * Return:
- *   An angle radius in rad.
+ *   mag       - The visual magnitude.
+ *   radius    - Output radius (rad).  Note: the fov is already taken into
+ *               account in the output.
+ *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
+ *               set to NULL.
  */
+void core_get_point_for_mag(double mag, double *radius, double *luminance);
+
 double core_get_apparent_angle_for_point(const painter_t *painter, double r);
+
 
 // Return a static string representation of an object type id.
 const char *type_to_str(const char type[4]);

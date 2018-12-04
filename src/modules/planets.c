@@ -692,10 +692,11 @@ static void planet_render_orbit(const planet_t *planet,
 
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
-    double pos[4], vpos[3];
+    double pos[4], vpos[3], p_win[4];
     double label_color[4] = RGBA(124, 124, 255, 255);
     double color[4];
-    double mag;              // Observed magnitude at this fov.
+    double vmag;             // Observed magnitude.
+    double point_size;       // Radius size of point (pixel).
     double point_r;          // Size (rad) and luminance if the planet is seen
     double point_luminance;  // as a point source (like a star).
     double radius;           // Planet rendered radius (AU).
@@ -710,15 +711,15 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     char label[256];
     planets_t *planets = (planets_t*)planet->obj.parent;
 
+    vmag = planet->obj.vmag;
     if (planet->id == EARTH) return;
-    if (planet->id != MOON && planet->obj.vmag > painter.mag_max) return;
+    if (planet->id != MOON && vmag > painter.mag_max) return;
 
     vec4_copy(planet->obj.pvg[0], pos);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, pos, pos);
 
-    mag = core_get_observed_mag(planet->obj.vmag);
-    core_get_point_for_mag(mag, &point_r, &point_luminance);
-    point_r = core_get_radius_for_angle(&painter, point_r);
+    core_get_point_for_mag(vmag, &point_size, &point_luminance);
+    point_r = core_get_apparent_angle_for_point(&painter, point_size);
 
     radius = planet->radius_m / DAU;
 
@@ -745,7 +746,12 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         if (alt < -max(r * r_scale, point_r)) return;
     }
 
-    core_report_vmag_in_fov(planet->obj.vmag, r, sep);
+    // If the planet is visible, report it for tonemapping.
+    if (project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, p_win)) {
+        if (pos[2] > 0) {
+            core_report_vmag_in_fov(vmag, r, sep);
+        }
+    }
 
     if (planet->hips && hips_k * r * r_scale >= point_r) {
         hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * r * r_scale ));
@@ -759,27 +765,27 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     painter.points_smoothness *= mix(1.0, 0.25,
                                      smoothstep(0.5, 3.0, point_r * DR2D));
     point = (point_t) {
-        .pos = {pos[0], pos[1], pos[2]},
-        .size = point_r,
+        .pos = {p_win[0], p_win[1]},
+        .size = point_size,
         .color = {color[0], color[1], color[2], color[3]},
         .oid = planet->obj.oid,
     };
-    paint_points(&painter, 1, &point, FRAME_OBSERVED);
+    paint_points(&painter, 1, &point, FRAME_WINDOW);
 
     if (hips_alpha > 0) {
         planet_render_hips(planet, radius * r_scale, hips_alpha, &painter);
     }
 
 
-    if (mag <= painter.label_mag_max) {
+    if (vmag <= painter.label_mag_max) {
         mat4_mul_vec3(core->observer->ro2v, pos, vpos);
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, vpos, vpos)) {
             if (r_scale == 1.0) strcpy(label, planet->name);
             else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
-            labels_add(label, vpos, point_r, 16, label_color, 0,
-                       ANCHOR_AROUND, -mag);
+            labels_add(label, vpos, point_size, 16, label_color, 0,
+                       ANCHOR_AROUND, -vmag);
         }
     }
 

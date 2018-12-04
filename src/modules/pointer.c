@@ -22,7 +22,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
 {
     int i;
     double pos[4], pos2d[2];
-    double mag, size, luminance, radius = NAN;
+    double size, luminance, radius = NAN;
     double white[4] = {1, 1, 1, 1};
     const double T = 2.0;    // Animation period.
     double r, transf[4][4];
@@ -43,10 +43,8 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
         return 0;
 
     // Empirical formula to compute the pointer size.
-    mag = core_get_observed_mag(selection->vmag);
-    core_get_point_for_mag(mag, &size, &luminance);
-    size = core_get_radius_for_angle(&painter, size);
-
+    core_get_point_for_mag(selection->vmag, &size, &luminance);
+    size = core_get_apparent_angle_for_point(&painter, size);
     if (obj_has_attr(selection, "radius")) {
         obj_get_attr(selection, "radius", "f", &radius);
         size = max(size, radius);

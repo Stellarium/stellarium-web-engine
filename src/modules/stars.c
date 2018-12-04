@@ -174,7 +174,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
     double ri, di, aob, zob, hob, dob, rob;
-    double p[4], size, luminance, mag;
+    double p[4], size, luminance;
     double color[3];
     painter_t painter = *painter_;
     point_t point;
@@ -187,10 +187,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && zob > 90 * DD2R)
         return 0;
     eraS2c(aob, 90 * DD2R - zob, p);
-    mag = core_get_observed_mag(s->vmag);
-    core_get_point_for_mag(mag, &size, &luminance);
-    size = core_get_radius_for_angle(&painter, size);
-
+    core_get_point_for_mag(s->vmag, &size, &luminance);
     bv_to_rgb(s->bv, color);
     point = (point_t) {
         .pos = {p[0], p[1], p[2]},
@@ -205,7 +202,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
                             p, p);
         if (project(painter.proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
-            star_render_name(&painter, s, p, size, mag, color);
+            star_render_name(&painter, s, p, size, s->vmag, color);
     }
     return 0;
 }
@@ -425,10 +422,9 @@ static int render_visitor(int order, int pix, void *user)
     tile_t *tile;
     int i, n = 0;
     star_data_t *s;
-    double p[4], p_win[4], size, luminance, mag;
+    double p[4], p_win[4], size, luminance;
     double color[3], max_sep, fov, viewport_cap[4];
     bool loaded;
-    bool debug_show_all = DEBUG ? debug_stars_show_all : false;
 
     painter.mag_max = min(painter.mag_max, stars->mag_max);
     // Early exit if the tile is clipped.
@@ -440,7 +436,7 @@ static int render_visitor(int order, int pix, void *user)
     if (loaded) (*nb_loaded)++;
 
     if (!tile) goto end;
-    if (!debug_show_all && tile->mag_min > painter.mag_max) goto end;
+    if (tile->mag_min > painter.mag_max) goto end;
 
     // Compute viewport cap for fast clipping test.
     // The cap is defined as the vector xyzw with xyz the observer viewing
@@ -458,7 +454,7 @@ static int render_visitor(int order, int pix, void *user)
     point_t *points = malloc(tile->nb * sizeof(*points));
     for (i = 0; i < tile->nb; i++) {
         s = &tile->stars[i];
-        if (!debug_show_all && s->vmag > painter.mag_max) break;
+        if (s->vmag > painter.mag_max) break;
         if (vec3_dot(s->pos, viewport_cap) < viewport_cap[3]) continue;
 
         // Compute star observed and screen pos.
@@ -475,11 +471,7 @@ static int render_visitor(int order, int pix, void *user)
         if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win))
             continue;
 
-        mag = core_get_observed_mag(s->vmag);
-        if (debug_show_all) mag = 4.0;
-        core_get_point_for_mag(mag, &size, &luminance);
-        size = core_get_radius_for_angle(&painter, size);
-
+        core_get_point_for_mag(s->vmag, &size, &luminance);
         bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
             .pos = {p_win[0], p_win[1], 0, 0},
@@ -489,7 +481,7 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         if (s->vmag <= painter.label_mag_max && !s->gaia)
-            star_render_name(&painter, s, p_win, size, mag, color);
+            star_render_name(&painter, s, p_win, size, s->vmag, color);
     }
     paint_points(&painter, n, points, FRAME_WINDOW);
     free(points);
@@ -500,7 +492,6 @@ end:
     // until order 3 no matter what, so that we reach the gaia survey.
     if (order < 3 && painter.mag_max > GAIA_MIN_MAG) return 1;
     if (!tile) return 0;
-    if (debug_show_all) return 1;
     if (tile->mag_max > painter.mag_max) return 0;
     return 1;
 }

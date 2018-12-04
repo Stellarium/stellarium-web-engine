@@ -166,12 +166,13 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int comet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[4], win_pos[4], mag, size, luminance;
+    double pos[4], win_pos[4], vmag, size, luminance;
     comet_t *comet = (comet_t*)obj;
     point_t point;
     double label_color[4] = RGBA(255, 124, 124, 255);
+    vmag = comet->obj.vmag;
 
-    if (comet->obj.vmag > painter->mag_max) return 0;
+    if (vmag > painter->mag_max) return 0;
     if (isnan(obj->pvg[0][0])) return 0; // For the moment!
     convert_coordinates(painter->obs, FRAME_ICRS, FRAME_OBSERVED, 0,
                         obj->pvg[0], pos);
@@ -182,9 +183,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
         return 0;
 
     comet->on_screen_timer = 100; // Keep the comet 'alive' for 100 frames.
-    mag = core_get_observed_mag(comet->obj.vmag);
-    core_get_point_for_mag(mag, &size, &luminance);
-    size = core_get_radius_for_angle(painter, size);
+    core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
         .pos = {win_pos[0], win_pos[1], 0, 0},
@@ -195,7 +194,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     paint_points(painter, 1, &point, FRAME_WINDOW);
 
     // Render name if needed.
-    if (*comet->name && comet->obj.vmag <= painter->label_mag_max) {
+    if (*comet->name && vmag < painter->label_mag_max) {
         labels_add(comet->name, win_pos, size, 13, label_color,
                    0, ANCHOR_AROUND, 0);
     }

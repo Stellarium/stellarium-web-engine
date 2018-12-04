@@ -441,13 +441,13 @@ static int dso_render_from_data(const dso_data_t *d,
                                 const char *id,
                                 const painter_t *painter_)
 {
-    double p[4] = {}, size, luminance, mag, temp_mag;
+    double p[4] = {}, size, luminance, vmag;
     painter_t painter = *painter_;
     int label_anchor, symbol;
 
-    temp_mag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
+    vmag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
 
-    if (temp_mag > painter.hint_mag_max) return 0;
+    if (vmag > painter.hint_mag_max) return 0;
 
     eraS2c(d->ra, d->de, p);
     convert_coordinates(painter.obs, FRAME_ICRS, FRAME_OBSERVED, 0, p, p);
@@ -455,9 +455,7 @@ static int dso_render_from_data(const dso_data_t *d,
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
         return 0;
 
-    mag = core_get_observed_mag(temp_mag);
-    core_get_point_for_mag(mag, &size, &luminance);
-    size = core_get_radius_for_angle(&painter, size);
+    core_get_point_for_mag(vmag, &size, &luminance);
 
     convert_coordinates(painter.obs, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
     if (!project(painter.proj,
@@ -476,11 +474,11 @@ static int dso_render_from_data(const dso_data_t *d,
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, d->id.oid, 0);
 
-    if (temp_mag <= painter.label_mag_max) {
+    if (vmag <= painter.label_mag_max) {
         compute_ellipse_label_pos(win_pos, win_size, win_angle, p,
                                   &label_anchor);
         vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
-        dso_render_name(&painter, d, p, size, mag, label_anchor);
+        dso_render_name(&painter, d, p, size, vmag, label_anchor);
     }
     return 0;
 }
