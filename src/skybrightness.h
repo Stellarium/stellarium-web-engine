@@ -14,35 +14,28 @@
  * Atmosphere brightness computation, based on the 1998 sky brightness model by
  * Bradley Schaefer:
  * B. Schaefer: To the Visual Limits. Sky&Telescope 5/1998 57-60.
- *
- * Most of this code comes as directly from Stellarium.
  */
 
 typedef struct skybrightness
 {
+    float Y, M, AM, LA, AL, TE, RH, ZM, ZS;
+    float max_BM;
 
-    float airMassMoon;
-    float airMassSun;
-    float magMoon;
-    float RA;
-    float K;
-    float C3;
-    float C4;
-    float SN;
-    float bNightTerm;
-    float bMoonTerm1;
-    float bTwilightTerm;
+    // Precomputed values.
+    float K, XM, XS;
 
 } skybrightness_t;
 
 void skybrightness_prepare(
         skybrightness_t *sb,
-        int year, int month, float moonPhase, float moonMag,
+        int year, int month, float moon_phase,
         float latitude, float altitude,
-        float temperature, float relativeHumidity,
-        float cosDistMoonZenith, float cosDistSunZenith);
+        float temperature, float relative_humidity,
+        float dist_moon_zenith, float dist_sun_zenith,
+        float max_moon_brightness);
 
-float skybrightness_get_luminance(const skybrightness_t *sb,
-        float cosDistMoon, float cosDistSun, float cosDistZenith);
+float skybrightness_get_luminance(
+        const skybrightness_t *sb,
+        float moon_dist, float sun_dist, float zenith_dist);
 
 #endif // SKYBRIGHTNESS_H

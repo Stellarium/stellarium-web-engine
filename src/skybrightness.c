@@ -7,122 +7,158 @@
  * repository.
  */
 
-#define _GNU_SOURCE
 #include <math.h>
-
 #include "skybrightness.h"
+
+#define exp10(x) exp((x) * log(10.f))
+#define exp10f(x) expf((x) * logf(10.f))
+
+static inline float pow2(float x) { return x * x; }
+static inline float pow4(float x) { return x * x * x * x; }
+
+// Radiant to degree.
+static const float DR = 180.0 / 3.14159;
+
+// Nanolambert to cd/m²
+static const float NLAMBERT_TO_CDM2 = 3.183e-6;
+
+
+static const float WA = 0.55;
+static const float MO = -11.05;
+static const float OZ = 0.031;
+static const float WT = 0.031;
+static const float BO = 1.0E-13;
+static const float CM = 0.00;
+static const float MS = -26.74;
 
 void skybrightness_prepare(
         skybrightness_t *sb,
-        int year, int month, float moonPhase, float moonMag,
+        int year, int month, float moon_phase,
         float latitude, float altitude,
-        float temperature, float relativeHumidity,
-        float cosDistMoonZenith, float cosDistSunZenith)
+        float temperature, float relative_humidity,
+        float dist_moon_zenith, float dist_sun_zenith,
+        float max_moon_brightness)
 {
-    sb->magMoon = moonMag;
-    // GZ: Bah, a very crude estimate for the solar position...
-    sb->RA = (month - 3) * 0.52359878f;
-    // Term for dark sky brightness computation.
-    // GZ: This works for a few 11-year solar cycles around 1992...
-    // ... cos((y-1992)/11 * 2pi)
-    sb->bNightTerm = 1.0e-13 + 0.3e-13 * cosf(0.57118f * (year - 1992));
+    sb->Y = year;
+    sb->M = month;
+    sb->AM = moon_phase * DR;
+    sb->LA = latitude * DR;
+    sb->AL = altitude;
+    sb->TE = temperature;
+    sb->RH = relative_humidity;
+    sb->ZM = dist_moon_zenith * DR;
+    sb->ZS = dist_sun_zenith * DR;
+    sb->max_BM = max_moon_brightness * (1.11e-15 / NLAMBERT_TO_CDM2);
 
-    float sign_latitude = (latitude >= 0.f) * 2.f - 1.f;
-    // extinction Coefficient for V band
-    // GZ TODO: re-create UBVRI for colored extinction, and get RGB extinction
-    // factors from SkyBright!
-    float KR = 0.1066f * expf(-altitude / 8200.f); // Rayleigh
-    float KA = 0.1f * expf(-altitude / 1500.f) *
-        powf(1.f - 0.32f / logf(relativeHumidity / 100.f), 1.33f) *
-        (1.f + 0.33f * sign_latitude * sinf(sb->RA)); // Aerosol
-    float KO = 0.031f * expf(-altitude / 8200.f) *
-        (3.f + 0.4f * (latitude * cosf(sb->RA) -
-                       cosf(3.f*latitude))) / 3.f; // Ozone
-    float KW = 0.031f * 0.94f * (relativeHumidity / 100.f)
-        * expf(temperature / 15.f) * expf(-altitude / 8200.f); // Water
-    sb->K = KR + KA + KO + KW; // Total extinction coefficient
+    // Precompute as much as possible.
+    float K, KR, KA, KO, KW, LT, RA, SL, XM, XS;
+    const float M = sb->M; // Month (1=Jan, 12=Dec)
+    const float RD = 3.14159 / 180.0;
+    const float LA = sb->LA; // Latitude (deg.)
+    const float AL = sb->AL; // Altitude above sea level (m)
+    const float RH = sb->RH; // relative humidity (%)
+    const float TE = sb->TE; // Air temperature (deg. C)
+    const float ZM = sb->ZM; // Zenith distance of Moon (deg.)
+    const float ZS = sb->ZS; // Zenith distance of Sun (deg.)
 
-    // Air mass for Moon
-    if (cosDistMoonZenith < 0) sb->airMassMoon = 40.f;
-    else sb->airMassMoon = 1.f / (cosDistMoonZenith + 0.025f *
-            expf(-11.f * cosDistMoonZenith));
+    LT = LA * RD;
+    RA = (M - 3) * 30.0 * RD;
+    SL = LA / fabs(LA);
+    // 1080 Airmass for each component
+    // 1130 UBVRI extinction for each component
+    KR = .1066 * expf(-1 * AL / 8200) * powf((WA / .55), -4);
+    KA = .1 * powf((WA / .55), -1.3) * expf(-1 * AL / 1500);
+    KA = KA * powf((1 - .32 / logf(RH / 100.0)), 1.33) *
+             (1 + 0.33 * SL * sinf(RA));
+    KO = OZ * (3.0 + .4 * (LT * cosf(RA) - cosf(3 * LT))) / 3.0;
+    KW = WT * .94 * (RH / 100.0) * expf(TE / 15) * expf(-1 * AL / 8200);
+    K = KR + KA + KO + KW;
+    sb->K = K;
 
-    // Air mass for Sun
-    if (cosDistSunZenith < 0) sb->airMassSun = 40.f;
-    else sb->airMassSun = 1.f / (cosDistSunZenith + 0.025f *
-            expf(-11.f * cosDistSunZenith));
+    // air mass Moon
+    XM = 1 / (cosf(ZM * RD) + .025 * expf(-11 * cosf(ZM * RD)));
+    if (ZM > 90.0) XM = 40.0;
+    sb->XM = XM;
 
-    sb->bMoonTerm1 = exp10(-0.4f * (sb->magMoon + 54.32f));
-
-    // Moon should have no impact if below the horizon
-    // .05 is ad hoc fadeout range - Rob
-    if( cosDistMoonZenith < 0.f )
-        sb->bMoonTerm1 *= 1.f + cosDistMoonZenith/0.05f;
-    if(cosDistMoonZenith < -0.05f)
-        sb->bMoonTerm1 = 0.f;
-
-    // Term for moon brightness computation
-    sb->C3 = exp10(-0.4f * sb->K * sb->airMassMoon);
-
-    sb->bTwilightTerm = -6.724f + 22.918312f *
-        (M_PI_2 - acosf(cosDistSunZenith));
-
-    // Term for sky brightness computation
-    sb->C4 = exp10(-0.4f * sb->K * sb->airMassSun);
+    // air mass Sun
+    XS = 1 / (cosf(ZS * RD) + .025 * expf(-11 * cosf(ZS * RD)));
+    if (ZS > 90.0) XS = 40.0;
+    sb->XS = XS;
 }
 
-float skybrightness_get_luminance(const skybrightness_t *sb,
-        float cosDistMoon, float cosDistSun, float cosDistZenith)
+
+float skybrightness_get_luminance(
+        const skybrightness_t *sb,
+        float moon_dist, float sun_dist, float zenith_dist)
 {
-    // Air mass
-    const float bKX = exp10(-0.4f * sb->K *
-            (1.f / (cosDistZenith + 0.025f * exp(-11.f * cosDistZenith))));
+    float BL, B, ZZ,
+           K, X, XS, XM, BN, MM, C3, FM, BM, HS, BT, C4, FS,
+           BD;
 
-    // Daylight brightness
-    const float distSun = acos(cosDistSun);
-    const float FSv = 18886.28f / (distSun * distSun + 0.0007f)
-                    + exp10(6.15f - (distSun + 0.001f)* 1.43239f)
-                    + 229086.77f * ( 1.06f + cosDistSun * cosDistSun);
-    const float b_daylight = 9.289663e-12f * (1.f - bKX) *
-                (FSv * sb->C4 + 440000.f * (1.f - sb->C4));
+    const float RD = 3.14159 / 180.0;
+    // 80 Input for Moon and Sun
+    const float AM = sb->AM; // Moon phase (deg.; 0=FM, 90=FQ/LQ, 180=NM)
+    const float ZM = sb->ZM; // Zenith distance of Moon (deg.)
+    const float RM = moon_dist * DR; // Angular distance to Moon (deg.)
+    const float ZS = sb->ZS; // Zenith distance of Sun (deg.)
+    const float RS = sun_dist * DR; // Angular distance to Sun (deg.)
+    // 140 Input for the Site, Date, Observer
+    const float Y = sb->Y; // Year
+    const float Z = zenith_dist * DR; // Zenith distance (deg.)
 
-    //Twilight brightness
-    const float b_twilight = exp10(sb->bTwilightTerm + 0.063661977f *
-            acos(cosDistZenith) / (sb->K > 0.05f ? sb->K : 0.05f)) *
-            (1.7453293f / distSun) * (1.f - bKX);
+    // 1000 Extinction Subroutine
+    // 1080 Airmass for each component
+    ZZ = Z * RD;
+    K = sb->K;
 
-    // Total sky brightness
-    float b_total = ((b_twilight < b_daylight) ? b_twilight : b_daylight);
+    // 2000 SKY Subroutine
+    X = 1 / (cosf(ZZ) + .025 * expf(-11 * cosf(ZZ))); // air mass
+    XM = sb->XM;
+    XS = sb->XS;
 
-    // Moonlight brightness, don't compute if less than 1% daylight
-    if ((sb->bMoonTerm1 * (1.f - bKX) *
-                (28860205.1341274269f * sb->C3 + 440000.f *
-                 (1.f - sb->C3)))/b_total>0.01f) {
-        float dist_moon;
-        if (cosDistMoon >= 1.f) {cosDistMoon = 1.f; dist_moon = 0.f;}
-        else {
-            // Because the accuracy of our power serie is bad around 1, call
-            // the real acos if it's the case
-            dist_moon = cosDistMoon > 0.99f ? acosf(cosDistMoon) :
-                                              acos(cosDistMoon);
-        }
-        // The last 0.0005 should be 0, but it causes too fast brightness
-        // change
-        const float FM = 18886.28f / (dist_moon * dist_moon + 0.0005f)
-            + exp10(6.15f - dist_moon * 1.43239f)
-            + 229086.77f * ( 1.06f + cosDistMoon * cosDistMoon);
-        b_total += sb->bMoonTerm1 * (1.f - bKX) *
-            (FM * sb->C3 + 440000.f * (1.f - sb->C3));
-    }
+    // 2130 Dark night sky brightness
+    BN = BO * (1 + .3 * cosf(6.283 * (Y - 1992) / 11));
+    BN = BN * (.4 + .6 / sqrtf(1.0 - .96 * powf((sinf(ZZ)), 2)));
+    BN = BN * (exp10f(-.4 * K * X));
 
-    // Dark night sky brightness, don't compute if less than 1% daylight
-    if ((sb->bNightTerm * bKX) / b_total > 0.01f) {
-        b_total += (0.4f + 0.6f / sqrtf(0.04f + 0.96f *
-                    cosDistZenith * cosDistZenith)) * sb->bNightTerm * bKX;
-    }
+    // 2170 Moonlight brightness
+    MM = -12.73 + .026 * fabs(AM) + 4E-09 * pow4(AM); // moon mag in V
+    MM = MM + CM; // Moon mag
+    C3 = exp10f(-.4 * K * XM);
+    FM = 6.2E+07 / pow2(RM) + (exp10f(6.15 - RM / 40));
+    FM = FM + exp10f(5.36) * (1.06 + pow2(cosf(RM * RD)));
+    BM = exp10f(-.4 * (MM - MO + 43.27));
+    BM = BM * (1 - exp10f(-.4 * K * X));
+    BM = BM * (FM * C3 + 440000.0 * (1 - C3));
 
-    // In cd/m^2 : the 32393895 is empirical term because the
-    // lambert -> cd/m^2 formula seems to be wrong.
-    return (b_total < 0.f) ? 0.f :
-        b_total * (900900.9f * M_PI * 1e-4f * 3239389.f * 2.f * 1.5f);
+    // Added from the original code, a clamping value to prevent the
+    // moon brightness to get too hight.
+    if (sb->max_BM >= 0 && BM > sb->max_BM) BM = sb->max_BM;
+
+    // 2260 Twilight brightness
+    HS = 90.0 - ZS; // Height of Sun
+    BT = exp10f(-.4 * (MS - MO + 32.5 - HS - (Z / (360 * K))));
+    BT = BT * (100 / RS) * (1.0 - exp10f(-.4 * K * X));
+
+    // 2300 Daylight brightness
+    C4 = exp10f(-.4 * K * XS);
+    FS = 6.2E+07 / pow2(RS) + (exp10f(6.15 - RS / 40));
+    FS = FS + exp10f(5.36) * (1.06 + pow2(cosf(RS * RD)));
+    BD = exp10f(-.4 * (MS - MO + 43.27));
+    BD = BD * (1 - exp10f(-.4 * K * X));
+    BD = BD * (FS * C4 + 440000.0 * (1 - C4));
+
+    // 2370 Total sky brightness
+    if (BD > BT)
+        B = BN + BT;
+    else
+        B = BN + BD;
+    if (ZM < 90.0) B = B + BM;
+    // End sky subroutine.
+
+
+    // 250 Visual limiting magnitude
+    BL = B / 1.11E-15; // in nanolamberts
+    // 330 PRINT : REM  Write results and stop program
+    return BL * NLAMBERT_TO_CDM2;
 }
