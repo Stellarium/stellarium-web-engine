@@ -253,8 +253,7 @@ static int moon_update(planet_t *planet, const observer_t *obs)
     pv[1][2] = 0;
 
     // Compute heliocentric position.
-    eraPvppv(pv, obs->earth_pvb, planet->pvh);
-    eraPvmpv(planet->pvh, obs->sun_pvb, planet->pvh);
+    eraPvppv(pv, obs->earth_pvh, planet->pvh);
 
     // Compute apparent position
     position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
