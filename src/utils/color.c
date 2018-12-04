@@ -31,32 +31,39 @@ void xyY_to_XYZ(const double xyY[3], double XYZ[3])
     XYZ[2] = Z;
 }
 
-static void rgb_linear_to_rgb(const double rgb[3], double out[3])
+static void rgb_to_srgb(const double rgb[3], double out[3])
 {
     int i;
+    // Value taken from https://en.wikipedia.org/wiki/SRGB
     for (i = 0; i < 3; i++) {
-        if (rgb[i] > 0.0031308)
-            // XXX: I approximate x^(1/2.4) with sqrt(x) !
-            //      This is the correct formula:
-            // ret.v[i] = 1.055 * (pow(c.v[i], 1/2.4f)) - 0.055;
-            out[i] = 1.055 * sqrt(rgb[i]) - 0.055;
-        else
-            out[i] = 12.92 * rgb[i];
+        out[i] = (rgb[i] <= 0.0031308) ? 12.92 * rgb[i] :
+                  1.055 * powf(rgb[i], 1 / 2.4) - 0.055;
     }
 }
 
 void XYZ_to_rgb(const double XYZ[3], double rgb[3])
 {
-    // XXX: for the moment I use the Adobe RGB formula.
-    // Adobe RGB (1998)
-    double rgb_linear[3];
+    // Value taken from https://en.wikipedia.org/wiki/SRGB
     const double xyz_to_rgb_mat[3][3] = {
-        {2.0413690,  -0.9692660, 0.0134474},
-        {-0.5649464,  1.8760108, -0.1183897},
-        {-0.3446944,  0.0415560,  1.0154096},
+        {3.2406, -0.9689, 0.0557},
+        {-1.5372, 1.8758, -0.2040},
+        {-0.4986, 0.0415, 1.0570},
     };
-    mat3_mul_vec3((void*)xyz_to_rgb_mat, XYZ, rgb_linear);
-    rgb_linear_to_rgb(rgb_linear, rgb);
+    mat3_mul_vec3((void*)xyz_to_rgb_mat, XYZ, rgb);
+}
+
+void XYZ_to_srgb(const double XYZ[3], double srgb[3])
+{
+    double rgb[3];
+    XYZ_to_rgb(XYZ, rgb);
+    rgb_to_srgb(rgb, srgb);
+}
+
+void xyY_to_srgb(const double xyY[3], double srgb[3])
+{
+    double XYZ[3];
+    xyY_to_XYZ(xyY, XYZ);
+    XYZ_to_srgb(XYZ, srgb);
 }
 
 void xyY_to_rgb(const double xyY[3], double rgb[3])

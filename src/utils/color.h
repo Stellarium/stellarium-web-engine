@@ -18,6 +18,12 @@
     ((v >>  0) & 0xff) / 255.0f}
 
 /*
+ * Function: xyY_to_srgb
+ * Convert color from xyY to srbg
+ */
+void xyY_to_srgb(const double xyY[3], double srgb[3]);
+
+/*
  * Function: xyY_to_rgb
  * Convert color from xyY to rbg
  */
