@@ -113,23 +113,20 @@ int convert_direction(const observer_t *obs,
                         int origin, int dest, int flags,
                         const double in[3], double out[3])
 {
-    double p[3];
-
     obs = obs ?: (observer_t*)core->observer;
 
     // Can't convert to NDC space.
     assert(dest < FRAME_NDC && origin < FRAME_NDC);
-    vec3_copy(in, p);
-    assert(!isnan(p[0] + p[1] + p[2]));
+    vec3_copy(in, out);
+    assert(!isnan(out[0] + out[1] + out[2]));
 
     if (dest > origin) {
-        convert_direction_forward(obs, origin, dest, p);
+        convert_direction_forward(obs, origin, dest, out);
     } else {
-        convert_direction_backward(obs, origin, dest, p);
+        convert_direction_backward(obs, origin, dest, out);
     }
 
-    assert(!isnan(p[0] + p[1] + p[2]));
-    vec3_copy(p, out);
+    assert(!isnan(out[0] + out[1] + out[2]));
     return 0;
 }
 
