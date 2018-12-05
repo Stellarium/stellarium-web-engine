@@ -63,6 +63,7 @@ struct observer
     // Barycentric position/speed of the observer in ICRS, i.e. as seen from the
     // SSB in ICRF reference frame and in BCRS reference system. AU, AU/day.
     double obs_pvb[2][3];
+    double obs_pvg[2][3];
 
     // The pointed position and constellation.
     struct {

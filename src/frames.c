@@ -34,8 +34,7 @@ void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
             eraPvmpv(out, obs->obs_pvb, out);
             break;
         case ORIGIN_GEOCENTRIC:
-            eraPvppv(out, obs->earth_pvb, out);
-            eraPvmpv(out, obs->obs_pvb, out);
+            eraPvmpv(out, obs->obs_pvg, out);
             break;
         default:
             assert(0);

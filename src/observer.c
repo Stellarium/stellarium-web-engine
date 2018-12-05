@@ -131,15 +131,34 @@ void observer_update(observer_t *obs, bool fast)
         // Update earth position.
         eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
         obs->last_full_update = obs->tt;
+        eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
+        eraCp(obs->astrom.eb, obs->obs_pvb[0]);
+        vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
     }
     eraPvmpv(obs->earth_pvb, obs->earth_pvh, obs->sun_pvb);
-    eraCp(obs->astrom.eb, obs->obs_pvb[0]);
-    vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
 
+    if (fast) {
+        // Update observer geocentric position obs_pvg. We can't use eraPvu here
+        // as the movement is a rotation about the earth center and can't
+        // be approximated by a linear velocity  on a 24h time span
+        double theta = eraEra00(DJM0, obs->ut1);
+        eraPvtob(obs->elong, obs->phi, obs->hm, 0, 0, 0, theta, obs->obs_pvg);
+        // Rotate from CIRS to ICRS
+        eraTrxp(obs->astrom.bpn, obs->obs_pvg[0], obs->obs_pvg[0]);
+        eraTrxp(obs->astrom.bpn, obs->obs_pvg[1], obs->obs_pvg[1]);
+        // Set pos back in AU
+        eraSxp(1. / DAU, obs->obs_pvg[0], obs->obs_pvg[0]);
+        // Set speed back in AU / day
+        eraSxp(ERFA_DAYSEC / DAU, obs->obs_pvg[1], obs->obs_pvg[1]);
+
+        // Compute the observer's barycentric position
+        eraPvppv(obs->earth_pvb, obs->obs_pvg, obs->obs_pvb);
+    }
+
+    update_matrices(obs);
     position_to_apparent(obs, ORIGIN_BARYCENTRIC, false, obs->sun_pvb,
                          obs->sun_pvo);
     obs->last_update = obs->tt;
-    update_matrices(obs);
 
     // Compute pointed at constellation.
     eraS2c(obs->azimuth, obs->altitude, p);
