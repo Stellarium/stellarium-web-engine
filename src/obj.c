@@ -447,7 +447,7 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
-    double v[4] = {}, az, alt, ra, de;
+    double v[3] = {}, az, alt, ra, de;
     if (str_equ(attr->name, "distance")) {
         return args_value_new("f", "dist",
                 obj->pvo[0][3] == 0 ? NAN :
@@ -471,13 +471,13 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "azalt")) {
-        convert_direction(core->observer, FRAME_ICRF, FRAME_OBSERVED, 0,
+        convert_directionv4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
                             obj->pvo[0], v);
         return args_value_new("v3", "azalt", v);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "az")) {
-        convert_direction(core->observer, FRAME_ICRF, FRAME_OBSERVED, 0,
+        convert_directionv4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
                             obj->pvo[0], v);
         eraC2s(v, &az, &alt);
         az = eraAnp(az);
@@ -485,7 +485,7 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "alt")) {
-        convert_direction(core->observer, FRAME_ICRF, FRAME_OBSERVED, 0,
+        convert_directionv4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
                             obj->pvo[0], v);
         eraC2s(v, &az, &alt);
         alt = eraAnpm(alt);

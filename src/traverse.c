@@ -120,7 +120,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     for (i = 0; i < 4; i++) {
         project(d->proj, PROJ_BACKWARD, 4, uv[i], pos[i]);
         mat4_mul_vec4(*d->painter->transform, pos[i], pos[i]);
-        convert_direction(d->painter->obs, d->frame, FRAME_VIEW, 0,
+        convert_directionv4(d->painter->obs, d->frame, FRAME_VIEW,
                             pos[i], pos[i]);
         project(d->painter->proj, 0, 4, pos[i], clip[i]);
     }
@@ -131,7 +131,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     project(d->proj, PROJ_BACKWARD, 4, mid_pos, mid_pos);
     vec3_normalize(mid_pos, mid_pos);
     mat4_mul_vec4(*d->painter->transform, mid_pos, mid_pos);
-    convert_direction(d->painter->obs, d->frame, FRAME_VIEW, 0,
+    convert_directionv4(d->painter->obs, d->frame, FRAME_VIEW,
                         mid_pos, mid_pos);
     sep = eraSepp(mid_pos, pos[0]) * 2;
 

@@ -117,22 +117,14 @@ static int star_init(obj_t *obj, json_value *args)
 static int star_update(obj_t *obj, const observer_t *obs, double dt)
 {
     star_t *star = (star_t*)obj;
-    double dist;
     eraASTROM *astrom = (void*)&obs->astrom;
     eraPmpx(star->data.ra, star->data.de, 0, 0, star->data.plx, 0,
             astrom->pmt, astrom->eb, obj->pvo[0]);
     assert(!isnan(obj->pvo[0][0]));
 
-    // Multiply by distance in AU:
-    // XXX: we can do that a single time at the star creation!
-    if (star->data.plx > 0.001) {
-        dist = 1.0 / (star->data.plx) * PARSEC_IN_METER / DAU;
-        eraSxp(dist, obj->pvo[0], obj->pvo[0]);
-        obj->pvo[0][3] = 1.0;
-    } else {
-        obj->pvo[0][3] = 0.0;
-    }
+    obj->pvo[0][3] = 0.0;
     obj->vmag = star->data.vmag;
+    vec3_normalize(obj->pvo[0], obj->pvo[0]);
     // Set speed to 0.
     obj->pvo[1][0] = obj->pvo[1][1] = obj->pvo[1][2] = 0;
     astrometric_to_apparent(obs, obj->pvo[0], true, obj->pvo[0]);
@@ -199,7 +191,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (s->vmag <= painter.label_mag_max) {
-        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
+        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW,
+                          true, p, p);
         if (project(painter.proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
             star_render_name(&painter, s, p, size, s->vmag, color);
@@ -428,7 +421,7 @@ static int render_visitor(int order, int pix, void *user)
 
     painter.mag_max = min(painter.mag_max, stars->mag_max);
     // Early exit if the tile is clipped.
-    if (painter_is_tile_clipped(&painter, FRAME_ICRF, order, pix, true))
+    if (painter_is_tile_clipped(&painter, FRAME_ASTROM, order, pix, true))
         return 0;
 
     (*nb_tot)++;
@@ -460,14 +453,17 @@ static int render_visitor(int order, int pix, void *user)
         // Compute star observed and screen pos.
         vec3_copy(s->pos, p);
         p[3] = 0;
-        astrometric_to_apparent(core->observer, p, true, p);
-        convert_direction(core->observer, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
+        //astrometric_to_apparent(core->observer, p, true, p);
+        convert_direction(core->observer, FRAME_ASTROM, FRAME_OBSERVED,
+                          true, p, p);
         // Skip if below horizon.
         if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
             continue;
         // Skip if not visible.
-        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW, 0, p, p);
-        if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win))
+        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW,
+                          true, p, p);
+        if (!project(painter.proj, PROJ_TO_WINDOW_SPACE |
+                     PROJ_ALREADY_NORMALIZED, 2, p, p_win))
             continue;
 
         core_get_point_for_mag(s->vmag, &size, &luminance);

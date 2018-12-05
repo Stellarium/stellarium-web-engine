@@ -19,6 +19,10 @@ typedef struct observer observer_t;
  * Represent a reference frame. A reference frame is independent of the origin,
  * it just defines the direction of the x,y and z axes.
  *
+ * FRAME_ASTROM   - Astrometric ICRF frame. Like FRAME_ICRF but first convert
+ *                  from Astrometric to Apparent direction (as seen from the
+ *                  current observer). Use this frame to pass directly star
+ *                  catalogs directions.
  * FRAME_ICRF     - ICRF frame. Axes (almost) aligned to equatorial J2000.0.
  *                  This frame is used for all 3D positions/velocities for
  *                  ephemerides of solar system objects or astrometric reference
@@ -42,6 +46,7 @@ typedef struct observer observer_t;
  *                  the painter when we have already projected coordinates.
  */
 enum {
+    FRAME_ASTROM              = -1,
     FRAME_ICRF                = 0,
     FRAME_CIRS                = 1,
     FRAME_JNOW                = 2,
@@ -66,7 +71,9 @@ enum {
  *            One of the <FRAME> enum values.
  *  dest    - Destination coordinates.
  *            One of the <FRAME> enum values.
- *  flags   - Optional flags.  Not used yet.
+ *  at_inf  - true for fixed objects (far away from the solar system).
+ *            For such objects, velocity is assumed to be 0 and the position
+ *            is assumed to be normalized.
  *  in      - The input coordinates (3d AU).
  *  out     - The output coordinates (3d AU).
  *
@@ -74,8 +81,18 @@ enum {
  *  0 for success.
  */
 int convert_direction(const observer_t *obs,
-                        int origin, int dest, int flags,
+                        int origin, int dest, bool at_inf,
                         const double in[3], double out[3]);
+
+/* Function: convert_directionv4
+ * Same as convert_direction but check the 4th component of the input vector
+ * to know if the source is at infinity. If in[3] == 1.0, the source is at
+ * infinity and the vector must be normalized, otherwise assume the vector to
+ * contain the real object's distance in AU.
+ */
+int convert_directionv4(const observer_t *obs,
+                        int origin, int dest,
+                        const double in[4], double out[3]);
 
 /* Enum: ORIGIN
  * Represent a reference system, i.e. the origin of a reference frame and the

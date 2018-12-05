@@ -439,7 +439,8 @@ void calendar_delete(calendar_t *cal)
 EMSCRIPTEN_KEEPALIVE
 int calendar_compute(calendar_t *cal)
 {
-    double step = DHOUR, p[3], ra, de;
+    double step = DHOUR, ra, de;
+    double p[3];
     int i, j;
     obj_t *o1, *o2;
     const event_type_t *ev_type;
@@ -455,11 +456,11 @@ int calendar_compute(calendar_t *cal)
         obj_update(cal->objs[i], &cal->obs, 0);
         // Compute extra dat.
         extra = cal->objs[i]->user;
-        vec3_copy(cal->objs[i]->pvo[0], p);
-        eraC2s(p, &ra, &de);
+        eraC2s(cal->objs[i]->pvo[0], &ra, &de);
         extra->ra = eraAnp(ra);
         extra->de = eraAnp(de);
-        convert_direction(&cal->obs, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
+        convert_directionv4(&cal->obs, FRAME_ICRF, FRAME_OBSERVED,
+                            cal->objs[i]->pvo[0], p);
         extra->obs_z = p[2];
     }
     // Check two bodies events.

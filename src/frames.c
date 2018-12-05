@@ -54,10 +54,13 @@ void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
 }
 
 static void convert_direction_forward(const observer_t *obs,
-                        int origin, int dest, double p[3])
+                        int origin, int dest, bool at_inf, double p[3])
 {
     const eraASTROM *astrom = &obs->astrom;
 
+    if (origin == FRAME_ASTROM) {
+        astrometric_to_apparent(obs, p, at_inf, p);
+    }
     // ICRS to CIRS
     if (origin < FRAME_CIRS && dest >= FRAME_CIRS) {
         // Bias-precession-nutation, giving CIRS proper direction.
@@ -80,21 +83,23 @@ static void convert_direction_forward(const observer_t *obs,
     if (origin < FRAME_OBSERVED && dest >= FRAME_OBSERVED) {
         // Precomputed earth rotation and polar motion.
         // Ignores Diurnal aberration for the moment
-
-        // Special case for null's vectors
-        // Fabien: TODO, this should not be tested here as in many case we know
-        // by design that the vector is never going to be null.
-        double dist = vec3_norm(p);
-        if (dist == 0.0) {
-            vec3_set(p, 0, 0, 0);
-            return;
-        }
-
         mat4_mul_vec3(obs->ri2h, p, p);
-        vec3_mul(1.0 / dist, p, p);
-        refraction(p, astrom->refa, astrom->refb, p);
-        vec3_normalize(p, p);
-        vec3_mul(dist, p, p);
+
+        if (at_inf) {
+            refraction(p, astrom->refa, astrom->refb, p);
+            vec3_normalize(p, p);
+        } else {
+            // Special case for null's vectors
+            double dist = vec3_norm(p);
+            if (dist == 0.0) {
+                vec3_set(p, 0, 0, 0);
+                return;
+            }
+            vec3_mul(1.0 / dist, p, p);
+            refraction(p, astrom->refa, astrom->refb, p);
+            vec3_normalize(p, p);
+            vec3_mul(dist, p, p);
+        }
     }
 
     // OBSERVED to VIEW.
@@ -110,7 +115,7 @@ static void convert_direction_backward(const observer_t *obs,
 
 EMSCRIPTEN_KEEPALIVE
 int convert_direction(const observer_t *obs,
-                        int origin, int dest, int flags,
+                        int origin, int dest, bool at_inf,
                         const double in[3], double out[3])
 {
     obs = obs ?: (observer_t*)core->observer;
@@ -121,7 +126,7 @@ int convert_direction(const observer_t *obs,
     assert(!isnan(out[0] + out[1] + out[2]));
 
     if (dest > origin) {
-        convert_direction_forward(obs, origin, dest, out);
+        convert_direction_forward(obs, origin, dest, at_inf, out);
     } else {
         convert_direction_backward(obs, origin, dest, out);
     }
@@ -130,6 +135,18 @@ int convert_direction(const observer_t *obs,
     return 0;
 }
 
+EMSCRIPTEN_KEEPALIVE
+int convert_directionv4(const observer_t *obs,
+                        int origin, int dest,
+                        const double in[4], double out[3])
+{
+    if (in[3] == 1.0) {
+        return convert_direction(obs, origin, dest, false, in, out);
+    } else {
+        assert(fabs(vec3_norm2(in) - 1.0) <= 0.0000000001);
+        return convert_direction(obs, origin, dest, true, in, out);
+    }
+}
 
 void position_to_astrometric(const observer_t *obs, int origin,
                                 const double in[2][3], double out[2][3])
@@ -170,7 +187,7 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
     eraCp(in, out);
 
     if (inf) {
-        assert(vec3_norm(out) != 0);
+        assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
         // Light deflection by the Sun, giving BCRS natural direction.
         // TODO: adapt this formula for solar system bodies, this works only for
         // distant stars.

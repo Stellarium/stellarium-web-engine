@@ -60,7 +60,7 @@ static double rise_dist(double time, void *user)
     data->obs->tt = time;
     observer_update(data->obs, false);
     obj_update(data->obj, data->obs, 0);
-    convert_direction(data->obs, FRAME_ICRF, FRAME_OBSERVED, 0,
+    convert_directionv4(data->obs, FRAME_ICRF, FRAME_OBSERVED,
                         data->obj->pvo[0], observed);
     eraC2s(observed, &az, &alt);
     az = eraAnp(az);
