@@ -114,7 +114,7 @@ static void load_data(comets_t *comets, const char *data)
 static int comet_update(obj_t *obj, const observer_t *obs, double dt)
 {
     comet_t *comet = (comet_t*)obj;
-    double a, p, n, ph[2][3], or, sr, b, v, w, r, o, u, i;
+    double a, p, n, ph[2][3], pv[2][3], or, sr, b, v, w, r, o, u, i;
     const double K = 0.01720209895; // AU, day
 
     // Position algo for elliptical comets.
@@ -153,10 +153,10 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
     sr = vec3_norm(ph[0]);
 
     vec3_set(ph[1], 0, 0, 0);
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, ph);
-    vec3_copy(ph[0], obj->pvo[0]);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, pv);
+    vec3_copy(pv[0], obj->pvo[0]);
     obj->pvo[0][3] = 1;
-    vec3_copy(ph[1], obj->pvo[1]);
+    vec3_copy(pv[1], obj->pvo[1]);
     obj->pvo[1][3] = 0;
 
     // Compute vmag.
