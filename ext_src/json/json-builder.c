@@ -663,7 +663,7 @@ size_t json_measure_ex (json_value * value, json_serialize_opts opts)
 
          case json_double:
 
-            total += snprintf (NULL, 0, "%f", value->u.dbl);
+            total += snprintf (NULL, 0, "%.12f", value->u.dbl);
 
             if (value->u.dbl - floor (value->u.dbl) < 0.001)
                 total += 2;
@@ -879,7 +879,7 @@ void json_serialize_ex (json_char * buf, json_value * value, json_serialize_opts
 
             ptr = buf;
 
-            buf += sprintf (buf, "%f", value->u.dbl);
+            buf += sprintf (buf, "%.12f", value->u.dbl);
 
             if ((dot = strchr (ptr, ',')))
             {
