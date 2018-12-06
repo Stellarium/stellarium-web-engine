@@ -253,6 +253,7 @@ static star_t *star_create(const star_data_t *data)
     star->data = *data;
     star->obj.nsid = star->data.gaia;
     star->obj.oid = star->data.oid;
+    star_update(&star->obj, core->observer, 0);
     return star;
 }
 

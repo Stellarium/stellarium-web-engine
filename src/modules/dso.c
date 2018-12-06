@@ -100,6 +100,17 @@ static uint64_t make_oid(const dso_data_t *data)
     }
 }
 
+static int dso_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    dso_t *dso = (dso_t*)obj;
+    eraS2c(dso->data.ra, dso->data.de, obj->pvo[0]);
+    astrometric_to_apparent(obs, obj->pvo[0], true, obj->pvo[0]);
+    obj->pvo[0][3] = 0.0;
+    assert(fabs(vec3_norm2(obj->pvo[0]) - 1.0) <= 0.000001);
+    obj->vmag = dso->data.vmag;
+    return 0;
+}
+
 static dso_t *dso_create(const dso_data_t *data)
 {
     dso_t *dso;
@@ -114,6 +125,7 @@ static dso_t *dso_create(const dso_data_t *data)
     dso->obj.nsid = data->id.nsid;
     dso->obj.oid = data->id.oid;
     dso->obj.vmag = data->vmag;
+    dso_update(&dso->obj, core->observer, 0);
     return dso;
 }
 
@@ -157,15 +169,6 @@ static int dso_init(obj_t *obj, json_value *args)
     if (names)
         dso->data.names = parse_json_names(names);
 
-    return 0;
-}
-
-static int dso_update(obj_t *obj, const observer_t *obs, double dt)
-{
-    dso_t *dso = (dso_t*)obj;
-    eraS2c(dso->data.ra, dso->data.de, obj->pvo[0]);
-    astrometric_to_apparent(obs, obj->pvo[0], true, obj->pvo[0]);
-    obj->vmag = dso->data.vmag;
     return 0;
 }
 
