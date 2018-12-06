@@ -84,7 +84,7 @@ static void tail_project(const projection_t *proj, int flags,
     mat3_mul_vec3(m, p, p);
     mat3_mul_vec3(proj->mat3, p, p);
 
-    p[3] = 0;
+    p[3] = 1;
     vec4_copy(p, out);
 }
 
