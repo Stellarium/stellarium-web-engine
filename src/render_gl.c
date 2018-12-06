@@ -1185,9 +1185,10 @@ static void line(renderer_t           *rend_,
         if (line_proj)
             project(line_proj, PROJ_BACKWARD, 4, pos, pos);
         mat4_mul_vec4(*painter->transform, pos, pos);
-        convert_directionv4(painter->obs, frame, FRAME_VIEW, pos, pos);
-        pos[3] = 1.0;
-        project(painter->proj, 0, 4, pos, pos);
+        vec3_normalize(pos, pos);
+        convert_direction(painter->obs, frame, FRAME_VIEW, true, pos, pos);
+        pos[3] = 0.0;
+        project(painter->proj, PROJ_ALREADY_NORMALIZED, 4, pos, pos);
         vec4_to_float(pos, buf[i].pos);
         memcpy(buf[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
         if (i < nb_segs) {

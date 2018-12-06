@@ -231,6 +231,11 @@ static void spherical_project(
     // aligned with the meridians and parallels we need to apply the
     // rotation to J2000.
     mat3_mul_vec3(rnpb, out, out);
+
+    // We need to renormalize as the output vectors are not perfectly
+    // normalized after the rotation matrix is applied.
+    vec3_normalize(out, out);
+    assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
 }
 
 static int render_bounds(const constellation_t *con,

@@ -131,6 +131,7 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
 
     obj->pvo[0][3] = 0.0;
     obj->vmag = star->data.vmag;
+    // We need to renormalize
     vec3_normalize(obj->pvo[0], obj->pvo[0]);
     // Set speed to 0.
     obj->pvo[1][0] = obj->pvo[1][1] = obj->pvo[1][2] = 0;

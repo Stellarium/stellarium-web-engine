@@ -386,6 +386,7 @@ static void compute_hint_transformation(
     mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
+    vec3_normalize(p, p);
     convert_direction(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
     // 3. Semi minor.
@@ -398,6 +399,7 @@ static void compute_hint_transformation(
     mat3_rx(-M_PI / 2, mat, mat);
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
+    vec3_normalize(p, p);
     convert_direction(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
 

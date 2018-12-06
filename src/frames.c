@@ -194,6 +194,7 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
         eraLdsun(out, obs->astrom.eh, obs->astrom.em, out);
         // Aberration, giving GCRS proper direction.
         eraAb(out, obs->astrom.v, obs->astrom.em, obs->astrom.bm1, out);
+        assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
     } else {
         eraPpp(out, obs->obs_pvb[0], out);
         eraPmp(out, obs->earth_pvb[0], out);
