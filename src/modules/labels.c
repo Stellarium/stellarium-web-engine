@@ -30,19 +30,9 @@ struct label
 
 static label_t *g_labels = NULL;
 
-static int labels_render(const obj_t *obj, const painter_t *painter);
-
 typedef struct labels {
     obj_t obj;
 } labels_t;
-
-static obj_klass_t labels_klass = {
-    .id = "labels",
-    .size = sizeof(labels_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .render = labels_render,
-    .render_order = 100,
-};
 
 void labels_reset(void)
 {
@@ -174,5 +164,18 @@ label_t *labels_add(const char *text, const double pos[2],
     DL_APPEND(g_labels, label);
     return label;
 }
+
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t labels_klass = {
+    .id = "labels",
+    .size = sizeof(labels_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .render = labels_render,
+    .render_order = 100,
+};
 
 OBJ_REGISTER(labels_klass)
