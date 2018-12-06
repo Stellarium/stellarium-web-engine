@@ -31,8 +31,9 @@ typedef struct {
     float   pde;    // Dec proper motion (rad/year)
     float   plx;    // Parallax (arcsec)
     float   bv;
-    // Normalized ICRS position.
+    // Normalized Astrometric direction.
     double  pos[3];
+    double  distance;    // Distance in AU
 } star_data_t;
 
 // A single star.
@@ -83,7 +84,13 @@ static void compute_pv(double ra, double de,
     double pv[2][3];
     r = eraStarpv(ra, de, pra, pde, plx, 0, pv);
     if (r & (2 | 4)) LOG_W("Wrong star coordinates");
-    vec3_normalize(pv[0], s->pos);
+    if (r & 1) {
+        s->distance = NAN;
+        vec3_normalize(pv[0], s->pos);
+    } else {
+        s->distance = vec3_norm(pv[0]);
+        vec3_mul(1.0 / s->distance, pv[0], s->pos);
+    }
 }
 
 // Get the pix number from a gaia source id at a given level.
@@ -222,6 +229,13 @@ void star_get_designations(
         sprintf(buf, "%016" PRIx64, s->gaia);
         f(obj, user, "NSID", buf);
     }
+}
+
+static json_value *star_get_distance(obj_t *obj, const attribute_t *attr,
+                                      const json_value *args)
+{
+    star_t *star = (star_t*)obj;
+    return args_value_new("f", "dist", star->data.distance);
 }
 
 void stars_load(const char *path, stars_t *stars);
@@ -645,7 +659,8 @@ static obj_klass_t star_klass = {
         PROPERTY("name"),
         PROPERTY("ra"),
         PROPERTY("dec"),
-        PROPERTY("distance"),
+        { "distance", "f", .hint = "dist", .fn = star_get_distance,
+          .desc = "Distance (AU)." },
         PROPERTY("alt"),
         PROPERTY("az"),
         PROPERTY("radec"),
