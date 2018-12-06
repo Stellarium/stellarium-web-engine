@@ -377,6 +377,9 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
     // has time to adjust.
     avg_lum = 0;
     if (nb_lum) avg_lum = sum_lum / nb_lum;
+    // Clamp the average luminance to prevent too much adaptation.
+    // 8000 cd/m² represents a bright sky.
+    avg_lum = min(avg_lum, 8000);
     core_report_luminance_in_fov(avg_lum + 0.001, true);
 
     buf = malloc(TEX_SIZE * TEX_SIZE * 3);
