@@ -199,7 +199,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (s->vmag <= painter.label_mag_max) {
-        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW,
+        convert_frame(core->observer, FRAME_OBSERVED, FRAME_VIEW,
                           true, p, p);
         if (project(painter.proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
@@ -469,13 +469,13 @@ static int render_visitor(int order, int pix, void *user)
         vec3_copy(s->pos, p);
         p[3] = 0;
         //astrometric_to_apparent(core->observer, p, true, p);
-        convert_direction(core->observer, FRAME_ASTROM, FRAME_OBSERVED,
+        convert_frame(core->observer, FRAME_ASTROM, FRAME_OBSERVED,
                           true, p, p);
         // Skip if below horizon.
         if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
             continue;
         // Skip if not visible.
-        convert_direction(core->observer, FRAME_OBSERVED, FRAME_VIEW,
+        convert_frame(core->observer, FRAME_OBSERVED, FRAME_VIEW,
                           true, p, p);
         if (!project(painter.proj, PROJ_TO_WINDOW_SPACE |
                      PROJ_ALREADY_NORMALIZED, 2, p, p_win))

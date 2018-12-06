@@ -337,8 +337,8 @@ static void info_widget(obj_t *obj)
         gui_label(cat, value);
 
     obj_get_attr(obj, "radec", "v4", icrs);
-    convert_direction(NULL, FRAME_ICRF, FRAME_CIRS, 0, icrs, cirs);
-    convert_direction(NULL, FRAME_ICRF, FRAME_OBSERVED, 0, icrs, observed);
+    convert_framev4(NULL, FRAME_ICRF, FRAME_CIRS, icrs, cirs);
+    convert_framev4(NULL, FRAME_ICRF, FRAME_OBSERVED, icrs, observed);
     eraC2s(cirs, &ra, &dec);
     ra = eraAnp(ra);
     dec = eraAnpm(dec);

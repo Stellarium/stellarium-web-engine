@@ -353,7 +353,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
-        convert_direction(painter.obs, FRAME_ICRF, FRAME_OBSERVED, true,
+        convert_frame(painter.obs, FRAME_ICRF, FRAME_OBSERVED, true,
                             con->stars[i]->pvo[0], lines[i]);
         lines[i][3] = 0; // To infinity.
         vec3_add(pos, lines[i], pos);

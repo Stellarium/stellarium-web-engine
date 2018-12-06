@@ -52,7 +52,7 @@ void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
     }
 }
 
-static void convert_direction_forward(const observer_t *obs,
+static void convert_frame_forward(const observer_t *obs,
                         int origin, int dest, bool at_inf, double p[3])
 {
     const eraASTROM *astrom = &obs->astrom;
@@ -106,14 +106,14 @@ static void convert_direction_forward(const observer_t *obs,
         mat4_mul_vec3(obs->ro2v, p, p);
 }
 
-static void convert_direction_backward(const observer_t *obs,
+static void convert_frame_backward(const observer_t *obs,
                         int origin, int dest, double p[3])
 {
     assert(0);
 }
 
 EMSCRIPTEN_KEEPALIVE
-int convert_direction(const observer_t *obs,
+int convert_frame(const observer_t *obs,
                         int origin, int dest, bool at_inf,
                         const double in[3], double out[3])
 {
@@ -125,9 +125,9 @@ int convert_direction(const observer_t *obs,
     assert(!isnan(out[0] + out[1] + out[2]));
 
     if (dest > origin) {
-        convert_direction_forward(obs, origin, dest, at_inf, out);
+        convert_frame_forward(obs, origin, dest, at_inf, out);
     } else {
-        convert_direction_backward(obs, origin, dest, out);
+        convert_frame_backward(obs, origin, dest, out);
     }
 
     assert(!isnan(out[0] + out[1] + out[2]));
@@ -135,15 +135,15 @@ int convert_direction(const observer_t *obs,
 }
 
 EMSCRIPTEN_KEEPALIVE
-int convert_directionv4(const observer_t *obs,
+int convert_framev4(const observer_t *obs,
                         int origin, int dest,
                         const double in[4], double out[3])
 {
     if (in[3] == 1.0) {
-        return convert_direction(obs, origin, dest, false, in, out);
+        return convert_frame(obs, origin, dest, false, in, out);
     } else {
         assert(fabs(vec3_norm2(in) - 1.0) <= 0.0000000001);
-        return convert_direction(obs, origin, dest, true, in, out);
+        return convert_frame(obs, origin, dest, true, in, out);
     }
 }
 
@@ -331,7 +331,7 @@ static void test_convert_origin(void)
 
         position_to_apparent(obs, ORIGIN_BARYCENTRIC, false,
                              planet->pv_bary, out);
-        convert_direction(obs, FRAME_ICRF, FRAME_OBSERVED, 0, out[0], p);
+        convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, 0, out[0], p);
 
         eraS2p(planet->altazd[1] * DD2R, planet->altazd[0] * DD2R,
                planet->altazd[2], pref);

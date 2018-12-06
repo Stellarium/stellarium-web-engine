@@ -471,13 +471,13 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "azalt")) {
-        convert_directionv4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
+        convert_framev4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
                             obj->pvo[0], v);
         return args_value_new("v3", "azalt", v);
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "az")) {
-        convert_directionv4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
+        convert_framev4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
                             obj->pvo[0], v);
         eraC2s(v, &az, &alt);
         az = eraAnp(az);
@@ -485,7 +485,7 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     }
     // XXX: deprecated argument.
     if (str_equ(attr->name, "alt")) {
-        convert_directionv4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
+        convert_framev4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
                             obj->pvo[0], v);
         eraC2s(v, &az, &alt);
         alt = eraAnpm(alt);
@@ -857,7 +857,7 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])
 {
     double p[4];
     obj_get_pos_icrs(obj, obs, p);
-    convert_direction(obs, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
+    convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, 0, p, p);
     vec4_copy(p, pos);
 }
 

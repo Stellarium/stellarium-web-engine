@@ -366,7 +366,7 @@ static void compute_hint_transformation(
     mat3_rz(ra, mat, mat);
     mat3_ry(-de, mat, mat);
     mat3_mul_vec3(mat, p, p);
-    convert_direction(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
+    convert_frame(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
 
     // Point dso.
@@ -387,7 +387,7 @@ static void compute_hint_transformation(
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
-    convert_direction(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
+    convert_frame(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
     // 3. Semi minor.
     vec4_set(p, 1, 0, 0, 0);
@@ -400,7 +400,7 @@ static void compute_hint_transformation(
     mat3_rz(size_x / 2.0, mat, mat);
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
-    convert_direction(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
+    convert_frame(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
     project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
 
     vec2_copy(c, win_pos);
@@ -453,14 +453,14 @@ static int dso_render_from_data(const dso_data_t *d,
     if (vmag > painter.hint_mag_max) return 0;
 
     eraS2c(d->ra, d->de, p);
-    convert_direction(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
+    convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
     // Skip if below horizon.
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
         return 0;
 
     core_get_point_for_mag(vmag, &size, &luminance);
 
-    convert_direction(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
+    convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
     if (!project(painter.proj,
                  PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
         return 0;

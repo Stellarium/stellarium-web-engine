@@ -266,9 +266,9 @@ static void test_ephemeris(void)
 
         obj_update(obj, core->observer, 0);
         obj_get_attr(obj, "radec", "v4", apparent_radec_icrf);
-        convert_directionv4(obs, FRAME_ICRF, FRAME_JNOW,
+        convert_framev4(obs, FRAME_ICRF, FRAME_JNOW,
                           apparent_radec_icrf, got.apparent_radec);
-        convert_directionv4(obs, FRAME_ICRF, FRAME_OBSERVED,
+        convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED,
                           apparent_radec_icrf, got.apparent_azalt);
 
         eraS2c(ephs[i].ra * DD2R, ephs[i].dec * DD2R, expected.apparent_radec);

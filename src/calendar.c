@@ -459,7 +459,7 @@ int calendar_compute(calendar_t *cal)
         eraC2s(cal->objs[i]->pvo[0], &ra, &de);
         extra->ra = eraAnp(ra);
         extra->de = eraAnp(de);
-        convert_directionv4(&cal->obs, FRAME_ICRF, FRAME_OBSERVED,
+        convert_framev4(&cal->obs, FRAME_ICRF, FRAME_OBSERVED,
                             cal->objs[i]->pvo[0], p);
         extra->obs_z = p[2];
     }

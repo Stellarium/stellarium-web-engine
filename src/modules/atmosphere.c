@@ -257,7 +257,7 @@ static void fill_texture(float (*buf)[3], int size, int border,
         buf[(i * size + j)][1] = color[1];
         buf[(i * size + j)][2] = color[2];
         // If the pixel is probably not visible, don't add it to the lum.
-        convert_direction(painter->obs, FRAME_OBSERVED, FRAME_VIEW, true,
+        convert_frame(painter->obs, FRAME_OBSERVED, FRAME_VIEW, true,
                             pos, ndc_pos);
         if (project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_pos, ndc_pos)) {
             *out_sum += lum;

@@ -56,12 +56,12 @@ enum {
     FRAME_WINDOW              = 6,
 };
 
-/* Function: convert_direction
- * Rotate the passed 3D apparent direction vector from a Reference Frame to
+/* Function: convert_frame
+ * Rotate the passed 3D apparent coordinate vector from a Reference Frame to
  * another.
  *
- * The vector represents the apparent direction of the source as seen by the
- * observer in his reference system (usually GCRS for earth observation).
+ * The vector represents the apparent position/direction of the source as seen
+ * by the observer in his reference system (usually GCRS for earth observation).
  * This means that effects such as space motion, light deflection or annual
  * aberration must already be taken into account before calling this function.
  *
@@ -80,17 +80,17 @@ enum {
  * Return:
  *  0 for success.
  */
-int convert_direction(const observer_t *obs,
+int convert_frame(const observer_t *obs,
                         int origin, int dest, bool at_inf,
                         const double in[3], double out[3]);
 
-/* Function: convert_directionv4
- * Same as convert_direction but check the 4th component of the input vector
+/* Function: convert_framev4
+ * Same as convert_frame but check the 4th component of the input vector
  * to know if the source is at infinity. If in[3] == 1.0, the source is at
  * infinity and the vector must be normalized, otherwise assume the vector to
  * contain the real object's distance in AU.
  */
-int convert_directionv4(const observer_t *obs,
+int convert_framev4(const observer_t *obs,
                         int origin, int dest,
                         const double in[4], double out[3]);
 

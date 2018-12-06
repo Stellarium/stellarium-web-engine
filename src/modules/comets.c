@@ -179,12 +179,12 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
 
     if (vmag > painter->mag_max) return 0;
     if (isnan(obj->pvo[0][0])) return 0; // For the moment!
-    convert_direction(painter->obs, FRAME_ICRF, FRAME_OBSERVED, false,
+    convert_frame(painter->obs, FRAME_ICRF, FRAME_OBSERVED, false,
                         obj->pvo[0], pos);
 
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
-    convert_direction(painter->obs, FRAME_OBSERVED, FRAME_VIEW, false,
+    convert_frame(painter->obs, FRAME_OBSERVED, FRAME_VIEW, false,
                       pos, pos);
     if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, win_pos))
         return 0;
