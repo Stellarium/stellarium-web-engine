@@ -248,9 +248,9 @@ static void test_ephemeris(void)
     struct { double apparent_radec[4], apparent_azalt[4]; } got;
     struct { double apparent_radec[4], apparent_azalt[4]; } expected;
     // 40 arcsec, limited by test data truncation after 2 digits..
-    const double precisionRadec = 40.0 / 3600;
+    const double precision_radec = 40.0 / 3600;
     // 2 arcmin, limited by refraction settings
-    const double precisionAzAlt = 2.0 / 60;
+    const double precision_azalt = 2.0 / 60;
     double sep, apparent_radec_icrf[4];
 
     core_init();
@@ -275,13 +275,13 @@ static void test_ephemeris(void)
         eraS2c(ephs[i].az * DD2R, ephs[i].alt * DD2R, expected.apparent_azalt);
 
         sep = eraSepp(got.apparent_radec, expected.apparent_radec) * DR2D;
-        if (sep > precisionRadec) {
+        if (sep > precision_radec) {
             LOG_E("Error: %s", ephs[i].name);
             LOG_E("Apparent radec JNow error: %.5f°", sep);
             assert(false);
         }
         sep = eraSepp(got.apparent_azalt, expected.apparent_azalt) * DR2D;
-        if (sep > precisionAzAlt) {
+        if (sep > precision_azalt) {
             LOG_E("Error: %s", ephs[i].name);
             LOG_E("Apparent azalt error: %.5f°", sep);
             double az, alt, dist;

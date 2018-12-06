@@ -19,8 +19,7 @@ void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
 {
     eraCpv(in, out);
 
-    if (!at_inf)
-    {
+    if (!at_inf) {
         // Take into account relative position of observer/object
         // This is a classical formula, we should use the relativistic
         // velocity addition formula instead see
