@@ -9,6 +9,7 @@
 
 #include "swe.h"
 
+// Extra flags (on top of anchors flags).
 enum {
     SKIPPED = 1 << 16,
 };
@@ -23,6 +24,7 @@ struct label
     double  color[4];
     double  angle;
     int     flags;
+    fader_t fader;
 
     double  priority;
     double  box[4];
@@ -38,10 +40,25 @@ void labels_reset(void)
 {
     label_t *label, *tmp;
     DL_FOREACH_SAFE(g_labels, label, tmp) {
-        DL_DELETE(g_labels, label);
-        free(label->text);
-        free(label);
+        if (label->fader.target == false && label->fader.value == 0) {
+            DL_DELETE(g_labels, label);
+            free(label->text);
+            free(label);
+        } else {
+            label->fader.target = false;
+        }
     }
+}
+
+static label_t *label_get(label_t *list, const char *txt, double size,
+                          const double pos[2])
+{
+    label_t *label;
+    DL_FOREACH(list, label) {
+        if (label->size == size && strcmp(txt, label->text) == 0)
+            return label;
+    }
+    return NULL;
 }
 
 static void label_get_box(const painter_t *painter, const label_t *label,
@@ -121,9 +138,12 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
 {
     label_t *label;
     int i;
-    double pos[2];
+    double pos[2], color[4];
     DL_SORT(g_labels, label_cmp);
     DL_FOREACH(g_labels, label) {
+        // We fade in the label slowly, but fade out very fast, otherwise
+        // we don't get updated positions for fading out labels.
+        fader_update(&label->fader, label->fader.target ? 0.01 : 1);
         for (i = 0; ; i++) {
             if (!label_get_boxes(painter, label, i, label->box)) {
                 label->flags |= SKIPPED;
@@ -133,9 +153,10 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
         }
         pos[0] = (label->box[0] + label->box[2]) / 2;
         pos[1] = (label->box[1] + label->box[3]) / 2;
-
+        vec4_copy(label->color, color);
+        color[3] *= label->fader.value;
         paint_text(painter, label->text, pos, label->size,
-                   label->color, label->angle);
+                   color, label->angle);
         label->flags &= ~SKIPPED;
 skip:;
     }
@@ -149,19 +170,24 @@ label_t *labels_add(const char *text, const double pos[2],
     if (flags & ANCHOR_FIXED) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
-    label_t *label = calloc(1, sizeof(*label));
+    label_t *label;
 
-    *label = (label_t) {
-        .text = strdup(text),
-        .pos = {pos[0], pos[1]},
-        .radius = radius,
-        .size = size,
-        .color = {color[0], color[1], color[2], color[3]},
-        .angle = angle,
-        .flags = flags,
-        .priority = priority,
-    };
-    DL_APPEND(g_labels, label);
+    label = label_get(g_labels, text, size, pos);
+    if (!label) {
+        label = calloc(1, sizeof(*label));
+        fader_init(&label->fader, false);
+        label->text = strdup(text);
+        DL_APPEND(g_labels, label);
+    }
+
+    vec2_set(label->pos, pos[0], pos[1]);
+    label->radius = radius;
+    label->size = size;
+    vec4_set(label->color, color[0], color[1], color[2], color[3]);
+    label->angle = angle;
+    label->flags = flags;
+    label->priority = priority;
+    label->fader.target = true;
     return label;
 }
 
