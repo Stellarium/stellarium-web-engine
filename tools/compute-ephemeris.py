@@ -25,8 +25,8 @@ def compute(target, o=None):
     target.compute(o)
     # Pyephem use Dublin JD, ephemeride uses Modified JD!
     mjd = o.date + 15020 - 0.5
-    print ('        {"%s", %.4f, %.2f, %.2f,\n'
-           '         %.2f, %.2f, %.2f, %.2f, %.2f, %.2f},') % (
+    print ('        {"%s", %.8f, %.8f, %.8f,\n'
+           '         %.8f, %.8f, %.8f, %.8f, %.8f, %.8f},') % (
             target.name, mjd, o.lon * R2D, o.lat * R2D,
             target.a_ra * R2D, target.a_dec * R2D,
             target.ra * R2D, target.dec * R2D,
