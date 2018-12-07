@@ -131,9 +131,9 @@ void observer_update(observer_t *obs, bool fast)
         // Update earth position.
         eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
         obs->last_full_update = obs->tt;
-        eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
         eraCp(obs->astrom.eb, obs->obs_pvb[0]);
         vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
+        eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
     }
     eraPvmpv(obs->earth_pvb, obs->earth_pvh, obs->sun_pvb);
 
