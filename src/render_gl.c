@@ -167,7 +167,6 @@ typedef struct renderer_gl {
         prog_t  planet;
     } progs;
 
-    int     projection_type;    // The current shader projection.
     double  depth_range[2];
 
     texture_t   *white_tex;
