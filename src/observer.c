@@ -73,7 +73,8 @@ static void update_matrices(observer_t *obs)
     mat3_to_mat4(re2v, obs->re2v);
 }
 
-static uint64_t observer_compute_hash(observer_t *obs)
+static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
+                                  uint64_t* hash)
 {
     uint64_t v = 0;
     #define H(a) v = crc64(v, &obs->a, sizeof(obs->a))
@@ -83,12 +84,13 @@ static uint64_t observer_compute_hash(observer_t *obs)
     H(horizon);
     H(pressure);
     H(refraction);
+    *hash_partial = v;
     H(altitude);
     H(azimuth);
     H(roll);
     H(tt);
     #undef H
-    return v;
+    *hash = v;
 }
 
 void observer_update(observer_t *obs, bool fast)
@@ -97,9 +99,16 @@ void observer_update(observer_t *obs, bool fast)
     double dt, dut1 = 0;
     double p[4] = {0};
 
-    uint64_t new_hash = observer_compute_hash(obs);
-    if (new_hash == obs->hash)
+    uint64_t hash, hash_partial;
+    observer_compute_hash(obs, &hash_partial, &hash);
+    // Check if we have computed accurate positions already
+    if (hash == obs->hash_accurate)
         return;
+    // Check if we have computed 'fast' positions already
+    if (fast && hash == obs->hash)
+        return;
+    fast = fast && hash_partial == obs->hash_partial &&
+            fabs(obs->last_accurate_update - obs->tt) < 1.0;
 
     // Compute UT1 and UTC time.
     dt = deltat(obs->tt);
@@ -109,9 +118,6 @@ void observer_update(observer_t *obs, bool fast)
     eraTaiutc(tai1, tai2, &utc1, &utc2);
     obs->ut1 = ut11 - DJM0 + ut12;
     obs->utc = utc1 - DJM0 + utc2;
-
-    if (fabs(obs->last_full_update - obs->tt) > 1)
-        fast = false;
 
     if (fast) {
         eraAper13(DJM0, obs->ut1, &obs->astrom);
@@ -130,7 +136,6 @@ void observer_update(observer_t *obs, bool fast)
                 &obs->eo);
         // Update earth position.
         eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
-        obs->last_full_update = obs->tt;
         eraCp(obs->astrom.eb, obs->obs_pvb[0]);
         vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
         eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
@@ -158,14 +163,19 @@ void observer_update(observer_t *obs, bool fast)
     update_matrices(obs);
     position_to_apparent(obs, ORIGIN_BARYCENTRIC, false, obs->sun_pvb,
                          obs->sun_pvo);
+
     obs->last_update = obs->tt;
+    obs->hash_partial = hash_partial;
+    obs->hash = hash;
+    if (!fast) {
+        obs->hash_accurate = hash;
+        obs->last_accurate_update = obs->tt;
+    }
 
     // Compute pointed at constellation.
     eraS2c(obs->azimuth, obs->altitude, p);
     mat4_mul_vec4(obs->rh2i, p, obs->pointer.icrs);
     find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
-
-    obs->hash = new_hash;
 }
 
 static int city_get_choices(
@@ -187,7 +197,8 @@ static int city_get_choices(
 static int observer_init(obj_t *obj, json_value *args)
 {
     observer_t*  obs = (observer_t*)obj;
-    obs->hash = observer_compute_hash(obs);
+    observer_compute_hash(obs, &obs->hash_partial, &obs->hash_accurate);
+    obs->hash = obs->hash_accurate;
     return 0;
 }
 
