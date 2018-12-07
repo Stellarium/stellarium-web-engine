@@ -27,7 +27,14 @@ struct tex_cache {
     texture_t   *tex;
 };
 
-typedef struct {
+/*
+ * Struct: prog_t
+ * Contains an opengl shader and all it's attribute and uniform locations.
+ *
+ * All the location for all possible shaders are stored, so we can use this
+ * struct for any of our shaders.
+ */
+typedef struct prog {
     GLuint prog;
 
     GLuint a_pos_l;
@@ -62,7 +69,7 @@ typedef struct {
 
 // The buffer struct contains the opengl arrays used for a render call,
 // and the offset for each attribute used.
-typedef struct buffer_t {
+typedef struct buffer {
     GLuint  array_buffer;
     GLuint  index_buffer;
     int     nb_vertices;
@@ -761,11 +768,7 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
                     GL_DYNAMIC_DRAW));
 
-    GL(glUniform4f(prog->u_color_l, item->color[0],
-                                    item->color[1],
-                                    item->color[2],
-                                    item->color[3]));
-
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
     GL(glEnableVertexAttribArray(prog->a_pos_l));
     GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
                     sizeof(lines_buf_t),
@@ -863,11 +866,7 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
                     GL_DYNAMIC_DRAW));
 
-    GL(glUniform4f(prog->u_color_l, item->color[0],
-                                    item->color[1],
-                                    item->color[2],
-                                    item->color[3]));
-
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
     GL(glEnableVertexAttribArray(prog->a_pos_l));
     GL(glVertexAttribPointer(prog->a_pos_l, 2, GL_FLOAT, false,
                     sizeof(texture_buf_t),
@@ -939,11 +938,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
                     GL_DYNAMIC_DRAW));
 
-    GL(glUniform4f(prog->u_color_l, item->color[0],
-                                    item->color[1],
-                                    item->color[2],
-                                    item->color[3]));
-
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
     GL(glEnableVertexAttribArray(prog->a_pos_l));
     GL(glVertexAttribPointer(prog->a_pos_l, 2, GL_FLOAT, false,
                     sizeof(texture_buf_t),
@@ -1027,19 +1022,10 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
                     GL_DYNAMIC_DRAW));
 
     // Set all uniforms.
-    GL(glUniform4f(prog->u_color_l, item->color[0],
-                                    item->color[1],
-                                    item->color[2],
-                                    item->color[3]));
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
     GL(glUniform1f(prog->u_contrast_l, item->planet.contrast));
-    GL(glUniform4f(prog->u_sun_l, item->planet.sun[0],
-                                  item->planet.sun[1],
-                                  item->planet.sun[2],
-                                  item->planet.sun[3]));
-    GL(glUniform3f(prog->u_light_emit_l,
-                   item->planet.light_emit[0],
-                   item->planet.light_emit[1],
-                   item->planet.light_emit[2]));
+    GL(glUniform4f(prog->u_sun_l, VEC4_SPLIT(item->planet.sun)));
+    GL(glUniform3f(prog->u_light_emit_l, VEC3_SPLIT(item->planet.light_emit)));
     GL(glUniform1i(prog->u_material_l, item->planet.material));
     GL(glUniform1i(prog->u_is_moon_l, item->flags & PAINTER_IS_MOON ? 1 : 0));
     mat4_to_float(item->planet.mv, mf);
