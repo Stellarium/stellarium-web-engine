@@ -67,23 +67,6 @@ typedef struct prog {
     GLuint u_shadow_spheres_l;
 } prog_t;
 
-// The buffer struct contains the opengl arrays used for a render call,
-// and the offset for each attribute used.
-typedef struct buffer {
-    GLuint  array_buffer;
-    GLuint  index_buffer;
-    int     nb_vertices;
-    GLenum  mode;
-    int     offset;
-    int     offset_pos;
-    int     offset_mpos;
-    int     offset_tex_pos;
-    int     offset_normal;
-    int     offset_tangent;
-    int     offset_color;
-    int     offset_shift;
-} buffer_t;
-
 enum {
     ITEM_LINES = 1,
     ITEM_POINTS,
