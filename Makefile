@@ -30,7 +30,7 @@ js-debug:
 
 .PHONY: js-prof
 js-prof:
-	$(EMSCRIPTEN)/emscons scons debug=0 profile=1 emscripten=1
+	$(EMSCRIPTEN)/emscons scons -j8 debug=0 profile=1 emscripten=1
 
 .PHONY: js-es6
 js-es6:
@@ -39,6 +39,10 @@ js-es6:
 .PHONY: js-es6-debug
 js-es6-debug:
 	$(EMSCRIPTEN)/emscons scons -j8 debug=1 es6=1 emscripten=1
+
+.PHONY: js-es6-prof
+js-es6-prof:
+	$(EMSCRIPTEN)/emscons scons -j8 debug=0 profile=1 es6=1 emscripten=1
 
 .PHONY: setup
 
@@ -51,11 +55,18 @@ dev:
 dev-jsdebug:
 	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-debug" && cd html && python -m SimpleHTTPServer
 
+dev-jsprof:
+	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-prof" && cd html && python -m SimpleHTTPServer
+
+
 gen-es6:
 	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6"
 
 gen-es6-debug:
 	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6-debug"
+
+gen-es6-prof:
+	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6-prof"
 
 # Make the doc using natualdocs.  On debian, we only have an old version
 # of naturaldocs available, where it is not possible to exclude files by
