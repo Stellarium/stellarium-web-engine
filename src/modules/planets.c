@@ -33,7 +33,6 @@ struct planet {
     int         id; // Uniq id number, as defined in JPL HORIZONS.
 
     // Precomputed values.
-    uint64_t    observer_hash;
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      hpos[3];     // ecl, heliocentric pos J2000.0
     double      phase;
@@ -377,9 +376,6 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 
 static int planet_update_(planet_t *planet, const observer_t *obs)
 {
-    // Skip if already up to date.
-    if (planet->observer_hash == obs->hash) return 0;
-
     // Compute the position of the planet.
     // XXX: we could use an approximation at the beginning, and only compute
     // the exact pos if needed.
