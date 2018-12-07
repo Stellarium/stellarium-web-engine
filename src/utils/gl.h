@@ -42,4 +42,5 @@
 
 int gl_check_errors(const char *file, int line);
 int gl_create_program(const char *vertex_shader_code,
-                      const char *fragment_shader_code, const char *include);
+                      const char *fragment_shader_code, const char *include,
+                      const char **attr_names);

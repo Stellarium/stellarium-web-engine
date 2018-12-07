@@ -16,6 +16,28 @@
 
 #include <float.h>
 
+// All the shader attribute locations.
+enum {
+    ATTR_POS,
+    ATTR_MPOS,
+    ATTR_TEX_POS,
+    ATTR_NORMAL,
+    ATTR_TANGENT,
+    ATTR_COLOR,
+    ATTR_SHIFT,
+};
+
+static const char *ATTR_NAMES[] = {
+    [ATTR_POS]          = "a_pos",
+    [ATTR_MPOS]         = "a_mpos",
+    [ATTR_TEX_POS]      = "a_tex_pos",
+    [ATTR_NORMAL]       = "a_normal",
+    [ATTR_TANGENT]      = "a_tangent",
+    [ATTR_COLOR]        = "a_color",
+    [ATTR_SHIFT]        = "a_shift",
+    NULL,
+};
+
 // We keep all the text textures in a cache so that we don't have to recreate
 // them each time.
 typedef struct tex_cache tex_cache_t;
@@ -29,21 +51,13 @@ struct tex_cache {
 
 /*
  * Struct: prog_t
- * Contains an opengl shader and all it's attribute and uniform locations.
+ * Contains an opengl shader and all it's uniform locations.
  *
  * All the location for all possible shaders are stored, so we can use this
  * struct for any of our shaders.
  */
 typedef struct prog {
     GLuint prog;
-
-    GLuint a_pos_l;
-    GLuint a_mpos_l;
-    GLuint a_tex_pos_l;
-    GLuint a_normal_l;
-    GLuint a_tangent_l;
-    GLuint a_color_l;
-    GLuint a_shift_l;
 
     GLuint u_tex_l;
     GLuint u_normal_tex_l;
@@ -685,32 +699,32 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
                                     item->color[3]));
     GL(glUniform1f(prog->u_smooth_l, item->points.smooth));
 
-    GL(glEnableVertexAttribArray(prog->a_pos_l));
-    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_POS));
+    GL(glVertexAttribPointer(ATTR_POS, 4, GL_FLOAT, false,
                     sizeof(points_buf_t),
                     (void*)(long)offsetof(points_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
+    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
                     sizeof(points_buf_t),
                     (void*)(long)offsetof(points_buf_t, tex_pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_color_l));
-    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+    GL(glEnableVertexAttribArray(ATTR_COLOR));
+    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
                     sizeof(points_buf_t),
                     (void*)(long)offsetof(points_buf_t, color)));
 
-    GL(glEnableVertexAttribArray(prog->a_shift_l));
-    GL(glVertexAttribPointer(prog->a_shift_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_SHIFT));
+    GL(glVertexAttribPointer(ATTR_SHIFT, 2, GL_FLOAT, false,
                     sizeof(points_buf_t),
                     (void*)(long)offsetof(points_buf_t, shift)));
 
     GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
 
-    GL(glDisableVertexAttribArray(prog->a_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_color_l));
-    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_shift_l));
+    GL(glDisableVertexAttribArray(ATTR_POS));
+    GL(glDisableVertexAttribArray(ATTR_COLOR));
+    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
+    GL(glDisableVertexAttribArray(ATTR_SHIFT));
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -748,26 +762,26 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
                     GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
-    GL(glEnableVertexAttribArray(prog->a_pos_l));
-    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_POS));
+    GL(glVertexAttribPointer(ATTR_POS, 4, GL_FLOAT, false,
                     sizeof(lines_buf_t),
                     (void*)(long)offsetof(lines_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, true,
+    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
+    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, true,
                     sizeof(lines_buf_t),
                     (void*)(long)offsetof(lines_buf_t, tex_pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_color_l));
-    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+    GL(glEnableVertexAttribArray(ATTR_COLOR));
+    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
                     sizeof(lines_buf_t),
                     (void*)(long)offsetof(lines_buf_t, color)));
 
     GL(glDrawElements(GL_LINES, item->nb, GL_UNSIGNED_SHORT, 0));
 
-    GL(glDisableVertexAttribArray(prog->a_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_color_l));
-    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glDisableVertexAttribArray(ATTR_POS));
+    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
+    GL(glDisableVertexAttribArray(ATTR_COLOR));
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -846,26 +860,26 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
                     GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
-    GL(glEnableVertexAttribArray(prog->a_pos_l));
-    GL(glVertexAttribPointer(prog->a_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_POS));
+    GL(glVertexAttribPointer(ATTR_POS, 2, GL_FLOAT, false,
                     sizeof(texture_buf_t),
                     (void*)(long)offsetof(texture_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
+    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
                     sizeof(texture_buf_t),
                     (void*)(long)offsetof(texture_buf_t, tex_pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_color_l));
-    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+    GL(glEnableVertexAttribArray(ATTR_COLOR));
+    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
                     sizeof(texture_buf_t),
                     (void*)(long)offsetof(texture_buf_t, color)));
 
     GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
 
-    GL(glDisableVertexAttribArray(prog->a_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_color_l));
-    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glDisableVertexAttribArray(ATTR_POS));
+    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
+    GL(glDisableVertexAttribArray(ATTR_COLOR));
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -918,26 +932,26 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
                     GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
-    GL(glEnableVertexAttribArray(prog->a_pos_l));
-    GL(glVertexAttribPointer(prog->a_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_POS));
+    GL(glVertexAttribPointer(ATTR_POS, 2, GL_FLOAT, false,
                     sizeof(texture_buf_t),
                     (void*)(long)offsetof(texture_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
+    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
                     sizeof(texture_buf_t),
                     (void*)(long)offsetof(texture_buf_t, tex_pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_color_l));
-    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+    GL(glEnableVertexAttribArray(ATTR_COLOR));
+    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
                     sizeof(texture_buf_t),
                     (void*)(long)offsetof(texture_buf_t, color)));
 
     GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
 
-    GL(glDisableVertexAttribArray(prog->a_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_color_l));
-    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
+    GL(glDisableVertexAttribArray(ATTR_POS));
+    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
+    GL(glDisableVertexAttribArray(ATTR_COLOR));
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -1018,44 +1032,44 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
                    rend->depth_range[0], rend->depth_range[1]));
 
     // Set array positions.
-    GL(glEnableVertexAttribArray(prog->a_pos_l));
-    GL(glVertexAttribPointer(prog->a_pos_l, 4, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_POS));
+    GL(glVertexAttribPointer(ATTR_POS, 4, GL_FLOAT, false,
                     sizeof(planet_buf_t),
                     (void*)(long)offsetof(planet_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_mpos_l));
-    GL(glVertexAttribPointer(prog->a_mpos_l, 4, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_MPOS));
+    GL(glVertexAttribPointer(ATTR_MPOS, 4, GL_FLOAT, false,
                     sizeof(planet_buf_t),
                     (void*)(long)offsetof(planet_buf_t, mpos)));
 
-    GL(glEnableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glVertexAttribPointer(prog->a_tex_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
+    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
                     sizeof(planet_buf_t),
                     (void*)(long)offsetof(planet_buf_t, tex_pos)));
 
-    GL(glEnableVertexAttribArray(prog->a_color_l));
-    GL(glVertexAttribPointer(prog->a_color_l, 4, GL_UNSIGNED_BYTE, true,
+    GL(glEnableVertexAttribArray(ATTR_COLOR));
+    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
                     sizeof(planet_buf_t),
                     (void*)(long)offsetof(planet_buf_t, color)));
 
-    GL(glEnableVertexAttribArray(prog->a_normal_l));
-    GL(glVertexAttribPointer(prog->a_normal_l, 3, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_NORMAL));
+    GL(glVertexAttribPointer(ATTR_NORMAL, 3, GL_FLOAT, false,
                     sizeof(planet_buf_t),
                     (void*)(long)offsetof(planet_buf_t, normal)));
 
-    GL(glEnableVertexAttribArray(prog->a_tangent_l));
-    GL(glVertexAttribPointer(prog->a_tangent_l, 3, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_TANGENT));
+    GL(glVertexAttribPointer(ATTR_TANGENT, 3, GL_FLOAT, false,
                     sizeof(planet_buf_t),
                     (void*)(long)offsetof(planet_buf_t, tangent)));
 
     GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
 
-    GL(glDisableVertexAttribArray(prog->a_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_mpos_l));
-    GL(glDisableVertexAttribArray(prog->a_color_l));
-    GL(glDisableVertexAttribArray(prog->a_tex_pos_l));
-    GL(glDisableVertexAttribArray(prog->a_normal_l));
-    GL(glDisableVertexAttribArray(prog->a_tangent_l));
+    GL(glDisableVertexAttribArray(ATTR_POS));
+    GL(glDisableVertexAttribArray(ATTR_MPOS));
+    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
+    GL(glDisableVertexAttribArray(ATTR_COLOR));
+    GL(glDisableVertexAttribArray(ATTR_NORMAL));
+    GL(glDisableVertexAttribArray(ATTR_TANGENT));
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -1214,10 +1228,9 @@ void line_2d(renderer_t          *rend_,
 static void init_prog(prog_t *p, const char *code, const char *include)
 {
     assert(code);
-    p->prog = gl_create_program(code, code, include);
+    p->prog = gl_create_program(code, code, include, ATTR_NAMES);
     GL(glUseProgram(p->prog));
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
-#define ATTRIB(x) p->x##_l = glGetAttribLocation(p->prog, #x)
     UNIFORM(u_tex);
     UNIFORM(u_normal_tex);
     UNIFORM(u_has_normal_tex);
@@ -1235,14 +1248,6 @@ static void init_prog(prog_t *p, const char *code, const char *include)
     UNIFORM(u_mv);
     UNIFORM(u_stripes);
     UNIFORM(u_depth_range);
-    ATTRIB(a_pos);
-    ATTRIB(a_mpos);
-    ATTRIB(a_tex_pos);
-    ATTRIB(a_normal);
-    ATTRIB(a_tangent);
-    ATTRIB(a_color);
-    ATTRIB(a_shift);
-#undef ATTRIB
 #undef UNIFORM
     // Default texture locations:
     GL(glUniform1i(p->u_tex_l, 0));

@@ -249,7 +249,7 @@ void gui_init(void *user)
     prog_t *p;
 
     gui->user = user;
-    gui->prog.prog = gl_create_program(VSHADER, FSHADER, NULL);
+    gui->prog.prog = gl_create_program(VSHADER, FSHADER, NULL, NULL);
     p = &gui->prog;
     GL(glUseProgram(p->prog));
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);

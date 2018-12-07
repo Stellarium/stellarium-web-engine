@@ -76,8 +76,10 @@ static int compile_shader(int shader, const char *code,
 }
 
 int gl_create_program(const char *vertex_shader_code,
-                      const char *fragment_shader_code, const char *include)
+                      const char *fragment_shader_code, const char *include,
+                      const char **attr_names)
 {
+    int i;
     int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     include = include ? : "";
     assert(vertex_shader);
@@ -92,6 +94,14 @@ int gl_create_program(const char *vertex_shader_code,
     int prog = glCreateProgram();
     glAttachShader(prog, vertex_shader);
     glAttachShader(prog, fragment_shader);
+
+    // Set all the attributes names if specified.
+    if (attr_names) {
+        for (i = 0; attr_names[i]; i++) {
+            glBindAttribLocation(prog, i, attr_names[i]);
+        }
+    }
+
     glLinkProgram(prog);
     int status;
     glGetProgramiv(prog, GL_LINK_STATUS, &status);
