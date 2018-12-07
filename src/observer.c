@@ -73,7 +73,7 @@ static void update_matrices(observer_t *obs)
     mat3_to_mat4(re2v, obs->re2v);
 }
 
-void observer_recompute_hash(observer_t *obs)
+static uint64_t observer_compute_hash(observer_t *obs)
 {
     uint64_t v = 0;
     #define H(a) v = crc64(v, &obs->a, sizeof(obs->a))
@@ -88,7 +88,7 @@ void observer_recompute_hash(observer_t *obs)
     H(roll);
     H(tt);
     #undef H
-    obs->hash = v;
+    return v;
 }
 
 void observer_update(observer_t *obs, bool fast)
@@ -97,9 +97,9 @@ void observer_update(observer_t *obs, bool fast)
     double dt, dut1 = 0;
     double p[4] = {0};
 
-    if (!fast || obs->force_full_update) obs->dirty = true;
-    if (obs->last_update != obs->tt) obs->dirty = true;
-    if (!obs->dirty) return;
+    uint64_t new_hash = observer_compute_hash(obs);
+    if (new_hash == obs->hash)
+        return;
 
     // Compute UT1 and UTC time.
     dt = deltat(obs->tt);
@@ -110,7 +110,7 @@ void observer_update(observer_t *obs, bool fast)
     obs->ut1 = ut11 - DJM0 + ut12;
     obs->utc = utc1 - DJM0 + utc2;
 
-    if (obs->force_full_update || fabs(obs->last_full_update - obs->tt) > 1)
+    if (fabs(obs->last_full_update - obs->tt) > 1)
         fast = false;
 
     if (fast) {
@@ -165,9 +165,7 @@ void observer_update(observer_t *obs, bool fast)
     mat4_mul_vec4(obs->rh2i, p, obs->pointer.icrs);
     find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
 
-    obs->dirty = false;
-    obs->force_full_update = false;
-    observer_recompute_hash(obs);
+    obs->hash = new_hash;
 }
 
 static int city_get_choices(
@@ -188,7 +186,8 @@ static int city_get_choices(
 
 static int observer_init(obj_t *obj, json_value *args)
 {
-    observer_recompute_hash((observer_t*)obj);
+    observer_t*  obs = (observer_t*)obj;
+    obs->hash = observer_compute_hash(obs);
     return 0;
 }
 
@@ -200,14 +199,6 @@ static obj_t *observer_clone(const obj_t *obj)
     memcpy(((char*)ret) + sizeof(obj_t), ((char*)obj) + sizeof(obj_t),
            sizeof(*ret) - sizeof(obj_t));
     return &ret->obj;
-}
-
-static void observer_on_changed(obj_t *obj, const attribute_t *attr)
-{
-    observer_t *obs = (observer_t*)obj;
-    obs->dirty = true;
-    obs->force_full_update = true;
-    observer_recompute_hash(obs);
 }
 
 static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
@@ -230,8 +221,6 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
         eraUt1tt(DJM0, obs->ut1, dt, &tt1, &tt2);
         obs->tt = tt1 - DJM0 + tt2;
     }
-    obs->dirty = true;
-    observer_recompute_hash(obs);
     obj_changed(obj, "tt");
     obj_changed(obj, "utc");
 }
@@ -268,15 +257,11 @@ static obj_klass_t observer_klass = {
     .clone = observer_clone,
     .attributes = (attribute_t[]) {
         PROPERTY("longitude", "f", MEMBER(observer_t, elong),
-                 .hint = "d_angle",
-                 .on_changed = observer_on_changed),
+                 .hint = "d_angle"),
         PROPERTY("latitude", "f", MEMBER(observer_t, phi),
-                 .hint = "d_angle",
-                 .on_changed = observer_on_changed),
-        PROPERTY("elevation", "f", MEMBER(observer_t, hm),
-                 .on_changed = observer_on_changed),
-        PROPERTY("refraction", "b", MEMBER(observer_t, refraction),
-                 .on_changed = observer_on_changed),
+                 .hint = "d_angle"),
+        PROPERTY("elevation", "f", MEMBER(observer_t, hm)),
+        PROPERTY("refraction", "b", MEMBER(observer_t, refraction)),
         PROPERTY("tt", "f", MEMBER(observer_t, tt),
                  .hint = "mjd", .on_changed = observer_on_timeattr_changed),
         PROPERTY("ut1", "f", MEMBER(observer_t, ut1),

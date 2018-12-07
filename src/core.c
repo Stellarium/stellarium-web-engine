@@ -201,7 +201,6 @@ static int core_pan(const gesture_t *g, void *user)
     core->observer->altitude += (sal - dal);
     core->observer->altitude = clamp(core->observer->altitude,
                                      -M_PI / 2, +M_PI / 2);
-    core->observer->dirty = true;
     core->fast_mode = true;
     obj_set_attr(&core->obj, "lock", "p", NULL);
     observer_update(core->observer, true);
@@ -293,7 +292,6 @@ static void core_set_default(void)
     core->utc_offset = sys_get_utc_offset() / 60.0;
 
     core->proj = PROJ_STEREOGRAPHIC;
-    obs->force_full_update = true;
 
     core->star_relative_scale = 2;
     core->star_linear_scale = 2;
@@ -414,7 +412,6 @@ static int core_update_direction(double dt)
             core->fov = mix(core->target.src_fov, core->target.dst_fov, t);
             obj_changed(&core->obj, "fov");
         }
-        core->observer->dirty = true;
         if (core->target.t >= 1.0) {
             core->target.speed = 0.0;
             core->target.t = 0.0;
@@ -429,9 +426,6 @@ static int core_update_direction(double dt)
     if (core->target.lock && !core->target.move_to_lock) {
         obj_get_pos_observed(core->target.lock, core->observer, v);
         eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
-        core->observer->dirty = true;
-        core->observer->force_full_update = true;
-        observer_recompute_hash(core->observer);
     }
 
     return 1;
@@ -582,8 +576,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
             core->fov = proj.max_fov;
         obj_changed((obj_t*)core, "fov");
     }
-
-    core->observer->dirty = true;
 
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");
@@ -738,7 +730,6 @@ void core_on_zoom(double k, double x, double y)
     core->observer->altitude += (sal - dal);
     core->observer->altitude = clamp(core->observer->altitude,
                                      -M_PI / 2, +M_PI / 2);
-    core->observer->dirty = true;
     core->fast_mode = true;
     // Notify the changes.
     obj_changed(&core->observer->obj, "altitude");
@@ -889,10 +880,7 @@ static int do_core_lookat(double* pos, double speed, double fov) {
     // Direct lookat.
     if (speed == 0.0) {
         eraC2s(pos, &core->observer->azimuth, &core->observer->altitude);
-        core->observer->dirty = true;
-        core->observer->force_full_update = true;
         if (fov) core->fov = fov;
-        observer_recompute_hash(core->observer);
         return 0;
     }
 

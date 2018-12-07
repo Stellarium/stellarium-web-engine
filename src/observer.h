@@ -32,8 +32,6 @@ struct observer
     double roll;
     obj_t  *city;
 
-    bool dirty;                 // Require an update.
-    bool force_full_update;     // Set to true to force a full update.
     double last_update;
     double last_full_update;
 
@@ -87,7 +85,6 @@ struct observer
     double re2v[4][4];  // Ecliptic to view.
 };
 
-void observer_recompute_hash(observer_t *obs);
 void observer_update(observer_t *obs, bool fast);
 
 #endif // OBSERVER_H
