@@ -1,30 +1,67 @@
+/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+ *
+ * This program is licensed under the terms of the GNU AGPL v3, or
+ * alternatively under a commercial licence.
+ *
+ * The terms of the AGPL v3 license can be found in the main directory of this
+ * repository.
+ */
+
+#define PI 3.14159265
+
 #ifdef GL_ES
 precision mediump float;
 #endif
 
-#define PI 3.14159265
+uniform lowp    vec4      u_color;
+uniform lowp    vec2      u_depth_range;
+uniform mediump sampler2D u_tex;
+uniform mediump sampler2D u_normal_tex;
+uniform lowp    vec3      u_light_emit;
+uniform mediump mat4      u_mv;  // Model view matrix.
+uniform lowp    int       u_has_normal_tex;
+uniform lowp    int       u_material; // 0: Oren Nayar, 1: generic, 2: ring
+uniform lowp    int       u_is_moon; // Set to 1 for the Moon only.
+uniform mediump sampler2D u_shadow_color_tex; // Used for the Moon.
+uniform lowp    float     u_contrast;
 
-uniform sampler2D u_tex;
-uniform sampler2D u_normal_tex;
-uniform vec3 u_light_emit;
-uniform mat4 u_mv;  // Model view matrix.
-uniform int u_has_normal_tex;
-uniform int u_material; // 0: Oren Nayar, 1: generic, 2: ring
-uniform int u_is_moon; // Set to 1 for the Moon only.
-uniform sampler2D u_shadow_color_tex; // Used for the Moon.
-uniform float u_contrast;
-
-uniform highp vec4 u_sun; // Sun pos (xyz) and radius (w).
+uniform highp   vec4      u_sun; // Sun pos (xyz) and radius (w).
 // Up to four spheres for illumination ray tracing.
-uniform int u_shadow_spheres_nb;
-uniform highp mat4 u_shadow_spheres;
+uniform lowp    int       u_shadow_spheres_nb;
+uniform mediump mat4      u_shadow_spheres;
 
-varying vec3 v_mpos;   // Pos in model coordinates.
-varying vec2 v_tex_pos;
-varying vec4 v_color;
-varying vec3 v_normal; // Normal in model coordinates.
-varying vec3 v_tangent;
-varying vec3 v_bitangent;
+varying highp   vec3 v_mpos;
+varying mediump vec2 v_tex_pos;
+varying lowp    vec4 v_color;
+varying mediump vec3 v_normal;
+varying mediump vec3 v_tangent;
+varying mediump vec3 v_bitangent;
+
+#ifdef VERTEX_SHADER
+
+attribute highp   vec4 a_pos;
+attribute highp   vec4 a_mpos;
+attribute mediump vec2 a_tex_pos;
+attribute lowp    vec3 a_color;
+attribute mediump vec3 a_normal;
+attribute mediump vec3 a_tangent;
+
+void main()
+{
+    gl_Position = a_pos;
+    gl_Position.z = (gl_Position.z - u_depth_range[0]) /
+                    (u_depth_range[1] - u_depth_range[0]);
+    v_mpos = a_mpos.xyz;
+    v_tex_pos = a_tex_pos;
+    v_color = vec4(a_color, 1.0) * u_color;
+
+    v_normal = normalize(a_normal);
+    v_tangent = normalize(a_tangent);
+    v_bitangent = normalize(cross(v_normal, v_tangent));
+}
+
+#endif
+#ifdef FRAGMENT_SHADER
 
 float oren_nayar_diffuse(
         vec3 lightDirection,
@@ -84,12 +121,12 @@ float illumination_sphere(vec3 p, vec4 sphere, vec3 sun_pos, float sun_r)
 
     // Penumbra partially inside.
     // I took this from Stellarium, even though I am not sure how it works.
-    mediump float x = (sun_r * sun_r + d * d - sph_r * sph_r) / (2.0 * d);
-    mediump float alpha = acos(x / sun_r);
-    mediump float beta = acos((d - x) / sph_r);
-    mediump float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
-    mediump float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
-    mediump float AS = sun_r * sun_r * 2.0 * 1.57079633;
+    float x = (sun_r * sun_r + d * d - sph_r * sph_r) / (2.0 * d);
+    float alpha = acos(x / sun_r);
+    float beta = acos((d - x) / sph_r);
+    float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
+    float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
+    float AS = sun_r * sun_r * 2.0 * 1.57079633;
     return 1.0 - (AR + Ar) / AS;
 }
 
@@ -152,3 +189,5 @@ void main()
         gl_FragColor.rgb *= illu;
     }
 }
+
+#endif

@@ -177,9 +177,6 @@ typedef struct renderer_gl {
 } renderer_gl_t;
 
 
-static void init_prog(prog_t *prog, const char *vert, const char *frag,
-                      const char *include);
-
 static bool color_is_white(const double c[4])
 {
     return c[0] == 1.0 && c[1] == 1.0 && c[2] == 1.0 && c[3] == 1.0;
@@ -1214,12 +1211,10 @@ void line_2d(renderer_t          *rend_,
     DL_APPEND(rend->items, item);
 }
 
-static void init_prog(prog_t *p, const char *vert, const char *frag,
-                      const char *include)
+static void init_prog(prog_t *p, const char *code, const char *include)
 {
-    assert(vert);
-    assert(frag);
-    p->prog = gl_create_program(vert, frag, include);
+    assert(code);
+    p->prog = gl_create_program(code, code, include);
     GL(glUseProgram(p->prog));
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
 #define ATTRIB(x) p->x##_l = glGetAttribLocation(p->prog, #x)
@@ -1275,18 +1270,14 @@ renderer_t* render_gl_create(void)
 
     // Create all the shaders programs.
     init_prog(&rend->progs.points,
-              asset_get_data("asset://shaders/points.vert", NULL, NULL),
-              asset_get_data("asset://shaders/points.frag", NULL, NULL), NULL);
+              asset_get_data("asset://shaders/points.glsl", NULL, NULL), NULL);
     init_prog(&rend->progs.blit_proj,
-              asset_get_data("asset://shaders/blit.vert", NULL, NULL),
-              asset_get_data("asset://shaders/blit.frag", NULL, NULL), NULL);
+              asset_get_data("asset://shaders/blit.glsl", NULL, NULL), NULL);
     init_prog(&rend->progs.blit_tag,
-              asset_get_data("asset://shaders/blit_tag.vert", NULL, NULL),
-              asset_get_data("asset://shaders/blit_tag.frag", NULL, NULL),
+              asset_get_data("asset://shaders/blit_tag.glsl", NULL, NULL),
                              NULL);
     init_prog(&rend->progs.planet,
-              asset_get_data("asset://shaders/planet.vert", NULL, NULL),
-              asset_get_data("asset://shaders/planet.frag", NULL, NULL), NULL);
+              asset_get_data("asset://shaders/planet.glsl", NULL, NULL), NULL);
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
