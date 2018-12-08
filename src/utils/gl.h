@@ -44,3 +44,84 @@ int gl_check_errors(const char *file, int line);
 int gl_create_program(const char *vertex_shader_code,
                       const char *fragment_shader_code, const char *include,
                       const char **attr_names);
+
+/*
+ * Struct: gl_buf_info
+ * Describe an OpenGL attribute.
+ */
+typedef struct gl_buf_info
+{
+    int size;
+    struct {
+        int         type;
+        int         size;
+        int         normalized;
+        int         ofs;
+    } attrs[];
+
+} gl_buf_info_t;
+
+/*
+ * Struct: gl_buf_t
+ * Helper structure to store an attribute buffer data.
+ *
+ * Still experimental.
+ *
+ * A gl_buf_t instance is basically just a memory buffer with meta info about
+ * the structure of the data it contains.
+ *
+ * The helper functions can be used to fill the buffer data without having
+ * to use an explicit C struct for it.
+ */
+typedef struct gl_buf
+{
+    uint8_t *data;
+    const gl_buf_info_t *info;
+    int capacity;   // Number of items we can store.
+    int nb;         // Current number of items.
+} gl_buf_t;
+
+/*
+ * Function: gl_buf_alloc
+ * Allocate buffer data.
+ */
+void gl_buf_alloc(gl_buf_t *buf, const gl_buf_info_t *info, int capacity);
+
+/*
+ * Function: gl_buf_release
+ * Release the memory used by a buffer.
+ */
+void gl_buf_release(gl_buf_t *buf);
+
+/*
+ * Function: gl_buf[234][ri]
+ * Set buffer data at a given index.
+ *
+ * If <idx> is -1, this set the current value of the buffer.
+ */
+
+void gl_buf_2f(gl_buf_t *buf, int idx, int attr, float v0, float v1);
+void gl_buf_3f(gl_buf_t *buf, int idx, int attr, float v0, float v1, float v2);
+void gl_buf_4f(gl_buf_t *buf, int idx, int attr,
+               float v0, float v1, float v2, float v3);
+void gl_buf_1i(gl_buf_t *buf, int idx, int attr, int v0);
+void gl_buf_4i(gl_buf_t *buf, int idx, int attr,
+               int v0, int v1, int v2, int v3);
+
+/*
+ * Function: gl_buf_next
+ * Add a new empty row to the buffer and set the default index to it
+ */
+void gl_buf_next(gl_buf_t *buf);
+
+/*
+ * Function: gl_buf_enable
+ * Enable the buffer for an opengl draw call.
+ */
+void gl_buf_enable(const gl_buf_t *buf);
+
+/*
+ * Function: gl_buf_disable
+ * Disable a buffer after an opengl draw call.
+ */
+void gl_buf_disable(const gl_buf_t *buf);

@@ -97,11 +97,8 @@ struct item
 {
     int type;
     double      color[4];
-    uint16_t    *indices;
-    void        *buf;
-    int         buf_size;
-    int         nb;
-    int         capacity;
+    gl_buf_t    buf;
+    gl_buf_t    indices;
     texture_t   *tex;
     int         flags;
     double      depth_range[2];
@@ -140,33 +137,52 @@ struct item
     item_t *next, *prev;
 };
 
-typedef struct {
-    float pos[4]        __attribute__((aligned(4)));
-    float tex_pos[2]    __attribute__((aligned(4)));
-    uint8_t color[4]    __attribute__((aligned(4)));
-} lines_buf_t;
+static const gl_buf_info_t INDICES_BUF = {
+    .size = 2,
+    .attrs = {
+        {GL_UNSIGNED_SHORT, 1, false, 0},
+    },
+};
 
-typedef struct {
-    float pos[4]        __attribute__((aligned(4)));
-    float tex_pos[2]    __attribute__((aligned(4)));
-    float shift[2]      __attribute__((aligned(4)));
-    uint8_t color[4]    __attribute__((aligned(4)));
-} points_buf_t;
+static const gl_buf_info_t LINES_BUF = {
+    .size = 28,
+    .attrs = {
+        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 24},
+    },
+};
 
-typedef struct {
-    float pos[2]        __attribute__((aligned(4)));
-    float tex_pos[2]    __attribute__((aligned(4)));
-    uint8_t color[4]    __attribute__((aligned(4)));
-} texture_buf_t;
+static const gl_buf_info_t POINTS_BUF = {
+    .size = 36,
+    .attrs = {
+        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
+        [ATTR_SHIFT]    = {GL_FLOAT, 2, false, 24},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 32},
+    },
+};
 
-typedef struct {
-    float   pos[4]      __attribute__((aligned(4)));
-    float   mpos[4]     __attribute__((aligned(4)));
-    float   tex_pos[2]  __attribute__((aligned(4)));
-    uint8_t color[4]    __attribute__((aligned(4)));
-    float   normal[3]   __attribute__((aligned(4)));
-    float   tangent[3]  __attribute__((aligned(4)));
-} planet_buf_t;
+static const gl_buf_info_t TEXTURE_BUF = {
+    .size = 20,
+    .attrs = {
+        [ATTR_POS]      = {GL_FLOAT, 2, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 8},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 16},
+    },
+};
+
+static const gl_buf_info_t PLANET_BUF = {
+    .size = 68,
+    .attrs = {
+        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
+        [ATTR_MPOS]     = {GL_FLOAT, 4, false, 16},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 32},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 40},
+        [ATTR_NORMAL]   = {GL_FLOAT, 3, false, 44},
+        [ATTR_TANGENT]  = {GL_FLOAT, 3, false, 56},
+    },
+};
 
 typedef struct renderer_gl {
     renderer_t  rend;
@@ -254,13 +270,11 @@ static void points(renderer_t *rend_,
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    points_buf_t *buf;
-    uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
     // Scale size from window to NDC.
     double s[2] = {2 * rend->scale / rend->fb_size[0],
                    2 * rend->scale / rend->fb_size[1]};
-    int i, j, idx, ofs;
+    int i, j, ofs;
     const int MAX_POINTS = 4096;
     point_t p;
     // Adjust size so that at any smoothness value the points look more or
@@ -278,17 +292,14 @@ static void points(renderer_t *rend_,
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
-        item->capacity = MAX_POINTS * 6;
-        item->buf = malloc(item->capacity / 6 * 4 * sizeof(*buf));
-        item->indices = malloc(item->capacity * sizeof(*indices));
+        gl_buf_alloc(&item->buf, &POINTS_BUF, MAX_POINTS * 4);
+        gl_buf_alloc(&item->indices, &INDICES_BUF, MAX_POINTS * 6);
         vec4_copy(painter->color, item->color);
         item->points.smooth = painter->points_smoothness;
         DL_APPEND(rend->items, item);
     }
 
-    buf = item->buf + item->buf_size;
-    indices = item->indices + item->nb;
-    ofs = item->buf_size / sizeof(*buf);
+    ofs = item->buf.nb;
 
     for (i = 0; i < n; i++) {
         p = points[i];
@@ -299,17 +310,17 @@ static void points(renderer_t *rend_,
             project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
         }
         for (j = 0; j < 4; j++) {
-            idx = i * 4 + j;
-            buf[idx].pos[3] = 1;
-            vec3_to_float(p.pos, buf[i * 4 + j].pos);
-            buf[idx].shift[0] = (j % 2 - 0.5) * p.size * s[0] * sm;
-            buf[idx].shift[1] = (j / 2 - 0.5) * p.size * s[1] * sm;
-            buf[idx].tex_pos[0] = j % 2;
-            buf[idx].tex_pos[1] = j / 2;
-            buf[idx].color[0] = p.color[0] * 255;
-            buf[idx].color[1] = p.color[1] * 255;
-            buf[idx].color[2] = p.color[2] * 255;
-            buf[idx].color[3] = p.color[3] * 255;
+            gl_buf_4f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos), 1);
+            gl_buf_2f(&item->buf, -1, ATTR_SHIFT,
+                      (j % 2 - 0.5) * p.size * s[0] * sm,
+                      (j / 2 - 0.5) * p.size * s[1] * sm);
+            gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, j % 2, j / 2);
+            gl_buf_4i(&item->buf, -1, ATTR_COLOR,
+                      p.color[0] * 255,
+                      p.color[1] * 255,
+                      p.color[2] * 255,
+                      p.color[3] * 255);
+            gl_buf_next(&item->buf);
         }
         // Add the point int the global list of rendered points.
         // XXX: could be done in the painter.
@@ -321,12 +332,10 @@ static void points(renderer_t *rend_,
     }
     for (i = 0; i < n; i++) {
         for (j = 0; j < 6; j++) {
-            indices[i * 6 + j] = ofs + INDICES[j] + i * 4;
+            gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[j] + i * 4);
+            gl_buf_next(&item->indices);
         }
     }
-
-    item->buf_size += n * 4 * sizeof(points_buf_t);
-    item->nb += n * 6;
 }
 
 static void compute_tangent(const double uv[2], const projection_t *tex_proj,
@@ -366,10 +375,8 @@ static void quad_planet(
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    planet_buf_t *buf;
     int n, i, j, k;
     double duvx[2], duvy[2];
-    uint16_t *indices;
     double p[4], normal[4] = {0}, tangent[4] = {0}, z;
 
     // Positions of the triangles in the quads.
@@ -381,9 +388,8 @@ static void quad_planet(
 
     item = calloc(1, sizeof(*item));
     item->type = ITEM_PLANET;
-    item->capacity = n * n * 6;
-    item->buf = calloc(n * n, sizeof(*buf));
-    item->indices = calloc(item->capacity, sizeof(*indices));
+    gl_buf_alloc(&item->buf, &PLANET_BUF, n * n * 4);
+    gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
     item->tex = tex;
     item->tex->ref++;
     vec4_copy(painter->color, item->color);
@@ -417,33 +423,35 @@ static void quad_planet(
 
     vec2_sub(uv[1], uv[0], duvx);
     vec2_sub(uv[2], uv[0], duvy);
-    buf = item->buf;
-    indices = item->indices;
 
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         vec4_set(p, uv[0][0], uv[0][1], 0, 1);
         vec2_addk(p, duvx, (double)j / grid_size, p);
         vec2_addk(p, duvy, (double)i / grid_size, p);
-        buf[i * n + j].tex_pos[0] = p[0] * tex->w / tex->tex_w;
-        buf[i * n + j].tex_pos[1] = p[1] * tex->h / tex->tex_h;
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0] * tex->w / tex->tex_w,
+                                                 p[1] * tex->h / tex->tex_h);
 
         if (normalmap) {
             compute_tangent(p, tex_proj, tangent);
             mat4_mul_vec4(*painter->transform, tangent, tangent);
-            vec3_to_float(tangent, buf[i * n + j].tangent);
+            gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
-        if (tex->flags & TF_FLIPPED)
-            buf[i * n + j].tex_pos[1] = 1.0 - buf[i * n + j].tex_pos[1];
+        // XXX: move up.
+        if (tex->flags & TF_FLIPPED) {
+            gl_buf_2f(&item->buf, -1, ATTR_TEX_POS,
+                      p[0] * tex->w / tex->tex_w,
+                      1.0 - p[1] * tex->h / tex->tex_h);
+        }
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
 
         vec3_copy(p, normal);
         mat4_mul_vec4(*painter->transform, normal, normal);
-        vec3_to_float(normal, buf[i * n + j].normal);
+        gl_buf_3f(&item->buf, -1, ATTR_NORMAL, VEC3_SPLIT(normal));
 
         mat4_mul_vec4(*painter->transform, p, p);
-        vec4_to_float(p, buf[i * n + j].mpos);
+        gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC4_SPLIT(p));
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
         z = p[2];
         project(painter->proj, 0, 4, p, p);
@@ -451,21 +459,19 @@ static void quad_planet(
             vec2_copy(*painter->depth_range, item->depth_range);
             p[2] = -z;
         }
-        vec4_to_float(p, buf[i * n + j].pos);
-        memcpy(buf[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(p));
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        gl_buf_next(&item->buf);
     }
 
     for (i = 0; i < grid_size; i++)
     for (j = 0; j < grid_size; j++) {
         for (k = 0; k < 6; k++) {
-            indices[(i * grid_size + j) * 6 + k] =
-                (INDICES[k][1] + i) * n + (INDICES[k][0] + j);
+            gl_buf_1i(&item->indices, -1, 0,
+                      (INDICES[k][1] + i) * n + (INDICES[k][0] + j));
+            gl_buf_next(&item->indices);
         }
     }
-
-    item->buf_size += n * n * sizeof(*buf);
-    item->nb += grid_size * grid_size * 6;
-
     DL_APPEND(rend->items, item);
 }
 
@@ -480,8 +486,6 @@ static void quad(renderer_t          *rend_,
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    texture_buf_t *buf;
-    uint16_t *indices;
     int n, i, j, k;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
@@ -497,9 +501,8 @@ static void quad(renderer_t          *rend_,
 
     item = calloc(1, sizeof(*item));
     item->type = ITEM_TEXTURE;
-    item->capacity = n * n * 6;
-    item->buf = calloc(n * n, sizeof(*buf));
-    item->indices = calloc(item->capacity, sizeof(*indices));
+    gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
+    gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
     item->tex = tex;
     item->tex->ref++;
     vec4_copy(painter->color, item->color);
@@ -507,9 +510,6 @@ static void quad(renderer_t          *rend_,
 
     vec2_sub(uv[1], uv[0], duvx);
     vec2_sub(uv[2], uv[0], duvy);
-
-    buf = item->buf;
-    indices = item->indices;
 
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
@@ -525,27 +525,25 @@ static void quad(renderer_t          *rend_,
                              1.0 - (tex->border - 0.5) / tex->h, tex_pos[1]);
         }
         if (tex->flags & TF_FLIPPED) tex_pos[1] = 1.0 - tex_pos[1];
-        vec2_to_float(tex_pos, buf[i * n + j].tex_pos);
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
         project(painter->proj, 0, 4, p, p);
-        vec2_to_float(p, buf[i * n + j].pos);
-        memcpy(buf[i * n + j].color, (uint8_t[]){255, 255, 255, 255}, 4);
+        gl_buf_2f(&item->buf, -1, ATTR_POS, p[0], p[1]);
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        gl_buf_next(&item->buf);
     }
 
     for (i = 0; i < grid_size; i++)
     for (j = 0; j < grid_size; j++) {
         for (k = 0; k < 6; k++) {
-            indices[(i * grid_size + j) * 6 + k] =
-                (INDICES[k][1] + i) * n + (INDICES[k][0] + j);
+            gl_buf_1i(&item->indices, -1, 0,
+                      (INDICES[k][1] + i) * n + (INDICES[k][0] + j));
+            gl_buf_next(&item->indices);
         }
     }
-
-    item->buf_size += n * n * sizeof(texture_buf_t);
-    item->nb += grid_size * grid_size * 6;
-
     DL_APPEND(rend->items, item);
 }
 
@@ -555,8 +553,6 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
 {
     int i, ofs;
     item_t *item;
-    texture_buf_t *buf;
-    uint16_t *indices;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
 
     item = get_item(rend, ITEM_ALPHA_TEXTURE, 6, tex);
@@ -565,33 +561,26 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_ALPHA_TEXTURE;
-        item->capacity = 6 * 64;
-        item->buf = calloc(item->capacity / 6 * 4, sizeof(*buf));
-        item->indices = calloc(item->capacity, sizeof(*indices));
+        gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
+        gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
         item->tex = tex;
         item->tex->ref++;
         vec4_copy(color, item->color);
         DL_APPEND(rend->items, item);
     }
 
-    buf = item->buf + item->buf_size;
-    indices = item->indices + item->nb;
-    ofs = item->buf_size / sizeof(*buf);
+    ofs = item->buf.nb;
 
     for (i = 0; i < 4; i++) {
-        vec2_to_float(pos[i], buf[i].pos);
-        vec2_to_float(uv[i], buf[i].tex_pos);
-        buf[i].color[0] = 255;
-        buf[i].color[1] = 255;
-        buf[i].color[2] = 255;
-        buf[i].color[3] = 255;
+        gl_buf_2f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1]);
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, uv[i][0], uv[i][1]);
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        gl_buf_next(&item->buf);
     }
     for (i = 0; i < 6; i++) {
-        indices[i] = ofs + INDICES[i];
+        gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[i]);
+        gl_buf_next(&item->indices);
     }
-
-    item->buf_size += 4 * sizeof(texture_buf_t);
-    item->nb += 6;
 }
 
 static void texture(renderer_t *rend_,
@@ -685,13 +674,13 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    item->nb * sizeof(*item->indices),
-                    item->indices, GL_DYNAMIC_DRAW));
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
-                    GL_DYNAMIC_DRAW));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, item->color[0],
                                     item->color[1],
@@ -699,32 +688,9 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
                                     item->color[3]));
     GL(glUniform1f(prog->u_smooth_l, item->points.smooth));
 
-    GL(glEnableVertexAttribArray(ATTR_POS));
-    GL(glVertexAttribPointer(ATTR_POS, 4, GL_FLOAT, false,
-                    sizeof(points_buf_t),
-                    (void*)(long)offsetof(points_buf_t, pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
-    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
-                    sizeof(points_buf_t),
-                    (void*)(long)offsetof(points_buf_t, tex_pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_COLOR));
-    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
-                    sizeof(points_buf_t),
-                    (void*)(long)offsetof(points_buf_t, color)));
-
-    GL(glEnableVertexAttribArray(ATTR_SHIFT));
-    GL(glVertexAttribPointer(ATTR_SHIFT, 2, GL_FLOAT, false,
-                    sizeof(points_buf_t),
-                    (void*)(long)offsetof(points_buf_t, shift)));
-
-    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
-
-    GL(glDisableVertexAttribArray(ATTR_POS));
-    GL(glDisableVertexAttribArray(ATTR_COLOR));
-    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
-    GL(glDisableVertexAttribArray(ATTR_SHIFT));
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -753,35 +719,20 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    item->nb * sizeof(*item->indices),
-                    item->indices, GL_DYNAMIC_DRAW));
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
-                    GL_DYNAMIC_DRAW));
+
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
-    GL(glEnableVertexAttribArray(ATTR_POS));
-    GL(glVertexAttribPointer(ATTR_POS, 4, GL_FLOAT, false,
-                    sizeof(lines_buf_t),
-                    (void*)(long)offsetof(lines_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
-    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, true,
-                    sizeof(lines_buf_t),
-                    (void*)(long)offsetof(lines_buf_t, tex_pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_COLOR));
-    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
-                    sizeof(lines_buf_t),
-                    (void*)(long)offsetof(lines_buf_t, color)));
-
-    GL(glDrawElements(GL_LINES, item->nb, GL_UNSIGNED_SHORT, 0));
-
-    GL(glDisableVertexAttribArray(ATTR_POS));
-    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
-    GL(glDisableVertexAttribArray(ATTR_COLOR));
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(GL_LINES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -851,35 +802,19 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    item->nb * sizeof(*item->indices),
-                    item->indices, GL_DYNAMIC_DRAW));
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
-                    GL_DYNAMIC_DRAW));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
-    GL(glEnableVertexAttribArray(ATTR_POS));
-    GL(glVertexAttribPointer(ATTR_POS, 2, GL_FLOAT, false,
-                    sizeof(texture_buf_t),
-                    (void*)(long)offsetof(texture_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
-    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
-                    sizeof(texture_buf_t),
-                    (void*)(long)offsetof(texture_buf_t, tex_pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_COLOR));
-    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
-                    sizeof(texture_buf_t),
-                    (void*)(long)offsetof(texture_buf_t, color)));
-
-    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
-
-    GL(glDisableVertexAttribArray(ATTR_POS));
-    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
-    GL(glDisableVertexAttribArray(ATTR_COLOR));
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -923,35 +858,19 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    item->nb * sizeof(*item->indices),
-                    item->indices, GL_DYNAMIC_DRAW));
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
-                    GL_DYNAMIC_DRAW));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
 
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
-    GL(glEnableVertexAttribArray(ATTR_POS));
-    GL(glVertexAttribPointer(ATTR_POS, 2, GL_FLOAT, false,
-                    sizeof(texture_buf_t),
-                    (void*)(long)offsetof(texture_buf_t, pos)));
 
-    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
-    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
-                    sizeof(texture_buf_t),
-                    (void*)(long)offsetof(texture_buf_t, tex_pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_COLOR));
-    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
-                    sizeof(texture_buf_t),
-                    (void*)(long)offsetof(texture_buf_t, color)));
-
-    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
-
-    GL(glDisableVertexAttribArray(ATTR_POS));
-    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
-    GL(glDisableVertexAttribArray(ATTR_COLOR));
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -1006,13 +925,13 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    item->nb * sizeof(*item->indices),
-                    item->indices, GL_DYNAMIC_DRAW));
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
-    GL(glBufferData(GL_ARRAY_BUFFER, item->buf_size, item->buf,
-                    GL_DYNAMIC_DRAW));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
 
     // Set all uniforms.
     GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
@@ -1031,45 +950,9 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     GL(glUniform2f(prog->u_depth_range_l,
                    rend->depth_range[0], rend->depth_range[1]));
 
-    // Set array positions.
-    GL(glEnableVertexAttribArray(ATTR_POS));
-    GL(glVertexAttribPointer(ATTR_POS, 4, GL_FLOAT, false,
-                    sizeof(planet_buf_t),
-                    (void*)(long)offsetof(planet_buf_t, pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_MPOS));
-    GL(glVertexAttribPointer(ATTR_MPOS, 4, GL_FLOAT, false,
-                    sizeof(planet_buf_t),
-                    (void*)(long)offsetof(planet_buf_t, mpos)));
-
-    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
-    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
-                    sizeof(planet_buf_t),
-                    (void*)(long)offsetof(planet_buf_t, tex_pos)));
-
-    GL(glEnableVertexAttribArray(ATTR_COLOR));
-    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE, true,
-                    sizeof(planet_buf_t),
-                    (void*)(long)offsetof(planet_buf_t, color)));
-
-    GL(glEnableVertexAttribArray(ATTR_NORMAL));
-    GL(glVertexAttribPointer(ATTR_NORMAL, 3, GL_FLOAT, false,
-                    sizeof(planet_buf_t),
-                    (void*)(long)offsetof(planet_buf_t, normal)));
-
-    GL(glEnableVertexAttribArray(ATTR_TANGENT));
-    GL(glVertexAttribPointer(ATTR_TANGENT, 3, GL_FLOAT, false,
-                    sizeof(planet_buf_t),
-                    (void*)(long)offsetof(planet_buf_t, tangent)));
-
-    GL(glDrawElements(GL_TRIANGLES, item->nb, GL_UNSIGNED_SHORT, 0));
-
-    GL(glDisableVertexAttribArray(ATTR_POS));
-    GL(glDisableVertexAttribArray(ATTR_MPOS));
-    GL(glDisableVertexAttribArray(ATTR_TEX_POS));
-    GL(glDisableVertexAttribArray(ATTR_COLOR));
-    GL(glDisableVertexAttribArray(ATTR_NORMAL));
-    GL(glDisableVertexAttribArray(ATTR_TANGENT));
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
@@ -1108,8 +991,8 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_VG_LINE) item_vg_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
-        free(item->indices);
-        free(item->buf);
+        gl_buf_release(&item->buf);
+        gl_buf_release(&item->indices);
         free(item);
     }
 }
@@ -1118,7 +1001,8 @@ static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex)
 {
     item_t *item;
     item = rend->items ? rend->items->prev : NULL;
-    if (    item && item->type == type && item->capacity > item->nb + nb &&
+    if (    item && item->type == type &&
+            item->indices.capacity > item->indices.nb + nb &&
             item->tex == tex)
         return item;
     return NULL;
@@ -1135,8 +1019,6 @@ static void line(renderer_t           *rend_,
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     double k, pos[4];
-    lines_buf_t *buf;
-    uint16_t *indices;
 
     item = get_item(rend, ITEM_LINES, nb_segs * 2, NULL);
     if (item && !vec4_equal(item->color, painter->color)) item = NULL;
@@ -1145,21 +1027,18 @@ static void line(renderer_t           *rend_,
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_LINES;
-        item->capacity = 1024;
-        item->buf = calloc(item->capacity, sizeof(*buf));
-        item->indices = calloc(item->capacity, sizeof(*indices));
+        gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
+        gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
         item->lines.width = painter->lines_width;
         vec4_copy(painter->color, item->color);
         DL_APPEND(rend->items, item);
     }
 
-    buf = item->buf + item->buf_size;
-    indices = item->indices + item->nb;
-    ofs = item->buf_size / sizeof(*buf);
+    ofs = item->buf.nb;
 
     for (i = 0; i < nb_segs + 1; i++) {
         k = i / (double)nb_segs;
-        buf[i].tex_pos[0] = k;
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, k, 0);
         vec4_mix(line[0], line[1], k, pos);
         if (line_proj)
             project(line_proj, PROJ_BACKWARD, 4, pos, pos);
@@ -1168,15 +1047,16 @@ static void line(renderer_t           *rend_,
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         pos[3] = 0.0;
         project(painter->proj, PROJ_ALREADY_NORMALIZED, 4, pos, pos);
-        vec4_to_float(pos, buf[i].pos);
-        memcpy(buf[i].color, (uint8_t[]){255, 255, 255, 255}, 4);
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         if (i < nb_segs) {
-            indices[i * 2 + 0] = ofs + i;
-            indices[i * 2 + 1] = ofs + i + 1;
+            gl_buf_1i(&item->indices, -1, 0, ofs + i);
+            gl_buf_next(&item->indices);
+            gl_buf_1i(&item->indices, -1, 0, ofs + i + 1);
+            gl_buf_next(&item->indices);
         }
+        gl_buf_next(&item->buf);
     }
-    item->buf_size += (nb_segs + 1) * sizeof(lines_buf_t);
-    item->nb += nb_segs * 2;
 }
 
 void ellipse_2d(renderer_t        *rend_,

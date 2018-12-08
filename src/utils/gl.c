@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef LOG_E
 #   define LOG_E
@@ -115,4 +116,114 @@ int gl_create_program(const char *vertex_shader_code,
         return 0;
     }
     return prog;
+}
+
+void gl_buf_alloc(gl_buf_t *buf, const gl_buf_info_t *info, int capacity)
+{
+    memset(buf, 0, sizeof(*buf));
+    buf->info = info;
+    buf->data = malloc(capacity * info->size);
+    buf->capacity = capacity;
+}
+
+void gl_buf_release(gl_buf_t *buf)
+{
+    free(buf->data);
+}
+
+void gl_buf_next(gl_buf_t *buf)
+{
+    assert(buf->nb < buf->capacity);
+    buf->nb++;
+}
+
+static int gl_size_for_type(int type)
+{
+    switch (type) {
+    case GL_FLOAT: return sizeof(GLfloat);
+    case GL_INT: return sizeof(GLint);
+    case GL_UNSIGNED_INT: return sizeof(GLuint);
+    case GL_BYTE: return sizeof(GLbyte);
+    case GL_UNSIGNED_BYTE: return sizeof(GLubyte);
+    case GL_UNSIGNED_SHORT: return sizeof(GLushort);
+    default: assert(false); return -1;
+    }
+}
+
+static void gl_buf_set(gl_buf_t *buf, int i, int attr, void *v, int size)
+{
+    void *dst;
+    const __typeof__(buf->info->attrs[attr]) *a;
+    if (i == -1) i = buf->nb;
+    a = &buf->info->attrs[attr];
+    dst = buf->data + i * buf->info->size + a->ofs;
+    memcpy(dst, v, size);
+}
+
+void gl_buf_2f(gl_buf_t *buf, int i, int attr, float v0, float v1)
+{
+    float v[2] = {v0, v1};
+    gl_buf_set(buf, i, attr, v, 8);
+}
+
+void gl_buf_3f(gl_buf_t *buf, int i, int attr, float v0, float v1, float v2)
+{
+    float v[3] = {v0, v1, v2};
+    gl_buf_set(buf, i, attr, v, 12);
+}
+
+void gl_buf_4f(gl_buf_t *buf, int i, int attr,
+               float v0, float v1, float v2, float v3)
+{
+    float v[4] = {v0, v1, v2, v3};
+    gl_buf_set(buf, i, attr, v, 16);
+}
+
+void gl_buf_1i(gl_buf_t *buf, int i, int attr, int v0)
+{
+    if (buf->info->attrs[attr].type == GL_UNSIGNED_SHORT)
+        gl_buf_set(buf, i, attr, (uint16_t[]){v0}, 2);
+    else
+        assert(false);
+}
+
+void gl_buf_4i(gl_buf_t *buf, int i, int attr,
+               int v0, int v1, int v2, int v3)
+{
+    if (buf->info->attrs[attr].type == GL_UNSIGNED_BYTE)
+        gl_buf_set(buf, i, attr, (uint8_t[]){v0, v1, v2, v3}, 4);
+    else if (buf->info->attrs[attr].type == GL_BYTE)
+        gl_buf_set(buf, i, attr, (int8_t[]){v0, v1, v2, v3}, 4);
+    else
+        assert(false);
+}
+
+void gl_buf_enable(const gl_buf_t *buf)
+{
+    int i, tot = 0;
+    const gl_buf_info_t *info = buf->info;
+    const __typeof__(*buf->info->attrs) *a;
+    for (i = 0; ; i++) {
+        a = &info->attrs[i];
+        if (!a->size) continue;
+        GL(glEnableVertexAttribArray(i));
+        GL(glVertexAttribPointer(i, a->size, a->type, a->normalized,
+                                 info->size, (void*)(long)a->ofs));
+        tot += a->size * gl_size_for_type(a->type);
+        if (tot == info->size) break;
+    }
+}
+
+void gl_buf_disable(const gl_buf_t *buf)
+{
+    int i, tot = 0;
+    const gl_buf_info_t *info = buf->info;
+    const __typeof__(*buf->info->attrs) *a;
+    for (i = 0; ; i++) {
+        a = &info->attrs[i];
+        if (!a->size) continue;
+        GL(glDisableVertexAttribArray(i));
+        tot += a->size * gl_size_for_type(a->type);
+        if (tot == info->size) break;
+    }
 }
