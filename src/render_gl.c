@@ -430,7 +430,7 @@ static void quad_planet(
         vec2_addk(p, duvx, (double)j / grid_size, p);
         vec2_addk(p, duvy, (double)i / grid_size, p);
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0] * tex->w / tex->tex_w,
-                                                 p[1] * tex->h / tex->tex_h);
+                                                p[1] * tex->h / tex->tex_h);
 
         if (normalmap) {
             compute_tangent(p, tex_proj, tangent);
@@ -682,10 +682,7 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
                     item->buf.data, GL_DYNAMIC_DRAW));
 
-    GL(glUniform4f(prog->u_color_l, item->color[0],
-                                    item->color[1],
-                                    item->color[2],
-                                    item->color[3]));
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
     GL(glUniform1f(prog->u_smooth_l, item->points.smooth));
 
     gl_buf_enable(&item->buf);
