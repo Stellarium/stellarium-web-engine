@@ -133,15 +133,19 @@ struct painter
     double          lines_width;
     double          lines_stripes;
     double          points_smoothness;
-
-    // For planet rendering.
-    double          (*sun)[4]; // pos + radius.
-    double          (*light_emit)[3];
     double          (*depth_range)[2]; // If set use depth test.
-    // A list of spheres that will be used for shadow.
-    int             shadow_spheres_nb;
-    double          (*shadow_spheres)[4]; // pos + radius.
-    texture_t       *shadow_color_tex; // Used for lunar eclipses.
+
+    union {
+        // For planet rendering only.
+        struct {
+            double          (*sun)[4]; // pos + radius.
+            double          (*light_emit)[3];
+            // A list of spheres that will be used for shadow.
+            int             shadow_spheres_nb;
+            double          (*shadow_spheres)[4]; // pos + radius.
+            texture_t       *shadow_color_tex; // Used for lunar eclipses.
+        } planet;
+    };
 };
 
 int paint_prepare(const painter_t *painter, double win_w, double win_h,

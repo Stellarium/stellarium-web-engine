@@ -509,16 +509,17 @@ static void render_rings(const planet_t *planet,
     const double radii[2] = {inner_radius, outer_radius};
 
     // Add the planet in the painter shadow candidates.
-    if (painter.shadow_spheres_nb < 4) {
+    if (painter.planet.shadow_spheres_nb < 4) {
         vec3_copy(planet->obj.pvo[0],
-                  painter.shadow_spheres[painter.shadow_spheres_nb]);
-        painter.shadow_spheres[painter.shadow_spheres_nb][3] =
+                  painter.planet.shadow_spheres[
+                                    painter.planet.shadow_spheres_nb]);
+        painter.planet.shadow_spheres[painter.planet.shadow_spheres_nb][3] =
                   planet->radius_m / DAU;
-        painter.shadow_spheres_nb++;
+        painter.planet.shadow_spheres_nb++;
     }
 
     proj.user = radii;
-    painter.light_emit = NULL;
+    painter.planet.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_RING_SHADER;
     paint_quad(&painter, FRAME_ICRF, tex, NULL, NULL, &proj, 64);
@@ -602,9 +603,9 @@ static void planet_render_hips(const planet_t *planet,
     double shadow_spheres[4][4];
     double epoch = DJM00; // J2000.
 
-    painter.shadow_spheres_nb =
+    painter.planet.shadow_spheres_nb =
         get_shadow_candidates(planet, 4, shadow_spheres);
-    painter.shadow_spheres = shadow_spheres;
+    painter.planet.shadow_spheres = shadow_spheres;
 
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
@@ -617,7 +618,7 @@ static void planet_render_hips(const planet_t *planet,
     // Compute sun position.
     vec3_copy(planets->sun->obj.pvo[0], sun_pos);
     sun_pos[3] = planets->sun->radius_m / DAU;
-    painter.sun = &sun_pos;
+    painter.planet.sun = &sun_pos;
 
     // Apply the rotation.
     mat4_mul(mat, core->observer->re2i, mat);
@@ -631,9 +632,9 @@ static void planet_render_hips(const planet_t *planet,
     painter.transform = &mat;
 
     if (planet->id == SUN)
-        painter.light_emit = &full_emit;
+        painter.planet.light_emit = &full_emit;
     if (planet->id == MOON)
-        painter.shadow_color_tex = planets->earth_shadow_tex;
+        painter.planet.shadow_color_tex = planets->earth_shadow_tex;
     // Lower current moon texture contrast.
     if (planet->id == MOON) painter.contrast = 0.6;
 

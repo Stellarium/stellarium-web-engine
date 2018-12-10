@@ -395,15 +395,16 @@ static void quad_planet(
     vec4_copy(painter->color, item->color);
     item->flags = painter->flags;
     item->planet.normalmap = normalmap;
-    item->planet.shadow_color_tex = painter->shadow_color_tex;
+    item->planet.shadow_color_tex = painter->planet.shadow_color_tex;
     item->planet.contrast = painter->contrast;
-    item->planet.shadow_spheres_nb = painter->shadow_spheres_nb;
-    if (painter->shadow_spheres_nb)
-        memcpy(item->planet.shadow_spheres, painter->shadow_spheres,
-               painter->shadow_spheres_nb * sizeof(*painter->shadow_spheres));
-    vec4_copy(*painter->sun, item->planet.sun);
-    if (painter->light_emit)
-        vec3_copy(*painter->light_emit, item->planet.light_emit);
+    item->planet.shadow_spheres_nb = painter->planet.shadow_spheres_nb;
+    if (painter->planet.shadow_spheres_nb)
+        memcpy(item->planet.shadow_spheres, painter->planet.shadow_spheres,
+               painter->planet.shadow_spheres_nb *
+               sizeof(*painter->planet.shadow_spheres));
+    vec4_copy(*painter->planet.sun, item->planet.sun);
+    if (painter->planet.light_emit)
+        vec3_copy(*painter->planet.light_emit, item->planet.light_emit);
 
     // Compute modelview matrix.
     mat4_set_identity(item->planet.mv);
@@ -414,7 +415,7 @@ static void quad_planet(
     mat4_mul(item->planet.mv, *painter->transform, item->planet.mv);
 
     // Set material
-    if (painter->light_emit)
+    if (painter->planet.light_emit)
         item->planet.material = 1; // Generic
     else
         item->planet.material = 0; // Oren Nayar
