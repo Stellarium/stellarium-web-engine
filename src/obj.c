@@ -357,6 +357,8 @@ int obj_update(obj_t *obj, observer_t *obs, double dt)
     assert(!obs || obs->hash != 0);
     if (!obj->klass->update) return 0;
     observer_update(obs, true);
+    if (obj->observer_hash == obs->hash)
+        return 0;
     assert(obs->astrom.em);
     ret = obj->klass->update(obj, obs, dt);
     obj->observer_hash = obs->hash;
