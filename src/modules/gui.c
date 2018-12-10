@@ -409,6 +409,9 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
         gui->visible = !gui->visible;
     }
     gui_same_line();
+    gui_text("%.1f°/%.1f°", core->observer->phi * DR2D,
+                            core->observer->elong * DR2D);
+    gui_same_line();
     obj_get_attr(&core->observer->obj, "city", "p", &city);
     if (city) gui_text("%s", obj_get_name(city));
     obj_get_attr(&core->observer->obj, "utc", "f", &utc);
