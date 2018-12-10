@@ -327,13 +327,15 @@ static void prepare_tile(atmosphere_t *atm, const painter_t *painter,
 }
 
 static void render_tile2(atmosphere_t *atm, const painter_t *painter,
-                         int pix)
+                         int order, int pix)
 {
     int split;
     double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    if (painter_is_tile_clipped(painter, FRAME_OBSERVED, order, pix, true))
+        return;
     split = 8; // Adhoc split computation.
     projection_t proj;
-    projection_init_healpix(&proj, 1, pix, true, true);
+    projection_init_healpix(&proj, 1 << order, pix, true, true);
     paint_quad(painter, FRAME_OBSERVED, NULL, NULL, uv, &proj, split);
 }
 
@@ -424,7 +426,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     painter.color[3] = atm->visible.value;
 
     for (i = 0; i < 12; i++) {
-        render_tile2(atm, &painter, i);
+        render_tile2(atm, &painter, 0, i);
     }
 
     avg_lum = 0;
