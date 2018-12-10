@@ -100,6 +100,7 @@ void gl_buf_release(gl_buf_t *buf);
  * If <idx> is -1, this set the current value of the buffer.
  */
 
+void gl_buf_1f(gl_buf_t *buf, int idx, int attr, float v0);
 void gl_buf_2f(gl_buf_t *buf, int idx, int attr, float v0, float v1);
 void gl_buf_3f(gl_buf_t *buf, int idx, int attr, float v0, float v1, float v2);
 void gl_buf_4f(gl_buf_t *buf, int idx, int attr,

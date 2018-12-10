@@ -106,6 +106,7 @@ enum {
     PAINTER_RING_SHADER         = 1 << 5,
     PAINTER_IS_MOON             = 1 << 6, // Only for moon texture!
     PAINTER_SHOW_BAYER_LABELS   = 1 << 7,
+    PAINTER_ATMOSPHERE_SHADER   = 1 << 8,
 };
 
 struct painter
@@ -145,6 +146,18 @@ struct painter
             double          (*shadow_spheres)[4]; // pos + radius.
             texture_t       *shadow_color_tex; // Used for lunar eclipses.
         } planet;
+
+        // For atmosphere rendering only.
+        struct {
+            // All the factors for A. J. Preetham model:
+            //   Ax, Bx, Cx, Dx, Ex, kx,
+            //   Ay, By, Cy, Dy, Ey, ky,
+            float p[12];
+            float sun[3]; // Sun position.
+            // Callback to compute the luminosity at a given point.
+            double (*compute_lum)(void *user, const double pos[3]);
+            void *user;
+        } atm;
     };
 };
 

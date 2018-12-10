@@ -160,6 +160,11 @@ static void gl_buf_set(gl_buf_t *buf, int i, int attr, void *v, int size)
     memcpy(dst, v, size);
 }
 
+void gl_buf_1f(gl_buf_t *buf, int i, int attr, float v0)
+{
+    gl_buf_set(buf, i, attr, &v0, 4);
+}
+
 void gl_buf_2f(gl_buf_t *buf, int i, int attr, float v0, float v1)
 {
     float v[2] = {v0, v1};
@@ -190,6 +195,7 @@ void gl_buf_1i(gl_buf_t *buf, int i, int attr, int v0)
 void gl_buf_4i(gl_buf_t *buf, int i, int attr,
                int v0, int v1, int v2, int v3)
 {
+    if (!buf->info->attrs[attr].type) return;
     if (buf->info->attrs[attr].type == GL_UNSIGNED_BYTE)
         gl_buf_set(buf, i, attr, (uint8_t[]){v0, v1, v2, v3}, 4);
     else if (buf->info->attrs[attr].type == GL_BYTE)

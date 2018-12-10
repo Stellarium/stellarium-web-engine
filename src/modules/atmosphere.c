@@ -136,6 +136,20 @@ static void prepare_skybrightness(
                           0.01);
 }
 
+static double compute_lum(void *user, const double pos[3])
+{
+    const render_data_t *d = user;
+    double p[3] = {pos[0], pos[1], pos[2]};
+    const double zenith[3] = {0, 0, 1};
+
+    // Our formula does not work below the horizon.
+    p[2] = fabs(p[2]);
+    return skybrightness_get_luminance(&d->skybrightness,
+                eraSepp(p, d->moon_pos),
+                eraSepp(p, d->sun_pos),
+                eraSepp(p, zenith));
+}
+
 static double compute_point_color(const render_data_t *d,
                                   const double pos[3],
                                   const double sun_pos[3],
@@ -303,6 +317,17 @@ static void prepare_tile(atmosphere_t *atm, const painter_t *painter,
     atm->tiles[pix].visible = (*nb) != 0;
 }
 
+static void render_tile2(atmosphere_t *atm, const painter_t *painter,
+                         int pix)
+{
+    int split;
+    double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    split = 4; // Adhoc split computation.
+    projection_t proj;
+    projection_init_healpix(&proj, 1, pix, true, true);
+    paint_quad(painter, FRAME_OBSERVED, NULL, NULL, uv, &proj, split);
+}
+
 static void render_tile(atmosphere_t *atm, const painter_t *painter_,
                         int pix, uint8_t *buf)
 {
@@ -340,7 +365,7 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter_,
     paint_quad(&painter, FRAME_OBSERVED, tile->tex, NULL, uv, &proj, split);
 }
 
-static int atmosphere_render(const obj_t *obj, const painter_t *painter)
+static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun, *moon;
@@ -350,25 +375,53 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
     const double T = 5.0;
     int i, nb, nb_lum = 0;
     uint8_t *buf;
+    painter_t painter = *painter_;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
     moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
     assert(sun);
     assert(moon);
-    obj_get_pos_observed(sun, painter->obs, sun_pos);
-    obj_get_pos_observed(moon, painter->obs, moon_pos);
+    obj_get_pos_observed(sun, painter.obs, sun_pos);
+    obj_get_pos_observed(moon, painter.obs, moon_pos);
     vec3_normalize(sun_pos, sun_pos);
     vec3_normalize(moon_pos, moon_pos);
+
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
     obj_get_attr(moon, "phase", "f", &moon_phase);
-
     prepare_skybrightness(&data.skybrightness,
-            painter, sun_pos, moon_pos, moon->vmag, moon_phase);
+            &painter, sun_pos, moon_pos, moon->vmag, moon_phase);
+
+    // Set the shader attributes.
+    painter.atm.p[0]  = data.Px[0];
+    painter.atm.p[1]  = data.Px[1];
+    painter.atm.p[2]  = data.Px[2];
+    painter.atm.p[3]  = data.Px[3];
+    painter.atm.p[4]  = data.Px[4];
+    painter.atm.p[5]  = data.kx;
+
+    painter.atm.p[6]  = data.Py[0];
+    painter.atm.p[7]  = data.Py[1];
+    painter.atm.p[8]  = data.Py[2];
+    painter.atm.p[9]  = data.Py[3];
+    painter.atm.p[10] = data.Py[4];
+    painter.atm.p[11] = data.ky;
+
+    vec3_to_float(sun_pos, painter.atm.sun);
+    painter.atm.compute_lum = compute_lum;
+    painter.atm.user = &data;
+    painter.flags |= PAINTER_ADD | PAINTER_ATMOSPHERE_SHADER;
+    painter.color[3] = atm->visible.value;
 
     for (i = 0; i < 12; i++) {
-        prepare_tile(atm, painter, &data, i, &nb, &sum);
+        render_tile2(atm, &painter, i);
+    }
+
+    return 0;
+
+    for (i = 0; i < 12; i++) {
+        prepare_tile(atm, &painter, &data, i, &nb, &sum);
         nb_lum += nb;
         sum_lum += sum;
     }
@@ -384,7 +437,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter)
 
     buf = malloc(TEX_SIZE * TEX_SIZE * 3);
     for (i = 0; i < 12; i++) {
-        render_tile(atm, painter, i, buf);
+        render_tile(atm, &painter, i, buf);
     }
     free(buf);
     return 0;

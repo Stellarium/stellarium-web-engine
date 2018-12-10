@@ -25,6 +25,8 @@ enum {
     ATTR_TANGENT,
     ATTR_COLOR,
     ATTR_SHIFT,
+    ATTR_SKY_POS,
+    ATTR_LUMINANCE,
 };
 
 static const char *ATTR_NAMES[] = {
@@ -35,6 +37,8 @@ static const char *ATTR_NAMES[] = {
     [ATTR_TANGENT]      = "a_tangent",
     [ATTR_COLOR]        = "a_color",
     [ATTR_SHIFT]        = "a_shift",
+    [ATTR_SKY_POS]      = "a_sky_pos",
+    [ATTR_LUMINANCE]    = "a_luminance",
     NULL,
 };
 
@@ -79,6 +83,9 @@ typedef struct prog {
     GLuint u_shadow_brightness_l;
     GLuint u_shadow_spheres_nb_l;
     GLuint u_shadow_spheres_l;
+
+    // For atmosphere.
+    GLuint u_atm_p_l;
 } prog_t;
 
 enum {
@@ -86,6 +93,7 @@ enum {
     ITEM_POINTS,
     ITEM_ALPHA_TEXTURE,
     ITEM_TEXTURE,
+    ITEM_ATMOSPHERE,
     ITEM_PLANET,
     ITEM_VG_ELLIPSE,
     ITEM_VG_RECT,
@@ -96,6 +104,8 @@ typedef struct item item_t;
 struct item
 {
     int type;
+
+    const prog_t *prog;
     double      color[4];
     gl_buf_t    buf;
     gl_buf_t    indices;
@@ -132,6 +142,11 @@ struct item
             double angle;
             double dashes;
         } vg;
+
+        struct {
+            float p[12];    // Color computation coefs.
+            float sun[3];   // Sun position.
+        } atm;
     };
 
     item_t *next, *prev;
@@ -184,6 +199,15 @@ static const gl_buf_info_t PLANET_BUF = {
     },
 };
 
+static const gl_buf_info_t ATMOSPHERE_BUF = {
+    .size = 24,
+    .attrs = {
+        [ATTR_POS]       = {GL_FLOAT, 2, false, 0},
+        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 8},
+        [ATTR_LUMINANCE] = {GL_FLOAT, 1, false, 20},
+    },
+};
+
 typedef struct renderer_gl {
     renderer_t  rend;
 
@@ -195,6 +219,7 @@ typedef struct renderer_gl {
         prog_t  blit_proj;
         prog_t  blit_tag;
         prog_t  planet;
+        prog_t  atmosphere;
     } progs;
 
     double  depth_range[2];
@@ -490,7 +515,7 @@ static void quad(renderer_t          *rend_,
     int n, i, j, k;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
-    double p[4], tex_pos[2], duvx[2], duvy[2];
+    double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4], lum;
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
@@ -501,8 +526,19 @@ static void quad(renderer_t          *rend_,
     n = grid_size + 1;
 
     item = calloc(1, sizeof(*item));
-    item->type = ITEM_TEXTURE;
-    gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
+
+    if (!(painter->flags & PAINTER_ATMOSPHERE_SHADER)) {
+        item->type = ITEM_TEXTURE;
+        gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
+        item->prog = &rend->progs.blit_proj;
+    } else {
+        item->type = ITEM_ATMOSPHERE;
+        gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, n * n * 4);
+        item->prog = &rend->progs.atmosphere;
+        memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
+        memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
+    }
+
     gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
     item->tex = tex;
     item->tex->ref++;
@@ -530,10 +566,15 @@ static void quad(renderer_t          *rend_,
 
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
-        convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
-        project(painter->proj, 0, 4, p, p);
-        gl_buf_2f(&item->buf, -1, ATTR_POS, p[0], p[1]);
+        convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
+        project(painter->proj, 0, 4, ndc_p, ndc_p);
+        gl_buf_2f(&item->buf, -1, ATTR_POS, ndc_p[0], ndc_p[1]);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
+            lum = painter->atm.compute_lum(painter->atm.user, p);
+            gl_buf_3f(&item->buf, -1, ATTR_SKY_POS, VEC3_SPLIT(p));
+            gl_buf_1f(&item->buf, -1, ATTR_LUMINANCE, lum);
+        }
         gl_buf_next(&item->buf);
     }
 
@@ -824,7 +865,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    prog = &rend->progs.blit_proj;
+    prog = item->prog;
     GL(glUseProgram(prog->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -853,6 +894,12 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
         }
     }
 
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
+    if (item->type == ITEM_ATMOSPHERE) {
+        GL(glUniform1fv(prog->u_atm_p_l, 12, item->atm.p));
+        GL(glUniform3fv(prog->u_sun_l, 1, item->atm.sun));
+    }
+
     GL(glGenBuffers(1, &index_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -863,8 +910,6 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
     GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
                     item->buf.data, GL_DYNAMIC_DRAW));
-
-    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
 
     gl_buf_enable(&item->buf);
     GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
@@ -981,7 +1026,7 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
         if (item->type == ITEM_ALPHA_TEXTURE)
             item_alpha_texture_render(rend, item);
-        if (item->type == ITEM_TEXTURE)
+        if (item->type == ITEM_TEXTURE || item->type == ITEM_ATMOSPHERE)
             item_texture_render(rend, item);
         if (item->type == ITEM_PLANET) item_planet_render(rend, item);
         if (item->type == ITEM_VG_ELLIPSE) item_vg_render(rend, item);
@@ -1126,6 +1171,7 @@ static void init_prog(prog_t *p, const char *code, const char *include)
     UNIFORM(u_mv);
     UNIFORM(u_stripes);
     UNIFORM(u_depth_range);
+    UNIFORM(u_atm_p);
 #undef UNIFORM
     // Default texture locations:
     GL(glUniform1i(p->u_tex_l, 0));
@@ -1161,6 +1207,9 @@ renderer_t* render_gl_create(void)
                              NULL);
     init_prog(&rend->progs.planet,
               asset_get_data("asset://shaders/planet.glsl", NULL, NULL), NULL);
+    init_prog(&rend->progs.atmosphere,
+              asset_get_data("asset://shaders/atmosphere.glsl", NULL, NULL),
+                             NULL);
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
