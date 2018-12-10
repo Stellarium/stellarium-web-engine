@@ -47,6 +47,8 @@ const createStore = () => {
       nightmode: false,
       wasmSupport: true,
 
+      orange: false,
+
       autoDetectedLocation: {
         shortName: 'Unknown',
         country: 'Unknown',
