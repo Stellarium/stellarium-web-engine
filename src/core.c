@@ -278,7 +278,10 @@ static void core_set_default(void)
     double tsl;
     observer_t *obs = core->observer;
 
-    obj_set_attr(&obs->obj, "city", "p", obj_get(NULL, "CITY TW TAIPEI", 0));
+    // Reset to Taipei.
+    obj_set_attr(&obs->obj, "latitude", "f", 25.066667 * DD2R);
+    obj_set_attr(&obs->obj, "longitude", "f", 121.516667 * DD2R);
+    obj_set_attr(&obs->obj, "elevation", "f", 0.0);
     obs->tt = unix_to_mjd(sys_get_unix_time());
 
     // We approximate the pressure from the altitude and the sea level
