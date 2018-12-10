@@ -163,8 +163,8 @@ static int atmosphere_update(obj_t *obj, const observer_t *obs, double dt)
     return fader_update(&atm->visible, dt);
 }
 
-static void render_tile2(atmosphere_t *atm, const painter_t *painter,
-                         int order, int pix)
+static void render_tile(atmosphere_t *atm, const painter_t *painter,
+                        int order, int pix)
 {
     int split;
     double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
@@ -224,7 +224,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     painter.color[3] = atm->visible.value;
 
     for (i = 0; i < 12; i++) {
-        render_tile2(atm, &painter, 0, i);
+        render_tile(atm, &painter, 0, i);
     }
 
     avg_lum = 0;
