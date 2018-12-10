@@ -158,6 +158,9 @@ export default {
     },
     setNightMode: function (b) {
       this.$store.commit('toggleBool', 'nightmode')
+      if (window.navigator.userAgent.indexOf('Edge') > -1) {
+        document.getElementById('nightmode').style.opacity = b ? '0.5' : '0'
+      }
       document.getElementById('nightmode').style.visibility = b ? 'visible' : 'hidden'
     },
     onFullscreenChange: function (b) {
