@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[2015] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[2561] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -65,7 +65,22 @@ static const unsigned char DATA_shaders_atmosphere_glsl[2015] __attribute__((ali
     "    xyy.y = ((1. + u_atm_p[6] * exp(u_atm_p[7] / cos_theta)) *\n"
     "             (1. + u_atm_p[8] * exp(u_atm_p[9] * gamma) +\n"
     "              u_atm_p[10] * cos_gamma2)) * u_atm_p[11];\n"
-    "    xyy.z = tonemap(a_luminance);\n"
+    "    xyy.z = a_luminance;\n"
+    "\n"
+    "    // Scotopic vision adjustment with blue shift (xy = 0.25, 0.25)\n"
+    "    // Algo inspired from Stellarium.\n"
+    "    if (xyy.z < 3.9) {\n"
+    "        float s, v;\n"
+    "        // s: ratio between scotopic and photopic vision.\n"
+    "        s = smoothstep(0.0, 1.0, (log(xyy.z) / log(10.) + 2.) / 2.6);\n"
+    "        xyy.x = mix(0.25, xyy.x, s);\n"
+    "        xyy.y = mix(0.25, xyy.y, s);\n"
+    "        v = xyy.z * (1.33 * (1. + xyy.y / xyy.x + xyy.x *\n"
+    "                            (1. - xyy.x - xyy.y)) - 1.68);\n"
+    "        xyy.z = 0.4468 * (1. - s) * v + s * xyy.z;\n"
+    "    }\n"
+    "\n"
+    "    xyy.z = tonemap(xyy.z);\n"
     "    xyy.z = min(xyy.z, 1.0);\n"
     "    v_color = vec4(xyy_to_srgb(xyy), 1.0);\n"
     "}\n"
