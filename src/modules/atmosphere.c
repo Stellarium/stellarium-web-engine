@@ -47,6 +47,10 @@ typedef struct {
 
     // Skybrightness model.
     skybrightness_t skybrightness;
+
+    // Updated during rendering.
+    double sum_lum;
+    int    nb_lum;
 } render_data_t;
 
 static double F2(const double *lam, double cos_theta,
@@ -66,7 +70,7 @@ static render_data_t prepare_render_data(
         const double moon_pos[3], double moon_vmag,
         double T)
 {
-    render_data_t data;
+    render_data_t data = {};
     double thetaS;
     double X;
     double zx, zy, zY;
@@ -138,16 +142,21 @@ static void prepare_skybrightness(
 
 static double compute_lum(void *user, const double pos[3])
 {
-    const render_data_t *d = user;
-    double p[3] = {pos[0], pos[1], pos[2]};
+    render_data_t *d = user;
+    double p[3] = {pos[0], pos[1], pos[2]}, lum;
     const double zenith[3] = {0, 0, 1};
-
     // Our formula does not work below the horizon.
     p[2] = fabs(p[2]);
-    return skybrightness_get_luminance(&d->skybrightness,
+    lum = skybrightness_get_luminance(&d->skybrightness,
                 eraSepp(p, d->moon_pos),
                 eraSepp(p, d->sun_pos),
                 eraSepp(p, zenith));
+    // Clamp to prevent too much adaptation.
+    lum = min(lum, 50000);
+
+    d->sum_lum += lum;
+    d->nb_lum++;
+    return lum;
 }
 
 static double compute_point_color(const render_data_t *d,
@@ -322,7 +331,7 @@ static void render_tile2(atmosphere_t *atm, const painter_t *painter,
 {
     int split;
     double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
-    split = 4; // Adhoc split computation.
+    split = 8; // Adhoc split computation.
     projection_t proj;
     projection_init_healpix(&proj, 1, pix, true, true);
     paint_quad(painter, FRAME_OBSERVED, NULL, NULL, uv, &proj, split);
@@ -417,6 +426,13 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     for (i = 0; i < 12; i++) {
         render_tile2(atm, &painter, i);
     }
+
+    avg_lum = 0;
+    if (data.nb_lum) avg_lum = data.sum_lum / data.nb_lum;
+    // Clamp the average luminance to prevent too much adaptation.
+    // 8000 cd/m² represents a bright sky.
+    avg_lum = min(avg_lum, 8000);
+    core_report_luminance_in_fov(avg_lum + 0.001, true);
 
     return 0;
 

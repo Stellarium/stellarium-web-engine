@@ -13,6 +13,7 @@ precision mediump float;
 
 uniform mediump float u_atm_p[12];
 uniform highp   vec3  u_sun;
+uniform lowp    float u_tm[3]; // Tonemapping koefs.
 
 varying lowp    vec4        v_color;
 
@@ -35,6 +36,12 @@ lowp vec3 xyy_to_srgb(lowp vec3 xyy)
     return pow(rgb, vec3(1.0 / 2.2));
 }
 
+lowp float tonemap(lowp float lw)
+{
+    // Implementation of the Tumblin tonemapping algorithm.
+    return u_tm[0] * pow(lw, u_tm[1]) + u_tm[2];
+}
+
 void main()
 {
     lowp vec3 xyy;
@@ -55,7 +62,7 @@ void main()
     xyy.y = ((1. + u_atm_p[6] * exp(u_atm_p[7] / cos_theta)) *
              (1. + u_atm_p[8] * exp(u_atm_p[9] * gamma) +
               u_atm_p[10] * cos_gamma2)) * u_atm_p[11];
-    xyy.z = a_luminance;
+    xyy.z = tonemap(a_luminance);
     v_color = vec4(xyy_to_srgb(xyy), 1.0);
 }
 

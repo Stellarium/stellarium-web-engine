@@ -86,6 +86,7 @@ typedef struct prog {
 
     // For atmosphere.
     GLuint u_atm_p_l;
+    GLuint u_tm_l;
 } prog_t;
 
 enum {
@@ -864,6 +865,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     prog_t *prog;
     GLuint  array_buffer;
     GLuint  index_buffer;
+    float tm[3];
 
     prog = item->prog;
     GL(glUseProgram(prog->prog));
@@ -898,6 +900,9 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     if (item->type == ITEM_ATMOSPHERE) {
         GL(glUniform1fv(prog->u_atm_p_l, 12, item->atm.p));
         GL(glUniform3fv(prog->u_sun_l, 1, item->atm.sun));
+        // XXX: the tonemapping args should be copied before rendering!
+        tonemapper_get_shader_args(core->tonemapper, &tm[0], &tm[1], &tm[2]);
+        GL(glUniform1fv(prog->u_tm_l, 3, tm));
     }
 
     GL(glGenBuffers(1, &index_buffer));
@@ -1172,6 +1177,7 @@ static void init_prog(prog_t *p, const char *code, const char *include)
     UNIFORM(u_stripes);
     UNIFORM(u_depth_range);
     UNIFORM(u_atm_p);
+    UNIFORM(u_tm);
 #undef UNIFORM
     // Default texture locations:
     GL(glUniform1i(p->u_tex_l, 0));

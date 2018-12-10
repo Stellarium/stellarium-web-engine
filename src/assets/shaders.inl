@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[1845] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[2055] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -16,6 +16,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[1845] __attribute__((ali
     "\n"
     "uniform mediump float u_atm_p[12];\n"
     "uniform highp   vec3  u_sun;\n"
+    "uniform lowp    float u_tm[3]; // Tonemapping koefs.\n"
     "\n"
     "varying lowp    vec4        v_color;\n"
     "\n"
@@ -38,6 +39,12 @@ static const unsigned char DATA_shaders_atmosphere_glsl[1845] __attribute__((ali
     "    return pow(rgb, vec3(1.0 / 2.2));\n"
     "}\n"
     "\n"
+    "lowp float tonemap(lowp float lw)\n"
+    "{\n"
+    "    // Implementation of the Tumblin tonemapping algorithm.\n"
+    "    return u_tm[0] * pow(lw, u_tm[1]) + u_tm[2];\n"
+    "}\n"
+    "\n"
     "void main()\n"
     "{\n"
     "    lowp vec3 xyy;\n"
@@ -58,7 +65,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[1845] __attribute__((ali
     "    xyy.y = ((1. + u_atm_p[6] * exp(u_atm_p[7] / cos_theta)) *\n"
     "             (1. + u_atm_p[8] * exp(u_atm_p[9] * gamma) +\n"
     "              u_atm_p[10] * cos_gamma2)) * u_atm_p[11];\n"
-    "    xyy.z = a_luminance;\n"
+    "    xyy.z = tonemap(a_luminance);\n"
     "    v_color = vec4(xyy_to_srgb(xyy), 1.0);\n"
     "}\n"
     "\n"
