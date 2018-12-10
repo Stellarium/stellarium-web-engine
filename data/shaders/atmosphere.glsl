@@ -78,8 +78,7 @@ void main()
     }
 
     xyy.z = tonemap(xyy.z);
-    xyy.z = min(xyy.z, 1.0);
-    v_color = vec4(xyy_to_srgb(xyy), 1.0);
+    v_color = vec4(clamp(xyy_to_srgb(xyy), 0.0, 1.0), 1.0);
 }
 
 #endif
