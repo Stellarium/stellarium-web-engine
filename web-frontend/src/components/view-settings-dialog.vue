@@ -16,6 +16,7 @@
     <v-checkbox label='Simulate refraction' v-model="refractionOn"></v-checkbox>
     <v-checkbox label='Meridian Line' v-model="meridianOn"></v-checkbox>
     <v-checkbox label='Ecliptic Line' v-model="eclipticOn"></v-checkbox>
+    <v-checkbox label='Orange night mode (default is red)' v-model="orangeOn"></v-checkbox>
   </v-card-text>
   <v-card-actions>
     <v-spacer></v-spacer><v-btn class="blue--text darken-1" flat @click.native="$store.state.showViewSettingsDialog = false">Close</v-btn>
@@ -70,6 +71,15 @@ export default {
       },
       set: function (newValue) {
         this.$stel.core.lines.ecliptic.visible = newValue
+      }
+    },
+    orangeOn: {
+      get: function () {
+        return this.$store.state.orange
+      },
+      set: function (newValue) {
+        this.$store.commit('toggleBool', 'orange')
+        document.getElementById('nightmode').style.background = newValue ? '#ff6800' : '#ff0000'
       }
     }
   }
