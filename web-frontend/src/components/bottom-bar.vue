@@ -44,6 +44,12 @@
                 :toggled="$store.state.stel.dsos.visible"
                 @clicked="(b) => { $stel.core.dsos.visible = b }">
     </bottom-button>
+    <bottom-button label="Night Mode"
+                :img="require('@/assets/images/btn-night-mode.svg')"
+                class="mr-auto"
+                :toggled="$store.state.nightmode"
+                @clicked="(b) => { setNightMode(b) }">
+    </bottom-button>
     <bottom-button label="Fullscreen"
                 :img="fullscreenBtnImage"
                 class="mr-auto hidden-xs-only"
@@ -149,6 +155,10 @@ export default {
         wrap: false,
         callback: this.onFullscreenChange
       })
+    },
+    setNightMode: function (b) {
+      this.$store.commit('toggleBool', 'nightmode')
+      document.getElementById('nightmode').style.visibility = b ? 'visible' : 'hidden'
     },
     onFullscreenChange: function (b) {
       if (this.$store.state.fullscreen === b) return
