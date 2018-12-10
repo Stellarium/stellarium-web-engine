@@ -15,8 +15,21 @@
     <meta name="Keywords" content="Stellarium, Stellarium Web, planetarium, astronomy, software, stars, planets, constellations, meteors, universe, astro, stars, planets, realistic, sky, program, scientific, educational, free, real, time, milky way, moon, mercury, venus, mars, earth, venus, jupiter, saturn, sun, real time, 3D, openGL, graphic, GL, chart, map, twinkle, photo-realistic" />
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet" type="text/css">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style type="text/css">
+    #nightmode {
+      background: #f00;
+      pointer-events: none;
+      height: 100vh;
+      width: 100vw;
+      position: absolute;
+      z-index: 1000;
+      mix-blend-mode: darken;
+      visibility: hidden;
+    }
+    </style>
   </head>
   <body>
+    <div id="nightmode"></div>
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>

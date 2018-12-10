@@ -44,6 +44,7 @@ const createStore = () => {
 
       showSidePanel: false,
       fullscreen: false,
+      nightmode: false,
       wasmSupport: true,
 
       autoDetectedLocation: {
