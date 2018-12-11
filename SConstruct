@@ -48,7 +48,7 @@ if profile or debug:
 
 if not debug:
      env.Append(CCFLAGS='-O3 -DNDEBUG', LINKFLAGS='-O3')
-     if target_os != 'js':
+     if target_os != 'js' and not profile:
          env.Append(CCFLAGS='-flto', LINKFLAGS='-flto')
 
 sources = (glob.glob('src/*.c*') + glob.glob('src/algos/*.c') +
@@ -129,7 +129,6 @@ if target_os == 'js':
              '--pre-js', 'src/js/pre.js',
              '--pre-js', 'src/js/obj.js',
              '--pre-js', 'src/js/canvas.js',
-             '--llvm-lto', '3',
              '-s', 'STRICT=1',
              '-s', 'RESERVED_FUNCTION_POINTERS=5',
              '-O3',
@@ -138,6 +137,9 @@ if target_os == 'js':
              '-s', '"EXPORTED_FUNCTIONS=[]"',
              '-s', '"EXTRA_EXPORTED_RUNTIME_METHODS=[%s]"' % extra_exported,
             ]
+
+    if not profile and not debug:
+        flags += ['--llvm-lto', '3']
 
     if profile or debug:
         flags += [
