@@ -12,7 +12,7 @@
 #ifndef SWE_H
 #define SWE_H
 
-#ifndef _GNU_SOURCE
+#if !defined(__clang__) && !defined(_GNU_SOURCE)
 #   define _GNU_SOURCE
 #endif
 

@@ -9,7 +9,7 @@
 
 #ifndef __EMSCRIPTEN__
 
-#ifndef _GNU_SOURCE
+#if !defined(__clang__) && !defined(_GNU_SOURCE)
 #   define _GNU_SOURCE
 #endif
 

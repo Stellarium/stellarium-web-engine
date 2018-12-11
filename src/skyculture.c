@@ -21,7 +21,7 @@ static bool iter_lines(const char **str, char *line, int size)
     const char *end;
     int len;
     if (!**str) return false;
-    end = strchrnul(*str, '\n');
+    end = strchr(*str, '\n') ?: *str + strlen(*str);
     len = end - *str;
     if (len >= size) len = size - 1;
     strncpy(line, *str, len);

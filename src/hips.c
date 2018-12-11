@@ -553,11 +553,13 @@ int hips_parse_hipslist(
 {
     int len, nb = 0;
     char *line, *hips_service_url = NULL, *key, *value, *tmp = NULL;
+    const char *end;
     double hips_release_date = 0;
 
     assert(data);
     while (*data) {
-        len = strchrnul(data, '\n') - data;
+        end = strchr(data, '\n') ?: data + strlen(data);
+        len = end - data;
         asprintf(&line, "%.*s", len, data);
 
         if (*line == '\0' || *line == '#') goto next;

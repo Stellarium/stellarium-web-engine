@@ -16,7 +16,7 @@
  * this project, without any external dependencies, and crossplatform.
  */
 
-#ifndef _GNU_SOURCE
+#if !defined(__clang__) && !defined(_GNU_SOURCE)
 #   define _GNU_SOURCE
 #endif
 
