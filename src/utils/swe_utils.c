@@ -93,6 +93,7 @@ uint8_t *img_read(const char *path, int *w, int *h, int *bpp)
     uint8_t *ret;
     int size;
     data = read_file(path, &size);
+    if (!data) return NULL;
     ret = img_read_from_mem(data, size, w, h, bpp);
     free(data);
     return ret;
