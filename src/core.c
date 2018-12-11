@@ -766,43 +766,43 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
      */
 
     const double foveye = 60 * DD2R;
-    double log_lf, log_lw, ld, r, s, pr;
+    double log_e, log_lw, ld, r, s, pr;
     const telescope_t *tel = &core->telescope;
     const double s_linear = core->star_linear_scale;
     const double s_relative = core->star_relative_scale;
     const double r_min = 0.5;
 
     /*
-     * Compute luminous flux (in lumen = cd . sr)
+     * Compute illuminance (in lux = lum/m² = cd.sr/m²)
      * Get log10 of the value for optimisation.
      *
      * S = m + 2.5 * log10(A)         | S: vmag/arcmin², A: arcmin²
      * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: cd/m²
-     * F = L * A                      | F: lm (= cd.sr), A: sr, L: cd/m²
+     * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
      *
-     * F = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
-     * log10(F) = log10(10.8e4 / R2AS^2) - 0.4 * m
+     * => E = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
+     * => log10(E) = log10(10.8e4 / R2AS^2) - 0.4 * m
      */
-    log_lf = log10(10.8e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
+    log_e = log10(10.8e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
 
     /*
      * Apply optic from telescope light grasp.
      *
-     * F' = F * Gl
+     * E' = E * Gl
      * Gmag = 2.5 * log10(Gl)
      *
-     * Log10(F') = Log10(F) + Gmag / 2.5
+     * Log10(E') = Log10(E) + Gmag / 2.5
      */
-    log_lf += tel->gain_mag / 2.5;
+    log_e += tel->gain_mag / 2.5;
 
     /*
      * Compute luminance assuming a point radius of 2.5 arcmin.
      *
-     * L = F / (pi * R^2)
-     * Log10(L) = Log10(F) - Log10(pi * R^2)
+     * L = E / (pi * R^2)
+     * => Log10(L) = Log10(E) - Log10(pi * R^2)
      */
     pr = 2.5 / 60 * DD2R;
-    log_lw = log_lf - log10(M_PI * pr * pr);
+    log_lw = log_e - log10(M_PI * pr * pr);
 
     // Apply eye adaptation.
     ld = tonemapper_map_log10(core->tonemapper, log_lw);
