@@ -45,11 +45,11 @@ void tonemapper_set_adaptation_luminance(tonemapper_t *t, float lwa)
 
     ldmax = t->ldmax;
     cmax = t->cmax;
-    a_rw = 0.4f * log10(lwa) + 2.92f;
-    b_rw = -0.4 * sqr(log10(lwa)) - 2.584f * log10(lwa) + 2.0208f;
-    lwd = ldmax / sqrt(cmax);
-    a_d = 0.4f * log10(lwd) + 2.92f;
-    b_d = -0.4f * sqr(log10(lwd)) - 2.584f * log10(lwd) + 2.0208f;
+    a_rw = 0.4f * log10f(lwa) + 2.92f;
+    b_rw = -0.4f * sqr(log10f(lwa)) - 2.584f * log10f(lwa) + 2.0208f;
+    lwd = ldmax / sqrtf(cmax);
+    a_d = 0.4f * log10f(lwd) + 2.92f;
+    b_d = -0.4f * sqr(log10f(lwd)) - 2.584f * log10f(lwd) + 2.0208f;
 
     // Precomputed values to speed up algo.
     t->a = exp10f((b_rw - b_d) / a_d) / ldmax;
