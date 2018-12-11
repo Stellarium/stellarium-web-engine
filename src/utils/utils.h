@@ -16,10 +16,6 @@
  * this project, without any external dependencies, and crossplatform.
  */
 
-#if !defined(__clang__) && !defined(_GNU_SOURCE)
-#   define _GNU_SOURCE
-#endif
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>

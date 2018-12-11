@@ -12,10 +12,6 @@
 #ifndef SWE_H
 #define SWE_H
 
-#if !defined(__clang__) && !defined(_GNU_SOURCE)
-#   define _GNU_SOURCE
-#endif
-
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>

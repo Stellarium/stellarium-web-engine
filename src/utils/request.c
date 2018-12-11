@@ -9,10 +9,6 @@
 
 #ifndef __EMSCRIPTEN__
 
-#if !defined(__clang__) && !defined(_GNU_SOURCE)
-#   define _GNU_SOURCE
-#endif
-
 #include "request.h"
 #include "utstring.h"
 

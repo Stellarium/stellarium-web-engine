@@ -32,7 +32,7 @@ if debug and target_os == 'posix':
     env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
                LIBS=['asan', 'ubsan'])
 
-env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas',
+env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE',
            CXXFLAGS='-Wall -std=gnu++11 -Wno-narrowing '
                     '-Wno-unknown-pragmas')
 if werror:
