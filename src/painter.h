@@ -107,6 +107,7 @@ enum {
     PAINTER_IS_MOON             = 1 << 6, // Only for moon texture!
     PAINTER_SHOW_BAYER_LABELS   = 1 << 7,
     PAINTER_ATMOSPHERE_SHADER   = 1 << 8,
+    PAINTER_FOG_SHADER          = 1 << 9,
 };
 
 struct painter

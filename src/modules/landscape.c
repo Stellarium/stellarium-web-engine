@@ -26,7 +26,6 @@ typedef struct landscape {
     fader_t         visible;
     double          color[4];
     hips_t          *hips;
-    texture_t       *fog;
     bool            active;
     struct  {
         char        *name;
@@ -104,6 +103,24 @@ static double get_global_brightness(void)
     return min(brightness, 1.0);
 }
 
+/*
+ * Render the fog using a healpix projection and opengl shader.
+ */
+static void render_fog(const painter_t *painter_)
+{
+    int pix, order = 0, split = 4;
+    const double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    painter_t painter = *painter_;
+    projection_t proj;
+    painter.flags |= PAINTER_FOG_SHADER;
+    for (pix = 0; pix < 12; pix++) {
+        if (painter_is_tile_clipped(&painter, FRAME_OBSERVED, order, pix, true))
+            continue;
+        projection_init_healpix(&proj, 1 << order, pix, true, true);
+        paint_quad(&painter, FRAME_OBSERVED, NULL, NULL, uv, &proj, split);
+    }
+}
+
 static int landscape_render(const obj_t *obj, const painter_t *painter_)
 {
     /*
@@ -115,6 +132,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
      *     +--------------------+ alt = -90
      *    az = 0              az = 360
      */
+
     landscape_t *ls = (landscape_t*)obj;
     painter_t painter = *painter_;
     projection_t proj_spherical = {
@@ -122,8 +140,6 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
         .backward   = spherical_project,
     };
     double brightness;
-    double FULL_UV[][2] = {{0.0, 1.0}, {1.0, 1.0},
-                           {0.0, 0.0}, {1.0, 0.0}};
     double HALF_UV[][2] = {{0.0, 0.5}, {1.0, 0.5},
                            {0.0, 0.0}, {1.0, 0.0}};
     // Hack matrice to fix the hips survey orientation.
@@ -133,21 +149,13 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
         {0,  0,  1,  0},
         {0,  0,  0,  1},
     };
-    int div = (painter.flags & PAINTER_FAST_MODE) ? 16 : 32;
+    int div;
 
     painter.color[3] *= ls->visible.value;
     if (painter.color[3] == 0.0) return 0;
-    if (!ls->fog) {
-        ls->fog = texture_from_url("asset://textures/fog.png", 0);
-        assert(ls->fog);
-    }
 
     brightness = get_global_brightness();
-
-    painter.color[3] *= 0.5;
-    paint_quad(&painter, FRAME_OBSERVED, ls->fog, NULL,
-               FULL_UV, &proj_spherical, div);
-    painter.color[3] /= 0.5;
+    render_fog(&painter);
 
     // Adjust the alpha to make the landscape transparent when we look down.
     painter.color[3] *= mix(1.0, 0.25,
@@ -158,6 +166,8 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
         painter.transform = &rg2h;
         hips_render(ls->hips, &painter, 2 * M_PI);
     } else {
+        // XXX: would be better to use an healpix projection and glsl shader.
+        div = (painter.flags & PAINTER_FAST_MODE) ? 8 : 32;
         vec4_copy(ls->color, painter.color);
         vec4_set(painter.color, 0, 0, 0, ls->visible.value);
         vec3_mul(brightness, painter.color, painter.color);

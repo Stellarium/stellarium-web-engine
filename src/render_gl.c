@@ -95,6 +95,7 @@ enum {
     ITEM_ALPHA_TEXTURE,
     ITEM_TEXTURE,
     ITEM_ATMOSPHERE,
+    ITEM_FOG,
     ITEM_PLANET,
     ITEM_VG_ELLIPSE,
     ITEM_VG_RECT,
@@ -209,6 +210,14 @@ static const gl_buf_info_t ATMOSPHERE_BUF = {
     },
 };
 
+static const gl_buf_info_t FOG_BUF = {
+    .size = 20,
+    .attrs = {
+        [ATTR_POS]       = {GL_FLOAT, 2, false, 0},
+        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 8},
+    },
+};
+
 typedef struct renderer_gl {
     renderer_t  rend;
 
@@ -221,6 +230,7 @@ typedef struct renderer_gl {
         prog_t  blit_tag;
         prog_t  planet;
         prog_t  atmosphere;
+        prog_t  fog;
     } progs;
 
     double  depth_range[2];
@@ -530,16 +540,20 @@ static void quad(renderer_t          *rend_,
 
     item = calloc(1, sizeof(*item));
 
-    if (!(painter->flags & PAINTER_ATMOSPHERE_SHADER)) {
-        item->type = ITEM_TEXTURE;
-        gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
-        item->prog = &rend->progs.blit_proj;
-    } else {
+    if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
         item->type = ITEM_ATMOSPHERE;
         gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, n * n * 4);
         item->prog = &rend->progs.atmosphere;
         memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
         memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
+    } else if (painter->flags & PAINTER_FOG_SHADER) {
+        item->type = ITEM_FOG;
+        gl_buf_alloc(&item->buf, &FOG_BUF, n * n * 4);
+        item->prog = &rend->progs.fog;
+    } else {
+        item->type = ITEM_TEXTURE;
+        gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
+        item->prog = &rend->progs.blit_proj;
     }
 
     gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
@@ -578,6 +592,9 @@ static void quad(renderer_t          *rend_,
         if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
             gl_buf_3f(&item->buf, -1, ATTR_SKY_POS, VEC3_SPLIT(p));
             gl_buf_1f(&item->buf, -1, ATTR_LUMINANCE, visible ? 1 : 0);
+        }
+        if (painter->flags & PAINTER_FOG_SHADER) {
+            gl_buf_3f(&item->buf, -1, ATTR_SKY_POS, VEC3_SPLIT(p));
         }
         gl_buf_next(&item->buf);
     }
@@ -635,6 +652,7 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
         item->type = ITEM_ALPHA_TEXTURE;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
+        item->prog = &rend->progs.blit_tag;
         item->tex = tex;
         item->tex->ref++;
         vec4_copy(color, item->color);
@@ -856,7 +874,7 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    prog = &rend->progs.blit_tag;
+    prog = item->prog;
     GL(glUseProgram(prog->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -1058,7 +1076,7 @@ static void rend_flush(renderer_gl_t *rend)
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
-        if (item->type == ITEM_ALPHA_TEXTURE)
+        if (item->type == ITEM_ALPHA_TEXTURE || item->type == ITEM_FOG)
             item_alpha_texture_render(rend, item);
         if (item->type == ITEM_TEXTURE || item->type == ITEM_ATMOSPHERE)
             item_texture_render(rend, item);
@@ -1245,6 +1263,8 @@ renderer_t* render_gl_create(void)
     init_prog(&rend->progs.atmosphere,
               asset_get_data("asset://shaders/atmosphere.glsl", NULL, NULL),
                              NULL);
+    init_prog(&rend->progs.fog,
+              asset_get_data("asset://shaders/fog.glsl", NULL, NULL), NULL);
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;

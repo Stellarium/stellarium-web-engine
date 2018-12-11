@@ -189,6 +189,49 @@ static const unsigned char DATA_shaders_blit_tag_glsl[810] __attribute__((aligne
 
 ASSET_REGISTER(shaders_blit_tag_glsl, "shaders/blit_tag.glsl", DATA_shaders_blit_tag_glsl, false)
 
+static const unsigned char DATA_shaders_fog_glsl[771] __attribute__((aligned(4))) =
+    "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
+    " *\n"
+    " * This program is licensed under the terms of the GNU AGPL v3, or\n"
+    " * alternatively under a commercial licence.\n"
+    " *\n"
+    " * The terms of the AGPL v3 license can be found in the main directory of this\n"
+    " * repository.\n"
+    " */\n"
+    "\n"
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "\n"
+    "varying lowp    vec4        v_color;\n"
+    "\n"
+    "#ifdef VERTEX_SHADER\n"
+    "\n"
+    "attribute highp   vec4       a_pos;\n"
+    "attribute highp   vec3       a_sky_pos;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position = a_pos;\n"
+    "    const lowp float height = 0.2;\n"
+    "    const lowp float alpha = 0.2;\n"
+    "    lowp float d = smoothstep(height, 0.0, abs(a_sky_pos.z));\n"
+    "    v_color = vec4(1.0, 1.0, 1.0, alpha * d);\n"
+    "}\n"
+    "\n"
+    "#endif\n"
+    "#ifdef FRAGMENT_SHADER\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_FragColor = v_color;\n"
+    "}\n"
+    "\n"
+    "#endif\n"
+    "";
+
+ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
+
 static const unsigned char DATA_shaders_planet_glsl[6651] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
