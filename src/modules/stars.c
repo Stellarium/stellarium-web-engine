@@ -31,6 +31,7 @@ typedef struct {
     float   pde;    // Dec proper motion (rad/year)
     float   plx;    // Parallax (arcsec)
     float   bv;
+    float   illuminance; // (lux)
     // Normalized Astrometric direction.
     double  pos[3];
     double  distance;    // Distance in AU
@@ -71,10 +72,22 @@ typedef struct tile {
     int         flags;
     double      mag_min;
     double      mag_max;
+    double      illuminance; // Totall illuminance (lux).
     int         nb;
     star_data_t *stars;
 } tile_t;
 
+static double illuminance_for_vmag(double vmag)
+{
+    /*
+     * S = m + 2.5 * log10(A)         | S: vmag/arcmin², A: arcmin²
+     * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: cd/m²
+     * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
+     *
+     * => E = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
+     */
+    return 10.8e4 / (ERFA_DR2AS * ERFA_DR2AS) * pow(10, -0.4 * vmag);
+}
 
 // Precompute values about the star position to make rendering faster.
 static void compute_pv(double ra, double de,
@@ -116,6 +129,7 @@ static int star_init(obj_t *obj, json_value *args)
         d->vmag = json_get_attr_f(model, "Vmag", NAN);
         if (isnan(d->vmag))
             d->vmag = json_get_attr_f(model, "Bmag", NAN);
+        d->illuminance = illuminance_for_vmag(d->vmag);
         compute_pv(d->ra, d->de, d->pra, d->pde, d->plx, d);
     }
     return 0;
@@ -343,6 +357,8 @@ static int on_file_tile_loaded(const char type[4],
                  s->gaia;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
+        s->illuminance = illuminance_for_vmag(vmag);
+        tile->illuminance += illuminance_for_vmag(vmag);
         tile->mag_min = min(tile->mag_min, vmag);
         tile->mag_max = max(tile->mag_max, vmag);
         tile->nb++;
@@ -422,6 +438,7 @@ static int render_visitor(int order, int pix, void *user)
     painter_t painter = *(const painter_t*)USER_GET(user, 2);
     int *nb_tot = USER_GET(user, 3);
     int *nb_loaded = USER_GET(user, 4);
+    double *illuminance = USER_GET(user, 5);
     tile_t *tile;
     int i, n = 0;
     star_data_t *s;
@@ -476,6 +493,7 @@ static int render_visitor(int order, int pix, void *user)
                      PROJ_ALREADY_NORMALIZED, 2, p, p_win))
             continue;
 
+        (*illuminance) += s->illuminance;
         core_get_point_for_mag(s->vmag, &size, &luminance);
         bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
@@ -506,15 +524,25 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
     stars_t *stars = (stars_t*)obj;
     int i, nb_tot = 0, nb_loaded = 0;
+    double illuminance = 0; // Totall illuminance
     painter_t painter = *painter_;
 
     if (!stars->visible) return 0;
 
     for (i = 0; i < ARRAY_SIZE(stars->surveys); i++) {
         if (!stars->surveys[i].hips) break;
-        hips_traverse(USER_PASS(stars, &i, &painter, &nb_tot, &nb_loaded),
+        hips_traverse(USER_PASS(stars, &i, &painter,
+                      &nb_tot, &nb_loaded, &illuminance),
                       render_visitor);
     }
+
+    /* Ad-hoc formula to adjust tonemapping when many stars are visible.
+     * I think the illuminance computation is correct, but should we use
+     * core_report_illuminance_in_fov?  Also the factor used (20) is
+     * arbitrary.*/
+    illuminance *= core->telescope.light_grasp;
+    core_report_luminance_in_fov(illuminance * 20.0, false);
+
     progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);
     return 0;
 }
