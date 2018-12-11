@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[2549] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[2559] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -80,7 +80,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[2549] __attribute__((ali
     "        xyy.z = 0.4468 * (1. - s) * v + s * xyy.z;\n"
     "    }\n"
     "\n"
-    "    xyy.z = tonemap(xyy.z);\n"
+    "    xyy.z = max(0.0, tonemap(xyy.z));\n"
     "    v_color = vec4(clamp(xyy_to_srgb(xyy), 0.0, 1.0), 1.0);\n"
     "}\n"
     "\n"

@@ -77,7 +77,7 @@ void main()
         xyy.z = 0.4468 * (1. - s) * v + s * xyy.z;
     }
 
-    xyy.z = tonemap(xyy.z);
+    xyy.z = max(0.0, tonemap(xyy.z));
     v_color = vec4(clamp(xyy_to_srgb(xyy), 0.0, 1.0), 1.0);
 }
 
