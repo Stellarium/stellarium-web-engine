@@ -155,7 +155,7 @@ struct painter
             float p[12];
             float sun[3]; // Sun position.
             // Callback to compute the luminosity at a given point.
-            double (*compute_lum)(void *user, const double pos[3]);
+            float (*compute_lum)(void *user, const float pos[3]);
             void *user;
         } atm;
     };

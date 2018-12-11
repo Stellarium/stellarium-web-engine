@@ -516,8 +516,8 @@ static void quad(renderer_t          *rend_,
     int n, i, j, k, x, y;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
-    double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4], lum;
-    float fp[3];
+    double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4];
+    float lum;
     bool visible;
 
     // Special case for planet shader.
@@ -601,10 +601,8 @@ static void quad(renderer_t          *rend_,
         for (j = 0; j < n; j++) {
             if (!*(float*)gl_buf_at(&item->buf, i * n + j, ATTR_LUMINANCE))
                 continue;
-            memcpy(fp, gl_buf_at(&item->buf, i * n + j, ATTR_SKY_POS),
-                   sizeof(fp));
-            vec3_set(p, fp[0], fp[1], fp[2]);
-            lum = painter->atm.compute_lum(painter->atm.user, p);
+            lum = painter->atm.compute_lum(painter->atm.user,
+                    gl_buf_at(&item->buf, i * n + j, ATTR_SKY_POS));
             gl_buf_1f(&item->buf, i * n + j, ATTR_LUMINANCE, lum);
         }
     }

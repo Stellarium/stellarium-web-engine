@@ -138,11 +138,12 @@ static void prepare_skybrightness(
                           0.01);
 }
 
-static double compute_lum(void *user, const double pos[3])
+static float compute_lum(void *user, const float pos[3])
 {
     render_data_t *d = user;
-    double p[3] = {pos[0], pos[1], pos[2]}, lum;
+    double p[3] = {pos[0], pos[1], pos[2]};
     const double zenith[3] = {0, 0, 1};
+    float lum;
     // Our formula does not work below the horizon.
     p[2] = fabs(p[2]);
     lum = skybrightness_get_luminance(&d->skybrightness,
