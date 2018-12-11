@@ -62,9 +62,11 @@ Module['D2R'] = Math.PI / 180;
 Module['R2D'] = 180 / Math.PI;
 
 // Expose the frame enum.
-// Make sure that correspond to the values in core.h!
-Module['FRAME_ICRS'] = 1;
-Module['FRAME_CIRS'] = 2;
+// Make sure that correspond to the values in frames.h!
+Module['FRAME_ASTROM'] = -1;
+Module['FRAME_ICRF'] = 0;
+Module['FRAME_CIRS'] = 1;
+Module['FRAME_JNOW'] = 2;
 Module['FRAME_OBSERVED'] = 3;
 Module['FRAME_VIEW'] = 4;
 
@@ -279,8 +281,10 @@ Module['anpm'] = function(a) {
 }
 
 var asFrame = function(f) {
-  if (f === 'ICRS') return Module.FRAME_ICRS;
+  if (f === 'ASTROM') return Module.FRAME_ASTROM;
+  if (f === 'ICRF') return Module.FRAME_ICRF;
   if (f === 'CIRS') return Module.FRAME_CIRS;
+  if (f === 'JNOW') return Module.FRAME_JNOW;
   if (f === 'OBSERVED') return Module.FRAME_OBSERVED;
   if (f === 'VIEW') return Module.FRAME_VIEW;
   assert(typeof(f) === 'number');
@@ -288,29 +292,44 @@ var asFrame = function(f) {
 }
 
 /*
- * Function: convertPosition
- * Convert positions from one frame to an other
+ * Function: convertFrame
+ * Rotate the passed apparent coordinate vector from a Reference Frame to
+ * another.
+ *
+ * Check the 4th component of the input vector
+ * to know if the source is at infinity. If in[3] == 1.0, the source is at
+ * infinity and the vector must be normalized, otherwise assume the vector to
+ * contain the real object's distance in AU.
+ *
+ * The vector represents the apparent position/direction of the source as seen
+ * by the observer in his reference system (usually GCRS for earth observation).
+ * This means that effects such as space motion, light deflection or annual
+ * aberration must already be taken into account before calling this function.
  *
  * Parameters:
  *   obs    - The observer.
- *   origin - Origin frame ('ICRS', 'CIRS', 'OBSERVED', 'VIEW').
+ *   origin - Origin frame ('ASTROM', 'ICRF', 'CIRS', 'JNOW', 'OBSERVED',
+ *            'VIEW').
  *   dest   - Destination frame (same as origin).
- *   v      - A 3d or 4d vector.
+ *   at_inf - true for fixed objects (far away from the solar system).
+ *            For such objects, velocity is assumed to be 0 and the position
+ *            is assumed to be normalized.
+ *   v      - A 3d vector.
  *
  * Return:
- *   A 3d or 4d vector.
+ *   A 4d vector.
  */
-Module['convertPosition'] = function(obs, origin, dest, v) {
+Module['convertFrame'] = function(obs, origin, dest, v) {
   origin = asFrame(origin);
   dest = asFrame(dest);
   var v4 = [v[0], v[1], v[2], v[3] || 0.0];
-  var ptr = Module._malloc(8 * 8);
+  var ptr = Module._malloc(7 * 8);
   var i;
   for (i = 0; i < 4; i++)
     Module._setValue(ptr + i * 8, v4[i], 'double');
-  Module._convert_coordinates(obs.v, origin, dest, 0, ptr, ptr + 4 * 8);
-  var ret = new Array(v.length);
-  for (i = 0; i < v.length; i++)
+  Module._convert_framev4(obs.v, origin, dest, ptr, ptr + 4 * 8);
+  var ret = new Array(3);
+  for (i = 0; i < 3; i++)
     ret[i] = Module._getValue(ptr + (4 + i) * 8, 'double')
   Module._free(ptr);
   return ret;

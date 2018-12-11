@@ -246,7 +246,7 @@ var testPositions = function(stel) {
   var o = stel.getObj('Polaris');
   o.update(obs);
   var icrs = o.icrs;
-  var cirs = stel.convertPosition(obs, 'ICRS', 'CIRS', icrs);
+  var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', icrs);
   var a_ra  = stel.anp(stel.c2s(icrs)[0]);
   var a_dec = stel.anpm(stel.c2s(icrs)[1]);
   var ra  = stel.anp(stel.c2s(cirs)[0]);
