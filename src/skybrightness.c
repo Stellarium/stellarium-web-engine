@@ -16,6 +16,18 @@
 static inline float pow2(float x) { return x * x; }
 static inline float pow4(float x) { return x * x * x * x; }
 
+static inline float fast_expf(float x) {
+    x = 1.0 + x / 1024;
+    x *= x; x *= x; x *= x; x *= x;
+    x *= x; x *= x; x *= x; x *= x;
+    x *= x; x *= x;
+    return x;
+}
+
+static inline float fast_exp10f(float x) {
+    return fast_expf(x * logf(10.f));
+}
+
 // Radiant to degree.
 static const float DR = 180.0 / 3.14159;
 
@@ -112,19 +124,19 @@ float skybrightness_get_luminance(
     K = sb->K;
 
     // 2000 SKY Subroutine
-    X = 1 / (cosf(ZZ) + .025 * expf(-11 * cosf(ZZ))); // air mass
+    X = 1 / (cosf(ZZ) + .025 * fast_expf(-11 * cosf(ZZ))); // air mass
     XM = sb->XM;
     XS = sb->XS;
 
     // 2130 Dark night sky brightness
     BN = BO * (1 + .3 * cosf(6.283 * (Y - 1992) / 11));
     BN = BN * (.4 + .6 / sqrtf(1.0 - .96 * powf((sinf(ZZ)), 2)));
-    BN = BN * (exp10f(-.4 * K * X));
+    BN = BN * (fast_exp10f(-.4 * K * X));
 
     // 2170 Moonlight brightness
     MM = -12.73 + .026 * fabs(AM) + 4E-09 * pow4(AM); // moon mag in V
     MM = MM + CM; // Moon mag
-    C3 = exp10f(-.4 * K * XM);
+    C3 = fast_exp10f(-.4 * K * XM);
     FM = 6.2E+07 / pow2(RM) + (exp10f(6.15 - RM / 40));
     FM = FM + exp10f(5.36) * (1.06 + pow2(cosf(RM * RD)));
     BM = exp10f(-.4 * (MM - MO + 43.27));
@@ -141,9 +153,9 @@ float skybrightness_get_luminance(
     BT = BT * (100 / RS) * (1.0 - exp10f(-.4 * K * X));
 
     // 2300 Daylight brightness
-    C4 = exp10f(-.4 * K * XS);
-    FS = 6.2E+07 / pow2(RS) + (exp10f(6.15 - RS / 40));
-    FS = FS + exp10f(5.36) * (1.06 + pow2(cosf(RS * RD)));
+    C4 = fast_exp10f(-.4 * K * XS);
+    FS = 6.2E+07 / pow2(RS) + (fast_exp10f(6.15 - RS / 40));
+    FS = FS + fast_exp10f(5.36) * (1.06 + pow2(cosf(RS * RD)));
     BD = exp10f(-.4 * (MS - MO + 43.27));
     BD = BD * (1 - exp10f(-.4 * K * X));
     BD = BD * (FS * C4 + 440000.0 * (1 - C4));
