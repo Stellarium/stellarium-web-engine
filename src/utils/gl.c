@@ -150,6 +150,11 @@ static int gl_size_for_type(int type)
     }
 }
 
+void *gl_buf_at(gl_buf_t *buf, int idx, int attr)
+{
+    return buf->data + idx * buf->info->size + buf->info->attrs[attr].ofs;
+}
+
 static void gl_buf_set(gl_buf_t *buf, int i, int attr, void *v, int size)
 {
     void *dst;

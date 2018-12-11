@@ -110,6 +110,12 @@ void gl_buf_4i(gl_buf_t *buf, int idx, int attr,
                int v0, int v1, int v2, int v3);
 
 /*
+ * Function: gl_buf_at
+ * Return a pointer to an element of a buffer
+ */
+void *gl_buf_at(gl_buf_t *buf, int idx, int attr);
+
+/*
  * Function: gl_buf_next
  * Add a new empty row to the buffer and set the default index to it
  */
