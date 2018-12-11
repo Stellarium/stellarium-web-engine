@@ -153,7 +153,9 @@ static float compute_lum(void *user, const float pos[3])
     // Clamp to prevent too much adaptation.
     lum = min(lum, 50000);
 
-    d->sum_lum += lum;
+    // Update luminance sum for eye adaptation.
+    // If we are below horizon do not consider the luminance.
+    if (pos[2] > 0) d->sum_lum += lum;
     d->nb_lum++;
     return lum;
 }
