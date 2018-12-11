@@ -171,7 +171,7 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
     double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     if (painter_is_tile_clipped(painter, FRAME_OBSERVED, order, pix, true))
         return;
-    split = 8; // Adhoc split computation.
+    split = 12; // Adhoc split value to look good while not being too slow.
     projection_t proj;
     projection_init_healpix(&proj, 1 << order, pix, true, true);
     paint_quad(painter, FRAME_OBSERVED, NULL, NULL, uv, &proj, split);
