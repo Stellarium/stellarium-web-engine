@@ -239,12 +239,6 @@ static json_value *star_get_distance(obj_t *obj, const attribute_t *attr,
     return args_value_new("f", "dist", star->data.distance);
 }
 
-void stars_load(const char *path, stars_t *stars);
-
-static int stars_init(obj_t *obj, json_value *args);
-static int stars_render(const obj_t *obj, const painter_t *painter);
-static obj_t *stars_get(const obj_t *obj, const char *id, int flags);
-
 static star_t *star_create(const star_data_t *data)
 {
     star_t *star;
