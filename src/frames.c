@@ -336,7 +336,7 @@ static void test_convert_origin(void)
         eraS2p(planet->altazd[1] * DD2R, planet->altazd[0] * DD2R,
                planet->altazd[2], pref);
         sep = eraSepp(p, pref) * DR2D;
-        if (sep > precision) {
+        if (sep > precision && strcmp(planet->name, "earth")) {
             LOG_E("Error: %s", planet->name);
             LOG_E("Apparent altaz error: %.5f°", sep);
             double az, alt, dist;
@@ -346,8 +346,7 @@ static void test_convert_origin(void)
             eraP2s(p, &az, &alt, &dist);
             az = eraAnp(az);
             LOG_E("Tst az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
-            if (strcmp(planet->name, "earth"))
-                assert(false);
+            assert(false);
         }
     }
 }
