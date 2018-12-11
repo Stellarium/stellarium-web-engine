@@ -675,6 +675,7 @@ void core_on_key(int key, int action)
         {"N", "core.dsos"},
         {"D", "core.dss"},
         {"S", "core.stars"},
+        {"T", "core", "test"},
     };
     int i;
     bool v;
@@ -1020,6 +1021,7 @@ static obj_klass_t core_klass = {
         PROPERTY("clicks", "d", MEMBER(core_t, clicks)),
         PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
         PROPERTY("zoom", "f", MEMBER(core_t, zoom)),
+        PROPERTY("test", "b", MEMBER(core_t, test)),
         FUNCTION("lookat", .fn = core_lookat),
         FUNCTION("point_and_lock", .fn = core_point_and_lock),
         {}

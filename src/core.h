@@ -214,6 +214,10 @@ struct core
 
     // Computed min radius before we start to dim out stars brightness.
     double r_min;
+
+    // Can be used for debugging.  It's conveniant to have an exposed test
+    // attribute.
+    bool test;
 };
 
 enum {
