@@ -45,6 +45,7 @@ typedef struct {
 
     // Skybrightness model.
     skybrightness_t skybrightness;
+    double landscape_lum; // Average luminance of the landscape.
 
     // Updated during rendering.
     double sum_lum;
@@ -115,6 +116,11 @@ static render_data_t prepare_render_data(
 
     vec3_copy(sun_pos, data.sun_pos);
     vec3_copy(moon_pos, data.moon_pos);
+
+    // Ad-hoc formula to estimate the landscape luminance.
+    // From 0 to 5kcd/m².
+    data.landscape_lum = smoothstep(0, 0.5, sun_pos[2]) * 5000;
+
     return data;
 }
 
@@ -154,8 +160,9 @@ static float compute_lum(void *user, const float pos[3])
     lum = min(lum, 50000);
 
     // Update luminance sum for eye adaptation.
-    // If we are below horizon do not consider the luminance.
+    // If we are below horizon use the precomputed landscape luminance.
     if (pos[2] > 0) d->sum_lum += lum;
+    else d->sum_lum += d->landscape_lum;
     d->nb_lum++;
     return lum;
 }
@@ -235,6 +242,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     // Clamp the average luminance to prevent too much adaptation.
     // 8000 cd/m² represents a bright sky.
     avg_lum = min(avg_lum, 8000);
+
     core_report_luminance_in_fov(avg_lum + 0.001, true);
     return 0;
 }
