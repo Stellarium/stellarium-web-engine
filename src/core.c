@@ -348,7 +348,7 @@ void core_init(void)
 
     // Set initial word adaptation luminance to 5 kcd/m², full sunlight.
     core->lwa = core->lwa_target = 5000;
-    core->tonemapper = tonemapper_create(86, 35, false);
+    core->tonemapper = tonemapper_create(86, 50, false);
 
     tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
 
