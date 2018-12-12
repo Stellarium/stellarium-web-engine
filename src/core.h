@@ -150,6 +150,7 @@ struct core
     tonemapper_t    *tonemapper;
     double          lwa; // Luminance adaptation.
     double          lwa_target; // The target lwa.
+    double          lwa_coef; // Manual asjutment of lwa value for debug.
 
     telescope_t     telescope;
     bool            telescope_auto; // Auto adjust telescope.

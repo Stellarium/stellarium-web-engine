@@ -299,6 +299,7 @@ static void core_set_default(void)
     core->star_relative_scale = 2;
     core->star_linear_scale = 2;
     core->telescope_auto = true;
+    core->lwa_coef = 1.0;
 
     core_update();
 }
@@ -453,7 +454,8 @@ static int core_update(void)
 
     // Update eye adaptation.
     core->lwa = exp(log(core->lwa) +
-                (log(core->lwa_target) - log(core->lwa)) * 0.1);
+                (log(core->lwa_target * core->lwa_coef) -
+                 log(core->lwa)) * 0.1);
     tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
     core->lwa_target = 0.001; // Reset for next frame.
 

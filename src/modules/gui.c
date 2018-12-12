@@ -257,8 +257,8 @@ static void menu_main(void *user)
         gui_tab_end();
     }
     if (DEBUG && gui_tab("Debug")) {
-        extern bool debug_stars_show_all;
-        gui_toggle("Stars show all", &debug_stars_show_all);
+        if (gui_double("lwa_koef", &core->lwa_coef, NAN))
+            core->lwa_coef = max(0.1, core->lwa_coef);
         gui_text("Progress:");
         progressbar_list(NULL, on_progressbar);
         gui_tab_end();
