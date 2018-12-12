@@ -9,6 +9,10 @@
 
 #include "swe.h"
 
+#ifndef NDEBUG
+#   include <fenv.h>
+#endif
+
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
 #endif
@@ -129,6 +133,12 @@ int main(int argc, char **argv)
     const char *title =
                 "Stellarium Web Engine "
                 SWE_VERSION_STR DEBUG_ONLY(" (debug)");
+
+#ifndef NDEBUG
+    // Make sure that we don't rely on NAN or INFINITY in our computing
+    feenableexcept(FE_DIVBYZERO | FE_INVALID);
+#endif
+
     args_t args = {};
 #if !DEFINED(NO_ARGP)
     argp_parse (&argp, argc, argv, 0, 0, &args);
