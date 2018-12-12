@@ -47,7 +47,7 @@ if profile or debug:
         env.Append(CCFLAGS='-Og')
 
 if not debug:
-     env.Append(CCFLAGS='-O3 -DNDEBUG', LINKFLAGS='-O3')
+     env.Append(CCFLAGS='-Ofast -DNDEBUG', LINKFLAGS='-Ofast')
      if target_os != 'js' and not profile:
          env.Append(CCFLAGS='-flto', LINKFLAGS='-flto')
 
