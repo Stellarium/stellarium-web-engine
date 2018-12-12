@@ -108,6 +108,7 @@ static void load_data(comets_t *comets, const char *data)
         comet->obj.oid = oid_create("Com ", line);
         identifiers_add("NAME", comet->name, comet->obj.oid, 0, "Com ",
                         amag, NULL, NULL);
+        comet->obj.pvo[0][0] = NAN;
     }
 }
 
