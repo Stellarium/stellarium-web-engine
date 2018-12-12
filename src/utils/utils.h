@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 
 // DEFINE(NAME) returns 1 if NAME is defined to 1, 0 otherwise.
@@ -84,6 +85,20 @@ static inline double smoothstep(double edge0, double edge1, double x)
     return x * x * (3.0 - 2.0 * x);
 }
 
+// Code inspired from https://stackoverflow.com/questions/2249110/
+static inline int swe_isnan(double x)
+{
+    union { uint64_t u; double f; } ieee754;
+    ieee754.f = x;
+    return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) +
+           ( (unsigned)ieee754.u != 0 ) > 0x7ff00000;
+}
+#undef isnan
+#define isnan(x) swe_isnan(x)
+
+#undef isinf
+#define isinf(x) static_assert(0, \
+    "Please don't rely on isinf, we build with -ffast-math")
 
 /*
  * Function: unix_to_mjd
