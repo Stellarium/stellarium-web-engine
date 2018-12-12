@@ -875,7 +875,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 {
     core->lwa_target = max(core->lwa_target, lum);
     if (fast_adaptation && core->lwa_target > core->lwa) {
-        core->lwa = core->lwa_target;
+        core->lwa = core->lwa_target * core->lwa_coef;
         tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
     }
 }
