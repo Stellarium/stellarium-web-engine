@@ -112,8 +112,8 @@ static double conjunction_func(const event_type_t *type,
         s4toi(sun->type) != s4toi("SUN ")) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
-    mat4_mul_vec3(obs->ri2e, o1->pvo[0], ohpos);
-    mat4_mul_vec3(obs->ri2e, sun->pvo[0], shpos);
+    mat3_mul_vec3(obs->ri2e, o1->pvo[0], ohpos);
+    mat3_mul_vec3(obs->ri2e, sun->pvo[0], shpos);
     eraC2s(ohpos, &olon, &lat);
     eraC2s(shpos, &slon, &lat);
 

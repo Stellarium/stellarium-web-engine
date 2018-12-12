@@ -289,8 +289,8 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
             mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
             mp->orbit.od, mp->orbit.wd);
 
-    mat4_mul_vec3(obs->re2i, ph[0], ph[0]);
-    mat4_mul_vec3(obs->re2i, ph[1], ph[1]);
+    mat3_mul_vec3(obs->re2i, ph[0], ph[0]);
+    mat3_mul_vec3(obs->re2i, ph[1], ph[1]);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, po);
     vec3_copy(po[0], obj->pvo[0]);
     vec3_copy(po[1], obj->pvo[1]);
@@ -342,7 +342,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     // Render name if needed.
     if (*mplanet->name && vmag <= painter->label_mag_max) {
-        mat4_mul_vec3(core->observer->ro2v, pos, pos);
+        mat3_mul_vec3(core->observer->ro2v, pos, pos);
         if (project(painter->proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                     2, pos, pos)) {

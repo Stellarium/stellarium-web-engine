@@ -38,7 +38,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     }
 
     obj_get_pos_observed(selection, painter.obs, pos);
-    mat4_mul_vec3(painter.obs->ro2v, pos, pos);
+    mat3_mul_vec3(painter.obs->ro2v, pos, pos);
     if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, pos, pos2d))
         return 0;
 

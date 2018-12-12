@@ -82,7 +82,7 @@ static void convert_frame_forward(const observer_t *obs,
     if (origin < FRAME_OBSERVED && dest >= FRAME_OBSERVED) {
         // Precomputed earth rotation and polar motion.
         // Ignores Diurnal aberration for the moment
-        mat4_mul_vec3(obs->ri2h, p, p);
+        mat3_mul_vec3(obs->ri2h, p, p);
 
         if (at_inf) {
             refraction(p, astrom->refa, astrom->refb, p);
@@ -103,7 +103,7 @@ static void convert_frame_forward(const observer_t *obs,
 
     // OBSERVED to VIEW.
     if (origin < FRAME_VIEW && dest >= FRAME_VIEW)
-        mat4_mul_vec3(obs->ro2v, p, p);
+        mat3_mul_vec3(obs->ro2v, p, p);
 }
 
 static void convert_frame_backward(const observer_t *obs,

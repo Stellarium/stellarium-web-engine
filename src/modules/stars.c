@@ -468,7 +468,7 @@ static int render_visitor(int order, int pix, void *user)
     fov = max(core->fovx, core->fovy);
     max_sep = fov / 2.0 * 1.5 + 0.5 * DD2R;
     eraS2c(painter.obs->azimuth, painter.obs->altitude, viewport_cap);
-    mat4_mul_vec3(painter.obs->rh2i, viewport_cap, viewport_cap);
+    mat3_mul_vec3(painter.obs->rh2i, viewport_cap, viewport_cap);
     viewport_cap[3] = cos(max_sep);
 
     point_t *points = malloc(tile->nb * sizeof(*points));

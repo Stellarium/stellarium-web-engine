@@ -362,18 +362,18 @@ static double get_theta_range(const painter_t *painter)
 {
     const double inf = INFINITY;
     double p[4] = {0, 0, 0, 0};
-    double m[4][4];
+    double m[3][3];
     double theta, phi;
     double theta_max = -inf, theta_min = +inf;
     int i;
 
-    mat4_mul(painter->obs->ro2v, painter->obs->ri2h, m);
-    mat4_invert(m, m);
+    mat3_mul(painter->obs->ro2v, painter->obs->ri2h, m);
+    mat3_invert(m, m);
     for (i = 0; i < 4; i++) {
         p[0] = 2 * ((i % 2) - 0.5);
         p[1] = 2 * ((i / 2) - 0.5);
         project(painter->proj, PROJ_BACKWARD, 4, p, p);
-        mat4_mul_vec3(m, p, p);
+        mat3_mul_vec3(m, p, p);
         eraC2s(p, &theta, &phi);
         theta_max = max(theta_max, theta);
         theta_min = min(theta_min, theta);
@@ -418,7 +418,7 @@ static int line_render(const obj_t *obj, const painter_t *painter)
     mat4_set_identity(transform);
 
     if (strcmp(line->obj.id, "ecliptic") == 0) {
-        mat4_copy(core->observer->re2h, transform);
+        mat3_to_mat4(core->observer->re2h, transform);
         mat4_rx(M_PI / 2, transform, transform);
     }
 

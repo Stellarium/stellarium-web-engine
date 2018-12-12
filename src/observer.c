@@ -62,15 +62,15 @@ static void update_matrices(observer_t *obs)
     mat3_rx(eraObl80(DJM0, obs->ut1), re2h, re2h);
     mat3_mul(ro2v, re2h, re2v);
 
-    // Convert all to 4x4 matrices.
-    mat3_to_mat4(ro2v, obs->ro2v);
-    mat3_to_mat4(ri2h, obs->ri2h);
-    mat3_to_mat4(rh2i, obs->rh2i);
-    mat3_to_mat4(ri2v, obs->ri2v);
-    mat3_to_mat4(ri2e, obs->ri2e);
-    mat3_to_mat4(re2i, obs->re2i);
-    mat3_to_mat4(re2h, obs->re2h);
-    mat3_to_mat4(re2v, obs->re2v);
+    // Copy all
+    mat3_copy(ro2v, obs->ro2v);
+    mat3_copy(ri2h, obs->ri2h);
+    mat3_copy(rh2i, obs->rh2i);
+    mat3_copy(ri2v, obs->ri2v);
+    mat3_copy(ri2e, obs->ri2e);
+    mat3_copy(re2i, obs->re2i);
+    mat3_copy(re2h, obs->re2h);
+    mat3_copy(re2v, obs->re2v);
 }
 
 static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
@@ -174,7 +174,7 @@ void observer_update(observer_t *obs, bool fast)
 
     // Compute pointed at constellation.
     eraS2c(obs->azimuth, obs->altitude, p);
-    mat4_mul_vec3(obs->rh2i, p, obs->pointer.icrs);
+    mat3_mul_vec3(obs->rh2i, p, obs->pointer.icrs);
     find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
 }
 

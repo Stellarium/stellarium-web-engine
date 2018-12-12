@@ -43,7 +43,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     double size = 24;
     double color[4] = {0.8, 0.2, 0.1, 1.0};
     for (i = 0; i < ARRAY_SIZE(POINTS); i++) {
-        mat4_mul_vec3(core->observer->ro2v, POINTS[i].pos, pos);
+        mat3_mul_vec3(core->observer->ro2v, POINTS[i].pos, pos);
         if (    !project(painter->proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos))

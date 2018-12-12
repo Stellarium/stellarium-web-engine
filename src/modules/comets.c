@@ -149,7 +149,7 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
         ph[0][2] = r * (sin(u) * sin(i));
     }
 
-    mat4_mul_vec3(obs->re2i, ph[0], ph[0]);
+    mat3_mul_vec3(obs->re2i, ph[0], ph[0]);
     sr = vec3_norm(ph[0]);
 
     vec3_set(ph[1], 0, 0, 0);

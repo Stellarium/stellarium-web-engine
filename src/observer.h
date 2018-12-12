@@ -85,14 +85,14 @@ struct observer
     // i: ICRS (right handed).
     // e: Ecliptic (right handed).
     // v: View (observed with view direction).
-    double ro2v[4][4];  // Rotate from observed to view.
-    double ri2h[4][4];  // Equatorial J2000 (ICRS) to horizontal.
-    double rh2i[4][4];  // Horizontal to Equatorial J2000 (ICRS).
-    double ri2v[4][4];  // Equatorial J2000 (ICRS) to view.
-    double ri2e[4][4];  // Equatorial J2000 (ICRS) to ecliptic.
-    double re2i[4][4];  // Eclipic to Equatorial J2000 (ICRS).
-    double re2h[4][4];  // Ecliptic to horizontal.
-    double re2v[4][4];  // Ecliptic to view.
+    double ro2v[3][3];  // Rotate from observed to view.
+    double ri2h[3][3];  // Equatorial J2000 (ICRS) to horizontal.
+    double rh2i[3][3];  // Horizontal to Equatorial J2000 (ICRS).
+    double ri2v[3][3];  // Equatorial J2000 (ICRS) to view.
+    double ri2e[3][3];  // Equatorial J2000 (ICRS) to ecliptic.
+    double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRS).
+    double re2h[3][3];  // Ecliptic to horizontal.
+    double re2v[3][3];  // Ecliptic to view.
 };
 
 void observer_update(observer_t *obs, bool fast);

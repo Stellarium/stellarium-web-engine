@@ -169,11 +169,11 @@ static int core_update_direction(double dt);
 // Convert mouse position to observed coordinates.
 static void mouse_to_observed(double x, double y, double p[3])
 {
-    double rv2o[4][4];
+    double rv2o[3][3];
     projection_t proj;
     double pos[4] = {x, y};
 
-    mat4_invert(core->observer->ro2v, rv2o);
+    mat3_invert(core->observer->ro2v, rv2o);
     projection_init(&proj, core->proj, core->fovx,
                     core->win_size[0], core->win_size[1]);
     // Convert to NDC coordinates.
@@ -181,7 +181,7 @@ static void mouse_to_observed(double x, double y, double p[3])
     pos[0] = pos[0] / core->win_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
     project(&proj, PROJ_BACKWARD, 4, pos, pos);
-    mat4_mul_vec3(rv2o, pos, pos);
+    mat3_mul_vec3(rv2o, pos, pos);
     vec3_copy(pos, p);
 }
 

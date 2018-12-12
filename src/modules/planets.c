@@ -159,7 +159,7 @@ static int earth_update(planet_t *planet, const observer_t *obs)
     planet->obj.pvo[0][3] = 1;
     planet->obj.pvo[1][3] = 1;
     // Ecliptic position.
-    mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
+    mat3_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
     planet->phase = NAN;
     return 0;
 }
@@ -407,7 +407,7 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
     // Kepler orbit planets.
     if (planet->orbit.type == 1) kepler_update(planet, obs);
 
-    mat4_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
+    mat3_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
 
     // Adjust vmag for saturn.
     if (planet->id == SATURN) {
@@ -415,7 +415,7 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
         double earth_hlon, earth_hlat;
         double et, st, set;
         double earth_hpos[3];
-        mat4_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
+        mat3_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
 
         eraC2s(planet->hpos, &hlon, &hlat);
         eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
@@ -590,6 +590,7 @@ static void planet_render_hips(const planet_t *planet,
 {
     // XXX: cleanup this function.  It is getting too big.
     double mat[4][4];
+    double tmp_mat[4][4];
     double pos[4];
     double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
@@ -621,7 +622,8 @@ static void planet_render_hips(const planet_t *planet,
     painter.planet.sun = &sun_pos;
 
     // Apply the rotation.
-    mat4_mul(mat, core->observer->re2i, mat);
+    mat3_to_mat4(core->observer->re2i, tmp_mat);
+    mat4_mul(mat, tmp_mat, mat);
     mat4_rx(-planet->rot.obliquity, mat, mat);
 
     if (planet->rot.period) {
@@ -737,7 +739,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // XXX: we need to compute the max visible fov (for the moment I
     // add a factor of 1.5 to make sure).
     vec3_normalize(pos, pos);
-    mat4_mul_vec3(painter.obs->ro2v, pos, vpos);
+    mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
     sep = eraSepp(vpos, (double[]){0, 0, -1});
     if (sep - r > core->fov * 1.5)
         return;
@@ -780,7 +782,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
 
     if (vmag <= painter.label_mag_max) {
-        mat4_mul_vec3(core->observer->ro2v, pos, vpos);
+        mat3_mul_vec3(core->observer->ro2v, pos, vpos);
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, vpos, vpos)) {
@@ -800,7 +802,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Render the Sun halo.
     if (planet->id == SUN) {
-        mat4_mul_vec3(core->observer->ro2v, pos, vpos);
+        mat3_mul_vec3(core->observer->ro2v, pos, vpos);
         project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, vpos);
         paint_texture(&painter, planets->halo_tex, NULL, vpos, 200.0, NULL, 0);
     }
