@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <float.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

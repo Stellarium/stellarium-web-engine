@@ -330,8 +330,8 @@ static int on_file_tile_loaded(const char type[4],
 
     tile = calloc(1, sizeof(*tile));
     tile->stars = calloc(nb, sizeof(*tile->stars));
-    tile->mag_min = +INFINITY;
-    tile->mag_max = -INFINITY;
+    tile->mag_min = DBL_MAX;
+    tile->mag_max = DBL_MIN;
 
     for (i = 0; i < nb; i++) {
         s = &tile->stars[tile->nb];
@@ -392,7 +392,7 @@ static int stars_init(obj_t *obj, json_value *args)
     };
 
     stars->visible = true;
-    stars->mag_max = INFINITY;
+    stars->mag_max = DBL_MAX;
 
     regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
