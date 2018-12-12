@@ -97,7 +97,7 @@ void observer_update(observer_t *obs, bool fast)
 {
     double utc1, utc2, ut11, ut12, tai1, tai2;
     double dt, dut1 = 0;
-    double p[4] = {0};
+    double p[3] = {0};
 
     uint64_t hash, hash_partial;
     observer_compute_hash(obs, &hash_partial, &hash);
@@ -174,7 +174,7 @@ void observer_update(observer_t *obs, bool fast)
 
     // Compute pointed at constellation.
     eraS2c(obs->azimuth, obs->altitude, p);
-    mat4_mul_vec4(obs->rh2i, p, obs->pointer.icrs);
+    mat4_mul_vec3(obs->rh2i, p, obs->pointer.icrs);
     find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
 }
 

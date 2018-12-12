@@ -75,7 +75,7 @@ struct observer
 
     // The pointed position and constellation.
     struct {
-        double icrs[4];
+        double icrs[3];
         char cst[4];
     } pointer;
 
