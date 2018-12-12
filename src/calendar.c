@@ -276,7 +276,7 @@ void calendar_print(void)
     double start, end;
     double utcoffset;
     char b1[64], b2[64];
-    core_init();
+    core_init(100, 100, 1);
     utcoffset = core->utc_offset / 60.0 / 24;
     start = time_set_dtf(core->observer->utc, utcoffset, -1, -1, 1, 0, 0, 0);
     end   = time_add_dtf(start, utcoffset, 0, 1, 0, 0, 0, 0);

@@ -322,7 +322,7 @@ static uint8_t *texture_load_function(
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_init(void)
+void core_init(double win_w, double win_h, double pixel_scale)
 {
     char cache_dir[1024];
     obj_klass_t *module;
@@ -339,7 +339,9 @@ void core_init(void)
 
     font_init(asset_get_data("asset://font/DejaVuSans-small.ttf", NULL, NULL));
     core = (core_t*)obj_create("core", "core", NULL, NULL);
-    core->win_pixels_scale = 1.0;
+    core->win_size[0] = win_w;
+    core->win_size[1] = win_h;
+    core->win_pixels_scale = pixel_scale;
     obj_add_sub(&core->obj, "hints");
     core->hints_mag_max = NAN;
 
@@ -1055,7 +1057,7 @@ static void test_vec(void)
 static void test_core(void)
 {
     double v;
-    core_init();
+    core_init(100, 100, 1.0);
     core->observer->hm = 10.0;
     obj_t *obs = obj_get(NULL, "core.observer", 0);
     assert(obs);
@@ -1082,7 +1084,7 @@ static void test_basic(void)
 static void test_set_city(void)
 {
     double lat;
-    core_init();
+    core_init(100, 100, 1.0);
     obj_t *city;
     obj_t *obs = &core->observer->obj;
 

@@ -176,7 +176,7 @@ static void test_events(void)
     obj_t *sun, *moon;
     double t, djm0, djm;
     const double sec = 1. / 24 / 60 / 60;
-    core_init();
+    core_init(100, 100, 1.0);
 
     // Set atlanta coordinates.
     core->observer->elong = -84.4 * DD2R;
@@ -256,7 +256,7 @@ static void test_ephemeris(void)
     const double precision_azalt = 2. / 60;
     double sep, apparent_radec_icrf[4];
 
-    core_init();
+    core_init(100, 100, 1.0);
     for (i = 0; i < ARRAY_SIZE(ephs); i++) {
         obs = core->observer;
         obj_set_attr((obj_t*)obs, "utc", "f", ephs[i].date);

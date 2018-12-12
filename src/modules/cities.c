@@ -183,7 +183,7 @@ static void test_cities(void)
     const char tz[64];
     double lat;
 
-    core_init();
+    core_init(100, 100, 1.0);
     city = obj_get(NULL, "CITY GB London", 0);
     assert(city);
     name = identifiers_get(city->oid, "NAME");

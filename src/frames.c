@@ -294,7 +294,7 @@ static void test_convert_origin(void)
     static const double lon = -84.3880; // Atlanta
     static const double lat = 33.7490;  // Atlanta
 
-    core_init();
+    core_init(100, 100, 1.0);
     obs = core->observer;
     obj_set_attr((obj_t*)obs, "utc", "f", date);
     obj_set_attr((obj_t*)obs, "longitude", "f", lon * DD2R);

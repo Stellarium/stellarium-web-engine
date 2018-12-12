@@ -167,12 +167,16 @@ int main(int argc, char **argv)
     glfwSetScrollCallback(g_window, scroll_callback);
     glfwSetInputMode(g_window, GLFW_STICKY_MOUSE_BUTTONS, false);
 
-    core_init();
+    int fb_size[2];
+    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
+
+    core_init(fb_size[0], fb_size[1], 1.0);
     core_add_default_sources();
 
     if (DEFINED(COMPILE_TESTS)) {
         tests_run("auto"); // Run all the automatic tests.
-        core_init();       // Reinit the core to default.
+        // Reinit the core to default.
+        core_init(fb_size[0], fb_size[1], 1.0);
     }
 
     run_main_loop(loop_function);
