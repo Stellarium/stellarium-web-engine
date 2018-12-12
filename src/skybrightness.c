@@ -107,7 +107,7 @@ float skybrightness_get_luminance(
            K, X, XS, XM, BN, MM, C3, FM, BM, HS, BT, C4, FS,
            BD;
 
-    const float RD = 3.14159 / 180.0;
+    const float RD = 3.14159f / 180.0f;
     // 80 Input for Moon and Sun
     const float AM = sb->AM; // Moon phase (deg.; 0=FM, 90=FQ/LQ, 180=NM)
     const float ZM = sb->ZM; // Zenith distance of Moon (deg.)
@@ -124,53 +124,53 @@ float skybrightness_get_luminance(
     K = sb->K;
 
     // 2000 SKY Subroutine
-    X = 1 / (cosf(ZZ) + .025 * fast_expf(-11 * cosf(ZZ))); // air mass
+    X = 1 / (cosf(ZZ) + .025f * fast_expf(-11 * cosf(ZZ))); // air mass
     XM = sb->XM;
     XS = sb->XS;
 
     // 2130 Dark night sky brightness
-    BN = BO * (1 + .3 * cosf(6.283 * (Y - 1992) / 11));
-    BN = BN * (.4 + .6 / sqrtf(1.0 - .96 * powf((sinf(ZZ)), 2)));
-    BN = BN * (fast_exp10f(-.4 * K * X));
+    BN = BO * (1 + .3f * cosf(6.283f * (Y - 1992) / 11));
+    BN = BN * (.4f + .6f / sqrtf(1.0f - .96f * powf((sinf(ZZ)), 2)));
+    BN = BN * (fast_exp10f(-.4f * K * X));
 
     // 2170 Moonlight brightness
-    MM = -12.73 + .026 * fabs(AM) + 4E-09 * pow4(AM); // moon mag in V
+    MM = -12.73f + .026f * fabsf(AM) + 4E-09f * pow4(AM); // moon mag in V
     MM = MM + CM; // Moon mag
-    C3 = fast_exp10f(-.4 * K * XM);
-    FM = 6.2E+07 / pow2(RM) + (exp10f(6.15 - RM / 40));
-    FM = FM + exp10f(5.36) * (1.06 + pow2(cosf(RM * RD)));
-    BM = exp10f(-.4 * (MM - MO + 43.27));
-    BM = BM * (1 - exp10f(-.4 * K * X));
-    BM = BM * (FM * C3 + 440000.0 * (1 - C3));
+    C3 = fast_exp10f(-.4f * K * XM);
+    FM = 6.2E+07f / pow2(RM) + (exp10f(6.15f - RM / 40));
+    FM = FM + exp10f(5.36f) * (1.06f + pow2(cosf(RM * RD)));
+    BM = exp10f(-.4f * (MM - MO + 43.27f));
+    BM = BM * (1 - exp10f(-.4f * K * X));
+    BM = BM * (FM * C3 + 440000.0f * (1 - C3));
 
     // Added from the original code, a clamping value to prevent the
     // moon brightness to get too hight.
     if (sb->max_BM >= 0 && BM > sb->max_BM) BM = sb->max_BM;
 
     // 2260 Twilight brightness
-    HS = 90.0 - ZS; // Height of Sun
-    BT = exp10f(-.4 * (MS - MO + 32.5 - HS - (Z / (360 * K))));
-    BT = BT * (100 / RS) * (1.0 - exp10f(-.4 * K * X));
+    HS = 90.0f - ZS; // Height of Sun
+    BT = exp10f(-.4f * (MS - MO + 32.5f - HS - (Z / (360 * K))));
+    BT = BT * (100 / RS) * (1.0f - exp10f(-.4f * K * X));
 
     // 2300 Daylight brightness
-    C4 = fast_exp10f(-.4 * K * XS);
-    FS = 6.2E+07 / pow2(RS) + (fast_exp10f(6.15 - RS / 40));
-    FS = FS + fast_exp10f(5.36) * (1.06 + pow2(cosf(RS * RD)));
-    BD = exp10f(-.4 * (MS - MO + 43.27));
-    BD = BD * (1 - exp10f(-.4 * K * X));
-    BD = BD * (FS * C4 + 440000.0 * (1 - C4));
+    C4 = fast_exp10f(-.4f * K * XS);
+    FS = 6.2E+07f / pow2(RS) + (fast_exp10f(6.15f - RS / 40));
+    FS = FS + fast_exp10f(5.36f) * (1.06f + pow2(cosf(RS * RD)));
+    BD = exp10f(-.4f * (MS - MO + 43.27f));
+    BD = BD * (1 - exp10f(-.4f * K * X));
+    BD = BD * (FS * C4 + 440000.0f * (1 - C4));
 
     // 2370 Total sky brightness
     if (BD > BT)
         B = BN + BT;
     else
         B = BN + BD;
-    if (ZM < 90.0) B = B + BM;
+    if (ZM < 90.0f) B = B + BM;
     // End sky subroutine.
 
 
     // 250 Visual limiting magnitude
-    BL = B / 1.11E-15; // in nanolamberts
+    BL = B / 1.11E-15f; // in nanolamberts
     // 330 PRINT : REM  Write results and stop program
     return BL * NLAMBERT_TO_CDM2;
 }
