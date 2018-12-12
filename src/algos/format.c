@@ -7,6 +7,7 @@
  * repository.
  */
 
+#include "utils/utils.h"
 #include "erfa.h"
 #include <stdio.h>
 #include <string.h>
@@ -80,10 +81,10 @@ const char *format_dist(char *buf, double d)
     double light_year;
     double meter;
 
+    if (isnan(d)) return "NAN";
+
     light_year = d * ERFA_AULT / ERFA_DAYSEC / ERFA_DJY;
     meter = d * ERFA_DAU;
-
-    if (isnan(d)) return "NAN";
 
     if (light_year >= 0.1) {
         sprintf(buf, "%.1f light years", light_year);
