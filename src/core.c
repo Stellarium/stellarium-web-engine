@@ -295,13 +295,18 @@ static void core_set_default(void)
     core->utc_offset = sys_get_utc_offset() / 60.0;
 
     core->proj = PROJ_STEREOGRAPHIC;
+    core->lwmax = 5000;
 
-    core->star_relative_scale = 2;
-    core->star_linear_scale = 2;
+    // Adjust those values to make the sky look good.
+    core->star_linear_scale = 0.7;
+    core->star_relative_scale = 1.5;
+    core->lwmax_min = 0.004;
+    core->lwmax_scale = 1.3;
+    core->max_point_radius = 6.0;
+    core->min_point_radius = 0.2;
+    tonemapper_update(&core->tonemapper, 1, 1, 1, core->lwmax);
+
     core->telescope_auto = true;
-    core->lwa_coef = 1.0;
-    core->min_point_radius = 0.125;
-    core->max_point_radius = 8.0;
 
     core_update();
 }
@@ -349,12 +354,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
 
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
-
-    // Set initial word adaptation luminance to 5 kcd/m², full sunlight.
-    core->lwa = core->lwa_target = 5000;
-    core->tonemapper = tonemapper_create(86, 50, false);
-
-    tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
 
     core->gest_pan = (gesture_t) {
         .type = GESTURE_PAN,
@@ -443,6 +442,7 @@ static int core_update(void)
 {
     bool atm_visible;
     double aspect = core->win_size[0] / core->win_size[1];
+    double lwmax;
     obj_t *atm;
 
     atm = core_get_module("atmosphere");
@@ -457,11 +457,10 @@ static int core_update(void)
     progressbar_update();
 
     // Update eye adaptation.
-    core->lwa = exp(log(core->lwa) +
-                (log(core->lwa_target * core->lwa_coef) -
-                 log(core->lwa)) * 0.1);
-    tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
-    core->lwa_target = 0.001; // Reset for next frame.
+    lwmax = exp(log(core->tonemapper.lwmax) +
+                (log(core->lwmax) - log(core->tonemapper.lwmax)) * 0.1);
+    tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax * core->lwmax_scale);
+    core->lwmax = core->lwmax_min; // Reset for next frame.
 
     return 0;
 }
@@ -787,7 +786,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     log_lw = log_e - log10(M_PI * pr * pr);
 
     // Apply eye adaptation.
-    ld = tonemapper_map_log10(core->tonemapper, log_lw);
+    ld = tonemapper_map_log10(&core->tonemapper, log_lw);
     if (ld < 0) ld = 0; // Prevent math error.
 
     // Extra scale if the telescope magnification is not enough to reach the
@@ -853,10 +852,10 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
 
 void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 {
-    core->lwa_target = max(core->lwa_target, lum);
-    if (fast_adaptation && core->lwa_target > core->lwa) {
-        core->lwa = core->lwa_target * core->lwa_coef;
-        tonemapper_set_adaptation_luminance(core->tonemapper, core->lwa);
+    core->lwmax = max(core->lwmax, lum);
+    if (fast_adaptation && core->lwmax > core->tonemapper.lwmax) {
+        tonemapper_update(&core->tonemapper, -1, -1, -1,
+                          core->lwmax * core->lwmax_scale);
     }
 }
 

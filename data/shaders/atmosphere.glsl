@@ -38,8 +38,9 @@ vec3 xyy_to_srgb(vec3 xyy)
 
 float tonemap(float lw)
 {
-    // Implementation of the Tumblin tonemapping algorithm.
-    return u_tm[0] * pow(lw, u_tm[1]) + u_tm[2];
+    // Logarithmic tonemapping, same as in tonemapper.c
+    return pow(log(1.0 + u_tm[0] * lw) / log(1.0 + u_tm[0] * u_tm[1]),
+               1.0 / u_tm[2]);
 }
 
 void main()

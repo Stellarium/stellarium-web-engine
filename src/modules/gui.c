@@ -258,8 +258,10 @@ static void menu_main(void *user)
         gui_double("s relative", &core->star_relative_scale, 0.1, 8, 1, NAN);
         gui_double("min rad", &core->min_point_radius, 0.01, 10, 2, NAN);
         gui_double("max rad", &core->max_point_radius, 1, 100, 1, NAN);
-        gui_double_log("lwa db ofs", &core->lwa_coef,
-                       -DBL_MAX, DBL_MAX, 2, NAN);
+        gui_double_log("log lmaxmin", &core->lwmax_min, -100, 100, 2, NAN);
+        gui_double_log("log lmaxs", &core->lwmax_scale, -100, 100, 2, NAN);
+        gui_float_log("log p", &core->tonemapper.p, -100, 100, 0, NAN);
+        gui_float("q", &core->tonemapper.q, 1, 4, 1, NAN);
         gui_text("Progress:");
         progressbar_list(NULL, on_progressbar);
         gui_tab_end();
@@ -419,7 +421,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_same_line();
     gui_text("FPS: %.0f", core->prof.fps);
     gui_same_line();
-    gui_text("lwa: %f cd/m2", core->lwa);
+    gui_text("lwmax: %f cd/m2", core->lwmax);
     gui_same_line();
     gui_text("cst: %s", core->observer->pointer.cst);
     gui_panel_end();

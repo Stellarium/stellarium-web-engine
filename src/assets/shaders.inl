@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[2559] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[2608] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -41,8 +41,9 @@ static const unsigned char DATA_shaders_atmosphere_glsl[2559] __attribute__((ali
     "\n"
     "float tonemap(float lw)\n"
     "{\n"
-    "    // Implementation of the Tumblin tonemapping algorithm.\n"
-    "    return u_tm[0] * pow(lw, u_tm[1]) + u_tm[2];\n"
+    "    // Logarithmic tonemapping, same as in tonemapper.c\n"
+    "    return pow(log(1.0 + u_tm[0] * lw) / log(1.0 + u_tm[0] * u_tm[1]),\n"
+    "               1.0 / u_tm[2]);\n"
     "}\n"
     "\n"
     "void main()\n"

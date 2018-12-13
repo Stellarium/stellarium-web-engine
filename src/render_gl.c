@@ -924,7 +924,9 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
         GL(glUniform1fv(prog->u_atm_p_l, 12, item->atm.p));
         GL(glUniform3fv(prog->u_sun_l, 1, item->atm.sun));
         // XXX: the tonemapping args should be copied before rendering!
-        tonemapper_get_shader_args(core->tonemapper, &tm[0], &tm[1], &tm[2]);
+        tm[0] = core->tonemapper.p;
+        tm[1] = core->tonemapper.lwmax;
+        tm[2] = core->tonemapper.q;
         GL(glUniform1fv(prog->u_tm_l, 3, tm));
     }
 

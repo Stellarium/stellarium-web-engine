@@ -82,7 +82,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
 
     // Ad-hock formula for tone mapping.
     lum = 2.4;
-    c = tonemapper_map(core->tonemapper, lum);
+    c = tonemapper_map(&core->tonemapper, lum);
     c = clamp(c, 0, 1) * 0.35;
     painter.color[3] *= c;
 

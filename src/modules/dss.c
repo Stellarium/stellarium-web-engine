@@ -57,8 +57,8 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     painter2.color[3] *= dss->visible.value * visibility;
 
     // Adjust for eye adaptation.
-    lum = 1;
-    c = tonemapper_map(core->tonemapper, lum);
+    lum = 0.075;
+    c = tonemapper_map(&core->tonemapper, lum);
     c = clamp(c, 0, 1);
     painter2.color[3] *= c;
 

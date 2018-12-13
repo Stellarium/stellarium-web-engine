@@ -147,10 +147,10 @@ struct core
     double          hints_mag_max;
     double          contrast; // Apply contrast to the rendered stars.
 
-    tonemapper_t    *tonemapper;
-    double          lwa; // Luminance adaptation.
-    double          lwa_target; // The target lwa.
-    double          lwa_coef; // Manual asjutment of lwa value for debug.
+    tonemapper_t    tonemapper;
+    double          lwmax; // Max visible luminance.
+    double          lwmax_min; // Min value for lwmax.
+    double          lwmax_scale; // Manual scale of lwmax.
     double          max_point_radius; // Max radius in pixel.
     double          min_point_radius;
 

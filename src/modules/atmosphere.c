@@ -49,6 +49,7 @@ typedef struct {
 
     // Updated during rendering.
     double sum_lum;
+    double max_lum;
     int    nb_lum;
 } render_data_t;
 
@@ -157,11 +158,14 @@ static float compute_lum(void *user, const float pos[3])
                 eraSepp(p, d->sun_pos),
                 eraSepp(p, zenith));
     // Clamp to prevent too much adaptation.
-    lum = min(lum, 50000);
+    lum = min(lum, 100000);
 
     // Update luminance sum for eye adaptation.
     // If we are below horizon use the precomputed landscape luminance.
-    if (pos[2] > 0) d->sum_lum += lum;
+    if (pos[2] > 0) {
+        d->sum_lum += lum;
+        d->max_lum = max(d->max_lum, lum);
+    }
     else d->sum_lum += d->landscape_lum;
     d->nb_lum++;
     return lum;
@@ -195,7 +199,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun, *moon;
-    double sun_pos[4], moon_pos[4], avg_lum, moon_phase;
+    double sun_pos[4], moon_pos[4], moon_phase;
     render_data_t data;
     const double T = 5.0;
     int i;
@@ -241,14 +245,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     for (i = 0; i < 12; i++) {
         render_tile(atm, &painter, 0, i);
     }
-
-    avg_lum = 0;
-    if (data.nb_lum) avg_lum = data.sum_lum / data.nb_lum;
-    // Clamp the average luminance to prevent too much adaptation.
-    // 8000 cd/m² represents a bright sky.
-    avg_lum = min(avg_lum, 8000);
-
-    core_report_luminance_in_fov(avg_lum + 0.001, true);
+    core_report_luminance_in_fov(data.max_lum, true);
     return 0;
 }
 
