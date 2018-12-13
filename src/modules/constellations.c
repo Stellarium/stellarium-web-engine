@@ -40,6 +40,7 @@ typedef struct constellations {
     bool        show_all;
 } constellations_t;
 
+static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
 
 static int constellation_init(obj_t *obj, json_value *args)
 {
@@ -60,6 +61,7 @@ static int constellation_init(obj_t *obj, json_value *args)
                     NULL, NULL);
     identifiers_add("NAME", info->name, cons->obj.oid, 0, "Con ", 0,
                     NULL, NULL);
+    constellation_update(obj, core->observer, 0);
     return 0;
 }
 
