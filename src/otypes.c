@@ -347,5 +347,10 @@ T(16, 5, 7, 0, "JTA",   "JupiterTrojan", "Jupiter Trojan Asteroid")
 T(16, 5, 8, 0, "DOA",   "DistantObject", "Distant Object Asteroid")
 T(16, 5, 9, 0, "MBA",   "MainBeltAst", "Main Belt Asteroid")
 
+// Extra fields for Cultural Sky Representation
+T(17, 0, 0, 0, "Cul", "Cultural", "Cultural Sky Representation")
+T(17, 1, 0, 0, "Con",   "Constellation", "Constellation")
+T(17, 2, 0, 0, "Ast",   "Asterism", "Asterism")
+
 {}
 };
