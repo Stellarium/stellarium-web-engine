@@ -151,6 +151,8 @@ struct core
     double          lwa; // Luminance adaptation.
     double          lwa_target; // The target lwa.
     double          lwa_coef; // Manual asjutment of lwa value for debug.
+    double          max_point_radius; // Max radius in pixel.
+    double          min_point_radius;
 
     telescope_t     telescope;
     bool            telescope_auto; // Auto adjust telescope.

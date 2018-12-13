@@ -300,6 +300,8 @@ static void core_set_default(void)
     core->star_linear_scale = 2;
     core->telescope_auto = true;
     core->lwa_coef = 1.0;
+    core->min_point_radius = 0.125;
+    core->max_point_radius = 8.0;
 
     core_update();
 }
@@ -819,7 +821,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     r = s_linear * pow(ld, s_relative / 2.0) * s;
 
     // If the radius is really too small, we don't render the star.
-    if (r < r_min / 4) {
+    if (r < core->min_point_radius) {
         r = 0;
         ld = 0;
     }
@@ -833,7 +835,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     ld = pow(ld, 1 / 2.2); // Gama correction.
     // Saturate radius after a certain point.
     // XXX: make it smooth.
-    r = min(r, 8.0);
+    r = min(r, core->max_point_radius);
     *radius = r;
     if (luminance) *luminance = clamp(ld, 0, 1);
 }

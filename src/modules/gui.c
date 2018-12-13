@@ -220,9 +220,6 @@ static void menu_main(void *user)
     }
 
     if (gui_tab("telescope")) {
-        gui_double("s linear", &core->star_linear_scale, 0, 8, 1, NAN);
-        gui_double("s relative", &core->star_relative_scale, 0.1, 8, 1, NAN);
-
         gui_text("Telescope:");
         gui_text("diameter: %.0fmm", core->telescope.diameter);
         gui_text("f-ratio: %.1f",
@@ -257,6 +254,10 @@ static void menu_main(void *user)
         gui_tab_end();
     }
     if (DEBUG && gui_tab("Debug")) {
+        gui_double("s linear", &core->star_linear_scale, 0, 8, 1, NAN);
+        gui_double("s relative", &core->star_relative_scale, 0.1, 8, 1, NAN);
+        gui_double("min rad", &core->min_point_radius, 0.01, 10, 2, NAN);
+        gui_double("max rad", &core->max_point_radius, 1, 100, 1, NAN);
         gui_double_log("lwa db ofs", &core->lwa_coef,
                        -DBL_MAX, DBL_MAX, 2, NAN);
         gui_text("Progress:");
