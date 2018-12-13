@@ -80,7 +80,8 @@ bool gui_item(const gui_item_t *item)
         }
         if (attr->type[0] == 'f') { // Double attribute
             obj_get_attr(item->obj, item->attr, "f", &f);
-            ret = gui_double(item->label, &f, item->default_value);
+            ret = gui_double(item->label, &f, -DBL_MAX, DBL_MAX, 1,
+                             item->default_value);
             if (ret) obj_set_attr(item->obj, item->attr, "f", f);
             return ret;
         }
@@ -211,8 +212,7 @@ static void menu_main(void *user)
         city_widget();
         obj_get_attr(&core->obj, "fov", "f", &f);
         f *= DR2D;
-        if (gui_double("FOV", &f, NAN)) {
-            f = clamp(f, 0.1, 360);
+        if (gui_double("FOV", &f, 0.1, 360, 0.1, NAN)) {
             f *= DD2R;
             obj_set_attr(&core->obj, "fov", "f", f);
         }
@@ -220,8 +220,8 @@ static void menu_main(void *user)
     }
 
     if (gui_tab("telescope")) {
-        gui_double("s linear", &core->star_linear_scale, NAN);
-        gui_double("s relative", &core->star_relative_scale, NAN);
+        gui_double("s linear", &core->star_linear_scale, 0, 8, 1, NAN);
+        gui_double("s relative", &core->star_relative_scale, 0.1, 8, 1, NAN);
 
         gui_text("Telescope:");
         gui_text("diameter: %.0fmm", core->telescope.diameter);
@@ -257,10 +257,8 @@ static void menu_main(void *user)
         gui_tab_end();
     }
     if (DEBUG && gui_tab("Debug")) {
-        f = log10(core->lwa_coef);
-        if (gui_double("lwa db ofs", &f, NAN))
-            core->lwa_coef = exp10(f);
-        gui_text("lwa coef: %g", core->lwa_coef);
+        gui_double_log("lwa db ofs", &core->lwa_coef,
+                       -DBL_MAX, DBL_MAX, 2, NAN);
         gui_text("Progress:");
         progressbar_list(NULL, on_progressbar);
         gui_tab_end();

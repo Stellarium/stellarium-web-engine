@@ -53,7 +53,14 @@ bool gui_button(const char *label, double size);
 bool gui_link(const char *label, const char *sublabel);
 bool gui_int(const char *label, int *v);
 // default_value set to NAN for no toggle button.
-bool gui_double(const char *label, double *v, double default_value);
+bool gui_double(const char *label, double *v, double min_v, double max_v,
+                int precision, double default_value);
+bool gui_float(const char *label, float *v, float min_v, float max_v,
+               int precision, float default_value);
+bool gui_double_log(const char *label, double *v, double min_v, double max_v,
+                    int precision, double default_value);
+bool gui_float_log(const char *label, float *v, float min_v, float max_v,
+                   int precision, float default_value);
 
 void gui_tabs(char *current);
 void gui_tabs_end(void);

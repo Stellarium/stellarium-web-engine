@@ -482,10 +482,11 @@ bool gui_int(const char *label, int *v)
     return ret;
 }
 
-bool gui_double(const char *label, double *v, double default_value)
+bool gui_double(const char *label, double *v, double min_v, double max_v,
+                int precision, double default_value)
 {
     bool ret, b;
-    double height;
+    double height, step = 1. / pow(10, max(1.0, precision));
     float f = *v;
     gui_base_widget(label, NULL, 10);
 
@@ -496,7 +497,7 @@ bool gui_double(const char *label, double *v, double default_value)
 
     height = ImGui::CalcTextSize(label, NULL, true).y;
     ImGui::PushItemWidth(8.5 * height);
-    ret = ImGui::InputFloat("##l", &f, 0.1, 1.0, 1);
+    ret = ImGui::InputFloat("##l", &f, step, 0.0, precision);
     ImGui::PopItemWidth();
 
     if (!isnan(default_value)) {
@@ -515,8 +516,38 @@ bool gui_double(const char *label, double *v, double default_value)
         }
     }
 
-    if (ret) *v = f;
+    if (ret) *v = clamp(f, min_v, max_v);
     gui_base_widget_end();
+    return ret;
+}
+
+bool gui_float(const char *label, float *v, float min_v, float max_v,
+               int precision, float default_value)
+{
+    double d = *v;
+    bool ret;
+    ret = gui_double(label, &d, min_v, max_v, precision, default_value);
+    if (ret) *v = d;
+    return ret;
+}
+
+bool gui_double_log(const char *label, double *v, double min_v, double max_v,
+                    int precision, double default_value)
+{
+    double d = log10(*v);
+    bool ret;
+    ret = gui_double(label, &d, min_v, max_v, precision, default_value);
+    if (ret) *v = pow(10, d);
+    return ret;
+}
+
+bool gui_float_log(const char *label, float *v, float min_v, float max_v,
+                   int precision, float default_value)
+{
+    double d = log10(*v);
+    bool ret;
+    ret = gui_double(label, &d, min_v, max_v, precision, default_value);
+    if (ret) *v = pow(10, d);
     return ret;
 }
 
