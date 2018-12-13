@@ -503,30 +503,6 @@ static double compute_max_vmag(void)
     return m;
 }
 
-/*
- * Compute the magnitude a stars need to have to have a given radius on screen.
- *
- * Parameters:
- *   target     - The target radius (pixel).
- */
-static double compute_vmag_for_radius(double target)
-{
-    // Compute by dichotomy.
-    const int max_iter = 32;
-    double m = 0, m1 = -128.0, m2 = 128.0;
-    double r, l;
-    int i;
-    for (i = 0; i < max_iter; i++) {
-        m = (m1 + m2) / 2;
-        core_get_point_for_mag(m, &r, &l);
-        if (r && fabs(r - target) < 0.1) return m;
-        *((r > target) ? &m1 : &m2) = m;
-    }
-    if (i >= max_iter) LOG_W("Too many iterations! (%f)", m);
-    return m;
-}
-
-
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
 {
@@ -600,8 +576,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .proj = &proj,
         .mag_max = max_vmag,
         .hint_mag_max = (!isnan(core->hints_mag_max)) ? core->hints_mag_max :
-                        compute_vmag_for_radius(1),
-        .label_mag_max = compute_vmag_for_radius(2),
+                        max_vmag - 4,
+        .label_mag_max = max_vmag - 4,
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
