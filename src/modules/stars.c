@@ -331,7 +331,7 @@ static int on_file_tile_loaded(const char type[4],
     tile = calloc(1, sizeof(*tile));
     tile->stars = calloc(nb, sizeof(*tile->stars));
     tile->mag_min = DBL_MAX;
-    tile->mag_max = DBL_MIN;
+    tile->mag_max = -DBL_MAX;
 
     for (i = 0; i < nb; i++) {
         s = &tile->stars[tile->nb];

@@ -363,7 +363,7 @@ static double get_theta_range(const painter_t *painter)
     double p[4] = {0, 0, 0, 0};
     double m[3][3];
     double theta, phi;
-    double theta_max = DBL_MIN, theta_min = DBL_MAX;
+    double theta_max = -DBL_MAX, theta_min = DBL_MAX;
     int i;
 
     mat3_mul(painter->obs->ro2v, painter->obs->ri2h, m);
@@ -454,13 +454,13 @@ static int line_render(const obj_t *obj, const painter_t *painter)
 static double seg_intersect(const double a[2], const double b[2], int *border)
 {
     double idx = 1.0 / (b[0] - a[0]);
-    double tx1 = (-1 == a[0] ? DBL_MIN : (-1 - a[0]) * idx);
-    double tx2 = (+1 == a[0] ? DBL_MAX : (+1 - a[0]) * idx);
+    double tx1 = (-1 == a[0] ? -DBL_MAX : (-1 - a[0]) * idx);
+    double tx2 = (+1 == a[0] ?  DBL_MAX : (+1 - a[0]) * idx);
     double txmin = min(tx1, tx2);
     double txmax = max(tx1, tx2);
     double idy = 1.0 / (b[1] - a[1]);
-    double ty1 = (-1 == a[1] ? DBL_MIN : (-1 - a[1]) * idy);
-    double ty2 = (+1 == a[1] ? DBL_MAX : (+1 - a[1]) * idy);
+    double ty1 = (-1 == a[1] ? -DBL_MAX : (-1 - a[1]) * idy);
+    double ty2 = (+1 == a[1] ?  DBL_MAX : (+1 - a[1]) * idy);
     double tymin = min(ty1, ty2);
     double tymax = max(ty1, ty2);
     double ret = DBL_MAX;
