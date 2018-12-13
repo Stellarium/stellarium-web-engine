@@ -523,12 +523,11 @@ static void quad(renderer_t          *rend_,
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    int n, i, j, k, x, y;
+    int n, i, j, k;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
     double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4];
     float lum;
-    bool visible;
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
@@ -584,44 +583,21 @@ static void quad(renderer_t          *rend_,
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        visible = project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
+        project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
         gl_buf_2f(&item->buf, -1, ATTR_POS, ndc_p[0], ndc_p[1]);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         // For atmosphere shader, in the first pass we do not compute the
         // luminance yet, only if the point is visible.
         if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
             gl_buf_3f(&item->buf, -1, ATTR_SKY_POS, VEC3_SPLIT(p));
-            gl_buf_1f(&item->buf, -1, ATTR_LUMINANCE, visible ? 1 : 0);
+            lum = painter->atm.compute_lum(painter->atm.user,
+                    (float[3]){p[0], p[1], p[2]});
+            gl_buf_1f(&item->buf, -1, ATTR_LUMINANCE, lum);
         }
         if (painter->flags & PAINTER_FOG_SHADER) {
             gl_buf_3f(&item->buf, -1, ATTR_SKY_POS, VEC3_SPLIT(p));
         }
         gl_buf_next(&item->buf);
-    }
-
-    // Second pass for atmosphere shader: Compute the luminance of the visible
-    // points only.  Check the neighbors points as well.
-    if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
-        // Fill the neighbors data.
-        for (i = 0; i < n; i++)
-        for (j = 0; j < n; j++) {
-            if (*(float*)gl_buf_at(&item->buf, i * n + j, ATTR_LUMINANCE) != 1)
-                continue;
-            for (y = max(0, i - 1); y < min(i + 2, n); y++)
-            for (x = max(0, j - 1); x < min(j + 2, n); x++) {
-                if (!*(float*)gl_buf_at(&item->buf, y * n + x, ATTR_LUMINANCE))
-                    gl_buf_1f(&item->buf, y * n + x, ATTR_LUMINANCE, 2);
-            }
-        }
-        // Compute the luminance.
-        for (i = 0; i < n; i++)
-        for (j = 0; j < n; j++) {
-            if (!*(float*)gl_buf_at(&item->buf, i * n + j, ATTR_LUMINANCE))
-                continue;
-            lum = painter->atm.compute_lum(painter->atm.user,
-                    gl_buf_at(&item->buf, i * n + j, ATTR_SKY_POS));
-            gl_buf_1f(&item->buf, i * n + j, ATTR_LUMINANCE, lum);
-        }
     }
 
     // Set the index buffer.
