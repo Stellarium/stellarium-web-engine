@@ -47,9 +47,11 @@ if profile or debug:
         env.Append(CCFLAGS='-Og')
 
 if not debug:
-     env.Append(CCFLAGS='-Ofast -DNDEBUG', LINKFLAGS='-Ofast')
-     if target_os != 'js' and not profile:
-         env.Append(CCFLAGS='-flto', LINKFLAGS='-flto')
+    env.Append(CCFLAGS='-DNDEBUG')
+    if target_os != 'js':
+         env.Append(CCFLAGS='-Ofast', LINKFLAGS='-Ofast')
+    if target_os != 'js' and not profile:
+        env.Append(CCFLAGS='-flto', LINKFLAGS='-flto')
 
 sources = (glob.glob('src/*.c*') + glob.glob('src/algos/*.c') +
            glob.glob('src/projections/*.c') + glob.glob('src/modules/*.c') +
