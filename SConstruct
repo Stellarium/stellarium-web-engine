@@ -80,12 +80,53 @@ sources += glob.glob('ext_src/nanovg/*.c')
 env.Append(CPPPATH=['ext_src/nanovg'])
 
 # Add webp
-sources += (glob.glob('ext_src/webp/src/dec/*.c') +
-            glob.glob('ext_src/webp/src/dsp/*.c') +
-            glob.glob('ext_src/webp/src/demux/*.c') +
-            glob.glob('ext_src/webp/src/enc/*.c') +
-            glob.glob('ext_src/webp/src/mux/*.c') +
-            glob.glob('ext_src/webp/src/utils/*.c'))
+sources += (
+    'ext_src/webp/src/dec/alpha_dec.c',
+    'ext_src/webp/src/dec/buffer_dec.c',
+    'ext_src/webp/src/dec/frame_dec.c',
+    'ext_src/webp/src/dec/idec_dec.c',
+    'ext_src/webp/src/dec/io_dec.c',
+    'ext_src/webp/src/dec/quant_dec.c',
+    'ext_src/webp/src/dec/tree_dec.c',
+    'ext_src/webp/src/dec/vp8_dec.c',
+    'ext_src/webp/src/dec/vp8l_dec.c',
+    'ext_src/webp/src/dec/webp_dec.c',
+    'ext_src/webp/src/utils/bit_reader_utils.c',
+    'ext_src/webp/src/utils/color_cache_utils.c',
+    'ext_src/webp/src/utils/filters_utils.c',
+    'ext_src/webp/src/utils/huffman_utils.c',
+    'ext_src/webp/src/utils/quant_levels_dec_utils.c',
+    'ext_src/webp/src/utils/random_utils.c',
+    'ext_src/webp/src/utils/rescaler_utils.c',
+    'ext_src/webp/src/utils/thread_utils.c',
+    'ext_src/webp/src/utils/utils.c',
+    'ext_src/webp/src/dsp/cpu.c',
+    'ext_src/webp/src/dsp/dec_clip_tables.c')
+
+# SIMD specific WepP sources
+simd = []
+if target_os == 'posix':
+    simd += ['sse2', 'sse41']
+    env.Append(CCFLAGS='-DWEBP_USE_THREAD')
+
+# Emscripten supports SSE1 SSE2 and SSE3
+# https://kripken.github.io/emscripten-site/docs/porting/simd.html
+# But webp specifically disables SSE2 in emscripten because of a clang issue
+# (see dsp.h and README.webp_js)
+# We can force SSE2 optims enabling the below flag, should we?
+if 0 and target_os == 'js':
+    simd += ['sse2']
+    env.Append(CCFLAGS='-DWEBP_USE_SSE2')
+    # We also need to add this emscripten compilation flag '-msse2'
+
+for fname in ['alpha_processing', 'dec', 'filters', 'lossless', 'rescaler',
+        'upsampling', 'yuv']:
+    sources += ('ext_src/webp/src/dsp/' + fname + '.c', )
+    for s in simd:
+        f = 'ext_src/webp/src/dsp/' + fname + '_' + s + '.c'
+        if os.path.isfile(f):
+            sources += (f, )
+
 env.Append(CPPPATH=['ext_src/webp'])
 env.Append(CPPPATH=['ext_src/webp/src'])
 
