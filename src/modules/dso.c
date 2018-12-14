@@ -292,7 +292,7 @@ static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
 
-    fader_init(&dsos->visible, false);
+    fader_init(&dsos->visible, true);
 
 
     // Bundled DSO if there is any (shouldn't be)
