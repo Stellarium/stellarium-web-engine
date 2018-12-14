@@ -575,7 +575,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .proj = &proj,
         .mag_max = max_vmag,
         .hint_mag_max = (!isnan(core->hints_mag_max)) ? core->hints_mag_max :
-                        max_vmag - 4,
+                        max_vmag - 2,
         .label_mag_max = max_vmag - 4,
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
