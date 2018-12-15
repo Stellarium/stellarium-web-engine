@@ -11,6 +11,7 @@
 
 # Some utils functions that can be used by the other scripts.
 
+import functools
 import gzip
 import hashlib
 import os
@@ -90,3 +91,26 @@ def compute_dir_md5(path):
         for f in filenames:
             m.update(open(os.path.join(dirpath, f)).read())
     return m.hexdigest()
+
+
+def generator(filename, md5):
+    """Decorator that checks if a generated file is already up to date
+       This can be used to cache data that is slow to generate.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper():
+            path = os.path.join('data-src', filename)
+            if not os.path.exists(path):
+                print('Generating %s' % path)
+                ensure_dir(path)
+                func(path)
+            current_md5 = hashlib.md5(open(path).read()).hexdigest()
+            if  current_md5 != md5:
+                print 'Md5 for file %s changed!' % filename
+                print 'Current md5: %s' % current_md5
+                print 'Expected   : %s' % md5
+                raise ValueError
+            return path
+        return wrapper
+    return decorator
