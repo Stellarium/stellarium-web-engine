@@ -397,21 +397,12 @@ static int stars_init(obj_t *obj, json_value *args)
     regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
 
-    // Default bundled survey.
-    survey_settings.user = &stars->surveys[0];
-    sprintf(stars->surveys[0].url, "asset://stars");
-    stars->surveys[0].hips = hips_create(
-            stars->surveys[0].url, 0, &survey_settings);
-    stars->surveys[0].min_vmag = NAN;
-
-    // Online gaia survey.
+    // Online gaia survey at index 1.
     survey_settings.user = &stars->surveys[1];
     sprintf(stars->surveys[1].url,
             "https://data.stellarium.org/surveys/gaia_dr2");
     stars->surveys[1].hips = hips_create(
             stars->surveys[1].url, 0, &survey_settings);
-    stars->surveys[1].min_vmag = 7.125; // Max from bundled stars.
-
     return 0;
 }
 
@@ -667,6 +658,37 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     return d.nb;
 }
 
+static int stars_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
+{
+    stars_t *stars = (stars_t*)obj;
+    const char *args_type, *max_vmag_str;
+    hips_settings_t survey_settings = {
+        .create_tile = stars_create_tile,
+        .delete_tile = del_tile,
+    };
+
+    if (!type || !args || strcmp(type, "hips")) return 1;
+    args_type = json_get_attr_s(args, "type");
+    if (!args_type || strcmp(args_type, "stars")) return 1;
+
+    // For the moment we only support one stars source in addition to the
+    // only gaia survey.
+    assert(!stars->surveys[0].hips);
+    survey_settings.user = &stars->surveys[0];
+    sprintf(stars->surveys[0].url, "%s", url);
+    stars->surveys[0].hips = hips_create(
+            stars->surveys[0].url, 0, &survey_settings);
+    stars->surveys[0].min_vmag = NAN;
+
+    // Tell online gaia survey to only start after the vmag for this survey.
+    max_vmag_str = json_get_attr_s(args, "max_vmag");
+    if (max_vmag_str)
+        stars->surveys[1].min_vmag = atof(max_vmag_str);
+
+    return 0;
+}
+
 /*
  * Meta class declarations.
  */
@@ -705,6 +727,7 @@ static obj_klass_t stars_klass = {
     .get            = stars_get,
     .get_by_oid     = stars_get_by_oid,
     .list           = stars_list,
+    .add_data_source = stars_add_data_source,
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY("max_mag", "f", MEMBER(stars_t, mag_max)),

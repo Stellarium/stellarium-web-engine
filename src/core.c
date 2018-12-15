@@ -260,6 +260,9 @@ void core_add_default_sources(void)
     asset_set_alias(BASE_URL "landscapes", "asset://landscapes");
     obj_add_data_source(NULL, BASE_URL "landscapes", NULL, NULL);
 
+    // Bundled star survey.
+    obj_add_data_source(NULL, "asset://stars", "hips", NULL);
+
     // Skyculture.  We load the western culture immediately so we don't have
     // to wait to parse the online directory index.json file.
     asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
