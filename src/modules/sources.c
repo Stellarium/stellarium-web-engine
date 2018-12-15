@@ -41,6 +41,8 @@ typedef struct sources {
     source_t        *sources;
 } sources_t;
 
+static int process_source(sources_t *sources, source_t *source);
+
 static int add_data_source(obj_t *obj, const char *url, const char *type,
                            json_value *args)
 {
@@ -53,9 +55,14 @@ static int add_data_source(obj_t *obj, const char *url, const char *type,
         source = calloc(1, sizeof(*source));
         source->url = strdup(url);
         source->type = SOURCE_HIPSLIST;
+    } else if (strcmp(type, "hips") == 0 && !args) {
+        source = calloc(1, sizeof(*source));
+        source->url = strdup(url);
+        source->type = SOURCE_HIPS;
     }
     if (!source) return 1;
     DL_APPEND(sources->sources, source);
+    process_source(sources, source);
     return 0;
 }
 
@@ -142,13 +149,13 @@ static int process_source(sources_t *sources, source_t *source)
         if (!data) return 0;
         parse_index(source->url, data);
         release_data(source, "index.json");
-        return 1;
+        break;
     case SOURCE_HIPSLIST:
         data = get_data(source, "hipslist");
         if (!data) return 0;
         hips_parse_hipslist(data, sources, on_hips);
         release_data(source, "hipslist");
-        return 1;
+        break;
     case SOURCE_HIPS:
         data = get_data(source, "properties");
         if (!data) return 0;
@@ -156,10 +163,13 @@ static int process_source(sources_t *sources, source_t *source)
         ini_parse_string(data, hips_property_handler, args);
         obj_add_data_source(NULL, source->url, "hips", args);
         json_builder_free(args);
-        return 1;
+        break;
     default:
         assert(false);
     }
+    DL_DELETE(sources->sources, source);
+    free(source->url);
+    free(source);
     return 1;
 }
 
@@ -169,10 +179,7 @@ static int sources_update(obj_t *obj, const observer_t *obs, double dt)
     source_t *source, *tmp;
 
     DL_FOREACH_SAFE(sources->sources, source, tmp) {
-        if (!process_source(sources, source)) continue;
-        DL_DELETE(sources->sources, source);
-        free(source->url);
-        free(source);
+        process_source(sources, source);
     }
     return 0;
 }
