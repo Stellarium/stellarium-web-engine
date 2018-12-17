@@ -351,7 +351,7 @@ static int on_file_tile_loaded(const char type[4],
         s->pra = pra;
         s->pde = pde;
         s->plx = plx;
-        s->bv = bv;
+        s->bv = isnan(bv) ? 0 : bv;
         s->oid = s->hip ? oid_create("HIP ", s->hip) :
                  s->tyc ? oid_create("TYC ", s->tyc) :
                  s->gaia;
