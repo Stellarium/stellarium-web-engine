@@ -545,10 +545,7 @@ static int render_visitor(int order, int pix, void *user)
     bool loaded;
 
     // Early exit if the tile is clipped.
-    // (don't test at order 0 because is_tile_clipped doesn't work very
-    //  well in that case!).
-    if (    order > 0 &&
-            painter_is_tile_clipped(&painter, FRAME_ICRF, order, pix, true))
+    if (painter_is_tile_clipped(&painter, FRAME_ICRF, order, pix, true))
         return 0;
 
     (*nb_tot)++;
