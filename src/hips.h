@@ -117,6 +117,7 @@ bool hips_is_ready(hips_t *hips);
  *
  * Return:
  *   0 if the traverse finished.
+ *   -1 if we reach the traverse limite.
  *   -v if the callback returned a negative value -v.
  */
 int hips_traverse(void *user, int callback(int order, int pix, void *user));

@@ -288,7 +288,7 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
         if (r < 0) return r;
         if (r == 1) {
             // Enqueue the 4 children tiles.
-            assert(size + 4 < n);
+            if (size + 4 >= n) return -1; // No more space.
             for (i = 0; i < 4; i++) {
                 queue[(start + size) % n] = (node_t){order + 1, pix * 4 + i};
                 size++;
