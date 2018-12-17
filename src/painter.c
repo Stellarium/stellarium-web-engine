@@ -41,7 +41,7 @@ int paint_flush(const painter_t *painter)
 int paint_points(const painter_t *painter, int n, const point_t *points,
                  int frame)
 {
-    PROFILE(paint_points, 0);
+    PROFILE(paint_points, PROFILE_AGGREGATE);
     REND(painter->rend, points, painter, frame, n, points);
     return 0;
 }
