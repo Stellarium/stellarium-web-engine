@@ -10,6 +10,9 @@
 #include "swe.h"
 #include "skybrightness.h"
 
+// Default decibel offset of the luminance.
+static const double LUM_DB_OFFSET = -0.5;
+
 /*
  * This is all based on the paper: "A Practical Analytic Model for Daylight" by
  * A. J. Preetham, Peter Shirley and Brian Smits.
@@ -257,7 +260,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 static int atmosphere_init(obj_t *obj, json_value *args)
 {
     atmosphere_t *atm = (void*)obj;
-    atm->lum_scale = 1.0;
+    atm->lum_scale = pow(10.0, LUM_DB_OFFSET);
     fader_init(&atm->visible, true);
     return 0;
 }
