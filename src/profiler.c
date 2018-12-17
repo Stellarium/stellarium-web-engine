@@ -17,6 +17,10 @@ static Remotery* rmt = NULL;
 int profile_init(void)
 {
     int ret;
+    if (rmt) {
+        LOG_E("Attempt to init profiler twice!");
+        return -1;
+    }
     LOG_I("Start remotery http server");
     ret = rmt_CreateGlobalInstance(&rmt);
     if (ret) LOG_E("Cannot start server");

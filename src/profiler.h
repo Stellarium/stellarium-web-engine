@@ -52,7 +52,8 @@ static inline void _profile_cleanup(int *v)
  */
 #define PROFILE(name, flags) \
     rmt_BeginCPUSample(name, flags); \
-    int _profile __attribute__((__cleanup__(_profile_cleanup))) = 0;
+    int _profile __attribute__((__cleanup__(_profile_cleanup))) = 0; \
+    (void)_profile;
 
 #else
 
