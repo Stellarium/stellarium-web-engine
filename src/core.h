@@ -153,6 +153,7 @@ struct core
     double          lwmax_scale; // Manual scale of lwmax.
     double          max_point_radius; // Max radius in pixel.
     double          min_point_radius;
+    double          skip_point_radius;
 
     telescope_t     telescope;
     bool            telescope_auto; // Auto adjust telescope.

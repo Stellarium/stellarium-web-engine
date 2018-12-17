@@ -254,9 +254,10 @@ static void menu_main(void *user)
         gui_tab_end();
     }
     if (DEBUG && gui_tab("Debug")) {
-        gui_double("s linear", &core->star_linear_scale, 0, 8, 1, NAN);
+        gui_double("s linear", &core->star_linear_scale, 0, 8, 2, NAN);
         gui_double("s relative", &core->star_relative_scale, 0.1, 8, 1, NAN);
-        gui_double("min rad", &core->min_point_radius, 0.01, 10, 2, NAN);
+        gui_double("min rad", &core->min_point_radius, 0.001, 10, 3, NAN);
+        gui_double("skip rad", &core->skip_point_radius, 0.001, 10, 3, NAN);
         gui_double("max rad", &core->max_point_radius, 1, 100, 1, NAN);
         gui_double_log("log lmaxmin", &core->lwmax_min, -100, 100, 2, NAN);
         gui_double_log("log lmaxs", &core->lwmax_scale, -100, 100, 2, NAN);

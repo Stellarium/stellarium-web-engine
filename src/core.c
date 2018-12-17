@@ -306,7 +306,8 @@ static void core_set_default(void)
     core->lwmax_min = 0.004;
     core->lwmax_scale = 1.3;
     core->max_point_radius = 6.0;
-    core->min_point_radius = 0.2;
+    core->min_point_radius = 0.5;
+    core->skip_point_radius = 0.2;
     tonemapper_update(&core->tonemapper, 1, 1, 1, core->lwmax);
 
     core->telescope_auto = true;
@@ -754,7 +755,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     const telescope_t *tel = &core->telescope;
     const double s_linear = core->star_linear_scale;
     const double s_relative = core->star_relative_scale;
-    const double r_min = 0.5;
+    const double r_min = core->min_point_radius;
 
     /*
      * Compute illuminance (in lux = lum/m² = cd.sr/m²)
@@ -799,7 +800,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     r = s_linear * pow(ld, s_relative / 2.0) * s;
 
     // If the radius is really too small, we don't render the star.
-    if (r < core->min_point_radius) {
+    if (r < core->skip_point_radius) {
         r = 0;
         ld = 0;
     }
