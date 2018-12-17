@@ -311,6 +311,7 @@ texture_t *hips_get_tile_texture(
         double uv[4][2], projection_t *proj, int *split, double *fade,
         bool *loading_complete)
 {
+    PROFILE(hips_get_tile_texture, 0)
     texture_t *tex;
     img_tile_t *tile, *render_tile;
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
@@ -391,6 +392,7 @@ texture_t *hips_get_tile_texture(
 static int render_visitor(hips_t *hips, const painter_t *painter_,
                           int order, int pix, int flags, void *user)
 {
+    PROFILE(hips_render_visitor, PROFILE_AGGREGATE);
     int *nb_tot = USER_GET(user, 0);
     int *nb_loaded = USER_GET(user, 1);
     painter_t painter = *painter_;
@@ -414,6 +416,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
 
 int hips_render(hips_t *hips, const painter_t *painter, double angle)
 {
+    PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
     if (painter->color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
@@ -426,6 +429,7 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle)
 
 static int render_traverse_visitor(int order, int pix, void *user)
 {
+    PROFILE(render_traverse_visitor, 0);
     hips_t *hips = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
     int render_order = *(int*)USER_GET(user, 2);

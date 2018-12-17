@@ -118,6 +118,7 @@ int convert_frame(const observer_t *obs,
                         int origin, int dest, bool at_inf,
                         const double in[3], double out[3])
 {
+    PROFILE(convert_frame, PROFILE_AGGREGATE);
     obs = obs ?: (observer_t*)core->observer;
 
     // Can't convert to NDC space.

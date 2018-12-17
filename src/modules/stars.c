@@ -424,6 +424,7 @@ bool debug_stars_show_all = false;
 
 static int render_visitor(int order, int pix, void *user)
 {
+    PROFILE(stars_render_visitor, PROFILE_AGGREGATE);
     stars_t *stars = USER_GET(user, 0);
     int survey = *((int*)USER_GET(user, 1));
     painter_t painter = *(const painter_t*)USER_GET(user, 2);

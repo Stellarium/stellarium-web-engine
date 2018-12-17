@@ -227,6 +227,7 @@ void paint_debug(bool value)
 bool painter_is_tile_clipped(const painter_t *painter, int frame,
                              int order, int pix, bool outside)
 {
+    PROFILE(painter_is_tile_clipped, PROFILE_AGGREGATE);
     double quad[4][4] = { {0, 0, 1, 1},
                           {1, 0, 1, 1},
                           {0, 1, 1, 1},
