@@ -26,12 +26,14 @@ int paint_prepare(const painter_t *painter, double win_w, double win_h,
 
 int paint_finish(const painter_t *painter)
 {
+    PROFILE(paint_finish, 0);
     REND(painter->rend, finish);
     return 0;
 }
 
 int paint_flush(const painter_t *painter)
 {
+    PROFILE(paint_flush, 0);
     REND(painter->rend, flush);
     return 0;
 }
@@ -39,6 +41,7 @@ int paint_flush(const painter_t *painter)
 int paint_points(const painter_t *painter, int n, const point_t *points,
                  int frame)
 {
+    PROFILE(paint_points, 0);
     REND(painter->rend, points, painter, frame, n, points);
     return 0;
 }
@@ -88,6 +91,7 @@ int paint_quad(const painter_t *painter,
                const projection_t *tex_proj,
                int grid_size)
 {
+    PROFILE(paint_quad, PROFILE_AGGREGATE);
     // The OBSERVED frame (azalt) is left handed, so if we didn't specify
     // the uv values, we use inverted uv so that things work by default.
     const double UV1[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};

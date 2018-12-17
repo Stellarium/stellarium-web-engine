@@ -17,6 +17,10 @@ run:
 profile:
 	scons profile=1 debug=0
 
+# Start with remotery server running so we can do real time profiling.
+remotery:
+	scons -j8 debug=0 remotery=1
+
 analyze:
 	scan-build scons analyze=1
 

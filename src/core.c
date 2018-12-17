@@ -343,6 +343,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
         core_set_default();
         return;
     }
+    profile_init();
     texture_set_load_callback(NULL, texture_load_function);
     sprintf(cache_dir, "%s/%s", sys_get_user_dir(), ".cache");
     request_init(cache_dir);
@@ -394,6 +395,7 @@ void core_release(void)
     DL_FOREACH(core->obj.children, module) {
         if (module->klass->del) module->klass->del(module);
     }
+    profile_release();
 }
 
 static int core_update_direction(double dt)
@@ -510,6 +512,7 @@ static double compute_max_vmag(void)
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
 {
+    PROFILE(core_render, 0);
     obj_t *module;
     projection_t proj;
     double t;

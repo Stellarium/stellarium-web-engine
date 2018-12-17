@@ -226,6 +226,7 @@ static bool range_contains(int range_start, int range_size, int nb, int i)
 
 static int comets_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    PROFILE(comets_update, 0);
     int size, code, i, nb;
     const char *data;
     obj_t *tmp;
@@ -270,6 +271,7 @@ static int comets_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int comets_render(const obj_t *obj, const painter_t *painter)
 {
+    PROFILE(comets_render, 0);
     obj_t *child;
     OBJ_ITER(obj, child, "mpc_comet")
         obj_render(child, painter);

@@ -60,6 +60,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
      *     +--------------------+----------+---------+ de = -90°
      *  ra:90°                 270°        0°       90°
      */
+    PROFILE(milkyway_render, 0);
     milkyway_t *mw = (milkyway_t*)obj;
     painter_t painter = *painter_;
     projection_t proj_spherical = {

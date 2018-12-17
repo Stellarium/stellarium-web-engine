@@ -817,6 +817,7 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
 
 static int planets_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    PROFILE(planets_update, 0);
     planets_t *planets = (planets_t*)obj;
     planet_t *p;
 
@@ -830,6 +831,7 @@ static int planets_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int planets_render(const obj_t *obj, const painter_t *painter)
 {
+    PROFILE(planets_render, 0);
     planets_t *planets = (planets_t*)obj;
     planet_t *p;
 

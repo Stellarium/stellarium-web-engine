@@ -571,6 +571,7 @@ static int dsos_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int dsos_render(const obj_t *obj, const painter_t *painter_)
 {
+    PROFILE(dsos_render, 0);
     dsos_t *dsos = (dsos_t*)obj;
     int nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;

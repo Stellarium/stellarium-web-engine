@@ -141,6 +141,7 @@ static int meteors_init(obj_t *obj, json_value *args)
 
 static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    PROFILE(meterors_update, 0);
     meteors_t *ms = (meteors_t*)obj;
     meteor_t *m;
     obj_t *child, *tmp;
@@ -167,6 +168,7 @@ static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int meteors_render(const obj_t *obj, const painter_t *painter)
 {
+    PROFILE(meterors_render, 0);
     obj_t *child;
     OBJ_ITER(obj, child, "meteor")
         obj_render(child, painter);

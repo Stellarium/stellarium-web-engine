@@ -31,6 +31,7 @@
 #include "eph-file.h"
 #include "erfa.h"
 #include "log.h"
+#include "profiler.h"
 #include "tests.h"
 
 #include "utils/cache.h"

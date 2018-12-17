@@ -46,6 +46,7 @@ static int dss_init(obj_t *obj, json_value *args)
 
 static int dss_render(const obj_t *obj, const painter_t *painter)
 {
+    PROFILE(dss_render, 0);
     double visibility;
     dss_t *dss = (dss_t*)obj;
     painter_t painter2 = *painter;

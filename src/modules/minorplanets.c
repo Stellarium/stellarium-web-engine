@@ -374,6 +374,7 @@ void mplanet_get_designations(
 
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    PROFILE(mplanets_update, 0);
     obj_t *child;
     OBJ_ITER(obj, child, "asteroid")
         obj_update(child, obs, dt);
@@ -382,6 +383,7 @@ static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
+    PROFILE(mplanets_render, 0);
     obj_t *child;
     OBJ_ITER(obj, child, "asteroid")
         obj_render(child, painter);

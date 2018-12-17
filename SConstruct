@@ -14,6 +14,7 @@ emscripten = int(ARGUMENTS.get('emscripten', 0))
 werror = int(ARGUMENTS.get("werror", 1))
 analyze = int(ARGUMENTS.get("analyze", 0))
 es6 = int(ARGUMENTS.get("es6", 0))
+remotery = int(ARGUMENTS.get('remotery', 0))
 
 if emscripten: target_os = 'js'
 
@@ -78,6 +79,10 @@ env.Append(CPPPATH=['ext_src/inih'])
 
 sources += glob.glob('ext_src/nanovg/*.c')
 env.Append(CPPPATH=['ext_src/nanovg'])
+
+if remotery:
+    env.Append(CPPPATH=['ext_src/remotery'])
+    env.Append(CFLAGS=['-DRMT_ENABLED=1'])
 
 # Add webp
 sources += (

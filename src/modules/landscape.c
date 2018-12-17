@@ -133,6 +133,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
      *    az = 0              az = 360
      */
 
+    PROFILE(landscape_render, 0);
     landscape_t *ls = (landscape_t*)obj;
     painter_t painter = *painter_;
     projection_t proj_spherical = {

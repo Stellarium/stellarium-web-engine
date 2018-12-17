@@ -161,6 +161,7 @@ static bool load_data(satellites_t *sats)
 
 static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
 {
+    PROFILE(satellites_update, 0);
     satellites_t *sats = (satellites_t*)obj;
     satellite_t *sat;
     if (!load_qsmag(sats)) return 0;
@@ -175,6 +176,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
+    PROFILE(satellites_render, 0);
     obj_t *child;
     OBJ_ITER(obj, child, "tle_satellite")
         obj_render(child, painter);

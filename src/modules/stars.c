@@ -513,6 +513,7 @@ end:
 
 static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
+    PROFILE(stars_render, 0);
     stars_t *stars = (stars_t*)obj;
     int i, nb_tot = 0, nb_loaded = 0;
     double illuminance = 0; // Totall illuminance
