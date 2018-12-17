@@ -259,28 +259,14 @@ static void prepare(renderer_t *rend_, double win_w, double win_h,
                     double scale)
 {
     renderer_gl_t *rend = (void*)rend_;
-    tex_cache_t *ctex, *tmp;
+    tex_cache_t *ctex;
 
-    assert(scale);
-    DL_FOREACH_SAFE(rend->tex_cache, ctex, tmp) {
-        if (!ctex->in_use) {
-            DL_DELETE(rend->tex_cache, ctex);
-            texture_release(ctex->tex);
-            free(ctex->text);
-            free(ctex);
-        }
-    }
-
-    GL(glClearColor(0.0, 0.0, 0.0, 1.0));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    GL(glViewport(0, 0, win_w * scale, win_h * scale));
     rend->fb_size[0] = win_w * scale;
     rend->fb_size[1] = win_h * scale;
     rend->scale = scale;
 
     DL_FOREACH(rend->tex_cache, ctex)
         ctex->in_use = false;
-
 }
 
 static void rend_flush(renderer_gl_t *rend);
@@ -1034,6 +1020,7 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 static void rend_flush(renderer_gl_t *rend)
 {
     item_t *item, *tmp;
+    tex_cache_t *ctex, *tmptex;
 
     // Compute depth range.
     rend->depth_range[0] = DBL_MAX;
@@ -1051,6 +1038,10 @@ static void rend_flush(renderer_gl_t *rend)
         rend->depth_range[1] = 1;
     }
 
+    GL(glClearColor(0.0, 0.0, 0.0, 1.0));
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
+
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
@@ -1067,6 +1058,15 @@ static void rend_flush(renderer_gl_t *rend)
         gl_buf_release(&item->buf);
         gl_buf_release(&item->indices);
         free(item);
+    }
+
+    DL_FOREACH_SAFE(rend->tex_cache, ctex, tmptex) {
+        if (!ctex->in_use) {
+            DL_DELETE(rend->tex_cache, ctex);
+            texture_release(ctex->tex);
+            free(ctex->text);
+            free(ctex);
+        }
     }
 }
 
