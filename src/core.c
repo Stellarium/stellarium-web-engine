@@ -304,7 +304,7 @@ static void core_set_default(void)
     core->star_linear_scale = 0.7;
     core->star_relative_scale = 1.5;
     core->lwmax_min = 0.004;
-    core->lwmax_scale = 1.3;
+    core->lwmax_scale = 13.0;
     core->max_point_radius = 6.0;
     core->min_point_radius = 0.5;
     core->skip_point_radius = 0.2;
@@ -461,9 +461,10 @@ static int core_update(void)
     progressbar_update();
 
     // Update eye adaptation.
+    lwmax = core->lwmax * core->lwmax_scale;
     lwmax = exp(log(core->tonemapper.lwmax) +
-                (log(core->lwmax) - log(core->tonemapper.lwmax)) * 0.1);
-    tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax * core->lwmax_scale);
+                (log(lwmax) - log(core->tonemapper.lwmax)) * 0.1);
+    tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
     return 0;
