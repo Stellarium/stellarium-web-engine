@@ -49,7 +49,8 @@ void skybrightness_prepare(
         float latitude, float altitude,
         float temperature, float relative_humidity,
         float dist_moon_zenith, float dist_sun_zenith,
-        float max_moon_brightness)
+        float max_moon_brightness,
+        float twilight_coef)
 {
     sb->Y = year;
     sb->M = month;
@@ -61,6 +62,7 @@ void skybrightness_prepare(
     sb->ZM = dist_moon_zenith * DR;
     sb->ZS = dist_sun_zenith * DR;
     sb->max_BM = max_moon_brightness * (1.11e-15 / NLAMBERT_TO_CDM2);
+    sb->k_BT = twilight_coef;
 
     // Precompute as much as possible.
     float K, KR, KA, KO, KW, LT, RA, SL, XM, XS;
@@ -151,6 +153,7 @@ float skybrightness_get_luminance(
     HS = 90.0f - ZS; // Height of Sun
     BT = exp10f(-.4f * (MS - MO + 32.5f - HS - (Z / (360 * K))));
     BT = BT * (100 / RS) * (1.0f - exp10f(-.4f * K * X));
+    BT *= sb->k_BT;
 
     // 2300 Daylight brightness
     C4 = fast_exp10f(-.4f * K * XS);

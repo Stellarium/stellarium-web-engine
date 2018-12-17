@@ -12,6 +12,7 @@
 
 // Default decibel offset of the luminance.
 static const double LUM_DB_OFFSET = -0.5;
+static const double TWILIGHT_DB_OFFSET = -2.0;
 
 /*
  * This is all based on the paper: "A Practical Analytic Model for Daylight" by
@@ -33,8 +34,9 @@ typedef struct atmosphere {
         bool            visible;
     } tiles[12];
     fader_t         visible;
-    // Manual factor to adjuste the luminance.
-    double              lum_scale;
+    // Manual factors to adjust the luminance.
+    double      lum_scale;
+    double      twilight_coef;
 } atmosphere_t;
 
 // All the precomputed data
@@ -134,7 +136,7 @@ static render_data_t prepare_render_data(
 static void prepare_skybrightness(
         skybrightness_t *sb, const painter_t *painter,
         const double sun_pos[3], const double moon_pos[3], double moon_vmag,
-        double moon_phase)
+        double moon_phase, double twilight_coef)
 {
     int year, month, day, ihmsf[4];
     const observer_t *obs = painter->obs;
@@ -148,7 +150,7 @@ static void prepare_skybrightness(
                           15, 40,
                           eraSepp(moon_pos, zenith),
                           eraSepp(sun_pos, zenith),
-                          0.01);
+                          0.01, twilight_coef);
 }
 
 static float compute_lum(void *user, const float pos[3])
@@ -227,7 +229,8 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     data.lum_scale = atm->lum_scale;
     obj_get_attr(moon, "phase", "f", &moon_phase);
     prepare_skybrightness(&data.skybrightness,
-            &painter, sun_pos, moon_pos, moon->vmag, moon_phase);
+            &painter, sun_pos, moon_pos, moon->vmag, moon_phase,
+            atm->twilight_coef);
 
     // Set the shader attributes.
     painter.atm.p[0]  = data.Px[0];
@@ -261,6 +264,7 @@ static int atmosphere_init(obj_t *obj, json_value *args)
 {
     atmosphere_t *atm = (void*)obj;
     atm->lum_scale = pow(10.0, LUM_DB_OFFSET);
+    atm->twilight_coef = pow(10.0, TWILIGHT_DB_OFFSET);
     fader_init(&atm->visible, true);
     return 0;
 }
@@ -271,6 +275,7 @@ static void atmosphere_gui(obj_t *obj, int location)
     if (!DEFINED(SWE_GUI)) return;
     if (location == 1) { // debug.
         gui_double_log("atm db", &atm->lum_scale, -100, 100, 1, NAN);
+        gui_double_log("twilight db ", &atm->twilight_coef, -100, 100, 1, NAN);
     }
 }
 
