@@ -71,7 +71,7 @@ static void skyculture_deactivate(skyculture_t *cult)
 static void skyculture_activate(skyculture_t *cult)
 {
     char id[32];
-    int i;
+    int i, nb_skipped = 0;
     obj_t *star;
     json_value *args;
     constellation_infos_t *cst;
@@ -86,11 +86,18 @@ static void skyculture_activate(skyculture_t *cult)
     // Add all the names.
     for (i = 0; cult->names[i][0]; i++) {
         star = obj_get(NULL, cult->names[i][0], 0);
-        if (!star) continue;
+        if (!star) {
+            nb_skipped++;
+            continue;
+        }
         identifiers_add("NAME", cult->names[i][1], star->oid, 0, star->type,
                         star->vmag, NULL, NULL);
         obj_release(star);
     }
+
+    if (nb_skipped)
+        LOG_D("Cannot add name for %d stars in skyculture %s",
+              nb_skipped, cult->info.name);
 
     // Create all the constellations object.
     constellations = obj_get(NULL, "constellations", 0);
