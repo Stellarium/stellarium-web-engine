@@ -273,12 +273,12 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
         int order;
         int pix;
     } node_t;
-    node_t queue[1024] = {};
+    node_t queue[1024];
     const int n = ARRAY_SIZE(queue);
     int start = 0, size = 12, r, i;
     int order, pix;
     // Enqueue the first 12 pix at order 0.
-    for (i = 0; i < 12; i++) queue[i].pix = i;
+    for (i = 0; i < 12; i++) {queue[i] = (node_t){0, i};}
     while (size) {
         order = queue[start % n].order;
         pix = queue[start % n].pix;
