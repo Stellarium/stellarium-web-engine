@@ -264,7 +264,7 @@ static void skycultures_gui(obj_t *obj, int location)
 {
     skyculture_t *cult;
     if (!DEFINED(SWE_GUI)) return;
-    if (gui_tab("Skycultures")) {
+    if (location == 0 && gui_tab("Skycultures")) {
         OBJ_ITER(obj, cult, "skyculture") {
             gui_item(&(gui_item_t){
                     .label = cult->info.name,

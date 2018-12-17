@@ -242,7 +242,7 @@ static void landscapes_gui(obj_t *obj, int location)
 {
     landscape_t *ls;
     if (!DEFINED(SWE_GUI)) return;
-    if (gui_tab("Landscapes")) {
+    if (location == 0 && gui_tab("Landscapes")) {
         OBJ_ITER(obj, ls, "landscape") {
             gui_item(&(gui_item_t){
                     .label = ls->obj.id,

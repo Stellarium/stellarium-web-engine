@@ -95,7 +95,7 @@ static void debug_gui(obj_t *obj, int location)
 {
     int i;
     if (!DEFINED(SWE_GUI)) return;
-    if (gui_tab("Tests")) {
+    if (location == 0 && gui_tab("Tests")) {
         for (i = 0; i < ARRAY_SIZE(TARGETS); i++)
             show_target(&TARGETS[i]);
         gui_tab_end();

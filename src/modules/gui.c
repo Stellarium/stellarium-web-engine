@@ -262,6 +262,11 @@ static void menu_main(void *user)
         gui_double_log("log lmaxs", &core->lwmax_scale, -100, 100, 2, NAN);
         gui_float_log("log p", &core->tonemapper.p, -100, 100, 0, NAN);
         gui_float("q", &core->tonemapper.q, 1, 4, 1, NAN);
+
+        DL_FOREACH(core->obj.children, module) {
+            if (module->klass->gui) module->klass->gui(module, 1);
+        }
+
         gui_text("Progress:");
         progressbar_list(NULL, on_progressbar);
         gui_tab_end();
@@ -421,7 +426,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_same_line();
     gui_text("FPS: %.0f", core->prof.fps);
     gui_same_line();
-    gui_text("lwmax: %f cd/m2", core->lwmax);
+    gui_text("lwmax: %f cd/m2", core->lwmax * core->lwmax_scale);
     gui_same_line();
     gui_text("cst: %s", core->observer->pointer.cst);
     gui_panel_end();

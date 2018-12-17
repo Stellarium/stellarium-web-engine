@@ -193,9 +193,9 @@ static int lines_render(const obj_t *obj, const painter_t *painter)
 
 static void lines_gui(obj_t *obj, int location)
 {
-    if (!DEFINED(SWE_GUI)) return;
     int i;
-    if (gui_tab("Grids")) {
+    if (!DEFINED(SWE_GUI)) return;
+    if (location == 0 && gui_tab("Grids")) {
         for (i = 0; i < ARRAY_SIZE(LINES); i++) {
             gui_item(&(gui_item_t){
                     .label = LINES[i].name,
