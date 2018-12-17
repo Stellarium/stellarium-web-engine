@@ -30,6 +30,8 @@ typedef struct atmosphere {
         bool            visible;
     } tiles[12];
     fader_t         visible;
+    // Manual factor to adjuste the luminance.
+    double              lum_scale;
 } atmosphere_t;
 
 // All the precomputed data
@@ -46,6 +48,7 @@ typedef struct {
     // Skybrightness model.
     skybrightness_t skybrightness;
     double landscape_lum; // Average luminance of the landscape.
+    double lum_scale; // Manual adjustement.
 
     // Updated during rendering.
     double sum_lum;
@@ -157,6 +160,7 @@ static float compute_lum(void *user, const float pos[3])
                 eraSepp(p, d->moon_pos),
                 eraSepp(p, d->sun_pos),
                 eraSepp(p, zenith));
+    lum *= d->lum_scale;
     // Clamp to prevent too much adaptation.
     lum = min(lum, 100000);
 
@@ -217,6 +221,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
+    data.lum_scale = atm->lum_scale;
     obj_get_attr(moon, "phase", "f", &moon_phase);
     prepare_skybrightness(&data.skybrightness,
             &painter, sun_pos, moon_pos, moon->vmag, moon_phase);
@@ -252,8 +257,18 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 static int atmosphere_init(obj_t *obj, json_value *args)
 {
     atmosphere_t *atm = (void*)obj;
+    atm->lum_scale = 1.0;
     fader_init(&atm->visible, true);
     return 0;
+}
+
+static void atmosphere_gui(obj_t *obj, int location)
+{
+    atmosphere_t *atm = (void*)obj;
+    if (!DEFINED(SWE_GUI)) return;
+    if (location == 1) { // debug.
+        gui_double_log("atm db", &atm->lum_scale, -100, 100, 1, NAN);
+    }
 }
 
 /*
@@ -268,6 +283,7 @@ static obj_klass_t atmosphere_klass = {
     .render = atmosphere_render,
     .update = atmosphere_update,
     .render_order = 35,
+    .gui    = atmosphere_gui,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(atmosphere_t, visible.target)),
         {}
