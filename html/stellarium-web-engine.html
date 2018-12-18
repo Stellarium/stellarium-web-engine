@@ -223,11 +223,11 @@
 
         var ret = [];
         var obs = stel.core.observer;
-        var cirs = stel.convertPosition(obs, 'ICRS', 'CIRS', obj.icrs);
+        var cirs = stel.convertFrame(obs, 'ICRS', 'CIRS', obj.icrs);
         var radec = stel.c2s(cirs);
         var ra = stel.anp(radec[0]);
         var dec = stel.anpm(radec[1]);
-        var observed = stel.convertPosition(obs, 'CIRS', 'OBSERVED', cirs);
+        var observed = stel.convertFrame(obs, 'CIRS', 'OBSERVED', cirs);
         var azalt = stel.c2s(observed);
         var az = stel.anp(azalt[0]);
         var alt = stel.anp(azalt[1]);
