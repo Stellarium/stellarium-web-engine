@@ -19,6 +19,7 @@ static bool g_debug = false;
 int paint_prepare(const painter_t *painter, double win_w, double win_h,
                   double scale)
 {
+    PROFILE(paint_prepare, 0);
     areas_clear_all(core->areas);
     REND(painter->rend, prepare, win_w, win_h, scale);
     return 0;
