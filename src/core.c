@@ -608,25 +608,18 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     paint_prepare(&painter, win_w, win_h, pixel_scale);
 
-#ifdef SWE_GUI
-    // We will render the GUI later
-    obj_t* gui = core_get_module("gui");
-    DL_FOREACH(core->obj.children, module) {
-        if (module != gui)
-            obj_render(module, &painter);
-    }
-#else
     DL_FOREACH(core->obj.children, module) {
         obj_render(module, &painter);
     }
-#endif
 
+    // Flush all rendering pipeline
     paint_finish(&painter);
 
-#ifdef SWE_GUI
-    // We want to render the GUI after the render_flush
-    obj_render(gui, &painter);
-#endif
+    // Do post render (e.g. for GUI)
+    DL_FOREACH(core->obj.children, module) {
+        obj_post_render(module, &painter);
+    }
+
     if (core->fast_mode) updated = true;
     core->fast_mode = false;
     return updated ? 1 : 0;

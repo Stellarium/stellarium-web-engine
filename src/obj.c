@@ -340,6 +340,14 @@ int obj_render(const obj_t *obj, const painter_t *painter)
         return 0;
 }
 
+int obj_post_render(const obj_t *obj, const painter_t *painter)
+{
+    if (obj->klass->post_render)
+        return obj->klass->post_render(obj, painter);
+    else
+        return 0;
+}
+
 EMSCRIPTEN_KEEPALIVE
 int obj_update(obj_t *obj, observer_t *obs, double dt)
 {

@@ -34,7 +34,7 @@ static obj_klass_t gui_klass = {
     .flags = OBJ_MODULE,
     .init = gui_init_,
     .del = gui_del,
-    .render = gui_render,
+    .post_render = gui_render,
     .render_order = 200,
     .create_order = -1,     // Create before anything else.
 };

@@ -70,6 +70,8 @@ typedef struct obj_klass obj_klass_t;
  *   del    - Called when an instance is destroyed.
  *   update - Update the object for a new observer.
  *   render - Render the object.
+ *   post_render - Called after all modules are rendered, but with a still
+ *                 valid OpenGL context. Useful for e.g. GUI rendering.
  *   clone  - Create a copy of the object.
  *   get    - Find a sub-object for a given query.
  *   get_by_nsid - Find a sub-object for a given nsid.
@@ -95,6 +97,7 @@ struct obj_klass
     void (*del)(obj_t *obj);
     int (*update)(obj_t *obj, const observer_t *obs, double dt);
     int (*render)(const obj_t *obj, const painter_t *painter);
+    int (*post_render)(const obj_t *obj, const painter_t *painter);
     obj_t* (*clone)(const obj_t *obj);
     int (*render_pointer)(const obj_t *obj, const painter_t *painter);
 
@@ -366,6 +369,12 @@ double obj_get_render_order(const obj_t *obj);
  * Render an object.
  */
 int obj_render(const obj_t *obj, const painter_t *painter);
+
+/*
+ * Function: obj_post_render
+ * Post render an object.
+ */
+int obj_post_render(const obj_t *obj, const painter_t *painter);
 
 /*
  * Function: obj_update
