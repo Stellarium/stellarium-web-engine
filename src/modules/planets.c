@@ -1108,12 +1108,7 @@ static obj_klass_t planet_klass = {
     .update = planet_update,
     .attributes = (attribute_t[]) {
         PROPERTY("name"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
         PROPERTY("radec"),
-        PROPERTY("azalt"),
         PROPERTY("vmag"),
         PROPERTY("distance"),
         PROPERTY("phase", "f", MEMBER(planet_t, phase)),

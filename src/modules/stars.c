@@ -706,14 +706,9 @@ static obj_klass_t star_klass = {
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
         { "distance", "f", .hint = "dist", .fn = star_get_distance,
           .desc = "Distance (AU)." },
-        PROPERTY("alt"),
-        PROPERTY("az"),
         PROPERTY("radec"),
-        PROPERTY("azalt"),
         PROPERTY("vmag"),
         PROPERTY("type"),
         {},

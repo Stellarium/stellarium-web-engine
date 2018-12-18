@@ -40,18 +40,8 @@ static const attribute_t DEFAULT_ATTRIBUTES[] = {
     { "visible", "b"},
     { "name", "s", .fn = obj_fn_default_name,
       .desc = "Common name for the object." },
-    { "ra", "f", .hint = "h_angle", .fn = obj_fn_default_pos,
-      .desc = "RA position angle (ICRS)." },
-    { "dec", "f", .hint = "d_angle", .fn = obj_fn_default_pos,
-      .desc = "Dec position angle (ICRS)."},
-    { "alt", "f", .hint = "d_angle", .fn = obj_fn_default_pos,
-      .desc = "Altitude position angle" },
-    { "az", "f", .hint = "d_angle", .fn = obj_fn_default_pos,
-      .desc = "Azimuth position angle" },
     { "radec", "v4", .hint = "radec", .fn = obj_fn_default_pos,
       .desc = "Cartesian 3d vector of the ra/dec position (ICRS)."},
-    { "azalt", "v3", .hint = "azalt", .fn = obj_fn_default_pos,
-      .desc = "Cartesian 3d vector of the alt/az position."},
     { "vmag", "f", .hint = "mag", MEMBER(obj_t, vmag),
       .desc = "Visual magnitude"},
     { "distance", "f", .hint = "dist", .fn = obj_fn_default_pos,
@@ -449,7 +439,6 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
-    double v[3] = {}, az, alt, ra, de;
     if (str_equ(attr->name, "distance")) {
         return args_value_new("f", "dist",
                 obj->pvo[0][3] == 0 ? NAN :
@@ -458,40 +447,6 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
     // Radec is in local ICRS, i.e. equatorial J2000 observer centered
     if (str_equ(attr->name, "radec")) {
         return args_value_new("v4", "radec", obj->pvo[0]);
-    }
-    // XXX: deprecated argument.
-    if (str_equ(attr->name, "ra")) {
-        eraC2s(obj->pvo[0], &ra, &de);
-        ra = eraAnp(ra);
-        return args_value_new("f", "h_angle", ra);
-    }
-    // XXX: deprecated argument.
-    if (str_equ(attr->name, "dec")) {
-        eraC2s(obj->pvo[0], &ra, &de);
-        de = eraAnpm(de);
-        return args_value_new("f", "d_angle", de);
-    }
-    // XXX: deprecated argument.
-    if (str_equ(attr->name, "azalt")) {
-        convert_framev4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
-                            obj->pvo[0], v);
-        return args_value_new("v3", "azalt", v);
-    }
-    // XXX: deprecated argument.
-    if (str_equ(attr->name, "az")) {
-        convert_framev4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
-                            obj->pvo[0], v);
-        eraC2s(v, &az, &alt);
-        az = eraAnp(az);
-        return args_value_new("f", "d_angle", az);
-    }
-    // XXX: deprecated argument.
-    if (str_equ(attr->name, "alt")) {
-        convert_framev4(core->observer, FRAME_ICRF, FRAME_OBSERVED,
-                            obj->pvo[0], v);
-        eraC2s(v, &az, &alt);
-        alt = eraAnpm(alt);
-        return args_value_new("f", "d_angle", alt);
     }
     assert(false);
     return NULL;

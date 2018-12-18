@@ -500,12 +500,7 @@ static obj_klass_t constellation_klass = {
         // Default properties.
         PROPERTY("name"),
         PROPERTY("distance"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
         PROPERTY("radec"),
-        PROPERTY("azalt"),
         PROPERTY("vmag"),
         PROPERTY("type"),
         {}

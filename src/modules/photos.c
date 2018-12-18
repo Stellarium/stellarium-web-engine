@@ -140,12 +140,7 @@ static obj_klass_t photo_klass = {
         PROPERTY("calibration", "json", .fn = photo_fn_calibration),
         PROPERTY("render_shape", "b", MEMBER(photo_t, render_shape)),
         // Default properties.
-        PROPERTY("ra"),
-        PROPERTY("dec"),
         PROPERTY("radec"),
-        PROPERTY("az"),
-        PROPERTY("alt"),
-        PROPERTY("azalt"),
         {}
     },
 };

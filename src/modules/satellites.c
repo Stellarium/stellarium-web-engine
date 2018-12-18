@@ -384,13 +384,8 @@ static obj_klass_t satellite_klass = {
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
-        PROPERTY("ra"),
-        PROPERTY("dec"),
         PROPERTY("distance"),
-        PROPERTY("alt"),
-        PROPERTY("az"),
         PROPERTY("radec"),
-        PROPERTY("azalt"),
         PROPERTY("vmag"),
         PROPERTY("type"),
         {}
