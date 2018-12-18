@@ -232,15 +232,16 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
                           {1, 0, 1, 1},
                           {0, 1, 1, 1},
                           {1, 1, 1, 1} };
+    double p[4][4];
     double mat3[3][3];
     int i;
 
     // At order zero, the tiles are too big and it can give false positive,
     // so in that case is check the four tiles of level one.
-    if (outside && order == 0) {
+    if (outside && order < 1) {
         for (i = 0; i < 4; i++) {
-            if (!painter_is_tile_clipped(painter, frame, 1, pix * 4 + i,
-                                         outside))
+            if (!painter_is_tile_clipped(
+                        painter, frame, order + 1, pix * 4 + i, outside))
                 return false;
         }
         return true;
@@ -252,9 +253,26 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         healpix_xy2vec(quad[i], quad[i]);
         mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
-        project(painter->proj, 0, 4, quad[i], quad[i]);
+        project(painter->proj, 0, 4, quad[i], p[i]);
     }
-    return is_clipped(4, quad);
+    if (is_clipped(4, p)) return true;
+
+    /*
+     * Special case: if all the points are behind us and none are visible
+     * on screen, we assume the tile is clipped.  This fix the problem
+     * that the stereographic projection as defined at the moment doesn't
+     * make the clipping test very accurate.
+     */
+    if (outside) {
+        for (i = 0; i < 4; i++) {
+            if (p[i][0] >= -p[i][3] && p[i][0] <= +p[i][3] &&
+                p[i][1] >= -p[i][3] && p[i][1] <= +p[i][3] &&
+                p[i][2] >= -p[i][3] && p[i][2] <= +p[i][3]) return false;
+            if (quad[i][2] < 0) return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 /* Draw the contour lines of a shape.
