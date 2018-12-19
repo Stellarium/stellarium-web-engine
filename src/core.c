@@ -174,7 +174,7 @@ void core_screen_to_observed(double x, double y, double p[3])
     double pos[4] = {x, y};
 
     mat3_invert(core->observer->ro2v, rv2o);
-    projection_init(&proj, core->proj, core->fovx,
+    projection_init(&proj, core->proj, core->fov,
                     core->win_size[0], core->win_size[1]);
     // Convert to NDC coordinates.
     // Could be done in the projector?
