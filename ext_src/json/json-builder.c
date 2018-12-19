@@ -663,6 +663,10 @@ size_t json_measure_ex (json_value * value, json_serialize_opts opts)
 
          case json_double:
 
+            if (isnan(value->u.dbl)) {
+              total += 4;
+              break;
+            }
             total += snprintf (NULL, 0, "%.12f", value->u.dbl);
 
             if (value->u.dbl - floor (value->u.dbl) < 0.001)
@@ -879,6 +883,11 @@ void json_serialize_ex (json_char * buf, json_value * value, json_serialize_opts
 
             ptr = buf;
 
+            if (isnan(value->u.dbl)) {
+                memcpy (buf, "null", 4);
+                buf += 4;
+                break;
+            }
             buf += sprintf (buf, "%.12f", value->u.dbl);
 
             if ((dot = strchr (ptr, ',')))
