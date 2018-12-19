@@ -38,23 +38,23 @@ def ensure_dir(file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def download(url, md5=None, unpacked_md5=False):
+def download(url, dest=None, md5=None, unpacked_md5=False):
     '''download a file into data-src and return a path to it'''
-    filename = os.path.basename(url)
-    outpath = 'data-src/{}'.format(filename)
-    if not os.path.exists(outpath):
-        ensure_dir(outpath)
+    dest = dest or 'data-src/'
+    if dest.endswith('/'):
+        dest = os.path.join(dest, os.path.basename(url))
+    if not os.path.exists(dest):
+        ensure_dir(dest)
         print("Download '{}'".format(url))
         r = requests.get(url)
-        with open(outpath, 'wb') as out:
+        with open(dest, 'wb') as out:
             out.write(r.content)
     if md5:
-        assert hashlib.md5(open(outpath).read()).hexdigest() == md5
+        assert hashlib.md5(open(dest).read()).hexdigest() == md5
     if unpacked_md5:
-        data_md5 = hashlib.md5(gzip.open(outpath).read()).hexdigest()
+        data_md5 = hashlib.md5(gzip.open(dest).read()).hexdigest()
         assert data_md5 == unpacked_md5
-
-    return outpath
+    return dest
 
 
 def parse(line, start, end, type=float, default=None, required=False,
@@ -93,21 +93,31 @@ def compute_dir_md5(path):
     return m.hexdigest()
 
 
-def generator(filename, md5):
+def compute_file_md5(path):
+    """Compute the md5 of a file or a directory"""
+    if not path.endswith('/'):
+        return hashlib.md5(open(path).read()).hexdigest()
+    else:
+        return compute_dir_md5(path)
+
+
+def generator(target, md5):
     """Decorator that checks if a generated file is already up to date
        This can be used to cache data that is slow to generate.
     """
     def decorator(func):
         @functools.wraps(func)
         def wrapper():
-            path = os.path.join('data-src', filename)
+            path = target
+            if not path.startswith('./'):
+                path = os.path.join('data-src', path)
             if not os.path.exists(path):
                 print('Generating %s' % path)
                 ensure_dir(path)
                 func(path)
-            current_md5 = hashlib.md5(open(path).read()).hexdigest()
+            current_md5 = compute_file_md5(path)
             if  current_md5 != md5:
-                print 'Md5 for file %s changed!' % filename
+                print 'Md5 for file %s changed!' % target
                 print 'Current md5: %s' % current_md5
                 print 'Expected   : %s' % md5
                 raise ValueError
