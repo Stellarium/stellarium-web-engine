@@ -261,6 +261,29 @@ void core_on_char(uint32_t c);
 void core_on_zoom(double zoom, double x, double y);
 
 /*
+ * Function: core_screen_to_observed
+ * Convert a screen 2D position to a 3D azalt direction.
+ *
+ * Parameters:
+ *   x    - The screen x position.
+ *   y    - The screen y position.
+ *   p    - Corresponding 3D unit vector in azalt (after refraction).
+ */
+void core_screen_to_observed(double x, double y, double p[3]);
+
+/*
+ * Function: core_get_obj_at
+ * Get the object at a given screen position.
+ *
+ * Parameters:
+ *   x        - The screen x position.
+ *   y        - The screen y position.
+ *   max_dist - Maximum distance in pixel between the object and the given
+ *              position.
+ */
+obj_t *core_get_obj_at(double x, double y, double max_dist);
+
+/*
  * Function: core_get_module
  * Return a core module by name
  */

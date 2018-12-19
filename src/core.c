@@ -166,8 +166,8 @@ static int modules_sort_cmp(void *a, void *b)
 static int core_update(void);
 static int core_update_direction(double dt);
 
-// Convert mouse position to observed coordinates.
-static void mouse_to_observed(double x, double y, double p[3])
+// Convert screen position to observed coordinates.
+void core_screen_to_observed(double x, double y, double p[3])
 {
     double rv2o[3][3];
     projection_t proj;
@@ -191,7 +191,7 @@ static int core_pan(const gesture_t *g, void *user)
     double pos[3];
     static double start_pos[3];
 
-    mouse_to_observed(g->pos[0], g->pos[1], pos);
+    core_screen_to_observed(g->pos[0], g->pos[1], pos);
     if (g->state == GESTURE_BEGIN)
         vec3_copy(pos, start_pos);
 
@@ -210,7 +210,7 @@ static int core_pan(const gesture_t *g, void *user)
     return 0;
 }
 
-static obj_t *get_obj_at(double x, double y, double max_dist)
+obj_t *core_get_obj_at(double x, double y, double max_dist)
 {
     double pos[2] = {x, y};
     uint64_t oid, hint;
@@ -224,7 +224,7 @@ static int core_click(const gesture_t *g, void *user)
 {
     obj_t *obj;
     if (!core->ignore_clicks) {
-        obj = get_obj_at(g->pos[0], g->pos[1], 18);
+        obj = core_get_obj_at(g->pos[0], g->pos[1], 18);
         obj_set_attr(&core->obj, "selection", "p", obj);
         obj_release(obj);
     }
@@ -236,7 +236,7 @@ static int core_click(const gesture_t *g, void *user)
 static int core_hover(const gesture_t *g, void *user)
 {
     obj_t *obj;
-    obj = get_obj_at(g->pos[0], g->pos[1], 18);
+    obj = core_get_obj_at(g->pos[0], g->pos[1], 18);
     obj_set_attr(&core->obj, "hovered", "p", obj);
     obj_release(obj);
     return 0;
@@ -718,11 +718,11 @@ void core_on_zoom(double k, double x, double y)
     double fov, pos_start[3], pos_end[3];
     double sal, saz, dal, daz;
 
-    mouse_to_observed(x, y, pos_start);
+    core_screen_to_observed(x, y, pos_start);
     obj_get_attr(&core->obj, "fov", "f", &fov);
     fov /= k;
     obj_set_attr(&core->obj, "fov", "f", fov);
-    mouse_to_observed(x, y, pos_end);
+    core_screen_to_observed(x, y, pos_end);
 
     // Adjust lat/az to keep the mouse point at the same position.
     eraC2s(pos_start, &saz, &sal);
