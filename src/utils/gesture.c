@@ -44,6 +44,7 @@ static int pan_on_mouse(gesture_t *g, const inputs_t *in)
         }
         if (vec2_dist2(g->start_pos[0], g->pos) > sqr(g_start_dist)) {
             g->state = GESTURE_BEGIN;
+            vec2_copy(g->start_pos[0], g->pos);
             g->callback(g, NULL);
             g->state = GESTURE_UPDATE;
             return 1;
