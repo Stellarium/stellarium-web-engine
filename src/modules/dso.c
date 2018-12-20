@@ -535,7 +535,6 @@ static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
 
 static int render_visitor(int order, int pix, void *user)
 {
-    PROFILE(dso_render_visitor, 0);
     dsos_t *dsos = USER_GET(user, 0);
     painter_t painter = *(const painter_t*)USER_GET(user, 1);
     int *nb_tot = USER_GET(user, 2);

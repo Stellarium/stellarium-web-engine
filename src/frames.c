@@ -55,7 +55,6 @@ void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
 static void convert_frame_forward(const observer_t *obs,
                         int origin, int dest, bool at_inf, double p[3])
 {
-    PROFILE(convert_frame_forward, PROFILE_AGGREGATE);
     const eraASTROM *astrom = &obs->astrom;
 
     if (origin == FRAME_ASTROM) {
