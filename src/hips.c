@@ -9,6 +9,7 @@
 
 #include "swe.h"
 #include "ini.h"
+#include <string.h>
 
 // Should be good enough...
 #define URL_MAX_SIZE 4096
