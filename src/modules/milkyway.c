@@ -77,7 +77,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     if (!mw->tex) {
         // For the moment the texture url is hardcoded.
         mw->tex = texture_from_url(
-                "https:/data.stellarium.org/other/milkyway.webp", 0);
+                "https://data.stellarium.org/other/milkyway.webp", 0);
         assert(mw->tex);
     }
 
