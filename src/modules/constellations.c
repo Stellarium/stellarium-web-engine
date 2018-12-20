@@ -365,8 +365,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
         mag[1] = con->stars[i + 1]->vmag;
         core_get_point_for_mag(mag[0], &radius[0], NULL);
         core_get_point_for_mag(mag[1], &radius[1], NULL);
-        radius[0] = core_get_apparent_angle_for_point(&painter, radius[0]);
-        radius[1] = core_get_apparent_angle_for_point(&painter, radius[1]);
+        radius[0] = core_get_apparent_angle_for_point(painter.proj, radius[0]);
+        radius[1] = core_get_apparent_angle_for_point(painter.proj, radius[1]);
         // Add some space, using ad-hoc formula.
         line_truncate(&lines[i], radius[0] * 2 + 0.25 * DD2R,
                                  radius[1] * 2 + 0.25 * DD2R);

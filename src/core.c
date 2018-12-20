@@ -832,10 +832,10 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
 }
 
 
-double core_get_apparent_angle_for_point(const painter_t *painter, double r)
+double core_get_apparent_angle_for_point(const projection_t *proj, double r)
 {
-    const double win_w = painter->fb_size[0] / painter->pixel_scale;
-    return r * painter->proj->scaling[0] / win_w * 2;
+    const double win_w = proj->window_size[0];
+    return r * proj->scaling[0] / win_w * 2;
 }
 
 /*

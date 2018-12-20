@@ -723,7 +723,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     convert_frame(painter.obs, FRAME_ICRF, FRAME_OBSERVED, false, pos, pos);
 
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
-    point_r = core_get_apparent_angle_for_point(&painter, point_size);
+    point_r = core_get_apparent_angle_for_point(painter.proj, point_size);
 
     radius = planet->radius_m / DAU;
 

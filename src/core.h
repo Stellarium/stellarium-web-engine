@@ -318,7 +318,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
  */
 void core_get_point_for_mag(double mag, double *radius, double *luminance);
 
-double core_get_apparent_angle_for_point(const painter_t *painter, double r);
+double core_get_apparent_angle_for_point(const projection_t *proj, double r);
 
 
 // Return a static string representation of an object type id.
