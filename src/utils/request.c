@@ -7,7 +7,7 @@
  * repository.
  */
 
-#ifndef __EMSCRIPTEN__
+#ifndef NO_LIBCURL
 
 #include "request.h"
 #include "utstring.h"
@@ -127,11 +127,6 @@ static char *create_local_path(const char *url, const char *suffix)
     return ret;
 }
 
-static bool is_url_local(const char *url)
-{
-    return !strchr(url, ':');
-}
-
 void request_init(const char *cache_dir)
 {
     assert(cache_dir);
@@ -150,17 +145,7 @@ request_t *request_create(const char *url)
     request_t *req = calloc(1, sizeof(*req));
     req->url = strdup(url);
 
-    // Special case for local url.
-    if (is_url_local(url)) {
-        req->done = true;
-        if (file_exists(url)) {
-            req->local_path = strdup(url);
-            req->status_code = 200;
-        } else {
-            req->status_code = 404;
-        }
-        return req;
-    }
+    assert(strchr(url, ':')); // Make sure we have a protocol.
 
     // Check for cache info.
     local_path = create_local_path(url, NULL);
@@ -402,4 +387,4 @@ void request_make_fresh(request_t *req)
     req->etag = NULL;
 }
 
-#endif // !emscripten
+#endif // NO_LIBCURL

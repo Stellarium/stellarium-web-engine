@@ -15,6 +15,7 @@ static void assets_update(void);
 enum {
     STATIC      = 1 << 0,
     COMPRESSED  = 1 << 1,
+    FREE_DATA   = 1 << 2,
 };
 
 typedef struct asset asset_t;
@@ -45,6 +46,16 @@ static struct {
     char *prefix;
     void *(*fn)(const char *path, int *size, int *code);
 } g_handler = {};
+
+static bool file_exists(const char *path)
+{
+    FILE *file;
+    if ((file = fopen(path, "r"))) {
+        fclose(file);
+        return true;
+    }
+    return false;
+}
 
 static asset_t *asset_get(const char *url)
 {
@@ -84,11 +95,12 @@ void asset_register(const char *url, const void *data, int size,
 const void *asset_get_data(const char *url, int *size, int *code)
 {
     asset_t *asset;
-    int i, r, default_size;
+    int i, r, default_size, default_code;
     char alias[1024];
     const void *data;
     (void)r;
     size = size ?: &default_size;
+    code = code ?: &default_code;
     asset = asset_get(url);
 
     if (!asset) {
@@ -107,11 +119,23 @@ const void *asset_get_data(const char *url, int *size, int *code)
         r = z_uncompress(asset->data, asset->size,
                          asset->compressed_data + 4,
                          asset->compressed_size - 4);
+        asset->flags |= FREE_DATA;
         assert(r == 0);
     }
 
+    // Special handler for local files.
+    if (!strchr(url, ':')) {
+        if (!file_exists(url)) {
+            *size = 0;
+            *code = 404;
+            return NULL;
+        }
+        asset->data = read_file(url, &asset->size);
+        asset->flags |= FREE_DATA;
+    }
+
     if (asset->data) {
-        if (code) *code = 200;
+        *code = 200;
         *size = asset->size;
         return asset->data;
     }
@@ -132,7 +156,8 @@ const void *asset_get_data(const char *url, int *size, int *code)
     // Check if we have a special handler for this asset.
     if (g_handler.prefix && str_startswith(url, g_handler.prefix)) {
         asset->data = g_handler.fn(url, &asset->size, code);
-        if (size) *size = asset->size;
+        asset->flags |= FREE_DATA;
+        *size = asset->size;
         return asset->data;
     }
 
@@ -182,7 +207,7 @@ void asset_release(const char *url)
     asset_t *asset;
     HASH_FIND_STR(g_assets, url, asset);
     if (!asset) return;
-    if (asset->compressed_data) {
+    if (asset->flags & FREE_DATA) {
         free(asset->data);
         asset->size = 0;
     }

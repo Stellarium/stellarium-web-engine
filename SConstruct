@@ -157,6 +157,7 @@ if target_os == 'js':
 
     # Clang does not like overrided initializers.
     env.Append(CCFLAGS=['-Wno-initializer-overrides'])
+    env.Append(CCFLAGS='-DNO_LIBCURL')
 
     # All the emscripten runtime functions we use.
     # Needed since emscripten 1.37.
