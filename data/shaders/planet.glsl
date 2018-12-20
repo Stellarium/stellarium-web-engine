@@ -33,9 +33,9 @@ uniform mediump mat4      u_shadow_spheres;
 varying highp   vec3 v_mpos;
 varying mediump vec2 v_tex_pos;
 varying lowp    vec4 v_color;
-varying mediump vec3 v_normal;
-varying mediump vec3 v_tangent;
-varying mediump vec3 v_bitangent;
+varying highp   vec3 v_normal;
+varying highp   vec3 v_tangent;
+varying highp   vec3 v_bitangent;
 
 #ifdef VERTEX_SHADER
 
@@ -43,8 +43,8 @@ attribute highp   vec4 a_pos;
 attribute highp   vec4 a_mpos;
 attribute mediump vec2 a_tex_pos;
 attribute lowp    vec3 a_color;
-attribute mediump vec3 a_normal;
-attribute mediump vec3 a_tangent;
+attribute highp   vec3 a_normal;
+attribute highp   vec3 a_tangent;
 
 void main()
 {
