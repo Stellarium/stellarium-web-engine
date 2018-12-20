@@ -36,7 +36,6 @@ static struct {
     CURLM        *curlm;
     char         *cache_dir;
     int          nb; // Number of current running handles.
-    void         (*global_listener)(const char *url, int state);
 } g = {};
 
 struct request
@@ -273,8 +272,7 @@ static void on_done(request_t *req)
     }
 
 end:
-    if (g.global_listener)
-        g.global_listener(req->url, 2);
+    return;
 }
 
 static void update(void)
@@ -402,20 +400,6 @@ void request_make_fresh(request_t *req)
 {
     free(req->etag);
     req->etag = NULL;
-}
-
-void request_wait(request_t *req)
-{
-    while (!req->done) {
-        req_update(req);
-        if (req->handle)
-            curl_multi_wait(g.curlm, NULL, 0, 0, NULL);
-    }
-}
-
-void request_add_global_listener(void (*f)(const char *url, int state))
-{
-    g.global_listener = f;
 }
 
 #endif // !emscripten

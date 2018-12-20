@@ -23,16 +23,10 @@ struct request
     int         size;
 };
 
-static void (*g_global_listener)(const char *url, int state) = NULL;
 
 static struct {
     int nb;     // Number of current running requests.
 } g = {};
-
-void request_add_global_listener(void (*f)(const char *url, int state))
-{
-    g_global_listener = f;
-}
 
 void request_init(const char *cache_dir)
 {
@@ -83,8 +77,6 @@ static void onload(unsigned int _, void *arg, void *data, unsigned int size)
     req->data = data;
     req->size = size;
     req->done = true;
-    if (g_global_listener)
-        g_global_listener(req->url, 2);
     g.nb--;
 }
 
@@ -119,11 +111,6 @@ const void *request_get_data(request_t *req, int *size, int *status_code)
 }
 
 void request_make_fresh(request_t *req)
-{
-}
-
-
-void request_wait(request_t *req)
 {
 }
 
