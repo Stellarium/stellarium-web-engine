@@ -85,6 +85,7 @@ typedef struct obj_klass obj_klass_t;
  * Module Methods:
  *   list    - List all the sky objects children from this module.
  *   get_render_order - Return the render order.
+ *   on_mouse   - Called when there is a mouse event.
  */
 struct obj_klass
 {
@@ -100,6 +101,7 @@ struct obj_klass
     int (*post_render)(const obj_t *obj, const painter_t *painter);
     obj_t* (*clone)(const obj_t *obj);
     int (*render_pointer)(const obj_t *obj, const painter_t *painter);
+    int (*on_mouse)(obj_t *obj, int id, int state, double x, double y);
 
     // Find a sub object given an id.
     obj_t *(*get)(const obj_t *obj, const char *id, int flags);

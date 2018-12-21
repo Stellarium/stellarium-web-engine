@@ -173,11 +173,6 @@ struct core
         double      fps;        // Averaged FPS counter.
     } prof;
 
-    gesture_t       gest_pan;
-    gesture_t       gest_click;
-    gesture_t       gest_hover;
-    gesture_t       gest_pinch;
-
     // Number of clicks so far.  This is just so that we can wait for clicks
     // from the ui.
     int clicks;

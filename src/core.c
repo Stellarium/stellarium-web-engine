@@ -185,31 +185,6 @@ void core_screen_to_observed(double x, double y, double p[3])
     vec3_copy(pos, p);
 }
 
-static int core_pan(const gesture_t *g, void *user)
-{
-    double sal, saz, dal, daz;
-    double pos[3];
-    static double start_pos[3];
-
-    core_screen_to_observed(g->pos[0], g->pos[1], pos);
-    if (g->state == GESTURE_BEGIN)
-        vec3_copy(pos, start_pos);
-
-    eraC2s(start_pos, &saz, &sal);
-    eraC2s(pos, &daz, &dal);
-    core->observer->azimuth += (saz - daz);
-    core->observer->altitude += (sal - dal);
-    core->observer->altitude = clamp(core->observer->altitude,
-                                     -M_PI / 2, +M_PI / 2);
-    core->fast_mode = true;
-    obj_set_attr(&core->obj, "lock", "p", NULL);
-    observer_update(core->observer, true);
-    // Notify the changes.
-    obj_changed(&core->observer->obj, "altitude");
-    obj_changed(&core->observer->obj, "azimuth");
-    return 0;
-}
-
 obj_t *core_get_obj_at(double x, double y, double max_dist)
 {
     double pos[2] = {x, y};
@@ -218,39 +193,6 @@ obj_t *core_get_obj_at(double x, double y, double max_dist)
         return NULL;
     if (!oid) return NULL;
     return obj_get_by_oid(NULL, oid, hint);
-}
-
-static int core_click(const gesture_t *g, void *user)
-{
-    obj_t *obj;
-    if (!core->ignore_clicks) {
-        obj = core_get_obj_at(g->pos[0], g->pos[1], 18);
-        obj_set_attr(&core->obj, "selection", "p", obj);
-        obj_release(obj);
-    }
-    core->clicks++;
-    obj_changed((obj_t*)core, "clicks");
-    return 0;
-}
-
-static int core_hover(const gesture_t *g, void *user)
-{
-    obj_t *obj;
-    obj = core_get_obj_at(g->pos[0], g->pos[1], 18);
-    obj_set_attr(&core->obj, "hovered", "p", obj);
-    obj_release(obj);
-    return 0;
-}
-
-static int core_pinch(const gesture_t *gest, void *user)
-{
-    static double start_fov = 0;
-    if (gest->state == GESTURE_BEGIN) {
-        start_fov = core->fov;
-    }
-    core->fov = start_fov / gest->pinch;
-    obj_changed((obj_t*)core, "fov");
-    return 0;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -359,23 +301,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
 
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
-
-    core->gest_pan = (gesture_t) {
-        .type = GESTURE_PAN,
-        .callback = core_pan,
-    };
-    core->gest_click = (gesture_t) {
-        .type = GESTURE_CLICK,
-        .callback = core_click,
-    };
-    core->gest_hover = (gesture_t) {
-        .type = GESTURE_HOVER,
-        .callback = core_hover,
-    };
-    core->gest_pinch = (gesture_t) {
-        .type = GESTURE_PINCH,
-        .callback = core_pinch,
-    };
 
     for (module = obj_get_all_klasses(); module; module = module->next) {
         if (!(module->flags & OBJ_MODULE)) continue;
@@ -520,7 +445,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     int r;
     bool updated = false, cst_visible;
     double max_vmag;
-
+    const double ZOOM_FACTOR = 1.05;
 
     max_vmag = compute_max_vmag();
 
@@ -544,22 +469,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     if (r) updated = true;
 
     projection_init(&proj, core->proj, core->fovx, win_w, win_h);
-
-    const double ZOOM_FACTOR = 1.05;
-    const double MOVE_SPEED  = 1 * DD2R;
-
-    if (core->inputs.keys[KEY_RIGHT])
-        core->observer->azimuth += MOVE_SPEED * core->fov;
-    if (core->inputs.keys[KEY_LEFT])
-        core->observer->azimuth -= MOVE_SPEED * core->fov;
-    if (core->inputs.keys[KEY_UP])
-        core->observer->altitude += MOVE_SPEED * core->fov;
-    if (core->inputs.keys[KEY_DOWN])
-        core->observer->altitude -= MOVE_SPEED * core->fov;
-    if (core->inputs.keys[KEY_PAGE_UP])
-        core->fov /= ZOOM_FACTOR;
-    if (core->inputs.keys[KEY_PAGE_DOWN])
-        core->fov *= ZOOM_FACTOR;
 
     // Continuous zoom.
     if (core->zoom) {
@@ -625,37 +534,15 @@ int core_render(double win_w, double win_h, double pixel_scale)
     return updated ? 1 : 0;
 }
 
-static int get_touch_index(int id)
-{
-    int i;
-    assert(id != 0);
-    for (i = 0; i < ARRAY_SIZE(core->inputs.touches); i++) {
-        if (core->inputs.touches[i].id == id) return i;
-    }
-    // Create new touch.
-    for (i = 0; i < ARRAY_SIZE(core->inputs.touches); i++) {
-        if (!core->inputs.touches[i].id) {
-            core->inputs.touches[i].id = id;
-            return i;
-        }
-    }
-    return -1; // No more space.
-}
-
 EMSCRIPTEN_KEEPALIVE
 void core_on_mouse(int id, int state, double x, double y)
 {
-    id = get_touch_index(id + 1);
-    if (id == -1) return;
-    if (state == -1) state = core->inputs.touches[id].down[0];
-    if (state == 0) core->inputs.touches[id].id = 0; // Remove.
-    core->inputs.touches[id].pos[0] = x;
-    core->inputs.touches[id].pos[1] = y;
-    core->inputs.touches[id].down[0] = state == 1;
-    if (core->gui_want_capture_mouse) return;
-    gesture_t *gs[] = {&core->gest_pan, &core->gest_pinch,
-                       &core->gest_click, &core->gest_hover};
-    gesture_on_mouse(4, gs, id, state, x, y);
+    obj_t *module;
+    DL_FOREACH(core->obj.children, module) {
+        if (module->klass->on_mouse) {
+            module->klass->on_mouse(module, id, state, x, y);
+        };
+    }
 }
 
 EMSCRIPTEN_KEEPALIVE
