@@ -248,6 +248,16 @@ void core_init(double win_w, double win_h, double pixel_scale);
 void core_add_default_sources(void);
 
 void core_release(void);
+
+/*
+ * Function: core_update
+ * Update the core and all the modules
+ *
+ * Parameters:
+ *   dt     - Time imcrement from last frame (sec).
+ */
+int core_update(double dt);
+
 int core_render(double win_w, double win_h, double pixel_scale);
 // x and y in screen coordinates.
 void core_on_mouse(int id, int state, double x, double y);

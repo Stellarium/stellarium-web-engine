@@ -198,8 +198,10 @@ int main(int argc, char **argv)
 static void loop_function(void)
 {
     int fb_size[2];
+    double dt = 1.0 / 16.0;
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
 
+    core_update(dt);
     core_render(fb_size[0], fb_size[1], 1.0);
     glfwSwapBuffers(g_window);
     glfwPollEvents();

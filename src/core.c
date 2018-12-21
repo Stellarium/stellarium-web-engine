@@ -163,9 +163,6 @@ static int modules_sort_cmp(void *a, void *b)
     return cmp(obj_get_render_order(at), obj_get_render_order(bt));
 }
 
-static int core_update(void);
-static int core_update_direction(double dt);
-
 /*
  * Function: screen_to_observed
  * Convert a screen 2D position to a 3D azalt direction.
@@ -262,7 +259,7 @@ static void core_set_default(void)
 
     core->telescope_auto = true;
 
-    core_update();
+    core_update(0);
 }
 
 static void on_progressbar(const char *id)
@@ -377,12 +374,13 @@ static int core_update_direction(double dt)
     return 1;
 }
 
-static int core_update(void)
+int core_update(double dt)
 {
     bool atm_visible;
     double aspect = core->win_size[0] / core->win_size[1];
     double lwmax;
-    obj_t *atm;
+    int r;
+    obj_t *atm, *module;
 
     atm = core_get_module("atmosphere");
     assert(atm);
@@ -401,6 +399,16 @@ static int core_update(void)
                 (log(lwmax) - log(core->tonemapper.lwmax)) * 0.1);
     tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
+
+    core_update_direction(dt);
+
+    DL_SORT(core->obj.children, modules_sort_cmp);
+    DL_FOREACH(core->obj.children, module) {
+        if (module->klass->update) {
+            r = module->klass->update(module, core->observer, dt);
+            if (r < 0) LOG_E("Error updating module '%s'", module->id);
+        }
+    }
 
     return 0;
 }
@@ -449,9 +457,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     obj_t *module;
     projection_t proj;
     double t;
-    double dt = 1.0 / 16.0;
-    int r;
-    bool updated = false, cst_visible;
+    bool cst_visible;
     double max_vmag;
     const double ZOOM_FACTOR = 1.05;
 
@@ -473,8 +479,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     labels_reset();
-    r = core_update();
-    if (r) updated = true;
 
     projection_init(&proj, core->proj, core->fovx, win_w, win_h);
 
@@ -511,18 +515,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
             (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
     };
 
-    r = core_update_direction(dt);
-    if (r) updated = true;
-
-    DL_SORT(core->obj.children, modules_sort_cmp);
-    DL_FOREACH(core->obj.children, module) {
-        if (module->klass->update) {
-            r = module->klass->update(module, core->observer, dt);
-            if (r < 0) LOG_E("Error updating module '%s'", module->id);
-            if (r == 1) updated = true;
-        }
-    }
-
     paint_prepare(&painter, win_w, win_h, pixel_scale);
 
     DL_FOREACH(core->obj.children, module) {
@@ -537,9 +529,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
         obj_post_render(module, &painter);
     }
 
-    if (core->fast_mode) updated = true;
     core->fast_mode = false;
-    return updated ? 1 : 0;
+    return 0;
 }
 
 EMSCRIPTEN_KEEPALIVE
