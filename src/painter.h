@@ -341,10 +341,10 @@ int paint_2d_rect(const painter_t *painter, const double transf[3][3],
  *
  * Parameters:
  *   painter    - The painter.
- *   transf     - Transformation from unit into window space that defines
- *                the shape position, orientation and scale.
- *   p1         - First pos, in unit coordinates (-1 to 1).
- *   p2         - Second pos, in unit coordinates (-1 to 1).
+ *   transf     - Transformation applied to the coordinates.
+ *                Can be NULL for the identity.
+ *   p1         - First pos, in window coordinates.
+ *   p2         - Second pos, in window coordinates.
  */
 int paint_2d_line(const painter_t *painter, const double transf[3][3],
                   const double p1[2], const double p2[2]);
