@@ -219,7 +219,7 @@ static int parse_properties(hips_t *hips)
     int code;
     get_url_for(hips, url, "properties");
     data = asset_get_data(url, NULL, &code);
-    if (!data && code && code / 100 != 2) {
+    if (!data && code) {
         LOG_E("Cannot get hips properties file at '%s': %d", url, code);
         return -1;
     }
