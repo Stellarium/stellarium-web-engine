@@ -306,14 +306,19 @@ int paint_orbit(const painter_t *painter, int frame,
  *
  * Parameters:
  *   painter    - The painter.
- *   transf     - Transformation from unit into window space that defines
- *                the shape position, orientation and scale.
+ *   transf     - Transformation matrix applied to the coordinates.
+ *                Can be NULL for the identity.
+ *   pos        - The ellipse position in window space.
+ *   size       - The ellipse size in window space.
  *   dashes     - Size of the dashes (0 for a plain line).
  *   label_pos  - Output the position that could be used for a label.  Can
  *                be NULL.
  */
 int paint_2d_ellipse(const painter_t *painter,
-                     const double transf[4][4], double dashes,
+                     const double transf[4][4],
+                     double dashes,
+                     const double pos[2],
+                     const double size[2],
                      double label_pos[2]);
 
 /*

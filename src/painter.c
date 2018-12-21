@@ -359,19 +359,29 @@ int paint_orbit(const painter_t *painter, int frame,
  *   painter    - The painter.
  *   transf     - Transformation from unit into window space that defines
  *                the shape position, orientation and scale.
+ *   pos        - The ellipse position in window space.
+ *   size       - The ellipse size in window space.
  *   dashes     - Size of the dashes (0 for a plain line).
  *   label_pos  - Output the position that could be used for a label.  Can
  *                be NULL.
  */
 int paint_2d_ellipse(const painter_t *painter_,
                      const double transf[4][4], double dashes,
+                     const double pos[2],
+                     const double size[2],
                      double label_pos[2])
 {
-    double a2, b2, perimeter, pos[4], size[2], angle, a;
+    double a2, b2, perimeter, p[4], s[2], a, m[4][4], angle;
     painter_t painter = *painter_;
 
-    a2 = vec2_norm2(transf[0]);
-    b2 = vec2_norm2(transf[1]);
+    // Apply the pos, size and angle.
+    mat4_set_identity(m);
+    if (pos) mat4_itranslate(m, pos[0], pos[1], 0);
+    if (size) mat4_iscale(m, size[0], size[1], 1);
+    if (transf) mat4_mul(m, transf, m);
+
+    a2 = vec2_norm2(m[0]);
+    b2 = vec2_norm2(m[1]);
 
     // Estimate the number of dashes.
     painter.lines_stripes = 0;
@@ -380,18 +390,18 @@ int paint_2d_ellipse(const painter_t *painter_,
         painter.lines_stripes = perimeter / dashes;
     }
 
-    vec2_copy(transf[3], pos);
-    size[0] = sqrt(a2);
-    size[1] = sqrt(b2);
-    angle = atan2(transf[0][1], transf[0][0]);
-    REND(painter.rend, ellipse_2d, &painter, pos, size, angle);
+    vec2_copy(m[3], p);
+    s[0] = sqrt(a2);
+    s[1] = sqrt(b2);
+    angle = atan2(m[0][1], m[0][0]);
+    REND(painter.rend, ellipse_2d, &painter, p, s, angle);
 
     if (label_pos) {
         label_pos[1] = DBL_MAX;
         for (a = 0; a < 2 * M_PI / 2; a += 2 * M_PI / 16) {
-            vec4_set(pos, cos(a), sin(a), 0, 1);
-            mat4_mul_vec4(transf, pos, pos);
-            if (pos[1] < label_pos[1]) vec2_copy(pos, label_pos);
+            vec4_set(p, cos(a), sin(a), 0, 1);
+            mat4_mul_vec4(m, p, p);
+            if (p[1] < label_pos[1]) vec2_copy(p, label_pos);
         }
     }
     return 0;
