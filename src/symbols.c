@@ -83,7 +83,7 @@ static void cls_paint(const painter_t *painter, const double transf_[4][4])
     double transf[4][4];
     double dashes = M_PI * 12 * 0.8 / 8;
     mat4_copy(transf_, transf);
-    paint_2d_rect(painter, transf);
+    paint_2d_rect(painter, transf, NULL, NULL);
     mat4_iscale(transf, 0.8, 0.8, 1);
     paint_2d_ellipse(painter, transf, dashes, NULL, NULL, NULL);
 }
@@ -117,7 +117,7 @@ static void ism_paint(const painter_t *painter, const double transf[4][4])
 
 static void bne_paint(const painter_t *painter, const double transf[4][4])
 {
-    paint_2d_rect(painter, transf);
+    paint_2d_rect(painter, transf, NULL, NULL);
 }
 
 static void glc_paint(const painter_t *painter, const double transf[4][4])

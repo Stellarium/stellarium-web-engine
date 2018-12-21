@@ -327,10 +327,13 @@ int paint_2d_ellipse(const painter_t *painter,
  *
  * Parameters:
  *   painter    - The painter.
- *   transf     - Transformation from unit into window space that defines
- *                the shape position, orientation and scale.
+ *   transf     - Transformation applied to the coordinates.
+ *                Can be NULL for the identity.
+ *   pos        - Position in window space.
+ *   size       - Size in window space.
  */
-int paint_2d_rect(const painter_t *painter, const double transf[4][4]);
+int paint_2d_rect(const painter_t *painter, const double transf[4][4],
+                  const double pos[2], const double size[2]);
 
 /*
  * Function: paint_2d_line

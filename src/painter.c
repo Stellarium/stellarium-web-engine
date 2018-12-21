@@ -415,16 +415,24 @@ int paint_2d_ellipse(const painter_t *painter_,
  *   painter    - The painter.
  *   transf     - Transformation from unit into window space that defines
  *                the shape position, orientation and scale.
+ *   pos        - Position in window space.
+ *   size       - Size in window space.
  */
-int paint_2d_rect(const painter_t *painter, const double transf[4][4])
+int paint_2d_rect(const painter_t *painter, const double transf[4][4],
+                  const double pos[2], const double size[2])
 {
-    double pos[4], size[2], angle;
+    double p[4], s[2], angle, m[4][4];
 
-    vec2_copy(transf[3], pos);
-    size[0] = vec2_norm(transf[0]);
-    size[1] = vec2_norm(transf[1]);
-    angle = atan2(transf[0][1], transf[0][0]);
-    REND(painter->rend, rect_2d, painter, pos, size, angle);
+    mat4_set_identity(m);
+    if (pos) mat4_itranslate(m, pos[0], pos[1], 0);
+    if (size) mat4_iscale(m, size[0], size[1], 1);
+    if (transf) mat4_mul(m, transf, m);
+
+    vec2_copy(m[3], p);
+    s[0] = vec2_norm(m[0]);
+    s[1] = vec2_norm(m[1]);
+    angle = atan2(m[0][1], m[0][0]);
+    REND(painter->rend, rect_2d, painter, p, s, angle);
     return 0;
 }
 
