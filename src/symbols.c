@@ -11,20 +11,20 @@
 
 static texture_t *g_tex = NULL;
 
-static void glc_paint(const painter_t *painter, const double transf[4][4]);
-static void opc_paint(const painter_t *painter, const double transf[4][4]);
-static void cls_paint(const painter_t *painter, const double transf[4][4]);
-static void   g_paint(const painter_t *painter, const double transf[4][4]);
-static void  pn_paint(const painter_t *painter, const double transf[4][4]);
-static void ism_paint(const painter_t *painter, const double transf[4][4]);
-static void bne_paint(const painter_t *painter, const double transf[4][4]);
+static void glc_paint(const painter_t *painter, const double transf[3][3]);
+static void opc_paint(const painter_t *painter, const double transf[3][3]);
+static void cls_paint(const painter_t *painter, const double transf[3][3]);
+static void   g_paint(const painter_t *painter, const double transf[3][3]);
+static void  pn_paint(const painter_t *painter, const double transf[3][3]);
+static void ism_paint(const painter_t *painter, const double transf[3][3]);
+static void bne_paint(const painter_t *painter, const double transf[3][3]);
 
 // Match the list of svg files in tool/makedata.py.
 // We can probably do better than that.
 static const struct {
     const char  *id;
     uint32_t    color;
-    void        (*paint)(const painter_t *painter, const double transf[4][4]);
+    void        (*paint)(const painter_t *painter, const double transf[3][3]);
 } ENTRIES[] = {
     [SYMBOL_POINTER]                = {"POIN", 0x4CFF4CFF},
     [SYMBOL_ARTIFICIAL_SATELLITE]   = {"Ast",  0xff00ffff},
@@ -72,55 +72,55 @@ int symbols_get_for_otype(const char *type)
     return 0;
 }
 
-static void opc_paint(const painter_t *painter, const double transf[4][4])
+static void opc_paint(const painter_t *painter, const double transf[3][3])
 {
     double dashes = M_PI * 12 / 8;
     paint_2d_ellipse(painter, transf, dashes, NULL, NULL, NULL);
 }
 
-static void cls_paint(const painter_t *painter, const double transf_[4][4])
+static void cls_paint(const painter_t *painter, const double transf_[3][3])
 {
-    double transf[4][4];
+    double transf[3][3];
     double dashes = M_PI * 12 * 0.8 / 8;
-    mat4_copy(transf_, transf);
+    mat3_copy(transf_, transf);
     paint_2d_rect(painter, transf, NULL, NULL);
-    mat4_iscale(transf, 0.8, 0.8, 1);
+    mat3_iscale(transf, 0.8, 0.8, 1);
     paint_2d_ellipse(painter, transf, dashes, NULL, NULL, NULL);
 }
 
-static void g_paint(const painter_t *painter, const double transf[4][4])
+static void g_paint(const painter_t *painter, const double transf[3][3])
 {
-    // double transf[4][4];
+    // double transf[3][3];
     // mat4_copy(transf_, transf);
     // mat4_iscale(transf, 0.5, 1, 1);
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
 }
 
-static void pn_paint(const painter_t *painter, const double transf_[4][4])
+static void pn_paint(const painter_t *painter, const double transf_[3][3])
 {
-    double transf[4][4];
-    mat4_copy(transf_, transf);
+    double transf[3][3];
+    mat3_copy(transf_, transf);
     paint_2d_line(painter, transf, VEC(-1, 0), VEC(-0.25, 0));
     paint_2d_line(painter, transf, VEC(+1, 0), VEC(+0.25, 0));
     paint_2d_line(painter, transf, VEC(0, -1), VEC(0, -0.25));
     paint_2d_line(painter, transf, VEC(0, +1), VEC(0, +0.25));
-    mat4_iscale(transf, 0.75, 0.75, 1);
+    mat3_iscale(transf, 0.75, 0.75, 1);
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
-    mat4_iscale(transf, 1. / 3, 1. / 3, 1);
+    mat3_iscale(transf, 1. / 3, 1. / 3, 1);
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
 }
 
-static void ism_paint(const painter_t *painter, const double transf[4][4])
+static void ism_paint(const painter_t *painter, const double transf[3][3])
 {
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
 }
 
-static void bne_paint(const painter_t *painter, const double transf[4][4])
+static void bne_paint(const painter_t *painter, const double transf[3][3])
 {
     paint_2d_rect(painter, transf, NULL, NULL);
 }
 
-static void glc_paint(const painter_t *painter, const double transf[4][4])
+static void glc_paint(const painter_t *painter, const double transf[3][3])
 {
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
     paint_2d_line(painter, transf, VEC(-1, 0), VEC(1, 0));
@@ -133,7 +133,7 @@ int symbols_paint(const painter_t *painter_, int symbol,
                   double angle)
 {
     int i;
-    double uv[4][2], c[4], transf[4][4];
+    double uv[4][2], c[4], transf[3][3];
     painter_t painter = *painter_;
     assert(symbol >= 0);
     if (!symbol) return 0;
@@ -144,10 +144,10 @@ int symbols_paint(const painter_t *painter_, int symbol,
     // Procedural symbol.
     if (ENTRIES[symbol].paint) {
         vec4_copy(color, painter.color);
-        mat4_set_identity(transf);
-        mat4_itranslate(transf, pos[0], pos[1], 0);
-        mat4_rz(angle, transf, transf);
-        mat4_iscale(transf, size[0] / 2, size[1] / 2, 1);
+        mat3_set_identity(transf);
+        mat3_itranslate(transf, pos[0], pos[1]);
+        mat3_rz(angle, transf, transf);
+        mat3_iscale(transf, size[0] / 2, size[1] / 2, 1);
         ENTRIES[symbol].paint(&painter, transf);
         return 0;
     }

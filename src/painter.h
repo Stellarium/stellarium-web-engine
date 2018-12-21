@@ -315,7 +315,7 @@ int paint_orbit(const painter_t *painter, int frame,
  *                be NULL.
  */
 int paint_2d_ellipse(const painter_t *painter,
-                     const double transf[4][4],
+                     const double transf[3][3],
                      double dashes,
                      const double pos[2],
                      const double size[2],
@@ -332,7 +332,7 @@ int paint_2d_ellipse(const painter_t *painter,
  *   pos        - Position in window space.
  *   size       - Size in window space.
  */
-int paint_2d_rect(const painter_t *painter, const double transf[4][4],
+int paint_2d_rect(const painter_t *painter, const double transf[3][3],
                   const double pos[2], const double size[2]);
 
 /*
@@ -346,7 +346,7 @@ int paint_2d_rect(const painter_t *painter, const double transf[4][4],
  *   p1         - First pos, in unit coordinates (-1 to 1).
  *   p2         - Second pos, in unit coordinates (-1 to 1).
  */
-int paint_2d_line(const painter_t *painter, const double transf[4][4],
+int paint_2d_line(const painter_t *painter, const double transf[3][3],
                   const double p1[2], const double p2[2]);
 
 #endif // PAINTER_H

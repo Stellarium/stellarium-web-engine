@@ -366,19 +366,19 @@ int paint_orbit(const painter_t *painter, int frame,
  *                be NULL.
  */
 int paint_2d_ellipse(const painter_t *painter_,
-                     const double transf[4][4], double dashes,
+                     const double transf[3][3], double dashes,
                      const double pos[2],
                      const double size[2],
                      double label_pos[2])
 {
-    double a2, b2, perimeter, p[4], s[2], a, m[4][4], angle;
+    double a2, b2, perimeter, p[3], s[2], a, m[3][3], angle;
     painter_t painter = *painter_;
 
     // Apply the pos, size and angle.
-    mat4_set_identity(m);
-    if (pos) mat4_itranslate(m, pos[0], pos[1], 0);
-    if (size) mat4_iscale(m, size[0], size[1], 1);
-    if (transf) mat4_mul(m, transf, m);
+    mat3_set_identity(m);
+    if (pos) mat3_itranslate(m, pos[0], pos[1]);
+    if (size) mat3_iscale(m, size[0], size[1], 1);
+    if (transf) mat3_mul(m, transf, m);
 
     a2 = vec2_norm2(m[0]);
     b2 = vec2_norm2(m[1]);
@@ -390,7 +390,7 @@ int paint_2d_ellipse(const painter_t *painter_,
         painter.lines_stripes = perimeter / dashes;
     }
 
-    vec2_copy(m[3], p);
+    vec2_copy(m[2], p);
     s[0] = sqrt(a2);
     s[1] = sqrt(b2);
     angle = atan2(m[0][1], m[0][0]);
@@ -399,8 +399,8 @@ int paint_2d_ellipse(const painter_t *painter_,
     if (label_pos) {
         label_pos[1] = DBL_MAX;
         for (a = 0; a < 2 * M_PI / 2; a += 2 * M_PI / 16) {
-            vec4_set(p, cos(a), sin(a), 0, 1);
-            mat4_mul_vec4(m, p, p);
+            vec3_set(p, cos(a), sin(a), 1);
+            mat3_mul_vec3(m, p, p);
             if (p[1] < label_pos[1]) vec2_copy(p, label_pos);
         }
     }
@@ -418,17 +418,17 @@ int paint_2d_ellipse(const painter_t *painter_,
  *   pos        - Position in window space.
  *   size       - Size in window space.
  */
-int paint_2d_rect(const painter_t *painter, const double transf[4][4],
+int paint_2d_rect(const painter_t *painter, const double transf[3][3],
                   const double pos[2], const double size[2])
 {
-    double p[4], s[2], angle, m[4][4];
+    double p[3], s[2], angle, m[3][3];
 
-    mat4_set_identity(m);
-    if (pos) mat4_itranslate(m, pos[0], pos[1], 0);
-    if (size) mat4_iscale(m, size[0], size[1], 1);
-    if (transf) mat4_mul(m, transf, m);
+    mat3_set_identity(m);
+    if (pos) mat3_itranslate(m, pos[0], pos[1]);
+    if (size) mat3_iscale(m, size[0], size[1], 1);
+    if (transf) mat3_mul(m, transf, m);
 
-    vec2_copy(m[3], p);
+    vec2_copy(m[2], p);
     s[0] = vec2_norm(m[0]);
     s[1] = vec2_norm(m[1]);
     angle = atan2(m[0][1], m[0][0]);
@@ -447,13 +447,13 @@ int paint_2d_rect(const painter_t *painter, const double transf[4][4],
  *   p1         - First pos, in unit coordinates (-1 to 1).
  *   p2         - Second pos, in unit coordinates (-1 to 1).
  */
-int paint_2d_line(const painter_t *painter, const double transf[4][4],
+int paint_2d_line(const painter_t *painter, const double transf[3][3],
                   const double p1[2], const double p2[2])
 {
-    double p1_win[4] = {p1[0], p1[1], 0, 1};
-    double p2_win[4] = {p2[0], p2[1], 0, 1};
-    mat4_mul_vec4(transf, p1_win, p1_win);
-    mat4_mul_vec4(transf, p2_win, p2_win);
+    double p1_win[3] = {p1[0], p1[1], 1};
+    double p2_win[3] = {p2[0], p2[1], 1};
+    mat3_mul_vec3(transf, p1_win, p1_win);
+    mat3_mul_vec3(transf, p2_win, p2_win);
     REND(painter->rend, line_2d, painter, p1_win, p2_win);
     return 0;
 }
