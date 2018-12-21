@@ -622,12 +622,12 @@ static void planet_render_hips(const planet_t *planet,
     painter.planet.sun = &sun_pos;
 
     // Apply the rotation.
-    mat3_to_mat4(core->observer->re2i, tmp_mat);
+    mat3_to_mat4(painter.obs->re2i, tmp_mat);
     mat4_mul(mat, tmp_mat, mat);
     mat4_rx(-planet->rot.obliquity, mat, mat);
 
     if (planet->rot.period) {
-        rot = (core->observer->tt - epoch) / planet->rot.period * 2 * M_PI;
+        rot = (painter.obs->tt - epoch) / planet->rot.period * 2 * M_PI;
         rot += planet->rot.offset;
         mat4_rz(rot, mat, mat);
     }
@@ -782,7 +782,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
 
     if (vmag <= painter.label_mag_max) {
-        mat3_mul_vec3(core->observer->ro2v, pos, vpos);
+        mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, vpos, vpos)) {
@@ -802,7 +802,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Render the Sun halo.
     if (planet->id == SUN) {
-        mat3_mul_vec3(core->observer->ro2v, pos, vpos);
+        mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
         project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, vpos);
         paint_texture(&painter, planets->halo_tex, NULL, vpos, 200.0, NULL, 0);
     }

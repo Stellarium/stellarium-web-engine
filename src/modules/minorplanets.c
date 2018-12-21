@@ -342,7 +342,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     // Render name if needed.
     if (*mplanet->name && vmag <= painter->label_mag_max) {
-        mat3_mul_vec3(core->observer->ro2v, pos, pos);
+        mat3_mul_vec3(painter->obs->ro2v, pos, pos);
         if (project(painter->proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                     2, pos, pos)) {

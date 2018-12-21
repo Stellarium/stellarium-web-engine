@@ -197,8 +197,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
 
     // XXX: Use convert_coordinates instead!
     eraAtciq(s->ra, s->de, s->pra, s->pde, s->plx, 0,
-            &core->observer->astrom, &ri, &di);
-    eraAtioq(ri, di, &core->observer->astrom,
+            &painter.obs->astrom, &ri, &di);
+    eraAtioq(ri, di, &painter.obs->astrom,
             &aob, &zob, &hob, &dob, &rob);
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && zob > 90 * DD2R)
         return 0;
@@ -214,7 +214,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
     if (s->vmag <= painter.label_mag_max) {
-        convert_frame(core->observer, FRAME_OBSERVED, FRAME_VIEW,
+        convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW,
                           true, p, p);
         if (project(painter.proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
@@ -473,15 +473,13 @@ static int render_visitor(int order, int pix, void *user)
         // Compute star observed and screen pos.
         vec3_copy(s->pos, p);
         p[3] = 0;
-        //astrometric_to_apparent(core->observer, p, true, p);
-        convert_frame(core->observer, FRAME_ASTROM, FRAME_OBSERVED,
-                          true, p, p);
+        //astrometric_to_apparent(painter.obs, p, true, p);
+        convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
         // Skip if below horizon.
         if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
             continue;
         // Skip if not visible.
-        convert_frame(core->observer, FRAME_OBSERVED, FRAME_VIEW,
-                          true, p, p);
+        convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
         if (!project(painter.proj, PROJ_TO_WINDOW_SPACE |
                      PROJ_ALREADY_NORMALIZED, 2, p, p_win))
             continue;

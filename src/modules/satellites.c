@@ -324,8 +324,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     vmag = obj->vmag;
     if (vmag > painter.mag_max) return 0;
-    convert_frame(core->observer, FRAME_ICRF, FRAME_VIEW, false,
-                      obj->pvo[0], p);
+    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, false, obj->pvo[0], p);
 
     // Skip if not visible.
     if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;

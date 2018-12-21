@@ -378,7 +378,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
-    mat3_mul_vec3(core->observer->ro2v, pos, pos);
+    mat3_mul_vec3(painter.obs->ro2v, pos, pos);
     if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos)) {
