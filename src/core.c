@@ -166,8 +166,16 @@ static int modules_sort_cmp(void *a, void *b)
 static int core_update(void);
 static int core_update_direction(double dt);
 
-// Convert screen position to observed coordinates.
-void core_screen_to_observed(double x, double y, double p[3])
+/*
+ * Function: screen_to_observed
+ * Convert a screen 2D position to a 3D azalt direction.
+ *
+ * Parameters:
+ *   x    - The screen x position.
+ *   y    - The screen y position.
+ *   p    - Corresponding 3D unit vector in azalt (after refraction).
+ */
+static void screen_to_observed(double x, double y, double p[3])
 {
     double rv2o[3][3];
     projection_t proj;
@@ -605,11 +613,11 @@ void core_on_zoom(double k, double x, double y)
     double fov, pos_start[3], pos_end[3];
     double sal, saz, dal, daz;
 
-    core_screen_to_observed(x, y, pos_start);
+    screen_to_observed(x, y, pos_start);
     obj_get_attr(&core->obj, "fov", "f", &fov);
     fov /= k;
     obj_set_attr(&core->obj, "fov", "f", fov);
-    core_screen_to_observed(x, y, pos_end);
+    screen_to_observed(x, y, pos_end);
 
     // Adjust lat/az to keep the mouse point at the same position.
     eraC2s(pos_start, &saz, &sal);
