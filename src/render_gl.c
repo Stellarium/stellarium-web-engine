@@ -143,6 +143,7 @@ struct item
             double size[2];
             double angle;
             double dashes;
+            double stroke_width;
         } vg;
 
         struct {
@@ -824,7 +825,7 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
                                      item->color[1] * 255,
                                      item->color[2] * 255,
                                      item->color[3] * 255));
-    nvgStrokeWidth(rend->vg, 1);
+    nvgStrokeWidth(rend->vg, item->vg.stroke_width);
     nvgStroke(rend->vg);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);
@@ -1145,6 +1146,7 @@ void ellipse_2d(renderer_t        *rend_,
     vec4_copy(painter->color, item->color);
     item->vg.angle = angle;
     item->vg.dashes = painter->lines_stripes;
+    item->vg.stroke_width = painter->lines_width;
     DL_APPEND(rend->items, item);
 }
 
@@ -1160,6 +1162,7 @@ void rect_2d(renderer_t        *rend_,
     vec2_copy(size, item->vg.size);
     vec4_copy(painter->color, item->color);
     item->vg.angle = angle;
+    item->vg.stroke_width = painter->lines_width;
     DL_APPEND(rend->items, item);
 }
 
@@ -1175,6 +1178,7 @@ void line_2d(renderer_t          *rend_,
     vec2_copy(p1, item->vg.pos);
     vec2_copy(p2, item->vg.pos2);
     vec4_copy(painter->color, item->color);
+    item->vg.stroke_width = painter->lines_width;
     DL_APPEND(rend->items, item);
 }
 
