@@ -657,7 +657,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     }
     get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
                 order, (pix / 10000) * 10000, pix, hips->ext);
-    data = asset_get_data(url, &size, code);
+    data = asset_get_data2(url, order ? ASSET_DELAY : 0, &size, code);
     if (!(*code)) return NULL; // Still loading the file.
 
     // If the tile doesn't exists, mark it in the parent tile so that we
