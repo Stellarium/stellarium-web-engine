@@ -12,7 +12,7 @@
 typedef struct milkyway {
     obj_t           obj;
     fader_t         visible;
-    texture_t       *tex;
+    hips_t          *hips;
 } milkyway_t;
 
 
@@ -20,6 +20,8 @@ static int milkyway_init(obj_t *obj, json_value *args)
 {
     milkyway_t *mw = (void*)obj;
     fader_init(&mw->visible, true);
+    mw->hips = hips_create("https://data.stellarium.org/surveys/milkyway",
+                           0, NULL);
     return 0;
 }
 
@@ -29,57 +31,13 @@ static int milkyway_update(obj_t *obj, const observer_t *obs, double dt)
     return fader_update(&mw->visible, dt);
 }
 
-static void spherical_project(
-        const projection_t *proj, int flags, const double *v, double *out)
-{
-    double ra, de;
-    ra = v[0] * 360 * DD2R - 90 * DD2R;
-    de = (v[1] - 0.5) * 180 * DD2R;
-    eraS2c(-ra, -de, out);
-    out[3] = 0; // At infinity.
-}
-
 static int milkyway_render(const obj_t *obj, const painter_t *painter_)
 {
-    /*
-     * For the moment we use stellarium texture.  I guess we should get
-     * a healpix or toast texture.
-     *
-     * Stellarium texture is in polar coordinate, with a 90° shift:
-     *
-     *                  Celestial North Pole
-     *                          v
-     *     +--------------------+--------------------+ de = +90°
-     *     |                    |                    |
-     *     |                    |                    |
-     *     |                    |                    |
-     *     +--------------------+--------------------+
-     *     |                    |                    |
-     *     |                    |                    |
-     *     |                    |                    |
-     *     +--------------------+----------+---------+ de = -90°
-     *  ra:90°                 270°        0°       90°
-     */
     PROFILE(milkyway_render, 0);
+    double lum, c;
     milkyway_t *mw = (milkyway_t*)obj;
     painter_t painter = *painter_;
-    projection_t proj_spherical = {
-        .name       = "spherical",
-        .backward   = spherical_project,
-    };
-    double UV[][2] = {{0.0, 1.0}, {0.0, 0.0},
-                      {1.0, 1.0}, {1.0, 0.0}};
-    const int div = 32;
-    double lum, c;
-
     if (mw->visible.value == 0.0) return 0;
-
-    if (!mw->tex) {
-        // For the moment the texture url is hardcoded.
-        mw->tex = texture_from_url(
-                "https://data.stellarium.org/other/milkyway.webp", 0);
-        assert(mw->tex);
-    }
 
     // Ad-hock formula for tone mapping.
     lum = 2.4;
@@ -87,8 +45,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     c = clamp(c, 0, 1) * 0.35;
     painter.color[3] *= c;
 
-    paint_quad(&painter, FRAME_ICRF, mw->tex, NULL, UV, &proj_spherical, div);
-    return 0;
+    return hips_render(mw->hips, &painter, 2 * M_PI);
 }
 
 /*
