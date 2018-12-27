@@ -10,12 +10,14 @@
 #include "swe.h"
 #include <sys/stat.h>
 
+static const int DEFAULT_DELAY = 60;
+
 static void assets_update(void);
 
 enum {
-    STATIC      = 1 << 0,
-    COMPRESSED  = 1 << 1,
-    FREE_DATA   = 1 << 2,
+    STATIC      = 1 << 8,
+    COMPRESSED  = 1 << 9,
+    FREE_DATA   = 1 << 10,
 };
 
 typedef struct asset asset_t;
@@ -30,6 +32,7 @@ struct asset
     void            *data;
     int             size;
     int             last_used;
+    int             delay;
 };
 
 // Global map of all the assets.
@@ -57,7 +60,7 @@ static bool file_exists(const char *path)
     return false;
 }
 
-static asset_t *asset_get(const char *url)
+static asset_t *asset_get(const char *url, int flags)
 {
     asset_t *asset;
     HASH_FIND_STR(g_assets, url, asset);
@@ -65,6 +68,8 @@ static asset_t *asset_get(const char *url)
     if (!asset) {
         asset = calloc(1, sizeof(*asset));
         asset->url = strdup(url);
+        asset->flags |= flags;
+        if (flags & ASSET_DELAY) asset->delay = DEFAULT_DELAY;
         HASH_ADD_KEYPTR(hh, g_assets, asset->url, strlen(asset->url), asset);
     }
     asset->last_used = 0;
@@ -94,6 +99,11 @@ void asset_register(const char *url, const void *data, int size,
 
 const void *asset_get_data(const char *url, int *size, int *code)
 {
+    return asset_get_data2(url, 0, size, code);
+}
+
+const void *asset_get_data2(const char *url, int flags, int *size, int *code)
+{
     asset_t *asset;
     int i, r, default_size, default_code;
     char alias[1024];
@@ -101,7 +111,7 @@ const void *asset_get_data(const char *url, int *size, int *code)
     (void)r;
     size = size ?: &default_size;
     code = code ?: &default_code;
-    asset = asset_get(url);
+    asset = asset_get(url, flags);
 
     if (!asset) {
         if (code) *code = 404;
@@ -161,7 +171,13 @@ const void *asset_get_data(const char *url, int *size, int *code)
         return asset->data;
     }
 
-    if (!asset->request) asset->request = request_create(asset->url);
+    if (!asset->request) {
+        if (asset->delay) {
+            asset->delay--;
+            return NULL;
+        }
+        asset->request = request_create(asset->url);
+    }
     return request_get_data(asset->request, size, code);
 }
 

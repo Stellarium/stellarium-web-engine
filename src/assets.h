@@ -26,6 +26,19 @@
  */
 
 /*
+ * Enum: ASSET_FLAGS
+ * Flags that can be passed to asset_get to optimize the network requests.
+ *
+ * Values:
+ *   ASSET_DELAY        - Delay the network request for a few seconds.  This
+ *                        is useful to prevent loading tiles resources too
+ *                        quickly.
+ */
+enum {
+    ASSET_DELAY             = 1 << 0,
+};
+
+/*
  * Function: asset_get_data
  * Get the data associated with an asset url.
  *
@@ -52,6 +65,11 @@
  *
  */
 const void *asset_get_data(const char *url, int *size, int *code);
+
+/*
+ * Same as asset_get_data, but accepts a flag argument.
+ */
+const void *asset_get_data2(const char *url, int flags, int *size, int *code);
 
 /*
  * Function: asset_release
