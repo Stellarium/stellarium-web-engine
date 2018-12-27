@@ -127,7 +127,7 @@ int convert_frame(const observer_t *obs,
 
     if (dest > origin) {
         convert_frame_forward(obs, origin, dest, at_inf, out);
-    } else {
+    } else if (dest < origin) {
         convert_frame_backward(obs, origin, dest, out);
     }
 
