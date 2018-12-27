@@ -112,13 +112,14 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     size = size ?: &default_size;
     code = code ?: &default_code;
     asset = asset_get(url, flags);
+    *code = 0;
+    *size = 0;
 
     if (!asset) {
         if (code) *code = 404;
         return NULL;
     }
 
-    if (code) *code = 0;
     if (!asset->data && asset->compressed_data) {
         asset->size = ((uint32_t*)asset->compressed_data)[0];
         assert(asset->size > 0);
@@ -136,7 +137,6 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     // Special handler for local files.
     if (!strchr(url, ':')) {
         if (!file_exists(url)) {
-            *size = 0;
             *code = 404;
             return NULL;
         }
@@ -160,6 +160,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
             if (strrchr(alias, '?')) *strrchr(alias, '?') = '\0';
             data = asset_get_data(alias, size, code);
             if (data) return data;
+            *code = 0;
         }
     }
 
@@ -174,6 +175,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     if (!asset->request) {
         if (asset->delay) {
             asset->delay--;
+            assert(*code == 0 && *size == 0);
             return NULL;
         }
         asset->request = request_create(asset->url);
