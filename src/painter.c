@@ -300,6 +300,27 @@ int paint_quad_contour(const painter_t *painter, int frame,
     return 0;
 }
 
+/*
+ * Function: paint_tile_contour
+ * Draw the contour lines of an healpix tile.
+ *
+ * This is mostly useful for debugging.
+ *
+ * Parameters:
+ *   painter    - A painter.
+ *   frame      - One the <FRAME> enum value.
+ *   order      - Healpix order.
+ *   pix        - Healpix pix.
+ *   split      - Number or times we split the lines.
+ */
+int paint_tile_contour(const painter_t *painter, int frame,
+                       int order, int pix, int split)
+{
+    projection_t proj;
+    projection_init_healpix(&proj, 1 << order, pix, false, false);
+    return paint_quad_contour(painter, frame, &proj, split, 15);
+}
+
 static void orbit_project(const projection_t *proj, int flags,
                           const double *v, double *out)
 {
