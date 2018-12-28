@@ -229,7 +229,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         constellations = asset_get_data(path, NULL, &code);
         if (!code) return 0;
         sprintf(path, "%s/%s", cult->uri, "edges.txt");
-        edges = asset_get_data(path, NULL, &code);
+        edges = asset_get_data2(path, ASSET_ACCEPT_404, NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_CONSTELLATIONS;
         cult->constellations = skyculture_parse_constellations(
@@ -249,7 +249,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
     if (!(cult->parsed & SK_IMGS)) {
         sprintf(path, "%s/%s", cult->uri, "imgs/index.json");
-        imgs = asset_get_data(path, NULL, &code);
+        imgs = asset_get_data2(path, ASSET_ACCEPT_404, NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_IMGS;
         if (!imgs) return 0;

@@ -12,6 +12,14 @@
 
 static const int DEFAULT_DELAY = 60;
 
+/*
+ * Convenience macro to log return code errors if needed.
+ */
+#define LOG_RET(url, code, flags) \
+    if ((code) >= ((flags) & ASSET_ACCEPT_404 ? 500 : 400)) \
+        LOG_W("Asset error %d: %s", code, url);
+
+
 static void assets_update(void);
 
 enum {
@@ -107,7 +115,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     asset_t *asset;
     int i, r, default_size, default_code;
     char alias[1024];
-    const void *data;
+    const void *data = NULL;
     (void)r;
     size = size ?: &default_size;
     code = code ?: &default_code;
@@ -116,8 +124,8 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     *size = 0;
 
     if (!asset) {
-        if (code) *code = 404;
-        return NULL;
+        *code = 404;
+        goto end;
     }
 
     if (!asset->data && asset->compressed_data) {
@@ -138,7 +146,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     if (!strchr(url, ':')) {
         if (!file_exists(url)) {
             *code = 404;
-            return NULL;
+            goto end;
         }
         asset->data = read_file(url, &asset->size);
         asset->flags |= FREE_DATA;
@@ -158,8 +166,8 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
                     g_alias[i].alias, url + strlen(g_alias[i].base));
             // Remove http parameters for alias!
             if (strrchr(alias, '?')) *strrchr(alias, '?') = '\0';
-            data = asset_get_data(alias, size, code);
-            if (data) return data;
+            data = asset_get_data2(alias, flags | ASSET_ACCEPT_404, size, code);
+            if (data) goto end;
             *code = 0;
         }
     }
@@ -169,7 +177,8 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         asset->data = g_handler.fn(url, &asset->size, code);
         asset->flags |= FREE_DATA;
         *size = asset->size;
-        return asset->data;
+        data = asset->data;
+        goto end;
     }
 
     if (!asset->request) {
@@ -180,7 +189,11 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         }
         asset->request = request_create(asset->url);
     }
-    return request_get_data(asset->request, size, code);
+    data = request_get_data(asset->request, size, code);
+
+end:
+    LOG_RET(url, *code, flags);
+    return data;
 }
 
 static void assets_update(void)

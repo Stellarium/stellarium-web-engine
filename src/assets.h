@@ -33,9 +33,11 @@
  *   ASSET_DELAY        - Delay the network request for a few seconds.  This
  *                        is useful to prevent loading tiles resources too
  *                        quickly.
+ *   ASSET_ACCEPT_404   - Do not log error on a 404 return.
  */
 enum {
     ASSET_DELAY             = 1 << 0,
+    ASSET_ACCEPT_404        = 1 << 1,
 };
 
 /*

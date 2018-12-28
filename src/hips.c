@@ -612,7 +612,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
                               int *code)
 {
     const void *data;
-    int size, parent_code, cost = 0, transparency = 0;
+    int size, parent_code, asset_flags, cost = 0, transparency = 0;
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
     tile_key_t key = {hips->hash, order, pix};
@@ -657,7 +657,9 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     }
     get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
                 order, (pix / 10000) * 10000, pix, hips->ext);
-    data = asset_get_data2(url, order ? ASSET_DELAY : 0, &size, code);
+    asset_flags = ASSET_ACCEPT_404;
+    if (order > 0) asset_flags |= ASSET_DELAY;
+    data = asset_get_data2(url, asset_flags, &size, code);
     if (!(*code)) return NULL; // Still loading the file.
 
     // If the tile doesn't exists, mark it in the parent tile so that we
