@@ -212,7 +212,7 @@ static void menu_main(void *user)
         city_widget();
         obj_get_attr(&core->obj, "fov", "f", &f);
         f *= DR2D;
-        if (gui_double("FOV", &f, 0.1, 360, 0.1, NAN)) {
+        if (gui_double("FOV", &f, 0.1, 360, 1, NAN)) {
             f *= DD2R;
             obj_set_attr(&core->obj, "fov", "f", f);
         }
