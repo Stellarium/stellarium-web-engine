@@ -335,7 +335,6 @@ static int on_file_tile_loaded(const char type[4],
     nb = eph_read_table_header(version, data, size,
                                &data_ofs, &row_size, &flags,
                                ARRAY_SIZE(columns), columns);
-    LOG_D("XXXX %d", columns[11].size);
     if (nb < 0) {
         LOG_E("Cannot parse file");
         return -1;
