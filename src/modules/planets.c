@@ -1056,15 +1056,6 @@ static int planets_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
-static double parse_release_date(const char *str)
-{
-    int iy, im, id, ihr, imn;
-    double d1, d2;
-    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
-    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
-    return d1 - DJM0 + d2;
-}
-
 static int planets_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
@@ -1085,7 +1076,7 @@ static int planets_add_data_source(
     if (!p) return 1;
     release_date_str = json_get_attr_s(args, "hips_release_date");
     if (release_date_str)
-        release_date = parse_release_date(release_date_str);
+        release_date = hips_parse_date(release_date_str);
     if (strcmp(args_type, "planet") == 0) {
         p->hips = hips_create(url, release_date, NULL);
         hips_set_frame(p->hips, FRAME_ICRF);

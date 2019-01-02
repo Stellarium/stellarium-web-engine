@@ -199,5 +199,16 @@ int hips_render_traverse(hips_t *hips, const painter_t *painter,
                                       int order, int pix, int flags,
                                       void *user));
 
+/*
+ * Function: hips_parse_date
+ * Parse a date in the format supported for HiPS property files
+ *
+ * Parameters:
+ *   str    - A date string (like 2019-01-02T15:27Z)
+ *
+ * Returns:
+ *   The time in MJD, or 0 in case of error.
+ */
+double hips_parse_date(const char *str);
 
 #endif // HIPS_H

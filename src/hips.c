@@ -166,15 +166,6 @@ static const char *get_url_for(const hips_t *hips, char *buf,
     return buf;
 }
 
-static double parse_release_date(const char *str)
-{
-    int iy, im, id, ihr, imn;
-    double d1, d2;
-    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
-    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
-    return d1 - DJM0 + d2;
-}
-
 static int property_handler(void* user, const char* section,
                             const char* name, const char* value)
 {
@@ -187,7 +178,7 @@ static int property_handler(void* user, const char* section,
     if (strcmp(name, "hips_tile_width") == 0)
         hips->tile_width = atoi(value);
     if (strcmp(name, "hips_release_date") == 0)
-        hips->release_date = parse_release_date(value);
+        hips->release_date = hips_parse_date(value);
     if (strcmp(name, "hips_tile_format") == 0) {
              if (strstr(value, "webp")) hips->ext = "webp";
         else if (strstr(value, "jpeg")) hips->ext = "jpg";
@@ -574,7 +565,7 @@ int hips_parse_hipslist(
             hips_service_url = strdup(value);
         }
         if (strcmp(key, "hips_release_date") == 0)
-            hips_release_date = parse_release_date(value);
+            hips_release_date = hips_parse_date(value);
 
 next:
         free(line);
@@ -794,4 +785,24 @@ static int delete_img_tile(void *tile_)
     texture_release(tile->allsky_tex);
     free(tile);
     return 0;
+}
+
+/*
+ * Function: hips_parse_date
+ * Parse a date in the format supported for HiPS property files
+ *
+ * Parameters:
+ *   str    - A date string (like 2019-01-02T15:27Z)
+ *
+ * Returns:
+ *   The time in MJD, or 0 in case of error.
+ */
+double hips_parse_date(const char *str)
+{
+    int iy, im, id, ihr, imn;
+    double d1, d2;
+    if (sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn) != 5)
+        return 0;
+    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
+    return d1 - DJM0 + d2;
 }
