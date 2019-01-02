@@ -12,13 +12,6 @@
 
 static const int DEFAULT_DELAY = 60;
 
-/*
- * Convenience macro to log return code errors if needed.
- */
-#define LOG_RET(url, code, flags) \
-    if ((code) >= ((flags) & ASSET_ACCEPT_404 ? 500 : 400)) \
-        LOG_W("Asset error %d: %s", code, url);
-
 
 static void assets_update(void);
 
@@ -26,6 +19,7 @@ enum {
     STATIC      = 1 << 8,
     COMPRESSED  = 1 << 9,
     FREE_DATA   = 1 << 10,
+    LOGGED      = 1 << 11,
 };
 
 typedef struct asset asset_t;
@@ -57,6 +51,18 @@ static struct {
     char *prefix;
     void *(*fn)(const char *path, int *size, int *code);
 } g_handler = {};
+
+/*
+ * Convenience function to log return code errors if needed.
+ */
+void LOG_RET(asset_t *asset, const char *url, int code, int flags)
+{
+    if (code < ((flags & ASSET_ACCEPT_404) ? 500 : 400)) return;
+    if (asset && (asset->flags & LOGGED)) return;
+    LOG_W("Asset error %d: %s", code, url);
+    if (asset) asset->flags |= LOGGED;
+}
+
 
 static bool file_exists(const char *path)
 {
@@ -192,7 +198,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     data = request_get_data(asset->request, size, code);
 
 end:
-    LOG_RET(url, *code, flags);
+    LOG_RET(asset, url, *code, flags);
     return data;
 }
 
