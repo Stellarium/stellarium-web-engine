@@ -185,8 +185,9 @@ static void strip_type(char str[4])
 // Used by the cache.
 static int del_tile(void *data)
 {
+    int i;
     tile_t *tile = data;
-    free(tile->data->names);
+    for (i = 0; i < tile->nb; i++) free(tile->data[i].names);
     free(tile->data);
     free(tile);
     return 0;
