@@ -17,24 +17,6 @@ typedef struct dss {
     hips_t      *hips;
 } dss_t;
 
-static int dss_init(obj_t *obj, json_value *args);
-static int dss_update(obj_t *obj, const observer_t *obs, double dt);
-static int dss_render(const obj_t *obj, const painter_t *painter);
-static obj_klass_t dss_klass = {
-    .id = "dss",
-    .size = sizeof(dss_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init = dss_init,
-    .update = dss_update,
-    .render = dss_render,
-    .render_order = 6,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(dss_t, visible.target)),
-        {}
-    },
-};
-OBJ_REGISTER(dss_klass)
-
 static int dss_init(obj_t *obj, json_value *args)
 {
     dss_t *dss = (void*)obj;
@@ -72,3 +54,22 @@ static int dss_update(obj_t *obj, const observer_t *obs, double dt)
     dss_t *dss = (dss_t*)obj;
     return fader_update(&dss->visible, dt);
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t dss_klass = {
+    .id = "dss",
+    .size = sizeof(dss_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = dss_init,
+    .update = dss_update,
+    .render = dss_render,
+    .render_order = 6,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(dss_t, visible.target)),
+        {}
+    },
+};
+OBJ_REGISTER(dss_klass)
