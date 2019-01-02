@@ -123,7 +123,8 @@ static bool load_qsmag(satellites_t *sats)
 
     if (sats->qsmags_status < 400) return true;
     if (sats->qsmags_status) return false;
-    comp_data = asset_get_data(URL, &size, &sats->qsmags_status);
+    comp_data = asset_get_data2(URL, ASSET_USED_ONCE,
+                                &size, &sats->qsmags_status);
     if (sats->qsmags_status && !comp_data)
         LOG_E("Error while loading qs.mag: %d", sats->qsmags_status);
     if (!comp_data) return false;
@@ -151,7 +152,7 @@ static bool load_data(satellites_t *sats)
     const char *data;
     const char *URL = "https://data.stellarium.org/norad/visual.txt";
     if (sats->loaded) return true;
-    data = asset_get_data(URL, &size, &code);
+    data = asset_get_data2(URL, ASSET_USED_ONCE, &size, &code);
     if (!data) return false;
     nb = parse_tle_file(sats, data);
     LOG_D("Parsed %d satellites", nb);

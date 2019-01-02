@@ -209,7 +209,7 @@ static int parse_properties(hips_t *hips)
     char url[URL_MAX_SIZE];
     int code;
     get_url_for(hips, url, "properties");
-    data = asset_get_data(url, NULL, &code);
+    data = asset_get_data2(url, ASSET_USED_ONCE, NULL, &code);
     if (!data && code) {
         LOG_E("Cannot get hips properties file at '%s': %d", url, code);
         return -1;
@@ -217,7 +217,6 @@ static int parse_properties(hips_t *hips)
     if (!data) return 0;
     hips->properties = json_object_new(0);
     ini_parse_string(data, property_handler, hips);
-    asset_release(url);
     return 0;
 }
 
@@ -491,7 +490,7 @@ static bool hips_update(hips_t *hips)
         asprintf(&url, "%s/Norder%d/Allsky.%s?v=%d", hips->service_url,
                  hips->order_min, hips->ext,
                  (int)hips->release_date);
-        data = asset_get_data(url, &size, &code);
+        data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
         if (code && !data) hips->allsky.not_available = true;
         if (data) {
             hips->allsky.data = img_read_from_mem(data, size,
