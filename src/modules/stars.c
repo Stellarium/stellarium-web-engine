@@ -35,6 +35,8 @@ typedef struct {
     // Normalized Astrometric direction.
     double  pos[3];
     double  distance;    // Distance in AU
+    // List of extra names, separated by '\0', terminated by two '\0'.
+    char    *names;
 } star_data_t;
 
 // A single star.
@@ -230,7 +232,10 @@ void star_get_designations(
 {
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
+    const char *names = s->names;
     char buf[128];
+    char cat[128] = {};
+
     if (s->hd) {
         sprintf(buf, "%d", s->hd);
         f(obj, user, "HD", buf);
@@ -244,6 +249,16 @@ void star_get_designations(
         f(obj, user, "GAIA", buf);
         sprintf(buf, "%016" PRIx64, s->gaia);
         f(obj, user, "NSID", buf);
+    }
+    while (names && *names) {
+        strncpy(cat, names, sizeof(cat) - 1);
+        if (!strchr(cat, ' ')) { // No catalog.
+            f(obj, user, "", cat);
+        } else {
+            *strchr(cat, ' ') = '\0';
+            f(obj, user, cat, names + strlen(cat) + 1);
+        }
+        names += strlen(names) + 1;
     }
 }
 
@@ -269,7 +284,9 @@ static star_t *star_create(const star_data_t *data)
 // Used by the cache.
 static int del_tile(void *data)
 {
+    int i;
     tile_t *tile = data;
+    for (i = 0; i < tile->nb; i++) free(tile->stars[i].names);
     free(tile->stars);
     free(tile);
     return 0;
@@ -283,8 +300,9 @@ static int star_data_cmp(const void *a, const void *b)
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
-    int version, nb, data_ofs = 0, row_size, flags, i, order, pix;
+    int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
     double vmag, ra, de, pra, pde, plx, bv;
+    char ids[256] = {};
     typeof(((stars_t*)0)->surveys[0]) *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
@@ -304,6 +322,7 @@ static int on_file_tile_loaded(const char type[4],
         {"pra",  'f', EPH_RAD_PER_YEAR},
         {"pde",  'f', EPH_RAD_PER_YEAR},
         {"bv",   'f'},
+        {"ids",  's', .size=256},
     };
 
     *out = NULL;
@@ -316,6 +335,7 @@ static int on_file_tile_loaded(const char type[4],
     nb = eph_read_table_header(version, data, size,
                                &data_ofs, &row_size, &flags,
                                ARRAY_SIZE(columns), columns);
+    LOG_D("XXXX %d", columns[11].size);
     if (nb < 0) {
         LOG_E("Cannot parse file");
         return -1;
@@ -339,7 +359,7 @@ static int on_file_tile_loaded(const char type[4],
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
                 &s->gaia, &s->hip, &s->hd, &s->tyc, &vmag, &ra, &de, &plx,
-                &pra, &pde, &bv);
+                &pra, &pde, &bv, ids);
 
         assert(!isnan(ra));
         assert(!isnan(de));
@@ -359,6 +379,14 @@ static int on_file_tile_loaded(const char type[4],
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
         s->illuminance = illuminance_for_vmag(vmag);
+
+        // Turn '|' separated ids into '\0' separated values.
+        if (*ids) {
+            s->names = calloc(1, 1 + strlen(ids));
+            for (j = 0; ids[j]; j++)
+                s->names[j] = ids[j] != '|' ? ids[j] : '\0';
+        }
+
         tile->illuminance += illuminance_for_vmag(vmag);
         tile->mag_min = min(tile->mag_min, vmag);
         tile->mag_max = max(tile->mag_max, vmag);
@@ -648,6 +676,11 @@ static int stars_list(const obj_t *obj, observer_t *obs,
                       double max_mag, uint64_t hint, void *user,
                       int (*f)(void *user, obj_t *obj))
 {
+    int order, pix, i, r, nb = 0;
+    tile_t *tile;
+    stars_t *stars = (void*)obj;
+    star_t *star;
+
     struct {
         stars_t *stars;
         double max_mag;
@@ -656,8 +689,25 @@ static int stars_list(const obj_t *obj, observer_t *obs,
         void *user;
     } d = {.stars=(void*)obj, .max_mag=max_mag, .f=f, .user=user};
 
-    hips_traverse(&d, stars_list_visitor);
-    return d.nb;
+    if (!hint) {
+        hips_traverse(&d, stars_list_visitor);
+        return d.nb;
+    }
+
+    // Get tile from hint (as nuniq).
+    order = log2(hint / 4) / 2;
+    pix = hint - 4 * (1 << (2 * (order)));
+    tile = get_tile(stars, 0, order, pix, NULL);
+    if (!tile) return 0;
+    for (i = 0; i < tile->nb; i++) {
+        if (!f) continue;
+        nb++;
+        star = star_create(&tile->stars[i]);
+        r = f(user, (obj_t*)star);
+        obj_release((obj_t*)star);
+        if (r) break;
+    }
+    return nb;
 }
 
 static int stars_add_data_source(
