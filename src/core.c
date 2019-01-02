@@ -209,6 +209,8 @@ void core_add_default_sources(void)
 
     // Bundled star survey.
     obj_add_data_source(NULL, "asset://stars", "hips", NULL);
+    // Online DSO survey.
+    obj_add_data_source(NULL, BASE_URL "surveys/dso", "hips", NULL);
 
     // Skyculture.  We load the western culture immediately so we don't have
     // to wait to parse the online directory index.json file.

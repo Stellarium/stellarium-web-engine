@@ -13,9 +13,7 @@
 
 // XXX: this very similar to stars.c.  I think we could merge most of the code.
 
-#define URL_MAX_SIZE 4096
 #define DSO_DEFAULT_VMAG 16.0
-
 
 /*
  * Type: dso_data_t
@@ -72,9 +70,7 @@ typedef struct {
     obj_t       obj;
     regex_t     search_reg;
     fader_t     visible;
-
     hips_t      *survey;
-    char        survey_url[URL_MAX_SIZE - 256]; // Url of the DSO survey.
 } dsos_t;
 
 static char *make_id(const dso_data_t *data, char buff[128])
@@ -292,23 +288,9 @@ static const void *dsos_create_tile(void *user, int order, int pix, void *data,
 static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
-
     fader_init(&dsos->visible, true);
-
-
-    // Bundled DSO if there is any (shouldn't be)
-    /*
-    ASSET_ITER("asset://dso/", path) {
-        data = asset_get_data(path, &size, NULL);
-        eph_load(data, size, dsos, on_file_tile_loaded);
-        asset_release(path);
-    }
-    */
-
     regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
-
-    sprintf(dsos->survey_url, "https://data.stellarium.org/surveys/dso");
     return 0;
 }
 
@@ -317,13 +299,7 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
                         bool *loading_complete)
 {
     int code, flags = 0;
-    hips_settings_t survey_settings = {
-        .create_tile = dsos_create_tile,
-        .delete_tile = del_tile,
-    };
     tile_t *tile;
-    if (!dsos->survey)
-        dsos->survey = hips_create(dsos->survey_url, 0, &survey_settings);
     if (!load) flags |= HIPS_CACHED_ONLY;
     tile = hips_get_tile(dsos->survey, order, pix, flags, &code);
     if (loading_complete) *loading_complete = (code != 0);
@@ -574,6 +550,7 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
     dsos_t *dsos = (dsos_t*)obj;
     int nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;
+    if (!dsos->survey) return 0;
     painter.color[3] *= dsos->visible.value;
     if (painter.color[3] == 0) return 0;
     hips_traverse(USER_PASS(dsos, &painter, &nb_tot, &nb_loaded),
@@ -686,6 +663,23 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
+static int dsos_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
+{
+    dsos_t *dsos = (void*)obj;
+    const char *args_type;
+    hips_settings_t survey_settings = {
+        .create_tile = dsos_create_tile,
+        .delete_tile = del_tile,
+    };
+    if (!type || !args || strcmp(type, "hips")) return 1;
+    args_type = json_get_attr_s(args, "type");
+    if (!args_type || strcmp(args_type, "dso")) return 1;
+    if (dsos->survey) return 1; // Already present.
+    dsos->survey = hips_create(url, 0, &survey_settings);
+    return 0;
+}
+
 
 /*
  * Meta class declarations.
@@ -724,10 +718,10 @@ static obj_klass_t dsos_klass = {
     .get_by_oid  = dsos_get_by_oid,
     .get_by_nsid = dsos_get_by_nsid,
     .list   = dsos_list,
+    .add_data_source = dsos_add_data_source,
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(dsos_t, visible.target)),
-        PROPERTY("survey_url", "S", MEMBER(dsos_t, survey_url)),
         {}
     },
 };
