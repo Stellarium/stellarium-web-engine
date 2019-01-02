@@ -83,7 +83,6 @@ static const char *get_data(const source_t *source, const char *file)
 
     data = asset_get_data(url, NULL, &code);
     if (!code) return NULL;
-    if (!data) LOG_W("Cannot get %s (%d)", url, code);
     return data;
 }
 
