@@ -21,8 +21,6 @@ static int dss_init(obj_t *obj, json_value *args)
 {
     dss_t *dss = (void*)obj;
     fader_init(&dss->visible, true); // Visible by default.
-    dss->hips = hips_create("https://alaskybis.unistra.fr/DSS/DSSColor", 0,
-                            NULL);
     return 0;
 }
 
@@ -35,6 +33,7 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     double lum, c;
 
     if (dss->visible.value == 0.0) return 0;
+    if (!dss->hips) return 0;
     // Fade the survey between 20° and 10° fov.
     visibility = smoothstep(20 * DD2R, 10 * DD2R, core->fov);
     painter2.color[3] *= dss->visible.value * visibility;
@@ -55,6 +54,33 @@ static int dss_update(obj_t *obj, const observer_t *obs, double dt)
     return fader_update(&dss->visible, dt);
 }
 
+static double parse_release_date(const char *str)
+{
+    int iy, im, id, ihr, imn;
+    double d1, d2;
+    sscanf(str, "%d-%d-%dT%d:%dZ", &iy, &im, &id, &ihr, &imn);
+    eraDtf2d("UTC", iy, im, id, ihr, imn, 0, &d1, &d2);
+    return d1 - DJM0 + d2;
+}
+
+static int dss_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
+{
+    dss_t *dss = (dss_t*)obj;
+    const char *title, *release_date_str;
+    double release_date = 0;
+
+    if (dss->hips) return 1;
+    if (!type || !args || strcmp(type, "hips")) return 1;
+    title = json_get_attr_s(args, "obs_title");
+    if (!title || strcasecmp(title, "DSS colored") != 0) return 1;
+    release_date_str = json_get_attr_s(args, "hips_release_date");
+    if (release_date_str)
+        release_date = parse_release_date(release_date_str);
+    dss->hips = hips_create(url, release_date, NULL);
+    return 0;
+}
+
 /*
  * Meta class declarations.
  */
@@ -67,6 +93,7 @@ static obj_klass_t dss_klass = {
     .update = dss_update,
     .render = dss_render,
     .render_order = 6,
+    .add_data_source = dss_add_data_source,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(dss_t, visible.target)),
         {}
