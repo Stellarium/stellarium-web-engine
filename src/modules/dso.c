@@ -61,7 +61,7 @@ typedef struct tile {
     double      mag_min;
     double      mag_max;
     int         nb;
-    dso_data_t *data;
+    dso_data_t *sources;
 } tile_t;
 
 /*
@@ -187,8 +187,8 @@ static int del_tile(void *data)
 {
     int i;
     tile_t *tile = data;
-    for (i = 0; i < tile->nb; i++) free(tile->data[i].names);
-    free(tile->data);
+    for (i = 0; i < tile->nb; i++) free(tile->sources[i].names);
+    free(tile->sources);
     free(tile);
     return 0;
 }
@@ -197,7 +197,7 @@ static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
     tile_t *tile;
-    dso_data_t *d;
+    dso_data_t *s;
     int nb, i, j, version, data_ofs = 0, flags, row_size, order, pix;
     char ids[256] = {};
     double bmag, temp_mag;
@@ -240,39 +240,39 @@ static int on_file_tile_loaded(const char type[4],
     tile->mag_max = -DBL_MAX;
     tile->nb = nb;
 
-    tile->data = calloc(tile->nb, sizeof(*tile->data));
+    tile->sources = calloc(tile->nb, sizeof(*tile->sources));
 
     for (i = 0; i < tile->nb; i++) {
-        d = &tile->data[i];
+        s = &tile->sources[i];
         eph_read_table_row(tile_data, size, &data_ofs,
                            ARRAY_SIZE(columns), columns,
-                           &d->id.nsid, d->type,
-                           &d->vmag, &bmag, &d->ra, &d->de,
-                           &d->smax, &d->smin, &d->angle,
-                           d->short_name, ids);
-        assert(d->id.nsid);
-        d->ra *= DD2R;
-        d->de *= DD2R;
-        d->smax *= DAM2R;
-        d->smin *= DAM2R;
-        if (!d->smin && d->smax) {
-            d->smin = d->smax;
-            d->angle = NAN;
+                           &s->id.nsid, s->type,
+                           &s->vmag, &bmag, &s->ra, &s->de,
+                           &s->smax, &s->smin, &s->angle,
+                           s->short_name, ids);
+        assert(s->id.nsid);
+        s->ra *= DD2R;
+        s->de *= DD2R;
+        s->smax *= DAM2R;
+        s->smin *= DAM2R;
+        if (!s->smin && s->smax) {
+            s->smin = s->smax;
+            s->angle = NAN;
         }
-        d->angle *= DD2R;
+        s->angle *= DD2R;
         // For the moment use bmag as fallback vmag value
-        if (isnan(d->vmag)) d->vmag = bmag;
-        strip_type(d->type);
-        temp_mag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
+        if (isnan(s->vmag)) s->vmag = bmag;
+        strip_type(s->type);
+        temp_mag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
         tile->mag_min = min(tile->mag_min, temp_mag);
         tile->mag_max = max(tile->mag_max, temp_mag);
-        d->id.oid = make_oid(d);
+        s->id.oid = make_oid(s);
 
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
-            d->names = calloc(1, 1 + strlen(ids));
+            s->names = calloc(1, 1 + strlen(ids));
             for (j = 0; ids[j]; j++)
-                d->names[j] = ids[j] != '|' ? ids[j] : '\0';
+                s->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
     }
     free(tile_data);
@@ -285,7 +285,7 @@ static const void *dsos_create_tile(void *user, int order, int pix, void *data,
 {
     tile_t *tile;
     eph_load(data, size, &tile, on_file_tile_loaded);
-    if (tile) *cost = tile->nb * sizeof(*tile->data);
+    if (tile) *cost = tile->nb * sizeof(*tile->sources);
     return tile;
 }
 
@@ -330,19 +330,19 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
     return tile;
 }
 
-static void dso_render_name(const painter_t *painter, const dso_data_t *d,
+static void dso_render_name(const painter_t *painter, const dso_data_t *s,
                             const double pos[2], double size, double vmag,
                             int anchor)
 {
     char buff[128] = "";
-    if (d->short_name[0])
-        strcpy(buff, d->short_name);
-    else if (d->id.m)
-        sprintf(buff, "M %d", d->id.m);
-    else if (d->id.ngc)
-        sprintf(buff, "NGC %d", d->id.ngc);
-    else if (d->id.ic)
-        sprintf(buff, "IC %d", d->id.ic);
+    if (s->short_name[0])
+        strcpy(buff, s->short_name);
+    else if (s->id.m)
+        sprintf(buff, "M %d", s->id.m);
+    else if (s->id.ngc)
+        sprintf(buff, "NGC %d", s->id.ngc);
+    else if (s->id.ic)
+        sprintf(buff, "IC %d", s->id.ic);
     if (buff[0])
         labels_add(buff, pos, size, 13, painter->color, 0, anchor, -vmag);
 }
@@ -444,7 +444,7 @@ static void compute_ellipse_label_pos(
 
 
 // Render a DSO from its data.
-static int dso_render_from_data(const dso_data_t *d,
+static int dso_render_from_data(const dso_data_t *s,
                                 const char *id,
                                 const painter_t *painter_)
 {
@@ -453,11 +453,11 @@ static int dso_render_from_data(const dso_data_t *d,
     painter_t painter = *painter_;
     int label_anchor, symbol;
 
-    vmag = isnan(d->vmag) ? DSO_DEFAULT_VMAG : d->vmag;
+    vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
 
     if (vmag > painter.hint_mag_max) return 0;
 
-    eraS2c(d->ra, d->de, p);
+    eraS2c(s->ra, s->de, p);
     convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
     // Skip if below horizon.
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
@@ -472,21 +472,21 @@ static int dso_render_from_data(const dso_data_t *d,
 
     double win_pos[2], win_size[2], win_angle;
 
-    symbol = symbols_get_for_otype(d->type);
-    compute_hint_transformation(&painter, d->ra, d->de, d->angle,
-            d->smax, d->smin, win_pos, win_size, &win_angle);
+    symbol = symbols_get_for_otype(s->type);
+    compute_hint_transformation(&painter, s->ra, s->de, s->angle,
+            s->smax, s->smin, win_pos, win_size, &win_angle);
 
     win_size[0] = max(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
     win_size[1] = max(win_size[1], 12);
     symbols_paint(&painter, symbol, win_pos, win_size, NULL, win_angle);
     areas_add_ellipse(core->areas, win_pos, win_angle,
-                      win_size[0] / 2, win_size[1] / 2, d->id.oid, 0);
+                      win_size[0] / 2, win_size[1] / 2, s->id.oid, 0);
 
     if (vmag <= painter.label_mag_max) {
         compute_ellipse_label_pos(win_pos, win_size, win_angle, p,
                                   &label_anchor);
         vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
-        dso_render_name(&painter, d, p, size, vmag, label_anchor);
+        dso_render_name(&painter, s, p, size, vmag, label_anchor);
     }
     return 0;
 }
@@ -502,10 +502,10 @@ void dso_get_designations(
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     const dso_t *dso = (dso_t*)obj;
-    const dso_data_t *d = &dso->data;
-    const char *names = d->names;
+    const dso_data_t *s = &dso->data;
+    const char *names = s->names;
     char cat[128] = {};
-    f(obj, user, "", d->short_name); // XXX: should extract cat.
+    f(obj, user, "", s->short_name); // XXX: should extract cat.
     while (names && *names) {
         strncpy(cat, names, sizeof(cat) - 1);
         if (!strchr(cat, ' ')) { // No catalog.
@@ -522,13 +522,13 @@ static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (dso_t*)obj;
     double min_circle_size;
-    const dso_data_t *d = &dso->data;
+    const dso_data_t *s = &dso->data;
     double win_pos[2], win_size[2], win_angle;
 
     min_circle_size = core->fov / 20;
     if (isnan(dso->data.smax) || dso->data.smax <= min_circle_size) return 1;
-    compute_hint_transformation(painter, d->ra, d->de, d->angle,
-            d->smax, d->smin, win_pos, win_size, &win_angle);
+    compute_hint_transformation(painter, s->ra, s->de, s->angle,
+            s->smax, s->smin, win_pos, win_size, &win_angle);
     symbols_paint(painter, SYMBOL_GALAXY, win_pos, win_size, painter->color,
                   win_angle);
     return 0;
@@ -556,7 +556,7 @@ static int render_visitor(int order, int pix, void *user)
     if (tile->mag_min > painter.mag_max) return 0;
 
     for (i = 0; i < tile->nb; i++) {
-        dso_render_from_data(&tile->data[i], NULL, &painter);
+        dso_render_from_data(&tile->sources[i], NULL, &painter);
     }
     if (tile->mag_max > painter.mag_max) return 0;
     return 1;
@@ -595,12 +595,12 @@ static int dsos_get_visitor(int order, int pix, void *user)
     tile = get_tile(d->dsos, order, pix, false, NULL);
     if (!tile) return 0;
     for (i = 0; i < tile->nb; i++) {
-        if (    (d->cat == 0 && tile->data[i].id.m    == d->n) ||
-                (d->cat == 1 && tile->data[i].id.ngc  == d->n) ||
-                (d->cat == 2 && tile->data[i].id.ic   == d->n) ||
-                (d->cat == 3 && tile->data[i].id.nsid == d->n) ||
-                (d->cat == 4 && tile->data[i].id.oid == d->n)) {
-            d->ret = &dso_create(&tile->data[i])->obj;
+        if (    (d->cat == 0 && tile->sources[i].id.m    == d->n) ||
+                (d->cat == 1 && tile->sources[i].id.ngc  == d->n) ||
+                (d->cat == 2 && tile->sources[i].id.ic   == d->n) ||
+                (d->cat == 3 && tile->sources[i].id.nsid == d->n) ||
+                (d->cat == 4 && tile->sources[i].id.oid == d->n)) {
+            d->ret = &dso_create(&tile->sources[i])->obj;
             return -1; // Stop the search.
         }
     }
@@ -678,7 +678,7 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
     for (i = 0; i < tile->nb; i++) {
         if (!f) continue;
         nb++;
-        dso = dso_create(&tile->data[i]);
+        dso = dso_create(&tile->sources[i]);
         r = f(user, (obj_t*)dso);
         obj_release((obj_t*)dso);
         if (r) break;

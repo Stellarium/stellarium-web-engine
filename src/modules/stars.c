@@ -76,7 +76,7 @@ typedef struct tile {
     double      mag_max;
     double      illuminance; // Totall illuminance (lux).
     int         nb;
-    star_data_t *stars;
+    star_data_t *sources;
 } tile_t;
 
 static double illuminance_for_vmag(double vmag)
@@ -286,8 +286,8 @@ static int del_tile(void *data)
 {
     int i;
     tile_t *tile = data;
-    for (i = 0; i < tile->nb; i++) free(tile->stars[i].names);
-    free(tile->stars);
+    for (i = 0; i < tile->nb; i++) free(tile->sources[i].names);
+    free(tile->sources);
     free(tile);
     return 0;
 }
@@ -349,12 +349,12 @@ static int on_file_tile_loaded(const char type[4],
     if (flags & 1) eph_shuffle_bytes(table_data, row_size, nb);
 
     tile = calloc(1, sizeof(*tile));
-    tile->stars = calloc(nb, sizeof(*tile->stars));
+    tile->sources = calloc(nb, sizeof(*tile->sources));
     tile->mag_min = DBL_MAX;
     tile->mag_max = -DBL_MAX;
 
     for (i = 0; i < nb; i++) {
-        s = &tile->stars[tile->nb];
+        s = &tile->sources[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
                 &s->gaia, &s->hip, &s->hd, &s->tyc, &vmag, &ra, &de, &plx,
@@ -393,7 +393,7 @@ static int on_file_tile_loaded(const char type[4],
     }
 
     // Sort the data by vmag, so that we can early exit during render.
-    qsort(tile->stars, tile->nb, sizeof(*tile->stars), star_data_cmp);
+    qsort(tile->sources, tile->nb, sizeof(*tile->sources), star_data_cmp);
     free(table_data);
 
     *out = tile;
@@ -407,7 +407,7 @@ static const void *stars_create_tile(
     tile_t *tile;
     typeof(((stars_t*)0)->surveys[0]) *survey = user;
     eph_load(data, size, USER_PASS(survey, &tile), on_file_tile_loaded);
-    if (tile) *cost = tile->nb * sizeof(*tile->stars);
+    if (tile) *cost = tile->nb * sizeof(*tile->sources);
     return tile;
 }
 
@@ -493,7 +493,7 @@ static int render_visitor(int order, int pix, void *user)
 
     point_t *points = malloc(tile->nb * sizeof(*points));
     for (i = 0; i < tile->nb; i++) {
-        s = &tile->stars[i];
+        s = &tile->sources[i];
         if (s->vmag > painter.mag_max) break;
         if (vec3_dot(s->pos, viewport_cap) < viewport_cap[3]) continue;
 
@@ -593,11 +593,11 @@ static int stars_get_visitor(int order, int pix, void *user)
     // XXX: read the survey properties file instead of hard coding!
     if (!tile) return order < 3 ? 1 : 0;
     for (i = 0; i < tile->nb; i++) {
-        if (    (d->cat == 0 && tile->stars[i].hip == d->n) ||
-                (d->cat == 1 && tile->stars[i].hd  == d->n) ||
-                (d->cat == 2 && tile->stars[i].gaia == d->n) ||
-                (d->cat == 3 && tile->stars[i].oid  == d->n)) {
-            d->ret = &star_create(&tile->stars[i])->obj;
+        if (    (d->cat == 0 && tile->sources[i].hip == d->n) ||
+                (d->cat == 1 && tile->sources[i].hd  == d->n) ||
+                (d->cat == 2 && tile->sources[i].gaia == d->n) ||
+                (d->cat == 3 && tile->sources[i].oid  == d->n)) {
+            d->ret = &star_create(&tile->sources[i])->obj;
             return -1; // Stop the search.
         }
     }
@@ -660,10 +660,10 @@ static int stars_list_visitor(int order, int pix, void *user)
     tile = get_tile(d->stars, 0, order, pix, NULL);
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
-        if (tile->stars[i].vmag > d->max_mag) continue;
+        if (tile->sources[i].vmag > d->max_mag) continue;
         d->nb++;
         if (!d->f) continue;
-        star = star_create(&tile->stars[i]);
+        star = star_create(&tile->sources[i]);
         r = d->f(d->user, (obj_t*)star);
         obj_release((obj_t*)star);
         if (r) break;
@@ -701,7 +701,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     for (i = 0; i < tile->nb; i++) {
         if (!f) continue;
         nb++;
-        star = star_create(&tile->stars[i]);
+        star = star_create(&tile->sources[i]);
         r = f(user, (obj_t*)star);
         obj_release((obj_t*)star);
         if (r) break;
