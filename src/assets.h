@@ -34,10 +34,13 @@
  *                        is useful to prevent loading tiles resources too
  *                        quickly.
  *   ASSET_ACCEPT_404   - Do not log error on a 404 return.
+ *   ASSET_USED_ONCE    - Hint that the data can be release after it has
+ *                        been read.
  */
 enum {
     ASSET_DELAY             = 1 << 0,
     ASSET_ACCEPT_404        = 1 << 1,
+    ASSET_USED_ONCE         = 1 << 2,
 };
 
 /*

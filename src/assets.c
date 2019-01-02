@@ -20,6 +20,7 @@ enum {
     COMPRESSED  = 1 << 9,
     FREE_DATA   = 1 << 10,
     LOGGED      = 1 << 11,
+    CAN_RELEASE = 1 << 12,
 };
 
 typedef struct asset asset_t;
@@ -87,7 +88,6 @@ static asset_t *asset_get(const char *url, int flags)
         HASH_ADD_KEYPTR(hh, g_assets, asset->url, strlen(asset->url), asset);
     }
     asset->last_used = 0;
-    assets_update();
     return asset;
 }
 
@@ -125,6 +125,8 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     (void)r;
     size = size ?: &default_size;
     code = code ?: &default_code;
+
+    assets_update();
     asset = asset_get(url, flags);
     *code = 0;
     *size = 0;
@@ -196,18 +198,40 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         asset->request = request_create(asset->url);
     }
     data = request_get_data(asset->request, size, code);
+    if (*code && (flags & ASSET_USED_ONCE))
+        asset->flags |= CAN_RELEASE;
 
 end:
     LOG_RET(asset, url, *code, flags);
     return data;
 }
 
+static void asset_release_(asset_t *asset)
+{
+    if (asset->flags & FREE_DATA) {
+        free(asset->data);
+        asset->data = NULL;
+        asset->size = 0;
+    }
+    if (asset->request)
+        request_delete(asset->request);
+    if (!(asset->flags & STATIC)) {
+        HASH_DEL(g_assets, asset);
+        free(asset->url);
+        free(asset);
+    }
+}
+
 static void assets_update(void)
 {
     asset_t *asset, *tmp;
     HASH_ITER(hh, g_assets, asset, tmp) {
-        if (asset->last_used++ < 128) continue;
+        if ((asset->flags & CAN_RELEASE)) {
+            asset_release_(asset);
+            continue;
+        }
         if (asset->flags & STATIC) continue;
+        if (asset->last_used++ < 128) continue;
         // XXX: to finish: delete unused assets.
     }
 }
@@ -244,17 +268,7 @@ void asset_release(const char *url)
     asset_t *asset;
     HASH_FIND_STR(g_assets, url, asset);
     if (!asset) return;
-    if (asset->flags & FREE_DATA) {
-        free(asset->data);
-        asset->size = 0;
-    }
-    if (asset->request)
-        request_delete(asset->request);
-    if (!(asset->flags & STATIC)) {
-        HASH_DEL(g_assets, asset);
-        free(asset->url);
-        free(asset);
-    }
+    asset_release_(asset);
 }
 
 void asset_add_handler(
