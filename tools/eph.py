@@ -106,3 +106,35 @@ def create_tile(data, chunk_type, nuniq, path, columns):
 
     with open(path, 'wb') as out:
         out.write(ret)
+
+
+def read_tile(path):
+    f = open(path, 'rb')
+    assert f.read(4) == 'EPHE'
+    version = struct.unpack('I', f.read(4))[0]
+    assert version == 2
+    chunk_type, chunk_len = struct.unpack('4sI', f.read(8))
+    chunk_version = f.read(4)[0]
+    nuniq = struct.unpack('Q', f.read(8))
+    _, row_size, nb_col, nb_sources = struct.unpack('iiii', f.read(16))
+    cols = []
+    for i in range(nb_col):
+        id, type, unit, ofs, size = struct.unpack('4s4siii', f.read(20))
+        id = id.strip('\0')
+        type = type.strip('\0')
+        cols.append(dict(id=id, type=type, unit=unit, ofs=ofs, size=size))
+    data_len, comp_data_len = struct.unpack('II', f.read(8))
+    comp_data = f.read(comp_data_len)
+    data = zlib.decompress(comp_data)
+    data = shuffle_bytes(data, nb_sources)
+    ret = []
+    for i in range(nb_sources):
+        source = {}
+        for col in cols:
+            id = col['id']
+            t = col['type']
+            if t == 's': t = '%ds' % col['size']
+            pos = i * row_size + col['ofs']
+            source[id] = struct.unpack(t, data[pos: pos + col['size']])[0]
+        ret.append(source)
+    return ret
