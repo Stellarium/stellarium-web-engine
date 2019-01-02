@@ -60,6 +60,7 @@ typedef struct eph_table_column {
     int         unit;
 
     // Attributes filled by eph_read_table_prepare.
+    int         got;    // Set if present in the source file.
     int         start;
     int         size;
     int         src_unit;

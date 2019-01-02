@@ -154,6 +154,7 @@ int eph_read_table_header(int version, const void *data, int data_size,
             LOG_E("Wrong type");
             return -1;
         }
+        columns[j].got = true;
         memcpy(&columns[j].src_unit, data + 24 + i * 20, 4);
         memcpy(&columns[j].start, data + 28 + i * 20, 4);
         memcpy(&columns[j].size, data + 32 + i * 20, 4);
@@ -202,7 +203,7 @@ int eph_read_table_row(const void *data, int data_size, int *data_ofs,
     va_start(ap, columns);
     for (i = 0; i < nb_columns; i++) {
         memset(&v, 0, sizeof(v));
-        got = columns[i].size;
+        got = columns[i].got;
         switch (columns[i].type) {
         case 'i':
             if (got) memcpy(&v.i, data + columns[i].start, 4);
