@@ -29,8 +29,12 @@ var testBasic = function(stel) {
   // Test sun pos.
   var sun = stel.getObj("Sun");
   sun.update();
-  assert(isNear(sun.ra, 165.48 * stel.D2R, 0.01));
-  assert(isNear(sun.dec,  6.20 * stel.D2R, 0.01));
+  var icrs = sun.icrs;
+  var cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', icrs);
+  var ra  = stel.anp(stel.c2s(cirs)[0]);
+  var dec = stel.anpm(stel.c2s(cirs)[1]);
+  assert(isNear(ra, 165.48 * stel.D2R, 0.01));
+  assert(isNear(dec,  6.20 * stel.D2R, 0.01));
 
   // Test different possible values for passing NULL to the core.
   stel.core.selection = null;
