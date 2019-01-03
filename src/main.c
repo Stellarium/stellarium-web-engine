@@ -134,7 +134,7 @@ int main(int argc, char **argv)
                 "Stellarium Web Engine "
                 SWE_VERSION_STR DEBUG_ONLY(" (debug)");
 
-#ifndef NDEBUG
+#if DEBUG && !defined(__EMSCRIPTEN__)
     // Make sure that we don't rely on NAN or INFINITY in our computing
     feenableexcept(FE_DIVBYZERO | FE_INVALID);
 #endif
