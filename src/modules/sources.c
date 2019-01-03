@@ -62,7 +62,9 @@ static int add_data_source(obj_t *obj, const char *url, const char *type,
     }
     if (!source) return 1;
     DL_APPEND(sources->sources, source);
-    process_source(sources, source);
+    // Immediatly process only if offline source.
+    if (strncmp(url, "http", 4) != 0)
+        process_source(sources, source);
     return 0;
 }
 
