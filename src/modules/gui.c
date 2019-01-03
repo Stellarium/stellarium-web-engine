@@ -262,7 +262,6 @@ static void menu_main(void *user)
         gui_double_log("log lmaxmin", &core->lwmax_min, -100, 100, 2, NAN);
         gui_double_log("log lmaxs", &core->lwmax_scale, -100, 100, 2, NAN);
         gui_float_log("log p", &core->tonemapper.p, -100, 100, 0, NAN);
-        gui_float("q", &core->tonemapper.q, 1, 4, 1, NAN);
 
         DL_FOREACH(core->obj.children, module) {
             if (module->klass->gui) module->klass->gui(module, 1);

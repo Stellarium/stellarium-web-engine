@@ -39,8 +39,8 @@ vec3 xyy_to_srgb(vec3 xyy)
 float tonemap(float lw)
 {
     // Logarithmic tonemapping, same as in tonemapper.c
-    return pow(log(1.0 + u_tm[0] * lw) / log(1.0 + u_tm[0] * u_tm[1]),
-               1.0 / u_tm[2]);
+    // Assumes u_tm[2] == 1.
+    return log(1.0 + u_tm[0] * lw) / log(1.0 + u_tm[0] * u_tm[1]);
 }
 
 void main()

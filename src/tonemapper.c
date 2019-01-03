@@ -9,6 +9,7 @@
 
 #include "tonemapper.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -21,12 +22,13 @@ void tonemapper_update(tonemapper_t *t,
     if (exposure != -1) t->exposure = exposure;
     if (p != -1) t->p = p;
     if (q != -1) t->q = q;
+    assert(t->q == 1.0);
 }
 
 float tonemapper_map(const tonemapper_t *t, float lw)
 {
-    return powf(logf(1.f + t->p * lw) / logf(1.f + t->p * t->lwmax),
-                1.f / t->q);
+    // Assume q = 1, so that we can skip the pow call.
+    return logf(1.f + t->p * lw) / logf(1.f + t->p * t->lwmax);
 }
 
 float tonemapper_map_log10(const tonemapper_t *t, float log_lw)
