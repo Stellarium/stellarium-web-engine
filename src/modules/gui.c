@@ -327,9 +327,14 @@ static void time_widget(void *user)
 
 }
 
+static void on_designation(const obj_t *obj, void *user,
+                           const char *cat, const char *value)
+{
+    gui_label(cat, value);
+}
+
 static void info_widget(obj_t *obj)
 {
-    const char *value, *cat;
     char buf[256], buf1[64], buf2[64];
     double icrs[4], cirs[4], observed[4];
     double v, ra, dec, az, alt;
@@ -337,11 +342,7 @@ static void info_widget(obj_t *obj)
     if (!obj) return;
     obj_update(obj, core->observer, 0);
     gui_text_unformatted(obj_get_name(obj, buf));
-
-    gui_label("ID", obj->id); // XXX: to remove.
-    IDENTIFIERS_ITER(obj->oid, NULL, NULL, NULL, &cat, &value,
-                     NULL, NULL, NULL, NULL)
-        gui_label(cat, value);
+    obj_get_designations(obj, NULL, on_designation);
 
     obj_get_attr(obj, "radec", "v4", icrs);
     convert_framev4(NULL, FRAME_ICRF, FRAME_CIRS, icrs, cirs);
