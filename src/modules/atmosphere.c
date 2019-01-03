@@ -134,7 +134,7 @@ static render_data_t prepare_render_data(
 
     // Compute factor due to solar eclipse.
     // I am using an ad-hoc formula to make it look OK here.
-    data.eclipse_factor = exp10((base_sun_vmag - sun_vmag) / 2.512 * 1.1);
+    data.eclipse_factor = pow(10, (base_sun_vmag - sun_vmag) / 2.512 * 1.1);
 
     return data;
 }
