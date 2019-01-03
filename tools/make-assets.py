@@ -60,7 +60,6 @@ def is_extra(path):
     """Return whether an asset should only be included if the macro
        ASSETS_INCLUDE_EXTRA has been defined"""
     if re.match(r'^skycultures/(?!western).*', path): return True
-    if re.match(r'^landscapes/.*', path): return True
     return False
 
 

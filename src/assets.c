@@ -282,7 +282,6 @@ void asset_add_handler(
 
 #include "assets/cities.txt.inl"
 #include "assets/font.inl"
-#include "assets/landscapes.inl"
 #include "assets/mpcorb.dat.inl"
 #include "assets/planets.ini.inl"
 #include "assets/skycultures.inl"
