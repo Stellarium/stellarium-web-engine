@@ -336,8 +336,7 @@ static void info_widget(obj_t *obj)
 
     if (!obj) return;
     obj_update(obj, core->observer, 0);
-    obj_get_attr(obj, "name", "s", buf);
-    gui_text_unformatted(buf);
+    gui_text_unformatted(obj_get_name(obj, buf));
 
     gui_label("ID", obj->id); // XXX: to remove.
     IDENTIFIERS_ITER(obj->oid, NULL, NULL, NULL, &cat, &value,

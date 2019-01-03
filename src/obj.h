@@ -415,17 +415,25 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
 
 /*
  * Function: obj_get_name
- * Return the given name for an object.
+ * Return the given name for an object or its first designation.
  */
-const char *obj_get_name(const obj_t *obj);
+const char *obj_get_name(const obj_t *obj, char out[128]);
 
 /*
  * Function: obj_get_designations
  * Return the list of all the identifiers of an object.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   user   - User data passed to the callback.
+ *   f      - A callback function called once per designation.
+ *
+ * Return:
+ *   The number of designations processed.
  */
 int obj_get_designations(const obj_t *obj, void *user,
-                  void (*f)(const obj_t *obj, void *user,
-                            const char *cat, const char *value));
+                         void (*f)(const obj_t *obj, void *user,
+                                   const char *cat, const char *value));
 
 /*
  * Function: obj_get_tree

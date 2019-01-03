@@ -567,6 +567,7 @@ void core_on_key(int key, int action)
     bool v;
     obj_t *obj;
     const char *attr;
+    char buf[128];
 
     core->inputs.keys[key] = (action != KEY_ACTION_UP);
 
@@ -583,7 +584,7 @@ void core_on_key(int key, int action)
         }
     }
     if (key == ' ' && core->selection) {
-        LOG_D("lock to %s", obj_get_name(core->selection));
+        LOG_D("lock to %s", obj_get_name(core->selection, buf));
         obj_set_attr(&core->obj, "lock", "p", core->selection);
     }
 }

@@ -151,7 +151,7 @@ static double vertical_align_event_func(const event_type_t *type,
 
 static int vertical_align_format(const event_t *ev, char *out, int len)
 {
-    char buf[64];
+    char buf[64], buf1[128], buf2[128];
     double v;
     int prec;
     const extra_data_t *extra1 = ev->o1->user, *extra2 = ev->o2->user;
@@ -164,7 +164,7 @@ static int vertical_align_format(const event_t *ev, char *out, int len)
         sprintf(buf, "%.*f° north", prec, v * DR2D);
 
     snprintf(out, len, "%s passes %s of %s",
-             obj_get_name(ev->o1), buf, obj_get_name(ev->o2));
+             obj_get_name(ev->o1, buf1), buf, obj_get_name(ev->o2, buf2));
     return 0;
 }
 
@@ -184,11 +184,12 @@ static int moon_format(const event_t *ev, char *out, int len)
 
 static int conjunction_format(const event_t *ev, char *out, int len)
 {
+    char buf1[128], buf2[128];
     if (strcmp(ev->type->name, "conjunction") == 0)
         snprintf(out, len, "Conjunction %s %s",
-                 obj_get_name(ev->o1), obj_get_name(ev->o2));
+                 obj_get_name(ev->o1, buf1), obj_get_name(ev->o2, buf2));
     if (strcmp(ev->type->name, "opposition") == 0)
-        snprintf(out, len, "%s is in opposition", obj_get_name(ev->o1));
+        snprintf(out, len, "%s is in opposition", obj_get_name(ev->o1, buf1));
     return 0;
 }
 

@@ -321,15 +321,30 @@ double obj_get_render_order(const obj_t *obj)
         return obj->klass->render_order;
 }
 
-// Return the object first name, or if there is no name, the object id.
-const char *obj_get_name(const obj_t *obj)
+static void name_on_designation(const obj_t *obj, void *user,
+                                const char *cat, const char *value)
 {
-    const char *value;
-    IDENTIFIERS_ITER(obj->oid, "NAME", NULL, NULL, NULL, &value, NULL, NULL,
-                     NULL, NULL) {
-        return value;
-    }
-    return obj->id;
+    int current_score;
+    int *score = USER_GET(user, 0);
+    char *out = USER_GET(user, 1);
+    current_score = (strcmp(cat, "NAME") == 0) ? 2 : 1;
+    if (current_score <= *score) return;
+    *score = current_score;
+    if (*cat && strcmp(cat, "NAME") != 0)
+        snprintf(out, 128, "%s %s", cat, value);
+    else
+        snprintf(out, 128, "%s", value);
+}
+
+/*
+ * Function: obj_get_name
+ * Return the given name for an object or its first designation.
+ */
+const char *obj_get_name(const obj_t *obj, char buf[static 128])
+{
+    int score = 0;
+    obj_get_designations(obj, USER_PASS(&score, buf), name_on_designation);
+    return buf;
 }
 
 int obj_render(const obj_t *obj, const painter_t *painter)
@@ -441,7 +456,8 @@ int obj_add_data_source(obj_t *obj, const char *url, const char *type,
 static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
                                        const json_value *args)
 {
-    return args_value_new("s", NULL, obj_get_name(obj));
+    char buf[128];
+    return args_value_new("s", NULL, obj_get_name(obj, buf));
 }
 
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
