@@ -342,7 +342,11 @@ static void info_widget(obj_t *obj)
     if (!obj) return;
     obj_update(obj, core->observer, 0);
     gui_text_unformatted(obj_get_name(obj, buf));
+    if (obj_get_attr(obj, "type", "s", buf1) == 0)
+        gui_label("TYPE", type_to_str(buf1));
+    gui_separator();
     obj_get_designations(obj, NULL, on_designation);
+    gui_separator();
 
     obj_get_attr(obj, "radec", "v4", icrs);
     convert_framev4(NULL, FRAME_ICRF, FRAME_CIRS, icrs, cirs);
@@ -352,8 +356,6 @@ static void info_widget(obj_t *obj)
     dec = eraAnpm(dec);
     eraC2s(observed, &az, &alt);
 
-    if (obj_get_attr(obj, "type", "s", buf1) == 0)
-        gui_label("TYPE", type_to_str(buf1));
     if (obj_get_attr(obj, "vmag", "f", &v) == 0) {
         sprintf(buf, "%f", v);
         gui_label("VMAG", buf);
