@@ -262,8 +262,7 @@ static void core_set_default(void)
     tonemapper_update(&core->tonemapper, 1, 1, 1, core->lwmax);
 
     core->telescope_auto = true;
-
-    core_update(0);
+    observer_update(core->observer, false);
 }
 
 static void on_progressbar(const char *id)
