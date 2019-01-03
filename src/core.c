@@ -384,6 +384,18 @@ int core_update(double dt)
     double lwmax;
     int r;
     obj_t *atm, *module;
+    const double ZOOM_FACTOR = 1.05;
+    projection_t proj;
+
+    // Continuous zoom.
+    projection_init(&proj, core->proj, core->fovx,
+                    core->win_size[0], core->win_size[1]);
+    if (core->zoom) {
+        core->fov *= pow(ZOOM_FACTOR, -core->zoom);
+        if (core->fov > proj.max_fov)
+            core->fov = proj.max_fov;
+        obj_changed((obj_t*)core, "fov");
+    }
 
     atm = core_get_module("atmosphere");
     assert(atm);
@@ -462,8 +474,18 @@ int core_render(double win_w, double win_h, double pixel_scale)
     double t;
     bool cst_visible;
     double max_vmag;
-    const double ZOOM_FACTOR = 1.05;
 
+    // Used to make sure some values are not touched during render.
+    struct {
+        observer_t obs;
+        double fov;
+    } bck = {
+        .obs = *core->observer,
+        .fov = core->fov,
+    };
+    (void)bck;
+
+    observer_update(core->observer, true);
     max_vmag = compute_max_vmag();
 
     t = sys_get_unix_time();
@@ -484,14 +506,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     labels_reset();
 
     projection_init(&proj, core->proj, core->fovx, win_w, win_h);
-
-    // Continuous zoom.
-    if (core->zoom) {
-        core->fov *= pow(ZOOM_FACTOR, -core->zoom);
-        if (core->fov > proj.max_fov)
-            core->fov = proj.max_fov;
-        obj_changed((obj_t*)core, "fov");
-    }
 
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");
@@ -533,6 +547,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
     }
 
     core->fast_mode = false;
+
+    assert(bck.obs.azimuth == core->observer->azimuth);
+    assert(bck.obs.altitude == core->observer->altitude);
+    assert(bck.fov == core->fov);
     return 0;
 }
 
