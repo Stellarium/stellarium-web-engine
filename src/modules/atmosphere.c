@@ -52,6 +52,7 @@ typedef struct {
 
     // Skybrightness model.
     skybrightness_t skybrightness;
+    double eclipse_factor; // Solar eclipse adjustment.
     double landscape_lum; // Average luminance of the landscape.
     double lum_scale; // Manual adjustement.
 
@@ -82,6 +83,7 @@ static render_data_t prepare_render_data(
     double thetaS;
     double X;
     double zx, zy, zY;
+    const double base_sun_vmag = -26.74;
 
     thetaS = acos(sun_pos[2]); // Zenith angle
     X = (4.0 / 9.0 - T / 120) * (M_PI - 2 * thetaS);
@@ -130,6 +132,10 @@ static render_data_t prepare_render_data(
     // From 0 to 5kcd/m².
     data.landscape_lum = smoothstep(0, 0.5, sun_pos[2]) * 5000;
 
+    // Compute factor due to solar eclipse.
+    // I am using an ad-hoc formula to make it look OK here.
+    data.eclipse_factor = exp10((base_sun_vmag - sun_vmag) / 2.512 * 1.1);
+
     return data;
 }
 
@@ -165,7 +171,7 @@ static float compute_lum(void *user, const float pos[3])
                 eraSepp(p, d->moon_pos),
                 eraSepp(p, d->sun_pos),
                 eraSepp(p, zenith));
-    lum *= d->lum_scale;
+    lum *= d->lum_scale * d->eclipse_factor;
     // Clamp to prevent too much adaptation.
     lum = min(lum, 100000);
 
