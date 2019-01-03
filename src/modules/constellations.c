@@ -343,12 +343,13 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     painter_t painter = *_painter;
     int i;
     double (*lines)[4];
-    double lines_color[4];
+    double lines_color[4], names_color[4];
     double pos[3] = {0, 0, 0};
     double mag[2], radius[2];
 
     if (painter.color[3] == 0.0) return 0;
-    hex_to_rgba(0x6096C2B0, lines_color);
+    vec4_set(lines_color, 0.2, 0.2, 0.6, 0.75);
+    vec4_set(names_color, 0.2, 0.4, 0.7, 0.75);
     painter.lines_width *= clamp(1.0 / (core->fov / (90 * DD2R)), 1.0, 16.0);
     // Refraction already taken into account from stars position.
     vec4_emul(lines_color, painter.color, painter.color);
@@ -382,7 +383,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos)) {
-        labels_add(con->name, pos, 0, 16, lines_color, 0, ANCHOR_CENTER, 0);
+        labels_add(con->name, pos, 0, 16, names_color, 0, ANCHOR_CENTER, 0);
     }
     return 0;
 }
