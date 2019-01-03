@@ -14,6 +14,12 @@
 
 #define URL_MAX_SIZE 4096
 
+// Indices of the two surveys we use.
+enum {
+    SURVEY_DEFAULT  = 0,
+    SURVEY_GAIA     = 1,
+};
+
 // Min mag to start loading the gaia survey.
 static const double GAIA_MIN_MAG = 8.0;
 
@@ -521,7 +527,7 @@ static int render_visitor(int order, int pix, void *user)
             .oid = s->oid,
         };
         n++;
-        if (s->vmag <= painter.label_mag_max && !s->gaia)
+        if (s->vmag <= painter.label_mag_max && survey != SURVEY_GAIA)
             star_render_name(&painter, s, p_win, size, s->vmag, color);
     }
     paint_points(&painter, n, points, FRAME_WINDOW);
