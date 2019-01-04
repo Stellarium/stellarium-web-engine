@@ -27,6 +27,12 @@ int u8_char_code(const char *c);
 void u8_lower(char *dst, const char *str, int n);
 
 /*
+ * Function: u8_upper
+ * Make an utf-8 string uppercase.
+ */
+void u8_upper(char *dst, const char *str, int n);
+
+/*
  * Function: u8_char_len
  * Return the number of characters in a utf-8 string.
  */

@@ -56,6 +56,32 @@ void u8_lower(char *dst, const char *str, int n)
     *dst = '\0';
 }
 
+void u8_upper(char *dst, const char *str, int n)
+{
+    const char* ptr;
+    int len;
+    while (*str && n) {
+        len = u8_char_len(str);
+        if (len == 1 && *str >= 'a' && *str <= 'z') {
+            *dst = *str - 'a' + 'A';
+        } else if (len == 2) {
+            memcpy(dst, str, 2);
+            for (ptr = UPPER; *ptr; ptr += 4) {
+                if (memcmp(ptr + 2, str, 2) == 0) {
+                    memcpy(dst, ptr, 2);
+                    break;
+                }
+            }
+        } else {
+            memcpy(dst, str, len);
+        }
+        str += len;
+        dst += len;
+        n--;
+    }
+    *dst = '\0';
+}
+
 int u8_len(const char *str)
 {
     int len = 0;
