@@ -351,7 +351,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     // Render name if needed.
     if (*sat->name && vmag <= painter.label_mag_max) {
         labels_add(sat->name, p_win, size, 13, label_color, 0,
-                   ANCHOR_AROUND, 0);
+                   ANCHOR_AROUND, 0, obj->oid);
     }
 
     return 0;

@@ -14,6 +14,7 @@ enum {
     SKIPPED = 1 << 16,
 };
 
+typedef struct label label_t;
 struct label
 {
     label_t *next, *prev;
@@ -31,18 +32,20 @@ struct label
     double  box[4];
 };
 
-static label_t *g_labels = NULL;
-
 typedef struct labels {
     obj_t obj;
+    bool skip_selection; // If set, do no render the core selection label.
+    label_t *labels;
 } labels_t;
+
+static labels_t *g_labels = NULL;
 
 void labels_reset(void)
 {
     label_t *label, *tmp;
-    DL_FOREACH_SAFE(g_labels, label, tmp) {
+    DL_FOREACH_SAFE(g_labels->labels, label, tmp) {
         if (label->fader.target == false && label->fader.value == 0) {
-            DL_DELETE(g_labels, label);
+            DL_DELETE(g_labels->labels, label);
             if (label->render_text != label->text) free(label->render_text);
             free(label->text);
             free(label);
@@ -123,7 +126,7 @@ static bool test_label_overlaps(const label_t *label)
 {
     label_t *other;
     if (label->flags & ANCHOR_FIXED) return false;
-    DL_FOREACH(g_labels, other) {
+    DL_FOREACH(g_labels->labels, other) {
         if (other == label) break;
         if (other->flags & SKIPPED) continue;
         if (box_overlap(other->box, label->box)) return true;
@@ -136,13 +139,19 @@ static int label_cmp(void *a, void *b)
     return cmp(((label_t*)b)->priority, ((label_t*)a)->priority);
 }
 
+static int labels_init(obj_t *obj, json_value *args)
+{
+    g_labels = (void*)obj;
+    return 0;
+}
+
 static int labels_render(const obj_t *obj, const painter_t *painter)
 {
     label_t *label;
     int i;
     double pos[2], color[4];
-    DL_SORT(g_labels, label_cmp);
-    DL_FOREACH(g_labels, label) {
+    DL_SORT(g_labels->labels, label_cmp);
+    DL_FOREACH(g_labels->labels, label) {
         // We fade in the label slowly, but fade out very fast, otherwise
         // we don't get updated positions for fading out labels.
         fader_update(&label->fader, label->fader.target ? 0.01 : 1);
@@ -179,17 +188,22 @@ skip:;
  *   angle      - Rotation angle (rad).
  *   flags      - Union of <LABEL_FLAGS>.  Used to specify anchor position
  *                and text effects.
+ *   oid        - Optional unique id for the label.
  */
-label_t *labels_add(const char *text, const double pos[2],
-                    double radius, double size, const double color[4],
-                    double angle, int flags, double priority)
+void labels_add(const char *text, const double pos[2],
+                double radius, double size, const double color[4],
+                double angle, int flags, double priority, uint64_t oid)
 {
     if (flags & ANCHOR_FIXED) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
     label_t *label;
 
-    label = label_get(g_labels, text, size, pos);
+    if (    g_labels->skip_selection && oid && core->selection &&
+            oid == core->selection->oid) {
+        return;
+    }
+    label = label_get(g_labels->labels, text, size, pos);
     if (!label) {
         label = calloc(1, sizeof(*label));
         fader_init(&label->fader, false);
@@ -198,7 +212,7 @@ label_t *labels_add(const char *text, const double pos[2],
             label->render_text = malloc(strlen(text) + 64);
             u8_upper(label->render_text, text, strlen(text) + 64);
         }
-        DL_APPEND(g_labels, label);
+        DL_APPEND(g_labels->labels, label);
     }
 
     vec2_set(label->pos, pos[0], pos[1]);
@@ -209,7 +223,6 @@ label_t *labels_add(const char *text, const double pos[2],
     label->flags = flags;
     label->priority = priority;
     label->fader.target = true;
-    return label;
 }
 
 
@@ -221,8 +234,13 @@ static obj_klass_t labels_klass = {
     .id = "labels",
     .size = sizeof(labels_t),
     .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = labels_init,
     .render = labels_render,
     .render_order = 100,
+    .attributes = (attribute_t[]) {
+        PROPERTY("skip_selection", "b", MEMBER(labels_t, skip_selection)),
+        {},
+    },
 };
 
 OBJ_REGISTER(labels_klass)

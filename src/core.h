@@ -25,7 +25,6 @@
 
 
 typedef struct core core_t;
-typedef struct label label_t;
 
 extern core_t *core;    // Global core object.
 
@@ -137,10 +136,11 @@ void labels_reset(void);
  *   angle      - Rotation angle (rad).
  *   flags      - Union of <LABEL_FLAGS>.  Used to specify anchor position
  *                and text effects.
+ *   oid        - Optional unique id for the label.
  */
-label_t *labels_add(const char *text, const double win_pos[2],
-                    double radius, double size, const double color[4],
-                    double angle, int flags, double priority);
+void labels_add(const char *text, const double win_pos[2],
+                double radius, double size, const double color[4],
+                double angle, int flags, double priority, uint64_t oid);
 
 /******* Section: Core ****************************************************/
 

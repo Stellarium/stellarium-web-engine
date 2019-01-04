@@ -789,7 +789,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
             if (r_scale == 1.0) strcpy(label, planet->name);
             else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
             labels_add(label, vpos, point_size, 16, label_color, 0,
-                       ANCHOR_AROUND, -vmag);
+                       ANCHOR_AROUND, -vmag, planet->obj.oid);
         }
     }
 

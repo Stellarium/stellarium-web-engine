@@ -384,7 +384,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos)) {
         labels_add(con->name, pos, 0, 16, names_color, 0,
-                   ANCHOR_CENTER | LABEL_UPPERCASE, 0);
+                   ANCHOR_CENTER | LABEL_UPPERCASE, 0, con->obj.oid);
     }
     return 0;
 }

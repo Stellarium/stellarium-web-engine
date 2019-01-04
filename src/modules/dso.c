@@ -320,7 +320,8 @@ static void dso_render_name(const painter_t *painter, const dso_data_t *s,
     else if (s->id.ic)
         sprintf(buff, "IC %d", s->id.ic);
     if (buff[0])
-        labels_add(buff, pos, size, 13, painter->color, 0, anchor, -vmag);
+        labels_add(buff, pos, size, 13, painter->color, 0, anchor, -vmag,
+                   s->id.oid);
 }
 
 
