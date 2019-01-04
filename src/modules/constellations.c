@@ -348,8 +348,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     double mag[2], radius[2];
 
     if (painter.color[3] == 0.0) return 0;
-    vec4_set(lines_color, 0.2, 0.2, 0.6, 0.75);
-    vec4_set(names_color, 0.2, 0.4, 0.7, 0.75);
+    vec4_set(lines_color, 0.2, 0.2, 0.6, 1.0);
+    vec4_set(names_color, 0.2, 0.4, 0.7, 1.0);
     painter.lines_width *= clamp(1.0 / (core->fov / (90 * DD2R)), 1.0, 16.0);
     // Refraction already taken into account from stars position.
     vec4_emul(lines_color, painter.color, painter.color);
