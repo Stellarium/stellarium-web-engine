@@ -345,7 +345,7 @@ int paint_2d_ellipse(const painter_t *painter,
  *   painter    - The painter.
  *   transf     - Transformation applied to the coordinates.
  *                Can be NULL for the identity.
- *   pos        - Position in window space.
+ *   pos        - Top left position in window space.
  *   size       - Size in window space.
  */
 int paint_2d_rect(const painter_t *painter, const double transf[3][3],

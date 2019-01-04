@@ -436,8 +436,9 @@ int paint_2d_ellipse(const painter_t *painter_,
  *   painter    - The painter.
  *   transf     - Transformation from unit into window space that defines
  *                the shape position, orientation and scale.
- *   pos        - Position in window space.
- *   size       - Size in window space.
+ *   pos        - Top left position in window space.  If set to NULL, center
+ *                the rect at the origin.
+ *   size       - Size in window space.  Default value to a rect of size 1.
  */
 int paint_2d_rect(const painter_t *painter, const double transf[3][3],
                   const double pos[2], const double size[2])
@@ -445,8 +446,8 @@ int paint_2d_rect(const painter_t *painter, const double transf[3][3],
     double p[3], s[2], angle, m[3][3];
 
     mat3_set_identity(m);
-    if (pos) mat3_itranslate(m, pos[0], pos[1]);
-    if (size) mat3_iscale(m, size[0], size[1], 1);
+    if (pos) mat3_itranslate(m, pos[0] + size[0] / 2, pos[1] + size[1] / 2);
+    if (size) mat3_iscale(m, size[0] / 2, size[1] / 2, 1);
     if (transf) mat3_mul(m, transf, m);
 
     vec2_copy(m[2], p);
