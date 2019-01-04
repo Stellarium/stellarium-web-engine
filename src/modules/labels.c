@@ -17,7 +17,8 @@ enum {
 struct label
 {
     label_t *next, *prev;
-    char    *text;
+    char    *text; // Original passed text.
+    char    *render_text; // Processed text (can point to text).
     double  pos[2];
     double  radius;     // Radius of the object (pixel).
     double  size;
@@ -42,6 +43,7 @@ void labels_reset(void)
     DL_FOREACH_SAFE(g_labels, label, tmp) {
         if (label->fader.target == false && label->fader.value == 0) {
             DL_DELETE(g_labels, label);
+            if (label->render_text != label->text) free(label->render_text);
             free(label->text);
             free(label);
         } else {
@@ -70,7 +72,7 @@ static void label_get_box(const painter_t *painter, const label_t *label,
     double border = 4;
 
     vec2_copy(label->pos, pos);
-    paint_text_size(painter, label->text, label->size, size);
+    paint_text_size(painter, label->render_text, label->size, size);
 
     borders[0] = label->radius;
     borders[1] = label->radius;
@@ -155,7 +157,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
         pos[1] = (label->box[1] + label->box[3]) / 2;
         vec4_copy(label->color, color);
         color[3] *= label->fader.value;
-        paint_text(painter, label->text, pos, label->size,
+        paint_text(painter, label->render_text, pos, label->size,
                    color, label->angle);
         label->flags &= ~SKIPPED;
 skip:;
@@ -176,7 +178,11 @@ label_t *labels_add(const char *text, const double pos[2],
     if (!label) {
         label = calloc(1, sizeof(*label));
         fader_init(&label->fader, false);
-        label->text = strdup(text);
+        label->render_text = label->text = strdup(text);
+        if (flags & LABEL_UPPERCASE) {
+            label->render_text = malloc(strlen(text) + 64);
+            u8_upper(label->render_text, text, strlen(text) + 64);
+        }
         DL_APPEND(g_labels, label);
     }
 
