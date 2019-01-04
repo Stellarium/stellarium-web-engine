@@ -56,18 +56,12 @@
 #define FILE_VERSION 2
 
 // CHECK is similar to an assert, but the condition is tested even in release
-// mode.
-// XXX: to remove.
-#if DEBUG
-    #define CHECK(c) assert(c)
-#else
-    #define CHECK(c) do { \
-        if (!(c)) { \
-            LOG_E("Error %s %s %d", __func__,  __FILE__, __LINE__); \
-            exit(-1); \
-        } \
-    } while (0)
-#endif
+#define CHECK(c) do { \
+    if (!(c)) { \
+        LOG_E("Error %s %s %d", __func__,  __FILE__, __LINE__); \
+        return -1; \
+    } \
+} while (0)
 
 int eph_read_tile_header(const void *data, int data_size, int *data_ofs,
                          int *version, int *order, int *pix)
