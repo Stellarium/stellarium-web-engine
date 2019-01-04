@@ -80,10 +80,10 @@ static void label_get_box(const painter_t *painter, const label_t *label,
     if (anchor & ANCHOR_BOTTOM) pos[1] -= size[1] / 2 + border + borders[1];
     if (anchor & ANCHOR_TOP) pos[1] += size[1] / 2 + border + borders[1];
 
-    box[0] = pos[0] - size[0];
-    box[1] = pos[1] - size[1];
-    box[2] = pos[0] + size[0];
-    box[3] = pos[1] + size[1];
+    box[0] = pos[0] - size[0] / 2;
+    box[1] = pos[1] - size[1] / 2;
+    box[2] = pos[0] + size[0] / 2;
+    box[3] = pos[1] + size[1] / 2;
 }
 
 static bool label_get_boxes(const painter_t *painter, const label_t *label,
