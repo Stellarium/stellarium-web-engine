@@ -165,6 +165,21 @@ skip:;
     return 0;
 }
 
+/*
+ * Function: labels_add
+ * Render a label on screen.
+ *
+ * Parameters:
+ *   text       - The text to render.
+ *   win_pow    - Position of the text in windows coordinates.
+ *   radius     - Radius of the point the label is linked to.  Zero for
+ *                independent label.
+ *   size       - Height of the text in pixel.
+ *   color      - Color of the text.
+ *   angle      - Rotation angle (rad).
+ *   flags      - Union of <LABEL_FLAGS>.  Used to specify anchor position
+ *                and text effects.
+ */
 label_t *labels_add(const char *text, const double pos[2],
                     double radius, double size, const double color[4],
                     double angle, int flags, double priority)
