@@ -527,7 +527,7 @@ static void quad(renderer_t          *rend_,
     if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_ATMOSPHERE;
-        gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, n * n * 4);
+        gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, n * n);
         gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
         item->prog = &rend->progs.atmosphere;
         memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
@@ -544,7 +544,7 @@ static void quad(renderer_t          *rend_,
     } else {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXTURE;
-        gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
+        gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n);
         gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
         item->prog = &rend->progs.blit;
     }
