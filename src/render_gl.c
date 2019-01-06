@@ -283,7 +283,16 @@ static void flush(renderer_t *rend_)
     rend_flush(rend);
 }
 
-static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex);
+static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex)
+{
+    item_t *item;
+    item = rend->items ? rend->items->prev : NULL;
+    if (    item && item->type == type &&
+            item->indices.capacity > item->indices.nb + nb &&
+            item->tex == tex)
+        return item;
+    return NULL;
+}
 
 static void points(renderer_t *rend_,
                    const painter_t *painter,
@@ -382,9 +391,6 @@ static void compute_tangent(const double uv[2], const projection_t *tex_proj,
     project(tex_proj, PROJ_BACKWARD, 4, uv, p);
     vec3_cross(VEC(0, 0, 1), p, out);
 }
-
-static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex);
-
 
 static void quad_planet(
                  renderer_t          *rend_,
@@ -1076,17 +1082,6 @@ static void rend_flush(renderer_gl_t *rend)
             free(ctex);
         }
     }
-}
-
-static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex)
-{
-    item_t *item;
-    item = rend->items ? rend->items->prev : NULL;
-    if (    item && item->type == type &&
-            item->indices.capacity > item->indices.nb + nb &&
-            item->tex == tex)
-        return item;
-    return NULL;
 }
 
 static void line(renderer_t           *rend_,
