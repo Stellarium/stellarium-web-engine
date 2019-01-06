@@ -160,6 +160,7 @@ static void gl_buf_set(gl_buf_t *buf, int i, int attr, void *v, int size)
     void *dst;
     const __typeof__(buf->info->attrs[attr]) *a;
     if (i == -1) i = buf->nb;
+    assert(i < buf->capacity);
     a = &buf->info->attrs[attr];
     dst = buf->data + i * buf->info->size + a->ofs;
     memcpy(dst, v, size);
