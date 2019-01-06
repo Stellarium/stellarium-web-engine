@@ -544,13 +544,21 @@ static void quad(renderer_t          *rend_,
     n = grid_size + 1;
 
     if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
-        item = calloc(1, sizeof(*item));
-        item->type = ITEM_ATMOSPHERE;
-        gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, n * n);
-        gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
-        item->prog = &rend->progs.atmosphere;
-        memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
-        memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
+        item = get_item(rend, ITEM_ATMOSPHERE,
+                        n * n, grid_size * grid_size * 6, tex);
+        if (item && (
+                memcmp(item->atm.p, painter->atm.p, sizeof(item->atm.p)) ||
+                memcmp(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun))))
+            item = NULL;
+        if (!item) {
+            item = calloc(1, sizeof(*item));
+            item->type = ITEM_ATMOSPHERE;
+            gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, 256);
+            gl_buf_alloc(&item->indices, &INDICES_BUF, 256 * 6);
+            item->prog = &rend->progs.atmosphere;
+            memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
+            memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
+        }
     } else if (painter->flags & PAINTER_FOG_SHADER) {
         item = get_item(rend, ITEM_FOG, n * n, grid_size * grid_size * 6, tex);
         if (!item) {
