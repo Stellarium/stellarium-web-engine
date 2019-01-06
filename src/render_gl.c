@@ -1182,10 +1182,12 @@ void line_2d(renderer_t          *rend_,
     DL_APPEND(rend->items, item);
 }
 
-static void init_prog(prog_t *p, const char *code, const char *include)
+static void init_prog(prog_t *p, const char *shader)
 {
+    const char *code;
+    code = asset_get_data2(shader, ASSET_USED_ONCE, NULL, NULL);
     assert(code);
-    p->prog = gl_create_program(code, code, include, ATTR_NAMES);
+    p->prog = gl_create_program(code, code, NULL, ATTR_NAMES);
     GL(glUseProgram(p->prog));
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
     UNIFORM(u_tex);
@@ -1233,20 +1235,12 @@ renderer_t* render_gl_create(void)
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 
     // Create all the shaders programs.
-    init_prog(&rend->progs.points,
-              asset_get_data("asset://shaders/points.glsl", NULL, NULL), NULL);
-    init_prog(&rend->progs.blit_proj,
-              asset_get_data("asset://shaders/blit.glsl", NULL, NULL), NULL);
-    init_prog(&rend->progs.blit_tag,
-              asset_get_data("asset://shaders/blit_tag.glsl", NULL, NULL),
-                             NULL);
-    init_prog(&rend->progs.planet,
-              asset_get_data("asset://shaders/planet.glsl", NULL, NULL), NULL);
-    init_prog(&rend->progs.atmosphere,
-              asset_get_data("asset://shaders/atmosphere.glsl", NULL, NULL),
-                             NULL);
-    init_prog(&rend->progs.fog,
-              asset_get_data("asset://shaders/fog.glsl", NULL, NULL), NULL);
+    init_prog(&rend->progs.points, "asset://shaders/points.glsl");
+    init_prog(&rend->progs.blit_proj, "asset://shaders/blit.glsl");
+    init_prog(&rend->progs.blit_tag, "asset://shaders/blit_tag.glsl");
+    init_prog(&rend->progs.planet, "asset://shaders/planet.glsl");
+    init_prog(&rend->progs.atmosphere, "asset://shaders/atmosphere.glsl");
+    init_prog(&rend->progs.fog, "asset://shaders/fog.glsl");
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
