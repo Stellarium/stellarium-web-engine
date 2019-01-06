@@ -283,12 +283,25 @@ static void flush(renderer_t *rend_)
     rend_flush(rend);
 }
 
-static item_t *get_item(renderer_gl_t *rend, int type, int nb, texture_t *tex)
+/*
+ * Function: get_item
+ * Try to get a render item we can batch with.
+ *
+ * Parameters:
+ *   type           - The type of item.
+ *   buf_size       - The free vertex buffer size requiered.
+ *   indices_size   - The free indice size required.
+ */
+static item_t *get_item(renderer_gl_t *rend, int type,
+                        int buf_size,
+                        int indices_size,
+                        texture_t *tex)
 {
     item_t *item;
     item = rend->items ? rend->items->prev : NULL;
     if (    item && item->type == type &&
-            item->indices.capacity > item->indices.nb + nb &&
+            item->buf.capacity > item->buf.nb + buf_size &&
+            item->indices.capacity > item->indices.nb + indices_size &&
             item->tex == tex)
         return item;
     return NULL;
@@ -318,7 +331,7 @@ static void points(renderer_t *rend_,
         n = MAX_POINTS;
     }
 
-    item = get_item(rend, ITEM_POINTS, n * 6, NULL);
+    item = get_item(rend, ITEM_POINTS, n * 4, n * 6, NULL);
     if (item && item->points.smooth != painter->points_smoothness)
         item = NULL;
     if (!item) {
@@ -539,7 +552,7 @@ static void quad(renderer_t          *rend_,
         memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
         memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
     } else if (painter->flags & PAINTER_FOG_SHADER) {
-        item = get_item(rend, ITEM_FOG, n * n * 6, tex);
+        item = get_item(rend, ITEM_FOG, n * n, grid_size * grid_size * 6, tex);
         if (!item) {
             item = calloc(1, sizeof(*item));
             item->type = ITEM_FOG;
@@ -620,7 +633,7 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     item_t *item;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
 
-    item = get_item(rend, ITEM_ALPHA_TEXTURE, 6, tex);
+    item = get_item(rend, ITEM_ALPHA_TEXTURE, 4, 6, tex);
     if (item && !vec4_equal(item->color, color)) item = NULL;
 
     if (!item) {
@@ -1096,7 +1109,7 @@ static void line(renderer_t           *rend_,
     item_t *item;
     double k, pos[4];
 
-    item = get_item(rend, ITEM_LINES, nb_segs * 2, NULL);
+    item = get_item(rend, ITEM_LINES, nb_segs + 1, nb_segs * 2, NULL);
     if (item && !vec4_equal(item->color, painter->color)) item = NULL;
     if (item && item->lines.width != painter->lines_width) item = NULL;
 
