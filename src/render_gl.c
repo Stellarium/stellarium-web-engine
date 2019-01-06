@@ -227,7 +227,7 @@ typedef struct renderer_gl {
 
     struct {
         prog_t  points;
-        prog_t  blit_proj;
+        prog_t  blit;
         prog_t  blit_tag;
         prog_t  planet;
         prog_t  atmosphere;
@@ -539,7 +539,7 @@ static void quad(renderer_t          *rend_,
     } else {
         item->type = ITEM_TEXTURE;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
-        item->prog = &rend->progs.blit_proj;
+        item->prog = &rend->progs.blit;
     }
 
     gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
@@ -752,7 +752,7 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    prog = &rend->progs.blit_proj;
+    prog = &rend->progs.blit;
     GL(glUseProgram(prog->prog));
 
     GL(glEnable(GL_CULL_FACE));
@@ -1236,7 +1236,7 @@ renderer_t* render_gl_create(void)
 
     // Create all the shaders programs.
     init_prog(&rend->progs.points, "asset://shaders/points.glsl");
-    init_prog(&rend->progs.blit_proj, "asset://shaders/blit.glsl");
+    init_prog(&rend->progs.blit, "asset://shaders/blit.glsl");
     init_prog(&rend->progs.blit_tag, "asset://shaders/blit_tag.glsl");
     init_prog(&rend->progs.planet, "asset://shaders/planet.glsl");
     init_prog(&rend->progs.atmosphere, "asset://shaders/atmosphere.glsl");
