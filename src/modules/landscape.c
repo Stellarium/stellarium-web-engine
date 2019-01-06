@@ -108,12 +108,18 @@ static double get_global_brightness(void)
  */
 static void render_fog(const painter_t *painter_)
 {
-    int pix, order = 0, split = 4;
+    int pix, order = 1, split = 2;
     const double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    double theta, phi;
     painter_t painter = *painter_;
     projection_t proj;
     painter.flags |= PAINTER_FOG_SHADER;
-    for (pix = 0; pix < 12; pix++) {
+    // Note: we could try to optimize further by doing a breath first
+    // iteration to skip level 0 tiles.
+    for (pix = 0; pix < 12 * 4; pix++) {
+        healpix_pix2ang(1 << order, pix, &theta, &phi);
+        // Skip tiles that will be totally transparent anyway.
+        if (fabs(theta - M_PI / 2) > 20 * DD2R) continue;
         if (painter_is_tile_clipped(&painter, FRAME_OBSERVED, order, pix, true))
             continue;
         projection_init_healpix(&proj, 1 << order, pix, true, true);
