@@ -510,7 +510,7 @@ static void quad(renderer_t          *rend_,
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    int n, i, j, k;
+    int n, i, j, k, ofs;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
     double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4];
@@ -524,25 +524,32 @@ static void quad(renderer_t          *rend_,
     if (!tex) tex = rend->white_tex;
     n = grid_size + 1;
 
-    item = calloc(1, sizeof(*item));
-
     if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
+        item = calloc(1, sizeof(*item));
         item->type = ITEM_ATMOSPHERE;
         gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, n * n * 4);
+        gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
         item->prog = &rend->progs.atmosphere;
         memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
         memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
     } else if (painter->flags & PAINTER_FOG_SHADER) {
-        item->type = ITEM_FOG;
-        gl_buf_alloc(&item->buf, &FOG_BUF, n * n * 4);
-        item->prog = &rend->progs.fog;
+        item = get_item(rend, ITEM_FOG, n * n * 6, tex);
+        if (!item) {
+            item = calloc(1, sizeof(*item));
+            item->type = ITEM_FOG;
+            gl_buf_alloc(&item->buf, &FOG_BUF, 256);
+            gl_buf_alloc(&item->indices, &INDICES_BUF, 256 * 6);
+            item->prog = &rend->progs.fog;
+        }
     } else {
+        item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXTURE;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n * 4);
+        gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
         item->prog = &rend->progs.blit;
     }
 
-    gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
+    ofs = item->buf.nb;
     item->tex = tex;
     item->tex->ref++;
     vec4_copy(painter->color, item->color);
@@ -592,7 +599,7 @@ static void quad(renderer_t          *rend_,
     for (j = 0; j < grid_size; j++) {
         for (k = 0; k < 6; k++) {
             gl_buf_1i(&item->indices, -1, 0,
-                      (INDICES[k][1] + i) * n + (INDICES[k][0] + j));
+                      ofs + (INDICES[k][1] + i) * n + (INDICES[k][0] + j));
             gl_buf_next(&item->indices);
         }
     }
