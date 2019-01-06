@@ -149,16 +149,20 @@ static bool constellation_is_visible(const painter_t *painter,
     bool ret;
     double (*pos)[4];
     const obj_t *s;
+    bool below = true; // Set if all stars are below horizon.
 
     if (con->error) return false;
     pos = calloc(con->count, sizeof(*pos));
     for (i = 0; i < con->count; i++) {
         s = con->stars[i];
         obj_get_pos_observed(s, painter->obs, pos[i]);
+        if (pos[i][2] > 0) below = false;
         mat3_mul_vec3(painter->obs->ro2v, pos[i], pos[i]);
         project(painter->proj, PROJ_TO_NDC_SPACE, 4, pos[i], pos[i]);
     }
     ret = !is_clipped(con->count, pos);
+    if (ret && below && (painter->flags & PAINTER_HIDE_BELOW_HORIZON))
+        ret = false;
     free(pos);
     return ret;
 }
