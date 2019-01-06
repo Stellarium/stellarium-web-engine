@@ -57,7 +57,7 @@ typedef struct gl_buf_info
         int         size;
         int         normalized;
         int         ofs;
-    } attrs[];
+    } attrs[16];
 
 } gl_buf_info_t;
 
