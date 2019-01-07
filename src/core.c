@@ -372,6 +372,9 @@ static int core_update_direction(double dt)
     if (core->target.lock && !core->target.move_to_lock) {
         obj_get_pos_observed(core->target.lock, core->observer, v);
         eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
+        // Notify the changes.
+        obj_changed(&core->observer->obj, "altitude");
+        obj_changed(&core->observer->obj, "azimuth");
     }
 
     return 1;
