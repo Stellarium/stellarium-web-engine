@@ -164,13 +164,18 @@ constellation_infos_t *skyculture_parse_constellations(
 
     ret = calloc(nb + 1, sizeof(*ret));
     nb = 0;
-    for (line = strtok_r(data, "\n", &tmp); line;
-          line = strtok_r(NULL, "\n", &tmp)) {
+    for (line = strtok_r(data, "\r\n", &tmp); line;
+          line = strtok_r(NULL, "\r\n", &tmp)) {
         if (*line == '\0') continue;
         if (*line == '#') continue;
         cons = &ret[nb];
-        strcpy(cons->id, strtok(line, "|"));
-        strcpy(cons->name, strtok(NULL, "|"));
+        tok = strtok(line, "|");
+        if (!tok) goto error;
+        if (strlen(tok) > sizeof(cons->id)) goto error;
+        strcpy(cons->id, tok);
+        tok = strtok(NULL, "|");
+        if (!tok) goto error;
+        strcpy(cons->name, tok);
         trim_right_spaces(cons->name);
         while ((tok = strtok(NULL, " -"))) {
             // Check if the last separator was a '-'.
@@ -191,4 +196,10 @@ constellation_infos_t *skyculture_parse_constellations(
 
     if (edges) parse_edges(edges, ret);
     return ret;
+
+error:
+    LOG_W("Could not parse constellations data");
+    *nb_cst = 0;
+    free(data);
+    return NULL;
 }
