@@ -199,6 +199,7 @@ void labels_add(const char *text, const double pos[2],
     assert(color);
     label_t *label;
 
+    if (!text || !*text) return;
     if (    g_labels->skip_selection && oid && core->selection &&
             oid == core->selection->oid) {
         return;
