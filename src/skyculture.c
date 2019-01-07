@@ -203,3 +203,46 @@ error:
     free(data);
     return NULL;
 }
+
+constellation_infos_t *skyculture_parse_stellarium_constellations(
+        const char *data, int *nb_out)
+{
+    int nb = 0, nb_segs, i, s1, s2;
+    char line[512], *tok;
+    constellation_infos_t *ret, *cons;
+
+    // Count the number of lines in the file.
+    for (tok = data; *tok; tok = strchr(tok, '\n') + 1) nb++;
+    ret = calloc(nb + 1, sizeof(*ret));
+
+    nb = 0;
+    while (iter_lines(&data, line, sizeof(line))) {
+        if (*line == '\0') continue;
+        if (*line == '#') continue;
+        cons = &ret[nb];
+        tok = strtok(line, " ");
+        if (!tok) goto error;
+        if (strlen(tok) > sizeof(cons->id)) goto error;
+        strcpy(cons->id, tok);
+        tok = strtok(NULL, " ");
+        if (!tok) goto error;
+        nb_segs = atoi(tok);
+        for (i = 0; i < nb_segs; i++) {
+            tok = strtok(NULL, " "); if (!tok) goto error;
+            s1 = atoi(tok);
+            tok = strtok(NULL, " "); if (!tok) goto error;
+            s2 = atoi(tok);
+            cons->lines[i][0] = s1;
+            cons->lines[i][1] = s2;
+            cons->nb_lines++;
+        }
+        nb++;
+    }
+    *nb_out = nb;
+    return ret;
+
+error:
+    LOG_W("Could not parse constellations data");
+    *nb_out = 0;
+    return NULL;
+}

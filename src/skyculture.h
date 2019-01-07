@@ -47,4 +47,11 @@ int skyculture_parse_names(const char *data, char *(*names)[2]);
 constellation_infos_t *skyculture_parse_constellations(
         const char *consts, const char *edges, int *nb);
 
+/*
+ * Function: skyculture_parse_stellarium_constellations
+ * Parse a skyculture constellation file in stellarium format.
+ */
+constellation_infos_t *skyculture_parse_stellarium_constellations(
+        const char *consts, int *nb);
+
 #endif // SKYCULTURE_H
