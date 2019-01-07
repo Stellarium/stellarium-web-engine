@@ -84,7 +84,7 @@ static void skyculture_activate(skyculture_t *cult)
     }
 
     // Add all the names.
-    for (i = 0; cult->names[i][0]; i++) {
+    for (i = 0; cult->names && cult->names[i][0]; i++) {
         star = obj_get(NULL, cult->names[i][0], 0);
         if (!star) {
             nb_skipped++;
@@ -219,9 +219,11 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         data = asset_get_data(path , NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_NAMES;
-        nb = skyculture_parse_names(data, NULL);
-        cult->names = calloc(nb + 1, sizeof(*cult->names));
-        skyculture_parse_names(data, cult->names);
+        if (data) {
+            nb = skyculture_parse_names(data, NULL);
+            cult->names = calloc(nb + 1, sizeof(*cult->names));
+            skyculture_parse_names(data, cult->names);
+        }
     }
 
     if (!(cult->parsed & SK_CONSTELLATIONS)) {
@@ -231,9 +233,11 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         sprintf(path, "%s/%s", cult->uri, "edges.txt");
         edges = asset_get_data2(path, ASSET_ACCEPT_404, NULL, &code);
         if (!code) return 0;
-        cult->parsed |= SK_CONSTELLATIONS;
-        cult->constellations = skyculture_parse_constellations(
-                constellations, edges, &cult->nb_constellations);
+        if (constellations) {
+            cult->parsed |= SK_CONSTELLATIONS;
+            cult->constellations = skyculture_parse_constellations(
+                    constellations, edges, &cult->nb_constellations);
+        }
     }
 
     if (!(cult->parsed & SK_DESCRIPTION)) {
