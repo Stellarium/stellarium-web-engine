@@ -45,7 +45,20 @@ int skyculture_parse_names(const char *data, char *(*names)[2]);
  * Parse a skyculture constellation file.
  */
 constellation_infos_t *skyculture_parse_constellations(
-        const char *consts, const char *edges, int *nb);
+        const char *consts, int *nb);
+
+/*
+ * Function: skyculture_parse_edge
+ * Parse a constellation edge file.
+ *
+ * Parameters:
+ *   data   - Text data in the edge file format.
+ *   infos  - Constellation info to update with the edge data.
+ *
+ * Return:
+ *   The number of edges parsed, or -1 in case of error.
+ */
+int skyculture_parse_edges(const char *data, constellation_infos_t *infos);
 
 /*
  * Function: skyculture_parse_stellarium_constellations

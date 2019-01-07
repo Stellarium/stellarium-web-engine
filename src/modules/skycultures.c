@@ -23,6 +23,7 @@ enum {
     SK_CONSTELLATIONS = 1 << 2,
     SK_IMGS           = 1 << 3,
     SK_DESCRIPTION    = 1 << 4,
+    SK_EDGES          = 1 << 5,
 };
 
 /*
@@ -230,14 +231,20 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         sprintf(path, "%s/%s", cult->uri, "constellations.txt");
         constellations = asset_get_data(path, NULL, &code);
         if (!code) return 0;
+        cult->parsed |= SK_CONSTELLATIONS;
+        if (constellations) {
+            cult->constellations = skyculture_parse_constellations(
+                    constellations, &cult->nb_constellations);
+        }
+    }
+
+    if (cult->constellations && !(cult->parsed & SK_EDGES)) {
         sprintf(path, "%s/%s", cult->uri, "edges.txt");
         edges = asset_get_data2(path, ASSET_ACCEPT_404, NULL, &code);
         if (!code) return 0;
-        if (constellations) {
-            cult->parsed |= SK_CONSTELLATIONS;
-            cult->constellations = skyculture_parse_constellations(
-                    constellations, edges, &cult->nb_constellations);
-        }
+        cult->parsed |= SK_EDGES;
+        if (!edges) return 0;
+        skyculture_parse_edges(edges, cult->constellations);
     }
 
     if (!(cult->parsed & SK_DESCRIPTION)) {

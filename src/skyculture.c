@@ -102,7 +102,18 @@ static constellation_infos_t *get_constellation(
     return NULL;
 }
 
-static void parse_edges(const char *edges, constellation_infos_t *csts)
+/*
+ * Function: skyculture_parse_edge
+ * Parse a constellation edge file.
+ *
+ * Parameters:
+ *   data   - Text data in the edge file format.
+ *   infos  - Constellation info to update with the edge data.
+ *
+ * Return:
+ *   The number of edges parsed, or -1 in case of error.
+ */
+int skyculture_parse_edges(const char *edges, constellation_infos_t *csts)
 {
     constellation_infos_t *info = NULL;
     const char *line;
@@ -146,11 +157,12 @@ static void parse_edges(const char *edges, constellation_infos_t *csts)
             info->nb_edges++;
         }
     }
+    return info->nb_edges;
 }
 
 
 constellation_infos_t *skyculture_parse_constellations(
-        const char *consts, const char *edges, int *nb_cst)
+        const char *consts, int *nb_cst)
 {
     char *data, *line, *tmp = NULL, *tok;
     bool linked;
@@ -193,8 +205,6 @@ constellation_infos_t *skyculture_parse_constellations(
     }
     free(data);
     *nb_cst = nb;
-
-    if (edges) parse_edges(edges, ret);
     return ret;
 
 error:
