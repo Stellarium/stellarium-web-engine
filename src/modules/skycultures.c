@@ -24,6 +24,10 @@ enum {
     SK_IMGS           = 1 << 3,
     SK_DESCRIPTION    = 1 << 4,
     SK_EDGES          = 1 << 5,
+
+    SK_CONSTELLATIONS_STEL  = 1 << 6,
+    SK_NAMES_STEL     = 1 << 7,
+    SK_IMGS_STEL      = 1 << 8,
 };
 
 /*
@@ -201,6 +205,45 @@ static json_value *parse_imgs(const char *data, const char *uri)
 }
 
 /*
+ * Convert an array of constellation_art_t values into a json in the same
+ * format as recognised by the constellation module, that is an array of
+ * dict similar to this one:
+ *
+ * {
+ *   "anchors": "198 215 3881 337 136 3092 224 428 9640",
+ *   "id": "And",
+ *   "img": "And.webp",
+ *   "type": "constellation"
+ *   "uv_in_pixel": true,
+ *   "base_path": "asset://skycultures/western/img"
+ *  }
+ *
+ */
+static json_value *make_imgs_json(
+        const constellation_art_t *imgs, const char *uri)
+{
+    json_value *values, *v;
+    constellation_art_t *a;
+    char anchors[1024];
+    values = json_array_new(0);
+    for (a = imgs; *a->cst; a++) {
+        v = json_object_new(0);
+        json_object_push(v, "id", json_string_new(a->cst));
+        json_object_push(v, "img", json_string_new(a->img));
+        json_object_push(v, "type", json_string_new("constellation"));
+        json_object_push(v, "base_path", json_string_new(uri));
+        sprintf(anchors, "%f %f %d %f %f %d %f %f %d",
+            a->anchors[0].uv[0], a->anchors[0].uv[1], a->anchors[0].hip,
+            a->anchors[1].uv[0], a->anchors[1].uv[1], a->anchors[1].hip,
+            a->anchors[2].uv[0], a->anchors[2].uv[1], a->anchors[2].hip);
+        json_object_push(v, "anchors", json_string_new(anchors));
+        json_object_push(v, "uv_in_pixel", json_boolean_new(a->uv_in_pixel));
+        json_array_push(values, v);
+    }
+    return values;
+}
+
+/*
  * Function: get_file
  * Convenience function to get a data file.
  *
@@ -226,6 +269,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
     skyculture_t *cult = (skyculture_t*)obj;
     const char *data;
     int nb;
+    constellation_art_t *arts;
 
     if (get_file(cult, SK_INFO, "info.ini", &data, 0)) {
         ini_parse_string(data, info_ini_handler, cult);
@@ -255,6 +299,36 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
     if (get_file(cult, SK_IMGS, "imgs/index.json", &data, ASSET_ACCEPT_404)) {
         cult->imgs = parse_imgs(data, cult->uri);
+        if (cult->active) skyculture_activate(cult);
+    }
+
+
+    // Fallback support for stellarium format.
+    // XXX: This should be the default, and we should remove the
+    // original format.
+    if ((cult->parsed & SK_CONSTELLATIONS) && !cult->constellations &&
+         get_file(cult, SK_CONSTELLATIONS_STEL, "constellationship.fab",
+                  &data, 0))
+    {
+        cult->constellations = skyculture_parse_stellarium_constellations(
+                data, &cult->nb_constellations);
+    }
+
+    if ((cult->parsed & SK_CONSTELLATIONS_STEL) && cult->constellations &&
+         get_file(cult, SK_NAMES_STEL, "constellation_names.eng.fab",
+                  &data, 0))
+    {
+        skyculture_parse_stellarium_constellations_names(
+                data, cult->constellations);
+    }
+
+    if ((cult->parsed & SK_CONSTELLATIONS_STEL) && cult->constellations &&
+            get_file(cult, SK_IMGS_STEL, "constellationsart.fab",
+                     &data, ASSET_ACCEPT_404))
+    {
+        arts = skyculture_parse_stellarium_constellations_art(data, NULL);
+        if (arts) cult->imgs = make_imgs_json(arts, cult->uri);
+        free(arts);
         if (cult->active) skyculture_activate(cult);
     }
 
