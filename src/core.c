@@ -660,8 +660,7 @@ void core_on_zoom(double k, double x, double y)
  *
  * Parameters:
  *   mag       - The observed magnitude.
- *   radius    - Output radius (rad).  Note: the fov is already taken into
- *               account in the output.
+ *   radius    - Output radius in window pixels.
  *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
  *               set to NULL.
  */

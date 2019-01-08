@@ -323,8 +323,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
  *
  * Parameters:
  *   mag       - The visual magnitude.
- *   radius    - Output radius (rad).  Note: the fov is already taken into
- *               account in the output.
+ *   radius    - Output radius in window pixels.
  *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
  *               set to NULL.
  */
