@@ -19,6 +19,17 @@ static char *unquote(char *str)
     return str;
 }
 
+static int count_lines(const char *str)
+{
+    int nb = 0;
+    while (str) {
+        nb++;
+        str = strchr(str, '\n');
+        if (str) str++;
+    }
+    return nb;
+}
+
 /*
  * Function that iters a txt buffer line by line, taking care of the case
  * when the file doesn't end with a \n.
@@ -303,4 +314,47 @@ int skyculture_parse_stellarium_constellations_names(
 error:
     LOG_W("Could not parse constellation names");
     return -1;
+}
+
+constellation_art_t *skyculture_parse_stellarium_constellations_art(
+        const char *data_, int *nb_out)
+{
+    int i, nb = 0;
+    char *data, *line, *tmp = NULL, *tok;
+
+    assert(data_);
+    data = strdup(data_);
+    constellation_art_t *ret, *art;
+
+    ret = calloc(count_lines(data) + 1, sizeof(*ret));
+
+    for (line = strtok_r(data, "\r\n", &tmp); line;
+         line = strtok_r(NULL, "\r\n", &tmp))
+    {
+        if (*line == '\0') continue;
+        if (*line == '#') continue;
+        art = &ret[nb];
+        art->uv_in_pixel = true;
+        tok = strtok(line, " "); if (!tok) goto error;
+        strncpy(art->cst, tok, sizeof(art->cst));
+        tok = strtok(NULL, " "); if (!tok) goto error;
+        strncpy(art->img, tok, sizeof(art->img));
+        for (i = 0; i < 3; i++) {
+            tok = strtok(NULL, " "); if (!tok) goto error;
+            art->anchors[i].uv[0] = atoi(tok);
+            tok = strtok(NULL, " "); if (!tok) goto error;
+            art->anchors[i].uv[1] = atoi(tok);
+            tok = strtok(NULL, " "); if (!tok) goto error;
+            art->anchors[i].hip = atoi(tok);
+        }
+        nb++;
+    }
+    if (nb_out) *nb_out = nb;
+    return ret;
+
+error:
+    LOG_W("Cannot parse constellationart file");
+    free(ret);
+    *nb_out = 0;
+    return NULL;
 }

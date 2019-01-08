@@ -19,6 +19,8 @@
 #ifndef SKYCULTURE_H
 #define SKYCULTURE_H
 
+#include <stdbool.h>
+
 /*
  * Type: constellation_infos_t
  * Information about a given constellation.
@@ -32,6 +34,21 @@ typedef struct constellation_infos
     double edges[64][2][2]; // Ra/dec B1875 boundaries polygon.
     int nb_edges;
 } constellation_infos_t;
+
+/*
+ * Type: constellation_art_t
+ * Information about a constellation image.
+ */
+typedef struct constellation_art
+{
+    char cst[8];    // Id of the constellation.
+    char img[128];  // Name of the image file.
+    bool uv_in_pixel; // Set to true if anchors uv are in pixel.
+    struct {
+        double  uv[2]; // Texture UV position.
+        int     hip;   // Star HIP.
+    } anchors[3];
+} constellation_art_t;
 
 
 /*
@@ -80,5 +97,8 @@ constellation_infos_t *skyculture_parse_stellarium_constellations(
  */
 int skyculture_parse_stellarium_constellations_names(
         const char *data, constellation_infos_t *infos);
+
+constellation_art_t *skyculture_parse_stellarium_constellations_art(
+        const char *data, int *nb);
 
 #endif // SKYCULTURE_H
