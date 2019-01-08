@@ -23,7 +23,7 @@
  */
 
 enum {
-    SOURCE_JSON = 0,
+    SOURCE_DIR = 0,
     SOURCE_HIPSLIST,
     SOURCE_HIPS,
 };
@@ -68,10 +68,10 @@ static int add_data_source(obj_t *obj, const char *url, const char *type,
     return 0;
 }
 
-static const char *get_data(const source_t *source, const char *file)
+static const char *get_data(const source_t *source, const char *file,
+                            int extra_flags, int *code)
 {
     char url[1024];
-    int code;
     const char *data;
 
     if (    source->release_date &&
@@ -83,8 +83,7 @@ static const char *get_data(const source_t *source, const char *file)
         sprintf(url, "%s/%s", source->url, file);
     }
 
-    data = asset_get_data(url, NULL, &code);
-    if (!code) return NULL;
+    data = asset_get_data2(url, extra_flags, NULL, code);
     return data;
 }
 
@@ -139,26 +138,58 @@ static int hips_property_handler(void* user, const char* section,
     return 0;
 }
 
+static int on_sub_dir(void *user, const char *path, int is_dir)
+{
+    if (!is_dir) return 0;
+    obj_add_data_source(NULL, path, NULL, NULL);
+    return 0;
+}
+
+static int process_dir(source_t *source)
+{
+    const char *data;
+    int code;
+
+    // First check if there is an index.json file, if so we use it.
+    data = get_data(source, "index.json", ASSET_ACCEPT_404, &code);
+    if (!code) return 0;
+    if (data) {
+        parse_index(source->url, data);
+        release_data(source, "index.json");
+        return 1;
+    }
+    // Check for a skyculture dir.
+    data = get_data(source, "constellationship.fab", ASSET_ACCEPT_404, &code);
+    if (!code) return 0;
+    if (data) {
+        obj_add_data_source(NULL, source->url, "skyculture", NULL);
+        return 1;
+    }
+    // Finally try to iter for subdirectories.
+    if (strncmp(source->url, "http", 4) != 0) {
+        sys_list_dir(source->url, NULL, on_sub_dir);
+    }
+    return 1;
+}
+
 static int process_source(sources_t *sources, source_t *source)
 {
     const char *data;
     json_value *args;
+    int code;
 
     switch (source->type) {
-    case SOURCE_JSON:
-        data = get_data(source, "index.json");
-        if (!data) return 0;
-        parse_index(source->url, data);
-        release_data(source, "index.json");
+    case SOURCE_DIR:
+        if (!process_dir(source)) return 0;
         break;
     case SOURCE_HIPSLIST:
-        data = get_data(source, "hipslist");
+        data = get_data(source, "hipslist", 0, &code);
         if (!data) return 0;
         hips_parse_hipslist(data, sources, on_hips);
         release_data(source, "hipslist");
         break;
     case SOURCE_HIPS:
-        data = get_data(source, "properties");
+        data = get_data(source, "properties", 0, &code);
         if (!data) return 0;
         args = json_object_new(0);
         ini_parse_string(data, hips_property_handler, args);
