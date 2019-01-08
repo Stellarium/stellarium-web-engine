@@ -10,6 +10,15 @@
 #include "swe.h"
 #include <regex.h>
 
+// In-place remove '"' of a string.
+static char *unquote(char *str)
+{
+    if (str[0] == '"') str++;
+    if (strlen(str) && str[strlen(str) - 1] == '"')
+        str[strlen(str) - 1] = '\0';
+    return str;
+}
+
 /*
  * Function that iters a txt buffer line by line, taking care of the case
  * when the file doesn't end with a \n.
@@ -26,6 +35,7 @@ static bool iter_lines(const char **str, char *line, int size)
     if (len >= size) len = size - 1;
     strncpy(line, *str, len);
     line[len] = '\0';
+    if (len && line[len - 1] == '\r') line[len - 1] = '\0';
     *str = end;
     if (**str == '\n') (*str)++;
     return true;
@@ -255,4 +265,42 @@ error:
     LOG_W("Could not parse constellations data");
     *nb_out = 0;
     return NULL;
+}
+
+/*
+ * Function: skyculture_parse_stellarium_constellations_names
+ * Parse a 'constellation_names.fab' file.
+ *
+ * Parameters:
+ *   data   - Text data in the fab file format.
+ *   infos  - Constellation info to update with the names.
+ *
+ * Return:
+ *   The number of names parsed, or -1 in case of error.
+ */
+int skyculture_parse_stellarium_constellations_names(
+        const char *data, constellation_infos_t *infos)
+{
+    char line[512], *tok;
+    constellation_infos_t *cons = NULL;
+    while (iter_lines(&data, line, sizeof(line))) {
+        if (*line == '\0') continue;
+        if (*line == '#') continue;
+        tok = strtok(line, "\t");
+        if (!tok) goto error;
+        cons = get_constellation(infos, tok);
+        if (!cons) {
+            LOG_W("Can not find constellation '%s'", tok);
+            continue;
+        }
+        tok = strtok(NULL, "\t");
+        if (!tok) goto error;
+        tok = unquote(tok);
+        strncpy(cons->name, tok, sizeof(cons->name));
+    }
+    return 0;
+
+error:
+    LOG_W("Could not parse constellation names");
+    return -1;
 }

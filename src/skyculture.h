@@ -67,4 +67,18 @@ int skyculture_parse_edges(const char *data, constellation_infos_t *infos);
 constellation_infos_t *skyculture_parse_stellarium_constellations(
         const char *consts, int *nb);
 
+/*
+ * Function: skyculture_parse_stellarium_constellations_names
+ * Parse a 'constellation_names.fab' file.
+ *
+ * Parameters:
+ *   data   - Text data in the fab file format.
+ *   infos  - Constellation info to update with the names.
+ *
+ * Return:
+ *   The number of names parsed, or -1 in case of error.
+ */
+int skyculture_parse_stellarium_constellations_names(
+        const char *data, constellation_infos_t *infos);
+
 #endif // SKYCULTURE_H
