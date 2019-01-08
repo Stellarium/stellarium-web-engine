@@ -50,3 +50,11 @@ int64_t json_get_attr_i(json_value *val, const char *attr,
     if (v) return v->u.integer;
     return default_value;
 }
+
+bool json_get_attr_b(json_value *val, const char *attr, bool default_value)
+{
+    json_value *v;
+    v = json_get_attr(val, attr, json_boolean);
+    if (v) return v->u.boolean;
+    return default_value;
+}
