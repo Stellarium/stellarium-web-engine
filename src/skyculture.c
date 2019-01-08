@@ -55,13 +55,12 @@ static bool iter_lines(const char **str, char *line, int size)
 int skyculture_parse_names(const char *data, char *(*names)[2])
 {
     char line[512], id[32], name[128];
-    const char *tmp;
     regex_t reg;
     regmatch_t m[4];
     int r, i = 0, hd, hip, nb = 0;
 
     // Count the number of lines in the file.
-    for (tmp = data; *tmp; tmp = strchr(tmp, '\n') + 1) nb++;
+    nb = count_lines(data);
     if (!names) return nb;
 
     regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
@@ -191,12 +190,7 @@ constellation_infos_t *skyculture_parse_constellations(
     constellation_infos_t *ret, *cons;
 
     data = strdup(consts);
-
-    // Count the number of lines in the file.
-    for (line = data; *line; line = strchr(line, '\n') + 1) nb++;
-
-    ret = calloc(nb + 1, sizeof(*ret));
-    nb = 0;
+    ret = calloc(count_lines(consts) + 1, sizeof(*ret));
     for (line = strtok_r(data, "\r\n", &tmp); line;
           line = strtok_r(NULL, "\r\n", &tmp)) {
         if (*line == '\0') continue;
@@ -243,10 +237,8 @@ constellation_infos_t *skyculture_parse_stellarium_constellations(
     constellation_infos_t *ret, *cons;
 
     // Count the number of lines in the file.
-    for (tok = data; *tok; tok = strchr(tok, '\n') + 1) nb++;
-    ret = calloc(nb + 1, sizeof(*ret));
+    ret = calloc(count_lines(data) + 1, sizeof(*ret));
 
-    nb = 0;
     while (iter_lines(&data, line, sizeof(line))) {
         if (*line == '\0') continue;
         if (*line == '#') continue;
