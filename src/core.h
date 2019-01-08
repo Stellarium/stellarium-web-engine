@@ -329,6 +329,23 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
  */
 void core_get_point_for_mag(double mag, double *radius, double *luminance);
 
+/*
+ * Function: core_get_apparent_angle_for_point
+ * Get angular radius of a round object from it's pixel radius on screen.
+ *
+ * For example this can be used after core_get_point_for_mag to estimate the
+ * angular size a circle should have to exactly fit the object.
+ *
+ * Parameters:
+ *   proj   - The projection used.
+ *   r      - Radius on screen in window pixels.
+ *
+ * Return:
+ *   Angular radius in radian.  This is the physical radius, not scaled by
+ *   the fov.
+ *
+ * XXX: make this a function of the projection directly?
+ */
 double core_get_apparent_angle_for_point(const projection_t *proj, double r);
 
 
