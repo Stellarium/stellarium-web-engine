@@ -24,6 +24,11 @@ typedef struct constellation {
     // Texture and associated projection matrix.
     texture_t   *img;
     double      mat[3][3];
+    // Set to true if the img matrix need to be rescaled to the image size.
+    // This happens if we get image anchors in pixel size before we know
+    // the size of the image.
+    bool        img_need_rescale;
+
     int         error; // Set if we couldn't parse the stars.
 } constellation_t;
 
@@ -134,6 +139,8 @@ static json_value *constellation_set_image(
 
     if (parse_anchors(anchors, cons->mat) != 0) goto error;
     cons->img = texture_from_url(join_paths(base_path, img), TF_LAZY_LOAD);
+    if (json_get_attr_b(args, "uv_in_pixel", false))
+        cons->img_need_rescale = true;
     assert(cons->img);
     return NULL;
 
@@ -212,6 +219,14 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_copy(pos, obj->pvo[0]);
     obj->pvo[0][3] = 0; // At infinity.
     vec4_set(obj->pvo[1], 0, 0, 0, 0);
+
+    // Rescale the image matrix once we got the texture if the anchors
+    // coordinagtes were in pixels.
+    if (con->img_need_rescale && con->img->w) {
+        mat3_iscale(con->mat, con->img->w, con->img->h, 1.0);
+        con->img_need_rescale = false;
+    }
+
 end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
@@ -399,6 +414,7 @@ static int render_img(const constellation_t *con, const painter_t *painter)
     painter_t painter2 = *painter;
     if (!painter2.color[3]) return 0;
     if (!con->img || !texture_load(con->img, NULL)) return 0;
+    if (con->img_need_rescale) return 0;
 
     painter2.flags |= PAINTER_ADD;
     vec3_set(painter2.color, 1, 1, 1);
