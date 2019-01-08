@@ -203,13 +203,13 @@ static json_value *parse_imgs(const char *data, const char *uri)
 static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
-    const char *constellations, *edges, *imgs, *data;
+    const char *data;
     char path[1024];
     int nb, code;
 
     if (!(cult->parsed & SK_INFO)) {
         sprintf(path, "%s/%s", cult->uri, "info.ini");
-        data = asset_get_data(path, NULL, &code);
+        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_INFO;
         ini_parse_string(data, info_ini_handler, cult);
@@ -217,7 +217,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
     if (!(cult->parsed & SK_NAMES)) {
         sprintf(path, "%s/%s", cult->uri, "names.txt");
-        data = asset_get_data(path , NULL, &code);
+        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_NAMES;
         if (data) {
@@ -229,27 +229,27 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
     if (!(cult->parsed & SK_CONSTELLATIONS)) {
         sprintf(path, "%s/%s", cult->uri, "constellations.txt");
-        constellations = asset_get_data(path, NULL, &code);
+        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_CONSTELLATIONS;
-        if (constellations) {
-            cult->constellations = skyculture_parse_constellations(
-                    constellations, &cult->nb_constellations);
-        }
+        if (!data) return 0;
+        cult->constellations = skyculture_parse_constellations(
+                data, &cult->nb_constellations);
     }
 
     if (cult->constellations && !(cult->parsed & SK_EDGES)) {
         sprintf(path, "%s/%s", cult->uri, "edges.txt");
-        edges = asset_get_data2(path, ASSET_ACCEPT_404, NULL, &code);
+        data = asset_get_data2(path, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
+                               NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_EDGES;
-        if (!edges) return 0;
-        skyculture_parse_edges(edges, cult->constellations);
+        if (!data) return 0;
+        skyculture_parse_edges(data, cult->constellations);
     }
 
     if (!(cult->parsed & SK_DESCRIPTION)) {
         sprintf(path, "%s/%s", cult->uri, "description.en.html");
-        data = asset_get_data(path, NULL, &code);
+        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_DESCRIPTION;
         if (!data) return 0;
@@ -260,11 +260,12 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
     if (!(cult->parsed & SK_IMGS)) {
         sprintf(path, "%s/%s", cult->uri, "imgs/index.json");
-        imgs = asset_get_data2(path, ASSET_ACCEPT_404, NULL, &code);
+        data = asset_get_data2(path, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
+                               NULL, &code);
         if (!code) return 0;
         cult->parsed |= SK_IMGS;
-        if (!imgs) return 0;
-        cult->imgs = parse_imgs(imgs, cult->uri);
+        if (!data) return 0;
+        cult->imgs = parse_imgs(data, cult->uri);
         if (cult->active) skyculture_activate(cult);
     }
 
