@@ -392,6 +392,20 @@ static void compute_hint_transformation(
     win_size[1] = 2 * vec2_norm(b);
 }
 
+
+static void dso_get_2d_ellipse(const obj_t *obj, const painter_t *painter,
+                               double win_pos[2], double win_size[2],
+                               double* win_angle)
+{
+    const dso_t *dso = (dso_t*)obj;
+    const dso_data_t *s = &dso->data;
+
+    compute_hint_transformation(painter, s->ra, s->de, s->angle,
+            s->smax, s->smin, win_pos, win_size, win_angle);
+    win_size[0] /= 2.0;
+    win_size[1] /= 2.0;
+}
+
 /*
  * Compute the position to put the label next to an ellipse
  */
@@ -694,6 +708,7 @@ static obj_klass_t dso_klass = {
     .render = dso_render,
     .get_designations = dso_get_designations,
     .render_pointer = dso_render_pointer,
+    .get_2d_ellipse = dso_get_2d_ellipse,
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),

@@ -842,6 +842,43 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])
     vec4_copy(p, pos);
 }
 
+void obj_get_2d_ellipse(obj_t *obj, const painter_t *painter,
+                        double win_pos[2], double win_size[2],
+                        double* win_angle)
+{
+    double p[4], p2[4];
+    double s, luminance, radius;
+
+    if (obj->klass->get_2d_ellipse) {
+        obj->klass->get_2d_ellipse(obj, painter,
+                                   win_pos, win_size, win_angle);
+        return;
+    }
+
+    // Fall back to generic version
+
+    // Ellipse center
+    obj_get_pos_icrs(obj, painter->obs, p);
+    vec3_normalize(p, p);
+    convert_frame(painter->obs, FRAME_ICRF, FRAME_VIEW, true, p, p2);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p2, win_pos);
+
+    // Empirical formula to compute the pointer size.
+    core_get_point_for_mag(obj->vmag, &s, &luminance);
+    s *= 2;
+
+    if (obj_has_attr(obj, "radius")) {
+        obj_get_attr(obj, "radius", "f", &radius);
+        radius = radius / 2.0 * painter->proj->window_size[0] /
+                painter->proj->scaling[0];
+        s = max(s, radius);
+    }
+
+    win_size[0] = s;
+    win_size[1] = s;
+    *win_angle = 0;
+}
+
 /******** TESTS ***********************************************************/
 
 #if COMPILE_TESTS
