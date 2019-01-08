@@ -82,6 +82,18 @@ const char *sys_translate(const char *domain, const char *str);
 char *sys_render_text(const char *txt, float height, int *w, int *h);
 
 /*
+ * Function: sys_list_dir
+ * List all the files and directories in a local directory.
+ *
+ * Parameters:
+ *   dir    - A local dir.
+ *   user   - User data passed to the callback.
+ *   f      - A callback function called once per file/dir.
+ */
+int sys_list_dir(const char *dir, void *user,
+                 int (*f)(void *user, const char *path, int is_dir));
+
+/*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
  */
@@ -96,6 +108,8 @@ typedef struct {
     const char *(*translate)(void *user, const char *domain, const char *str);
     char *(*render_text)(void *user, const char *txt,
                          float height, int *w, int *h);
+    int (*list_dir)(void *user, const char *dir, void *cuser,
+                    int (*f)(void *user, const char *path, int is_dir));
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

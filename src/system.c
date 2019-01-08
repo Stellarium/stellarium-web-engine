@@ -94,3 +94,10 @@ char *sys_render_text(const char *txt, float height, int *w, int *h)
         return (void*)font_render(txt, height, w, h);
     return sys_callbacks.render_text(sys_callbacks.user, txt, height, w, h);
 }
+
+int sys_list_dir(const char *dir, void *user,
+                 int (*f)(void *user, const char *path, int is_dir))
+{
+    if (!sys_callbacks.list_dir) return 0;
+    return sys_callbacks.list_dir(sys_callbacks.user, dir, user, f);
+}
