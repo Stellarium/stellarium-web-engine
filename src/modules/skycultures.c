@@ -200,71 +200,60 @@ static json_value *parse_imgs(const char *data, const char *uri)
     return value;
 }
 
+/*
+ * Function: get_file
+ * Convenience function to get a data file.
+ *
+ * This only return true the first time the file is retreive.  After that
+ * the file_id flag is set to cult->parsed and the file is never read
+ * again.
+ */
+static bool get_file(skyculture_t *cult, int file_id, const char *name,
+                     const char **data, int extra_flags)
+{
+    char path[1024];
+    int code;
+    if (cult->parsed & file_id) return false;
+    snprintf(path, sizeof(path) - 1, "%s/%s", cult->uri, name);
+    *data = asset_get_data2(path, ASSET_USED_ONCE | extra_flags, NULL, &code);
+    if (!code) return false;
+    cult->parsed |= file_id;
+    return *data;
+}
+
 static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
     const char *data;
-    char path[1024];
-    int nb, code;
+    int nb;
 
-    if (!(cult->parsed & SK_INFO)) {
-        sprintf(path, "%s/%s", cult->uri, "info.ini");
-        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_INFO;
+    if (get_file(cult, SK_INFO, "info.ini", &data, 0)) {
         ini_parse_string(data, info_ini_handler, cult);
     }
 
-    if (!(cult->parsed & SK_NAMES)) {
-        sprintf(path, "%s/%s", cult->uri, "names.txt");
-        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_NAMES;
-        if (data) {
-            nb = skyculture_parse_names(data, NULL);
-            cult->names = calloc(nb + 1, sizeof(*cult->names));
-            skyculture_parse_names(data, cult->names);
-        }
+    if (get_file(cult, SK_NAMES, "names.txt", &data, 0)) {
+        nb = skyculture_parse_names(data, NULL);
+        cult->names = calloc(nb + 1, sizeof(*cult->names));
+        skyculture_parse_names(data, cult->names);
     }
 
-    if (!(cult->parsed & SK_CONSTELLATIONS)) {
-        sprintf(path, "%s/%s", cult->uri, "constellations.txt");
-        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_CONSTELLATIONS;
-        if (!data) return 0;
+    if (get_file(cult, SK_CONSTELLATIONS, "constellations.txt", &data, 0)) {
         cult->constellations = skyculture_parse_constellations(
                 data, &cult->nb_constellations);
     }
 
-    if (cult->constellations && !(cult->parsed & SK_EDGES)) {
-        sprintf(path, "%s/%s", cult->uri, "edges.txt");
-        data = asset_get_data2(path, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
-                               NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_EDGES;
-        if (!data) return 0;
+    if (cult->constellations &&
+            get_file(cult, SK_EDGES, "edges.txt", &data, ASSET_ACCEPT_404)) {
         skyculture_parse_edges(data, cult->constellations);
     }
 
-    if (!(cult->parsed & SK_DESCRIPTION)) {
-        sprintf(path, "%s/%s", cult->uri, "description.en.html");
-        data = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_DESCRIPTION;
-        if (!data) return 0;
+    if (get_file(cult, SK_DESCRIPTION, "description.en.html", &data, 0)) {
         cult->description = strdup(data);
         obj_changed((obj_t*)cult, "description");
         return 0; // Don't load imgs just after the descriptions.
     }
 
-    if (!(cult->parsed & SK_IMGS)) {
-        sprintf(path, "%s/%s", cult->uri, "imgs/index.json");
-        data = asset_get_data2(path, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
-                               NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_IMGS;
-        if (!data) return 0;
+    if (get_file(cult, SK_IMGS, "imgs/index.json", &data, ASSET_ACCEPT_404)) {
         cult->imgs = parse_imgs(data, cult->uri);
         if (cult->active) skyculture_activate(cult);
     }
