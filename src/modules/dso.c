@@ -393,14 +393,18 @@ static void compute_hint_transformation(
 }
 
 
-static void dso_get_2d_ellipse(const obj_t *obj, const painter_t *painter,
+static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
+                               const projection_t* proj,
                                double win_pos[2], double win_size[2],
                                double* win_angle)
 {
     const dso_t *dso = (dso_t*)obj;
     const dso_data_t *s = &dso->data;
 
-    compute_hint_transformation(painter, s->ra, s->de, s->angle,
+    painter_t tmp_painter;
+    tmp_painter.obs = obs;
+    tmp_painter.proj = proj;
+    compute_hint_transformation(&tmp_painter, s->ra, s->de, s->angle,
             s->smax, s->smin, win_pos, win_size, win_angle);
     win_size[0] /= 2.0;
     win_size[1] /= 2.0;
