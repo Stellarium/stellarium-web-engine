@@ -34,8 +34,8 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
         selection->klass->render_pointer(selection, &painter);
     }
 
-    obj_get_2d_ellipse(selection, &painter, win_pos, win_size,
-                       &angle);
+    obj_get_2d_ellipse(selection, painter.obs, painter.proj,
+                       win_pos, win_size, &angle);
     r = max(win_size[0], win_size[1]);
     r += 5;
     // Draw four strokes around the object.

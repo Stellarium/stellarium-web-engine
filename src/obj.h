@@ -44,6 +44,7 @@ typedef struct _json_value json_value;
 typedef struct attribute attribute_t;
 typedef struct obj obj_t;
 typedef struct observer observer_t;
+typedef struct projection projection_t;
 typedef struct painter painter_t;
 typedef struct obj_klass obj_klass_t;
 
@@ -101,7 +102,8 @@ struct obj_klass
     int (*post_render)(const obj_t *obj, const painter_t *painter);
     obj_t* (*clone)(const obj_t *obj);
     int (*render_pointer)(const obj_t *obj, const painter_t *painter);
-    void (*get_2d_ellipse)(const obj_t *obj, const painter_t *painter,
+    void (*get_2d_ellipse)(const obj_t *obj, const observer_t *obs,
+                           const projection_t *proj,
                            double win_pos[2], double win_size[2],
                            double* win_angle);
     int (*on_mouse)(obj_t *obj, int id, int state, double x, double y);
@@ -422,12 +424,14 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
  *
  * Parameters:
  *   obj       - An object.
- *   painter   - The painter providing observer and projection.
+ *   obs       - The observer.
+ *   proj      - The projection
  *   win_pos   - The ellipse center in screen coordinates (px).
  *   win_size  - The ellipse small and large sizes in screen coordinates (px).
  *   win_angle - The ellipse angle in screen coordinates (radian).
  */
-void obj_get_2d_ellipse(obj_t *obj, const painter_t *painter,
+void obj_get_2d_ellipse(obj_t *obj, const observer_t *obs,
+                        const projection_t *proj,
                         double win_pos[2], double win_size[2],
                         double* win_angle);
 
