@@ -387,7 +387,7 @@ static int on_file_tile_loaded(const char type[4],
 
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
-            s->names = calloc(1, 1 + strlen(ids));
+            s->names = calloc(1, 2 + strlen(ids));
             for (j = 0; ids[j]; j++)
                 s->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
