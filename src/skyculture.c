@@ -52,35 +52,37 @@ static bool iter_lines(const char **str, char *line, int size)
     return true;
 }
 
-int skyculture_parse_names(const char *data, char *(*names)[2])
+skyculture_name_t *skyculture_parse_names(const char *data, int *nb_out)
 {
-    char line[512], id[32], name[128];
+    char line[512], name[128];
     regex_t reg;
     regmatch_t m[4];
-    int r, i = 0, hd, hip, nb = 0;
+    int r, i = 0, hd, hip;
+    skyculture_name_t *ret;
+    uint64_t oid;
 
     // Count the number of lines in the file.
-    nb = count_lines(data);
-    if (!names) return nb;
+    ret = calloc(count_lines(data) + 1, sizeof(*ret));
 
     regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
     while (iter_lines(&data, line, sizeof(line))) {
         if (str_startswith(line, "#")) continue;
         r = regexec(&reg, line, 4, m, 0);
         if (r) goto error;
-        sprintf(name, "%*s", (int)(m[3].rm_eo - m[3].rm_so), line + m[3].rm_so);
-        *id = '\0';
+        snprintf(name, sizeof(name) - 1,
+                 "%*s", (int)(m[3].rm_eo - m[3].rm_so), line + m[3].rm_so);
+        oid = 0;
         if (strncmp(line + m[1].rm_so, "HD", 2) == 0) {
             hd = strtoul(line + m[2].rm_so, NULL, 10);
-            sprintf(id, "HD %d", hd);
+            oid = oid_create("HD  ", hd);
         }
         if (strncmp(line + m[1].rm_so, "HIP", 3) == 0) {
             hip = strtoul(line + m[2].rm_so, NULL, 10);
-            sprintf(id, "HIP %d", hip);
+            oid = oid_create("HIP ", hip);
         }
-        if (*id) {
-            names[i][0] = strdup(id);
-            names[i][1] = strdup(name);
+        if (oid) {
+            ret[i].oid = oid;
+            strcpy(ret[i].name, name);
             i++;
         }
         continue;
@@ -88,7 +90,8 @@ error:
         LOG_W("Cannot parse star name: %s", line);
     }
     regfree(&reg);
-    return nb;
+    if (nb_out) *nb_out = i;
+    return ret;
 }
 
 static void trim_right_spaces(char *s)

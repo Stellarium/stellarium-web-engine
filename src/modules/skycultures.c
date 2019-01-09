@@ -42,7 +42,7 @@ typedef struct skyculture {
         char        *author;
     } info;
     int             nb_constellations;
-    char            *(*names)[2]; // [ID, Name].  NULL terminated.
+    skyculture_name_t *names; // NULL terminated.
     constellation_infos_t *constellations;
     json_value      *imgs;
     bool            active;
@@ -89,14 +89,14 @@ static void skyculture_activate(skyculture_t *cult)
     }
 
     // Add all the names.
-    for (i = 0; cult->names && cult->names[i][0]; i++) {
-        star = obj_get(NULL, cult->names[i][0], 0);
+    for (i = 0; cult->names && cult->names[i].oid; i++) {
+        star = obj_get_by_oid(NULL, cult->names[i].oid, 0);
         if (!star) {
             nb_skipped++;
             continue;
         }
-        identifiers_add("NAME", cult->names[i][1], star->oid, 0, star->type,
-                        star->vmag, NULL, NULL);
+        identifiers_add("NAME", cult->names[i].name, cult->names[i].oid, 0,
+                        star->type, star->vmag, NULL, NULL);
         obj_release(star);
     }
 
@@ -268,7 +268,6 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
     const char *data;
-    int nb;
     constellation_art_t *arts;
 
     if (get_file(cult, SK_INFO, "info.ini", &data, 0)) {
@@ -276,9 +275,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
     }
 
     if (get_file(cult, SK_NAMES, "names.txt", &data, 0)) {
-        nb = skyculture_parse_names(data, NULL);
-        cult->names = calloc(nb + 1, sizeof(*cult->names));
-        skyculture_parse_names(data, cult->names);
+        cult->names = skyculture_parse_names(data, NULL);
     }
 
     if (get_file(cult, SK_CONSTELLATIONS, "constellations.txt", &data, 0)) {

@@ -20,6 +20,7 @@
 #define SKYCULTURE_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /*
  * Type: constellation_infos_t
@@ -50,12 +51,24 @@ typedef struct constellation_art
     } anchors[3];
 } constellation_art_t;
 
+/*
+ * Type: skyculture_name
+ * Structure to hold object name and oid.
+ *
+ * Used as result of skyculture names file parsing.
+ */
+typedef struct skyculture_name
+{
+    uint64_t    oid;
+    char        name[128];
+} skyculture_name_t;
+
 
 /*
  * Function: skyculture_parse_names
  * Parse a skyculture star names file.
  */
-int skyculture_parse_names(const char *data, char *(*names)[2]);
+skyculture_name_t *skyculture_parse_names(const char *data, int *nb);
 
 /*
  * Function: skyculture_parse_constellations
