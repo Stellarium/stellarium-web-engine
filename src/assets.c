@@ -151,7 +151,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     }
 
     // Special handler for local files.
-    if (!strchr(url, ':')) {
+    if (!asset->data && !strchr(url, ':')) {
         if (!file_exists(url)) {
             *code = 404;
             goto end;
