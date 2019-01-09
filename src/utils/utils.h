@@ -162,13 +162,6 @@ bool move_toward(double *x,
                  double speed,
                  double dt);
 
-/*
- * Function: join_paths
- * Join two urls.  The returned path is only valid until the next call.
- */
-const char *join_paths(const char *base, const char *path);
-
-
 static inline bool str_equ(const char *a, const char *b)
 {
     return strcmp(a, b) == 0;

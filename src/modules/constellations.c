@@ -47,6 +47,20 @@ typedef struct constellations {
 
 static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
 
+/*
+ * Function: join_paths
+ * Join two urls.  The returned path is only valid until the next call.
+ */
+const char *join_paths(const char *base, const char *path)
+{
+    const int BUFF_SIZE = 256;
+    static char *ret = NULL;
+    if (!base) return path;
+    if (!ret) ret = calloc(BUFF_SIZE, 1);
+    snprintf(ret, BUFF_SIZE, "%s/%s", base, path);
+    return ret;
+}
+
 static int constellation_init(obj_t *obj, json_value *args)
 {
     constellation_t *cons = (constellation_t *)obj;

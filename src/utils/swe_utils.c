@@ -166,16 +166,6 @@ bool move_toward(double *x,
     return true;
 }
 
-const char *join_paths(const char *base, const char *path)
-{
-    const int BUFF_SIZE = 256;
-    static char *ret = NULL;
-    if (!base) return path;
-    if (!ret) ret = calloc(BUFF_SIZE, 1);
-    snprintf(ret, BUFF_SIZE, "%s/%s", base, path);
-    return ret;
-}
-
 bool str_endswith(const char *str, const char *end)
 {
     if (!str || !end) return false;
