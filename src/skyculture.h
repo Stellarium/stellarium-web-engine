@@ -114,4 +114,11 @@ int skyculture_parse_stellarium_constellations_names(
 constellation_art_t *skyculture_parse_stellarium_constellations_art(
         const char *data, int *nb);
 
+/*
+ * Function: skyculture_parse_stellarium_star_names
+ * Parse a skyculture star names file.
+ */
+skyculture_name_t *skyculture_parse_stellarium_star_names(
+        const char *data, int *nb);
+
 #endif // SKYCULTURE_H
