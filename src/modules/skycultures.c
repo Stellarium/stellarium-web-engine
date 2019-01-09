@@ -389,8 +389,8 @@ static int skycultures_add_data_source(
     if (obj_get((obj_t*)cults, key, 0)) return 0;
     cult = add_from_uri(cults, url, key);
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
-    // If it's the first one activate it immediately.
-    if (cult == (void*)cults->obj.children)
+    // If it's the default skyculture (western) activate it immediatly.
+    if (str_endswith(url, "western"))
         obj_set_attr((obj_t*)cult, "active", "b", true);
     return 0;
 }
