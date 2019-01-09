@@ -233,16 +233,22 @@ error:
 }
 
 constellation_infos_t *skyculture_parse_stellarium_constellations(
-        const char *data, int *nb_out)
+        const char *data_, int *nb_out)
 {
     int nb = 0, nb_segs, i, s1, s2;
-    char line[512], *tok;
+    char *data, *line, *tmp, *tok;
     constellation_infos_t *ret, *cons;
+
+    assert(data_);
+    data = strdup(data_);
 
     // Count the number of lines in the file.
     ret = calloc(count_lines(data) + 1, sizeof(*ret));
 
-    while (iter_lines(&data, line, sizeof(line))) {
+    for (line = strtok_r(data, "\r\n", &tmp); line;
+         line = strtok_r(NULL, "\r\n", &tmp))
+    {
+        while (*line == ' ' || *line == '\t') line++;
         if (*line == '\0') continue;
         if (*line == '#') continue;
         cons = &ret[nb];
@@ -263,14 +269,12 @@ constellation_infos_t *skyculture_parse_stellarium_constellations(
             cons->nb_lines++;
         }
         nb++;
+        continue;
+error:
+        LOG_W("Could not parse constellations data: %s", line);
     }
     *nb_out = nb;
     return ret;
-
-error:
-    LOG_W("Could not parse constellations data");
-    *nb_out = 0;
-    return NULL;
 }
 
 /*
