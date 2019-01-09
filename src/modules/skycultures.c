@@ -92,6 +92,11 @@ static void skyculture_activate(skyculture_t *cult)
     for (i = 0; cult->names && cult->names[i].oid; i++) {
         star = obj_get_by_oid(NULL, cult->names[i].oid, 0);
         if (!star) {
+            /*
+            char buf[128];
+            LOG_D("Cannot find star: %s = %s",
+                  oid_to_str(cult->names[i].oid, buf), cult->names[i].name);
+            */
             nb_skipped++;
             continue;
         }
