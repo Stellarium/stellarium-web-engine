@@ -28,6 +28,7 @@ enum {
     SK_CONSTELLATIONS_STEL          = 1 << 6,
     SK_CONSTELLATION_NAMES_STEL     = 1 << 7,
     SK_IMGS_STEL                    = 1 << 8,
+    SK_STAR_NAMES_STEL              = 1 << 9,
 };
 
 /*
@@ -279,7 +280,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         ini_parse_string(data, info_ini_handler, cult);
     }
 
-    if (get_file(cult, SK_NAMES, "names.txt", &data, 0)) {
+    if (get_file(cult, SK_NAMES, "names.txt", &data, ASSET_ACCEPT_404)) {
         cult->names = skyculture_parse_names(data, NULL);
     }
 
@@ -332,6 +333,12 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         if (arts) cult->imgs = make_imgs_json(arts, cult->uri);
         free(arts);
         if (cult->active) skyculture_activate(cult);
+    }
+
+    if ((cult->parsed & SK_NAMES) && !cult->names &&
+            get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data, 0))
+    {
+        cult->names = skyculture_parse_stellarium_star_names(data, NULL);
     }
 
     return 0;
