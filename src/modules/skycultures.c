@@ -25,9 +25,9 @@ enum {
     SK_DESCRIPTION    = 1 << 4,
     SK_EDGES          = 1 << 5,
 
-    SK_CONSTELLATIONS_STEL  = 1 << 6,
-    SK_NAMES_STEL     = 1 << 7,
-    SK_IMGS_STEL      = 1 << 8,
+    SK_CONSTELLATIONS_STEL          = 1 << 6,
+    SK_CONSTELLATION_NAMES_STEL     = 1 << 7,
+    SK_IMGS_STEL                    = 1 << 8,
 };
 
 /*
@@ -312,8 +312,8 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
     }
 
     if ((cult->parsed & SK_CONSTELLATIONS_STEL) && cult->constellations &&
-         get_file(cult, SK_NAMES_STEL, "constellation_names.eng.fab",
-                  &data, 0))
+         get_file(cult, SK_CONSTELLATION_NAMES_STEL,
+                  "constellation_names.eng.fab", &data, 0))
     {
         skyculture_parse_stellarium_constellations_names(
                 data, cult->constellations);
