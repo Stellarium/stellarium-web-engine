@@ -2,6 +2,7 @@
 *.swp
 *~
 *.obj
+*.pyc
 build
 data/cities.txt
 data/font
