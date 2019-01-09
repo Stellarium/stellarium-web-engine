@@ -83,15 +83,8 @@ static const char *get_data(const source_t *source, const char *file,
         sprintf(url, "%s/%s", source->url, file);
     }
 
-    data = asset_get_data2(url, extra_flags, NULL, code);
+    data = asset_get_data2(url, ASSET_USED_ONCE | extra_flags, NULL, code);
     return data;
-}
-
-static void release_data(const source_t *source, const char *file)
-{
-    char url[1024];
-    sprintf(url, "%s/%s", source->url, file);
-    asset_release(url);
 }
 
 static int parse_index(const char *base_url, const char *data)
@@ -155,11 +148,11 @@ static int process_dir(source_t *source)
     if (!code) return 0;
     if (data) {
         parse_index(source->url, data);
-        release_data(source, "index.json");
         return 1;
     }
     // Check for a skyculture dir.
-    data = get_data(source, "constellationship.fab", ASSET_ACCEPT_404, &code);
+    data = get_data(source, "constellationship.fab",
+                    ASSET_ACCEPT_404 | ASSET_USED_ONCE, &code);
     if (!code) return 0;
     if (data) {
         obj_add_data_source(NULL, source->url, "skyculture", NULL);
@@ -186,7 +179,6 @@ static int process_source(sources_t *sources, source_t *source)
         data = get_data(source, "hipslist", 0, &code);
         if (!data) return 0;
         hips_parse_hipslist(data, sources, on_hips);
-        release_data(source, "hipslist");
         break;
     case SOURCE_HIPS:
         data = get_data(source, "properties", 0, &code);
