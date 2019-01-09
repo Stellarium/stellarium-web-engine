@@ -10,6 +10,8 @@
 #include "oid.h"
 
 #include <assert.h>
+#include <inttypes.h>
+#include <stdio.h>
 #include <string.h>
 
 uint64_t oid_create(const char cat[4], uint32_t n)
@@ -51,4 +53,15 @@ const char *oid_get_catalog(uint64_t oid, char cat[4])
         memcpy(cat, &cat_n, 4);
     }
     return cat;
+}
+
+const char *oid_to_str(uint64_t oid, char buf[128])
+{
+    char cat[4];
+    if (oid_is_gaia(oid)) {
+        sprintf(buf, "Gaia DR2 %" PRIx64, oid);
+    } else {
+        sprintf(buf, "%s %u", oid_get_catalog(oid, cat), (uint32_t)oid);
+    }
+    return buf;
 }

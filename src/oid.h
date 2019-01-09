@@ -33,3 +33,11 @@ bool oid_is_gaia(uint64_t oid);
  * Get the four character catalog part of an oid
  */
 const char *oid_get_catalog(uint64_t oid, char cat[4]);
+
+/*
+ * Function: oid_to_str
+ * Return a string representation of the oid
+ *
+ * Useful for debugging.
+ */
+const char *oid_to_str(uint64_t oid, char buf[128]);
