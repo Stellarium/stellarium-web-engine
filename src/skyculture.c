@@ -273,6 +273,7 @@ constellation_infos_t *skyculture_parse_stellarium_constellations(
 error:
         LOG_W("Could not parse constellations data: %s", line);
     }
+    free(data);
     *nb_out = nb;
     return ret;
 }
@@ -347,15 +348,14 @@ constellation_art_t *skyculture_parse_stellarium_constellations_art(
             art->anchors[i].hip = atoi(tok);
         }
         nb++;
+        continue;
+error:
+        LOG_W("Cannot parse constellationart: %s", line);
     }
+    free(data);
     if (nb_out) *nb_out = nb;
     return ret;
 
-error:
-    LOG_W("Cannot parse constellationart file");
-    free(ret);
-    *nb_out = 0;
-    return NULL;
 }
 
 /*
@@ -395,6 +395,7 @@ skyculture_name_t *skyculture_parse_stellarium_star_names(
                  "%.*s", (int)(m[2].rm_eo - m[2].rm_so), line + m[2].rm_so);
         nb++;
     }
+    regfree(&reg);
     free(data);
     if (nb_out) *nb_out = nb;
     return ret;
