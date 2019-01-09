@@ -9,6 +9,7 @@
 
 #include "swe.h"
 
+#include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -95,9 +96,21 @@ char *sys_render_text(const char *txt, float height, int *w, int *h)
     return sys_callbacks.render_text(sys_callbacks.user, txt, height, w, h);
 }
 
-int sys_list_dir(const char *dir, void *user,
+int sys_list_dir(const char *dirpath, void *user,
                  int (*f)(void *user, const char *path, int is_dir))
 {
-    if (!sys_callbacks.list_dir) return 0;
-    return sys_callbacks.list_dir(sys_callbacks.user, dir, user, f);
+    DIR *dir;
+    struct dirent *dirent;
+    char buf[1024];
+    if (sys_callbacks.list_dir)
+        return sys_callbacks.list_dir(sys_callbacks.user, dirpath, user, f);
+    dir = opendir(dirpath);
+    if (!dir) return -1;
+    while ((dirent = readdir(dir))) {
+        if (dirent->d_name[0] == '.') continue;
+        snprintf(buf, sizeof(buf) - 1, "%s/%s", dirpath, dirent->d_name);
+        f(user, buf, dirent->d_type == DT_DIR);
+    }
+    closedir(dir);
+    return 0;
 }
