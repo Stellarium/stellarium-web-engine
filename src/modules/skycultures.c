@@ -284,7 +284,9 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         cult->names = skyculture_parse_names(data, NULL);
     }
 
-    if (get_file(cult, SK_CONSTELLATIONS, "constellations.txt", &data, 0)) {
+    if (get_file(cult, SK_CONSTELLATIONS, "constellations.txt", &data,
+                 ASSET_ACCEPT_404))
+    {
         cult->constellations = skyculture_parse_constellations(
                 data, &cult->nb_constellations);
     }
@@ -294,7 +296,11 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         skyculture_parse_edges(data, cult->constellations);
     }
 
-    if (get_file(cult, SK_DESCRIPTION, "description.en.html", &data, 0)) {
+    if (get_file(cult, SK_DESCRIPTION, "description.en.html",
+                 &data, ASSET_ACCEPT_404) ||
+        get_file(cult, SK_DESCRIPTION, "description.en.utf8",
+                 &data, ASSET_ACCEPT_404))
+    {
         cult->description = strdup(data);
         obj_changed((obj_t*)cult, "description");
         return 0; // Don't load imgs just after the descriptions.
