@@ -409,6 +409,7 @@ static obj_klass_t skyculture_klass = {
         PROPERTY("active", "b", MEMBER(skyculture_t, active),
                  .on_changed = skyculture_on_active_changed),
         PROPERTY("description", "s", MEMBER(skyculture_t, description)),
+        PROPERTY("url", "s", MEMBER(skyculture_t, uri)),
         {}
     },
 };
