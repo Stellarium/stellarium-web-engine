@@ -10,14 +10,6 @@
 #include "swe.h"
 #include <regex.h>
 
-// In-place remove '"' of a string.
-static char *unquote(char *str)
-{
-    if (str[0] == '"') str++;
-    if (strlen(str) && str[strlen(str) - 1] == '"')
-        str[strlen(str) - 1] = '\0';
-    return str;
-}
 
 static int count_lines(const char *str)
 {
@@ -290,30 +282,41 @@ error:
  *   The number of names parsed, or -1 in case of error.
  */
 int skyculture_parse_stellarium_constellations_names(
-        const char *data, constellation_infos_t *infos)
+        const char *data_, constellation_infos_t *infos)
 {
-    char line[512], *tok;
+    char *data, *line, *tmp = NULL;
+    int r;
     constellation_infos_t *cons = NULL;
-    while (iter_lines(&data, line, sizeof(line))) {
+    regex_t reg;
+    regmatch_t m[3];
+
+    data = strdup(data_);
+    // Regexp for:
+    // <ID>   "<NAME>"
+    regcomp(&reg, "[ \t]*([.a-zA-Z0-9]+)[ \t]+\"([^\"]*)\"", REG_EXTENDED);
+    for (line = strtok_r(data, "\r\n", &tmp); line;
+         line = strtok_r(NULL, "\r\n", &tmp))
+    {
+        while (*line == ' ' || *line == '\t') line++;
         if (*line == '\0') continue;
         if (*line == '#') continue;
-        tok = strtok(line, "\t");
-        if (!tok) goto error;
-        cons = get_constellation(infos, tok);
+        r = regexec(&reg, line, 3, m, 0);
+        if (r) goto error;
+        line[m[1].rm_eo] = '\0';
+        cons = get_constellation(infos, line + m[1].rm_so);
         if (!cons) {
-            LOG_W("Can not find constellation '%s'", tok);
+            LOG_W("Can not find constellation '%s'", line + m[1].rm_so);
             continue;
         }
-        tok = strtok(NULL, "\t");
-        if (!tok) goto error;
-        tok = unquote(tok);
-        strncpy(cons->name, tok, sizeof(cons->name));
-    }
-    return 0;
-
+        snprintf(cons->name, sizeof(cons->name) - 1,
+                 "%.*s", (int)(m[2].rm_eo - m[2].rm_so), line + m[2].rm_so);
+        continue;
 error:
-    LOG_W("Could not parse constellation names");
-    return -1;
+        LOG_W("Could not parse constellation names: %s", line);
+    }
+    regfree(&reg);
+    free(data);
+    return 0;
 }
 
 constellation_art_t *skyculture_parse_stellarium_constellations_art(
