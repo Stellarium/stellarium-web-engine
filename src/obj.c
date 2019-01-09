@@ -234,6 +234,7 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     // XXX: might not be a very good idea, what if the object id contains
     // point?
     while ((sep = strchr(query, '.'))) {
+        if (sep > query && *(sep - 1) == ' ') break;
         strncpy(tmp, query, sep - query);
         tmp[sep - query] = '\0';
         DL_FOREACH(obj->children, child) {
