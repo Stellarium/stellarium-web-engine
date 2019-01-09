@@ -29,6 +29,7 @@ enum {
     SK_CONSTELLATION_NAMES_STEL     = 1 << 7,
     SK_IMGS_STEL                    = 1 << 8,
     SK_STAR_NAMES_STEL              = 1 << 9,
+    SK_DESCRIPTION_STEL             = 1 << 10,
 };
 
 /*
@@ -298,7 +299,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 
     if (get_file(cult, SK_DESCRIPTION, "description.en.html",
                  &data, ASSET_ACCEPT_404) ||
-        get_file(cult, SK_DESCRIPTION, "description.en.utf8",
+        get_file(cult, SK_DESCRIPTION_STEL, "description.en.utf8",
                  &data, ASSET_ACCEPT_404))
     {
         cult->description = strdup(data);
