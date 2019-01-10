@@ -328,7 +328,7 @@ static void dso_render_name(const painter_t *painter, const dso_data_t *s,
 static void compute_hint_transformation(
         const painter_t *painter,
         double ra, double de, double angle,
-        double size_x, double size_y,
+        double size_x, double size_y, int symbol,
         double win_pos[2], double win_size[2], double *win_angle)
 {
     double p[4], c[2], a[2], b[2], mat[3][3];
@@ -390,6 +390,9 @@ static void compute_hint_transformation(
     *win_angle = isnan(angle) ? 0 : atan2(a[1], a[0]);
     win_size[0] = 2 * vec2_norm(a);
     win_size[1] = 2 * vec2_norm(b);
+
+    win_size[0] = max(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
+    win_size[1] = max(win_size[1], 12);
 }
 
 
@@ -400,12 +403,13 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
 {
     const dso_t *dso = (dso_t*)obj;
     const dso_data_t *s = &dso->data;
+    int symbol = symbols_get_for_otype(s->type);
 
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
     compute_hint_transformation(&tmp_painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, win_pos, win_size, win_angle);
+            s->smax, s->smin, symbol, win_pos, win_size, win_angle);
     win_size[0] /= 2.0;
     win_size[1] /= 2.0;
 }
@@ -450,7 +454,8 @@ static int dso_render_from_data(const dso_data_t *s,
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
 
-    if (vmag > painter.hint_mag_max) return 0;
+    if (vmag > painter.hint_mag_max)
+        return 0;
 
     eraS2c(s->ra, s->de, p);
     convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
@@ -466,13 +471,11 @@ static int dso_render_from_data(const dso_data_t *s,
         return 0;
 
     double win_pos[2], win_size[2], win_angle;
-
     symbol = symbols_get_for_otype(s->type);
-    compute_hint_transformation(&painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, win_pos, win_size, &win_angle);
 
-    win_size[0] = max(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
-    win_size[1] = max(win_size[1], 12);
+    compute_hint_transformation(&painter, s->ra, s->de, s->angle,
+            s->smax, s->smin, symbol, win_pos, win_size, &win_angle);
+
     symbols_paint(&painter, symbol, win_pos, win_size, NULL, win_angle);
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->id.oid, 0);
@@ -516,16 +519,16 @@ void dso_get_designations(
 static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (dso_t*)obj;
-    double min_circle_size;
     const dso_data_t *s = &dso->data;
     double win_pos[2], win_size[2], win_angle;
+    int symbol = symbols_get_for_otype(s->type);
 
-    min_circle_size = core->fov / 20;
-    if (isnan(dso->data.smax) || dso->data.smax <= min_circle_size) return 1;
     compute_hint_transformation(painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, win_pos, win_size, &win_angle);
-    symbols_paint(painter, SYMBOL_GALAXY, win_pos, win_size, painter->color,
-                  win_angle);
+            s->smax, s->smin, symbol, win_pos, win_size, &win_angle);
+    painter_t p = *painter;
+    p.lines_width = 2;
+    symbols_paint(&p, symbols_get_for_otype(s->type), win_pos, win_size,
+                  p.color, win_angle);
     return 0;
 }
 
