@@ -19,10 +19,6 @@
  */
 enum {
     SK_INFO           = 1 << 0,
-    SK_NAMES          = 1 << 1,
-    SK_CONSTELLATIONS = 1 << 2,
-    SK_IMGS           = 1 << 3,
-    SK_DESCRIPTION    = 1 << 4,
     SK_EDGES          = 1 << 5,
 
     SK_CONSTELLATIONS_STEL          = 1 << 6,
@@ -185,32 +181,6 @@ static void skyculture_on_active_changed(
     else skyculture_deactivate(cult);
 }
 
-static json_value *parse_imgs(const char *data, const char *uri)
-{
-    int i;
-    char base_path[1024];
-    char error[json_error_max] = "";
-    json_value *value, *v;
-    json_settings settings = {};
-    settings.value_extra = json_builder_extra;
-    value = json_parse_ex(&settings, data, strlen(data), error);
-    if (error[0]) {
-        LOG_E("Failed to parse json: %s", error);
-        return NULL;
-    }
-
-    // Add the base_path attribute needed by the constellation add_img
-    // function.
-    // XXX: It would probably be better to add it in the activate function
-    //      instead.
-    sprintf(base_path, "%s/imgs", uri);
-    for (i = 0; i < value->u.array.length; i++) {
-        v = value->u.array.values[i];
-        json_object_push(v, "base_path", json_string_new(base_path));
-    }
-    return value;
-}
-
 /*
  * Convert an array of constellation_art_t values into a json in the same
  * format as recognised by the constellation module, that is an array of
@@ -281,15 +251,29 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         ini_parse_string(data, info_ini_handler, cult);
     }
 
-    if (get_file(cult, SK_NAMES, "names.txt", &data, ASSET_ACCEPT_404)) {
-        cult->names = skyculture_parse_names(data, NULL);
+    if (get_file(cult, SK_DESCRIPTION_STEL, "description.en.utf8",
+                 &data, ASSET_ACCEPT_404))
+    {
+        cult->description = strdup(data);
+        obj_changed((obj_t*)cult, "description");
     }
 
-    if (get_file(cult, SK_CONSTELLATIONS, "constellations.txt", &data,
-                 ASSET_ACCEPT_404))
+    if (get_file(cult, SK_CONSTELLATIONS_STEL, "constellationship.fab",
+                 &data, 0))
     {
-        cult->constellations = skyculture_parse_constellations(
+        cult->constellations = skyculture_parse_stellarium_constellations(
                 data, &cult->nb_constellations);
+    }
+
+    if (cult->constellations && get_file(cult, SK_CONSTELLATION_NAMES_STEL,
+                  "constellation_names.eng.fab", &data, 0))
+    {
+        skyculture_parse_stellarium_constellations_names(
+                data, cult->constellations);
+    }
+
+    if (get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data, 0)) {
+        cult->names = skyculture_parse_stellarium_star_names(data, NULL);
     }
 
     if (cult->constellations &&
@@ -297,55 +281,13 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         skyculture_parse_edges(data, cult->constellations);
     }
 
-    if (get_file(cult, SK_DESCRIPTION, "description.en.html",
-                 &data, ASSET_ACCEPT_404) ||
-        get_file(cult, SK_DESCRIPTION_STEL, "description.en.utf8",
-                 &data, ASSET_ACCEPT_404))
-    {
-        cult->description = strdup(data);
-        obj_changed((obj_t*)cult, "description");
-        return 0; // Don't load imgs just after the descriptions.
-    }
-
-    if (get_file(cult, SK_IMGS, "imgs/index.json", &data, ASSET_ACCEPT_404)) {
-        cult->imgs = parse_imgs(data, cult->uri);
-        if (cult->active) skyculture_activate(cult);
-    }
-
-
-    // Fallback support for stellarium format.
-    // XXX: This should be the default, and we should remove the
-    // original format.
-    if ((cult->parsed & SK_CONSTELLATIONS) && !cult->constellations &&
-         get_file(cult, SK_CONSTELLATIONS_STEL, "constellationship.fab",
-                  &data, 0))
-    {
-        cult->constellations = skyculture_parse_stellarium_constellations(
-                data, &cult->nb_constellations);
-    }
-
-    if ((cult->parsed & SK_CONSTELLATIONS_STEL) && cult->constellations &&
-         get_file(cult, SK_CONSTELLATION_NAMES_STEL,
-                  "constellation_names.eng.fab", &data, 0))
-    {
-        skyculture_parse_stellarium_constellations_names(
-                data, cult->constellations);
-    }
-
-    if ((cult->parsed & SK_CONSTELLATIONS_STEL) && cult->constellations &&
-            get_file(cult, SK_IMGS_STEL, "constellationsart.fab",
-                     &data, ASSET_ACCEPT_404))
+    if (cult->constellations && get_file(cult, SK_IMGS_STEL,
+                "constellationsart.fab", &data, ASSET_ACCEPT_404))
     {
         arts = skyculture_parse_stellarium_constellations_art(data, NULL);
         if (arts) cult->imgs = make_imgs_json(arts, cult->uri);
         free(arts);
         if (cult->active) skyculture_activate(cult);
-    }
-
-    if ((cult->parsed & SK_NAMES) && !cult->names &&
-            get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data, 0))
-    {
-        cult->names = skyculture_parse_stellarium_star_names(data, NULL);
     }
 
     return 0;

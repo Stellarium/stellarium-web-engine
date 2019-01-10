@@ -40,6 +40,8 @@ TYPES = {
     "frag": {"text": True,  "compress": False},
     "glsl": {"text": True,  "compress": False},
     "html": {"text": True,  "compress": False},
+    "utf8": {"text": True,  "compress": False},
+    "fab": {"text": True,  "compress": False},
     "json": {"text": True,  "compress": False},
     "properties": {"text": True,  "compress": False},
 }
