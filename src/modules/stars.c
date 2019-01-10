@@ -57,7 +57,6 @@ typedef struct {
  */
 struct stars {
     obj_t           obj;
-    double          mag_max;
     regex_t         search_reg;
 
     // The stars module supports up to two surveys.
@@ -221,7 +220,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     };
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
-    if (s->vmag <= painter.label_mag_max) {
+    if (s->vmag <= painter.hints_limit_mag - 4.0) {
         convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW,
                           true, p, p);
         if (project(painter.proj,
@@ -426,7 +425,6 @@ static int stars_init(obj_t *obj, json_value *args)
     };
 
     stars->visible = true;
-    stars->mag_max = DBL_MAX;
 
     regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
@@ -472,7 +470,6 @@ static int render_visitor(int order, int pix, void *user)
     double color[3], max_sep, fov, viewport_cap[4];
     bool loaded;
 
-    painter.mag_max = min(painter.mag_max, stars->mag_max);
     // Early exit if the tile is clipped.
     if (painter_is_tile_clipped(&painter, FRAME_ASTROM, order, pix, true))
         return 0;
@@ -482,7 +479,7 @@ static int render_visitor(int order, int pix, void *user)
     if (loaded) (*nb_loaded)++;
 
     if (!tile) goto end;
-    if (tile->mag_min > painter.mag_max) goto end;
+    if (tile->mag_min > painter.stars_limit_mag) goto end;
 
     // Compute viewport cap for fast clipping test.
     // The cap is defined as the vector xyzw with xyz the observer viewing
@@ -500,7 +497,7 @@ static int render_visitor(int order, int pix, void *user)
     point_t *points = malloc(tile->nb * sizeof(*points));
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
-        if (s->vmag > painter.mag_max) break;
+        if (s->vmag > painter.stars_limit_mag) break;
         if (vec3_dot(s->pos, viewport_cap) < viewport_cap[3]) continue;
 
         // Compute star observed and screen pos.
@@ -527,7 +524,7 @@ static int render_visitor(int order, int pix, void *user)
             .oid = s->oid,
         };
         n++;
-        if (s->vmag <= painter.label_mag_max && survey != SURVEY_GAIA)
+        if (s->vmag <= painter.hints_limit_mag - 4.0 && survey != SURVEY_GAIA)
             star_render_name(&painter, s, p_win, size, s->vmag, color);
     }
     paint_points(&painter, n, points, FRAME_WINDOW);
@@ -537,9 +534,9 @@ end:
     // Test if we should go into higher order tiles.
     // Since for the moment we have two different surveys, keep going
     // until order 3 no matter what, so that we reach the gaia survey.
-    if (order < 3 && painter.mag_max > GAIA_MIN_MAG) return 1;
+    if (order < 3 && painter.stars_limit_mag > GAIA_MIN_MAG) return 1;
     if (!tile) return 0;
-    if (tile->mag_max > painter.mag_max) return 0;
+    if (tile->mag_max > painter.stars_limit_mag) return 0;
     return 1;
 }
 
@@ -782,7 +779,6 @@ static obj_klass_t stars_klass = {
     .add_data_source = stars_add_data_source,
     .render_order   = 20,
     .attributes = (attribute_t[]) {
-        PROPERTY("max_mag", "f", MEMBER(stars_t, mag_max)),
         PROPERTY("visible", "b", MEMBER(stars_t, visible)),
         {},
     },

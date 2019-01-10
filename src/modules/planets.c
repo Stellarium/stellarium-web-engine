@@ -717,7 +717,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     vmag = planet->obj.vmag;
     if (planet->id == EARTH) return;
-    if (planet->id != MOON && vmag > painter.mag_max) return;
+    if (planet->id != MOON && vmag > painter.stars_limit_mag) return;
 
     vec4_copy(planet->obj.pvo[0], pos);
     convert_frame(painter.obs, FRAME_ICRF, FRAME_OBSERVED, false, pos, pos);
@@ -781,7 +781,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     }
 
 
-    if (vmag <= painter.label_mag_max) {
+    if (vmag <= painter.hints_limit_mag - 1.0) {
         mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,

@@ -128,9 +128,9 @@ struct painter
     int             flags;
     double          contrast;       // Contrast effect when rendering tex.
 
-    double          mag_max;        // Max visual magnitude.
-    double          label_mag_max;  // After this mag, don't show the labels.
-    double          hint_mag_max;   // After this mag, don't show the hints.
+    double          stars_limit_mag;   // Actual stars visual magnitude limit.
+    // Base magnitude limit for hints and labels
+    double          hints_limit_mag;
 
     double          lines_width;
     double          lines_stripes;

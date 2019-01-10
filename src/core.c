@@ -305,7 +305,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     obj_add_sub(&core->obj, "hints");
-    core->hints_mag_max = NAN;
+    core->hints_mag_offset = 0;
 
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
@@ -522,10 +522,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .fb_size = {win_w * pixel_scale, win_h * pixel_scale},
         .pixel_scale = pixel_scale,
         .proj = &proj,
-        .mag_max = max_vmag,
-        .hint_mag_max = (!isnan(core->hints_mag_max)) ? core->hints_mag_max :
-                        max_vmag - 2,
-        .label_mag_max = max_vmag - 4,
+        .stars_limit_mag = max_vmag,
+        .hints_limit_mag = max_vmag + core->hints_mag_offset,
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
@@ -936,7 +934,7 @@ static obj_klass_t core_klass = {
                  .hint = "obj"),
         PROPERTY("hovered", "p", MEMBER(core_t, hovered),
                  .hint = "obj"),
-        PROPERTY("max_mag", "f", MEMBER(core_t, hints_mag_max),
+        PROPERTY("hints_mag_offset", "f", MEMBER(core_t, hints_mag_offset),
                  .sub = "hints"),
         PROPERTY("progressbars", "json", .fn = core_fn_progressbars),
         PROPERTY("fps", "f", MEMBER(core_t, prof.fps)),

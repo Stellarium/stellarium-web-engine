@@ -161,8 +161,8 @@ struct core
     double          star_linear_scale;
     double          star_relative_scale;
 
-    // Set the hints max magnitude.
-    double          hints_mag_max;
+    // Set the hints magnitude offset.
+    double          hints_mag_offset;
     double          contrast; // Apply contrast to the rendered stars.
 
     tonemapper_t    tonemapper;

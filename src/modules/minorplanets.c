@@ -325,7 +325,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
 
     vmag = mplanet->obj.vmag;
-    if (vmag > painter->mag_max) return 0;
+    if (vmag > painter->stars_limit_mag) return 0;
     obj_get_pos_observed(obj, painter->obs, pos);
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
@@ -341,7 +341,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     paint_points(painter, 1, &point, FRAME_OBSERVED);
 
     // Render name if needed.
-    if (*mplanet->name && vmag <= painter->label_mag_max) {
+    if (*mplanet->name && vmag <= painter->hints_limit_mag) {
         mat3_mul_vec3(painter->obs->ro2v, pos, pos);
         if (project(painter->proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,

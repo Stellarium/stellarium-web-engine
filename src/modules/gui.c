@@ -236,10 +236,10 @@ static void menu_main(void *user)
                     .attr = modules[i][1]});
         }
         gui_item(&(gui_item_t){
-                .label = "Hints max mag",
+                .label = "Hints mag offset",
                 .obj = obj_get(NULL, "core.hints", 0),
-                .attr = "max_mag",
-                .default_value = 7.0,
+                .attr = "hints_mag_offset",
+                .default_value = 0.0,
                 });
         gui_item(&(gui_item_t){
                 .label = "Refraction",

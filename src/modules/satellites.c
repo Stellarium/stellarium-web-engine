@@ -324,7 +324,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     satellite_t *sat = (satellite_t*)obj;
 
     vmag = obj->vmag;
-    if (vmag > painter.mag_max) return 0;
+    if (vmag > painter.stars_limit_mag) return 0;
     convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, false, obj->pvo[0], p);
 
     // Skip if not visible.
@@ -332,7 +332,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
-    if (vmag < painter.hint_mag_max) {
+    if (vmag < painter.hints_limit_mag) {
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
                       VEC(12.0, 12.0), label_color, 0.0);
         // Still render an invisible point for the selection.
@@ -349,7 +349,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_WINDOW);
 
     // Render name if needed.
-    if (*sat->name && vmag <= painter.label_mag_max) {
+    if (*sat->name && vmag <= painter.hints_limit_mag - 1.0) {
         labels_add(sat->name, p_win, size, 13, label_color, 0,
                    ANCHOR_AROUND, 0, obj->oid);
     }

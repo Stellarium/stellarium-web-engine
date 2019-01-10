@@ -451,11 +451,21 @@ static int dso_render_from_data(const dso_data_t *s,
     double p[4] = {}, size, luminance, vmag;
     painter_t painter = *painter_;
     int label_anchor, symbol;
+    double hints_limit_mag = painter.hints_limit_mag;
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
+    symbol = symbols_get_for_otype(s->type);
 
-    if (vmag > painter.hint_mag_max)
+    // Allow to select DSO a bit fainter than the faintest star
+    // as they tend to be more visible as they are extended objects.
+    if (vmag > painter.stars_limit_mag + 2.0)
         return 0;
+
+    // Special case for Open Clusters, for which the limiting magnitude
+    // is more like the one for a star.
+    if (symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
+        hints_limit_mag = painter.hints_limit_mag - 2.5;
+    }
 
     eraS2c(s->ra, s->de, p);
     convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
@@ -471,16 +481,17 @@ static int dso_render_from_data(const dso_data_t *s,
         return 0;
 
     double win_pos[2], win_size[2], win_angle;
-    symbol = symbols_get_for_otype(s->type);
 
     compute_hint_transformation(&painter, s->ra, s->de, s->angle,
             s->smax, s->smin, symbol, win_pos, win_size, &win_angle);
 
-    symbols_paint(&painter, symbol, win_pos, win_size, NULL, win_angle);
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->id.oid, 0);
 
-    if (vmag <= painter.label_mag_max) {
+    if (vmag <= hints_limit_mag)
+        symbols_paint(&painter, symbol, win_pos, win_size, NULL, win_angle);
+
+    if (vmag <= hints_limit_mag - 1.5) {
         compute_ellipse_label_pos(win_pos, win_size, win_angle, p,
                                   &label_anchor);
         vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
@@ -551,12 +562,12 @@ static int render_visitor(int order, int pix, void *user)
     if (loaded) (*nb_loaded)++;
 
     if (!tile) return 0;
-    if (tile->mag_min > painter.mag_max) return 0;
+    if (tile->mag_min > painter.stars_limit_mag + 2.0) return 0;
 
     for (i = 0; i < tile->nb; i++) {
         dso_render_from_data(&tile->sources[i], NULL, &painter);
     }
-    if (tile->mag_max > painter.mag_max) return 0;
+    if (tile->mag_max > painter.stars_limit_mag + 2.0) return 0;
     return 1;
 }
 
