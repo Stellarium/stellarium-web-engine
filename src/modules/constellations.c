@@ -48,27 +48,16 @@ typedef struct constellations {
 static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
 
 /*
- * Function: get_img_url
- * Get the url from an image name.
- *
- * If the image is in png, but a local webp version is available, we
- * use it instead.
+ * Function: join_path
+ * Join two file paths.
  */
-const char *get_img_url(const char *base, const char *path, char *buf)
+const char *join_path(const char *base, const char *path, char *buf)
 {
     if (!base) {
         sprintf(buf, "%s", path);
     } else {
         sprintf(buf, "%s/%s", base, path);
     }
-
-    if (strncmp(buf, "http", 4) != 0 && str_endswith(buf, ".png")) {
-        strcpy(strrchr(buf, '.'), ".webp");
-        if (!asset_get_data2(buf, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
-                             NULL, NULL))
-            strcpy(strrchr(buf, '.'), ".png");
-    }
-
     return buf;
 }
 
@@ -164,8 +153,7 @@ static json_value *constellation_set_image(
     base_path = json_get_attr_s(args, "base_path");
 
     if (parse_anchors(anchors, cons->mat) != 0) goto error;
-    cons->img = texture_from_url(
-                        get_img_url(base_path, img, buf), TF_LAZY_LOAD);
+    cons->img = texture_from_url(join_path(base_path, img, buf), TF_LAZY_LOAD);
     if (json_get_attr_b(args, "uv_in_pixel", false))
         cons->img_need_rescale = true;
     assert(cons->img);
