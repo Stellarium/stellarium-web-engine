@@ -173,7 +173,12 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     const char *name = NULL;
     char tmp[8];
     double label_color[4] = {color[0], color[1], color[2], 0.5};
+    static const double white[4] = {1, 1, 1, 1};
+    const bool selected = core->selection && s->oid == core->selection->oid;
+
     if (!s->hip) return;
+    if (selected)
+        vec4_copy(white, label_color);
     size += LABEL_SPACING;
 
     name = identifiers_get(s->oid, "NAME");
@@ -474,6 +479,7 @@ static int render_visitor(int order, int pix, void *user)
     double p[4], p_win[4], size, luminance;
     double color[3], max_sep, fov, viewport_cap[4];
     bool loaded;
+    bool selected;
 
     // Early exit if the tile is clipped.
     if (painter_is_tile_clipped(&painter, FRAME_ASTROM, order, pix, true))
@@ -529,7 +535,9 @@ static int render_visitor(int order, int pix, void *user)
             .oid = s->oid,
         };
         n++;
-        if (s->vmag <= painter.hints_limit_mag - 4.0 && survey != SURVEY_GAIA)
+        selected = core->selection && s->oid == core->selection->oid;
+        if (selected || (s->vmag <= painter.hints_limit_mag - 4.0 &&
+            survey != SURVEY_GAIA))
             star_render_name(&painter, s, p_win, size, s->vmag, color);
     }
     paint_points(&painter, n, points, FRAME_WINDOW);
