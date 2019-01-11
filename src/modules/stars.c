@@ -573,10 +573,9 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 
     /* Ad-hoc formula to adjust tonemapping when many stars are visible.
      * I think the illuminance computation is correct, but should we use
-     * core_report_illuminance_in_fov?  Also the factor used (20) is
-     * arbitrary.*/
+     * core_report_illuminance_in_fov? */
     illuminance *= core->telescope.light_grasp;
-    core_report_luminance_in_fov(illuminance * 20.0, false);
+    core_report_luminance_in_fov(illuminance, false);
 
     progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);
     return 0;
