@@ -108,42 +108,42 @@ struct item
     int type;
 
     const prog_t *prog;
-    double      color[4];
+    float       color[4];
     gl_buf_t    buf;
     gl_buf_t    indices;
     texture_t   *tex;
     int         flags;
-    double      depth_range[2];
+    float       depth_range[2];
 
     union {
         struct {
-            double width;
-            double stripes;
+            float width;
+            float stripes;
         } lines;
 
         struct {
-            double smooth;
+            float smooth;
         } points;
 
         struct {
-            double contrast;
+            float contrast;
             const texture_t *normalmap;
             texture_t *shadow_color_tex;
-            double mv[4][4];
-            double sun[4]; // pos + radius.
-            double light_emit[3];
-            int    shadow_spheres_nb;
-            double shadow_spheres[4][4]; // (pos + radius) * 4
-            int    material;
+            float mv[16];
+            float sun[4]; // pos + radius.
+            float light_emit[3];
+            int   shadow_spheres_nb;
+            float shadow_spheres[4][4]; // (pos + radius) * 4
+            int   material;
         } planet;
 
         struct {
-            double pos[2];
-            double pos2[2];
-            double size[2];
-            double angle;
-            double dashes;
-            double stroke_width;
+            float pos[2];
+            float pos2[2];
+            float size[2];
+            float angle;
+            float dashes;
+            float stroke_width;
         } vg;
 
         struct {
@@ -244,9 +244,9 @@ typedef struct renderer_gl {
 } renderer_gl_t;
 
 
-static bool color_is_white(const double c[4])
+static bool color_is_white(const float c[4])
 {
-    return c[0] == 1.0 && c[1] == 1.0 && c[2] == 1.0 && c[3] == 1.0;
+    return c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f;
 }
 
 static void window_to_ndc(renderer_gl_t *rend,
@@ -339,7 +339,7 @@ static void points(renderer_t *rend_,
         item->type = ITEM_POINTS;
         gl_buf_alloc(&item->buf, &POINTS_BUF, MAX_POINTS * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, MAX_POINTS * 6);
-        vec4_copy(painter->color, item->color);
+        vec4_to_float(painter->color, item->color);
         item->points.smooth = painter->points_smoothness;
         DL_APPEND(rend->items, item);
     }
@@ -419,7 +419,7 @@ static void quad_planet(
     item_t *item;
     int n, i, j, k;
     double duvx[2], duvy[2];
-    double p[4], normal[4] = {0}, tangent[4] = {0}, z;
+    double p[4], normal[4] = {0}, tangent[4] = {0}, z, mv[4][4];
 
     // Positions of the triangles in the quads.
     const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
@@ -434,27 +434,28 @@ static void quad_planet(
     gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
     item->tex = tex;
     item->tex->ref++;
-    vec4_copy(painter->color, item->color);
+    vec4_to_float(painter->color, item->color);
     item->flags = painter->flags;
     item->planet.normalmap = normalmap;
     item->planet.shadow_color_tex = painter->planet.shadow_color_tex;
     item->planet.contrast = painter->contrast;
     item->planet.shadow_spheres_nb = painter->planet.shadow_spheres_nb;
-    if (painter->planet.shadow_spheres_nb)
-        memcpy(item->planet.shadow_spheres, painter->planet.shadow_spheres,
-               painter->planet.shadow_spheres_nb *
-               sizeof(*painter->planet.shadow_spheres));
-    vec4_copy(*painter->planet.sun, item->planet.sun);
+    for (i = 0; i < painter->planet.shadow_spheres_nb; i++) {
+        vec4_to_float(painter->planet.shadow_spheres[i],
+                      item->planet.shadow_spheres[i]);
+    }
+    vec4_to_float(*painter->planet.sun, item->planet.sun);
     if (painter->planet.light_emit)
-        vec3_copy(*painter->planet.light_emit, item->planet.light_emit);
+        vec3_to_float(*painter->planet.light_emit, item->planet.light_emit);
 
     // Compute modelview matrix.
-    mat4_set_identity(item->planet.mv);
+    mat4_set_identity(mv);
     if (frame == FRAME_OBSERVED)
-        mat3_to_mat4(painter->obs->ro2v, item->planet.mv);
+        mat3_to_mat4(painter->obs->ro2v, mv);
     if (frame == FRAME_ICRF)
-        mat3_to_mat4(painter->obs->ri2v, item->planet.mv);
-    mat4_mul(item->planet.mv, *painter->transform, item->planet.mv);
+        mat3_to_mat4(painter->obs->ri2v, mv);
+    mat4_mul(mv, *painter->transform, mv);
+    mat4_to_float(mv, item->planet.mv);
 
     // Set material
     if (painter->planet.light_emit)
@@ -499,7 +500,7 @@ static void quad_planet(
         z = p[2];
         project(painter->proj, 0, 4, p, p);
         if (painter->depth_range) {
-            vec2_copy(*painter->depth_range, item->depth_range);
+            vec2_to_float(*painter->depth_range, item->depth_range);
             p[2] = -z;
         }
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(p));
@@ -579,7 +580,7 @@ static void quad(renderer_t          *rend_,
     ofs = item->buf.nb;
     item->tex = tex;
     item->tex->ref++;
-    vec4_copy(painter->color, item->color);
+    vec4_to_float(painter->color, item->color);
     item->flags = painter->flags;
 
     vec2_sub(uv[1], uv[0], duvx);
@@ -635,14 +636,16 @@ static void quad(renderer_t          *rend_,
 
 static void texture2(renderer_gl_t *rend, texture_t *tex,
                      double uv[4][2], double pos[4][2],
-                     const double color[4])
+                     const double color_[4])
 {
     int i, ofs;
     item_t *item;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
+    float color[4];
 
+    vec4_to_float(color_, color);
     item = get_item(rend, ITEM_ALPHA_TEXTURE, 4, 6, tex);
-    if (item && !vec4_equal(item->color, color)) item = NULL;
+    if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
@@ -652,7 +655,7 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
         item->prog = &rend->progs.blit_tag;
         item->tex = tex;
         item->tex->ref++;
-        vec4_copy(color, item->color);
+        memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
 
@@ -975,7 +978,6 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     prog_t *prog;
     GLuint  array_buffer;
     GLuint  index_buffer;
-    float mf[16];
 
     prog = &rend->progs.planet;
     GL(glUseProgram(prog->prog));
@@ -1034,12 +1036,11 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     GL(glUniform3f(prog->u_light_emit_l, VEC3_SPLIT(item->planet.light_emit)));
     GL(glUniform1i(prog->u_material_l, item->planet.material));
     GL(glUniform1i(prog->u_is_moon_l, item->flags & PAINTER_IS_MOON ? 1 : 0));
-    mat4_to_float(item->planet.mv, mf);
-    GL(glUniformMatrix4fv(prog->u_mv_l, 1, 0, mf));
+    GL(glUniformMatrix4fv(prog->u_mv_l, 1, 0, item->planet.mv));
     GL(glUniform1i(prog->u_shadow_spheres_nb_l,
                    item->planet.shadow_spheres_nb));
-    mat4_to_float(item->planet.shadow_spheres, mf);
-    GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0, mf));
+    GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0,
+                          (void*)item->planet.shadow_spheres));
 
     GL(glUniform2f(prog->u_depth_range_l,
                    rend->depth_range[0], rend->depth_range[1]));
@@ -1116,9 +1117,11 @@ static void line(renderer_t           *rend_,
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     double k, pos[4];
+    float color[4];
 
+    vec4_to_float(painter->color, color);
     item = get_item(rend, ITEM_LINES, nb_segs + 1, nb_segs * 2, NULL);
-    if (item && !vec4_equal(item->color, painter->color)) item = NULL;
+    if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
     if (item && item->lines.width != painter->lines_width) item = NULL;
 
     if (!item) {
@@ -1127,7 +1130,7 @@ static void line(renderer_t           *rend_,
         gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
         item->lines.width = painter->lines_width;
-        vec4_copy(painter->color, item->color);
+        memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
 
@@ -1164,9 +1167,9 @@ void ellipse_2d(renderer_t        *rend_,
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_ELLIPSE;
-    vec2_copy(pos, item->vg.pos);
-    vec2_copy(size, item->vg.size);
-    vec4_copy(painter->color, item->color);
+    vec2_to_float(pos, item->vg.pos);
+    vec2_to_float(size, item->vg.size);
+    vec4_to_float(painter->color, item->color);
     item->vg.angle = angle;
     item->vg.dashes = painter->lines_stripes;
     item->vg.stroke_width = painter->lines_width;
@@ -1181,9 +1184,9 @@ void rect_2d(renderer_t        *rend_,
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_RECT;
-    vec2_copy(pos, item->vg.pos);
-    vec2_copy(size, item->vg.size);
-    vec4_copy(painter->color, item->color);
+    vec2_to_float(pos, item->vg.pos);
+    vec2_to_float(size, item->vg.size);
+    vec4_to_float(painter->color, item->color);
     item->vg.angle = angle;
     item->vg.stroke_width = painter->lines_width;
     DL_APPEND(rend->items, item);
@@ -1198,9 +1201,9 @@ void line_2d(renderer_t          *rend_,
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_LINE;
-    vec2_copy(p1, item->vg.pos);
-    vec2_copy(p2, item->vg.pos2);
-    vec4_copy(painter->color, item->color);
+    vec2_to_float(p1, item->vg.pos);
+    vec2_to_float(p2, item->vg.pos2);
+    vec4_to_float(painter->color, item->color);
     item->vg.stroke_width = painter->lines_width;
     DL_APPEND(rend->items, item);
 }
