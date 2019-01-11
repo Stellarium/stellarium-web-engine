@@ -14,6 +14,8 @@
 
 #define URL_MAX_SIZE 4096
 
+static const double LABEL_SPACING = 4;
+
 // Indices of the two surveys we use.
 enum {
     SURVEY_DEFAULT  = 0,
@@ -172,6 +174,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     char tmp[8];
     double label_color[4] = {color[0], color[1], color[2], 0.5};
     if (!s->hip) return;
+    size += LABEL_SPACING;
 
     name = identifiers_get(s->oid, "NAME");
     if (name) {
