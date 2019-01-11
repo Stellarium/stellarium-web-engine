@@ -417,33 +417,6 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
     win_size[1] /= 2.0;
 }
 
-/*
- * Compute the position to put the label next to an ellipse
- */
-static void compute_ellipse_label_pos(
-        const double pos[2], const double size[2], double angle,
-        double out[2], int *anchor)
-{
-    double a, m[4][4], p[4];
-    // Small ellipse, use the middle pos:
-    if (size[0] <= 12 && size[1] <= 12) {
-        vec2_copy(pos, out);
-        *anchor = ANCHOR_AROUND;
-        return;
-    }
-    *anchor = ANCHOR_LEFT | ANCHOR_FIXED;
-    out[1] = 100000;
-    mat4_set_identity(m);
-    mat4_itranslate(m, pos[0], pos[1], 0);
-    mat4_rz(angle, m, m);
-    mat4_iscale(m, size[0] / 2, size[1] / 2, 1);
-    for (a = 0; a < 2 * M_PI; a += 2 * M_PI / 16) {
-        vec4_set(p, cos(a), sin(a), 0, 1);
-        mat4_mul_vec4(m, p, p);
-        if (p[0] - p[1] > out[0] - out[1]) vec2_copy(p, out);
-    }
-}
-
 
 // Render a DSO from its data.
 static int dso_render_from_data(const dso_data_t *s,
@@ -451,9 +424,8 @@ static int dso_render_from_data(const dso_data_t *s,
                                 const painter_t *painter_)
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
-    double p[4] = {}, size, luminance, vmag;
+    double p[4] = {}, vmag;
     painter_t painter = *painter_;
-    int label_anchor;
     double hints_limit_mag = painter.hints_limit_mag;
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
@@ -475,8 +447,6 @@ static int dso_render_from_data(const dso_data_t *s,
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
         return 0;
 
-    core_get_point_for_mag(vmag, &size, &luminance);
-
     convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
     if (!project(painter.proj,
                  PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
@@ -494,10 +464,12 @@ static int dso_render_from_data(const dso_data_t *s,
         symbols_paint(&painter, s->symbol, win_pos, win_size, NULL, win_angle);
 
     if (vmag <= hints_limit_mag - 1.5) {
-        compute_ellipse_label_pos(win_pos, win_size, win_angle, p,
-                                  &label_anchor);
         vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
-        dso_render_name(&painter, s, p, size, vmag, label_anchor);
+        double radius = min(win_size[0] / 2, win_size[1] / 2) +
+                fabs(cos(win_angle - M_PI_4)) *
+                fabs(win_size[0]/2 - win_size[1]/2);
+        radius += 4;
+        dso_render_name(&painter, s, win_pos, radius, vmag, ANCHOR_AROUND);
     }
     return 0;
 }
