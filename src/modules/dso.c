@@ -440,7 +440,13 @@ static int dso_render_from_data(const dso_data_t *s,
     // Special case for Open Clusters, for which the limiting magnitude
     // is more like the one for a star.
     if (s->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
-        hints_limit_mag = painter.hints_limit_mag - 2.5;
+        hints_limit_mag = painter.hints_limit_mag - 3;
+    }
+
+    if (s->smax == 0) {
+        // DSO without shape don't need to have labels displayed unless they are
+        // much zoomed or selected
+        hints_limit_mag = painter.stars_limit_mag - 10;
     }
 
     if (selected) {
