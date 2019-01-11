@@ -72,7 +72,6 @@ static void label_get_box(const painter_t *painter, const label_t *label,
     double borders[2];
     double pos[2];
     int size[2];
-    double border = 4;
 
     vec2_copy(label->pos, pos);
     paint_text_size(painter, label->render_text, label->size, size);
@@ -80,10 +79,10 @@ static void label_get_box(const painter_t *painter, const label_t *label,
     borders[0] = label->radius;
     borders[1] = label->radius;
 
-    if (anchor & ANCHOR_LEFT) pos[0] += size[0] / 2 + border + borders[0];
-    if (anchor & ANCHOR_RIGHT) pos[0] -= size[0] / 2 + border + borders[0];
-    if (anchor & ANCHOR_BOTTOM) pos[1] -= size[1] / 2 + border + borders[1];
-    if (anchor & ANCHOR_TOP) pos[1] += size[1] / 2 + border + borders[1];
+    if (anchor & ANCHOR_LEFT) pos[0] += size[0] / 2 + borders[0];
+    if (anchor & ANCHOR_RIGHT) pos[0] -= size[0] / 2 + borders[0];
+    if (anchor & ANCHOR_BOTTOM) pos[1] -= size[1] / 2 + borders[1];
+    if (anchor & ANCHOR_TOP) pos[1] += size[1] / 2 + borders[1];
 
     box[0] = pos[0] - size[0] / 2;
     box[1] = pos[1] - size[1] / 2;
