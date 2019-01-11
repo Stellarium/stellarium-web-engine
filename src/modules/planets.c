@@ -706,6 +706,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double radius;           // Planet rendered radius (AU).
     double r_scale = 1.0;    // Artificial size scale.
     double r;                // Angular diameter (rad).
+    double s;
     double sep;              // Angular sep to screen center.
     double hips_alpha = 0;
     double az, alt;
@@ -714,9 +715,11 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double hips_k = 2.0; // How soon we switch to the hips survey.
     char label[256];
     planets_t *planets = (planets_t*)planet->obj.parent;
+    bool selected = core->selection && planet->obj.oid == core->selection->oid;
 
     vmag = planet->obj.vmag;
     if (planet->id == EARTH) return;
+
     if (planet->id != MOON && vmag > painter.stars_limit_mag) return;
 
     vec4_copy(planet->obj.pvo[0], pos);
@@ -734,7 +737,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         r_scale = mix(1, 8, smoothstep(35 * DD2R, 220 * DD2R, core->fov));
     }
 
-    r = 2.0 * radius / vec3_norm(planet->obj.pvo[0]);
+    // Planet apparent diameter in rad
+    r = 2.0 * planet->radius;
     // First approximation, to skip non visible planets.
     // XXX: we need to compute the max visible fov (for the moment I
     // add a factor of 1.5 to make sure).
@@ -781,14 +785,23 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     }
 
 
-    if (vmag <= painter.hints_limit_mag - 1.0) {
+    if (selected || vmag <= painter.hints_limit_mag - 1.0) {
         mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
         if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, vpos, vpos)) {
             if (r_scale == 1.0) strcpy(label, planet->name);
             else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
-            labels_add(label, vpos, point_size, 16, label_color, 0,
+            static const double white[4] = {1, 1, 1, 1};
+
+            if (selected)
+                vec4_copy(white, label_color);
+            s = point_size;
+            double radius = planet->radius / 2.0 *
+                painter.proj->window_size[0] / painter.proj->scaling[0];
+            s = max(s, radius);
+
+            labels_add(label, vpos, s + 4, 14, label_color, 0,
                        ANCHOR_AROUND, -vmag, planet->obj.oid);
         }
     }
