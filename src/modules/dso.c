@@ -36,6 +36,8 @@ typedef struct {
     double      smax;   // Angular size (rad)
     double      angle;
 
+    int symbol;
+
     char short_name[64];
     // List of extra names, separated by '\0', terminated by two '\0'.
     char *names;
@@ -264,6 +266,8 @@ static int on_file_tile_loaded(const char type[4],
         tile->mag_max = max(tile->mag_max, temp_mag);
         s->id.oid = make_oid(s);
 
+        s->symbol = symbols_get_for_otype(s->type);
+
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
             s->names = calloc(1, 2 + strlen(ids));
@@ -403,13 +407,12 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
 {
     const dso_t *dso = (dso_t*)obj;
     const dso_data_t *s = &dso->data;
-    int symbol = symbols_get_for_otype(s->type);
 
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
     compute_hint_transformation(&tmp_painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, symbol, win_pos, win_size, win_angle);
+            s->smax, s->smin, s->symbol, win_pos, win_size, win_angle);
     win_size[0] /= 2.0;
     win_size[1] /= 2.0;
 }
@@ -450,7 +453,7 @@ static int dso_render_from_data(const dso_data_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double p[4] = {}, size, luminance, vmag;
     painter_t painter = *painter_;
-    int label_anchor, symbol;
+    int label_anchor;
     double hints_limit_mag = painter.hints_limit_mag;
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
@@ -460,11 +463,9 @@ static int dso_render_from_data(const dso_data_t *s,
     if (vmag > painter.stars_limit_mag + 2.0)
         return 0;
 
-    symbol = symbols_get_for_otype(s->type);
-
     // Special case for Open Clusters, for which the limiting magnitude
     // is more like the one for a star.
-    if (symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
+    if (s->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
         hints_limit_mag = painter.hints_limit_mag - 2.5;
     }
 
@@ -484,13 +485,13 @@ static int dso_render_from_data(const dso_data_t *s,
     double win_pos[2], win_size[2], win_angle;
 
     compute_hint_transformation(&painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, symbol, win_pos, win_size, &win_angle);
+            s->smax, s->smin, s->symbol, win_pos, win_size, &win_angle);
 
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->id.oid, 0);
 
     if (vmag <= hints_limit_mag)
-        symbols_paint(&painter, symbol, win_pos, win_size, NULL, win_angle);
+        symbols_paint(&painter, s->symbol, win_pos, win_size, NULL, win_angle);
 
     if (vmag <= hints_limit_mag - 1.5) {
         compute_ellipse_label_pos(win_pos, win_size, win_angle, p,
@@ -533,10 +534,9 @@ static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
     const dso_t *dso = (dso_t*)obj;
     const dso_data_t *s = &dso->data;
     double win_pos[2], win_size[2], win_angle;
-    int symbol = symbols_get_for_otype(s->type);
 
     compute_hint_transformation(painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, symbol, win_pos, win_size, &win_angle);
+            s->smax, s->smin, s->symbol, win_pos, win_size, &win_angle);
     painter_t p = *painter;
     p.lines_width = 2;
     symbols_paint(&p, symbols_get_for_otype(s->type), win_pos, win_size,
