@@ -309,7 +309,7 @@ static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
     int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
-    double vmag, ra, de, pra, pde, plx, bv;
+    double vmag, gmag, ra, de, pra, pde, plx, bv;
     char ids[256] = {};
     typeof(((stars_t*)0)->surveys[0]) *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
@@ -324,6 +324,7 @@ static int on_file_tile_loaded(const char type[4],
         {"hd",   'i'},
         {"tyc",  'i'},
         {"vmag", 'f', EPH_VMAG},
+        {"gmag", 'f', EPH_VMAG},
         {"ra",   'f', EPH_RAD},
         {"de",   'f', EPH_RAD},
         {"plx",  'f', EPH_ARCSEC},
@@ -365,12 +366,13 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->sources[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                &s->gaia, &s->hip, &s->hd, &s->tyc, &vmag, &ra, &de, &plx,
-                &pra, &pde, &bv, ids);
-
+                &s->gaia, &s->hip, &s->hd, &s->tyc, &vmag, &gmag,
+                &ra, &de, &plx, &pra, &pde, &bv, ids);
         assert(!isnan(ra));
         assert(!isnan(de));
         assert(!isnan(plx));
+        if (isnan(vmag)) vmag = gmag;
+        assert(!isnan(vmag));
 
         if (!isnan(survey->min_vmag) && (vmag < survey->min_vmag)) continue;
         s->vmag = vmag;
