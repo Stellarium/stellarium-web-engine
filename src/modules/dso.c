@@ -454,12 +454,13 @@ static int dso_render_from_data(const dso_data_t *s,
     double hints_limit_mag = painter.hints_limit_mag;
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
-    symbol = symbols_get_for_otype(s->type);
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
     if (vmag > painter.stars_limit_mag + 2.0)
         return 0;
+
+    symbol = symbols_get_for_otype(s->type);
 
     // Special case for Open Clusters, for which the limiting magnitude
     // is more like the one for a star.
