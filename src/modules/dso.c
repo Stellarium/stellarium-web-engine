@@ -31,6 +31,7 @@ typedef struct {
     double      vmag;
     double      ra;     // ra equ J2000
     double      de;     // de equ J2000
+    double      pos[3]; // Cartesian version of ra/dec
 
     double      smin;   // Angular size (rad)
     double      smax;   // Angular size (rad)
@@ -101,8 +102,7 @@ static uint64_t make_oid(const dso_data_t *data)
 static int dso_update(obj_t *obj, const observer_t *obs, double dt)
 {
     dso_t *dso = (dso_t*)obj;
-    eraS2c(dso->data.ra, dso->data.de, obj->pvo[0]);
-    astrometric_to_apparent(obs, obj->pvo[0], true, obj->pvo[0]);
+    astrometric_to_apparent(obs, dso->data.pos, true, obj->pvo[0]);
     obj->pvo[0][3] = 0.0;
     assert(fabs(vec3_norm2(obj->pvo[0]) - 1.0) <= 0.000001);
     obj->vmag = dso->data.vmag;
@@ -149,11 +149,12 @@ static int dso_init(obj_t *obj, json_value *args)
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
     // Support creating a dso using noctuasky model data json values.
     dso_t *dso = (dso_t*)obj;
-    json_value *model, *names;
+    json_value *model, *names, *types, *jstr;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         dso->data.ra = json_get_attr_f(model, "ra", 0) * DD2R;
         dso->data.de = json_get_attr_f(model, "de", 0) * DD2R;
+        eraS2c(dso->data.ra, dso->data.de, dso->data.pos);
         dso->data.vmag = json_get_attr_f(model, "Vmag", NAN);
         if (isnan(dso->data.vmag))
             dso->data.vmag = json_get_attr_f(model, "Bmag", NAN);
@@ -167,6 +168,14 @@ static int dso_init(obj_t *obj, json_value *args)
     if (names)
         dso->data.names = parse_json_names(names);
 
+    types = json_get_attr(args, "types", json_array);
+    if (types && types->u.array.length > 0) {
+        jstr = types->u.array.values[0];
+        if (jstr->type == json_string) {
+            strncpy(dso->data.type, jstr->u.string.ptr, 4);
+            dso->data.symbol = symbols_get_for_otype(dso->data.type);
+        }
+    }
     return 0;
 }
 
@@ -251,6 +260,7 @@ static int on_file_tile_loaded(const char type[4],
         assert(s->id.nsid);
         s->ra *= DD2R;
         s->de *= DD2R;
+        eraS2c(s->ra, s->de, s->pos);
         s->smax *= DAM2R;
         s->smin *= DAM2R;
         if (!s->smin && s->smax) {
@@ -455,8 +465,7 @@ static int dso_render_from_data(const dso_data_t *s,
         vec4_copy(white, painter.color);
     }
 
-    eraS2c(s->ra, s->de, p);
-    convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
+    convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, s->pos, p);
     // Skip if below horizon.
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
         return 0;
