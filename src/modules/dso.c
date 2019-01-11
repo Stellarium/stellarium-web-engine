@@ -424,21 +424,29 @@ static int dso_render_from_data(const dso_data_t *s,
                                 const painter_t *painter_)
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
+    static const double white[4] = {1, 1, 1, 1};
     double p[4] = {}, vmag;
     painter_t painter = *painter_;
     double hints_limit_mag = painter.hints_limit_mag;
+    const bool selected = core->selection && s->id.oid == core->selection->oid;
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
-    if (vmag > painter.stars_limit_mag + 2.0)
+    if (!selected && vmag > painter.stars_limit_mag + 2.0)
         return 0;
 
     // Special case for Open Clusters, for which the limiting magnitude
     // is more like the one for a star.
     if (s->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
         hints_limit_mag = painter.hints_limit_mag - 2.5;
+    }
+
+    if (selected) {
+        hints_limit_mag = 99;
+        painter.lines_width = 2;
+        vec4_copy(white, painter.color);
     }
 
     eraS2c(s->ra, s->de, p);
@@ -461,10 +469,12 @@ static int dso_render_from_data(const dso_data_t *s,
                       win_size[0] / 2, win_size[1] / 2, s->id.oid, 0);
 
     if (vmag <= hints_limit_mag)
-        symbols_paint(&painter, s->symbol, win_pos, win_size, NULL, win_angle);
+        symbols_paint(&painter, s->symbol, win_pos, win_size,
+                      selected ? white : NULL, win_angle);
 
     if (vmag <= hints_limit_mag - 1.5) {
-        vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
+        if (!selected)
+            vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
         double radius = min(win_size[0] / 2, win_size[1] / 2) +
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
@@ -499,21 +509,6 @@ void dso_get_designations(
         }
         names += strlen(names) + 1;
     }
-}
-
-static int dso_render_pointer(const obj_t *obj, const painter_t *painter)
-{
-    const dso_t *dso = (dso_t*)obj;
-    const dso_data_t *s = &dso->data;
-    double win_pos[2], win_size[2], win_angle;
-
-    compute_hint_transformation(painter, s->ra, s->de, s->angle,
-            s->smax, s->smin, s->symbol, win_pos, win_size, &win_angle);
-    painter_t p = *painter;
-    p.lines_width = 2;
-    symbols_paint(&p, symbols_get_for_otype(s->type), win_pos, win_size,
-                  p.color, win_angle);
-    return 0;
 }
 
 static int render_visitor(int order, int pix, void *user)
@@ -698,7 +693,6 @@ static obj_klass_t dso_klass = {
     .update = dso_update,
     .render = dso_render,
     .get_designations = dso_get_designations,
-    .render_pointer = dso_render_pointer,
     .get_2d_ellipse = dso_get_2d_ellipse,
     .attributes = (attribute_t[]) {
         // Default properties.
