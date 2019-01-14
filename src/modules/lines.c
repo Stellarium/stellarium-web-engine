@@ -205,10 +205,11 @@ static bool check_borders(const double a[3], const double b[3],
  *   p      - Position of the border intersection.
  *   u      - Direction of the line.
  *   v      - Normal of the window border inward.
+ *   dir    - 0: alt, 1: az
  */
 static void render_label(const double p[2], const double u[2],
                          const double v[2], const double uv[2],
-                         int i, line_t *line, int step,
+                         int dir, line_t *line, int step,
                          const painter_t *painter)
 {
     char buff[32];
@@ -233,9 +234,9 @@ static void render_label(const double p[2], const double u[2],
     label_angle = atan2(u[1], u[0]);
     if (fabs(label_angle) > M_PI / 2) label_angle += M_PI;
 
-    if (i == 0) a = mix(-90, +90 , uv[1]) * DD2R;
-    else        a = mix(  0, +360, uv[0]) * DD2R;
-    if (i == 0 || line->format == 'd') {
+    if (dir == 0) a = mix(-90, +90 , uv[1]) * DD2R;
+    else          a = mix(  0, +360, uv[0]) * DD2R;
+    if (dir == 0 || line->format == 'd') {
         eraA2af(1, a, &s, h);
         if (step <= 360)
             sprintf(buff, "%c%d°", s, h[0]);
@@ -263,7 +264,7 @@ static void render_label(const double p[2], const double u[2],
     vec4_copy(painter->color, color);
 
     // Uniq hash so that the labels are differentiated.
-    hash = crc32(i, (void*)line->obj.id, strlen(line->obj.id));
+    hash = crc32(dir, (void*)line->obj.id, strlen(line->obj.id));
     hash = crc32(hash, (void*)&a, sizeof(a));
     hash = crc32(hash, (void*)v, 2 * sizeof(double));
 
@@ -274,7 +275,7 @@ static void render_label(const double p[2], const double u[2],
 
 int on_quad(int step, qtree_node_t *node,
             const double uv[4][2], const double pos[4][4],
-            const painter_t *painter,
+            const painter_t *painter_,
             void *user, int s[2])
 {
     double lines[4][4] = {};
@@ -282,7 +283,8 @@ int on_quad(int step, qtree_node_t *node,
     projection_t *proj_spherical = ((void**)user)[0];
     line_t *line = ((void**)user)[1];
     step_t **steps = ((void**)user)[2];
-    int i;
+    int dir;
+    painter_t painter = *painter_;
 
     // Compute the next split.
     if (step == 0) {
@@ -308,24 +310,22 @@ int on_quad(int step, qtree_node_t *node,
     bool visible[2] = {false, false};
     assert(node->c < 3);
 
-    for (i = 0; i < 2; i++) {
-        if (node->c & (1 << i)) continue; // Do we need that?
-        visible[i] = (node->level >= steps[i]->level) &&
-            node->xy[i] % (1 << (node->level - steps[i]->level)) == 0;
-        if (!visible[i]) continue;
-        node->c |= (1 << i);
+    for (dir = 0; dir < 2; dir++) {
+        if (node->c & (1 << dir)) continue; // Do we need that?
+        visible[dir] = (node->level >= steps[dir]->level) &&
+            node->xy[dir] % (1 << (node->level - steps[dir]->level)) == 0;
+        if (!visible[dir]) continue;
+        node->c |= (1 << dir);
         if (line->lines_visible.value) {
-            // XXX: I should use a macro to do the painter copy.
-            painter_t painter2 = *painter;
-            painter2.color[3] *= line->lines_visible.value;
-            paint_lines(&painter2, line->frame, 2, lines + i * 2,
+            painter.color[3] *= line->lines_visible.value;
+            paint_lines(&painter, line->frame, 2, lines + dir * 2,
                         proj_spherical, 8, 0);
         }
         if (!line->format) continue;
-        if (check_borders(pos[0], pos[2 - i], painter->proj, p, u, v))
-                render_label(p, u, v, uv[0], 1 - i, line,
-                             node->s[i] * (i + 1),
-                             painter);
+        if (check_borders(pos[0], pos[2 - dir], painter.proj, p, u, v)) {
+            render_label(p, u, v, uv[0], 1 - dir, line,
+                         node->s[dir] * (dir + 1), &painter);
+        }
     }
     return (node->level >= max(steps[0]->level, steps[1]->level)) ? 0 : 1;
 }
