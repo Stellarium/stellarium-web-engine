@@ -698,6 +698,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], vpos[3], p_win[4];
     double label_color[4] = RGBA(124, 124, 255, 255);
+    const double white[4] = {1, 1, 1, 1};
     double color[4];
     double vmag;             // Observed magnitude.
     double point_size;       // Radius size of point (pixel).
@@ -792,17 +793,13 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                 2, vpos, vpos)) {
             if (r_scale == 1.0) strcpy(label, planet->name);
             else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
-            static const double white[4] = {1, 1, 1, 1};
-
-            if (selected)
-                vec4_copy(white, label_color);
             s = point_size;
-            double radius = planet->radius / 2.0 *
+            // Radius on screen in pixel.
+            radius = planet->radius / 2.0 *
                 painter.proj->window_size[0] / painter.proj->scaling[0];
             s = max(s, radius);
-
-            labels_add(label, vpos, s + 4, 14, label_color, 0,
-                       ANCHOR_AROUND, -vmag, planet->obj.oid);
+            labels_add(label, vpos, s + 4, 14, selected ? white : label_color,
+                       0, ANCHOR_AROUND, -vmag, planet->obj.oid);
         }
     }
 
