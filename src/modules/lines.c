@@ -117,7 +117,6 @@ typedef struct line line_t;
 struct line {
     obj_t           obj;
     fader_t         visible;
-    fader_t         lines_visible;
     int             frame;      // One of FRAME_ value.
     char            format;     // 'd', 'h', or 0
     double          color[4];
@@ -135,7 +134,6 @@ static int lines_init(obj_t *obj, json_value *args)
         line->frame = LINES[i].frame;
         hex_to_rgba(LINES[i].color, line->color);
         line->format = LINES[i].format;
-        fader_init(&line->lines_visible, true);
     }
     return 0;
 }
@@ -178,7 +176,6 @@ static int line_update(obj_t *obj, const observer_t *obs, double dt)
     bool changed = false;
     line_t *line = (line_t*)obj;
     changed |= fader_update(&line->visible, dt);
-    changed |= fader_update(&line->lines_visible, dt);
     return changed ? 1 : 0;
 }
 
@@ -316,11 +313,8 @@ int on_quad(int step, qtree_node_t *node,
             node->xy[dir] % (1 << (node->level - steps[dir]->level)) == 0;
         if (!visible[dir]) continue;
         node->c |= (1 << dir);
-        if (line->lines_visible.value) {
-            painter.color[3] *= line->lines_visible.value;
-            paint_lines(&painter, line->frame, 2, lines + dir * 2,
-                        proj_spherical, 8, 0);
-        }
+        paint_lines(&painter, line->frame, 2, lines + dir * 2,
+                    proj_spherical, 8, 0);
         if (!line->format) continue;
         if (check_borders(pos[0], pos[2 - dir], painter.proj, p, u, v)) {
             render_label(p, u, v, uv[0], 1 - dir, line,
@@ -510,8 +504,6 @@ static obj_klass_t line_klass = {
     .render = line_render,
     .attributes = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(line_t, visible.target)),
-        PROPERTY("visible", "b", MEMBER(line_t, lines_visible.target),
-                 .sub = "lines"),
         {}
     },
 };
