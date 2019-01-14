@@ -79,8 +79,6 @@ int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
  */
 const char *sys_translate(const char *domain, const char *str);
 
-char *sys_render_text(const char *txt, float height, int *w, int *h);
-
 /*
  * Function: sys_list_dir
  * List all the files and directories in a local directory.
@@ -127,6 +125,7 @@ typedef struct {
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
+    // XXX: to remove.
     char *(*render_text)(void *user, const char *txt,
                          float height, int *w, int *h);
     int (*list_dir)(void *user, const char *dir, void *cuser,

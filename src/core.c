@@ -299,7 +299,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
     request_init(cache_dir);
     identifiers_init();
 
-    font_init(asset_get_data("asset://font/DejaVuSans-small.ttf", NULL, NULL));
     core = (core_t*)obj_create("core", "core", NULL, NULL);
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;

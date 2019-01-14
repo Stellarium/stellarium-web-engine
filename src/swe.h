@@ -38,7 +38,6 @@
 #include "utils/catalog.h"
 #include "utils/color.h"
 #include "utils/fader.h"
-#include "utils/font.h"
 #include "utils/gesture.h"
 #include "utils/progressbar.h"
 #include "utils/texture.h"

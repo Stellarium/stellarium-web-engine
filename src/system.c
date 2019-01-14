@@ -89,13 +89,6 @@ const char *sys_translate(const char *domain, const char *str)
     return sys_callbacks.translate(sys_callbacks.user, domain, str);
 }
 
-char *sys_render_text(const char *txt, float height, int *w, int *h)
-{
-    if (!sys_callbacks.render_text)
-        return (void*)font_render(txt, height, w, h);
-    return sys_callbacks.render_text(sys_callbacks.user, txt, height, w, h);
-}
-
 int sys_list_dir(const char *dirpath, void *user,
                  int (*f)(void *user, const char *path, int is_dir))
 {
