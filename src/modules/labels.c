@@ -30,7 +30,7 @@ struct label
     fader_t fader;
 
     double  priority;
-    double  box[4];
+    double  bounds[4];
 };
 
 typedef struct labels {
@@ -68,55 +68,44 @@ static label_t *label_get(label_t *list, const char *txt, double size,
     return NULL;
 }
 
-static void label_get_box(const painter_t *painter, const label_t *label,
-                          int anchor, double box[4])
+static void label_get_bounds(const painter_t *painter, const label_t *label,
+                             int align, double bounds[4])
 {
-    double borders[2];
+    double border;
     double pos[2];
-    int size[2];
-
     vec2_copy(label->pos, pos);
-    paint_text_size(painter, label->render_text, label->size, size);
-
-    borders[0] = label->flags & ANCHOR_AROUND ? label->radius / sqrt(2.0) :
-                                                label->radius;
-    borders[1] = borders[0];
-
-    if (anchor & ANCHOR_LEFT) pos[0] += size[0] / 2 + borders[0];
-    if (anchor & ANCHOR_RIGHT) pos[0] -= size[0] / 2 + borders[0];
-    if (anchor & ANCHOR_BOTTOM) pos[1] -= size[1] / 2 + borders[1];
-    if (anchor & ANCHOR_TOP) pos[1] += size[1] / 2 + borders[1];
-
-    box[0] = pos[0] - size[0] / 2;
-    box[1] = pos[1] - size[1] / 2;
-    box[2] = pos[0] + size[0] / 2;
-    box[3] = pos[1] + size[1] / 2;
+    border = label->radius;
+    if (label->flags & LABEL_AROUND) border /= sqrt(2.0);
+    if (align & ALIGN_LEFT)    pos[0] += border;
+    if (align & ALIGN_RIGHT)   pos[0] -= border;
+    if (align & ALIGN_BOTTOM)  pos[1] -= border;
+    if (align & ALIGN_TOP)     pos[1] += border;
+    paint_text_bounds(painter, label->render_text, pos, align, label->size,
+                      bounds);
 }
 
-static bool label_get_boxes(const painter_t *painter, const label_t *label,
-                            int i, double box[4])
+static bool label_get_possible_bounds(const painter_t *painter,
+        const label_t *label, int i, double bounds[4])
 {
-    const int anchors_around[] = {ANCHOR_BOTTOM_LEFT, ANCHOR_BOTTOM_RIGHT,
-                                  ANCHOR_TOP_LEFT, ANCHOR_TOP_RIGHT};
-    const int anchors_over[] = {ANCHOR_CENTER, ANCHOR_TOP,
-                                ANCHOR_BOTTOM, ANCHOR_LEFT, ANCHOR_RIGHT};
-    if (label->flags & ANCHOR_FIXED) {
+    const int anchors_around[] = {
+        ALIGN_LEFT   | ALIGN_BOTTOM,
+        ALIGN_LEFT   | ALIGN_TOP,
+        ALIGN_RIGHT  | ALIGN_BOTTOM,
+        ALIGN_RIGHT  | ALIGN_TOP};
+
+    if (!(label->flags & LABEL_AROUND)) {
         if (i != 0) return false;
-        label_get_box(painter, label, label->flags, box);
+        label_get_bounds(painter, label, label->flags, bounds);
         return true;
     }
-    if (label->flags & ANCHOR_AROUND) {
+    if (label->flags & LABEL_AROUND) {
         if (i >= 4) return false;
-        label_get_box(painter, label, anchors_around[i], box);
-    }
-    if (label->flags & ANCHOR_CENTER) {
-        if (i >= 5) return false;
-        label_get_box(painter, label, anchors_over[i], box);
+        label_get_bounds(painter, label, anchors_around[i], bounds);
     }
     return true;
 }
 
-static bool box_overlap(const double a[4], const double b[4])
+static bool bounds_overlap(const double a[4], const double b[4])
 {
     return a[2] >  b[0] &&
            a[0] <= b[2] &&
@@ -127,11 +116,11 @@ static bool box_overlap(const double a[4], const double b[4])
 static bool test_label_overlaps(const label_t *label)
 {
     label_t *other;
-    if (label->flags & ANCHOR_FIXED) return false;
+    if (!(label->flags & LABEL_AROUND)) return false;
     DL_FOREACH(g_labels->labels, other) {
         if (other == label) break;
         if (other->flags & SKIPPED) continue;
-        if (box_overlap(other->box, label->box)) return true;
+        if (bounds_overlap(other->bounds, label->bounds)) return true;
     }
     return false;
 }
@@ -158,18 +147,19 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
         // we don't get updated positions for fading out labels.
         fader_update(&label->fader, label->fader.target ? 0.002 : 0.2);
         for (i = 0; ; i++) {
-            if (!label_get_boxes(painter, label, i, label->box)) {
+            if (!label_get_possible_bounds(painter, label, i, label->bounds)) {
                 label->flags |= SKIPPED;
                 goto skip;
             }
             if (!test_label_overlaps(label)) break;
         }
-        pos[0] = (label->box[0] + label->box[2]) / 2;
-        pos[1] = (label->box[1] + label->box[3]) / 2;
+        pos[0] = label->bounds[0];
+        pos[1] = label->bounds[1];
         vec4_copy(label->color, color);
         color[3] *= label->fader.value;
-        paint_text(painter, label->render_text, pos, label->size,
-                   color, label->angle);
+        paint_text(painter, label->render_text, pos,
+                   ALIGN_LEFT | ALIGN_TOP, label->size, color,
+                   label->angle);
         label->flags &= ~SKIPPED;
 skip:;
     }
@@ -196,7 +186,7 @@ void labels_add(const char *text, const double pos[2],
                 double radius, double size, const double color[4],
                 double angle, int flags, double priority, uint64_t oid)
 {
-    if (flags & ANCHOR_FIXED) priority = 1024.0; // Use FLT_MAX ?
+    if (!(flags & LABEL_AROUND)) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
     label_t *label;

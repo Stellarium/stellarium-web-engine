@@ -20,6 +20,24 @@ typedef struct painter painter_t;
 typedef struct point point_t;
 typedef struct texture texture_t;
 
+/*
+ * Enum: ALIGN_FLAGS
+ * Alignment values that can be passed to paint_text.
+ *
+ * Same as nanovg.
+ */
+enum {
+    // Horizontal align
+    ALIGN_LEFT      = 1 << 0,   // Default, align text horizontally to left.
+    ALIGN_CENTER    = 1 << 1,   // Align text horizontally to center.
+    ALIGN_RIGHT     = 1 << 2,   // Align text horizontally to right.
+    // Vertical align
+    ALIGN_TOP       = 1 << 3,   // Align text vertically to top.
+    ALIGN_MIDDLE    = 1 << 4,   // Align text vertically to middle.
+    ALIGN_BOTTOM    = 1 << 5,   // Align text vertically to bottom.
+    ALIGN_BASELINE  = 1 << 6,   // Default, align text vertically to baseline.
+};
+
 struct renderer
 {
     void (*prepare)(renderer_t *rend,
@@ -53,10 +71,11 @@ struct renderer
     void (*text)(renderer_t      *rend,
                  const char      *text,
                  const double    pos[2],
+                 int             align,
                  double          size,
                  const double    color[4],
                  double          angle,
-                 int             tex_size[2]    // Output, can be NULL.
+                 double          bounds[4]    // Output, can be NULL.
                  );
 
     void (*line)(renderer_t           *rend,
@@ -240,8 +259,13 @@ int paint_lines(const painter_t *painter,
                 int split,
                 int discontinuity_mode);
 
+// Deprecated.
 int paint_text_size(const painter_t *painter, const char *text, double size,
                     int out[2]);
+
+int paint_text_bounds(const painter_t *painter, const char *text,
+                      const double pos[2], int align, double size,
+                      double bounds[4]);
 
 /*
  * Function: paint_text
@@ -250,10 +274,11 @@ int paint_text_size(const painter_t *painter, const char *text, double size,
  * Parameters:
  *   text   - the text to render.
  *   pos    - text position in window coordinates.
+ *   align  - union of <ALIGN_FLAGS>.
  *   size   - text size in window unit.
  */
 int paint_text(const painter_t *painter,
-               const char *text, const double pos[2],
+               const char *text, const double pos[2], int align,
                double size, const double color[4], double angle);
 
 /*

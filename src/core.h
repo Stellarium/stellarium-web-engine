@@ -101,23 +101,8 @@ int traverse_surface(
 /***** Labels manager *****************************************************/
 
 enum {
-    ANCHOR_LEFT     = 1 << 0,
-    ANCHOR_RIGHT    = 1 << 1,
-    ANCHOR_BOTTOM   = 1 << 2,
-    ANCHOR_TOP      = 1 << 3,
-    ANCHOR_VCENTER  = 1 << 4,
-    ANCHOR_HCENTER  = 1 << 5,
-
-    ANCHOR_FIXED    = 1 << 6,
-    ANCHOR_AROUND   = 1 << 7,
-
-    ANCHOR_CENTER       = ANCHOR_VCENTER | ANCHOR_HCENTER,
-    ANCHOR_BOTTOM_LEFT  = ANCHOR_BOTTOM | ANCHOR_LEFT,
-    ANCHOR_BOTTOM_RIGHT = ANCHOR_BOTTOM | ANCHOR_RIGHT,
-    ANCHOR_TOP_LEFT     = ANCHOR_TOP | ANCHOR_LEFT,
-    ANCHOR_TOP_RIGHT    = ANCHOR_TOP | ANCHOR_RIGHT,
-
-    LABEL_UPPERCASE = 1 << 8,
+    LABEL_AROUND    = 1 << 8, // Auto place label around position.
+    LABEL_UPPERCASE = 1 << 10,
 };
 
 void labels_reset(void);
@@ -134,8 +119,8 @@ void labels_reset(void);
  *   size       - Height of the text in pixel.
  *   color      - Color of the text.
  *   angle      - Rotation angle (rad).
- *   flags      - Union of <LABEL_FLAGS>.  Used to specify anchor position
- *                and text effects.
+ *   flags      - Union of <ALIGN_FLAGS> and <LABEL_FLAGS>.
+ *                Used to specify anchor position and text effects.
  *   oid        - Optional unique id for the label.
  */
 void labels_add(const char *text, const double win_pos[2],

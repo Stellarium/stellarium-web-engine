@@ -494,7 +494,7 @@ static int dso_render_from_data(const dso_data_t *s,
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
         radius += 4;
-        dso_render_name(&painter, s, win_pos, radius, vmag, ANCHOR_AROUND);
+        dso_render_name(&painter, s, win_pos, radius, vmag, LABEL_AROUND);
     }
     return 0;
 }

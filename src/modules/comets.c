@@ -204,7 +204,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     // Render name if needed.
     if (*comet->name && vmag < painter->hints_limit_mag) {
         labels_add(comet->name, win_pos, size, 13, label_color,
-                   0, ANCHOR_AROUND, 0, obj->oid);
+                   0, LABEL_AROUND, 0, obj->oid);
     }
     return 0;
 }

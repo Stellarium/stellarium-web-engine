@@ -347,7 +347,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                     2, pos, pos)) {
             labels_add(mplanet->name, pos, size, 13, label_color, 0,
-                       ANCHOR_AROUND, 0, obj->oid);
+                       LABEL_AROUND, 0, obj->oid);
         }
     }
     return 0;

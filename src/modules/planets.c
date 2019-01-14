@@ -799,7 +799,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                 painter.proj->window_size[0] / painter.proj->scaling[0];
             s = max(s, radius);
             labels_add(label, vpos, s + 4, 14, selected ? white : label_color,
-                       0, ANCHOR_AROUND, -vmag, planet->obj.oid);
+                       0, LABEL_AROUND, -vmag, planet->obj.oid);
         }
     }
 

@@ -146,6 +146,7 @@ struct item
             char text[128];
             float pos[2];
             float size;
+            int   align;
         } text;
     };
 
@@ -690,26 +691,34 @@ static void texture(renderer_t *rend_,
 }
 
 static void text(renderer_t *rend_, const char *text, const double pos[2],
-                 double size, const double color[4], double angle,
-                 int out_size[2])
+                 int align, double size, const double color[4], double angle,
+                 double bounds[4])
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    float bounds[4];
+    float fbounds[4];
+    assert(pos);
 
-    if (pos) {
+    if (!bounds) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXT;
         vec4_to_float(color, item->color);
         vec2_to_float(pos, item->text.pos);
         item->text.size = size;
+        item->text.align = align;
         strncpy(item->text.text, text, sizeof(item->text.text) - 1);
         DL_APPEND(rend->items, item);
     }
-    if (out_size) {
-        nvgTextBounds(rend->vg, 0, 0, text, NULL, bounds);
-        out_size[0] = bounds[2] - bounds[0];
-        out_size[1] = bounds[3] - bounds[1];
+    if (bounds) {
+        nvgSave(rend->vg);
+        nvgFontSize(rend->vg, size);
+        nvgTextAlign(rend->vg, align);
+        nvgTextBounds(rend->vg, pos[0], pos[1], text, NULL, fbounds);
+        bounds[0] = fbounds[0];
+        bounds[1] = fbounds[1];
+        bounds[2] = fbounds[2];
+        bounds[3] = fbounds[3];
+        nvgRestore(rend->vg);
     }
 }
 
@@ -846,10 +855,10 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
                                    item->color[2] * 255,
                                    item->color[3] * 255));
     // Round the position to the nearest physical pixel.
-    // XXX: is that correct, considering we render at the middle pos?
+    // XXX: is that correct?
     x = round(item->text.pos[0] * rend->scale) / rend->scale;
     y = round(item->text.pos[1] * rend->scale) / rend->scale;
-    nvgTextAlign(rend->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    nvgTextAlign(rend->vg, item->text.align);
     nvgText(rend->vg, x, y, item->text.text, NULL);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);

@@ -55,18 +55,21 @@ static void points(renderer_t *rend_, const painter_t *painter,
 }
 
 static void text(renderer_t *rend_, const char *text, const double pos[2],
-                 double size, const double color[4], double angle,
-                 int out_size[2])
+                 int align, double size, const double color[4], double angle,
+                 double bounds[4])
 {
     double p[2];
     renderer_svg_t *rend = (void*)rend_;
     const double scale = 320;
 
-    if (out_size) {
-        out_size[0] = u8_len(text) * 8;
-        out_size[1] = 8;
+    if (bounds) {
+        // XXX: not true!
+        bounds[0] = 0;
+        bounds[1] = 0;
+        bounds[2] = u8_len(text) * 8;
+        bounds[3] = 8;
     }
-    if (!pos) return;
+    if (bounds) return;
 
     p[0] = (pos[0] + 1.0) * scale;
     p[1] = (pos[1] + 1.0) * scale;
