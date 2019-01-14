@@ -1253,12 +1253,31 @@ static texture_t *create_white_texture(int w, int h)
     return tex;
 }
 
+static int on_font(void *user, const char *path,
+                   const char *name, const char *fallback)
+{
+    void *data;
+    int size;
+    renderer_gl_t *rend = user;
+
+    data = asset_get_data2(path, ASSET_USED_ONCE, &size, NULL);
+    assert(data);
+    nvgCreateFontMem(rend->vg, name, data, size, 0);
+    if (fallback)
+        nvgAddFallbackFont(rend->vg, fallback, name);
+    return 0;
+}
+
 renderer_t* render_gl_create(void)
 {
     renderer_gl_t *rend;
     rend = calloc(1, sizeof(*rend));
     rend->white_tex = create_white_texture(16, 16);
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    if (sys_list_fonts(rend, on_font) == 0) {
+        // Default bundled font used only if the system didn't add any.
+        on_font(rend, "asset://font/DejaVuSans-small.ttf", "default", NULL);
+    }
 
     // Create all the shaders programs.
     init_prog(&rend->progs.points, "asset://shaders/points.glsl");
