@@ -10,6 +10,7 @@
 #include "swe.h"
 #include "sgp4.h"
 
+#define SATELLITE_DEFAULT_MAG 7.0
 /*
  * Artificial satellites module
  */
@@ -241,7 +242,7 @@ static double satellite_compute_vmag(const satellite_t *sat,
         // Eclipsed.
         return 17.0;
     }
-    if (isnan(sat->stdmag)) return sat->obj.vmag; // Default value.
+    if (isnan(sat->stdmag)) return SATELLITE_DEFAULT_MAG;
 
     // If we have a std mag value,
     // We use the formula:
@@ -260,14 +261,14 @@ static double satellite_compute_vmag(const satellite_t *sat,
 
 static int satellite_init(obj_t *obj, json_value *args)
 {
-    // Support creating a dso using noctuasky model data json values.
+    // Support creating a satellite using noctuasky model data json values.
     satellite_t *sat = (satellite_t*)obj;
     json_value *model, *tle;
     const char *tle1, *tle2, *name;
     double startmfe, stopmfe, deltamin;
     int norad_num = 0;
 
-    sat->obj.vmag = 7.0; // Default value.
+    sat->obj.vmag = SATELLITE_DEFAULT_MAG;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         norad_num = json_get_attr_i(model, "norad_num", 0);
