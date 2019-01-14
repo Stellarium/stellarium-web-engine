@@ -215,7 +215,7 @@ static void render_label(const double p[2], const double u[2],
     char s;
     int h[4];
     double n[2];
-    int size[2];
+    double bounds[4], size[2];
     uint32_t hash;
 
     vec2_normalize(u, n);
@@ -251,7 +251,10 @@ static void render_label(const double p[2], const double u[2],
             sprintf(buff, "%c%dh%2dm%2ds", s, h[0], h[1], h[2]);
     }
 
-    paint_text_size(painter, buff, 13, size);
+    paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE,
+                      13, bounds);
+    size[0] = bounds[2] - bounds[0];
+    size[1] = bounds[3] - bounds[1];
     vec2_normalize(u, n);
     pos[0] = p[0] + n[0] * size[0] / 2 + v[0] * 4;
     pos[1] = p[1] + n[1] * size[0] / 2 + v[1] * 4;

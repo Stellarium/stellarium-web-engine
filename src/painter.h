@@ -259,9 +259,6 @@ int paint_lines(const painter_t *painter,
                 int split,
                 int discontinuity_mode);
 
-// Deprecated.
-int paint_text_size(const painter_t *painter, const char *text, double size,
-                    int out[2]);
 
 int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, double size,

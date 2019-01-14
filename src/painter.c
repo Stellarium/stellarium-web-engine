@@ -141,17 +141,6 @@ double paint_quad_area(const painter_t *painter,
     return fabs(u[0] * v[1] - u[1] * v[0]);
 }
 
-int paint_text_size(const painter_t *painter, const char *text, double size,
-                    int out[2])
-{
-    double bound[4];
-    REND(painter->rend, text, text, VEC(0, 0), ALIGN_LEFT | ALIGN_TOP, size,
-         NULL, 0, bound);
-    out[0] = bound[2] - bound[0];
-    out[1] = bound[3] - bound[1];
-    return 0;
-}
-
 int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, double size,
                       double bounds[4])
