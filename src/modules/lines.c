@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include <zlib.h> // For crc32.
 
 typedef struct
 {
@@ -252,6 +253,7 @@ static void render_label(const double p[2], const double u[2],
     int h[4];
     double n[2];
     int size[2];
+    uint32_t hash;
 
     vec2_normalize(u, n);
 
@@ -294,9 +296,15 @@ static void render_label(const double p[2], const double u[2],
     pos[1] += fabs(v[0]) * size[1] * 1.5;
 
     vec4_copy(painter->color, color);
+
+    // Uniq hash so that the labels are differentiated.
+    hash = crc32(i, (void*)line->obj.id, strlen(line->obj.id));
+    hash = crc32(hash, (void*)&a, sizeof(a));
+    hash = crc32(hash, (void*)v, 2 * sizeof(double));
+
     color[3] = 1.0;
     labels_add(buff, pos, 0, 13, color, label_angle,
-               ANCHOR_FIXED | ANCHOR_CENTER, 0, 0);
+               ANCHOR_FIXED | ANCHOR_CENTER, 0, oid_create("LINE", hash));
 }
 
 int on_quad(int step, qtree_node_t *node,
