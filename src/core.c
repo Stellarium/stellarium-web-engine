@@ -379,6 +379,7 @@ static int core_update_direction(double dt)
     return 1;
 }
 
+EMSCRIPTEN_KEEPALIVE
 int core_update(double dt)
 {
     bool atm_visible;
