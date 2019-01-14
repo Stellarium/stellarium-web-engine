@@ -42,16 +42,6 @@ static const char *ATTR_NAMES[] = {
     NULL,
 };
 
-// We keep all the text textures in a cache so that we don't have to recreate
-// them each time.
-typedef struct tex_cache tex_cache_t;
-struct tex_cache {
-    tex_cache_t *next, *prev;
-    double      size;
-    char        *text;
-    bool        in_use;
-    texture_t   *tex;
-};
 
 /*
  * Struct: prog_t
@@ -244,7 +234,6 @@ typedef struct renderer_gl {
     double  depth_range[2];
 
     texture_t   *white_tex;
-    tex_cache_t *tex_cache;
     NVGcontext *vg;
 
     item_t  *items;
@@ -267,14 +256,10 @@ static void prepare(renderer_t *rend_, double win_w, double win_h,
                     double scale)
 {
     renderer_gl_t *rend = (void*)rend_;
-    tex_cache_t *ctex;
 
     rend->fb_size[0] = win_w * scale;
     rend->fb_size[1] = win_h * scale;
     rend->scale = scale;
-
-    DL_FOREACH(rend->tex_cache, ctex)
-        ctex->in_use = false;
 }
 
 static void rend_flush(renderer_gl_t *rend);
@@ -1058,7 +1043,6 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 static void rend_flush(renderer_gl_t *rend)
 {
     item_t *item, *tmp;
-    tex_cache_t *ctex, *tmptex;
 
     // Compute depth range.
     rend->depth_range[0] = DBL_MAX;
@@ -1097,15 +1081,6 @@ static void rend_flush(renderer_gl_t *rend)
         gl_buf_release(&item->buf);
         gl_buf_release(&item->indices);
         free(item);
-    }
-
-    DL_FOREACH_SAFE(rend->tex_cache, ctex, tmptex) {
-        if (!ctex->in_use) {
-            DL_DELETE(rend->tex_cache, ctex);
-            texture_release(ctex->tex);
-            free(ctex->text);
-            free(ctex);
-        }
     }
 }
 
