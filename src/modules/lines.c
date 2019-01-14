@@ -462,20 +462,32 @@ static int line_render(const obj_t *obj, const painter_t *painter)
 // from 0 to 3.
 static double seg_intersect(const double a[2], const double b[2], int *border)
 {
-    double idx = 1.0 / (b[0] - a[0]);
-    double tx1 = (-1 == a[0] ? -DBL_MAX : (-1 - a[0]) * idx);
-    double tx2 = (+1 == a[0] ?  DBL_MAX : (+1 - a[0]) * idx);
-    double txmin = min(tx1, tx2);
-    double txmax = max(tx1, tx2);
-    double idy = 1.0 / (b[1] - a[1]);
-    double ty1 = (-1 == a[1] ? -DBL_MAX : (-1 - a[1]) * idy);
-    double ty2 = (+1 == a[1] ?  DBL_MAX : (+1 - a[1]) * idy);
-    double tymin = min(ty1, ty2);
-    double tymax = max(ty1, ty2);
-    double ret = DBL_MAX;
+    // We use the common 'slab' algo for AABB/seg intersection.
+    // With some care to make sure we never use infinite values.
+    double idx, idy,
+           tx1 = -DBL_MAX, tx2 = +DBL_MAX,
+           ty1 = -DBL_MAX, ty2 = +DBL_MAX,
+           txmin = -DBL_MAX, txmax = +DBL_MAX,
+           tymin = -DBL_MAX, tymax = +DBL_MAX,
+           ret = DBL_MAX, vmin, vmax;
+    if (a[0] != b[0]) {
+        idx = 1.0 / (b[0] - a[0]);
+        tx1 = (-1 == a[0] ? -DBL_MAX : (-1 - a[0]) * idx);
+        tx2 = (+1 == a[0] ?  DBL_MAX : (+1 - a[0]) * idx);
+        txmin = min(tx1, tx2);
+        txmax = max(tx1, tx2);
+    }
+    if (a[1] != b[1]) {
+        idy = 1.0 / (b[1] - a[1]);
+        ty1 = (-1 == a[1] ? -DBL_MAX : (-1 - a[1]) * idy);
+        ty2 = (+1 == a[1] ?  DBL_MAX : (+1 - a[1]) * idy);
+        tymin = min(ty1, ty2);
+        tymax = max(ty1, ty2);
+    }
+    ret = DBL_MAX;
     if (tymin <= txmax && txmin <= tymax) {
-        double vmin = max(txmin, tymin);
-        double vmax = min(txmax, tymax);
+        vmin = max(txmin, tymin);
+        vmax = min(txmax, tymax);
         if (0.0 <= vmax && vmin <= 1.0) {
             ret = vmin >= 0 ? vmin : vmax;
         }
