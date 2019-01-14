@@ -94,6 +94,27 @@ int sys_list_dir(const char *dir, void *user,
                  int (*f)(void *user, const char *path, int is_dir));
 
 /*
+ * Function: sys_list_fonts
+ * List all the font files available.
+ *
+ * Parameters:
+ *   user   - User data passed to the callback.
+ *   f      - Callback function called once per font file.  If it returns
+ *            a value different than zero we stop the iteration.  The
+ *            callback takes the following arguments:
+ *              user        - The original user data.
+ *              path        - Path to the font file.
+ *              name        - Name for the font.
+ *              fallback    - If not NULL, name of a previous font this font
+ *                            should be used as a fallback for.
+ * Return:
+ *   The number of fonts listed.
+ */
+int sys_list_fonts(void *user,
+                   int (*f)(void *user, const char *path,
+                            const char *name, const char *fallback));
+
+/*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
  */
@@ -110,6 +131,9 @@ typedef struct {
                          float height, int *w, int *h);
     int (*list_dir)(void *user, const char *dir, void *cuser,
                     int (*f)(void *user, const char *path, int is_dir));
+    int (*list_fonts)(void *user, void *cuser,
+                      int (*f)(void *user, const char *path, const char *name,
+                               const char *fallback));
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

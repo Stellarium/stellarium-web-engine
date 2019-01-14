@@ -114,3 +114,29 @@ int sys_list_dir(const char *dirpath, void *user,
     closedir(dir);
     return 0;
 }
+
+/*
+ * Function: sys_list_fonts
+ * List all the font files available.
+ *
+ * Parameters:
+ *   user   - User data passed to the callback.
+ *   f      - Callback function called once per font file.  If it returns
+ *            a value different than zero we stop the iteration.  The
+ *            callback takes the following arguments:
+ *              user        - The original user data.
+ *              path        - Path to the font file.
+ *              name        - Name for the font.
+ *              fallback    - If not NULL, name of a previous font this font
+ *                            should be used as a fallback for.
+ * Return:
+ *   The number of fonts listed.
+ */
+int sys_list_fonts(void *user,
+                   int (*f)(void *user, const char *path,
+                            const char *name, const char *fallback))
+{
+    if (sys_callbacks.list_fonts)
+        return sys_callbacks.list_fonts(sys_callbacks.user, user, f);
+    return 0;
+}
