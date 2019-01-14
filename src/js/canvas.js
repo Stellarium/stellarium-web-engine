@@ -17,7 +17,7 @@ Module.afterInit(function() {
     window.requestAnimationFrame(function() {
       render.called = false;
       var canvas = Module.canvas;
-      Module._core_update(1 / 16); // XXX: should be 1 / 60.
+      Module._core_update(1 / 60);
       Module._core_render(canvas.width, canvas.height, 1);
       render(); // Render again if needed.
     });

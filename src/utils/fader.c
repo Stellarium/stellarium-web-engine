@@ -51,6 +51,6 @@ void fader_init(fader_t *f, bool v)
 
 bool fader_update(fader_t *f, double dt)
 {
-    const double speed = 4.0;
+    const double speed = 15.0;
     return move_toward(&f->value, f->target, 0, speed, dt);
 }

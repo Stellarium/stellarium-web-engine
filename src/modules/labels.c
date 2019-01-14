@@ -154,7 +154,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
     DL_FOREACH(g_labels->labels, label) {
         // We fade in the label slowly, but fade out very fast, otherwise
         // we don't get updated positions for fading out labels.
-        fader_update(&label->fader, label->fader.target ? 0.01 : 1);
+        fader_update(&label->fader, label->fader.target ? 0.002 : 0.2);
         for (i = 0; ; i++) {
             if (!label_get_boxes(painter, label, i, label->box)) {
                 label->flags |= SKIPPED;
