@@ -125,9 +125,6 @@ typedef struct {
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
-    // XXX: to remove.
-    char *(*render_text)(void *user, const char *txt,
-                         float height, int *w, int *h);
     int (*list_dir)(void *user, const char *dir, void *cuser,
                     int (*f)(void *user, const char *path, int is_dir));
     int (*list_fonts)(void *user, void *cuser,
