@@ -113,23 +113,6 @@ struct lines {
     obj_t       obj;
 };
 
-static int lines_init(obj_t *obj, json_value *args);
-static int lines_update(obj_t *obj, const observer_t *obs, double dt);
-static int lines_render(const obj_t *obj, const painter_t *painter);
-static void lines_gui(obj_t *obj, int location);
-static obj_klass_t lines_klass = {
-    .id = "lines",
-    .size = sizeof(lines_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
-    .init = lines_init,
-    .update = lines_update,
-    .render = lines_render,
-    .gui = lines_gui,
-    .render_order = 40,
-};
-
-OBJ_REGISTER(lines_klass)
-
 typedef struct line line_t;
 struct line {
     obj_t           obj;
@@ -139,24 +122,6 @@ struct line {
     char            format;     // 'd', 'h', or 0
     double          color[4];
 };
-
-static int line_update(obj_t *obj, const observer_t *obs, double dt);
-static int line_render(const obj_t *obj, const painter_t *painter);
-static obj_klass_t line_klass = {
-    .id = "line",
-    .size = sizeof(line_t),
-    .flags = OBJ_IN_JSON_TREE,
-    .update = line_update,
-    .render = line_render,
-    .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(line_t, visible.target)),
-        PROPERTY("visible", "b", MEMBER(line_t, lines_visible.target),
-                 .sub = "lines"),
-        {}
-    },
-};
-
-OBJ_REGISTER(line_klass)
 
 static int lines_init(obj_t *obj, json_value *args)
 {
@@ -532,3 +497,35 @@ static bool check_borders(const double a[3], const double b[3],
     }
     return false;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t line_klass = {
+    .id = "line",
+    .size = sizeof(line_t),
+    .flags = OBJ_IN_JSON_TREE,
+    .update = line_update,
+    .render = line_render,
+    .attributes = (attribute_t[]) {
+        PROPERTY("visible", "b", MEMBER(line_t, visible.target)),
+        PROPERTY("visible", "b", MEMBER(line_t, lines_visible.target),
+                 .sub = "lines"),
+        {}
+    },
+};
+OBJ_REGISTER(line_klass)
+
+
+static obj_klass_t lines_klass = {
+    .id = "lines",
+    .size = sizeof(lines_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = lines_init,
+    .update = lines_update,
+    .render = lines_render,
+    .gui = lines_gui,
+    .render_order = 40,
+};
+OBJ_REGISTER(lines_klass)
