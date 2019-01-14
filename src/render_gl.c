@@ -100,6 +100,7 @@ enum {
     ITEM_VG_ELLIPSE,
     ITEM_VG_RECT,
     ITEM_VG_LINE,
+    ITEM_TEXT,
 };
 
 typedef struct item item_t;
@@ -150,6 +151,12 @@ struct item
             float p[12];    // Color computation coefs.
             float sun[3];   // Sun position.
         } atm;
+
+        struct {
+            char text[128];
+            float pos[2];
+            float size;
+        } text;
     };
 
     item_t *next, *prev;
@@ -702,49 +709,23 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
                  int out_size[2])
 {
     renderer_gl_t *rend = (void*)rend_;
-    double uv[4][2], verts[4][2];
-    double p[2];
-    const double oversample = 2;
-    uint8_t *img;
-    int i, w, h;
-    tex_cache_t *ctex;
-    texture_t *tex;
+    item_t *item;
+    float bounds[4];
 
-    DL_FOREACH(rend->tex_cache, ctex) {
-        if (ctex->size == size && strcmp(ctex->text, text) == 0) break;
+    if (pos) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_TEXT;
+        vec4_to_float(color, item->color);
+        vec2_to_float(pos, item->text.pos);
+        item->text.size = size;
+        strncpy(item->text.text, text, sizeof(item->text.text) - 1);
+        DL_APPEND(rend->items, item);
     }
-    if (!ctex) {
-        img = (void*)sys_render_text(text, size * oversample, &w, &h);
-        ctex = calloc(1, sizeof(*ctex));
-        ctex->size = size;
-        ctex->text = strdup(text);
-        ctex->tex = texture_from_data(img, w, h, 1, 0, 0, w, h, 0);
-        free(img);
-        DL_APPEND(rend->tex_cache, ctex);
-    }
-
-    ctex->in_use = true;
     if (out_size) {
-        out_size[0] = ctex->tex->w / oversample;
-        out_size[1] = ctex->tex->h / oversample;
+        nvgTextBounds(rend->vg, 0, 0, text, NULL, bounds);
+        out_size[0] = bounds[2] - bounds[0];
+        out_size[1] = bounds[3] - bounds[1];
     }
-    if (!pos) return;
-
-    tex = ctex->tex;
-    vec2_copy(pos, p);
-
-    for (i = 0; i < 4; i++) {
-        uv[i][0] = ((i % 2) * tex->w) / (double)tex->tex_w;
-        uv[i][1] = ((i / 2) * tex->h) / (double)tex->tex_h;
-        verts[i][0] = (i % 2 - 0.5) * tex->w / oversample;
-        verts[i][1] = (0.5 - i / 2) * tex->h / oversample;
-        vec2_rotate(angle, verts[i], verts[i]);
-        verts[i][0] += p[0];
-        verts[i][1] += p[1];
-        window_to_ndc(rend, verts[i], verts[i]);
-    }
-
-    texture2(rend, tex, uv, verts, color);
 }
 
 static void item_points_render(renderer_gl_t *rend, const item_t *item)
@@ -864,6 +845,27 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
                                      item->color[3] * 255));
     nvgStrokeWidth(rend->vg, item->vg.stroke_width);
     nvgStroke(rend->vg);
+    nvgRestore(rend->vg);
+    nvgEndFrame(rend->vg);
+}
+
+static void item_text_render(renderer_gl_t *rend, const item_t *item)
+{
+    float x, y;
+    nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
+                            rend->fb_size[1] / rend->scale, rend->scale);
+    nvgSave(rend->vg);
+    nvgFontSize(rend->vg, item->text.size);
+    nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
+                                   item->color[1] * 255,
+                                   item->color[2] * 255,
+                                   item->color[3] * 255));
+    // Round the position to the nearest physical pixel.
+    // XXX: is that correct, considering we render at the middle pos?
+    x = round(item->text.pos[0] * rend->scale) / rend->scale;
+    y = round(item->text.pos[1] * rend->scale) / rend->scale;
+    nvgTextAlign(rend->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    nvgText(rend->vg, x, y, item->text.text, NULL);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);
 }
@@ -1089,6 +1091,7 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_VG_ELLIPSE) item_vg_render(rend, item);
         if (item->type == ITEM_VG_RECT) item_vg_render(rend, item);
         if (item->type == ITEM_VG_LINE) item_vg_render(rend, item);
+        if (item->type == ITEM_TEXT) item_text_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
         gl_buf_release(&item->buf);
