@@ -8,9 +8,40 @@
  */
 
 #include "fader.h"
-#include "utils.h"
+#include <assert.h>
+#include <math.h>
 
 // XXX: add easing curves support.
+
+
+static double cmp(float x, float y)
+{
+    return x > y ? +1 : x < y ? -1 : 0;
+}
+
+/*
+ * Function: move_toward
+ * Move a value toward a target value.
+ *
+ * Return:
+ *   True if the value changed.
+ */
+static bool move_toward(double *x,
+                        double target,
+                        int easing, // For the moment need to be 0.
+                        double speed,
+                        double dt)
+{
+    double d = speed * dt;
+    assert(easing == 0);
+    if (*x == target) return false;
+    if (fabs(*x - target) <= d) {
+        *x = target;
+    } else {
+        *x += d * cmp(target, *x);
+    }
+    return true;
+}
 
 void fader_init(fader_t *f, bool v)
 {

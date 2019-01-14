@@ -147,25 +147,6 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
     return ret;
 }
 
-// Move a value toward a target value.
-// Return true if the value changed.
-bool move_toward(double *x,
-                 double target,
-                 int easing, // For the moment need to be 0.
-                 double speed,
-                 double dt)
-{
-    double d = speed * dt;
-    assert(easing == 0);
-    if (*x == target) return false;
-    if (fabs(*x - target) <= d) {
-        *x = target;
-    } else {
-        *x += d * cmp(target, *x);
-    }
-    return true;
-}
-
 bool str_endswith(const char *str, const char *end)
 {
     if (!str || !end) return false;

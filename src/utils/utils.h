@@ -149,19 +149,6 @@ int z_uncompress(void *dest, int dest_size, const void *src, int src_size);
  */
 void *z_uncompress_gz(const void *src, int src_size, int *out_size);
 
-/*
- * Function: move_toward
- * Move a value toward a target value.
- *
- * Return:
- *   True if the value changed.
- */
-bool move_toward(double *x,
-                 double target,
-                 int easing, // For the moment need to be 0.
-                 double speed,
-                 double dt);
-
 static inline bool str_equ(const char *a, const char *b)
 {
     return strcmp(a, b) == 0;
