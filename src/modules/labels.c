@@ -18,6 +18,7 @@ typedef struct label label_t;
 struct label
 {
     label_t *next, *prev;
+    uint64_t oid;
     char    *text; // Original passed text.
     char    *render_text; // Processed text (can point to text).
     double  pos[2];
@@ -56,10 +57,11 @@ void labels_reset(void)
 }
 
 static label_t *label_get(label_t *list, const char *txt, double size,
-                          const double pos[2])
+                          const double pos[2], uint64_t oid)
 {
     label_t *label;
     DL_FOREACH(list, label) {
+        if (oid != label->oid) continue;
         if (label->size == size && strcmp(txt, label->text) == 0)
             return label;
     }
@@ -204,9 +206,10 @@ void labels_add(const char *text, const double pos[2],
             oid == core->selection->oid) {
         return;
     }
-    label = label_get(g_labels->labels, text, size, pos);
+    label = label_get(g_labels->labels, text, size, pos, oid);
     if (!label) {
         label = calloc(1, sizeof(*label));
+        label->oid = oid;
         fader_init(&label->fader, false);
         label->render_text = label->text = strdup(text);
         if (flags & LABEL_UPPERCASE) {
