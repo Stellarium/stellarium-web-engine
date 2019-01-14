@@ -14,12 +14,16 @@ static double newton(double (*f)(double x, void *user),
                      double x0, double x1, double precision, void *user)
 {
     double f0, f1, tmp;
+    double startDelta = fabs(x1 - x0);
     f0 = f(x0, user);
     f1 = f(x1, user);
     while (f1 && fabs(x1 - x0) > precision && f1 != f0) {
         tmp = x1;
         x1 = x1 + (x1 - x0) / (f0 / f1 - 1.0);
         x0 = tmp;
+        // Check for diverging
+        if (fabs(x1 - x0) > startDelta * 10)
+            return NAN;
         f0 = f1;
         f1 = f(x1, user);
     }
