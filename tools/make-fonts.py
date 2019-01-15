@@ -10,35 +10,27 @@
 # repository.
 
 # Generate the default font used in the html version.
+#
+# We use pyftsubset (that mush be installed on the system) to compress the
+# font keeping only the glyphs we use.
 
-import fontforge
-
+import subprocess
 from utils import ensure_dir
 
 def run():
     ensure_dir('data/font/')
-    path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-    dst = "data/font/DejaVuSans-small.ttf"
-    chars = (u"abcdefghijklmnopqrstuvwxyz"
-             u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             u"0123456789"
-             u" ?!\"#$%&'()*+,-./°¯[]:<>{}"
-             u"☉☿♀♁♂♃♄⛢♆⚳⚴⚵⚶🍷⚘⚕♇"
-             u"αβγδεζηθικλμνξοπρςστυφχψω")
-
-    font = fontforge.open(path)
-    for g in font:
-        u = font[g].unicode
-        if u == -1: continue
-        u = unichr(u)
-        if u not in chars: continue
-        font.selection[ord(u)] = True
-
-    font.selection.invert()
-    for i in font.selection.byGlyphs:
-        font.removeGlyph(i)
-
-    font.generate(dst)
+    for face in ['Regular', 'Bold']:
+        path = "/usr/share/fonts/truetype/noto/NotoSans-%s.ttf" % face
+        dst = "data/font/NotoSans-%s.ttf" % face
+        chars = (u"abcdefghijklmnopqrstuvwxyz"
+                 u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                 u"0123456789"
+                 u" ?!\"#$%&'()*+,-./°¯[]:<>{}"
+                 u"☉☿♀♁♂♃♄⛢♆⚳⚴⚵⚶🍷⚘⚕♇"
+                 u"αβγδεζηθικλμνξοπρςστυφχψω")
+        subprocess.call(['pyftsubset', path,
+                         '--text=%s' % chars.encode('utf8'),
+                         '--no-hinting', '--output-file=%s' % dst])
 
 if __name__ == '__main__':
     run()

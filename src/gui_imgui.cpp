@@ -196,9 +196,9 @@ static void load_fonts_texture(void)
     ImFontConfig conf;
 
     conf.FontDataOwnedByAtlas = false;
-    data = asset_get_data("asset://font/DejaVuSans-small.ttf",
+    data = asset_get_data("asset://font/NotoSans-Regular.ttf",
                           &data_size, NULL);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 28, &conf, ranges);
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 32, &conf, ranges);
     io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
     g_font_tex = texture_create(width, height, 1);
     texture_set_data(g_font_tex, pixels, width, height, 1);
