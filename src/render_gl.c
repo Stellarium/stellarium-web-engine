@@ -719,6 +719,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         if (font) {
             font_handle = nvgFindFont(rend->vg, font);
             if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
+            else font_handle = 0;
         }
         nvgFontSize(rend->vg, size * rend->font_scales[font_handle]);
         nvgTextAlign(rend->vg, align);
@@ -862,6 +863,7 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     if (item->text.font) {
         font_handle = nvgFindFont(rend->vg, item->text.font);
         if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
+        else font_handle = 0;
     }
     nvgFontSize(rend->vg, item->text.size * rend->font_scales[font_handle]);
     nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
