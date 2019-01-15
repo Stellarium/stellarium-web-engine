@@ -1261,7 +1261,7 @@ static int on_font(void *user, const char *path,
 {
     void *data;
     int size, handle;
-    char buf[128], *tok, *tmp;
+    char buf[128] = {}, *tok, *tmp;
     renderer_gl_t *rend = user;
 
     data = asset_get_data2(path, ASSET_USED_ONCE, &size, NULL);
@@ -1269,7 +1269,7 @@ static int on_font(void *user, const char *path,
     handle = nvgCreateFontMem(rend->vg, name, data, size, 0);
     rend->font_scales[handle] = scale;
     if (fallback) {
-        stpncpy(buf, fallback, sizeof(buf));
+        strncpy(buf, fallback, sizeof(buf) - 1);
         for (tok = strtok_r(buf, ",", &tmp); tok;
              tok = strtok_r(NULL, ",", &tmp))
         {
