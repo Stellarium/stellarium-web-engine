@@ -1245,13 +1245,20 @@ static int on_font(void *user, const char *path,
 {
     void *data;
     int size;
+    char buf[128], *tok, *tmp;
     renderer_gl_t *rend = user;
 
     data = asset_get_data2(path, ASSET_USED_ONCE, &size, NULL);
     assert(data);
     nvgCreateFontMem(rend->vg, name, data, size, 0);
-    if (fallback)
-        nvgAddFallbackFont(rend->vg, fallback, name);
+    if (fallback) {
+        stpncpy(buf, fallback, sizeof(buf));
+        for (tok = strtok_r(buf, ",", &tmp); tok;
+             tok = strtok_r(NULL, ",", &tmp))
+        {
+            nvgAddFallbackFont(rend->vg, tok, name);
+        }
+    }
     return 0;
 }
 
