@@ -14,6 +14,7 @@
 enum {
     LABEL_AROUND    = 1 << 8, // Auto place label around position.
     LABEL_UPPERCASE = 1 << 10,
+    LABEL_BOLD      = 1 << 11,
 };
 
 void labels_reset(void);

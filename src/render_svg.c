@@ -56,7 +56,7 @@ static void points(renderer_t *rend_, const painter_t *painter,
 
 static void text(renderer_t *rend_, const char *text, const double pos[2],
                  int align, double size, const double color[4], double angle,
-                 double bounds[4])
+                 const char *font, double bounds[4])
 {
     double p[2];
     renderer_svg_t *rend = (void*)rend_;

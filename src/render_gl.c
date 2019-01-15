@@ -147,6 +147,7 @@ struct item
             float pos[2];
             float size;
             int   align;
+            const char *font;
         } text;
     };
 
@@ -692,11 +693,12 @@ static void texture(renderer_t *rend_,
 
 static void text(renderer_t *rend_, const char *text, const double pos[2],
                  int align, double size, const double color[4], double angle,
-                 double bounds[4])
+                 const char *font, double bounds[4])
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     float fbounds[4];
+    int font_handle;
     assert(pos);
 
     if (!bounds) {
@@ -706,6 +708,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         vec2_to_float(pos, item->text.pos);
         item->text.size = size;
         item->text.align = align;
+        item->text.font = font;
         strncpy(item->text.text, text, sizeof(item->text.text) - 1);
         DL_APPEND(rend->items, item);
     }
@@ -714,6 +717,10 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         nvgFontSize(rend->vg, size);
         nvgTextAlign(rend->vg, align);
         nvgTextBounds(rend->vg, pos[0], pos[1], text, NULL, fbounds);
+        if (font) {
+            font_handle = nvgFindFont(rend->vg, font);
+            if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
+        }
         bounds[0] = fbounds[0];
         bounds[1] = fbounds[1];
         bounds[2] = fbounds[2];
@@ -846,6 +853,7 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 static void item_text_render(renderer_gl_t *rend, const item_t *item)
 {
     float x, y;
+    int font_handle;
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
@@ -859,6 +867,10 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     x = round(item->text.pos[0] * rend->scale) / rend->scale;
     y = round(item->text.pos[1] * rend->scale) / rend->scale;
     nvgTextAlign(rend->vg, item->text.align);
+    if (item->text.font) {
+        font_handle = nvgFindFont(rend->vg, item->text.font);
+        if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
+    }
     nvgText(rend->vg, x, y, item->text.text, NULL);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);

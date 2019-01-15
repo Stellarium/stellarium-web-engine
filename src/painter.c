@@ -145,7 +145,8 @@ int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, double size,
                       double bounds[4])
 {
-    REND(painter->rend, text, text, pos, align, size, NULL, 0, bounds);
+    REND(painter->rend, text, text, pos, align, size, NULL, 0, painter->font,
+         bounds);
     return 0;
 }
 
@@ -153,7 +154,8 @@ int paint_text(const painter_t *painter, const char *text,
                const double pos[2], int align, double size,
                const double color[4], double angle)
 {
-    REND(painter->rend, text, text, pos, align, size, color, angle, NULL);
+    REND(painter->rend, text, text, pos, align, size, color, angle,
+         painter->font, NULL);
     return 0;
 }
 

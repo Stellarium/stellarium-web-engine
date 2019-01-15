@@ -75,6 +75,7 @@ struct renderer
                  double          size,
                  const double    color[4],
                  double          angle,
+                 const char      *font,
                  double          bounds[4]    // Output, can be NULL.
                  );
 
@@ -150,6 +151,7 @@ struct painter
     double          stars_limit_mag;   // Actual stars visual magnitude limit.
     // Base magnitude limit for hints and labels
     double          hints_limit_mag;
+    const char      *font;          // Set to NULL for default font.
 
     double          lines_width;
     double          lines_stripes;

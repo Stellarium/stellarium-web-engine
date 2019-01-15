@@ -136,18 +136,20 @@ static int labels_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int labels_render(const obj_t *obj, const painter_t *painter)
+static int labels_render(const obj_t *obj, const painter_t *painter_)
 {
     label_t *label;
     int i;
     double pos[2], color[4];
+    painter_t painter = *painter_;
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
         // We fade in the label slowly, but fade out very fast, otherwise
         // we don't get updated positions for fading out labels.
         fader_update(&label->fader, label->fader.target ? 0.002 : 0.2);
+        painter.font = label->flags & LABEL_BOLD ? "bold" : NULL;
         for (i = 0; ; i++) {
-            if (!label_get_possible_bounds(painter, label, i, label->bounds)) {
+            if (!label_get_possible_bounds(&painter, label, i, label->bounds)) {
                 label->flags |= SKIPPED;
                 goto skip;
             }
@@ -157,7 +159,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter)
         pos[1] = label->bounds[1];
         vec4_copy(label->color, color);
         color[3] *= label->fader.value;
-        paint_text(painter, label->render_text, pos,
+        paint_text(&painter, label->render_text, pos,
                    ALIGN_LEFT | ALIGN_TOP, label->size, color,
                    label->angle);
         label->flags &= ~SKIPPED;
