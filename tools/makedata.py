@@ -10,7 +10,6 @@
 # repository.
 
 
-import fontforge
 import codecs
 import csv
 import gzip
@@ -30,12 +29,16 @@ import zipfile
 import zlib
 import PIL.Image
 
+# DEPRECATED: I try to move the data generation into separate scripts since
+#             usually we only want to update one type of data.  You should
+#             not have to generate the data since they are already bundled
+#             in the src/assets/<something>.c files.
+
 # Generate some of the data to be bundled in the sources.
 # I guess we should split this in separate scripts for each type of data.
 # For the moment this generates:
 #
 # - The cities list.
-# - The font.
 # - The symbols.
 # - Some minor planet sources.
 
@@ -91,31 +94,6 @@ def make_cities():
         print >>out, line
     out.close()
 
-def make_font():
-    create_dir('data/font')
-    path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-    dst = "data/font/DejaVuSans-small.ttf"
-    chars = (u"abcdefghijklmnopqrstuvwxyz"
-             u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             u"0123456789"
-             u" ?!\"#$%&'()*+,-./°¯[]:<>{}"
-             u"☉☿♀♁♂♃♄⛢♆⚳⚴⚵⚶🍷⚘⚕♇"
-             u"αβγδεζηθικλμνξοπρςστυφχψω")
-    if check_uptodate(path, dst): return
-
-    font = fontforge.open(path)
-    for g in font:
-        u = font[g].unicode
-        if u == -1: continue
-        u = unichr(u)
-        if u not in chars: continue
-        font.selection[ord(u)] = True
-
-    font.selection.invert()
-    for i in font.selection.byGlyphs:
-        font.removeGlyph(i)
-
-    font.generate(dst)
 
 def make_symbols():
     files = [
@@ -155,6 +133,5 @@ def make_mpc():
     out.close()
 
 make_cities()
-make_font()
 make_symbols()
 make_mpc()
