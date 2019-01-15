@@ -122,12 +122,16 @@ int sys_list_dir(const char *dirpath, void *user,
  *              name        - Name for the font.
  *              fallback    - If not NULL, name of a previous font this font
  *                            should be used as a fallback for.
+ *              scale       - Auto scale to apply (this is to fix a problem
+ *                            with nanovg that seems to render some fonts
+ *                            with the wrong size!).
  * Return:
  *   The number of fonts listed.
  */
 int sys_list_fonts(void *user,
                    int (*f)(void *user, const char *path,
-                            const char *name, const char *fallback))
+                            const char *name, const char *fallback,
+                            float scale))
 {
     if (sys_callbacks.list_fonts)
         return sys_callbacks.list_fonts(sys_callbacks.user, user, f);

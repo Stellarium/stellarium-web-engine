@@ -105,12 +105,16 @@ int sys_list_dir(const char *dir, void *user,
  *              name        - Name for the font.
  *              fallback    - If not NULL, name of a previous font this font
  *                            should be used as a fallback for.
+ *              scale       - Auto scale to apply (this is to fix a problem
+ *                            with nanovg that seems to render some fonts
+ *                            with the wrong size!).
  * Return:
  *   The number of fonts listed.
  */
 int sys_list_fonts(void *user,
                    int (*f)(void *user, const char *path,
-                            const char *name, const char *fallback));
+                            const char *name, const char *fallback,
+                            float scale));
 
 /*
  * Global structure that holds pointers to functions that allow to change
@@ -129,7 +133,7 @@ typedef struct {
                     int (*f)(void *user, const char *path, int is_dir));
     int (*list_fonts)(void *user, void *cuser,
                       int (*f)(void *user, const char *path, const char *name,
-                               const char *fallback));
+                               const char *fallback, float scale));
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

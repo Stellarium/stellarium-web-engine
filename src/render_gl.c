@@ -237,6 +237,8 @@ typedef struct renderer_gl {
 
     texture_t   *white_tex;
     NVGcontext *vg;
+    // Map font handle -> font scale to fix nanovg font sizes.
+    float       font_scales[8];
 
     item_t  *items;
 } renderer_gl_t;
@@ -698,7 +700,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     float fbounds[4];
-    int font_handle;
+    int font_handle = 0;
     assert(pos);
 
     if (!bounds) {
@@ -714,13 +716,13 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     }
     if (bounds) {
         nvgSave(rend->vg);
-        nvgFontSize(rend->vg, size);
-        nvgTextAlign(rend->vg, align);
-        nvgTextBounds(rend->vg, pos[0], pos[1], text, NULL, fbounds);
         if (font) {
             font_handle = nvgFindFont(rend->vg, font);
             if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
         }
+        nvgFontSize(rend->vg, size * rend->font_scales[font_handle]);
+        nvgTextAlign(rend->vg, align);
+        nvgTextBounds(rend->vg, pos[0], pos[1], text, NULL, fbounds);
         bounds[0] = fbounds[0];
         bounds[1] = fbounds[1];
         bounds[2] = fbounds[2];
@@ -853,11 +855,15 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 static void item_text_render(renderer_gl_t *rend, const item_t *item)
 {
     float x, y;
-    int font_handle;
+    int font_handle = 0;
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
-    nvgFontSize(rend->vg, item->text.size);
+    if (item->text.font) {
+        font_handle = nvgFindFont(rend->vg, item->text.font);
+        if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
+    }
+    nvgFontSize(rend->vg, item->text.size * rend->font_scales[font_handle]);
     nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                    item->color[1] * 255,
                                    item->color[2] * 255,
@@ -867,10 +873,6 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     x = round(item->text.pos[0] * rend->scale) / rend->scale;
     y = round(item->text.pos[1] * rend->scale) / rend->scale;
     nvgTextAlign(rend->vg, item->text.align);
-    if (item->text.font) {
-        font_handle = nvgFindFont(rend->vg, item->text.font);
-        if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
-    }
     nvgText(rend->vg, x, y, item->text.text, NULL);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);
@@ -1253,16 +1255,17 @@ static texture_t *create_white_texture(int w, int h)
 }
 
 static int on_font(void *user, const char *path,
-                   const char *name, const char *fallback)
+                   const char *name, const char *fallback, float scale)
 {
     void *data;
-    int size;
+    int size, handle;
     char buf[128], *tok, *tmp;
     renderer_gl_t *rend = user;
 
     data = asset_get_data2(path, ASSET_USED_ONCE, &size, NULL);
     assert(data);
-    nvgCreateFontMem(rend->vg, name, data, size, 0);
+    handle = nvgCreateFontMem(rend->vg, name, data, size, 0);
+    rend->font_scales[handle] = scale;
     if (fallback) {
         stpncpy(buf, fallback, sizeof(buf));
         for (tok = strtok_r(buf, ",", &tmp); tok;
@@ -1282,7 +1285,8 @@ renderer_t* render_gl_create(void)
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
     if (sys_list_fonts(rend, on_font) == 0) {
         // Default bundled font used only if the system didn't add any.
-        on_font(rend, "asset://font/DejaVuSans-small.ttf", "default", NULL);
+        on_font(rend, "asset://font/DejaVuSans-small.ttf",
+                "default", NULL, 1.16);
     }
 
     // Create all the shaders programs.
