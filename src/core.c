@@ -468,6 +468,80 @@ static double compute_max_vmag(void)
     return m;
 }
 
+
+/*
+ * Convert a window position to local ICRF position.
+ * Approximated version that doesn't take into account the refraction.
+ */
+static void win_to_icrf_(const observer_t *obs, const projection_t *proj,
+                         const double win_pos[2], double out[3])
+{
+    double p[4], rv2o[3][3];
+    // Win to NDC.
+    p[0] = win_pos[0] / proj->window_size[0] * 2 - 1;
+    p[1] = 1 - win_pos[1] / proj->window_size[1] * 2;
+    // NDC to view.
+    project(proj, PROJ_BACKWARD, 4, p, p);
+    // View to observed.
+    mat3_invert(obs->ro2v, rv2o);
+    mat3_mul_vec3(rv2o, p, p);
+    // Note: this part should probably be done with:
+    //   convert_frame(obs, FRAME_OBSERVED, FRAME_ICRF, true, p, p);
+    // Apply reverse refraction.
+    // View to CIRS (approximation that doesn't use refraction).
+    mat3_mul_vec3(obs->rh2i, p, p);
+    // CIRS to ICRF.
+    mat3_mul_vec3(obs->astrom.bpn, p, p);
+    vec3_copy(p, out);
+}
+
+/*
+ * Convert a window position to local ICRF position.
+ */
+static void win_to_icrf(const observer_t *obs, const projection_t *proj,
+                        const double win_pos[2], double out[3])
+{
+    double p[3][3], w[3][3] = {}, m[3][3];
+    int i;
+
+    // Compute approximate icrf pos for 3 points around win_pos:
+    win_to_icrf_(obs, proj, VEC(win_pos[0] + 1, win_pos[1]), p[0]);
+    win_to_icrf_(obs, proj, VEC(win_pos[0], win_pos[1] + 1), p[1]);
+    win_to_icrf_(obs, proj, win_pos, p[2]);
+
+    // Project back into screen pos.
+    for (i = 0; i < 3; i++) {
+        convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, p[i], w[i]);
+        project(proj, PROJ_TO_WINDOW_SPACE, 2, w[i], w[i]);
+        w[i][2] = 0;
+    }
+
+    /*
+     * Not totally sure about this code.
+     * The idea is that we express the wanted screen pos and pixel unit vectors
+     * as a matrix:
+     * [1, 0, 0]
+     * [0  1, 0]
+     * [x, y, 1]
+     * Then we compute the matrix (m) that transforms the approximate screen
+     * pos into the wanted screen pos, and we apply it to the original
+     * approximated ICRF pos.
+     */
+
+    for (i = 0; i < 2; i++) {
+        vec3_sub(w[i], w[2], w[i]);
+        vec3_sub(p[i], p[2], p[i]);
+    }
+    w[2][2] = 1;
+
+    mat3_invert(w, w);
+    mat3_set_identity(m);
+    vec3_set(m[2], win_pos[0], win_pos[1], 1);
+    mat3_mul(m, w, m);
+    mat3_mul(p, m, p);
+    vec3_normalize(p[2], out);
+}
+
 /*
  * Function: compute_viewport_cap
  * Compute the viewport cap (in ICRF) to set into the painter.
@@ -475,12 +549,18 @@ static double compute_max_vmag(void)
 static void compute_viewport_cap(double viewport_cap[4],
         const observer_t *obs, const projection_t *proj)
 {
-    // XXX: the algo should be redone properly.
-    double fov, max_sep;
-    fov = max(core->fovx, core->fovy);
-    max_sep = fov / 2.0 * 1.5 + 0.5 * DD2R;
-    eraS2c(obs->azimuth, obs->altitude, viewport_cap);
-    mat3_mul_vec3(obs->rh2i, viewport_cap, viewport_cap);
+    int i;
+    double p[3];
+    const double w = proj->window_size[0];
+    const double h = proj->window_size[1];
+    double max_sep = 0;
+
+    win_to_icrf(obs, proj, VEC(w / 2, h / 2), viewport_cap);
+    // Compute max separation from all corners.
+    for (i = 0; i < 4; i++) {
+        win_to_icrf(obs, proj, VEC(w * (i % 2), h * (i / 2)), p);
+        max_sep = max(max_sep, eraSepp(viewport_cap, p));
+    }
     viewport_cap[3] = cos(max_sep);
 }
 
@@ -560,6 +640,18 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     DL_FOREACH(core->obj.children, module) {
         obj_render(module, &painter);
+    }
+
+    // TEST: render the viewport cap at 50% size for debugging.
+    // To be removed once the viewport cap algo is stable.
+    if ((0)) {
+        double p[4], r;
+        vec3_copy(painter.viewport_cap, p);
+        convert_frame(core->observer, FRAME_ICRF, FRAME_VIEW, true, p, p);
+        project(&proj, PROJ_TO_WINDOW_SPACE, 2, p, p);
+        r = acos(painter.viewport_cap[3]) * 0.5;
+        r = r / proj.scaling[0] * proj.window_size[0] / 2;
+        paint_2d_ellipse(&painter, NULL, 0, p, VEC(r, r), NULL);
     }
 
     // Flush all rendering pipeline
