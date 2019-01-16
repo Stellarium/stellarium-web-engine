@@ -442,7 +442,7 @@ static int stars_init(obj_t *obj, json_value *args)
     // Online gaia survey at index 1.
     survey_settings.user = &stars->surveys[1];
     sprintf(stars->surveys[1].url,
-            "https://data.stellarium.org/surveys/gaia_dr2");
+            "https://data.stellarium.org/surveys/gaia_dr2_v2");
     stars->surveys[1].hips = hips_create(
             stars->surveys[1].url, 0, &survey_settings);
     return 0;
