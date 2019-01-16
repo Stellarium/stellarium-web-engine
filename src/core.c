@@ -163,32 +163,6 @@ static int modules_sort_cmp(void *a, void *b)
     return cmp(obj_get_render_order(at), obj_get_render_order(bt));
 }
 
-/*
- * Function: screen_to_observed
- * Convert a screen 2D position to a 3D azalt direction.
- *
- * Parameters:
- *   x    - The screen x position.
- *   y    - The screen y position.
- *   p    - Corresponding 3D unit vector in azalt (after refraction).
- */
-static void screen_to_observed(double x, double y, double p[3])
-{
-    double rv2o[3][3];
-    projection_t proj;
-    double pos[4] = {x, y};
-
-    mat3_invert(core->observer->ro2v, rv2o);
-    projection_init(&proj, core->proj, core->fov,
-                    core->win_size[0], core->win_size[1]);
-    // Convert to NDC coordinates.
-    // Could be done in the projector?
-    pos[0] = pos[0] / core->win_size[0] * 2 - 1;
-    pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
-    project(&proj, PROJ_BACKWARD, 4, pos, pos);
-    mat3_mul_vec3(rv2o, pos, pos);
-    vec3_copy(pos, p);
-}
 
 /*
  * Function: core_get_proj
@@ -555,6 +529,31 @@ static void win_to_icrf(const observer_t *obs, const projection_t *proj,
 }
 
 /*
+ * Function: win_to_observed
+ * Convert a window 2D position to a 3D azalt direction.
+ *
+ * Parameters:
+ *   x    - The window x position.
+ *   y    - The window y position.
+ *   p    - Corresponding 3D unit vector in azalt (after refraction).
+ */
+static void win_to_observed(double x, double y, double p[3])
+{
+    double rv2o[3][3];
+    projection_t proj;
+    double pos[4] = {x, y};
+
+    mat3_invert(core->observer->ro2v, rv2o);
+    core_get_proj(&proj);
+    // Convert to NDC coordinates.
+    pos[0] = pos[0] / core->win_size[0] * 2 - 1;
+    pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
+    project(&proj, PROJ_BACKWARD, 4, pos, pos);
+    mat3_mul_vec3(rv2o, pos, pos);
+    vec3_copy(pos, p);
+}
+
+/*
  * Function: compute_viewport_cap
  * Compute the viewport cap (in ICRF) to set into the painter.
  */
@@ -754,11 +753,11 @@ void core_on_zoom(double k, double x, double y)
     double fov, pos_start[3], pos_end[3];
     double sal, saz, dal, daz;
 
-    screen_to_observed(x, y, pos_start);
+    win_to_observed(x, y, pos_start);
     obj_get_attr(&core->obj, "fov", "f", &fov);
     fov /= k;
     obj_set_attr(&core->obj, "fov", "f", fov);
-    screen_to_observed(x, y, pos_end);
+    win_to_observed(x, y, pos_end);
 
     // Adjust lat/az to keep the mouse point at the same position.
     eraC2s(pos_start, &saz, &sal);
