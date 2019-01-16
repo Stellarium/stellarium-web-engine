@@ -474,7 +474,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     PROFILE(core_render, 0);
     obj_t *module;
     projection_t proj;
-    double t;
+    double t, al;
     bool cst_visible;
     double max_vmag;
 
@@ -487,6 +487,17 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .fov = core->fov,
     };
     (void)bck;
+
+    core->win_size[0] = win_w;
+    core->win_size[1] = win_h;
+    core->win_pixels_scale = pixel_scale;
+    projection_init(&proj, core->proj, core->fovx, win_w, win_h);
+
+    // Convert the center offset into a transformation mat.
+    assert(core->center_offset[0] == 0); // Only Y offset for the moment!
+    al = -core->center_offset[1] * proj.scaling[1] / proj.window_size[1] * 2;
+    mat3_set_identity(core->observer->view_rot);
+    mat3_rx(al, core->observer->view_rot, core->observer->view_rot);
 
     observer_update(core->observer, true);
     max_vmag = compute_max_vmag();
@@ -503,12 +514,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     if (!core->rend)
         core->rend = render_gl_create();
-    core->win_size[0] = win_w;
-    core->win_size[1] = win_h;
-    core->win_pixels_scale = pixel_scale;
     labels_reset();
-
-    projection_init(&proj, core->proj, core->fovx, win_w, win_h);
 
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");
@@ -942,6 +948,7 @@ static obj_klass_t core_klass = {
         PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
         PROPERTY("zoom", "f", MEMBER(core_t, zoom)),
         PROPERTY("test", "b", MEMBER(core_t, test)),
+        PROPERTY("center_offset", "v2", MEMBER(core_t, center_offset)),
         FUNCTION("lookat", .fn = core_lookat),
         FUNCTION("point_and_lock", .fn = core_point_and_lock),
         {}

@@ -32,6 +32,8 @@ static void update_matrices(observer_t *obs)
     mat3_rx(-obs->altitude, ro2v, ro2v);
     mat3_ry(obs->azimuth, ro2v, ro2v);
     mat3_mul(ro2v, r2gl, ro2v);
+    // Extra rotation for screen center offset.
+    mat3_mul(obs->view_rot, ro2v, ro2v);
 
     // Compute rotation matrix from CIRS to horizontal.
     mat3_set_identity(ri2h);
@@ -88,6 +90,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(altitude);
     H(azimuth);
     H(roll);
+    H(view_rot);
     H(tt);
     #undef H
     *hash = v;
@@ -199,6 +202,7 @@ static int observer_init(obj_t *obj, json_value *args)
     observer_t*  obs = (observer_t*)obj;
     observer_compute_hash(obs, &obs->hash_partial, &obs->hash_accurate);
     obs->hash = obs->hash_accurate;
+    mat3_set_identity(obs->view_rot);
     return 0;
 }
 

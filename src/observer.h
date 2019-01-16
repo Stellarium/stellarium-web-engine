@@ -30,6 +30,7 @@ struct observer
     double altitude;
     double azimuth;
     double roll;
+    double view_rot[3][3]; // Extra transformation applied to the view mat.
     obj_t  *city;
 
     double last_update;

@@ -183,6 +183,9 @@ struct core
     double fovx;
     double fovy;
 
+    // Offset the center of screen (pixel).
+    double center_offset[2];
+
     // Maintains a list of clickable/hoverable areas.
     areas_t         *areas;
 
