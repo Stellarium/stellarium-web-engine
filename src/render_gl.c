@@ -703,6 +703,11 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     int font_handle = 0;
     assert(pos);
 
+    if (strlen(text) >= sizeof(item->text.text)) {
+        LOG_W("Text too large: %s", text);
+        return;
+    }
+
     if (!bounds) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXT;
@@ -711,7 +716,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         item->text.size = size;
         item->text.align = align;
         item->text.font = font;
-        strncpy(item->text.text, text, sizeof(item->text.text) - 1);
+        strcpy(item->text.text, text);
         DL_APPEND(rend->items, item);
     }
     if (bounds) {
@@ -1269,7 +1274,8 @@ static int on_font(void *user, const char *path,
     handle = nvgCreateFontMem(rend->vg, name, data, size, 0);
     rend->font_scales[handle] = scale;
     if (fallback) {
-        strncpy(buf, fallback, sizeof(buf) - 1);
+        assert(strlen(fallback) < sizeof(buf));
+        strcpy(buf, fallback);
         for (tok = strtok_r(buf, ",", &tmp); tok;
              tok = strtok_r(NULL, ",", &tmp))
         {
