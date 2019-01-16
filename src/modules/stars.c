@@ -477,7 +477,7 @@ static int render_visitor(int order, int pix, void *user)
     int i, n = 0;
     star_data_t *s;
     double p[4], p_win[4], size, luminance;
-    double color[3], max_sep, fov, viewport_cap[4];
+    double color[3];
     bool loaded;
     bool selected;
 
@@ -492,24 +492,12 @@ static int render_visitor(int order, int pix, void *user)
     if (!tile) goto end;
     if (tile->mag_min > painter.stars_limit_mag) goto end;
 
-    // Compute viewport cap for fast clipping test.
-    // The cap is defined as the vector xyzw with xyz the observer viewing
-    // direction in ICRS and w the cosinus of the max separation between
-    // a visible point and xyz.
-    //
-    // (This should probably already be available in the observer or
-    //  painter).
-    fov = max(core->fovx, core->fovy);
-    max_sep = fov / 2.0 * 1.5 + 0.5 * DD2R;
-    eraS2c(painter.obs->azimuth, painter.obs->altitude, viewport_cap);
-    mat3_mul_vec3(painter.obs->rh2i, viewport_cap, viewport_cap);
-    viewport_cap[3] = cos(max_sep);
-
     point_t *points = malloc(tile->nb * sizeof(*points));
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
         if (s->vmag > painter.stars_limit_mag) break;
-        if (vec3_dot(s->pos, viewport_cap) < viewport_cap[3]) continue;
+        if (vec3_dot(s->pos, painter.viewport_cap) < painter.viewport_cap[3])
+            continue;
 
         // Compute star observed and screen pos.
         vec3_copy(s->pos, p);

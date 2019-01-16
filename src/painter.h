@@ -158,6 +158,14 @@ struct painter
     double          points_smoothness;
     double          (*depth_range)[2]; // If set use depth test.
 
+    // Viewport cap for fast clipping test.
+    // The cap is defined as the vector xyzw with xyz the observer viewing
+    // direction in ICRF and w the cosinus of the max separation between
+    // a visible point and xyz.
+    // To test if a pos in ICRF is clipped, we can use:
+    //   vec3_dot(pos, painter.viewport_cap) < painter.viewport_cap[3]
+    double          viewport_cap[4];
+
     union {
         // For planet rendering only.
         struct {

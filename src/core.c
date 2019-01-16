@@ -468,6 +468,22 @@ static double compute_max_vmag(void)
     return m;
 }
 
+/*
+ * Function: compute_viewport_cap
+ * Compute the viewport cap (in ICRF) to set into the painter.
+ */
+static void compute_viewport_cap(double viewport_cap[4],
+        const observer_t *obs, const projection_t *proj)
+{
+    // XXX: the algo should be redone properly.
+    double fov, max_sep;
+    fov = max(core->fovx, core->fovy);
+    max_sep = fov / 2.0 * 1.5 + 0.5 * DD2R;
+    eraS2c(obs->azimuth, obs->altitude, viewport_cap);
+    mat3_mul_vec3(obs->rh2i, viewport_cap, viewport_cap);
+    viewport_cap[3] = cos(max_sep);
+}
+
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
 {
@@ -538,6 +554,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
             (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
             (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
     };
+    compute_viewport_cap(painter.viewport_cap, core->observer, &proj);
 
     paint_prepare(&painter, win_w, win_h, pixel_scale);
 
