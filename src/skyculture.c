@@ -339,8 +339,10 @@ constellation_art_t *skyculture_parse_stellarium_constellations_art(
         art = &ret[nb];
         art->uv_in_pixel = true;
         tok = strtok(line, " "); if (!tok) goto error;
+        if (strlen(tok) >= sizeof(art->cst)) goto error;
         strncpy(art->cst, tok, sizeof(art->cst));
         tok = strtok(NULL, " "); if (!tok) goto error;
+        if (strlen(tok) >= sizeof(art->img)) goto error;
         strncpy(art->img, tok, sizeof(art->img));
         for (i = 0; i < 3; i++) {
             tok = strtok(NULL, " "); if (!tok) goto error;
