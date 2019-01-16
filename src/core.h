@@ -179,10 +179,6 @@ struct core
     // Zoom movement. -1 to zoom out, +1 to zoom in.
     double zoom;
 
-    // Auto computed from fov and screen aspect ratio.
-    double fovx;
-    double fovy;
-
     // Offset the center of screen (pixel).
     double center_offset[2];
 

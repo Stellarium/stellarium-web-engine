@@ -399,7 +399,6 @@ EMSCRIPTEN_KEEPALIVE
 int core_update(double dt)
 {
     bool atm_visible;
-    double aspect = core->win_size[0] / core->win_size[1];
     double lwmax;
     int r;
     obj_t *atm, *module;
@@ -418,8 +417,6 @@ int core_update(double dt)
     atm = core_get_module("atmosphere");
     assert(atm);
     obj_get_attr(atm, "visible", "b", &atm_visible);
-    projection_compute_fovs(core->proj, core->fov, aspect,
-                            &core->fovx, &core->fovy);
     observer_update(core->observer, true);
     // Update telescope according to the fov.
     if (core->telescope_auto)
