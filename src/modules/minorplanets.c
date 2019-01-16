@@ -323,6 +323,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     double label_color[4] = RGBA(255, 124, 124, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
+    const bool selected = core->selection && obj->oid == core->selection->oid;
 
     vmag = mplanet->obj.vmag;
     if (vmag > painter->stars_limit_mag) return 0;
@@ -341,13 +342,14 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     paint_points(painter, 1, &point, FRAME_OBSERVED);
 
     // Render name if needed.
-    if (*mplanet->name && vmag <= painter->hints_limit_mag) {
+    if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag)) {
         mat3_mul_vec3(painter->obs->ro2v, pos, pos);
         if (project(painter->proj,
                     PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                     2, pos, pos)) {
             labels_add(mplanet->name, pos, size, 13, label_color, 0,
-                       LABEL_AROUND, 0, obj->oid);
+                       selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                       0, obj->oid);
         }
     }
     return 0;

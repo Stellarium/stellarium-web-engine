@@ -175,16 +175,26 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     double label_color[4] = {color[0], color[1], color[2], 0.5};
     static const double white[4] = {1, 1, 1, 1};
     const bool selected = core->selection && s->oid == core->selection->oid;
+    int label_flags = LABEL_AROUND;
+    char buf[64];
 
-    if (!s->hip) return;
-    if (selected)
+    //if (!s->hip) return;
+    if (selected) {
         vec4_copy(white, label_color);
+        label_flags |= LABEL_BOLD;
+    }
     size += LABEL_SPACING;
 
     name = identifiers_get(s->oid, "NAME");
+    if (!name && selected) {
+        if (s->hd) {
+            sprintf(buf, "HD %d", s->hd);
+            name = buf;
+        }
+    }
     if (name) {
         labels_add(sys_translate("star", name),
-                   pos, size, 13, label_color, 0, LABEL_AROUND, -vmag, s->oid);
+                   pos, size, 13, label_color, 0, label_flags, -vmag, s->oid);
         return;
     }
     if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
@@ -192,7 +202,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         if (bayer) {
             sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
             labels_add(tmp, pos, size, 13, label_color, 0,
-                       LABEL_AROUND, -vmag, s->oid);
+                       label_flags, -vmag, s->oid);
         }
     }
 }
@@ -209,6 +219,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     double color[3];
     painter_t painter = *painter_;
     point_t point;
+    const bool selected = core->selection && obj->oid == core->selection->oid;
 
     // XXX: Use convert_coordinates instead!
     eraAtciq(s->ra, s->de, s->pra, s->pde, s->plx, 0,
@@ -228,7 +239,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     };
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
 
-    if (s->vmag <= painter.hints_limit_mag - 4.0) {
+    if (selected || (s->vmag <= painter.hints_limit_mag - 4.0)) {
         convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW,
                           true, p, p);
         if (project(painter.proj,

@@ -176,6 +176,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     comet_t *comet = (comet_t*)obj;
     point_t point;
     double label_color[4] = RGBA(255, 124, 124, 255);
+    const bool selected = core->selection && obj->oid == core->selection->oid;
     vmag = comet->obj.vmag;
 
     if (vmag > painter->stars_limit_mag) return 0;
@@ -202,9 +203,12 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     paint_points(painter, 1, &point, FRAME_WINDOW);
 
     // Render name if needed.
-    if (*comet->name && vmag < painter->hints_limit_mag) {
+    if (*comet->name && (selected || vmag < painter->hints_limit_mag)) {
+        if (selected)
+            vec4_set(label_color, 1, 1, 1, 1);
         labels_add(comet->name, win_pos, size, 13, label_color,
-                   0, LABEL_AROUND, 0, obj->oid);
+                   0, selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                   0, obj->oid);
     }
     return 0;
 }

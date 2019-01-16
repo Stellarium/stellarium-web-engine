@@ -322,7 +322,7 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
 
 static void dso_render_name(const painter_t *painter, const dso_data_t *s,
                             const double pos[2], double size, double vmag,
-                            int anchor)
+                            int flags)
 {
     char buff[128] = "";
     if (s->short_name[0])
@@ -334,7 +334,7 @@ static void dso_render_name(const painter_t *painter, const dso_data_t *s,
     else if (s->id.ic)
         sprintf(buff, "IC %d", s->id.ic);
     if (buff[0])
-        labels_add(buff, pos, size, 13, painter->color, 0, anchor, -vmag,
+        labels_add(buff, pos, size, 13, painter->color, 0, flags, -vmag,
                    s->id.oid);
 }
 
@@ -439,6 +439,7 @@ static int dso_render_from_data(const dso_data_t *s,
     painter_t painter = *painter_;
     double hints_limit_mag = painter.hints_limit_mag;
     const bool selected = core->selection && s->id.oid == core->selection->oid;
+    int label_flags;
 
     vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
 
@@ -488,13 +489,16 @@ static int dso_render_from_data(const dso_data_t *s,
                       selected ? white : NULL, win_angle);
 
     if (vmag <= hints_limit_mag - 1.5) {
-        if (!selected)
+        label_flags = LABEL_AROUND;
+        if (selected)
+            label_flags |= LABEL_BOLD;
+        else
             vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
         double radius = min(win_size[0] / 2, win_size[1] / 2) +
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
         radius += 4;
-        dso_render_name(&painter, s, win_pos, radius, vmag, LABEL_AROUND);
+        dso_render_name(&painter, s, win_pos, radius, vmag, label_flags);
     }
     return 0;
 }
