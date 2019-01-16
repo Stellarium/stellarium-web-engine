@@ -11,7 +11,10 @@
 // Generated from:
 // http://simbad.u-strasbg.fr/simbad/sim-display?data=otypes
 
-#include "swe.h"
+#include "otypes.h"
+
+#include <stdint.h>
+#include <string.h>
 
 typedef struct entry
 {

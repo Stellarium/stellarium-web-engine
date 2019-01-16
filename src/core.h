@@ -20,6 +20,7 @@
 #include "hips.h"
 #include "observer.h"
 #include "obj.h"
+#include "otypes.h"
 #include "bayer.h"
 #include "telescope.h"
 #include "tonemapper.h"
@@ -327,12 +328,3 @@ obj_t *city_create(const char *name, const char *country_code,
                    double latitude, double longitude,
                    double elevation,
                    double get_near);
-
-
-/**** Simbad object types database ******/
-int otypes_lookup(const char *condensed,
-                  const char **name,
-                  const char **explanation,
-                  int ns[4]);
-// Return the parent condensed id of an otype.
-const char *otypes_get_parent(const char *condensed);
