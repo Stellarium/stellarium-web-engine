@@ -190,6 +190,22 @@ static void screen_to_observed(double x, double y, double p[3])
     vec3_copy(pos, p);
 }
 
+/*
+ * Function: core_get_proj
+ * Get the core current view projection
+ *
+ * Parameters:
+ *   proj   - Pointer to a projection_t instance that get initialized.
+ */
+void core_get_proj(projection_t *proj)
+{
+    double fovx, fovy;
+    double aspect = core->win_size[0] / core->win_size[1];
+    projection_compute_fovs(core->proj, core->fov, aspect, &fovx, &fovy);
+    projection_init(proj, core->proj, fovx,
+                    core->win_size[0], core->win_size[1]);
+}
+
 obj_t *core_get_obj_at(double x, double y, double max_dist)
 {
     double pos[2] = {x, y};
@@ -391,8 +407,7 @@ int core_update(double dt)
     projection_t proj;
 
     // Continuous zoom.
-    projection_init(&proj, core->proj, core->fovx,
-                    core->win_size[0], core->win_size[1]);
+    core_get_proj(&proj);
     if (core->zoom) {
         core->fov *= pow(ZOOM_FACTOR, -core->zoom);
         if (core->fov > proj.max_fov)
@@ -587,7 +602,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    projection_init(&proj, core->proj, core->fovx, win_w, win_h);
+    core_get_proj(&proj);
 
     // Convert the center offset into a transformation mat.
     assert(core->center_offset[0] == 0); // Only Y offset for the moment!

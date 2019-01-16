@@ -244,6 +244,15 @@ void core_on_char(uint32_t c);
 void core_on_zoom(double zoom, double x, double y);
 
 /*
+ * Function: core_get_proj
+ * Get the core current view projection
+ *
+ * Parameters:
+ *   proj   - Pointer to a projection_t instance that get initialized.
+ */
+void core_get_proj(projection_t *proj);
+
+/*
  * Function: core_get_obj_at
  * Get the object at a given screen position.
  *
