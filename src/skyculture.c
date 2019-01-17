@@ -252,9 +252,9 @@ constellation_infos_t *skyculture_parse_stellarium_constellations(
         if (!tok) goto error;
         nb_segs = atoi(tok);
         for (i = 0; i < nb_segs; i++) {
-            tok = strtok(NULL, " "); if (!tok) goto error;
+            tok = strtok(NULL, " \t"); if (!tok) goto error;
             s1 = atoi(tok);
-            tok = strtok(NULL, " "); if (!tok) goto error;
+            tok = strtok(NULL, " \t"); if (!tok) goto error;
             s2 = atoi(tok);
             cons->lines[i][0] = s1;
             cons->lines[i][1] = s2;
