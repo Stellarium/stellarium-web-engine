@@ -84,7 +84,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     if (!info) return 0;
     cons->info = *info;
     cons->name = strdup(info->name);
-    cons->name_translated = info->name_translated ?
+    cons->name_translated = *info->name_translated ?
         strdup(info->name_translated) : strdup(info->name);
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST ",
