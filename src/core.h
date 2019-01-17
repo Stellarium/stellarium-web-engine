@@ -171,11 +171,16 @@ struct core
         double      dst_q[4]; // Destination pos quaternion.
         double      t;        // Goes from 0 to 1 as we move.
         double      speed;
-        double      src_fov;  // Initial fov.
-        double      dst_fov;  // Destination fov (0 to ignore).
         // Set to true if the move is toward newly locked object
         bool        move_to_lock;
     } target;
+
+    struct {
+        double      t;        // Goes from 0 to 1 as we move.
+        double      speed;
+        double      src_fov;  // Initial fov.
+        double      dst_fov;  // Destination fov.
+    } fov_animation;
 
     // Zoom movement. -1 to zoom out, +1 to zoom in.
     double zoom;
@@ -229,6 +234,17 @@ void core_release(void);
  *   dt     - Time imcrement from last frame (sec).
  */
 int core_update(double dt);
+
+/*
+ * Function: core_update_fov
+ * Update the core fov animation.
+ *
+ * Should be called before core_update
+ *
+ * Parameters:
+ *   dt     - Time imcrement from last frame (sec).
+ */
+void core_update_fov(double dt);
 
 int core_render(double win_w, double win_h, double pixel_scale);
 // x and y in screen coordinates.

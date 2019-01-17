@@ -320,6 +320,28 @@ void core_release(void)
     profile_release();
 }
 
+void core_update_fov(double dt)
+{
+    double t;
+
+    if (core->fov_animation.speed) {
+        core->fov_animation.t += dt / core->fov_animation.speed;
+        t = smoothstep(0.0, 1.0, core->fov_animation.t);
+        // Make sure we finish on an exact value.
+        if (core->fov_animation.t >= 1.0) t = 1.0;
+        if (core->fov_animation.dst_fov) {
+            core->fov = mix(core->fov_animation.src_fov,
+                            core->fov_animation.dst_fov, t);
+            obj_changed(&core->obj, "fov");
+        }
+        if (core->fov_animation.t >= 1.0) {
+            core->fov_animation.speed = 0.0;
+            core->fov_animation.t = 0.0;
+            core->fov_animation.dst_fov = 0.0;
+        }
+    }
+}
+
 static int core_update_direction(double dt)
 {
     double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
@@ -343,14 +365,9 @@ static int core_update_direction(double dt)
             quat_mul_vec3(q, v, v);
             eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
         }
-        if (core->target.dst_fov) {
-            core->fov = mix(core->target.src_fov, core->target.dst_fov, t);
-            obj_changed(&core->obj, "fov");
-        }
         if (core->target.t >= 1.0) {
             core->target.speed = 0.0;
             core->target.t = 0.0;
-            core->target.dst_fov = 0.0;
             core->target.move_to_lock = false;
         }
         // Notify the changes.
@@ -918,13 +935,12 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
     }
 }
 
-static int do_core_lookat(double* pos, double speed, double fov) {
+static int do_core_lookat(double* pos, double speed) {
     double az, al;
 
     // Direct lookat.
     if (speed == 0.0) {
         eraC2s(pos, &core->observer->azimuth, &core->observer->altitude);
-        if (fov) core->fov = fov;
         return 0;
     }
 
@@ -937,8 +953,6 @@ static int do_core_lookat(double* pos, double speed, double fov) {
     quat_rz(az, core->target.dst_q, core->target.dst_q);
     quat_ry(-al, core->target.dst_q, core->target.dst_q);
 
-    core->target.src_fov = core->fov;
-    core->target.dst_fov = fov;
     core->target.speed = speed;
     core->target.t = 0.0;
     core->fast_mode = true;
@@ -948,16 +962,15 @@ static int do_core_lookat(double* pos, double speed, double fov) {
 static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
                                const json_value *args)
 {
-    double v[4], speed = 1.0, fov = 0.0;
+    double v[4], speed = 1.0;
     obj_t* target_obj;
     args_get(args, "target", 1, "p", "obj", &target_obj);
     args_get(args, "speed", 2, "f", NULL, &speed);
-    args_get(args, "fov", 3, "f", NULL, &fov);
 
     obj_set_attr(&core->obj, "lock", "p", target_obj);
 
     obj_get_pos_observed(core->target.lock, core->observer, v);
-    do_core_lookat(v, speed, fov ? fov : core->fov);
+    do_core_lookat(v, speed);
     core->target.move_to_lock = true;
     return NULL;
 }
@@ -966,13 +979,34 @@ static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
                                const json_value *args)
 {
     // XXX find a better way to create a rot quaternion from a direction?
-    double speed = 1.0, pos[3], fov = 0.0;
+    double speed = 1.0, pos[3];
 
     args_get(args, "target", 1, "v3", "azalt", pos);
     args_get(args, "speed", 2, "f", NULL, &speed);
-    args_get(args, "fov", 3, "f", NULL, &fov);
 
-    do_core_lookat(pos, speed, fov);
+    do_core_lookat(pos, speed);
+    return NULL;
+}
+
+static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
+                               const json_value *args)
+{
+    double speed = 1.0, fov = 0.0;
+
+    args_get(args, "fov", 1, "f", NULL, &fov);
+    args_get(args, "speed", 2, "f", NULL, &speed);
+
+    // Direct lookat.
+    if (speed == 0.0) {
+        core->fov = fov;
+        return NULL;
+    }
+
+    core->fov_animation.src_fov = core->fov;
+    core->fov_animation.dst_fov = fov;
+    core->fov_animation.speed = speed;
+    core->fov_animation.t = 0.0;
+
     return NULL;
 }
 
@@ -1064,6 +1098,7 @@ static obj_klass_t core_klass = {
         PROPERTY("test", "b", MEMBER(core_t, test)),
         FUNCTION("lookat", .fn = core_lookat),
         FUNCTION("point_and_lock", .fn = core_point_and_lock),
+        FUNCTION("zoomto", .fn = core_zoomto),
         {}
     }
 };
