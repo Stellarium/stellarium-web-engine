@@ -22,6 +22,7 @@ static void update_matrices(observer_t *obs)
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRS).
     double re2h[3][3];  // Ecliptic to horizontal.
     double re2v[3][3];  // Ecliptic to view.
+    double view_rot[3][3];
 
     mat3_set_identity(ro2v);
     // r2gl changes the coordinate from z up to y up orthonomal.
@@ -32,8 +33,11 @@ static void update_matrices(observer_t *obs)
     mat3_rx(-obs->altitude, ro2v, ro2v);
     mat3_ry(obs->azimuth, ro2v, ro2v);
     mat3_mul(ro2v, r2gl, ro2v);
+
     // Extra rotation for screen center offset.
-    mat3_mul(obs->view_rot, ro2v, ro2v);
+    mat3_set_identity(view_rot);
+    mat3_rx(obs->view_offset_alt, view_rot, view_rot);
+    mat3_mul(view_rot, ro2v, ro2v);
 
     // Compute rotation matrix from CIRS to horizontal.
     mat3_set_identity(ri2h);
@@ -90,7 +94,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(altitude);
     H(azimuth);
     H(roll);
-    H(view_rot);
+    H(view_offset_alt);
     H(tt);
     #undef H
     *hash = v;
@@ -202,7 +206,6 @@ static int observer_init(obj_t *obj, json_value *args)
     observer_t*  obs = (observer_t*)obj;
     observer_compute_hash(obs, &obs->hash_partial, &obs->hash_accurate);
     obs->hash = obs->hash_accurate;
-    mat3_set_identity(obs->view_rot);
     return 0;
 }
 
@@ -291,6 +294,8 @@ static obj_klass_t observer_klass = {
         PROPERTY("azimuth", "f", MEMBER(observer_t, azimuth),
                 .hint = "h_angle"),
         PROPERTY("roll", "f", MEMBER(observer_t, roll)),
+        PROPERTY("view_offset_alt", "f", MEMBER(observer_t, view_offset_alt),
+                .hint = "d_angle"),
         PROPERTY("azalt", "v3", .hint = "azalt", .fn = observer_get_azalt),
         {}
     },

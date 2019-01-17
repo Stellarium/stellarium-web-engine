@@ -581,7 +581,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     PROFILE(core_render, 0);
     obj_t *module;
     projection_t proj;
-    double t, al;
+    double t;
     bool cst_visible;
     double max_vmag;
 
@@ -599,12 +599,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     core_get_proj(&proj);
-
-    // Convert the center offset into a transformation mat.
-    assert(core->center_offset[0] == 0); // Only Y offset for the moment!
-    al = -core->center_offset[1] * proj.scaling[1] / proj.window_size[1] * 2;
-    mat3_set_identity(core->observer->view_rot);
-    mat3_rx(al, core->observer->view_rot, core->observer->view_rot);
 
     observer_update(core->observer, true);
     max_vmag = compute_max_vmag();
@@ -1068,7 +1062,6 @@ static obj_klass_t core_klass = {
         PROPERTY("ignore_clicks", "b", MEMBER(core_t, ignore_clicks)),
         PROPERTY("zoom", "f", MEMBER(core_t, zoom)),
         PROPERTY("test", "b", MEMBER(core_t, test)),
-        PROPERTY("center_offset", "v2", MEMBER(core_t, center_offset)),
         FUNCTION("lookat", .fn = core_lookat),
         FUNCTION("point_and_lock", .fn = core_point_and_lock),
         {}

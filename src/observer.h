@@ -30,7 +30,10 @@ struct observer
     double altitude;
     double azimuth;
     double roll;
-    double view_rot[3][3]; // Extra transformation applied to the view mat.
+    // Extra rotations applied to the view matrix in altitude.
+    // Set this to have the centered objet not located at screen center
+    // but somewhere else.
+    double view_offset_alt;
     obj_t  *city;
 
     double last_update;
