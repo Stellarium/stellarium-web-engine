@@ -55,6 +55,7 @@ typedef struct skyculture {
 typedef struct skycultures_t {
     obj_t   obj;
     skyculture_t *current; // The current skyculture.
+    int     labels_display_style;
 } skycultures_t;
 
 

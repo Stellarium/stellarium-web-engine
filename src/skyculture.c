@@ -288,19 +288,21 @@ int skyculture_parse_stellarium_constellations_names(
     int r;
     constellation_infos_t *cons = NULL;
     regex_t reg;
-    regmatch_t m[3];
+    regmatch_t m[4];
 
     data = strdup(data_);
     // Regexp for:
-    // <ID>   "<NAME>"
-    regcomp(&reg, "[ \t]*([.a-zA-Z0-9]+)[ \t]+\"([^\"]*)\"", REG_EXTENDED);
+    // <ID>   "<NAME>"      _("<TRANSLATED_NAME>")
+    regcomp(&reg, "[ \t]*([.a-zA-Z0-9]+)"
+                  "[ \t]+\"([^\"]*)\""
+                  "[ \t]+_\\(\"([^\"]*)\"\\)", REG_EXTENDED);
     for (line = strtok_r(data, "\r\n", &tmp); line;
          line = strtok_r(NULL, "\r\n", &tmp))
     {
         while (*line == ' ' || *line == '\t') line++;
         if (*line == '\0') continue;
         if (*line == '#') continue;
-        r = regexec(&reg, line, 3, m, 0);
+        r = regexec(&reg, line, 4, m, 0);
         if (r) goto error;
         line[m[1].rm_eo] = '\0';
         cons = get_constellation(infos, line + m[1].rm_so);
@@ -308,8 +310,10 @@ int skyculture_parse_stellarium_constellations_names(
             LOG_W("Can not find constellation '%s'", line + m[1].rm_so);
             continue;
         }
-        snprintf(cons->name, sizeof(cons->name) - 1,
+        snprintf(cons->name, sizeof(cons->name),
                  "%.*s", (int)(m[2].rm_eo - m[2].rm_so), line + m[2].rm_so);
+        snprintf(cons->name_translated, sizeof(cons->name_translated),
+                 "%.*s", (int)(m[3].rm_eo - m[3].rm_so), line + m[3].rm_so);
         continue;
 error:
         LOG_W("Could not parse constellation names: %s", line);

@@ -11,6 +11,14 @@
 #include <zlib.h> // For crc32.
 
 /*
+ * Enum of the label display styles.
+ */
+enum {
+    LABEL_DISPLAY_TRANSLATED    = 0,
+    LABEL_DISPLAY_NATIVE        = 1,
+};
+
+/*
  * Type: constellation_t
  * Object representing a single constellation.
  */
@@ -18,6 +26,7 @@ typedef struct constellation {
     obj_t       obj;
     constellation_infos_t info;
     char        *name;
+    char        *name_translated;
     int         count;
     fader_t     visible;
     obj_t       **stars;
@@ -43,6 +52,7 @@ typedef struct constellations {
     fader_t     lines_visible;
     fader_t     bounds_visible;
     bool        show_all;
+    int         labels_display_style;
 } constellations_t;
 
 static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
@@ -74,6 +84,8 @@ static int constellation_init(obj_t *obj, json_value *args)
     if (!info) return 0;
     cons->info = *info;
     cons->name = strdup(info->name);
+    cons->name_translated = info->name_translated ?
+        strdup(info->name_translated) : strdup(info->name);
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST ",
                             crc32(0, (void*)info->id, strlen(info->id)));
@@ -360,6 +372,7 @@ static void constellation_del(obj_t *obj)
     }
     free(con->stars);
     free(con->name);
+    free(con->name_translated);
 }
 
 // Project from uv to the sphere.
@@ -380,6 +393,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     double lines_color[4], names_color[4];
     double pos[3] = {0, 0, 0};
     double mag[2], radius[2];
+    const char *label;
+    constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (painter.color[3] == 0.0) return 0;
     vec4_set(lines_color, 0.2, 0.2, 0.6, 1.0);
@@ -417,7 +432,9 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     if (project(painter.proj,
                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
                 2, pos, pos)) {
-        labels_add(con->name, pos, 0, 16, names_color, 0,
+        label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
+                    con->name : con->name_translated;
+        labels_add(label, pos, 0, 16, names_color, 0,
                    ALIGN_CENTER | ALIGN_MIDDLE | LABEL_UPPERCASE,
                    0, con->obj.oid);
     }
@@ -449,6 +466,7 @@ static int constellations_init(obj_t *obj, json_value *args)
     obj_add_sub(&conss->obj, "images");
     obj_add_sub(&conss->obj, "lines");
     obj_add_sub(&conss->obj, "bounds");
+    obj_add_sub(&conss->obj, "labels");
     fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->images_visible, false);
@@ -567,6 +585,9 @@ static obj_klass_t constellations_klass = {
                  MEMBER(constellations_t, bounds_visible.target),
                  .sub = "bounds"),
         PROPERTY("show_all", "b", MEMBER(constellations_t, show_all)),
+        PROPERTY("display_style", "i",
+                 MEMBER(constellations_t, labels_display_style),
+                .sub = "labels"),
         {}
     },
 };
