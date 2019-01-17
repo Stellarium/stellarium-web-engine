@@ -590,7 +590,7 @@ static int stars_get_visitor(int order, int pix, void *user)
         int         cat;
         uint64_t    n;
     } *d = user;
-    tile_t *tile;
+    tile_t *tile = NULL;
 
     is_gaia = d->cat == 2 || (d->cat == 3 && oid_is_gaia(d->n));
 
@@ -600,8 +600,10 @@ static int stars_get_visitor(int order, int pix, void *user)
             return 0;
     }
 
-    tile = get_tile(d->stars, 0, order, pix, NULL);
-    if (!tile && is_gaia) tile = get_tile(d->stars, 1, order, pix, NULL);
+    // Try both surveys (bundled and gaia).
+    for (i = 0; !tile && i < 2; i++) {
+        tile = get_tile(d->stars, i, order, pix, NULL);
+    }
 
     // Gaia survey has a min order of 3.
     // XXX: read the survey properties file instead of hard coding!
