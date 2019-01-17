@@ -58,11 +58,13 @@ int sys_make_dir(const char *path);
  *   enable - set to 1 to enable the sensors, 0 to stop them.
  *   acc    - get the accelerometer readings.
  *   mag    - get the magnetomer readings.
+ *   rot    - get the device rotation angle (0, 90, 180 or 270).
+ *
  *
  * Return:
  *   0 on success.
  */
-int sys_device_sensors(int enable, double acc[3], double mag[3]);
+int sys_device_sensors(int enable, double acc[3], double mag[3], int *rot);
 
 int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
 
@@ -125,7 +127,7 @@ typedef struct {
     void (*log)(void *user, const char *msg);
     const char *(*get_user_dir)(void *user);
     int (*device_sensors)(void *user, int enable,
-                          double acc[3], double mag[3]);
+                          double acc[3], double mag[3], int *rot);
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
