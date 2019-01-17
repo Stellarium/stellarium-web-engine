@@ -238,6 +238,7 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
         con->error = err;
         return 0;
     }
+    if (con->count == 0) return 0;
     for (i = 0; i < con->count; i++) {
         obj_update(con->stars[i], obs, 0);
         vec3_add(pos, con->stars[i]->pvo[0], pos);
