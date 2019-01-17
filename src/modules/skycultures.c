@@ -273,7 +273,9 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
                 data, cult->constellations);
     }
 
-    if (get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data, 0)) {
+    if (get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data,
+                 ASSET_ACCEPT_404))
+    {
         cult->names = skyculture_parse_stellarium_star_names(data, NULL);
     }
 
