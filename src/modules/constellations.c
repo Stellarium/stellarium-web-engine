@@ -100,17 +100,18 @@ static int constellation_init(obj_t *obj, json_value *args)
 // Get the list of the constellation stars.
 static int constellation_create_stars(constellation_t *cons)
 {
-    int i, err = 0;
-    char star_id[128];
+    int i, err = 0, hip;
+    uint64_t oid;
     if (cons->stars) return 0;
     cons->count = cons->info.nb_lines * 2;
     cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
-        assert(cons->info.lines[i / 2][i % 2] != 0);
-        sprintf(star_id, "HIP %d", cons->info.lines[i / 2][i % 2]);
-        cons->stars[i] = obj_get(NULL, star_id, 0);
+        hip = cons->info.lines[i / 2][i % 2];
+        assert(hip);
+        oid = oid_create("HIP ", hip);
+        cons->stars[i] = obj_get_by_oid(NULL, oid, 0);
         if (!cons->stars[i]) {
-            LOG_W("Cannot find cst star: %s, %s", cons->info.id, star_id);
+            LOG_W("Cannot find cst star: %s, HIP %d", cons->info.id, hip);
             err = 1;
         }
     }
@@ -123,7 +124,7 @@ static int parse_anchors(const char *str, double mat[3][3])
     double uvs[3][3], tmp[3][3];
     int i, hips[3], r;
     double pos[3][3];
-    char hip_s[16];
+    uint64_t oid;
     obj_t *star;
 
     sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
@@ -132,8 +133,8 @@ static int parse_anchors(const char *str, double mat[3][3])
             &uvs[2][0], &uvs[2][1], &hips[2]);
     for (i = 0; i < 3; i++) {
         uvs[i][2] = 1.0;
-        sprintf(hip_s, "HIP %d", hips[i]);
-        star = obj_get(NULL, hip_s, 0);
+        oid = oid_create("HIP ", hips[i]);
+        star = obj_get_by_oid(NULL, oid, 0);
         if (!star) {
             LOG_W("Cannot find star HIP %d", hips[i]);
             return -1;
