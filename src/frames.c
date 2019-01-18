@@ -107,9 +107,48 @@ static void convert_frame_forward(const observer_t *obs,
 }
 
 static void convert_frame_backward(const observer_t *obs,
-                        int origin, int dest, double p[3])
+                        int origin, int dest, bool at_inf, double p[3])
 {
-    assert(0);
+    const eraASTROM *astrom = &obs->astrom;
+
+    // VIEW to OBSERVED.
+    if (origin >= FRAME_VIEW && dest < FRAME_VIEW)
+        mat3_mul_vec3(obs->rv2o, p, p);
+
+    // OBSERVED to CIRS
+    if (origin >= FRAME_OBSERVED && dest < FRAME_OBSERVED) {
+        if (at_inf) {
+            refraction_inv(p, astrom->refa, astrom->refb, p);
+            vec3_normalize(p, p);
+        } else {
+            // Special case for null's vectors
+            double dist = vec3_norm(p);
+            if (dist == 0.0) {
+                vec3_set(p, 0, 0, 0);
+                return;
+            }
+            vec3_mul(1.0 / dist, p, p);
+            refraction_inv(p, astrom->refa, astrom->refb, p);
+            vec3_normalize(p, p);
+            vec3_mul(dist, p, p);
+        }
+        mat3_mul_vec3(obs->rh2i, p, p);
+    }
+    // CIRS to ICRS
+    if (origin >= FRAME_CIRS && dest < FRAME_CIRS) {
+        // Bias-precession-nutation, giving CIRS proper direction.
+        //eraRxp(astrom->bpn, p, p); -> reverse operation is regular mult ??
+        mat3_mul_vec3(astrom->bpn, p, p);
+    }
+    if (dest < FRAME_ICRF) {
+        // Unimplemented
+        assert(0);
+    }
+    if (dest == FRAME_ASTROM) {
+        // Unimplemented
+        assert(0);
+    }
+    vec3_normalize(p, p);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -128,7 +167,7 @@ int convert_frame(const observer_t *obs,
     if (dest > origin) {
         convert_frame_forward(obs, origin, dest, at_inf, out);
     } else if (dest < origin) {
-        convert_frame_backward(obs, origin, dest, out);
+        convert_frame_backward(obs, origin, dest, at_inf, out);
     }
 
     assert(!isnan(out[0] + out[1] + out[2]));
