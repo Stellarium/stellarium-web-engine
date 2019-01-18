@@ -338,6 +338,11 @@ static double get_theta_range(const painter_t *painter, int frame)
     double theta_max = -DBL_MAX, theta_min = DBL_MAX;
     int i;
 
+    /*
+     * This works by unprojection the four screen corners into the grid
+     * frame and testing the maximum and minimum separation to the zenith
+     * for each of them.
+     */
     mat3_copy(painter->obs->ro2v, m);
     if (frame == FRAME_CIRS)
         mat3_mul(m, painter->obs->ri2h, m);
