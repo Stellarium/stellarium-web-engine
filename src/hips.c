@@ -361,7 +361,7 @@ texture_t *hips_get_tile_texture(
             !render_tile->tex &&
             !render_tile->allsky_tex)
     {
-        nbw = sqrt(12 * 1 << (2 * order));
+        nbw = (int)sqrt(12 * (1 << (2 * order)));
         x = (pix % nbw) * hips->allsky.w / nbw;
         y = (pix / nbw) * hips->allsky.w / nbw;
         render_tile->allsky_tex = texture_from_data(
