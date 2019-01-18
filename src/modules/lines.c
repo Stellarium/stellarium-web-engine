@@ -330,7 +330,7 @@ int on_quad(int step, qtree_node_t *node,
 
 // Compute an estimation of the visible range of azimuthal angle.  If we look
 // at the pole it can go up to 360°.
-static double get_theta_range(const painter_t *painter)
+static double get_theta_range(const painter_t *painter, int frame)
 {
     double p[4] = {0, 0, 0, 0};
     double m[3][3];
@@ -338,7 +338,9 @@ static double get_theta_range(const painter_t *painter)
     double theta_max = -DBL_MAX, theta_min = DBL_MAX;
     int i;
 
-    mat3_mul(painter->obs->ro2v, painter->obs->ri2h, m);
+    mat3_copy(painter->obs->ro2v, m);
+    if (frame == FRAME_CIRS)
+        mat3_mul(m, painter->obs->ri2h, m);
     mat3_invert(m, m);
     for (i = 0; i < 4; i++) {
         p[0] = 2 * ((i % 2) - 0.5);
@@ -354,12 +356,13 @@ static double get_theta_range(const painter_t *painter)
 
 
 // XXX: make it better.
-static void get_steps(double fov, char type, const painter_t *painter,
+static void get_steps(double fov, char type, int frame,
+                      const painter_t *painter,
                       const step_t *steps[2])
 {
     double a = fov / 8;
     int i;
-    double theta_range = get_theta_range(painter);
+    double theta_range = get_theta_range(painter, frame);
     if (type == 'd') {
         i = (int)round(1.7 * log(2 * M_PI / a));
         i = min(i, ARRAY_SIZE(STEPS_DEG) - 1);
@@ -409,7 +412,7 @@ static int line_render(const obj_t *obj, const painter_t *painter)
     painter2.transform = &transform;
     // Compute the number of divisions of the grid.
     if (line->format)
-        get_steps(core->fov, line->format, &painter2, steps);
+        get_steps(core->fov, line->format, line->frame, &painter2, steps);
     else {
         steps[0] = &STEPS_DEG[1];
         steps[1] = &STEPS_DEG[0];
