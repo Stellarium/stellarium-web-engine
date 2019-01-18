@@ -222,6 +222,7 @@ static void test_ephemeris(void)
     observer_t *obs;
     const struct {
         const char *name;
+        uint64_t oid;
         double date;
         double lon;
         double lat;
@@ -233,19 +234,24 @@ static void test_ephemeris(void)
         double az;
     } ephs[] = {
         // Values generated with tools/compute-ephemeris.py.
-        {"Sun", 55080.70833333, -84.38798240, 33.74899540,
+        {"Sun", oid_create("HORI", 10),
+         55080.70833333, -84.38798240, 33.74899540,
          165.35302920, 6.25627931, 165.47771054, 6.20388133,
          61.24211255, 161.26054774},
-        {"Moon", 55080.70833333, -84.38798240, 33.74899540,
+        {"Moon", oid_create("HORI", 301),
+         55080.70833333, -84.38798240, 33.74899540,
          5.12351325, 7.42234252, 4.88049286, 6.88507510,
          -41.29087044, 321.13994926},
-        {"Polaris", 55080.70833333, -84.38798240, 33.74899540,
+        {"Polaris", oid_create("HIP ", 11767),
+         55080.70833333, -84.38798240, 33.74899540,
          37.95550905, 89.26413510, 41.07208870, 89.30364735,
          33.47052240, 359.24647623},
-        {"Jupiter", 55080.70833333, -84.38798240, 33.74899540,
+        {"Jupiter", oid_create("HORI", 599),
+         55080.70833333, -84.38798240, 33.74899540,
          321.88811808, -16.13925832, 322.03148431, -16.09494228,
          -68.04230353, 40.04118488},
-        {"Io", 55080.70833333, -84.38798240, 33.74899540,
+        {"Io", oid_create("HORI", 501),
+         55080.70833333, -84.38798240, 33.74899540,
          321.88392557, -16.14053347, 322.02730012, -16.09621846,
          -68.04112874, 40.05201756}
     };
@@ -264,7 +270,7 @@ static void test_ephemeris(void)
         obj_set_attr((obj_t*)obs, "latitude", "f", ephs[i].lat * DD2R);
         obs->refraction = false;
         observer_update(obs, false);
-        obj = obj_get(NULL, ephs[i].name, 0);
+        obj = obj_get_by_oid(NULL, ephs[i].oid, 0);
         assert(obj);
 
         obj_update(obj, core->observer, 0);
