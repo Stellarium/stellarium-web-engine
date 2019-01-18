@@ -70,6 +70,7 @@ static void update_matrices(observer_t *obs)
 
     // Copy all
     mat3_copy(ro2v, obs->ro2v);
+    mat3_invert(obs->ro2v, obs->rv2o);
     mat3_copy(ri2h, obs->ri2h);
     mat3_copy(rh2i, obs->rh2i);
     mat3_copy(ri2v, obs->ri2v);

@@ -479,15 +479,14 @@ static double compute_max_vmag(void)
 static void win_to_icrf_(const observer_t *obs, const projection_t *proj,
                          const double win_pos[2], double out[3])
 {
-    double p[4], rv2o[3][3];
+    double p[4];
     // Win to NDC.
     p[0] = win_pos[0] / proj->window_size[0] * 2 - 1;
     p[1] = 1 - win_pos[1] / proj->window_size[1] * 2;
     // NDC to view.
     project(proj, PROJ_BACKWARD, 4, p, p);
     // View to observed.
-    mat3_invert(obs->ro2v, rv2o);
-    mat3_mul_vec3(rv2o, p, p);
+    mat3_mul_vec3(obs->rv2o, p, p);
     // Note: this part should probably be done with:
     //   convert_frame(obs, FRAME_OBSERVED, FRAME_ICRF, true, p, p);
     // Apply reverse refraction.
@@ -556,17 +555,15 @@ static void win_to_icrf(const observer_t *obs, const projection_t *proj,
  */
 static void win_to_observed(double x, double y, double p[3])
 {
-    double rv2o[3][3];
     projection_t proj;
     double pos[4] = {x, y};
 
-    mat3_invert(core->observer->ro2v, rv2o);
     core_get_proj(&proj);
     // Convert to NDC coordinates.
     pos[0] = pos[0] / core->win_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
     project(&proj, PROJ_BACKWARD, 4, pos, pos);
-    mat3_mul_vec3(rv2o, pos, pos);
+    mat3_mul_vec3(core->observer->rv2o, pos, pos);
     vec3_copy(pos, p);
 }
 

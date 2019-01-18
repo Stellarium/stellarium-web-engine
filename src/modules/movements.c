@@ -28,16 +28,14 @@ static void screen_to_observed(
         const observer_t *obs, const projection_t *proj,
         const double screen_pos[2], double p[3])
 {
-    double rv2o[3][3];
     double pos[4] = {screen_pos[0], screen_pos[1]};
 
-    mat3_invert(obs->ro2v, rv2o);
     // Convert to NDC coordinates.
     // Could be done in the projector?
     pos[0] = pos[0] / proj->window_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / proj->window_size[1] * 2 - 1);
     project(proj, PROJ_BACKWARD, 4, pos, pos);
-    mat3_mul_vec3(rv2o, pos, pos);
+    mat3_mul_vec3(obs->rv2o, pos, pos);
     vec3_copy(pos, p);
 }
 

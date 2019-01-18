@@ -90,6 +90,7 @@ struct observer
     // e: Ecliptic (right handed).
     // v: View (observed with view direction).
     double ro2v[3][3];  // Rotate from observed to view.
+    double rv2o[3][3];  // Rotate from view to observed.
     double ri2h[3][3];  // Equatorial J2000 (ICRS) to horizontal.
     double rh2i[3][3];  // Horizontal to Equatorial J2000 (ICRS).
     double ri2v[3][3];  // Equatorial J2000 (ICRS) to view.
