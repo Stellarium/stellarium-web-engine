@@ -86,6 +86,17 @@ typedef struct tile {
     star_data_t *sources;
 } tile_t;
 
+static uint64_t pix_to_nuniq(int order, int pix)
+{
+    return pix + 4 * (1L << (2 * order));
+}
+
+static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
+{
+    *order = log2(nuniq / 4) / 2;
+    *pix = nuniq - 4 * (1 << (2 * (*order)));
+}
+
 static double illuminance_for_vmag(double vmag)
 {
     /*
@@ -532,6 +543,7 @@ static int render_visitor(int order, int pix, void *user)
             .size = size,
             .color = {color[0], color[1], color[2], luminance},
             .oid = s->oid,
+            .hint = pix_to_nuniq(order, pix),
         };
         n++;
         selected = core->selection && s->oid == core->selection->oid;
@@ -647,17 +659,37 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
 
 static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
+    int order, pix, i;
+    stars_t *stars = (void*)obj;
+    tile_t *tile = NULL;
+
     struct {
         stars_t  *stars;
         obj_t    *ret;
         int      cat;
         uint64_t n;
     } d = {.stars=(void*)obj, .cat=3, .n=oid};
-    if (    !oid_is_catalog(oid, "HIP ") &&
-            !oid_is_catalog(oid, "TYC ") &&
-            !oid_is_gaia(oid)) return NULL;
-    hips_traverse(&d, stars_get_visitor);
-    return d.ret;
+
+    if (!hint) {
+        if (    !oid_is_catalog(oid, "HIP ") &&
+                !oid_is_catalog(oid, "TYC ") &&
+                !oid_is_gaia(oid)) return NULL;
+        hips_traverse(&d, stars_get_visitor);
+        return d.ret;
+    }
+
+    // Get tile from hint (as nuniq).
+    nuniq_to_pix(hint, &order, &pix);
+    // Try both surveys (bundled and gaia).
+    for (i = 0; !tile && i < 2; i++) {
+        tile = get_tile(stars, i, order, pix, NULL);
+    }
+    if (!tile) return NULL;
+    for (i = 0; i < tile->nb; i++) {
+        if (tile->sources[i].oid == oid)
+            return (obj_t*)star_create(&tile->sources[i]);
+    }
+    return NULL;
 }
 
 // XXX: we can probably merge this with stars_get_visitor!
@@ -710,8 +742,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     }
 
     // Get tile from hint (as nuniq).
-    order = log2(hint / 4) / 2;
-    pix = hint - 4 * (1 << (2 * (order)));
+    nuniq_to_pix(hint, &order, &pix);
     tile = get_tile(stars, 0, order, pix, NULL);
     if (!tile) return 0;
     for (i = 0; i < tile->nb; i++) {
