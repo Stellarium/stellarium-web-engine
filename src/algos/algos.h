@@ -146,7 +146,7 @@ const char *format_dist(char *buf, double d); // d in AU.
  *
  */
 void refraction(const double v[3], double refa, double refb, double out[3]);
-
+void refraction_inv(const double v[3], double refa, double refb, double out[3]);
 
 /* Galilean satellites positions using l1.2 semi-analytic theory by
  * L.Duriez.

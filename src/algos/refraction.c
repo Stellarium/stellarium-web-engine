@@ -9,6 +9,7 @@
 
 #include <stdbool.h>
 #include <math.h>
+#include "utils/vec.h"
 
 /* Refraction computation
  *
@@ -59,3 +60,21 @@ void refraction(const double v[3], double refa, double refb,
     out[2] = cosdel * zaet + del * r;
 }
 
+void refraction_inv(const double v[3], double refa, double refb,
+                double out[3])
+{
+    double delta[3];
+    double a[3], b[3];
+    int i;
+    vec3_copy(v, a);
+    for (i = 0; i < 10 ; ++i) {
+        refraction(a, refa, refb, b);
+        vec3_normalize(b, b);
+        vec3_sub(b, v, delta);
+        vec3_sub(a, delta, a);
+        vec3_normalize(a, a);
+        if (vec3_dot(b, v) > cos(0.001 / 3600 * M_PI / 180))
+            break;
+    }
+    vec3_copy(a, out);
+}
