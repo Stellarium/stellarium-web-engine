@@ -35,8 +35,7 @@ static void screen_to_observed(
     pos[0] = pos[0] / proj->window_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / proj->window_size[1] * 2 - 1);
     project(proj, PROJ_BACKWARD, 4, pos, pos);
-    mat3_mul_vec3(obs->rv2o, pos, pos);
-    vec3_copy(pos, p);
+    convert_frame(obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
 }
 
 
