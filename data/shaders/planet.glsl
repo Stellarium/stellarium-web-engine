@@ -95,12 +95,12 @@ float oren_nayar_diffuse(
  *   sun_pos - Position of the sun.
  *   sun_r   - Precomputed sun angular radius from the given point.
  */
-float illumination_sphere(vec3 p, vec4 sphere, vec3 sun_pos, float sun_r)
+float illumination_sphere(highp vec3 p, highp vec4 sphere, highp vec3 sun_pos, float sun_r)
 {
     // Sphere angular radius as viewed from the point.
     float sph_r = asin(sphere.w / length(sphere.xyz - p));
     // Angle <sun, pos, sphere>
-    float d = acos(min(1.0, dot(normalize(sun_pos - p),
+    highp float d = acos(min(1.0, dot(normalize(sun_pos - p),
                                 normalize(sphere.xyz - p))));
 
     // Special case for the moon, to simulate lunar eclipses.

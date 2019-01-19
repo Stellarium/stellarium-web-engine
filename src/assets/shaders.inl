@@ -233,7 +233,7 @@ static const unsigned char DATA_shaders_fog_glsl[771] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_planet_glsl[6651] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -331,12 +331,12 @@ static const unsigned char DATA_shaders_planet_glsl[6651] __attribute__((aligned
     " *   sun_pos - Position of the sun.\n"
     " *   sun_r   - Precomputed sun angular radius from the given point.\n"
     " */\n"
-    "float illumination_sphere(vec3 p, vec4 sphere, vec3 sun_pos, float sun_r)\n"
+    "float illumination_sphere(highp vec3 p, highp vec4 sphere, highp vec3 sun_pos, float sun_r)\n"
     "{\n"
     "    // Sphere angular radius as viewed from the point.\n"
     "    float sph_r = asin(sphere.w / length(sphere.xyz - p));\n"
     "    // Angle <sun, pos, sphere>\n"
-    "    float d = acos(min(1.0, dot(normalize(sun_pos - p),\n"
+    "    highp float d = acos(min(1.0, dot(normalize(sun_pos - p),\n"
     "                                normalize(sphere.xyz - p))));\n"
     "\n"
     "    // Special case for the moon, to simulate lunar eclipses.\n"
