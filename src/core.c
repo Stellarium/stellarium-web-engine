@@ -664,13 +664,18 @@ int core_render(double win_w, double win_h, double pixel_scale)
     // TEST: render the viewport cap at 50% size for debugging.
     // To be removed once the viewport cap algo is stable.
     if ((0)) {
-        double p[4], r;
+        double r;
+        double p[4];
         vec3_copy(painter.viewport_cap, p);
-        convert_frame(core->observer, FRAME_ICRF, FRAME_VIEW, true, p, p);
-        project(&proj, PROJ_TO_WINDOW_SPACE, 2, p, p);
-        r = acos(painter.viewport_cap[3]) * 0.5;
-        r = r / proj.scaling[0] * proj.window_size[0] / 2;
-        paint_2d_ellipse(&painter, NULL, 0, p, VEC(r, r), NULL);
+        p[3] = 0;
+        r = acos(painter.viewport_cap[3]);
+        obj_t* obj = obj_create("circle", "cap_circle", NULL, NULL);
+        obj_set_attr(obj, "pos", "v4", p);
+        obj_set_attr(obj, "frame", "d", FRAME_ICRF);
+        double size[2] = {r, r};
+        obj_set_attr(obj, "size", "v2", size);
+        obj_render(obj, &painter);
+        obj_release(obj);
     }
 
     // Flush all rendering pipeline
