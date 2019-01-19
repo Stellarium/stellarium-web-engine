@@ -476,7 +476,7 @@ static double compute_max_vmag(void)
  * Convert a window position to local ICRF position.
  * Approximated version that doesn't take into account the refraction.
  */
-static void win_to_icrf_(const observer_t *obs, const projection_t *proj,
+static void win_to_icrf(const observer_t *obs, const projection_t *proj,
                          const double win_pos[2], double out[3])
 {
     double p[4];
@@ -485,63 +485,7 @@ static void win_to_icrf_(const observer_t *obs, const projection_t *proj,
     p[1] = 1 - win_pos[1] / proj->window_size[1] * 2;
     // NDC to view.
     project(proj, PROJ_BACKWARD, 4, p, p);
-    // View to observed.
-    mat3_mul_vec3(obs->rv2o, p, p);
-    // Note: this part should probably be done with:
-    //   convert_frame(obs, FRAME_OBSERVED, FRAME_ICRF, true, p, p);
-    // Apply reverse refraction.
-    // View to CIRS (approximation that doesn't use refraction).
-    mat3_mul_vec3(obs->rh2i, p, p);
-    // CIRS to ICRF.
-    mat3_mul_vec3(obs->astrom.bpn, p, p);
-    vec3_copy(p, out);
-}
-
-/*
- * Convert a window position to local ICRF position.
- */
-static void win_to_icrf(const observer_t *obs, const projection_t *proj,
-                        const double win_pos[2], double out[3])
-{
-    double p[3][3], w[3][3] = {}, m[3][3];
-    int i;
-
-    // Compute approximate icrf pos for 3 points around win_pos:
-    win_to_icrf_(obs, proj, VEC(win_pos[0] + 1, win_pos[1]), p[0]);
-    win_to_icrf_(obs, proj, VEC(win_pos[0], win_pos[1] + 1), p[1]);
-    win_to_icrf_(obs, proj, win_pos, p[2]);
-
-    // Project back into screen pos.
-    for (i = 0; i < 3; i++) {
-        convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, p[i], w[i]);
-        project(proj, PROJ_TO_WINDOW_SPACE, 2, w[i], w[i]);
-        w[i][2] = 0;
-    }
-
-    /*
-     * Not totally sure about this code.
-     * The idea is that we express the wanted screen pos and pixel unit vectors
-     * as a matrix:
-     * [1, 0, 0]
-     * [0  1, 0]
-     * [x, y, 1]
-     * Then we compute the matrix (m) that transforms the approximate screen
-     * pos into the wanted screen pos, and we apply it to the original
-     * approximated ICRF pos.
-     */
-
-    for (i = 0; i < 2; i++) {
-        vec3_sub(w[i], w[2], w[i]);
-        vec3_sub(p[i], p[2], p[i]);
-    }
-    w[2][2] = 1;
-
-    mat3_invert(w, w);
-    mat3_set_identity(m);
-    vec3_set(m[2], win_pos[0], win_pos[1], 1);
-    mat3_mul(m, w, m);
-    mat3_mul(p, m, p);
-    vec3_normalize(p[2], out);
+    convert_frame(core->observer, FRAME_VIEW, FRAME_ICRF, true, p, out);
 }
 
 /*
@@ -563,8 +507,7 @@ static void win_to_observed(double x, double y, double p[3])
     pos[0] = pos[0] / core->win_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
     project(&proj, PROJ_BACKWARD, 4, pos, pos);
-    mat3_mul_vec3(core->observer->rv2o, pos, pos);
-    vec3_copy(pos, p);
+    convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
 }
 
 /*
