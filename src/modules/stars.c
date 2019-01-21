@@ -22,9 +22,6 @@ enum {
     SURVEY_GAIA     = 1,
 };
 
-// Min mag to start loading the gaia survey.
-static const double GAIA_MIN_MAG = 8.0;
-
 typedef struct stars stars_t;
 typedef struct {
     uint64_t oid;
@@ -67,7 +64,8 @@ struct stars {
         stars_t *stars;
         hips_t  *hips;
         char    url[URL_MAX_SIZE - 256];
-        double  min_vmag; // Don't render stars below this mag.
+        int     min_order;
+        double  min_vmag; // Don't render survey below this mag.
     } surveys[2];
 
     bool            visible;
@@ -462,11 +460,12 @@ static int stars_init(obj_t *obj, json_value *args)
             REG_EXTENDED | REG_ICASE);
 
     // Online gaia survey at index 1.
-    survey_settings.user = &stars->surveys[1];
-    sprintf(stars->surveys[1].url,
+    survey_settings.user = &stars->surveys[SURVEY_GAIA];
+    sprintf(stars->surveys[SURVEY_GAIA].url,
             "https://data.stellarium.org/surveys/gaia_dr2_v2");
-    stars->surveys[1].hips = hips_create(
-            stars->surveys[1].url, 0, &survey_settings);
+    stars->surveys[SURVEY_GAIA].hips = hips_create(
+            stars->surveys[SURVEY_GAIA].url, 0, &survey_settings);
+    stars->surveys[SURVEY_GAIA].min_order = 3; // Hardcoded!
     return 0;
 }
 
@@ -506,6 +505,7 @@ static int render_visitor(int order, int pix, void *user)
     // Early exit if the tile is clipped.
     if (painter_is_tile_clipped(&painter, FRAME_ASTROM, order, pix, true))
         return 0;
+    if (order < stars->surveys[survey].min_order) return 1;
 
     (*nb_tot)++;
     tile = get_tile(stars, survey, order, pix, &loaded);
@@ -556,11 +556,8 @@ static int render_visitor(int order, int pix, void *user)
 
 end:
     // Test if we should go into higher order tiles.
-    // Since for the moment we have two different surveys, keep going
-    // until order 3 no matter what, so that we reach the gaia survey.
-    if (order < 3 && painter.stars_limit_mag > GAIA_MIN_MAG) return 1;
-    if (!tile) return 0;
-    if (tile->mag_max > painter.stars_limit_mag) return 0;
+    if (!tile || (tile->mag_max > painter.stars_limit_mag))
+        return 0;
     return 1;
 }
 
@@ -772,17 +769,17 @@ static int stars_add_data_source(
 
     // For the moment we only support one stars source in addition to the
     // only gaia survey.
-    assert(!stars->surveys[0].hips);
+    assert(!stars->surveys[SURVEY_DEFAULT].hips);
     survey_settings.user = &stars->surveys[0];
-    sprintf(stars->surveys[0].url, "%s", url);
-    stars->surveys[0].hips = hips_create(
-            stars->surveys[0].url, 0, &survey_settings);
-    stars->surveys[0].min_vmag = NAN;
+    sprintf(stars->surveys[SURVEY_DEFAULT].url, "%s", url);
+    stars->surveys[SURVEY_DEFAULT].hips = hips_create(
+            stars->surveys[SURVEY_DEFAULT].url, 0, &survey_settings);
+    stars->surveys[SURVEY_DEFAULT].min_vmag = NAN;
 
     // Tell online gaia survey to only start after the vmag for this survey.
     max_vmag_str = json_get_attr_s(args, "max_vmag");
     if (max_vmag_str)
-        stars->surveys[1].min_vmag = atof(max_vmag_str);
+        stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
 
     return 0;
 }
