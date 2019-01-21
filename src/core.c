@@ -507,6 +507,12 @@ static void compute_viewport_cap(double viewport_cap[4],
     viewport_cap[3] = cos(max_sep);
 }
 
+static void compute_sky_cap(double sky_cap[4], const observer_t *obs) {
+    double p[3] = {0, 0, 1};
+    convert_frame(obs, FRAME_OBSERVED, FRAME_ICRF, true, p, sky_cap);
+    sky_cap[3] = cos(91.0 * M_PI / 180);
+}
+
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
 {
@@ -572,6 +578,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
             (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
     };
     compute_viewport_cap(painter.viewport_cap, core->observer, &proj);
+    compute_sky_cap(painter.sky_cap, core->observer);
 
     paint_prepare(&painter, win_w, win_h, pixel_scale);
 
@@ -579,14 +586,14 @@ int core_render(double win_w, double win_h, double pixel_scale)
         obj_render(module, &painter);
     }
 
-    // TEST: render the viewport cap at 50% size for debugging.
-    // To be removed once the viewport cap algo is stable.
+    // Render the viewport cap for debugging.
+    // Reduce the cap size in compute_viewport_cap to see it and debug.
     if ((0)) {
         double r;
         double p[4];
         vec3_copy(painter.viewport_cap, p);
         p[3] = 0;
-        r = acos(painter.viewport_cap[3]);
+        r = acos(painter.viewport_cap[3]) * 2;
         obj_t* obj = obj_create("circle", "cap_circle", NULL, NULL);
         obj_set_attr(obj, "pos", "v4", p);
         obj_set_attr(obj, "frame", "d", FRAME_ICRF);

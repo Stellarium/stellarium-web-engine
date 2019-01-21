@@ -166,6 +166,11 @@ struct painter
     //   vec3_dot(pos, painter.viewport_cap) < painter.viewport_cap[3]
     double          viewport_cap[4];
 
+    // Sky above ground cap for fast clipping test.
+    // The cap is pointing up, and has an angle of 91 deg (to take refraction
+    // into account), in ICRF.
+    double          sky_cap[4];
+
     union {
         // For planet rendering only.
         struct {
