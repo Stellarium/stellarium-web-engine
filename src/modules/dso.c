@@ -516,7 +516,7 @@ static int dso_render_from_data(const dso_data_t *s,
 
 static int dso_render(const obj_t *obj, const painter_t *painter)
 {
-    const dso_t *dso = (dso_t*)obj;
+    const dso_t *dso = (const dso_t*)obj;
     return dso_render_from_data(&dso->data, obj->id, painter);
 }
 
@@ -524,7 +524,7 @@ void dso_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
-    const dso_t *dso = (dso_t*)obj;
+    const dso_t *dso = (const dso_t*)obj;
     const dso_data_t *s = &dso->data;
     const char *names = s->names;
     char cat[128] = {};
