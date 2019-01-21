@@ -37,6 +37,8 @@ typedef struct {
     double      smax;   // Angular size (rad)
     double      angle;
 
+    double bounding_cap[4]; // Cap containing this DSO's shape
+
     int symbol;
 
     char short_name[64];
@@ -268,6 +270,11 @@ static int on_file_tile_loaded(const char type[4],
             s->angle = NAN;
         }
         s->angle *= DD2R;
+
+        // Compute the cap containing this DSO
+        vec3_copy(s->pos, s->bounding_cap);
+        s->bounding_cap[3] = cos(s->smin);
+
         // For the moment use bmag as fallback vmag value
         if (isnan(s->vmag)) s->vmag = bmag;
         strip_type(s->type);
@@ -435,6 +442,7 @@ static int dso_render_from_data(const dso_data_t *s,
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     static const double white[4] = {1, 1, 1, 1};
+    double win_pos[2], win_size[2], win_angle;
     double p[4] = {}, vmag;
     painter_t painter = *painter_;
     double hints_limit_mag = painter.hints_limit_mag;
@@ -446,6 +454,14 @@ static int dso_render_from_data(const dso_data_t *s,
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
     if (!selected && vmag > painter.stars_limit_mag + 2.0)
+        return 0;
+
+    // Check that it's intersecting with current viewport
+    if (!cap_intersects_cap(painter.viewport_cap, s->bounding_cap))
+        return 0;
+    // Skip if below horizon.
+    if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&
+            !cap_intersects_cap(painter.sky_cap, s->bounding_cap))
         return 0;
 
     // Special case for Open Clusters, for which the limiting magnitude
@@ -466,17 +482,9 @@ static int dso_render_from_data(const dso_data_t *s,
         vec4_copy(white, painter.color);
     }
 
-    convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, s->pos, p);
-    // Skip if below horizon.
-    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
-        return 0;
-
-    convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
-    if (!project(painter.proj,
-                 PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
-        return 0;
-
-    double win_pos[2], win_size[2], win_angle;
+    convert_frame(painter.obs, FRAME_ASTROM, FRAME_VIEW, true, s->pos, p);
+    project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+            2, p, p);
 
     compute_hint_transformation(&painter, s->ra, s->de, s->angle,
             s->smax, s->smin, s->symbol, win_pos, win_size, &win_angle);
