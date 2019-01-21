@@ -574,6 +574,11 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 
     for (i = 0; i < ARRAY_SIZE(stars->surveys); i++) {
         if (!stars->surveys[i].hips) break;
+        // Don't even traverse if the min vmag of the survey is higher than
+        // the max visible vmag.
+        if (    !isnan(stars->surveys[i].min_vmag) &&
+                stars->surveys[i].min_vmag > painter.stars_limit_mag)
+            continue;
         hips_traverse(USER_PASS(stars, &i, &painter,
                       &nb_tot, &nb_loaded, &illuminance),
                       render_visitor);
