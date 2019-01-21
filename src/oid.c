@@ -55,6 +55,18 @@ const char *oid_get_catalog(uint64_t oid, char cat[4])
     return cat;
 }
 
+/*
+ * Function: oid_get_index
+ * Get the index number part of a given oid
+ *
+ * If the oid is a gaia index, return the oid.
+ */
+uint64_t oid_get_index(uint64_t oid)
+{
+    if (oid_is_gaia(oid)) return oid;
+    return (uint32_t)oid;
+}
+
 const char *oid_to_str(uint64_t oid, char buf[128])
 {
     char cat[4];
