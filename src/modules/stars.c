@@ -180,7 +180,6 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
                            "υ", "φ", "χ", "ψ", "ω"};
     int bayer, bayer_n;
     const char *name = NULL;
-    char tmp[8];
     double label_color[4] = {color[0], color[1], color[2], 0.5};
     static const double white[4] = {1, 1, 1, 1};
     const bool selected = core->selection && s->oid == core->selection->oid;
@@ -216,8 +215,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
         bayer_get(s->hd, NULL, &bayer, &bayer_n);
         if (bayer) {
-            sprintf(tmp, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add(tmp, pos, size, 13, label_color, 0,
+            sprintf(buf, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
+            labels_add(buf, pos, size, 13, label_color, 0,
                        label_flags, -vmag, s->oid);
         }
     }
