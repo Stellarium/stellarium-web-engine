@@ -482,6 +482,9 @@ static int dso_render_from_data(const dso_data_t *s,
         vec4_copy(white, painter.color);
     }
 
+    if (vmag > hints_limit_mag + 2)
+        return 0;
+
     convert_frame(painter.obs, FRAME_ASTROM, FRAME_VIEW, true, s->pos, p);
     project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
             2, p, p);
