@@ -19,6 +19,15 @@ enum {
 };
 
 /*
+ * Type: anchor_t
+ * An anchor point of a constellation texture.
+ */
+typedef struct {
+    double  uv[2];
+    int     hip;
+} anchor_t;
+
+/*
  * Type: constellation_t
  * Object representing a single constellation.
  */
@@ -118,25 +127,21 @@ static int constellation_create_stars(constellation_t *cons)
     return err;
 }
 
-// Still experimental.
-static int parse_anchors(const char *str, double mat[3][3])
+static int compute_img_mat(const anchor_t anchors[static 3], double mat[3][3])
 {
-    double uvs[3][3], tmp[3][3];
-    int i, hips[3], r;
-    double pos[3][3];
+    int i, r;
     uint64_t oid;
+    double pos[3][3];
+    double uvs[3][3];
+    double tmp[3][3];
     obj_t *star;
-
-    sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
-            &uvs[0][0], &uvs[0][1], &hips[0],
-            &uvs[1][0], &uvs[1][1], &hips[1],
-            &uvs[2][0], &uvs[2][1], &hips[2]);
     for (i = 0; i < 3; i++) {
+        vec2_copy(anchors[i].uv, uvs[i]);
         uvs[i][2] = 1.0;
-        oid = oid_create("HIP ", hips[i]);
+        oid = oid_create("HIP ", anchors[i].hip);
         star = obj_get_by_oid(NULL, oid, 0);
         if (!star) {
-            LOG_W("Cannot find star HIP %d", hips[i]);
+            LOG_W("Cannot find star HIP %d", anchors[i].hip);
             return -1;
         }
         // XXX: instead we should get the star g_ra and g_dec, since they
@@ -152,6 +157,20 @@ static int parse_anchors(const char *str, double mat[3][3])
     assert(r);
     mat3_mul(pos, tmp, mat);
     return 0;
+}
+
+// Still experimental.
+static int parse_anchors(const char *str, double mat[3][3])
+{
+    anchor_t anchors[3];
+    if (sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
+            &anchors[0].uv[0], &anchors[0].uv[1], &anchors[0].hip,
+            &anchors[1].uv[0], &anchors[1].uv[1], &anchors[1].hip,
+            &anchors[2].uv[0], &anchors[2].uv[1], &anchors[2].hip) != 9) {
+        LOG_E("Cannot parse constellation anchors: %s", str);
+        return -1;
+    }
+    return compute_img_mat(anchors, mat);
 }
 
 static json_value *constellation_set_image(
