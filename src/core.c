@@ -11,31 +11,6 @@
 
 core_t *core;   // The global core object.
 
-static int selection_get_choices(
-        int (*f)(const char* name, uint64_t oid, void *user),
-        void *user)
-{
-    char cat_up[8];
-    char buff[128];
-    const char *cat, *value;
-    int nb = 0, r;
-    uint64_t oid;
-    IDENTIFIERS_ITER(0, NULL, &oid, NULL, &cat, &value,
-                     NULL, NULL, NULL, NULL) {
-        if      (oid_is_catalog(oid, "CITY")) continue;
-        if      (str_equ(cat, "NAME"))  r = f(value, oid, user);
-        else if (str_equ(cat, "BAYER")) r = f(value, oid, user);
-        else {
-            str_to_upper(cat, cat_up);
-            sprintf(buff, "%s %s", cat_up, value);
-            r = f(buff, oid, user);
-        }
-        nb++;
-        if (r) break;
-    }
-    return nb;
-}
-
 static void core_on_fov_changed(obj_t *obj, const attribute_t *attr)
 {
     // Maybe put this into projection class?
@@ -1028,7 +1003,7 @@ static obj_klass_t core_klass = {
                  .on_changed = core_on_fov_changed),
         PROPERTY("projection", "d", MEMBER(core_t, proj)),
         PROPERTY("selection", "p", MEMBER(core_t, selection),
-                 .hint = "obj", .choices = selection_get_choices),
+                 .hint = "obj"),
         PROPERTY("lock", "p", MEMBER(core_t, target.lock),
                  .hint = "obj"),
         PROPERTY("hovered", "p", MEMBER(core_t, hovered),
