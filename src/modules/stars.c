@@ -8,7 +8,10 @@
  */
 
 #include "swe.h"
+
+#include "hip.h"
 #include "ini.h"
+
 #include <regex.h>
 #include <zlib.h>
 
@@ -602,7 +605,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 
 static int stars_get_visitor(int order, int pix, void *user)
 {
-    int i;
+    int i, p;
     bool is_gaia;
     struct {
         stars_t     *stars;
@@ -618,6 +621,12 @@ static int stars_get_visitor(int order, int pix, void *user)
     if (is_gaia) {
         if (gaia_index_to_pix(order, d->n) != pix)
             return 0;
+    }
+
+    // For HIP lookup, we can use the bundled hip -> pix data if available.
+    if (d->cat == 3 && oid_is_catalog(d->n, "HIP ")) {
+        p = hip_get_pix(oid_get_index(d->n), order);
+        if ((p != -1) && (p != pix)) return 0;
     }
 
     // Try both surveys (bundled and gaia).
