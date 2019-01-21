@@ -341,3 +341,18 @@ obj_t *city_create(const char *name, const char *country_code,
                    double latitude, double longitude,
                    double elevation,
                    double get_near);
+
+/*
+ * Function: skyculture_get_name
+ * Get the name of a star in the current skyculture.
+ *
+ * Parameters:
+ *   skycultures    - A skyculture module.
+ *   oid            - Object id of a star.
+ *   buf            - A text buffer that get filled with the name.
+ *
+ * Return:
+ *   NULL if no name was found.  A pointer to the passed buffer otherwise.
+ */
+const char *skycultures_get_name(obj_t *skycultures, uint64_t oid,
+                                 char buf[128]);

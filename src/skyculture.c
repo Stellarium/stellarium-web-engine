@@ -44,17 +44,14 @@ static bool iter_lines(const char **str, char *line, int size)
     return true;
 }
 
-skyculture_name_t *skyculture_parse_names(const char *data, int *nb_out)
+skyculture_name_t *skyculture_parse_names(const char *data)
 {
     char line[512], name[128];
     regex_t reg;
     regmatch_t m[4];
-    int r, i = 0, hd, hip;
-    skyculture_name_t *ret;
+    int r, hd, hip;
+    skyculture_name_t *ret = NULL, *entry;
     uint64_t oid;
-
-    // Count the number of lines in the file.
-    ret = calloc(count_lines(data) + 1, sizeof(*ret));
 
     regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
     while (iter_lines(&data, line, sizeof(line))) {
@@ -73,16 +70,16 @@ skyculture_name_t *skyculture_parse_names(const char *data, int *nb_out)
             oid = oid_create("HIP ", hip);
         }
         if (oid) {
-            ret[i].oid = oid;
-            strcpy(ret[i].name, name);
-            i++;
+            entry = calloc(1, sizeof(*entry));
+            entry->oid = oid;
+            strcpy(entry->name, name); // XXX: check size!
+            HASH_ADD(hh, ret, oid, sizeof(oid), entry);
         }
         continue;
 error:
         LOG_W("Cannot parse star name: %s", line);
     }
     regfree(&reg);
-    if (nb_out) *nb_out = i;
     return ret;
 }
 
@@ -371,18 +368,16 @@ error:
  * Function: skyculture_parse_stellarium_star_names
  * Parse a skyculture star names file.
  */
-skyculture_name_t *skyculture_parse_stellarium_star_names(
-        const char *data_, int *nb_out)
+skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data_)
 {
-    skyculture_name_t *ret;
+    skyculture_name_t *ret = NULL, *entry;
     regex_t reg;
     regmatch_t m[3];
     char *data, *line, *tmp;
-    int r, hip, nb = 0;
+    int r, hip;
 
     assert(data_);
     data = strdup(data_);
-    ret = calloc(count_lines(data) + 1, sizeof(*ret));
 
     // Parse something of the form:
     // 677|_("Alpheratz") 1,2,5,6,11,12
@@ -399,13 +394,13 @@ skyculture_name_t *skyculture_parse_stellarium_star_names(
             continue;
         }
         hip = strtoul(line + m[1].rm_so, NULL, 10);
-        ret[nb].oid = oid_create("HIP ", hip);
-        snprintf(ret[nb].name, sizeof(ret[nb].name) - 1,
+        entry = calloc(1, sizeof(*entry));
+        entry->oid = oid_create("HIP ", hip);
+        snprintf(entry->name, sizeof(entry->name),
                  "%.*s", (int)(m[2].rm_eo - m[2].rm_so), line + m[2].rm_so);
-        nb++;
+        HASH_ADD(hh, ret, oid, sizeof(entry->oid), entry);
     }
     regfree(&reg);
     free(data);
-    if (nb_out) *nb_out = nb;
     return ret;
 }

@@ -22,6 +22,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "uthash.h"
+
 /*
  * Type: constellation_infos_t
  * Information about a given constellation.
@@ -54,14 +56,15 @@ typedef struct constellation_art
 
 /*
  * Type: skyculture_name
- * Structure to hold object name and oid.
+ * Structure to hold hash table of object name and oid.
  *
  * Used as result of skyculture names file parsing.
  */
 typedef struct skyculture_name
 {
-    uint64_t    oid;
-    char        name[128];
+    UT_hash_handle  hh;
+    uint64_t        oid;
+    char            name[128];
 } skyculture_name_t;
 
 
@@ -69,7 +72,7 @@ typedef struct skyculture_name
  * Function: skyculture_parse_names
  * Parse a skyculture star names file.
  */
-skyculture_name_t *skyculture_parse_names(const char *data, int *nb);
+skyculture_name_t *skyculture_parse_names(const char *data);
 
 /*
  * Function: skyculture_parse_constellations
@@ -119,7 +122,6 @@ constellation_art_t *skyculture_parse_stellarium_constellations_art(
  * Function: skyculture_parse_stellarium_star_names
  * Parse a skyculture star names file.
  */
-skyculture_name_t *skyculture_parse_stellarium_star_names(
-        const char *data, int *nb);
+skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data);
 
 #endif // SKYCULTURE_H

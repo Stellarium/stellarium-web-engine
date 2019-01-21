@@ -40,7 +40,7 @@ typedef struct skyculture {
         char        *author;
     } info;
     int             nb_constellations;
-    skyculture_name_t *names; // NULL terminated.
+    skyculture_name_t *names; // Hash table of oid -> names.
     constellation_infos_t *constellations;
     json_value      *imgs;
     bool            active;
@@ -75,8 +75,7 @@ static void skyculture_deactivate(skyculture_t *cult)
 static void skyculture_activate(skyculture_t *cult)
 {
     char id[32];
-    int i, nb_skipped = 0;
-    obj_t *star;
+    int i;
     json_value *args;
     constellation_infos_t *cst;
     obj_t *constellations, *cons;
@@ -86,27 +85,6 @@ static void skyculture_activate(skyculture_t *cult)
     OBJ_ITER(cult->obj.parent, other, "skyculture") {
         if (other != cult && other->active) skyculture_deactivate(other);
     }
-
-    // Add all the names.
-    for (i = 0; cult->names && cult->names[i].oid; i++) {
-        star = obj_get_by_oid(NULL, cult->names[i].oid, 0);
-        if (!star) {
-            /*
-            char buf[128];
-            LOG_D("Cannot find star: %s = %s",
-                  oid_to_str(cult->names[i].oid, buf), cult->names[i].name);
-            */
-            nb_skipped++;
-            continue;
-        }
-        identifiers_add("NAME", cult->names[i].name, cult->names[i].oid, 0,
-                        star->type, star->vmag, NULL, NULL);
-        obj_release(star);
-    }
-
-    if (nb_skipped)
-        LOG_D("Cannot add name for %d stars in skyculture %s",
-              nb_skipped, cult->info.name);
 
     // Create all the constellations object.
     constellations = obj_get(NULL, "constellations", 0);
@@ -276,7 +254,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
     if (get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data,
                  ASSET_ACCEPT_404))
     {
-        cult->names = skyculture_parse_stellarium_star_names(data, NULL);
+        cult->names = skyculture_parse_stellarium_star_names(data);
     }
 
     if (cult->constellations &&
@@ -338,6 +316,33 @@ static int skycultures_add_data_source(
     if (str_endswith(url, "western"))
         obj_set_attr((obj_t*)cult, "active", "b", true);
     return 0;
+}
+
+/*
+ * Function: skyculture_get_name
+ * Get the name of a star in the current skyculture.
+ *
+ * Parameters:
+ *   skycultures    - A skyculture module.
+ *   oid            - Object id of a star.
+ *   buf            - A text buffer that get filled with the name.
+ *
+ * Return:
+ *   NULL if no name was found.  A pointer to the passed buffer otherwise.
+ */
+const char *skycultures_get_name(obj_t *skycultures, uint64_t oid,
+                                 char buf[128])
+{
+    skyculture_t *cult;
+    skyculture_name_t *entry;
+    if (!skycultures) return NULL;
+    assert(strcmp(skycultures->klass->id, "skycultures") == 0);
+    cult = ((skycultures_t*)skycultures)->current;
+    if (!cult) return NULL;
+    HASH_FIND(hh, cult->names, &oid, sizeof(oid), entry);
+    if (!entry) return NULL;
+    strcpy(buf, entry->name);
+    return buf;
 }
 
 /*
