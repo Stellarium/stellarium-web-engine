@@ -757,9 +757,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // If the planet is visible, report it for tonemapping.
     if (project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, p_win)) {
-        if (pos[2] > 0) {
-            core_report_vmag_in_fov(vmag, r, sep);
-        }
+        core_report_vmag_in_fov(vmag, r, sep);
     }
 
     if (planet->hips && hips_k * r * r_scale >= point_r) {
