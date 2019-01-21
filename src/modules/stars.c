@@ -527,19 +527,17 @@ static int render_visitor(int order, int pix, void *user)
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
         if (s->vmag > painter.stars_limit_mag) break;
-        if (vec3_dot(s->pos, painter.viewport_cap) < painter.viewport_cap[3])
+        if (!cap_contains_vec3(painter.viewport_cap, s->pos))
+            continue;
+        // Skip if below horizon.
+        if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&
+                !cap_contains_vec3(painter.sky_cap, s->pos))
             continue;
 
         // Compute star observed and screen pos.
         vec3_copy(s->pos, p);
         p[3] = 0;
-        //astrometric_to_apparent(painter.obs, p, true, p);
-        convert_frame(painter.obs, FRAME_ASTROM, FRAME_OBSERVED, true, p, p);
-        // Skip if below horizon.
-        if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && p[2] < 0)
-            continue;
-        // Skip if not visible.
-        convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
+        convert_frame(painter.obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
         if (!project(painter.proj, PROJ_TO_WINDOW_SPACE |
                      PROJ_ALREADY_NORMALIZED, 2, p, p_win))
             continue;
