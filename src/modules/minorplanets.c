@@ -36,6 +36,8 @@ typedef struct {
     double      g;      // Slope parameter.
     char        name[32];
     int         mpl_number; // Minor planet number if one has been assigned.
+    float update_delta_s;   // Number of seconds between 2 orbits full update
+    double last_update;     // Time of last full orbit update (UT1)
 } mplanet_t;
 
 /*
@@ -280,6 +282,8 @@ static void load_data(mplanets_t *mplanets, const char *data)
             rstrip(readable);
             memcpy(mplanet->name, readable + 9, sizeof(readable) - 9);
         }
+
+        mplanet->update_delta_s = 5.f + 5.f * rand() * 1.f / RAND_MAX;
     }
     if (nb_err) {
         LOG_W("Minor planet data got %d errors lines.", nb_err);
@@ -338,10 +342,16 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     double ph[2][3], po[2][3];
     mplanet_t *mp = (mplanet_t*)obj;
 
-    orbit_compute_pv(0, obs->ut1, ph[0], ph[1],
-            mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
-            mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
-            mp->orbit.od, mp->orbit.wd);
+    if (fabs(obs->ut1 - mp->last_update) < mp->update_delta_s / ERFA_DAYSEC) {
+        // Fast update from previous position
+        eraPvu(obs->ut1 - mp->last_update, ph, ph);
+    } else {
+        orbit_compute_pv(0, obs->ut1, ph[0], ph[1],
+                mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
+                mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
+                mp->orbit.od, mp->orbit.wd);
+        mp->last_update = obs->ut1;
+    }
 
     mat3_mul_vec3(obs->re2i, ph[0], ph[0]);
     mat3_mul_vec3(obs->re2i, ph[1], ph[1]);
