@@ -25,6 +25,8 @@ import struct
 import sys
 import zlib
 
+from utils import download
+
 Source = collections.namedtuple('Source',
         ['cst', 'bayer', 'bayer_n', 'vmag', 'hd'])
 
@@ -42,24 +44,6 @@ if os.path.dirname(__file__) != "./tools":
     print "Should be run from root directory"
     sys.exit(-1)
 
-def ensure_dir(file_path):
-    directory = os.path.dirname(file_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-ensure_dir('data-src/')
-requests_cache.install_cache('data-src/cache')
-
-def download(url, md5=None):
-    filename = os.path.basename(url)
-    outpath = 'data-src/{}'.format(filename)
-    r = requests.get(url)
-    if md5 and hashlib.md5(r.content).hexdigest() != md5:
-        print "Wrong md5 for %s" % url
-        sys.exit(-1)
-    with open(outpath, 'wb') as out:
-        out.write(r.content)
-    return outpath
 
 def encode_bin(data):
     ret = ""
