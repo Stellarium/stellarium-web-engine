@@ -30,8 +30,8 @@ from utils import download
 Source = collections.namedtuple('Source',
         ['cst', 'bayer', 'bayer_n', 'vmag', 'hd'])
 
-LETTERS = ("Alp,Bet,Gam,Del,Eps,Zet,Eta,The,Iot,Kap,Lam,Mu ,Nu ,Xi ,Omi,"
-           "Pi ,Rho,Sig,Tau,Ups,Phi,Chi,Psi,Ome").split(',')
+LETTERS = ("alf,bet,gam,del,eps,zet,eta,the,iot,kap,lam,mu.,nu.,ksi,omi,"
+           "pi.,rho,sig,tau,ups,phi,chi,psi,ome").split(',')
 
 CSTS = ("Aql And Scl Ara Lib Cet Ari Sct Pyx Boo Cae Cha Cnc Cap Car Cas "
         "Cen Cep Com CVn Aur Col Cir Crt CrA CrB Crv Cru Cyg Del Dor Dra "
@@ -55,24 +55,26 @@ def encode_bin(data):
             line = ""
     return ret;
 
-src = download('http://cdsarc.u-strasbg.fr/vizier/ftp/cats/V/50/catalog.gz',
-               md5='2f0662e53aa4e563acb8b2705f45c1a3')
+src = download('http://cdsarc.u-strasbg.fr/vizier/ftp/cats/IV/27A/catalog.dat',
+               dest='data-src/IV_27A.dat',
+               md5='7b51c0aa8255c6aaf261a1083e0f0bd8')
 
 # Parse all entries.
 sources = []
-for line in gzip.open(src):
-    hd = line[25:31].strip()
-    name = line[5:14]
-    vmag = float(line[102:107].strip() or 'nan')
-    if not hd or name[2] == ' ': continue
+for line in open(src):
+    hd = line[0:6].strip()
+    bayer = line[68:73]
+    cst = line[74:77]
+    vmag = float(line[58:63].strip() or 'nan')
+    if not hd or bayer[:3] not in LETTERS: continue
     hd = int(hd)
-    assert name[2:5] in LETTERS
-    assert name[6:9] in CSTS
+    assert bayer[:3] in LETTERS
+    assert cst in CSTS
     assert not isnan(vmag)
-    bayer = LETTERS.index(name[2:5]) + 1
-    bayer_n = int(name[5]) if name[5] != ' ' else 0
-    cst = CSTS.index(name[6:9]) + 1
-    sources.append(Source(cst, bayer, bayer_n, vmag, hd))
+    bayer_l = LETTERS.index(bayer[:3]) + 1
+    bayer_n = int(bayer[3:5]) if bayer[3] != ' ' else 0
+    cst = CSTS.index(cst) + 1
+    sources.append(Source(cst, bayer_l, bayer_n, vmag, hd))
 sources = sorted(sources)
 
 data = ''
