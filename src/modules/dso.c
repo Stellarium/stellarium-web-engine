@@ -465,7 +465,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
-    if (vmag > painter.stars_limit_mag + 2.0)
+    if (vmag > painter.stars_limit_mag + 1.5)
         return 1;
 
     // Check that it's intersecting with current viewport
@@ -575,7 +575,7 @@ static int render_visitor(int order, int pix, void *user)
     if (loaded) (*nb_loaded)++;
 
     if (!tile) return 0;
-    if (tile->mag_min > painter.stars_limit_mag + 2.0) return 0;
+    if (tile->mag_min > painter.stars_limit_mag + 1.5) return 0;
 
     for (i = 0; i < tile->nb; i++) {
         ret = dso_render_from_data(&tile->sources[i], &tile->sources_quick[i],
@@ -583,7 +583,7 @@ static int render_visitor(int order, int pix, void *user)
         if (ret)
             break;
     }
-    if (tile->mag_max > painter.stars_limit_mag + 2.0) return 0;
+    if (tile->mag_max > painter.stars_limit_mag + 1.5) return 0;
     return 1;
 }
 
