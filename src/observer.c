@@ -9,6 +9,7 @@
 
 #include "observer.h"
 #include "swe.h"
+#include "zlib.h"
 
 static void update_matrices(observer_t *obs)
 {
@@ -83,8 +84,8 @@ static void update_matrices(observer_t *obs)
 static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
                                   uint64_t* hash)
 {
-    uint64_t v = 0;
-    #define H(a) v = crc64(v, &obs->a, sizeof(obs->a))
+    uLong v = 1L;
+    #define H(a) v = adler32(v, (const Bytef*)&obs->a, sizeof(obs->a))
     H(elong);
     H(phi);
     H(hm);
