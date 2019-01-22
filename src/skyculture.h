@@ -121,6 +121,12 @@ constellation_art_t *skyculture_parse_stellarium_constellations_art(
 /*
  * Function: skyculture_parse_stellarium_star_names
  * Parse a skyculture star names file.
+ *
+ * Note that for the moment we just ignore the alternative names for the same
+ * star.
+ *
+ * Return:
+ *   A hash table of oid -> name.
  */
 skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data);
 

@@ -69,12 +69,14 @@ skyculture_name_t *skyculture_parse_names(const char *data)
             hip = strtoul(line + m[2].rm_so, NULL, 10);
             oid = oid_create("HIP ", hip);
         }
-        if (oid) {
-            entry = calloc(1, sizeof(*entry));
-            entry->oid = oid;
-            strcpy(entry->name, name); // XXX: check size!
-            HASH_ADD(hh, ret, oid, sizeof(oid), entry);
-        }
+        if (!oid) continue;
+        // Ignore alternative names for the moment!
+        HASH_FIND(hh, ret, &oid, sizeof(oid), entry);
+        if (entry) continue;
+        entry = calloc(1, sizeof(*entry));
+        entry->oid = oid;
+        strcpy(entry->name, name); // XXX: check size!
+        HASH_ADD(hh, ret, oid, sizeof(oid), entry);
         continue;
 error:
         LOG_W("Cannot parse star name: %s", line);
@@ -372,6 +374,7 @@ skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data_)
 {
     skyculture_name_t *ret = NULL, *entry;
     char *data, *line, *tmp, buf[128];
+    uint64_t oid;
     int hip;
 
     assert(data_);
@@ -389,8 +392,12 @@ skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data_)
             LOG_W("Cannot parse star name: '%s'", line);
             continue;
         }
+        oid = oid_create("HIP ", hip);
+        // Ignore alternative names for the moment!
+        HASH_FIND(hh, ret, &oid, sizeof(oid), entry);
+        if (entry) continue;
         entry = calloc(1, sizeof(*entry));
-        entry->oid = oid_create("HIP ", hip);
+        entry->oid = oid;
         snprintf(entry->name, sizeof(entry->name), "%s", buf);
         HASH_ADD(hh, ret, oid, sizeof(entry->oid), entry);
     }
