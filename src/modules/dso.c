@@ -15,7 +15,29 @@
 
 #define DSO_DEFAULT_VMAG 16.0
 
+/*
+ * Type: dso_quick_data_t
+ * Holds information used for clipping a DSO entry when rendering
+ */
 typedef struct {
+    uint64_t oid;
+    double bounding_cap[4];
+    float  display_vmag;
+} dso_clip_data_t;
+
+/*
+ * Type: dso_data_t
+ * Holds information data about a single DSO entry
+ */
+typedef struct {
+    union {
+        struct {
+            uint64_t oid;
+            double bounding_cap[4];
+            float  display_vmag;
+        };
+        dso_clip_data_t clip_data;
+    };
     uint64_t nsid;
     char        type[4];
     float       ra;     // ra equ J2000
@@ -30,17 +52,10 @@ typedef struct {
     char short_name[64];
     // List of extra names, separated by '\0', terminated by two '\0'.
     char *names;
-} dso_data2_t;
-
-/*
- * Type: dso_data_t
- * Holds information data about a single DSO entry
- */
-typedef struct {
-    uint64_t oid;
-    double bounding_cap[4]; // Cap containing this DSO's shape
-    float       vmag;
+    float  vmag;
 } dso_data_t;
+
+
 
 /*
  * Type: dso_t
@@ -49,7 +64,6 @@ typedef struct {
 typedef struct dso {
     obj_t       obj;
     dso_data_t  data;
-    dso_data2_t data2;
 } dso_t;
 
 /*
@@ -62,7 +76,7 @@ typedef struct tile {
     double      mag_max;
     int         nb;
     dso_data_t  *sources;
-    dso_data2_t *sources2;
+    dso_clip_data_t *sources_quick;
 } tile_t;
 
 /*
@@ -76,16 +90,16 @@ typedef struct {
     hips_t      *survey;
 } dsos_t;
 
-static char *make_id(const dso_data2_t *data2, char buff[128])
+static char *make_id(const dso_data_t *data, char buff[128])
 {
-    assert(data2->nsid);
-    sprintf(buff, "NSID %" PRIu64, data2->nsid);
+    assert(data->nsid);
+    sprintf(buff, "NSID %" PRIu64, data->nsid);
     return buff;
 }
 
-static uint64_t make_oid(const dso_data2_t *data2)
+static uint64_t make_oid(const dso_data_t *data)
 {
-    return oid_create("NDSO", (uint32_t)data2->nsid);
+    return oid_create("NDSO", (uint32_t)data->nsid);
 }
 
 static int dso_update(obj_t *obj, const observer_t *obs, double dt)
@@ -98,16 +112,15 @@ static int dso_update(obj_t *obj, const observer_t *obs, double dt)
     return 0;
 }
 
-static dso_t *dso_create(const dso_data_t *data, const dso_data2_t *data2)
+static dso_t *dso_create(const dso_data_t *data)
 {
     dso_t *dso;
     char buff[128];
-    if (data2->nsid) sprintf(buff, "NSID %" PRIu64,  data2->nsid);
-    dso = (dso_t*)obj_create("dso", make_id(data2, buff), NULL, NULL);
+    if (data->nsid) sprintf(buff, "NSID %" PRIu64,  data->nsid);
+    dso = (dso_t*)obj_create("dso", make_id(data, buff), NULL, NULL);
     dso->data = *data;
-    dso->data2 = *data2;
-    memcpy(&dso->obj.type, data2->type, 4);
-    dso->obj.nsid = data2->nsid;
+    memcpy(&dso->obj.type, data->type, 4);
+    dso->obj.nsid = data->nsid;
     dso->obj.oid = data->oid;
     dso->obj.vmag = data->vmag;
     dso_update(&dso->obj, core->observer, 0);
@@ -139,28 +152,30 @@ static int dso_init(obj_t *obj, json_value *args)
     json_value *model, *names, *types, *jstr;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
-        dso->data2.ra = json_get_attr_f(model, "ra", 0) * DD2R;
-        dso->data2.de = json_get_attr_f(model, "de", 0) * DD2R;
-        eraS2c(dso->data2.ra, dso->data2.de, dso->data.bounding_cap);
+        dso->data.ra = json_get_attr_f(model, "ra", 0) * DD2R;
+        dso->data.de = json_get_attr_f(model, "de", 0) * DD2R;
+        eraS2c(dso->data.ra, dso->data.de, dso->data.bounding_cap);
         dso->data.vmag = json_get_attr_f(model, "Vmag", NAN);
         if (isnan(dso->data.vmag))
             dso->data.vmag = json_get_attr_f(model, "Bmag", NAN);
-        dso->data2.angle = json_get_attr_f(model, "angle", NAN) * DD2R;
-        dso->data2.smax = json_get_attr_f(model, "dimx", NAN) * DAM2R;
-        dso->data2.smin = json_get_attr_f(model, "dimy", NAN) * DAM2R;
+        dso->data.angle = json_get_attr_f(model, "angle", NAN) * DD2R;
+        dso->data.smax = json_get_attr_f(model, "dimx", NAN) * DAM2R;
+        dso->data.smin = json_get_attr_f(model, "dimy", NAN) * DAM2R;
     }
-    dso->data.oid = make_oid(&dso->data2);
+    dso->data.display_vmag = isnan(dso->data.vmag) ? DSO_DEFAULT_VMAG :
+                                                      dso->data.vmag;
+    dso->data.oid = make_oid(&dso->data);
 
     names = json_get_attr(args, "names", json_array);
     if (names)
-        dso->data2.names = parse_json_names(names);
+        dso->data.names = parse_json_names(names);
 
     types = json_get_attr(args, "types", json_array);
     if (types && types->u.array.length > 0) {
         jstr = types->u.array.values[0];
         if (jstr->type == json_string) {
-            strncpy(dso->data2.type, jstr->u.string.ptr, 4);
-            dso->data2.symbol = symbols_get_for_otype(dso->data2.type);
+            strncpy(dso->data.type, jstr->u.string.ptr, 4);
+            dso->data.symbol = symbols_get_for_otype(dso->data.type);
         }
     }
     return 0;
@@ -182,12 +197,18 @@ static int del_tile(void *data)
     int i;
     tile_t *tile = data;
     for (i = 0; i < tile->nb; i++) {
-        free(tile->sources2[i].names);
+        free(tile->sources[i].names);
     }
     free(tile->sources);
-    free(tile->sources2);
+    free(tile->sources_quick);
     free(tile);
     return 0;
+}
+
+static int dso_data_cmp(const void *a, const void *b)
+{
+    return cmp(((const dso_data_t*)a)->display_vmag,
+               ((const dso_data_t*)b)->display_vmag);
 }
 
 static int on_file_tile_loaded(const char type[4],
@@ -195,7 +216,6 @@ static int on_file_tile_loaded(const char type[4],
 {
     tile_t *tile;
     dso_data_t *s;
-    dso_data2_t *s2;
     int nb, i, j, version, data_ofs = 0, flags, row_size, order, pix;
     char ids[256] = {};
     double bmag, temp_mag, tmp_ra, tmp_de, tmp_smax, tmp_smin, tmp_angle;
@@ -238,54 +258,60 @@ static int on_file_tile_loaded(const char type[4],
     tile->mag_max = -DBL_MAX;
     tile->nb = nb;
 
-    tile->sources = calloc(tile->nb, sizeof(*tile->sources));
-    tile->sources2 = calloc(tile->nb, sizeof(*tile->sources2));
+    tile->sources = calloc(tile->nb, sizeof(dso_data_t));
 
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
-        s2 = &tile->sources2[i];
         eph_read_table_row(tile_data, size, &data_ofs,
                            ARRAY_SIZE(columns), columns,
-                           &s2->nsid, s2->type,
+                           &s->nsid, s->type,
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
-                           s2->short_name, ids);
-        assert(s2->nsid);
-        s2->ra = tmp_ra * DD2R;
-        s2->de = tmp_de * DD2R;
+                           s->short_name, ids);
+        assert(s->nsid);
+        s->ra = tmp_ra * DD2R;
+        s->de = tmp_de * DD2R;
 
         // Compute the cap containing this DSO
-        s->bounding_cap[3] = cos(s2->smin);
-        eraS2c(s2->ra, s2->de, s->bounding_cap);
+        s->bounding_cap[3] = cos(s->smin);
+        eraS2c(s->ra, s->de, s->bounding_cap);
 
-        s2->smax = tmp_smax * DAM2R;
-        s2->smin = tmp_smin * DAM2R;
-        s2->angle = tmp_angle;
-        if (!s2->smin && s2->smax) {
-            s2->smin = s2->smax;
-            s2->angle = NAN;
+        s->smax = tmp_smax * DAM2R;
+        s->smin = tmp_smin * DAM2R;
+        s->angle = tmp_angle;
+        if (!s->smin && s->smax) {
+            s->smin = s->smax;
+            s->angle = NAN;
         }
-        s2->angle *= DD2R;
+        s->angle *= DD2R;
 
         s->vmag = temp_mag;
         // For the moment use bmag as fallback vmag value
         if (isnan(s->vmag)) s->vmag = bmag;
-        strip_type(s2->type);
-        temp_mag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
-        tile->mag_min = min(tile->mag_min, temp_mag);
-        tile->mag_max = max(tile->mag_max, temp_mag);
-        s->oid = make_oid(s2);
+        strip_type(s->type);
+        s->display_vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
+        tile->mag_min = min(tile->mag_min, s->display_vmag);
+        tile->mag_max = max(tile->mag_max, s->display_vmag);
+        s->oid = make_oid(s);
 
-        s2->symbol = symbols_get_for_otype(s2->type);
+        s->symbol = symbols_get_for_otype(s->type);
 
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
-            s2->names = calloc(1, 2 + strlen(ids));
+            s->names = calloc(1, 2 + strlen(ids));
             for (j = 0; ids[j]; j++)
-                s2->names[j] = ids[j] != '|' ? ids[j] : '\0';
+                s->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
     }
     free(tile_data);
+
+    // Sort DSO in tile by display magnitude
+    qsort(tile->sources, tile->nb, sizeof(dso_data_t), dso_data_cmp);
+    // Create a small table with all data used for fast tile iteration
+    tile->sources_quick = calloc(tile->nb, sizeof(dso_clip_data_t));
+    for (i = 0; i < tile->nb; ++i)
+        tile->sources_quick[i] = tile->sources[i].clip_data;
+
     *(tile_t**)user = tile;
     return 0;
 }
@@ -321,12 +347,12 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
 }
 
 static void dso_render_name(const painter_t *painter, const dso_data_t *s,
-                            const dso_data2_t *s2, const double pos[2],
-                            double size, double vmag, int flags)
+                            const double pos[2], double size, double vmag,
+                            int flags)
 {
     char buff[128] = "";
-    if (s2->short_name[0])
-        strcpy(buff, s2->short_name);
+    if (s->short_name[0])
+        strcpy(buff, s->short_name);
     if (buff[0])
         labels_add(buff, pos, size, 13, painter->color, 0, flags, -vmag,
                    s->oid);
@@ -410,38 +436,37 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
                                double* win_angle)
 {
     const dso_t *dso = (dso_t*)obj;
-    const dso_data2_t *s2 = &dso->data2;
+    const dso_data_t *s = &dso->data;
 
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
-    compute_hint_transformation(&tmp_painter, s2->ra, s2->de, s2->angle,
-            s2->smax, s2->smin, s2->symbol, win_pos, win_size, win_angle);
+    compute_hint_transformation(&tmp_painter, s->ra, s->de, s->angle,
+            s->smax, s->smin, s->symbol, win_pos, win_size, win_angle);
     win_size[0] /= 2.0;
     win_size[1] /= 2.0;
 }
 
 
 // Render a DSO from its data.
-static int dso_render_from_data(const dso_data_t *s, const dso_data2_t *s2,
-                                const char *id,
+static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
                                 const painter_t *painter_)
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     static const double white[4] = {1, 1, 1, 1};
     double win_pos[2], win_size[2], win_angle;
-    double p[4] = {}, vmag;
+    double p[4] = {};
     painter_t painter = *painter_;
     double hints_limit_mag = painter.hints_limit_mag;
     const bool selected = core->selection && s->oid == core->selection->oid;
     int label_flags;
 
-    vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
+    const float vmag = s->display_vmag;
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
-    if (!selected && vmag > painter.stars_limit_mag + 2.0)
-        return 0;
+    if (vmag > painter.stars_limit_mag + 2.0)
+        return 1;
 
     // Check that it's intersecting with current viewport
     if (!cap_intersects_cap(painter.viewport_cap, s->bounding_cap))
@@ -498,7 +523,7 @@ static int dso_render_from_data(const dso_data_t *s, const dso_data2_t *s2,
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
         radius += 4;
-        dso_render_name(&painter, s, s2, win_pos, radius, vmag, label_flags);
+        dso_render_name(&painter, s2, win_pos, radius, vmag, label_flags);
     }
     return 0;
 }
@@ -506,7 +531,7 @@ static int dso_render_from_data(const dso_data_t *s, const dso_data2_t *s2,
 static int dso_render(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (const dso_t*)obj;
-    return dso_render_from_data(&dso->data, &dso->data2, obj->id, painter);
+    return dso_render_from_data(&dso->data, &dso->data.clip_data, painter);
 }
 
 void dso_get_designations(
@@ -514,11 +539,11 @@ void dso_get_designations(
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     const dso_t *dso = (const dso_t*)obj;
-    const dso_data2_t *s2 = &dso->data2;
+    const dso_data_t *s = &dso->data;
 
-    const char *names = s2->names;
+    const char *names = s->names;
     char cat[128] = {};
-    f(obj, user, "", s2->short_name); // XXX: should extract cat.
+    f(obj, user, "", s->short_name); // XXX: should extract cat.
     while (names && *names) {
         strncpy(cat, names, sizeof(cat) - 1);
         if (!strchr(cat, ' ')) { // No catalog.
@@ -538,7 +563,7 @@ static int render_visitor(int order, int pix, void *user)
     int *nb_tot = USER_GET(user, 2);
     int *nb_loaded = USER_GET(user, 3);
     tile_t *tile;
-    int i;
+    int i, ret;
     bool loaded;
 
     // Early exit if the tile is clipped.
@@ -553,8 +578,10 @@ static int render_visitor(int order, int pix, void *user)
     if (tile->mag_min > painter.stars_limit_mag + 2.0) return 0;
 
     for (i = 0; i < tile->nb; i++) {
-        dso_render_from_data(&tile->sources[i], &tile->sources2[i], NULL,
-                             &painter);
+        ret = dso_render_from_data(&tile->sources[i], &tile->sources_quick[i],
+                                   &painter);
+        if (ret)
+            break;
     }
     if (tile->mag_max > painter.stars_limit_mag + 2.0) return 0;
     return 1;
@@ -594,9 +621,9 @@ static int dsos_get_visitor(int order, int pix, void *user)
     tile = get_tile(d->dsos, order, pix, false, NULL);
     if (!tile) return 0;
     for (i = 0; i < tile->nb; i++) {
-        if (    (d->cat == 3 && tile->sources2[i].nsid == d->n) ||
+        if (    (d->cat == 3 && tile->sources[i].nsid == d->n) ||
                 (d->cat == 4 && tile->sources[i].oid == d->n)) {
-            d->ret = &dso_create(&tile->sources[i], &tile->sources2[i])->obj;
+            d->ret = &dso_create(&tile->sources[i])->obj;
             return -1; // Stop the search.
         }
     }
@@ -674,7 +701,7 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
     for (i = 0; i < tile->nb; i++) {
         if (!f) continue;
         nb++;
-        dso = dso_create(&tile->sources[i], &tile->sources2[i]);
+        dso = dso_create(&tile->sources[i]);
         r = f(user, (obj_t*)dso);
         obj_release((obj_t*)dso);
         if (r) break;
@@ -718,8 +745,8 @@ static obj_klass_t dso_klass = {
         PROPERTY("radec"),
         PROPERTY("vmag"),
         PROPERTY("type"),
-        PROPERTY("smin", "f", MEMBER(dso_t, data2.smin)),
-        PROPERTY("smax", "f", MEMBER(dso_t, data2.smax)),
+        PROPERTY("smin", "f", MEMBER(dso_t, data.smin)),
+        PROPERTY("smax", "f", MEMBER(dso_t, data.smax)),
         {},
     },
 };
