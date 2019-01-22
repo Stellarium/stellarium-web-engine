@@ -139,6 +139,38 @@ static uint64_t compute_oid(const char desgn[7])
     return oid_create("MPl ", crc32(0L, (const Bytef*)desgn, 7));
 }
 
+// Faster than atof.
+static inline int parse_float(const char *str, double *ret)
+{
+    uint32_t x = 0;
+    int div = 1, sign = 1, nb = 0;
+    char c;
+    while (*str == ' ') str++;
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    }
+    // Whole part.
+    while (true) {
+        c = *str++;
+        if (c == '.') break;
+        if (c < '0' || c > '9') return -1;
+        if (nb++ > 8) return -1;
+        x = x * 10 + (c - '0');
+    }
+    // Fract part.
+    while (true) {
+        c = *str++;
+        if (c == ' ' || c == '\0' || c == '\n') break;
+        if (c < '0' || c > '9') return -1;
+        if (nb++ > 8) return -1;
+        x = x * 10 + (c - '0');
+        div *= 10;
+    }
+    *ret = sign * ((double)x / div);
+    return 0;
+}
+
 // https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
 static int parse_mpc_line(const char *line,
                           char desgn[static 8],
@@ -158,17 +190,17 @@ static int parse_mpc_line(const char *line,
     int r;
     memcpy(desgn, line + 0, 7);
     desgn[7] = '\0';
-    *h = atof(line + 8);
-    *g = atof(line + 14);
+    if (parse_float(line + 8, h)) return -1;
+    if (parse_float(line + 14, g)) return -1;
     r = unpack_epoch(line + 20, epoch);
     if (r) return r;
-    *m = atof(line + 26);
-    *w = atof(line + 37);
-    *o = atof(line + 48);
-    *i = atof(line + 59);
-    *e = atof(line + 70);
-    *n = atof(line + 80);
-    *a = atof(line + 92);
+    if (parse_float(line + 26, m)) return -1;
+    if (parse_float(line + 37, w)) return -1;
+    if (parse_float(line + 48, o)) return -1;
+    if (parse_float(line + 59, i)) return -1;
+    if (parse_float(line + 70, e)) return -1;
+    if (parse_float(line + 80, n)) return -1;
+    if (parse_float(line + 92, a)) return -1;
     *flags = strtol(line + 161, NULL, 16);
     memcpy(readable_desgn, line + 166, 28);
     readable_desgn[28] = '\0';
@@ -464,3 +496,24 @@ static obj_klass_t mplanets_klass = {
     .render_order   = 20,
 };
 OBJ_REGISTER(mplanets_klass)
+
+/******* TESTS **********************************************************/
+
+#if COMPILE_TESTS
+static void test_parse_float(void)
+{
+    double x, y;
+    int r, i;
+    const char *values[] = {
+        "10.5", "-10.6", "0.1", "1.0", "478.878313",
+    };
+    for (i = 0; i < ARRAY_SIZE(values); i++) {
+        r = parse_float(values[i], &x);
+        assert(r == 0);
+        y = atof(values[i]);
+        assert(x == y);
+    }
+}
+
+TEST_REGISTER(NULL, test_parse_float, TEST_AUTO);
+#endif
