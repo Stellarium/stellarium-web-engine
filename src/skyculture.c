@@ -371,36 +371,29 @@ error:
 skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data_)
 {
     skyculture_name_t *ret = NULL, *entry;
-    regex_t reg;
-    regmatch_t m[3];
-    char *data, *line, *tmp;
-    int r, hip;
+    char *data, *line, *tmp, buf[128];
+    int hip;
 
     assert(data_);
     data = strdup(data_);
 
     // Parse something of the form:
     // 677|_("Alpheratz") 1,2,5,6,11,12
-    regcomp(&reg, " *([0-9]+) *\\| *_\\(\"(.+)\"\\)", REG_EXTENDED);
     for (line = strtok_r(data, "\r\n", &tmp); line;
          line = strtok_r(NULL, "\r\n", &tmp))
     {
         while (*line == ' ') line++;
         if (*line == '\0') continue;
         if (*line == '#') continue;
-        r = regexec(&reg, line, 3, m, 0);
-        if (r) {
+        if (sscanf(line, " %d | _(\"%[^\"]\")", &hip, buf) != 2) {
             LOG_W("Cannot parse star name: '%s'", line);
             continue;
         }
-        hip = strtoul(line + m[1].rm_so, NULL, 10);
         entry = calloc(1, sizeof(*entry));
         entry->oid = oid_create("HIP ", hip);
-        snprintf(entry->name, sizeof(entry->name),
-                 "%.*s", (int)(m[2].rm_eo - m[2].rm_so), line + m[2].rm_so);
+        snprintf(entry->name, sizeof(entry->name), "%s", buf);
         HASH_ADD(hh, ret, oid, sizeof(entry->oid), entry);
     }
-    regfree(&reg);
     free(data);
     return ret;
 }
