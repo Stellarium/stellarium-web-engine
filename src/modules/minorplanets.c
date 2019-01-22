@@ -56,13 +56,13 @@ static int unpack_char(char c)
     else if (c >= 'a' && c < 'z')
         return 36 + c - 'a';
     else {
-        LOG_E("Cannot unpack char '%c'", c);
         return -1;
     }
 }
 
 // Unpack epoch field in MJD.
-static double unpack_epoch(const char epoch[5])
+// Return 0 for success.
+static int unpack_epoch(const char epoch[static 5], double *ret)
 {
     int year, month, day, r;
     double d1, d2;
@@ -73,10 +73,11 @@ static double unpack_epoch(const char epoch[5])
     day = unpack_char(epoch[4]);
     r = eraDtf2d("", year, month, day, 0, 0, 0, &d1, &d2);
     if (r != 0) {
-        LOG_E("Cannot parse epoch %.5s", epoch);
-        return NAN;
+        *ret = 0;
+        return -1;
     }
-    return d1 - DJM0 + d2;
+    *ret = d1 - DJM0 + d2;
+    return 0;
 }
 
 /*
@@ -139,15 +140,53 @@ static uint64_t compute_oid(const char desgn[7])
     return oid_create("MPl ", crc32(0L, (const Bytef*)desgn, 7));
 }
 
-static void load_data(mplanets_t *mplanets, const char *data) {
-    int line, r, flags, orbit_type, number;
-    char desgn[16] = {}, readable[32] = {}, epoch[5], type[4];
-    double h = 0, g = 0;
-    double m, w, o, i, e, n, a;
+// https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+static int parse_mpc_line(const char *line,
+                          char desgn[static 8],
+                          double *h,
+                          double *g,
+                          double *epoch,
+                          double *m,
+                          double *w,
+                          double *o,
+                          double *i,
+                          double *e,
+                          double *n,
+                          double *a,
+                          int    *flags,
+                          char readable_desgn[static 32])
+{
+    int r;
+    memcpy(desgn, line + 0, 7);
+    desgn[7] = '\0';
+    *h = atof(line + 8);
+    *g = atof(line + 14);
+    r = unpack_epoch(line + 20, epoch);
+    if (r) return r;
+    *m = atof(line + 26);
+    *w = atof(line + 37);
+    *o = atof(line + 48);
+    *i = atof(line + 59);
+    *e = atof(line + 70);
+    *n = atof(line + 80);
+    *a = atof(line + 92);
+    *flags = strtol(line + 161, NULL, 16);
+    memcpy(readable_desgn, line + 166, 28);
+    readable_desgn[28] = '\0';
+    return 0;
+}
+
+static void load_data(mplanets_t *mplanets, const char *data)
+{
+    const char *line;
+    int r, len, line_idx, flags, orbit_type, number, nb_err, nb;
+    char desgn[8] = {}, readable[32] = {}, type[4];
+    double h, g, m, w, o, i, e, n, a, epoch;
     bool permanent;
-    regex_t name_reg;
     mplanet_t *mplanet;
+    regex_t name_reg;
     regmatch_t matches[3];
+    obj_t *tmp;
 
     // Match minor planet center orbit type number to otype.
     const char *ORBIT_TYPES[] = {
@@ -164,47 +203,20 @@ static void load_data(mplanets_t *mplanets, const char *data) {
        [10] = "DOA",
     };
 
-    const catalog_t CAT[] = {
-        { 1,  7, "A7", "Desgn"},
-        { 9, 13, "F5.2", "H"},
-        {15, 19, "F5.2", "G"},
-        {21, 25, "A5", "Epoch"},
-        {27, 35, "F9.5", "M"},
-        {38, 46, "F9.5", "Peri."},
-        {49, 57, "F9.5", "Node"},
-        {60, 68, "F9.5", "Incl."},
-        {71, 79, "F9.7", "e"},
-        {81, 91, "F11.8", "n"},
-        {93, 103, "F11.7", "a"},
-        {106, 106, "I1", "U"},
-        {108, 116, "A9", "Reference"},
-        {118, 122, "I5", "#Obs"},
-        {124, 126, "I3", "#Opp"},
-        {128, 136, "A8", "Arc"},
-        {138, 141, "F4.2", "rms"},
-        {143, 145, "A3", "Perts"},
-        {147, 149, "A3", "Perts"},
-        {151, 160, "A10", "Computer"},
-        {162, 165, "Z4", "flags"},
-        {167, 194, "A", "Readable"},
-        {0}
-    };
-
     regcomp(&name_reg, " *(\\(.+\\))? *(.+)", REG_EXTENDED | REG_ICASE);
-    CATALOG_ITER(CAT, data, line, desgn, &h, &g, epoch, &m, &w,
-                 &o, &i, &e, &n, &a, NULL, NULL, NULL, NULL,
-                 NULL, NULL, NULL, NULL, NULL, &flags, readable) {
-        assert(m >= 0 && m <= 360);
-        assert(w >= 0 && w <= 360);
-        assert(o >= 0 && o <= 360);
-        assert(i >= 0 && i <= 360);
-        assert(e >= 0 && e <= 1);
-        str_rstrip(desgn);
-        str_rstrip(readable);
-
-        mplanet = (void*)obj_create("asteroid", NULL,
-                                    &mplanets->obj, NULL);
-        mplanet->orbit.d = unpack_epoch(epoch);
+    line_idx = 0;
+    nb_err = 0;
+    for (line = data; *line; line = strchr(line, '\n') + 1, line_idx++) {
+        len = strchr(line, '\n') - line;
+        if (len < 160) continue;
+        r = parse_mpc_line(line, desgn, &h, &g, &epoch, &m, &w, &o, &i, &e,
+                           &n, &a, &flags, readable);
+        if (r) {
+            nb_err++;
+            continue;
+        }
+        mplanet = (void*)obj_create("asteroid", NULL, &mplanets->obj, NULL);
+        mplanet->orbit.d = epoch;
         mplanet->orbit.m = m * DD2R;
         mplanet->orbit.w = w * DD2R;
         mplanet->orbit.o = o * DD2R;
@@ -233,7 +245,13 @@ static void load_data(mplanets_t *mplanets, const char *data) {
         }
     }
     regfree(&name_reg);
+    if (nb_err) {
+        LOG_W("Minor planet data got %d errors lines.", nb_err);
+    }
+    DL_COUNT(mplanets->obj.children, tmp, nb);
+    LOG_I("Parsed %d asteroids", nb);
 }
+
 
 static int mplanets_init(obj_t *obj, json_value *args)
 {
