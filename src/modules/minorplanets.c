@@ -247,8 +247,6 @@ static void load_data(mplanets_t *mplanets, const char *data)
             _Static_assert(sizeof(readable) == sizeof(mplanet->name), "");
             rstrip(readable);
             memcpy(mplanet->name, readable + 9, sizeof(readable) - 9);
-            identifiers_add("NAME", mplanet->name, mplanet->obj.oid,
-                            0, "MPl ", 0, NULL, NULL);
         }
     }
     if (nb_err) {
