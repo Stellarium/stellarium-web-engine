@@ -8,7 +8,6 @@
  */
 
 #include "swe.h"
-#include <regex.h>
 #include <zlib.h> // For crc32.
 
 // Minor planets module
@@ -176,6 +175,16 @@ static int parse_mpc_line(const char *line,
     return 0;
 }
 
+// Remove spaces characters at the end of name string.
+static void rstrip(char *s)
+{
+    int i;
+    for (i = strlen(s) - 1; i >= 0; i--) {
+        if (s[i] != ' ') return;
+        s[i] = '\0';
+    }
+}
+
 static void load_data(mplanets_t *mplanets, const char *data)
 {
     const char *line;
@@ -184,8 +193,6 @@ static void load_data(mplanets_t *mplanets, const char *data)
     double h, g, m, w, o, i, e, n, a, epoch;
     bool permanent;
     mplanet_t *mplanet;
-    regex_t name_reg;
-    regmatch_t matches[3];
     obj_t *tmp;
 
     // Match minor planet center orbit type number to otype.
@@ -203,7 +210,6 @@ static void load_data(mplanets_t *mplanets, const char *data)
        [10] = "DOA",
     };
 
-    regcomp(&name_reg, " *(\\(.+\\))? *(.+)", REG_EXTENDED | REG_ICASE);
     line_idx = 0;
     nb_err = 0;
     for (line = data; *line; line = strchr(line, '\n') + 1, line_idx++) {
@@ -235,16 +241,16 @@ static void load_data(mplanets_t *mplanets, const char *data)
             mplanet->mpl_number = number;
         mplanet->obj.oid = compute_oid(desgn);
 
-        r = regexec(&name_reg, readable, 3, matches, 0);
-        if (!r) {
-            strncpy(mplanet->name, readable + matches[2].rm_so,
-                    matches[2].rm_eo - matches[2].rm_so);
-            mplanet->name[matches[2].rm_eo - matches[2].rm_so] = '\0';
+        // If we have a readable designation (of the form (<n>) name),
+        // get the name out of it.
+        if (readable[9] != ' ') {
+            _Static_assert(sizeof(readable) == sizeof(mplanet->name), "");
+            rstrip(readable);
+            memcpy(mplanet->name, readable + 9, sizeof(readable) - 9);
             identifiers_add("NAME", mplanet->name, mplanet->obj.oid,
                             0, "MPl ", 0, NULL, NULL);
         }
     }
-    regfree(&name_reg);
     if (nb_err) {
         LOG_W("Minor planet data got %d errors lines.", nb_err);
     }
