@@ -127,7 +127,7 @@ int eph_load(const void *data, int data_size, void *user,
 void eph_shuffle_bytes(uint8_t *data, int nb, int size)
 {
     int i, j;
-    uint8_t *buf = calloc(nb, size);
+    uint8_t *buf = malloc(nb * size);
     memcpy(buf, data, nb * size);
     for (j = 0; j < size; j++) {
         for (i = 0; i < nb; i++) {
