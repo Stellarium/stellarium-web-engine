@@ -216,7 +216,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
 
     // Still no name, maybe we can show a bayer id.
     if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
-        bayer_get(s->hd, NULL, &bayer, &bayer_n);
+        bayer_get(s->hip, NULL, &bayer, &bayer_n);
         if (bayer) {
             sprintf(buf, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
             labels_add(buf, pos, size, 13, label_color, 0,

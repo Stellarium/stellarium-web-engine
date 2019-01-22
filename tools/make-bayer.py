@@ -28,7 +28,7 @@ import zlib
 from utils import download
 
 Source = collections.namedtuple('Source',
-        ['cst', 'bayer', 'bayer_n', 'vmag', 'hd'])
+        ['cst', 'bayer', 'bayer_n', 'vmag', 'hip'])
 
 LETTERS = ("alf,bet,gam,del,eps,zet,eta,the,iot,kap,lam,mu.,nu.,ksi,omi,"
            "pi.,rho,sig,tau,ups,phi,chi,psi,ome").split(',')
@@ -63,23 +63,23 @@ src = download('http://cdsarc.u-strasbg.fr/vizier/ftp/cats/IV/27A/catalog.dat',
 sources = []
 for line in open(src):
     hd = line[0:6].strip()
+    hip = int(line[31:37].strip() or 0)
     bayer = line[68:73]
     cst = line[74:77]
     vmag = float(line[58:63].strip() or 'nan')
-    if not hd or bayer[:3] not in LETTERS: continue
-    hd = int(hd)
+    if not hip or bayer[:3] not in LETTERS: continue
     assert bayer[:3] in LETTERS
     assert cst in CSTS
     assert not isnan(vmag)
     bayer_l = LETTERS.index(bayer[:3]) + 1
     bayer_n = int(bayer[3:5]) if bayer[3] != ' ' else 0
     cst = CSTS.index(cst) + 1
-    sources.append(Source(cst, bayer_l, bayer_n, vmag, hd))
+    sources.append(Source(cst, bayer_l, bayer_n, vmag, hip))
 sources = sorted(sources)
 
 data = ''
 for s in sources:
-    data += struct.pack("IBBBB", s.hd, s.cst, s.bayer, s.bayer_n, 0)
+    data += struct.pack("IBBBB", s.hip, s.cst, s.bayer, s.bayer_n, 0)
 
 data = struct.pack('I', len(data)) + zlib.compress(data, 9)
 

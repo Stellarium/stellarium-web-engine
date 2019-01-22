@@ -14,7 +14,7 @@
  * Get the bayer designation for a given star.
  *
  * Params:
- *   hd     - A star HD number.
+ *   hip    - A star HIP number.
  *   cons   - Get the star constellation short name.
  *   bayer  - Get the bayer number (1 -> α, 2 -> β, etc.)
  *   n      - Get the bayer extra number.
@@ -22,7 +22,7 @@
  * Return:
  *   False if the star does not have a bayer designation.
  */
-bool bayer_get(int hd, char cons[4], int *bayer, int *n);
+bool bayer_get(int hip, char cons[4], int *bayer, int *n);
 
 /*
  * Function: bayer_iter
@@ -30,7 +30,7 @@ bool bayer_get(int hd, char cons[4], int *bayer, int *n);
  *
  * Parameters:
  *   i      - An incrementing index starting from 0.
- *   hd     - Output of the star HD number.
+ *   hip    - Output of the star HIP number.
  *   cons   - Output of the constellation code.
  *   bayer  - Output of bayer number (1 -> α, 2 -> β, etc.).
  *   n      - Output of bayer extra number.
@@ -41,7 +41,7 @@ bool bayer_get(int hd, char cons[4], int *bayer, int *n);
  * Return:
  *   true until there are no more stars to iter.
  */
-bool bayer_iter(int i, int *hd, char cons[4], int *bayer, int *n,
+bool bayer_iter(int i, int *hip, char cons[4], int *bayer, int *n,
                 const char *greek[3]);
 
 
