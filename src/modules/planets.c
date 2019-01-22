@@ -32,6 +32,10 @@ struct planet {
     double      shadow_brightness; // in [0-1].
     int         id; // Uniq id number, as defined in JPL HORIZONS.
 
+    // Optimizations vars
+    float update_delta_s;   // Number of seconds between 2 orbits full update
+    double last_update;     // Time of last full orbit update (UT1)
+
     // Precomputed values.
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      hpos[3];     // ecl, heliocentric pos J2000.0
@@ -283,7 +287,15 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
     double i;   // Phase angle.
     double pv[2][3];
     int n = (planet->id - MERCURY) / 100 + 1;
-    eraPlan94(DJM0, obs->tt, n, planet->pvh);
+    const double dt = obs->ut1 - planet->last_update;
+    if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
+        // Fast update from previous position
+        eraPvu(dt, planet->pvh, planet->pvh);
+    } else {
+        eraPlan94(DJM0, obs->tt, n, planet->pvh);
+        planet->last_update = obs->ut1;
+    }
+
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->obj.pvo[0]);
     vec3_copy(pv[1], planet->obj.pvo[1]);
@@ -310,8 +322,15 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     double rp;  // Distance to Sun (AU).
     planet_t *jupiter = planet->parent;
     planet_update_(jupiter, obs);
-    l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
-    eraPvppv(pvj, jupiter->pvh, planet->pvh);
+    const double dt = obs->ut1 - planet->last_update;
+    if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
+        // Fast update from previous position
+        eraPvu(dt, planet->pvh, planet->pvh);
+    } else {
+        l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
+        eraPvppv(pvj, jupiter->pvh, planet->pvh);
+        planet->last_update = obs->ut1;
+    }
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->obj.pvo[0]);
     vec3_copy(pv[1], planet->obj.pvo[1]);
@@ -334,28 +353,35 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     double rp;  // Distance to Sun (AU).
     double p[3], v[3], pv[2][3];
     planet_update_(planet->parent, obs);
-    orbit_compute_pv(0, obs->tt, p, v,
-            planet->orbit.kepler.jd,
-            planet->orbit.kepler.in,
-            planet->orbit.kepler.om,
-            planet->orbit.kepler.w,
-            planet->orbit.kepler.a,
-            planet->orbit.kepler.n,
-            planet->orbit.kepler.ec,
-            planet->orbit.kepler.ma,
-            0.0, 0.0);
-    // Ecliptic -> Equatorial.
-    double obl;
-    double rmatecl[3][3];
-    obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
-    eraIr(rmatecl);
-    eraRx(-obl, rmatecl);
-    eraRxp(rmatecl, p, p);
-    eraRxp(rmatecl, v, v);
+    const double dt = obs->ut1 - planet->last_update;
+    if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
+        // Fast update from previous position
+        eraPvu(dt, planet->pvh, planet->pvh);
+    } else {
+        orbit_compute_pv(0, obs->tt, p, v,
+                planet->orbit.kepler.jd,
+                planet->orbit.kepler.in,
+                planet->orbit.kepler.om,
+                planet->orbit.kepler.w,
+                planet->orbit.kepler.a,
+                planet->orbit.kepler.n,
+                planet->orbit.kepler.ec,
+                planet->orbit.kepler.ma,
+                0.0, 0.0);
+        planet->last_update = obs->ut1;
+        // Ecliptic -> Equatorial.
+        double obl;
+        double rmatecl[3][3];
+        obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
+        eraIr(rmatecl);
+        eraRx(-obl, rmatecl);
+        eraRxp(rmatecl, p, p);
+        eraRxp(rmatecl, v, v);
 
-    // Add parent position and speed to get heliocentric position.
-    vec3_add(p, planet->parent->pvh[0], planet->pvh[0]);
-    vec3_add(v, planet->parent->pvh[1], planet->pvh[1]);
+        // Add parent position and speed to get heliocentric position.
+        vec3_add(p, planet->parent->pvh[0], planet->pvh[0]);
+        vec3_add(v, planet->parent->pvh[1], planet->pvh[1]);
+    }
 
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->obj.pvo[0]);
@@ -929,6 +955,7 @@ static int planets_ini_handler(void* user, const char* section,
         planet->obj.nsid = compute_nsid(name);
         if (strcmp(id, "SUN") == 0) planets->sun = planet;
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
+        planet->update_delta_s = 1.f + 1.f * rand() * 1.f / RAND_MAX;
     }
     if (strcmp(attr, "horizons_id") == 0) {
         sscanf(value, "%d", &planet->id);
