@@ -736,30 +736,24 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double point_luminance;  // as a point source (like a star).
     double radius;           // Planet rendered radius (AU).
     double r_scale = 1.0;    // Artificial size scale.
-    double r;                // Angular diameter (rad).
+    double diam;                // Angular diameter (rad).
     double s;
-    double sep;              // Angular sep to screen center.
     double hips_alpha = 0;
-    double az, alt;
     painter_t painter = *painter_;
     point_t point;
     double hips_k = 2.0; // How soon we switch to the hips survey.
     char label[256];
     planets_t *planets = (planets_t*)planet->obj.parent;
     bool selected = core->selection && planet->obj.oid == core->selection->oid;
+    double cap[4];
+    double q[4];
+    double axis[3];
+    double closest[3];
 
     vmag = planet->obj.vmag;
     if (planet->id == EARTH) return;
 
     if (planet->id != MOON && vmag > painter.stars_limit_mag) return;
-
-    vec4_copy(planet->obj.pvo[0], pos);
-    convert_frame(painter.obs, FRAME_ICRF, FRAME_OBSERVED, false, pos, pos);
-
-    core_get_point_for_mag(vmag, &point_size, &point_luminance);
-    point_r = core_get_apparent_angle_for_point(painter.proj, point_size);
-
-    radius = planet->radius_m / DAU;
 
     // Artificially increase the moon size when we are zoomed out, so that
     // we can render it as a hips survey.
@@ -768,30 +762,48 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         r_scale = mix(1, 8, smoothstep(35 * DD2R, 220 * DD2R, core->fov));
     }
 
-    // Planet apparent diameter in rad
-    r = 2.0 * planet->radius;
-    // First approximation, to skip non visible planets.
-    // XXX: we need to compute the max visible fov (for the moment I
-    // add a factor of 1.5 to make sure).
-    vec3_normalize(pos, pos);
-    mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
-    sep = eraSepp(vpos, (double[]){0, 0, -1});
-    if (sep - r > core->fov * 1.5)
+    core_get_point_for_mag(vmag, &point_size, &point_luminance);
+    point_r = core_get_apparent_angle_for_point(painter.proj, point_size);
+
+    // Compute planet's bounding cap in ICRF
+    vec4_copy(planet->obj.pvo[0], cap);
+    vec3_normalize(cap, cap);
+    cap[3] = cos(max(planet->radius * r_scale, point_r));
+
+    if (!cap_intersects_cap(painter.viewport_cap, cap))
         return;
 
-    // Remove below horizon planets (so that the names don't show up).
-    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0) {
-        eraC2s(pos, &az, &alt);
-        if (alt < -max(r * r_scale, point_r)) return;
+    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) &&
+         !cap_intersects_cap(painter.sky_cap, cap))
+        return;
+
+    // Compute 2D position of planetary disk point the closest to the screen
+    // center to perform exact clipping.
+    vec4_copy(planet->obj.pvo[0], pos);
+    vec3_normalize(pos, pos);
+    if (!cap_contains_vec3(cap, painter.viewport_cap)) {
+        vec3_cross(pos, painter.viewport_cap, axis);
+        quat_from_axis(q, max(planet->radius * r_scale, point_r),
+                       axis[0], axis[1], axis[2]);
+        quat_mul_vec3(q, pos, closest);
+        vec3_normalize(closest, closest);
+        convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, closest, vpos);
+        if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, vpos))
+            return;
     }
 
-    // If the planet is visible, report it for tonemapping.
-    if (project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, p_win)) {
-        core_report_vmag_in_fov(vmag, r, sep);
-    }
+    // At least 1 px of the planet is visible, report it for tonemapping
+    core_report_vmag_in_fov(vmag, planet->radius, 0);
 
-    if (planet->hips && hips_k * r * r_scale >= point_r) {
-        hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * r * r_scale ));
+    // Project planet's center
+    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
+    project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+            2, pos, p_win);
+
+    // Planet apparent diameter in rad
+    diam = 2.0 * planet->radius;
+    if (planet->hips && hips_k * diam * r_scale >= point_r) {
+        hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * diam * r_scale ));
     }
     vec4_copy(planet->color, color);
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
@@ -810,26 +822,21 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     paint_points(&painter, 1, &point, FRAME_WINDOW);
 
     if (hips_alpha > 0) {
-        planet_render_hips(planet, radius * r_scale, hips_alpha, &painter);
+        planet_render_hips(planet, planet->radius_m / DAU * r_scale,
+                           hips_alpha, &painter);
     }
 
-
     if (selected || vmag <= painter.hints_limit_mag - 1.0) {
-        mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
-        if (project(painter.proj,
-                PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                2, vpos, vpos)) {
-            if (r_scale == 1.0) strcpy(label, planet->name);
-            else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
-            s = point_size;
-            // Radius on screen in pixel.
-            radius = planet->radius / 2.0 *
-                painter.proj->window_size[0] / painter.proj->scaling[0];
-            s = max(s, radius);
-            labels_add(label, vpos, s + 4, 14, selected ? white : label_color,
-                       0, selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
-                       -vmag, planet->obj.oid);
-        }
+        if (r_scale == 1.0) strcpy(label, planet->name);
+        else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
+        s = point_size;
+        // Radius on screen in pixel.
+        radius = planet->radius / 2.0 *
+            painter.proj->window_size[0] / painter.proj->scaling[0];
+        s = max(s, radius);
+        labels_add(label, p_win, s + 4, 14, selected ? white : label_color,
+                   0, selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                   -vmag, planet->obj.oid);
     }
 
     // For the moment we never render the orbits!
@@ -841,9 +848,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Render the Sun halo.
     if (planet->id == SUN) {
-        mat3_mul_vec3(painter.obs->ro2v, pos, vpos);
-        project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, vpos);
-        paint_texture(&painter, planets->halo_tex, NULL, vpos, 200.0, NULL, 0);
+        paint_texture(&painter, planets->halo_tex, NULL, p_win, 200.0, NULL, 0);
     }
 }
 
