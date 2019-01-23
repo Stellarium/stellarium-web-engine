@@ -87,6 +87,7 @@ static int unpack_epoch(const char epoch[static 5], double *ret)
  * The algo is described there:
  * https://www.minorplanetcenter.net/iau/info/PackedDes.html
  */
+/*
 int mpc_parse_designation(
         const char str[7], char type[4], bool *permanent)
 {
@@ -120,6 +121,7 @@ int mpc_parse_designation(
     }
     return ret;
 }
+*/
 
 // Parse 4 digit hexa flag (A804)
 static int parse_flags(const char str[static 4])
@@ -135,13 +137,46 @@ static int parse_flags(const char str[static 4])
     return ret;
 }
 
+// Replace spaces at the end of a string with '\0'
+static void rstrip(char *str, int len)
+{
+    while (str[len - 1] == ' ') {
+        len -= 1;
+        str[len] = '\0';
+    }
+}
+
+// Parse packed number: [0-9a-zA-Z][0-9]{5}
+static int parse_number(const char str[static 5], int *number)
+{
+    int i, v = 0;
+    char c;
+    for (i = 0; i < 5; i++) {
+        v *= 10;
+        c = str[i];
+        /**/ if (c >= '0' && c <= '9') v += c - '0';
+        else if (c >= 'A' && c <= 'Z') v += 10 + c - 'A';
+        else if (c >= 'a' && c <= 'z') v += 36 + c - 'a';
+        else return -1;
+    }
+    *number = v;
+    return 0;
+}
+
 /*
  * Function: mpc_parse_line
- * Parse a line in the Minor Planet Center compact orbit format:
- * https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+ * Parse a line in the Minor Planet Center extended format.
+ *
+ * https://www.minorplanetcenter.net/data.
+ * https://minorplanetcenter.net/Extended_Files/
+ *         Extended_MPCORB_Data_Format_Manual.pdf
  *
  * Parameters:
  *   line       - Pointer to a string.  Doesn't have to be NULL terminated.
+ *   len        - Length of the line.
+ *   number     - Number if the asteroid has received one, else 0.
+ *   name       - Name if the asteroid has received one.
+ *   desig      - Principal designation.
  *   h          - Absolute magnitude, H.
  *   g          - Slope parameter, G.
  *   epoch      - Epoch in MJD TT.
@@ -153,13 +188,14 @@ static int parse_flags(const char str[static 4])
  *   n          - Mean daily motion (degrees per day).
  *   a          - Semimajor axis (AU).
  *   flags      - 4 hexdigit flags.
- *   readable_desig - Readable desig.
  *
  * Return:
  *   0 in case of success, an error code otherwise.
  */
-int mpc_parse_line(const char *line,
-                   char desgn[static 8],
+int mpc_parse_line(const char *line, int len,
+                   int    *number,
+                   char   name[static 24],
+                   char   desig[static 24],
                    double *h,
                    double *g,
                    double *epoch,
@@ -170,12 +206,16 @@ int mpc_parse_line(const char *line,
                    double *e,
                    double *n,
                    double *a,
-                   int    *flags,
-                   char readable_desgn[static 32])
+                   int    *flags)
 {
     int r;
-    memcpy(desgn, line + 0, 7);
-    desgn[7] = '\0';
+    if (len < 160) return -1;
+    if (line[5] == ' ') { // Got number.
+        if (parse_number(line, number)) return -1;
+    } else {
+        *number = 0;
+    }
+
     if (parse_float(line + 8, h)) return -1;
     if (parse_float(line + 14, g)) return -1;
     r = unpack_epoch(line + 20, epoch);
@@ -188,8 +228,24 @@ int mpc_parse_line(const char *line,
     if (parse_float(line + 80, n))      return -1;
     if (parse_float(line + 92, a))      return -1;
     *flags = parse_flags(line + 161);
-    memcpy(readable_desgn, line + 166, 28);
-    readable_desgn[28] = '\0';
+
+    // The readable designation (167-194) might have the name instead.
+    if (line[175] != ' ' && !(line[175] >= '0' && line[175] <= '9')) {
+        memcpy(name, line + 175, 19);
+        rstrip(name, 19);
+        memset(desig, 0, 24);
+    } else {
+        memcpy(desig, line + 175, 19);
+        rstrip(desig, 19);
+        memset(name, 0, 24);
+    }
+
+    // Extra designations.  For the moment we only parse it if the designation
+    // wasn't set yet.
+    if (!desig[0] && len > 222) {
+        memcpy(desig, line + 222, 10);
+        rstrip(desig, 10);
+    }
     return 0;
 }
 

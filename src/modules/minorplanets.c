@@ -35,7 +35,7 @@ typedef struct {
     orbit_t     orbit;
     double      h;      // Absolute magnitude.
     double      g;      // Slope parameter.
-    char        name[32];
+    char        name[24];
     int         mpl_number; // Minor planet number if one has been assigned.
 } mplanet_t;
 
@@ -49,35 +49,23 @@ typedef struct mplanets {
 
 
 // Compute nsid following the same algo as noctuasky.
-static uint64_t compute_nsid(const char *readable)
+static uint64_t compute_nsid(int number, const char *name, const char *desig)
 {
     uint64_t crc;
-    // Remove spaces at the beginning.
-    while (*readable == ' ') readable++;
-    crc = crc32(0L, (const Bytef*)readable, strlen(readable));
+    char hash_string[32];
+    if (number) sprintf(hash_string, "(%d) %s", number, name ?: desig);
+    else sprintf(hash_string, "%s", desig);
+    crc = crc32(0L, (const Bytef*)hash_string, strlen(hash_string));
     return (1ULL << 63) | (201326592ULL << 35) | (crc & 0xffffffff);
 }
 
-static uint64_t compute_oid(const char desgn[7])
+static uint64_t compute_oid(int number, const char desig[static 22])
 {
-    bool permanent;
-    char type[4];
-    int n;
-    n = mpc_parse_designation(desgn, type, &permanent);
-    if (permanent) return oid_create(type, n);
-    return oid_create("MPl ", crc32(0L, (const Bytef*)desgn, 7));
+    if (number) return oid_create("MPl ", number);
+    // No number, default to the crc32 of the designation.
+    return oid_create("MPl*", crc32(0L, (const Bytef*)desig, 22));
 }
 
-
-// Remove spaces characters at the end of name string.
-static void rstrip(char *s)
-{
-    int i;
-    for (i = strlen(s) - 1; i >= 0; i--) {
-        if (s[i] != ' ') return;
-        s[i] = '\0';
-    }
-}
 
 /*
  * Compute an asteroid observed magnitude from its H, G and positions.
@@ -100,38 +88,39 @@ static double compute_magnitude(double h, double g,
     return ha + 5 * log10(r * delta);
 }
 
+// Match minor planet center orbit type number to otype.
+static const char *ORBIT_TYPES[] = {
+   [ 0] = "MPl",
+   [ 1] = "Ati",
+   [ 2] = "Ate",
+   [ 3] = "Apo",
+   [ 4] = "Amo",
+   [ 5] = "MPl", // ? Object with q < 1.665 AU
+   [ 6] = "Hun",
+   [ 7] = "Pho",
+   [ 8] = "Hil",
+   [ 9] = "JTA",
+   [10] = "DOA",
+};
+
+
 static void load_data(mplanets_t *mplanets, const char *data)
 {
     const char *line;
     int r, len, line_idx, flags, orbit_type, number, nb_err, nb;
-    char desgn[8] = {}, readable[32] = {}, type[4];
+    char desig[24], name[24];
     double h, g, m, w, o, i, e, n, a, epoch;
-    bool permanent;
     mplanet_t *mplanet;
     obj_t *tmp;
-
-    // Match minor planet center orbit type number to otype.
-    const char *ORBIT_TYPES[] = {
-       [ 0] = "MPl",
-       [ 1] = "Ati",
-       [ 2] = "Ate",
-       [ 3] = "Apo",
-       [ 4] = "Amo",
-       [ 5] = "MPl", // ? Object with q < 1.665 AU
-       [ 6] = "Hun",
-       [ 7] = "Pho",
-       [ 8] = "Hil",
-       [ 9] = "JTA",
-       [10] = "DOA",
-    };
 
     line_idx = 0;
     nb_err = 0;
     for (line = data; *line; line = strchr(line, '\n') + 1, line_idx++) {
         len = strchr(line, '\n') - line;
         if (len < 160) continue;
-        r = mpc_parse_line(line, desgn, &h, &g, &epoch, &m, &w, &o, &i, &e,
-                           &n, &a, &flags, readable);
+        r = mpc_parse_line(line, len, &number, name, desig,
+                           &h, &g, &epoch, &m, &w, &o, &i, &e,
+                           &n, &a, &flags);
         if (r) {
             nb_err++;
             continue;
@@ -150,18 +139,13 @@ static void load_data(mplanets_t *mplanets, const char *data)
 
         orbit_type = flags & 0x3f;
         strcpy(mplanet->obj.type, ORBIT_TYPES[orbit_type]);
-        mplanet->obj.nsid = compute_nsid(readable);
-        number = mpc_parse_designation(desgn, type, &permanent);
-        if (permanent && strncmp(type, "MPl ", 4) == 0)
-            mplanet->mpl_number = number;
-        mplanet->obj.oid = compute_oid(desgn);
-
-        // If we have a readable designation (of the form (<n>) name),
-        // get the name out of it.
-        if (readable[9] != ' ') {
-            _Static_assert(sizeof(readable) == sizeof(mplanet->name), "");
-            rstrip(readable);
-            memcpy(mplanet->name, readable + 9, sizeof(readable) - 9);
+        mplanet->mpl_number = number;
+        mplanet->obj.nsid = compute_nsid(number, name, desig);
+        mplanet->obj.oid = compute_oid(number, desig);
+        if (number == 1) assert(mplanet->obj.nsid == 0xe00000005e96387dL);
+        if (name[0]) {
+            _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
+            memcpy(mplanet->name, name, sizeof(name));
         }
     }
     if (nb_err) {
@@ -320,7 +304,7 @@ static obj_t *mplanets_get_by_oid(
 {
     obj_t *child;
     if (    !oid_is_catalog(oid, "MPl ") &&
-            !oid_is_catalog(oid, "Com ")) return NULL;
+            !oid_is_catalog(oid, "MPl*")) return NULL;
     OBJ_ITER(obj, child, NULL) {
         if (child->oid == oid) {
             child->ref++;

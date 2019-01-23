@@ -14,12 +14,34 @@
 #include <stdbool.h>
 
 /*
+ * Enum: MPC_ORBIT_TYPE
+ *
+ * As defined here:
+ * https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+ */
+enum {
+    MPC_ATIRA = 1,
+    MPC_ATEN,
+    MPC_APOLLO,
+    MPC_AMOR,
+    MPC_OBJ_WITH_Q_INF_1_665_AU,
+    MPC_HUNGARIA,
+    MPC_PHOCAEA,
+    MPC_JUPITER_TROJAN,
+    MPC_DISTANT_OBJECT,
+};
+
+/*
  * Function: mpc_parse_line
  * Parse a line in the Minor Planet Center compact orbit format:
  * https://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
  *
  * Parameters:
  *   line       - Pointer to a string.  Doesn't have to be NULL terminated.
+ *   len        - Length of the line.
+ *   number     - Number if the asteroid has received one, else 0.
+ *   name       - Name if the asteroid has received one.
+ *   desig      - Principal designation.
  *   h          - Absolute magnitude, H.
  *   g          - Slope parameter, G.
  *   epoch      - Epoch in MJD TT.
@@ -31,13 +53,14 @@
  *   n          - Mean daily motion (degrees per day).
  *   a          - Semimajor axis (AU).
  *   flags      - 4 hexdigit flags.
- *   readable_desig - Readable desig.
  *
  * Return:
  *   0 in case of success, an error code otherwise.
  */
-int mpc_parse_line(const char *line,
-                   char   desig[static 8],
+int mpc_parse_line(const char *line, int len,
+                   int    *number,
+                   char   name[static 24],
+                   char   desig[static 24],
                    double *h,
                    double *g,
                    double *epoch,
@@ -48,15 +71,4 @@ int mpc_parse_line(const char *line,
                    double *e,
                    double *n,
                    double *a,
-                   int    *flags,
-                   char   readable_desig[static 32]);
-/*
- * Parse a 7 char packed designation
- *
- * The algo is described there:
- * https://www.minorplanetcenter.net/iau/info/PackedDes.html
- *
- * XXX: this should be directly done by mpc_parse_line I guess.
- */
-int mpc_parse_designation(
-        const char str[7], char type[4], bool *permanent);
+                   int    *flags);
