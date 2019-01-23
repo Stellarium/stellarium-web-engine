@@ -345,7 +345,7 @@ static int render_bounds(const constellation_t *con,
 
 static bool constellation_is_selected(const constellation_t *con)
 {
-    if (!core->selection) return false;
+    if (!core->selection || !core->selection->id) return false;
     return strcmp(core->selection->id, con->obj.id) == 0;
 }
 
