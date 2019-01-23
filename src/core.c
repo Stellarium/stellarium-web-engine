@@ -55,7 +55,7 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
     obj_t *ret;
     uint64_t oid, nsid;
     DL_FOREACH(core->obj.children, module) {
-        if (strcmp(module->id, id) == 0) return module;
+        if (module->id && strcmp(module->id, id) == 0) return module;
         ret = obj_get(module, id, flags);
         if (ret) return ret;
     }
@@ -76,7 +76,7 @@ obj_t *core_get_module(const char *id)
 {
     obj_t *module;
     DL_FOREACH(core->obj.children, module) {
-        if (strcmp(module->id, id) == 0) return module;
+        if (module->id && strcmp(module->id, id) == 0) return module;
     }
     return NULL;
 }
