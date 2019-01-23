@@ -22,7 +22,7 @@ void main()
 {
     gl_Position = a_pos;
     const lowp float height = 0.2;
-    const lowp float alpha = 0.2;
+    const lowp float alpha = 0.15;
     lowp float d = smoothstep(height, 0.0, abs(a_sky_pos.z));
     v_color = vec4(1.0, 1.0, 1.0, alpha * d);
 }

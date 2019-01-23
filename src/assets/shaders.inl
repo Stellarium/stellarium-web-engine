@@ -190,7 +190,7 @@ static const unsigned char DATA_shaders_blit_tag_glsl[810] __attribute__((aligne
 
 ASSET_REGISTER(shaders_blit_tag_glsl, "shaders/blit_tag.glsl", DATA_shaders_blit_tag_glsl, false)
 
-static const unsigned char DATA_shaders_fog_glsl[771] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -215,7 +215,7 @@ static const unsigned char DATA_shaders_fog_glsl[771] __attribute__((aligned(4))
     "{\n"
     "    gl_Position = a_pos;\n"
     "    const lowp float height = 0.2;\n"
-    "    const lowp float alpha = 0.2;\n"
+    "    const lowp float alpha = 0.15;\n"
     "    lowp float d = smoothstep(height, 0.0, abs(a_sky_pos.z));\n"
     "    v_color = vec4(1.0, 1.0, 1.0, alpha * d);\n"
     "}\n"
