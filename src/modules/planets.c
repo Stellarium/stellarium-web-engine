@@ -33,8 +33,9 @@ struct planet {
     int         id; // Uniq id number, as defined in JPL HORIZONS.
 
     // Optimizations vars
-    float update_delta_s;   // Number of seconds between 2 orbits full update
-    double last_update;     // Time of last full orbit update (UT1)
+    float update_delta_s;    // Number of seconds between 2 orbits full update
+    double last_full_update; // Time of last full orbit update (UT1)
+    double last_full_pvh[2][3]; // equ, J2000.0, AU heliocentric pos and speed.
 
     // Precomputed values.
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
@@ -287,13 +288,14 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
     double i;   // Phase angle.
     double pv[2][3];
     int n = (planet->id - MERCURY) / 100 + 1;
-    const double dt = obs->ut1 - planet->last_update;
+    const double dt = obs->tt - planet->last_full_update;
     if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
         // Fast update from previous position
-        eraPvu(dt, planet->pvh, planet->pvh);
+        eraPvu(dt, planet->last_full_pvh, planet->pvh);
     } else {
-        eraPlan94(DJM0, obs->tt, n, planet->pvh);
-        planet->last_update = obs->ut1;
+        eraPlan94(DJM0, obs->tt, n, planet->last_full_pvh);
+        eraCpv(planet->last_full_pvh, planet->pvh);
+        planet->last_full_update = obs->tt;
     }
 
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
@@ -322,14 +324,15 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     double rp;  // Distance to Sun (AU).
     planet_t *jupiter = planet->parent;
     planet_update_(jupiter, obs);
-    const double dt = obs->ut1 - planet->last_update;
+    const double dt = obs->ut1 - planet->last_full_update;
     if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
         // Fast update from previous position
-        eraPvu(dt, planet->pvh, planet->pvh);
+        eraPvu(dt, planet->last_full_pvh, planet->pvh);
     } else {
         l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
-        eraPvppv(pvj, jupiter->pvh, planet->pvh);
-        planet->last_update = obs->ut1;
+        eraPvppv(pvj, jupiter->pvh, planet->last_full_pvh);
+        eraCpv(planet->last_full_pvh, planet->pvh);
+        planet->last_full_update = obs->ut1;
     }
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->obj.pvo[0]);
@@ -353,10 +356,10 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     double rp;  // Distance to Sun (AU).
     double p[3], v[3], pv[2][3];
     planet_update_(planet->parent, obs);
-    const double dt = obs->ut1 - planet->last_update;
+    const double dt = obs->tt - planet->last_full_update;
     if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
         // Fast update from previous position
-        eraPvu(dt, planet->pvh, planet->pvh);
+        eraPvu(dt, planet->last_full_pvh, planet->pvh);
     } else {
         orbit_compute_pv(0, obs->tt, p, v,
                 planet->orbit.kepler.jd,
@@ -368,7 +371,7 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
                 planet->orbit.kepler.ec,
                 planet->orbit.kepler.ma,
                 0.0, 0.0);
-        planet->last_update = obs->ut1;
+        planet->last_full_update = obs->tt;
         // Ecliptic -> Equatorial.
         double obl;
         double rmatecl[3][3];
@@ -379,8 +382,9 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
         eraRxp(rmatecl, v, v);
 
         // Add parent position and speed to get heliocentric position.
-        vec3_add(p, planet->parent->pvh[0], planet->pvh[0]);
-        vec3_add(v, planet->parent->pvh[1], planet->pvh[1]);
+        vec3_add(p, planet->parent->pvh[0], planet->last_full_pvh[0]);
+        vec3_add(v, planet->parent->pvh[1], planet->last_full_pvh[1]);
+        eraCpv(planet->last_full_pvh, planet->pvh);
     }
 
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
