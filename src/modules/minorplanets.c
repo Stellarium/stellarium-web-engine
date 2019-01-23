@@ -80,7 +80,7 @@ static void rstrip(char *s)
 }
 
 /*
- * Compute an asteroid observed magnitude from it's H, G and positions.
+ * Compute an asteroid observed magnitude from its H, G and positions.
  * http://www.britastro.org/asteroids/dymock4.pdf
  */
 static double compute_magnitude(double h, double g,
