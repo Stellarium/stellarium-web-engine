@@ -170,7 +170,11 @@ float skybrightness_get_luminance(
         B = BN + BT;
     else
         B = BN + BD;
-    if (ZM < 90.0f) B = B + BM;
+    if (ZM < 80.0f) B = B + BM;
+    // Graduate the moon impact on atmosphere from 0 to 100% when its altitude
+    // is ranging from 0 to 10 deg to avoid discontinuity.
+    // This hack can probably be reduced when extinction is taken into account.
+    if (ZM > 80.0f && ZM <= 90.0f) B = B + BM * (90.f - ZM) / 10.f;
     // End sky subroutine.
 
 
