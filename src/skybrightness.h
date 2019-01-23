@@ -21,21 +21,21 @@ typedef struct skybrightness
     float Y, M, AM, LA, AL, TE, RH, ZM, ZS;
 
     // Adjustements changing the original code.
-    float max_BM, k_BT, k_BM;
+    float max_BM, k_BT, k_BM, k_BN;
 
     // Precomputed values.
     float K, XM, XS;
 
 } skybrightness_t;
 
-void skybrightness_prepare(
-        skybrightness_t *sb,
+void skybrightness_prepare(skybrightness_t *sb,
         int year, int month, float moon_phase,
         float latitude, float altitude,
         float temperature, float relative_humidity,
         float dist_moon_zenith, float dist_sun_zenith,
         float max_moon_brightness,
-        float twilight_coef, float moon_brightness_coef);
+        float twilight_coef, float moon_brightness_coef,
+        float darknight_brightness_coef);
 
 float skybrightness_get_luminance(
         const skybrightness_t *sb,

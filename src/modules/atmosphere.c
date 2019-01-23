@@ -156,7 +156,7 @@ static void prepare_skybrightness(
                           15, 40,
                           eraSepp(moon_pos, zenith),
                           eraSepp(sun_pos, zenith),
-                          0.04, twilight_coef, 0.4);
+                          0.04, twilight_coef, 0.4, 2.f);
 }
 
 static float compute_lum(void *user, const float pos[3])

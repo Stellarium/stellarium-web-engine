@@ -43,14 +43,14 @@ static const float BO = 1.0E-13;
 static const float CM = 0.00;
 static const float MS = -26.74;
 
-void skybrightness_prepare(
-        skybrightness_t *sb,
+void skybrightness_prepare(skybrightness_t *sb,
         int year, int month, float moon_phase,
         float latitude, float altitude,
         float temperature, float relative_humidity,
         float dist_moon_zenith, float dist_sun_zenith,
         float max_moon_brightness,
-        float twilight_coef, float moon_brightness_coef)
+        float twilight_coef, float moon_brightness_coef,
+        float darknight_brightness_coef)
 {
     sb->Y = year;
     sb->M = month;
@@ -64,6 +64,7 @@ void skybrightness_prepare(
     sb->max_BM = max_moon_brightness * (1.11e-15 / NLAMBERT_TO_CDM2);
     sb->k_BT = twilight_coef;
     sb->k_BM = moon_brightness_coef;
+    sb->k_BN = darknight_brightness_coef;
 
     // Precompute as much as possible.
     float K, KR, KA, KO, KW, LT, RA, SL, XM, XS;
@@ -135,6 +136,7 @@ float skybrightness_get_luminance(
     BN = BO * (1 + .3f * cosf(6.283f * (Y - 1992) / 11));
     BN = BN * (.4f + .6f / sqrtf(1.0f - .96f * powf((sinf(ZZ)), 2)));
     BN = BN * (fast_exp10f(-.4f * K * X));
+    BN *= sb->k_BN;
 
     // 2170 Moonlight brightness
     MM = -12.73f + .026f * fabsf(AM) + 4E-09f * pow4(AM); // moon mag in V
