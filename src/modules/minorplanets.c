@@ -79,6 +79,27 @@ static void rstrip(char *s)
     }
 }
 
+/*
+ * Compute an asteroid observed magnitude from it's H, G and positions.
+ * http://www.britastro.org/asteroids/dymock4.pdf
+ */
+static double compute_magnitude(double h, double g,
+                                const double ph[3],
+                                const double po[3])
+{
+    double alpha;   // Phase angle (sun/asteroid/earth)
+    double r;       // distance asteroid / sun (AU)
+    double delta;   // distance asteroid / earth (AU)
+    double phi1, phi2, ha;
+    r = vec3_norm(ph);
+    delta = vec3_norm(po);
+    alpha = eraSepp(ph, po);
+    phi1 = exp(-3.33 * pow(tan(0.5 * alpha), 0.63));
+    phi2 = exp(-1.87 * pow(tan(0.5 * alpha), 1.22));
+    ha = h - 2.5 * log10((1 - g) * phi1 + g * phi2);
+    return ha + 5 * log10(r * delta);
+}
+
 static void load_data(mplanets_t *mplanets, const char *data)
 {
     const char *line;
@@ -197,39 +218,25 @@ static int mplanet_init(obj_t *obj, json_value *args)
 
 static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    double ph[2][3], po[2][3];
+    double pvh[2][3], pvo[2][3];
     mplanet_t *mp = (mplanet_t*)obj;
 
-    orbit_compute_pv(0, obs->ut1, ph[0], ph[1],
+    orbit_compute_pv(0, obs->ut1, pvh[0], pvh[1],
             mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
             mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
             mp->orbit.od, mp->orbit.wd);
 
-    mat3_mul_vec3(obs->re2i, ph[0], ph[0]);
-    mat3_mul_vec3(obs->re2i, ph[1], ph[1]);
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, po);
-    vec3_copy(po[0], obj->pvo[0]);
-    vec3_copy(po[1], obj->pvo[1]);
+    mat3_mul_vec3(obs->re2i, pvh[0], pvh[0]);
+    mat3_mul_vec3(obs->re2i, pvh[1], pvh[1]);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    vec3_copy(pvo[0], obj->pvo[0]);
+    vec3_copy(pvo[1], obj->pvo[1]);
     obj->pvo[0][3] = 1.0; // AU unit.
     obj->pvo[1][3] = 1.0;
-    // Compute vmag.
-    // XXX: move this into algo.
+
+    // Compute vmag using algo from
     // http://www.britastro.org/asteroids/dymock4.pdf
-    double alpha;   // Phase angle (sun/asteroid/earth)
-    double r;       // distance asteroid / sun (AU)
-    double delta;   // distance asteroid / earth (AU)
-    double phi1, phi2, ha, h, g;
-
-    h = mp->h;
-    g = mp->g;
-    r = vec3_norm(ph[0]);
-    delta = vec3_norm(po[0]);
-    alpha = eraSepp(ph[0], po[0]);
-    phi1 = exp(-3.33 * pow(tan(0.5 * alpha), 0.63));
-    phi2 = exp(-1.87 * pow(tan(0.5 * alpha), 1.22));
-    ha = h - 2.5 * log10((1 - g) * phi1 + g * phi2);
-    mp->obj.vmag = ha + 5 * log10(r * delta);
-
+    mp->obj.vmag = compute_magnitude(mp->h, mp->g, pvh[0], pvo[0]);
     return 0;
 }
 
