@@ -121,6 +121,20 @@ int mpc_parse_designation(
     return ret;
 }
 
+// Parse 4 digit hexa flag (A804)
+static int parse_flags(const char str[static 4])
+{
+    int i, ret = 0;
+    uint8_t c;
+    for (i = 0; i < 4; i++) {
+        ret *= 16;
+        c = str[i];
+             if (c >= '0' && c <= '9') ret += (c - '0');
+        else if (c >= 'A' && c <= 'F') ret += 10 + (c - 'A');
+    }
+    return ret;
+}
+
 /*
  * Function: mpc_parse_line
  * Parse a line in the Minor Planet Center compact orbit format:
@@ -173,7 +187,7 @@ int mpc_parse_line(const char *line,
     if (parse_float(line + 70, e))      return -1;
     if (parse_float(line + 80, n))      return -1;
     if (parse_float(line + 92, a))      return -1;
-    *flags = strtol(line + 161, NULL, 16);
+    *flags = parse_flags(line + 161);
     memcpy(readable_desgn, line + 166, 28);
     readable_desgn[28] = '\0';
     return 0;
