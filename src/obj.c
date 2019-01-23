@@ -73,7 +73,7 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
 
     assert(klass->size);
     obj = calloc(1, klass->size);
-    obj->id = strdup(id ?: "");
+    if (id) obj->id = strdup(id);
     obj->ref = 1;
     obj->klass = klass;
     // XXX: auto set the parent of core to the root object as a hack.
@@ -254,7 +254,7 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     // Check direct sub objects.
     // XXX: this is a waste of time in most cases!
     DL_FOREACH(obj->children, child) {
-        if (strcasecmp(child->id, query) == 0) {
+        if (child->id && strcasecmp(child->id, query) == 0) {
             child->ref++;
             return child;
         }
