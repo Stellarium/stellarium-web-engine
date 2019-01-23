@@ -90,16 +90,26 @@ static double get_global_brightness(void)
 {
     // I use the algo from stellarium, even though I don't really understand
     // it.
-    obj_t *sun;
-    double sun_pos[4];
-    double sin_sun_angle;
+    obj_t *sun, *moon;
+    double pos[4];
+    double sin_angle;
     double brightness = 0.0;
+    double moon_phase;
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
-    obj_get_pos_observed(sun, core->observer, sun_pos);
-    vec3_normalize(sun_pos, sun_pos);
-    sin_sun_angle = sin(min(M_PI/ 2, asin(sun_pos[2]) + 8. * DD2R));
-    if(sin_sun_angle > -0.1 / 1.5 )
-        brightness += 1.5 * (sin_sun_angle + 0.1 / 1.5);
+    obj_get_pos_observed(sun, core->observer, pos);
+    vec3_normalize(pos, pos);
+    sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
+    if (sin_angle > -0.1 / 1.5 )
+        brightness += 1.5 * (sin_angle + 0.1 / 1.5);
+
+    moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
+    obj_get_pos_observed(moon, core->observer, pos);
+    obj_get_attr(moon, "phase", "f", &moon_phase);
+    vec3_normalize(pos, pos);
+    sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
+    if (sin_angle > -0.1 / 1.5 )
+        brightness += moon_phase * 0.2 * (sin_angle + 0.1 / 1.5);
+
     return min(brightness, 1.0);
 }
 
