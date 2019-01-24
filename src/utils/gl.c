@@ -56,7 +56,10 @@ static int compile_shader(int shader, const char *code,
     int status, len;
     char *log;
 #ifndef GLES2
-    const char *pre = "#define highp\n#define mediump\n#define lowp\n";
+    // We need GLSL version 1.2 to have gl_PointCoord support in desktop OpenGL
+    // It's already included in GLES 2.0
+    const char *pre =
+            "#version 120\n#define highp\n#define mediump\n#define lowp\n";
 #else
     const char *pre = "";
 #endif
