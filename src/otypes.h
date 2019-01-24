@@ -12,16 +12,28 @@
  */
 
 /*
- * Function: otypes_lookup
- * Get info about a given otype by condensed value.
+ * Function: otype_get_str
+ * Get long name of a given otype.
+ *
+ * Parameters:
+ *   otype  - An otype condensed id string (e.g '**').  Can be shorter than
+ *            4 bytes.  Doesn't have to be NULL terminated if exactly 4 bytes.
+ *
+ * Return:
+ *   A null terminated string, or NULL if the otype doesn't exists.
+ *
  */
-int otypes_lookup(const char *condensed,
-                  const char **name,
-                  const char **explanation,
-                  int ns[4]);
+const char *otype_get_str(const char *otype);
 
 /*
- * Function: otypes_get_parent
+ * Function: otype_get_parent
  * Return the parent condensed id of an otype.
+ *
+ * Parameters:
+ *   otype  - An otype condensed id string (e.g '**').  Can be shorter than
+ *            4 bytes.  Doesn't have to be NULL terminated if exactly 4 bytes.
+ *
+ * Return:
+ *   A null padded 4 bytes condensed id string, or NULL if no parent was found.
  */
-const char *otypes_get_parent(const char *condensed);
+const char *otype_get_parent(const char *otype);

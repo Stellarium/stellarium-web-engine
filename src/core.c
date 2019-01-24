@@ -938,12 +938,13 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
 }
 
 // Return a static string representation of a an object type id.
+// XXX: deprecated.  Use otypes_get_str instead.
 EMSCRIPTEN_KEEPALIVE
 const char *type_to_str(const char type[4])
 {
     const char *explanation;
-    if (otypes_lookup(type, NULL, &explanation, NULL) == 0)
-        return explanation;
+    explanation = otype_get_str(type);
+    if (explanation) return explanation;
 
     // Most of yhose values should eventually be removed, since we are now
     // using Simbad types everywhere.
