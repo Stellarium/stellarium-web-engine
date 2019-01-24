@@ -345,7 +345,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     point = (point_t) {
         .pos = {p_win[0], p_win[1]},
         .size = size,
-        .color = {color[0], color[1], color[2], luminance},
+        .color = {color[0] * 255, color[1] * 255, color[2] * 255,
+                  luminance * 255},
         .oid = obj->oid,
     };
     paint_points(&painter, 1, &point, FRAME_WINDOW);

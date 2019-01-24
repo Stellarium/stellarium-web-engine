@@ -112,7 +112,7 @@ struct point
 {
     double  pos[4];
     double  size;       // Radius in window pixel (pixel with density scale).
-    double  color[4];
+    uint8_t color[4];
     uint64_t oid;       // Used instead of id if set.
     uint64_t hint;      // Oid hint.
 };

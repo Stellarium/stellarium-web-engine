@@ -816,7 +816,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     point = (point_t) {
         .pos = {p_win[0], p_win[1]},
         .size = point_size,
-        .color = {color[0], color[1], color[2], color[3]},
+        .color = {color[0] * 255, color[1] * 255, color[2] * 255,
+                  color[3] * 255},
         .oid = planet->obj.oid,
     };
     paint_points(&painter, 1, &point, FRAME_WINDOW);

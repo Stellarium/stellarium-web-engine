@@ -252,7 +252,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     point = (point_t) {
         .pos = {p[0], p[1], p[2]},
         .size = size,
-        .color = {color[0], color[1], color[2], luminance},
+        .color = {color[0] * 255, color[1] * 255, color[2] * 255,
+                  luminance * 255},
         .oid = s->oid,
     };
     paint_points(&painter, 1, &point, FRAME_OBSERVED);
@@ -548,7 +549,8 @@ static int render_visitor(int order, int pix, void *user)
         points[n] = (point_t) {
             .pos = {p_win[0], p_win[1], 0, 0},
             .size = size,
-            .color = {color[0], color[1], color[2], luminance},
+            .color = {color[0] * 255, color[1] * 255, color[2] * 255,
+                      luminance * 255},
             .oid = s->oid,
             .hint = pix_to_nuniq(order, pix),
         };

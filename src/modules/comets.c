@@ -204,7 +204,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     point = (point_t) {
         .pos = {win_pos[0], win_pos[1], 0, 0},
         .size = size,
-        .color = {1, 1, 1, luminance},
+        .color = {255, 255, 255, luminance * 255},
         .oid = obj->oid,
     };
     paint_points(painter, 1, &point, FRAME_WINDOW);

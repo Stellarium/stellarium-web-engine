@@ -250,7 +250,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     point = (point_t) {
         .pos = {pos[0], pos[1], pos[2], 0},
         .size = size,
-        .color = {1, 1, 1, luminance},
+        .color = {255, 255, 255, luminance * 255},
         .oid = obj->oid,
     };
     paint_points(painter, 1, &point, FRAME_OBSERVED);
