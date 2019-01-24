@@ -115,23 +115,6 @@ def make_symbols():
         ret_img.paste(img, (128 * (i % 8), 128 * (i / 8)))
     ret_img.save(dst)
 
-def make_mpc():
-    path = download('http://www.minorplanetcenter.net/iau/MPCORB/MPCORB.DAT.gz')
-    f = gzip.GzipFile(path)
-    it = iter(f)
-    # Skip header
-    while not it.next().startswith('--------------'): pass
-    lines = list(it)
-    # Sort by magnitude.
-    lines = sorted(lines, key=lambda x: float(x[8:14].strip() or 'inf'))
-    # Keep only 500 first.
-    lines = lines[:500]
-
-    out = open("data/mpcorb.dat", "w")
-    for line in lines:
-        print >>out, line.rstrip()
-    out.close()
 
 make_cities()
 make_symbols()
-make_mpc()
