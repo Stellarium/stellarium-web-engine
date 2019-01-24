@@ -14,16 +14,16 @@
 // Minor planets module
 
 typedef struct orbit_t {
-    double d;    // date (julian day).
-    double i;    // inclination (rad).
-    double o;    // Longitude of the Ascending Node (rad).
-    double w;    // Argument of Perihelion (rad).
-    double a;    // Mean distance (Semi major axis).
-    double n;    // Daily motion (rad/day).
-    double e;    // Eccentricity.
-    double m;    // Mean Anomaly (rad).
-    double od;   // variation of o in time.
-    double wd;   // variation of w in time.
+    float d;    // date (julian day).
+    float i;    // inclination (rad).
+    float o;    // Longitude of the Ascending Node (rad).
+    float w;    // Argument of Perihelion (rad).
+    float a;    // Mean distance (Semi major axis).
+    float n;    // Daily motion (rad/day).
+    float e;    // Eccentricity.
+    float m;    // Mean Anomaly (rad).
+    float od;   // variation of o in time.
+    float wd;   // variation of w in time.
 } orbit_t;
 
 /*
@@ -33,8 +33,8 @@ typedef struct orbit_t {
 typedef struct {
     obj_t       obj;
     orbit_t     orbit;
-    double      h;      // Absolute magnitude.
-    double      g;      // Slope parameter.
+    float       h;      // Absolute magnitude.
+    float       g;      // Slope parameter.
     char        name[24];
     char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
