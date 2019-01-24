@@ -281,9 +281,9 @@ int on_quad(int step, qtree_node_t *node,
 {
     double lines[4][4] = {};
     double p[2], u[2], v[2]; // For the border labels.
-    projection_t *proj_spherical = ((void**)user)[0];
-    line_t *line = ((void**)user)[1];
-    step_t **steps = ((void**)user)[2];
+    projection_t *proj_spherical = USER_GET(user, 0);
+    line_t *line = USER_GET(user, 1);
+    step_t **steps = USER_GET(user, 2);
     int dir;
     painter_t painter = *painter_;
 
@@ -394,6 +394,7 @@ static int line_render(const obj_t *obj, const painter_t *painter)
     double UV[4][2] = {{0.0, 1.0}, {1.0, 1.0},
                        {0.0, 0.0}, {1.0, 0.0}};
     double transform[4][4];
+    const step_t *steps[2];
     mat4_set_identity(transform);
 
     if (strcmp(line->obj.id, "ecliptic") == 0) {
@@ -407,8 +408,6 @@ static int line_render(const obj_t *obj, const painter_t *painter)
         .backward   = spherical_project,
     };
     painter_t painter2 = *painter;
-    const step_t *steps[2];
-    void *user[3] = {&proj_spherical, line, steps};
 
     if (line->visible.value == 0.0) return 0;
 
@@ -423,7 +422,8 @@ static int line_render(const obj_t *obj, const painter_t *painter)
         steps[1] = &STEPS_DEG[0];
     }
     traverse_surface(nodes, ARRAY_SIZE(nodes), UV, &proj_spherical,
-                     &painter2, line->frame, 1, &user[0], on_quad);
+                     &painter2, line->frame, 1,
+                     USER_PASS(&proj_spherical, line, steps), on_quad);
     return 0;
 }
 
