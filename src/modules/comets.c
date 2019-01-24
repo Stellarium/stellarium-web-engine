@@ -35,7 +35,7 @@ typedef struct {
     double      slope_param;
     orbit_t     orbit;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
-    int         on_screen_timer;
+    bool        on_screen;  // Set once the object has been visible.
 } comet_t;
 
 /*
@@ -45,7 +45,7 @@ typedef struct {
 typedef struct {
     obj_t   obj;
     bool    parsed; // Set to true once the data has been parsed.
-    int     update_range;
+    int     update_pos; // Index of the position for iterative update.
     regex_t search_reg;
 } comets_t;
 
@@ -198,7 +198,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, win_pos))
         return 0;
 
-    comet->on_screen_timer = 100; // Keep the comet 'alive' for 100 frames.
+    comet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
@@ -268,15 +268,14 @@ static int comets_update(obj_t *obj, const observer_t *obs, double dt)
     DL_COUNT(obj->children, tmp, nb);
     i = 0;
     OBJ_ITER(obj, child, "mpc_comet") {
-        if (child->on_screen_timer) child->on_screen_timer--;
-        if (child->on_screen_timer ||
-                range_contains(comets->update_range, update_nb, nb, i))
+        if (child->on_screen ||
+                range_contains(comets->update_pos, update_nb, nb, i))
         {
             obj_update((obj_t*)child, obs, dt);
         }
         i++;
     }
-    comets->update_range = nb ? (comets->update_range + update_nb) % nb : 0;
+    comets->update_pos = nb ? (comets->update_pos + update_nb) % nb : 0;
     return 0;
 }
 
