@@ -345,7 +345,7 @@ static void points(renderer_t *rend_,
         }
 
         gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos));
-        gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * 2 * sm);
+        gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * rend->scale * 2 * sm);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(p.color));
         gl_buf_next(&item->buf);
 
