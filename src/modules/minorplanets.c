@@ -314,6 +314,22 @@ static obj_t *mplanets_get_by_oid(
     return NULL;
 }
 
+
+static int mplanets_list(const obj_t *obj, observer_t *obs,
+                         double max_mag, uint64_t hint, void *user,
+                         int (*f)(void *user, obj_t *obj))
+{
+    mplanet_t *p;
+    int nb = 0;
+    OBJ_ITER(obj, p, NULL) {
+        obj_update((obj_t*)p, obs, 0);
+        if (p->obj.vmag > max_mag) continue;
+        nb++;
+        if (f && f(user, &p->obj)) break;
+    }
+    return nb;
+}
+
 /*
  * Meta class declarations.
  */
@@ -346,6 +362,7 @@ static obj_klass_t mplanets_klass = {
     .update         = mplanets_update,
     .render         = mplanets_render,
     .get_by_oid     = mplanets_get_by_oid,
+    .list           = mplanets_list,
     .render_order   = 20,
 };
 OBJ_REGISTER(mplanets_klass)
