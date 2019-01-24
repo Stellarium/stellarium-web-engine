@@ -242,8 +242,8 @@ int mpc_parse_line(const char *line, int len,
 
     // Extra designations.  For the moment we only parse it if the designation
     // wasn't set yet.
-    if (!desig[0] && len > 222) {
-        memcpy(desig, line + 222, 10);
+    if (!desig[0] && len >= 227) {
+        memcpy(desig, line + 217, 10);
         rstrip(desig, 10);
     }
     return 0;
