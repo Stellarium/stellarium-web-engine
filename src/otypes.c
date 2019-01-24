@@ -19,7 +19,7 @@
 typedef struct entry
 {
     uint8_t n1, n2, n3, n4;
-    char cond[4];
+    char cond[5];
     char *name;
     char *explanation;
 } entry_t;
