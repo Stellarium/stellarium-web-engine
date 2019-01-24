@@ -79,6 +79,7 @@ static struct {
     uint32_t    color;
     int         frame;      // One of the FRAME_ value.
     char        format;     // 'h' for hour, 'd' for degree. 0 for no labels.
+    bool        grid;       // If true render the whole grid.
 } LINES[] = {
     {
         .name       = "Azimuthal",
@@ -86,6 +87,7 @@ static struct {
         .color      = 0x4c3319ff,
         .frame      = FRAME_OBSERVED,
         .format     = 'd',
+        .grid       = true,
     },
     {
         .name       = "Equatorial",
@@ -93,18 +95,21 @@ static struct {
         .color      = 0x2a81ad80,
         .frame      = FRAME_CIRS,
         .format     = 'h',
+        .grid       = true,
     },
     {
         .name       = "Meridian",
         .id         = "meridian",
         .color      = 0x339933ff,
         .frame      = FRAME_OBSERVED,
+        .grid       = false,
     },
     {
         .name       = "Ecliptic",
         .id         = "ecliptic",
         .color      = 0xb33333ff,
         .frame      = FRAME_OBSERVED, // XXX: probably need to change that.
+        .grid       = false,
     },
 };
 
@@ -119,6 +124,7 @@ struct line {
     fader_t         visible;
     int             frame;      // One of FRAME_ value.
     char            format;     // 'd', 'h', or 0
+    bool            grid;       // If true render the whole grid.
     double          color[4];
 };
 
@@ -132,6 +138,7 @@ static int lines_init(obj_t *obj, json_value *args)
         line = (line_t*)obj_create("line", LINES[i].id, lines, NULL);
         obj_add_sub(&line->obj, "lines");
         line->frame = LINES[i].frame;
+        line->grid = LINES[i].grid;
         hex_to_rgba(LINES[i].color, line->color);
         line->format = LINES[i].format;
     }
@@ -281,6 +288,7 @@ int on_quad(int step, qtree_node_t *node,
 {
     double lines[4][4] = {};
     double p[2], u[2], v[2]; // For the border labels.
+    bool visible;
     projection_t *proj_spherical = USER_GET(user, 0);
     line_t *line = USER_GET(user, 1);
     step_t **steps = USER_GET(user, 2);
@@ -307,15 +315,14 @@ int on_quad(int step, qtree_node_t *node,
     vec2_copy(uv[2], lines[1]);
     vec2_copy(uv[0], lines[2]);
     vec2_copy(uv[1], lines[3]);
-
-    bool visible[2] = {false, false};
     assert(node->c < 3);
 
     for (dir = 0; dir < 2; dir++) {
+        if (!line->grid && dir == 1) break;
         if (node->c & (1 << dir)) continue; // Do we need that?
-        visible[dir] = (node->level >= steps[dir]->level) &&
+        visible = (node->level >= steps[dir]->level) &&
             node->xy[dir] % (1 << (node->level - steps[dir]->level)) == 0;
-        if (!visible[dir]) continue;
+        if (!visible) continue;
         node->c |= (1 << dir);
         paint_lines(&painter, line->frame, 2, lines + dir * 2,
                     proj_spherical, 8, 0);
