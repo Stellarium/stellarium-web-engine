@@ -499,7 +499,10 @@ char *obj_get_path(const obj_t *obj, const obj_t *root);
  *   f        - Callback function called once per object.
  *
  * Return:
- *   The number of objects listed.
+ *    0       - Success.
+ *   -1       - The object doesn't support listing, or a hint is needed.
+ *   -2       - Some resources are still loading and so calling the function
+ *              again later might return more values.
  */
 int obj_list(const obj_t *obj, observer_t *obs,
              double max_mag, uint64_t hint, void *user,

@@ -381,11 +381,13 @@ static int obj_add_f(void *user, obj_t *obj)
     obj_t **objs = USER_GET(user, 0);
     int *i = USER_GET(user, 1);
     if (obj->oid == oid_create("HORI", 399)) return 0; // Skip Earth.
-    assert(objs[*i] == NULL);
-    objs[*i] = obj;
-    obj->ref++;
-    // Extra data for observed position.
-    objs[*i]->user = calloc(1, sizeof(extra_data_t));
+    if (objs) {
+        assert(objs[*i] == NULL);
+        objs[*i] = obj;
+        obj->ref++;
+        // Extra data for observed position.
+        objs[*i]->user = calloc(1, sizeof(extra_data_t));
+    }
     (*i)++;
     return 0;
 }
@@ -405,8 +407,9 @@ calendar_t *calendar_create(const observer_t *obs,
     observer_update(&cal->obs, false);
 
     // Create all the objects.
-    // -1 because we skip the earth.
-    cal->nb_objs = obj_list(&core->obj, &cal->obs, 2.0, 0, NULL, NULL) - 1;
+    i = 0;
+    obj_list(&core->obj, &cal->obs, 2.0, 0, USER_PASS(NULL, &i), obj_add_f);
+    cal->nb_objs = i;
     cal->objs = calloc(cal->nb_objs, sizeof(*cal->objs));
     i = 0;
     obj_list(&core->obj, &cal->obs, 2.0, 0, USER_PASS(cal->objs, &i),

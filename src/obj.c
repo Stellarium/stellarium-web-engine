@@ -440,20 +440,18 @@ int obj_list(const obj_t *obj, observer_t *obs,
              int (*f)(void *user, obj_t *obj))
 {
     obj_t *child;
-    int nb = 0;
 
     if (obj->klass->list)
         return obj->klass->list(obj, obs, max_mag, hint, user, f);
-    if (!(obj->klass->flags & OBJ_LISTABLE)) return 0;
+    if (!(obj->klass->flags & OBJ_LISTABLE)) return -1;
 
     // Default for listable modules: list all the children.
     DL_FOREACH(obj->children, child) {
         obj_update(child, obs, 0);
         if (child->vmag > max_mag) continue;
-        nb++;
         if (f && f(user, child)) break;
     }
-    return nb;
+    return 0;
 }
 
 EMSCRIPTEN_KEEPALIVE

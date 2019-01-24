@@ -741,7 +741,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
                       double max_mag, uint64_t hint, void *user,
                       int (*f)(void *user, obj_t *obj))
 {
-    int order, pix, i, r, nb = 0;
+    int order, pix, i, r;
     tile_t *tile;
     stars_t *stars = (void*)obj;
     star_t *star;
@@ -756,22 +756,21 @@ static int stars_list(const obj_t *obj, observer_t *obs,
 
     if (!hint) {
         hips_traverse(&d, stars_list_visitor);
-        return d.nb;
+        return 0;
     }
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
     tile = get_tile(stars, 0, order, pix, NULL);
-    if (!tile) return 0;
+    if (!tile) return -2; // Try again.
     for (i = 0; i < tile->nb; i++) {
         if (!f) continue;
-        nb++;
         star = star_create(&tile->sources[i]);
         r = f(user, (obj_t*)star);
         obj_release((obj_t*)star);
         if (r) break;
     }
-    return nb;
+    return 0;
 }
 
 static int stars_add_data_source(
