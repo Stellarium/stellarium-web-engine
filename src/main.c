@@ -144,6 +144,8 @@ int main(int argc, char **argv)
     argp_parse (&argp, argc, argv, 0, 0, &args);
 #endif
     if (args.calendar) {
+        core_init(0, 0, 1);
+        core_add_default_sources();
         calendar_print();
         return 0;
     }
