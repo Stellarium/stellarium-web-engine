@@ -1086,20 +1086,6 @@ static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
     return NULL;
 }
 
-static int planets_list(const obj_t *obj, observer_t *obs,
-                        double max_mag, uint64_t hint, void *user,
-                        int (*f)(void *user, obj_t *obj))
-{
-    planet_t *p;
-    int nb = 0;
-    PLANETS_ITER(obj, p) {
-        obj_update((obj_t*)p, obs, 0);
-        if (p->obj.vmag > max_mag) continue;
-        nb++;
-        if (f && f(user, &p->obj)) break;
-    }
-    return nb;
-}
 
 static int planets_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
@@ -1158,13 +1144,12 @@ OBJ_REGISTER(planet_klass)
 static obj_klass_t planets_klass = {
     .id     = "planets",
     .size   = sizeof(planets_t),
-    .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init   = planets_init,
     .update = planets_update,
     .render = planets_render,
     .get_by_oid = planets_get_by_oid,
     .get     = planets_get,
-    .list    = planets_list,
     .add_data_source = planets_add_data_source,
     .render_order = 30,
 };

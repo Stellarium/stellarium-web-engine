@@ -34,10 +34,14 @@
  *
  * OBJ_IN_JSON_TREE     - The object show up in the json tree dump.
  * OBJ_MODULE           - The object is a module.
+ * OBJ_LISTABLE         - For modules that maintain a list of children objects,
+ *                        like comets, this allows obj_list to directly do
+ *                        the listing.
  */
 enum {
     OBJ_IN_JSON_TREE = 1 << 0,
     OBJ_MODULE       = 1 << 1,
+    OBJ_LISTABLE     = 1 << 2,
 };
 
 typedef struct _json_value json_value;
