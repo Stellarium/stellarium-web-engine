@@ -34,7 +34,7 @@ typedef struct {
     double      amag;
     double      slope_param;
     orbit_t     orbit;
-    char        name[64];
+    char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
     int         on_screen_timer;
 } comet_t;
 
@@ -106,8 +106,6 @@ static void load_data(comets_t *comets, const char *data)
         strcpy(comet->name, name);
         str_rstrip(comet->name);
         comet->obj.oid = oid_create("Com ", line);
-        identifiers_add("NAME", comet->name, comet->obj.oid, 0, "Com ",
-                        amag, NULL, NULL);
         comet->obj.pvo[0][0] = NAN;
     }
 }
@@ -169,6 +167,15 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
                       2.5 * comet->slope_param * log10(sr);
     return 0;
 }
+
+void comet_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
+{
+    comet_t *comet = (void*)obj;
+    f(obj, user, "NAME", comet->name);
+}
+
 
 static int comet_render(const obj_t *obj, const painter_t *painter)
 {
@@ -321,6 +328,7 @@ static obj_klass_t comet_klass = {
     .size       = sizeof(comet_t),
     .update     = comet_update,
     .render     = comet_render,
+    .get_designations = comet_get_designations,
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
@@ -336,7 +344,7 @@ OBJ_REGISTER(comet_klass)
 static obj_klass_t comets_klass = {
     .id             = "comets",
     .size           = sizeof(comets_t),
-    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init           = comets_init,
     .update         = comets_update,
     .render         = comets_render,
