@@ -38,6 +38,7 @@ typedef struct {
     char        name[24];
     char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
+    bool        on_screen;  // Set once the object has been visible.
 } mplanet_t;
 
 /*
@@ -46,6 +47,7 @@ typedef struct {
  */
 typedef struct mplanets {
     obj_t   obj;
+    int     update_pos; // Index of the position for iterative update.
 } mplanets_t;
 
 
@@ -287,12 +289,37 @@ void mplanet_get_designations(
     if (*mplanet->desig) f(obj, user, "NAME", mplanet->desig);
 }
 
+static bool range_contains(int range_start, int range_size, int nb, int i)
+{
+    if (i < range_start) i += nb;
+    return i > range_start && i < range_start + range_size;
+}
+
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
 {
     PROFILE(mplanets_update, 0);
-    obj_t *child;
-    OBJ_ITER(obj, child, "asteroid")
-        obj_update(child, obs, dt);
+    const int update_nb = 32;
+    int i, nb;
+    mplanets_t *mps = (void*)obj;
+    mplanet_t *child;
+    obj_t *tmp;
+
+    /* To prevent spending too much time computing position of asteroids that
+     * are not visible, we only update a small number of them at each
+     * frame, using a moving range.  The comets who have been flagged as
+     * on screen get updated no matter what.  */
+    // XXX: Actually this should probably be done in the render method.
+    DL_COUNT(obj->children, tmp, nb);
+    i = 0;
+    OBJ_ITER(obj, child, "asteroid") {
+        if (child->on_screen ||
+                range_contains(mps->update_pos, update_nb, nb, i))
+        {
+            obj_update((obj_t*)child, obs, dt);
+        }
+        i++;
+    }
+    mps->update_pos = nb ? (mps->update_pos + update_nb) % nb : 0;
     return 0;
 }
 
