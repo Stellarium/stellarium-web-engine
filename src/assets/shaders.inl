@@ -431,7 +431,7 @@ static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned
 
 ASSET_REGISTER(shaders_planet_glsl, "shaders/planet.glsl", DATA_shaders_planet_glsl, false)
 
-static const unsigned char DATA_shaders_points_glsl[1088] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_glsl[1011] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -449,17 +449,14 @@ static const unsigned char DATA_shaders_points_glsl[1088] __attribute__((aligned
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
-    "attribute highp   vec4 a_pos;\n"
-    "attribute mediump vec2 a_tex_pos;\n"
-    "attribute lowp    vec4 a_color;\n"
-    "attribute lowp    vec2 a_shift;\n"
+    "attribute highp   vec4  a_pos;\n"
+    "attribute lowp    vec4  a_color;\n"
+    "attribute mediump float a_size;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    vec4 pos = a_pos;\n"
-    "    pos.xy += 2.0 * a_shift;\n"
-    "    gl_Position = pos;\n"
-    "    v_tex_pos = a_tex_pos;\n"
+    "    gl_Position = a_pos;\n"
+    "    gl_PointSize = a_size;\n"
     "    v_color = a_color * u_color;\n"
     "}\n"
     "\n"
@@ -471,7 +468,7 @@ static const unsigned char DATA_shaders_points_glsl[1088] __attribute__((aligned
     "\n"
     "void main()\n"
     "{\n"
-    "    dist = 2.0 * distance(v_tex_pos, vec2(0.5, 0.5));\n"
+    "    dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));\n"
     "    k = smoothstep(1.0 - u_smooth, 1.0, dist);\n"
     "    k = sqrt(k);\n"
     "    gl_FragColor.rgb = v_color.rgb;\n"

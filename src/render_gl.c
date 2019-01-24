@@ -24,9 +24,9 @@ enum {
     ATTR_NORMAL,
     ATTR_TANGENT,
     ATTR_COLOR,
-    ATTR_SHIFT,
     ATTR_SKY_POS,
     ATTR_LUMINANCE,
+    ATTR_SIZE,
 };
 
 static const char *ATTR_NAMES[] = {
@@ -36,9 +36,9 @@ static const char *ATTR_NAMES[] = {
     [ATTR_NORMAL]       = "a_normal",
     [ATTR_TANGENT]      = "a_tangent",
     [ATTR_COLOR]        = "a_color",
-    [ATTR_SHIFT]        = "a_shift",
     [ATTR_SKY_POS]      = "a_sky_pos",
     [ATTR_LUMINANCE]    = "a_luminance",
+    [ATTR_SIZE]         = "a_size",
     NULL,
 };
 
@@ -171,12 +171,11 @@ static const gl_buf_info_t LINES_BUF = {
 };
 
 static const gl_buf_info_t POINTS_BUF = {
-    .size = 36,
+    .size = 24,
     .attrs = {
         [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
-        [ATTR_SHIFT]    = {GL_FLOAT, 2, false, 24},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 32},
+        [ATTR_SIZE]     = {GL_FLOAT, 1, false, 16},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 20},
     },
 };
 
@@ -297,7 +296,8 @@ static item_t *get_item(renderer_gl_t *rend, int type,
     item = rend->items ? rend->items->prev : NULL;
     if (    item && item->type == type &&
             item->buf.capacity > item->buf.nb + buf_size &&
-            item->indices.capacity > item->indices.nb + indices_size &&
+            (indices_size == 0 ||
+                item->indices.capacity > item->indices.nb + indices_size) &&
             item->tex == tex)
         return item;
     return NULL;
@@ -311,11 +311,7 @@ static void points(renderer_t *rend_,
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
-    // Scale size from window to NDC.
-    double s[2] = {2 * rend->scale / rend->fb_size[0],
-                   2 * rend->scale / rend->fb_size[1]};
-    int i, j, ofs;
+    int i;
     const int MAX_POINTS = 4096;
     point_t p;
     // Adjust size so that at any smoothness value the points look more or
@@ -327,20 +323,17 @@ static void points(renderer_t *rend_,
         n = MAX_POINTS;
     }
 
-    item = get_item(rend, ITEM_POINTS, n * 4, n * 6, NULL);
+    item = get_item(rend, ITEM_POINTS, n, 0, NULL);
     if (item && item->points.smooth != painter->points_smoothness)
         item = NULL;
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
-        gl_buf_alloc(&item->buf, &POINTS_BUF, MAX_POINTS * 4);
-        gl_buf_alloc(&item->indices, &INDICES_BUF, MAX_POINTS * 6);
+        gl_buf_alloc(&item->buf, &POINTS_BUF, MAX_POINTS);
         vec4_to_float(painter->color, item->color);
         item->points.smooth = painter->points_smoothness;
         DL_APPEND(rend->items, item);
     }
-
-    ofs = item->buf.nb;
 
     for (i = 0; i < n; i++) {
         p = points[i];
@@ -350,31 +343,22 @@ static void points(renderer_t *rend_,
             convert_framev4(painter->obs, frame, FRAME_VIEW, p.pos, p.pos);
             project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
         }
-        for (j = 0; j < 4; j++) {
-            gl_buf_4f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos), 1);
-            gl_buf_2f(&item->buf, -1, ATTR_SHIFT,
-                      (j % 2 - 0.5) * p.size * s[0] * sm,
-                      (j / 2 - 0.5) * p.size * s[1] * sm);
-            gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, j % 2, j / 2);
-            gl_buf_4i(&item->buf, -1, ATTR_COLOR,
-                      p.color[0] * 255,
-                      p.color[1] * 255,
-                      p.color[2] * 255,
-                      p.color[3] * 255);
-            gl_buf_next(&item->buf);
-        }
+
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos), 1);
+        gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * 2 * sm);
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR,
+                  p.color[0] * 255,
+                  p.color[1] * 255,
+                  p.color[2] * 255,
+                  p.color[3] * 255);
+        gl_buf_next(&item->buf);
+
         // Add the point int the global list of rendered points.
         // XXX: could be done in the painter.
         if (p.oid) {
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
             areas_add_circle(core->areas, p.pos, p.size, p.oid, p.hint);
-        }
-    }
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < 6; j++) {
-            gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[j] + i * 4);
-            gl_buf_next(&item->indices);
         }
     }
 }
@@ -741,7 +725,6 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
 {
     prog_t *prog;
     GLuint  array_buffer;
-    GLuint  index_buffer;
 
     prog = &rend->progs.points;
     GL(glUseProgram(prog->prog));
@@ -750,12 +733,6 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_ONE));
     GL(glDisable(GL_DEPTH_TEST));
-
-    GL(glGenBuffers(1, &index_buffer));
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                    item->indices.nb * item->indices.info->size,
-                    item->indices.data, GL_DYNAMIC_DRAW));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
@@ -766,11 +743,10 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     GL(glUniform1f(prog->u_smooth_l, item->points.smooth));
 
     gl_buf_enable(&item->buf);
-    GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    GL(glDrawArrays(GL_POINTS, 0, item->buf.nb));
     gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
-    GL(glDeleteBuffers(1, &index_buffer));
 }
 
 static void item_lines_render(renderer_gl_t *rend, const item_t *item)
@@ -1094,6 +1070,12 @@ static void rend_flush(renderer_gl_t *rend)
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
 
+    // On OpenGL Desktop, we have to enable point sprite support.
+#ifndef GLES2
+    GL(glEnable(GL_PROGRAM_POINT_SIZE));
+    GL(glEnable(GL_POINT_SPRITE));
+#endif
+
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
@@ -1288,6 +1270,8 @@ static int on_font(void *user, const char *path,
 renderer_t* render_gl_create(void)
 {
     renderer_gl_t *rend;
+    GLint range[2];
+
     rend = calloc(1, sizeof(*rend));
     rend->white_tex = create_white_texture(16, 16);
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
@@ -1306,6 +1290,11 @@ renderer_t* render_gl_create(void)
     init_prog(&rend->progs.planet, "asset://shaders/planet.glsl");
     init_prog(&rend->progs.atmosphere, "asset://shaders/atmosphere.glsl");
     init_prog(&rend->progs.fog, "asset://shaders/fog.glsl");
+
+    // Query the point size range.
+    GL(glGetIntegerv(GL_ALIASED_POINT_SIZE_RANGE, range));
+    if (range[1] < 32)
+        LOG_W("OpenGL Doesn't support large point size!");
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;

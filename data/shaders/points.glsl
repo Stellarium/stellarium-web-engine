@@ -15,17 +15,14 @@ varying lowp    vec4 v_color;
 
 #ifdef VERTEX_SHADER
 
-attribute highp   vec4 a_pos;
-attribute mediump vec2 a_tex_pos;
-attribute lowp    vec4 a_color;
-attribute lowp    vec2 a_shift;
+attribute highp   vec4  a_pos;
+attribute lowp    vec4  a_color;
+attribute mediump float a_size;
 
 void main()
 {
-    vec4 pos = a_pos;
-    pos.xy += 2.0 * a_shift;
-    gl_Position = pos;
-    v_tex_pos = a_tex_pos;
+    gl_Position = a_pos;
+    gl_PointSize = a_size;
     v_color = a_color * u_color;
 }
 
@@ -37,7 +34,7 @@ lowp float k;
 
 void main()
 {
-    dist = 2.0 * distance(v_tex_pos, vec2(0.5, 0.5));
+    dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));
     k = smoothstep(1.0 - u_smooth, 1.0, dist);
     k = sqrt(k);
     gl_FragColor.rgb = v_color.rgb;
