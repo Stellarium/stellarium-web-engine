@@ -44,6 +44,10 @@ enum {
     OBJ_LISTABLE     = 1 << 2,
 };
 
+enum {
+    OBJ_AGAIN       = 1 // Returned if obj_list can be called again.
+};
+
 typedef struct _json_value json_value;
 typedef struct attribute attribute_t;
 typedef struct obj obj_t;
@@ -499,10 +503,10 @@ char *obj_get_path(const obj_t *obj, const obj_t *root);
  *   f        - Callback function called once per object.
  *
  * Return:
- *    0       - Success.
- *   -1       - The object doesn't support listing, or a hint is needed.
- *   -2       - Some resources are still loading and so calling the function
- *              again later might return more values.
+ *    0         - Success.
+ *   -1         - The object doesn't support listing, or a hint is needed.
+ *   OBJ_AGAIN  - Some resources are still loading and so calling the function
+ *                again later might return more values.
  */
 int obj_list(const obj_t *obj, observer_t *obs,
              double max_mag, uint64_t hint, void *user,

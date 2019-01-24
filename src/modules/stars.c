@@ -742,6 +742,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
                       int (*f)(void *user, obj_t *obj))
 {
     int order, pix, i, r;
+    bool complete;
     tile_t *tile;
     stars_t *stars = (void*)obj;
     star_t *star;
@@ -761,8 +762,11 @@ static int stars_list(const obj_t *obj, observer_t *obs,
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    tile = get_tile(stars, 0, order, pix, NULL);
-    if (!tile) return -2; // Try again.
+    tile = get_tile(stars, 0, order, pix, &complete);
+    if (!tile) {
+        if (!complete) return OBJ_AGAIN; // Try again later.
+        return -1;
+    }
     for (i = 0; i < tile->nb; i++) {
         if (!f) continue;
         star = star_create(&tile->sources[i]);
