@@ -211,7 +211,7 @@ static void core_set_default(void)
     obs->refraction = true;
 
     core->fov = 90 * DD2R;
-    core->utc_offset = sys_get_utc_offset() / 60.0;
+    core->utc_offset = sys_get_utc_offset() / 60;
 
     core->proj = PROJ_STEREOGRAPHIC;
     core->lwmax = 5000;
@@ -391,8 +391,8 @@ int core_update(double dt)
 
     // Update eye adaptation.
     lwmax = core->lwmax * core->lwmax_scale;
-    lwmax = exp(log(core->tonemapper.lwmax) +
-                (log(lwmax) - log(core->tonemapper.lwmax)) * 0.1);
+    lwmax = exp(logf(core->tonemapper.lwmax) +
+                (logf(lwmax) - logf(core->tonemapper.lwmax)) * 0.1);
     tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
