@@ -17,7 +17,7 @@ static inline float pow2(float x) { return x * x; }
 static inline float pow4(float x) { return x * x * x * x; }
 
 static inline float fast_expf(float x) {
-    x = 1.0 + x / 1024;
+    x = 1.0f + x / 1024;
     x *= x; x *= x; x *= x; x *= x;
     x *= x; x *= x; x *= x; x *= x;
     x *= x; x *= x;
@@ -29,19 +29,19 @@ static inline float fast_exp10f(float x) {
 }
 
 // Radiant to degree.
-static const float DR = 180.0 / 3.14159;
+static const float DR = 180.0f / 3.14159f;
 
 // Nanolambert to cd/m²
-static const float NLAMBERT_TO_CDM2 = 3.183e-6;
+static const float NLAMBERT_TO_CDM2 = 3.183e-6f;
 
 
-static const float WA = 0.55;
-static const float MO = -11.05;
-static const float OZ = 0.031;
-static const float WT = 0.031;
-static const float BO = 1.0E-13;
-static const float CM = 0.00;
-static const float MS = -26.74;
+static const float WA = 0.55f;
+static const float MO = -11.05f;
+static const float OZ = 0.031f;
+static const float WT = 0.031f;
+static const float BO = 1.0E-13f;
+static const float CM = 0.00f;
+static const float MS = -26.74f;
 
 void skybrightness_prepare(skybrightness_t *sb,
         int year, int month, float moon_phase,
@@ -61,7 +61,7 @@ void skybrightness_prepare(skybrightness_t *sb,
     sb->RH = relative_humidity;
     sb->ZM = dist_moon_zenith * DR;
     sb->ZS = dist_sun_zenith * DR;
-    sb->max_BM = max_moon_brightness * (1.11e-15 / NLAMBERT_TO_CDM2);
+    sb->max_BM = max_moon_brightness * (1.11e-15f / NLAMBERT_TO_CDM2);
     sb->k_BT = twilight_coef;
     sb->k_BM = moon_brightness_coef;
     sb->k_BN = darknight_brightness_coef;
@@ -69,7 +69,7 @@ void skybrightness_prepare(skybrightness_t *sb,
     // Precompute as much as possible.
     float K, KR, KA, KO, KW, LT, RA, SL, XM, XS;
     const float M = sb->M; // Month (1=Jan, 12=Dec)
-    const float RD = 3.14159 / 180.0;
+    const float RD = 3.14159f / 180.0f;
     const float LA = sb->LA; // Latitude (deg.)
     const float AL = sb->AL; // Altitude above sea level (m)
     const float RH = sb->RH; // relative humidity (%)
@@ -78,27 +78,27 @@ void skybrightness_prepare(skybrightness_t *sb,
     const float ZS = sb->ZS; // Zenith distance of Sun (deg.)
 
     LT = LA * RD;
-    RA = (M - 3) * 30.0 * RD;
-    SL = LA / fabs(LA);
+    RA = (M - 3) * 30.0f * RD;
+    SL = LA / fabsf(LA);
     // 1080 Airmass for each component
     // 1130 UBVRI extinction for each component
-    KR = .1066 * expf(-1 * AL / 8200) * powf((WA / .55), -4);
-    KA = .1 * powf((WA / .55), -1.3) * expf(-1 * AL / 1500);
-    KA = KA * powf((1 - .32 / logf(RH / 100.0)), 1.33) *
-             (1 + 0.33 * SL * sinf(RA));
-    KO = OZ * (3.0 + .4 * (LT * cosf(RA) - cosf(3 * LT))) / 3.0;
-    KW = WT * .94 * (RH / 100.0) * expf(TE / 15) * expf(-1 * AL / 8200);
+    KR = .1066f * expf(-1 * AL / 8200) * powf((WA / .55f), -4);
+    KA = .1f * powf((WA / .55f), -1.3f) * expf(-1 * AL / 1500);
+    KA = KA * powf((1 - .32f / logf(RH / 100.0f)), 1.33f) *
+             (1 + 0.33f * SL * sinf(RA));
+    KO = OZ * (3.0f + .4f * (LT * cosf(RA) - cosf(3 * LT))) / 3.0f;
+    KW = WT * .94f * (RH / 100.0f) * expf(TE / 15) * expf(-1 * AL / 8200);
     K = KR + KA + KO + KW;
     sb->K = K;
 
     // air mass Moon
-    XM = 1 / (cosf(ZM * RD) + .025 * expf(-11 * cosf(ZM * RD)));
-    if (ZM > 90.0) XM = 40.0;
+    XM = 1 / (cosf(ZM * RD) + .025f * expf(-11 * cosf(ZM * RD)));
+    if (ZM > 90.0f) XM = 40.0;
     sb->XM = XM;
 
     // air mass Sun
-    XS = 1 / (cosf(ZS * RD) + .025 * expf(-11 * cosf(ZS * RD)));
-    if (ZS > 90.0) XS = 40.0;
+    XS = 1 / (cosf(ZS * RD) + .025f * expf(-11 * cosf(ZS * RD)));
+    if (ZS > 90.0f) XS = 40.0;
     sb->XS = XS;
 }
 
