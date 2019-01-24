@@ -36,6 +36,7 @@ typedef struct {
     double      h;      // Absolute magnitude.
     double      g;      // Slope parameter.
     char        name[24];
+    char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
 } mplanet_t;
 
@@ -146,6 +147,10 @@ static void load_data(mplanets_t *mplanets, const char *data)
         if (name[0]) {
             _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
             memcpy(mplanet->name, name, sizeof(name));
+        }
+        if (desig[0]) {
+            _Static_assert(sizeof(desig) == sizeof(mplanet->desig), "");
+            memcpy(mplanet->desig, desig, sizeof(desig));
         }
     }
     if (nb_err) {
@@ -278,7 +283,8 @@ void mplanet_get_designations(
         sprintf(buf, "(%d)", mplanet->mpl_number);
         f(obj, user, "MPC", buf);
     }
-    if (*mplanet->name) f(obj, user, "NAME", mplanet->name);
+    if (*mplanet->name)  f(obj, user, "NAME", mplanet->name);
+    if (*mplanet->desig) f(obj, user, "NAME", mplanet->desig);
 }
 
 static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
