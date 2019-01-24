@@ -460,7 +460,7 @@ static void win_to_icrf(const observer_t *obs, const projection_t *proj,
     p[1] = 1 - win_pos[1] / proj->window_size[1] * 2;
     // NDC to view.
     project(proj, PROJ_BACKWARD, 4, p, p);
-    convert_frame(core->observer, FRAME_VIEW, FRAME_ICRF, true, p, out);
+    convert_frame(obs, FRAME_VIEW, FRAME_ICRF, true, p, out);
 }
 
 /*
