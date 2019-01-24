@@ -340,25 +340,20 @@ int on_quad(int step, qtree_node_t *node,
 static double get_theta_range(const painter_t *painter, int frame)
 {
     double p[4] = {0, 0, 0, 0};
-    double m[3][3];
     double theta, phi;
     double theta_max = -DBL_MAX, theta_min = DBL_MAX;
     int i;
 
     /*
      * This works by unprojection the four screen corners into the grid
-     * frame and testing the maximum and minimum separation to the zenith
+     * frame and testing the maximum and minimum distance to the meridian
      * for each of them.
      */
-    mat3_copy(painter->obs->ro2v, m);
-    if (frame == FRAME_CIRS)
-        mat3_mul(m, painter->obs->ri2h, m);
-    mat3_invert(m, m);
     for (i = 0; i < 4; i++) {
         p[0] = 2 * ((i % 2) - 0.5);
         p[1] = 2 * ((i / 2) - 0.5);
         project(painter->proj, PROJ_BACKWARD, 4, p, p);
-        mat3_mul_vec3(m, p, p);
+        convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
         eraC2s(p, &theta, &phi);
         theta_max = max(theta_max, theta);
         theta_min = min(theta_min, theta);
