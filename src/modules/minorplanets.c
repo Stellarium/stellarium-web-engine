@@ -22,8 +22,6 @@ typedef struct orbit_t {
     float n;    // Daily motion (rad/day).
     float e;    // Eccentricity.
     float m;    // Mean Anomaly (rad).
-    float od;   // variation of o in time.
-    float wd;   // variation of w in time.
 } orbit_t;
 
 /*
@@ -215,7 +213,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     orbit_compute_pv(0, obs->ut1, pvh[0], pvh[1],
             mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
             mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
-            mp->orbit.od, mp->orbit.wd);
+            0, 0);
 
     mat3_mul_vec3(obs->re2i, pvh[0], pvh[0]);
     mat3_mul_vec3(obs->re2i, pvh[1], pvh[1]);
