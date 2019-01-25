@@ -60,6 +60,12 @@ struct renderer
                  int                 grid_size,
                  const projection_t  *tex_proj);
 
+    void (*quad_wireframe)(renderer_t           *rend,
+                           const painter_t      *painter,
+                           int                  frame,
+                           int                  grid_size,
+                           const projection_t   *tex_proj);
+
     void (*texture)(renderer_t       *rend,
                     const texture_t  *tex,
                     double           uv[4][2],

@@ -91,6 +91,7 @@ enum {
     ITEM_VG_RECT,
     ITEM_VG_LINE,
     ITEM_TEXT,
+    ITEM_QUAD_WIREFRAME,
 };
 
 typedef struct item item_t;
@@ -610,6 +611,56 @@ static void quad(renderer_t          *rend_,
     DL_APPEND(rend->items, item);
 }
 
+static void quad_wireframe(renderer_t          *rend_,
+                           const painter_t     *painter,
+                           int                 frame,
+                           int                 grid_size,
+                           const projection_t  *tex_proj)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    int n, i, j;
+    item_t *item;
+    n = grid_size + 1;
+    double p[4], ndc_p[4];
+
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_QUAD_WIREFRAME;
+    gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n);
+    gl_buf_alloc(&item->indices, &INDICES_BUF, grid_size * n * 4);
+    vec4_to_float(VEC(1, 0, 0, 0.25), item->color);
+
+    // Generate grid position.
+    for (i = 0; i < n; i++)
+    for (j = 0; j < n; j++) {
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
+        vec4_set(p, i / (n - 1.0), j / (n - 1.0), 0, 0);
+        project(tex_proj, PROJ_BACKWARD, 4, p, p);
+        mat4_mul_vec4(*painter->transform, p, p);
+        convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
+        project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
+        gl_buf_2f(&item->buf, -1, ATTR_POS, ndc_p[0], ndc_p[1]);
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        gl_buf_next(&item->buf);
+    }
+
+    /* Set the index buffer.
+     * We render a set of horizontal and vertical lines.  */
+    for (i = 0; i < n; i++)
+    for (j = 0; j < grid_size; j++) {
+        // Vertical.
+        gl_buf_1i(&item->indices, -1, 0, (j + 0) * n + i);
+        gl_buf_next(&item->indices);
+        gl_buf_1i(&item->indices, -1, 0, (j + 1) * n + i);
+        gl_buf_next(&item->indices);
+        // Horizontal.
+        gl_buf_1i(&item->indices, -1, 0, i * n + j + 0);
+        gl_buf_next(&item->indices);
+        gl_buf_1i(&item->indices, -1, 0, i * n + j + 1);
+        gl_buf_next(&item->indices);
+    }
+    DL_APPEND(rend->items, item);
+}
+
 static void texture2(renderer_gl_t *rend, texture_t *tex,
                      double uv[4][2], double pos[4][2],
                      const double color_[4])
@@ -962,6 +1013,40 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+static void item_quad_wireframe_render(renderer_gl_t *rend, const item_t *item)
+{
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+    prog_t *prog = &rend->progs.blit;
+    GL(glUseProgram(prog->prog));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                           GL_ZERO, GL_ONE));
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
+
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(GL_LINES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
+
 static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 {
     prog_t *prog;
@@ -1084,6 +1169,8 @@ static void rend_flush(renderer_gl_t *rend)
         if (item->type == ITEM_VG_RECT) item_vg_render(rend, item);
         if (item->type == ITEM_VG_LINE) item_vg_render(rend, item);
         if (item->type == ITEM_TEXT) item_text_render(rend, item);
+        if (item->type == ITEM_QUAD_WIREFRAME)
+            item_quad_wireframe_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
         gl_buf_release(&item->buf);
@@ -1297,6 +1384,7 @@ renderer_t* render_gl_create(void)
     rend->rend.flush = flush;
     rend->rend.points = points;
     rend->rend.quad = quad;
+    rend->rend.quad_wireframe = quad_wireframe;
     rend->rend.texture = texture;
     rend->rend.text = text;
     rend->rend.line = line;

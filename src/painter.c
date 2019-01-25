@@ -69,18 +69,10 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
                         grid_size >> node->level,
                         tex_proj);
 
-    // For testing.  Render lines around the quad.
     if (g_debug) {
-        double lines[2][4];
-        const int idx[4][2] = {{0, 1}, {1, 3}, {3, 2}, {2, 0}};
-        int i;
-        for (i = 0; i < 4; i++) {
-            vec2_copy(uv[idx[i][0]], lines[0]);
-            vec2_copy(uv[idx[i][1]], lines[1]);
-            REND(painter->rend, line, painter, frame, lines, 32, tex_proj);
-        }
+        REND(painter->rend, quad_wireframe, painter, frame,
+             grid_size >> node->level, tex_proj);
     }
-
     return 0;
 }
 
