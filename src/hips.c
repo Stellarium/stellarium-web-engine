@@ -343,13 +343,15 @@ texture_t *hips_get_tile_texture(
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
     const bool outside = !(flags & HIPS_EXTERIOR);
+    bool loading_complete_;
     int i, code, x, y, nbw;
-    img_tile_t *tile, *rend_tile;
+    img_tile_t *tile = NULL, *rend_tile;
     // Order of the actual tile that was used.
     int rend_order = order, rend_pix = pix;
 
+    if (!loading_complete) loading_complete = &loading_complete_;
     // Set all the default values.
-    if (loading_complete) *loading_complete = false;
+    *loading_complete = false;
     if (fade) *fade = 1.0;
     if (uv) {
         if (outside) memcpy(uv, UV_OUT, sizeof(UV_OUT));
@@ -358,12 +360,13 @@ texture_t *hips_get_tile_texture(
 
     if (!hips_is_ready(hips)) goto end;
 
-    tile = hips_get_tile(hips, order, pix, flags, &code);
-    if (!tile && code && code != 598) { // The tile doesn't exists
-        if (loading_complete) *loading_complete = true;
-        goto end;
+    if (order <= hips->order) {
+        tile = hips_get_tile(hips, order, pix, flags, &code);
+        if (!tile && code && code != 598) { // The tile doesn't exists
+            *loading_complete = true;
+            goto end;
+        }
     }
-    if (tile && loading_complete) *loading_complete = true;
 
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
@@ -373,6 +376,7 @@ texture_t *hips_get_tile_texture(
         get_child_uv_mat(rend_pix % 4, mat, mat);
         rend_order -= 1;
         rend_pix /= 4;
+        if (rend_order > hips->order) continue;
         rend_tile = hips_get_tile(hips, rend_order, rend_pix, flags, &code);
     }
     // We couldn't even find a parent tile.  Reset to normal pix and give up.
@@ -381,6 +385,9 @@ texture_t *hips_get_tile_texture(
         rend_pix = pix;
         goto end;
     }
+    if (rend_order == min(order, hips->order))
+        *loading_complete = true;
+
     // Modify UV coordinates to fit the parent texture we picked.
     if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
 

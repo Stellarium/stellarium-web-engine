@@ -126,9 +126,14 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user));
  * Function: hips_get_tile_texture
  * Get the texture for a given hips tile.
  *
+ * This should return the most appropriate texture, no matter if the actual
+ * tile exists.  It tries to use a parent texture, or the allsky as
+ * fallback.
+ *
  * The algorithm is more or less:
  *   - If the tile is loaded, return its texture.
- *   - If not, try to use a parent tile as a fallback.
+ *   - If not, or if the order is higher than the survey max order,
+ *     try to use a parent tile as a fallback.
  *   - If no parent is loaded, but we have an allsky image, use it.
  *   - If all else failed, return NULL.  In that case the UV and projection
  *     are still set, so that the client can still render a fallback texture.
