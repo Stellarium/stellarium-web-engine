@@ -321,43 +321,36 @@ texture_t *hips_get_tile_texture(
         bool *loading_complete)
 {
     PROFILE(hips_get_tile_texture, PROFILE_AGGREGATE)
-    texture_t *tex;
+    texture_t *tex = NULL;
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
     const bool outside = !(flags & HIPS_EXTERIOR);
     int i, code, x, y, nbw;
-    // The actual tile used might be at a lowe order than requested.
     img_tile_t *tile, *rend_tile;
-    int rend_order, rend_pix;
+    // Order of the actual tile that was used.
+    int rend_order = order, rend_pix = pix;
 
     // Set all the default values.
     if (loading_complete) *loading_complete = false;
     if (fade) *fade = 1.0;
-    if (proj) projection_init_healpix(proj, 1 << order, pix, true, outside);
-    if (split)
-        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
     if (uv) {
         if (outside) memcpy(uv, UV_OUT, sizeof(UV_OUT));
         else memcpy(uv, UV_IN,  sizeof(UV_IN));
     }
 
-    // If the texture is not ready yet, we still set the values, so that
-    // the caller can render a fallback color instead.
-    if (!hips_is_ready(hips)) return NULL;
+    if (!hips_is_ready(hips)) goto end;
 
     tile = hips_get_tile(hips, order, pix, flags, &code);
     if (!tile && code && code != 598) { // The tile doesn't exists
         if (loading_complete) *loading_complete = true;
-        return NULL;
+        goto end;
     }
     if (tile && loading_complete) *loading_complete = true;
 
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
     rend_tile = tile;
-    rend_order = order;
-    rend_pix = pix;
     mat3_set_identity(mat);
     while (!(rend_tile) && (rend_order > hips->order_min)) {
         get_child_uv_mat(rend_pix % 4, mat, mat);
@@ -365,7 +358,13 @@ texture_t *hips_get_tile_texture(
         rend_pix /= 4;
         rend_tile = hips_get_tile(hips, rend_order, rend_pix, flags, &code);
     }
-    if (!rend_tile) return NULL;
+    // We couldn't even find a parent tile.  Reset to normal pix and give up.
+    if (!rend_tile) {
+        rend_order = order;
+        rend_pix = pix;
+        goto end;
+    }
+    // Modify UV coordinates to fit the parent texture we picked.
     if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
 
     // Create texture if needed.
@@ -393,7 +392,8 @@ texture_t *hips_get_tile_texture(
     }
 
     tex = rend_tile->tex ?: rend_tile->allsky_tex;
-    if (!tex) return NULL;
+
+end:
     if (proj) {
         projection_init_healpix(proj, 1 << rend_order, rend_pix, true, outside);
     }
