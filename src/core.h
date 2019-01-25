@@ -329,6 +329,7 @@ double core_get_apparent_angle_for_point(const projection_t *proj, double r);
 
 
 // Return a static string representation of an object type id.
+__attribute__((deprecated)) // Use otype_get_str instead.
 const char *type_to_str(const char type[4]);
 
 /***** Dump catalogs to json **********************************************/
