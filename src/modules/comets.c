@@ -105,7 +105,7 @@ static void load_data(comets_t *comets, const char *data)
         memcpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
         strcpy(comet->name, name);
         str_rstrip(comet->name);
-        comet->obj.oid = oid_create("Com ", line);
+        comet->obj.oid = oid_create("Com", line);
         comet->obj.pvo[0][0] = NAN;
     }
 }
@@ -291,7 +291,7 @@ static int comets_render(const obj_t *obj, const painter_t *painter)
 static obj_t *comets_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     obj_t *child;
-    if (!oid_is_catalog(oid, "Com ")) return NULL;
+    if (!oid_is_catalog(oid, "Com")) return NULL;
     OBJ_ITER(obj, child, NULL) {
         if (child->oid == oid) {
             child->ref++;

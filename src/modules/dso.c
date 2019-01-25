@@ -675,8 +675,8 @@ static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         int         cat;
         uint64_t    n;
     } d = {.dsos=(void*)obj, .cat=4, .n=oid};
-    if (    !oid_is_catalog(oid, "NGC ") &&
-            !oid_is_catalog(oid, "IC  ") &&
+    if (    !oid_is_catalog(oid, "NGC") &&
+            !oid_is_catalog(oid, "IC") &&
             !oid_is_catalog(oid, "NDSO"))
         return NULL;
     hips_traverse(&d, dsos_get_visitor);

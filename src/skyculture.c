@@ -63,11 +63,11 @@ skyculture_name_t *skyculture_parse_names(const char *data)
         oid = 0;
         if (strncmp(line + m[1].rm_so, "HD", 2) == 0) {
             hd = strtoul(line + m[2].rm_so, NULL, 10);
-            oid = oid_create("HD  ", hd);
+            oid = oid_create("HD", hd);
         }
         if (strncmp(line + m[1].rm_so, "HIP", 3) == 0) {
             hip = strtoul(line + m[2].rm_so, NULL, 10);
-            oid = oid_create("HIP ", hip);
+            oid = oid_create("HIP", hip);
         }
         if (!oid) continue;
         // Ignore alternative names for the moment!
@@ -392,7 +392,7 @@ skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data_)
             LOG_W("Cannot parse star name: '%s'", line);
             continue;
         }
-        oid = oid_create("HIP ", hip);
+        oid = oid_create("HIP", hip);
         // Ignore alternative names for the moment!
         HASH_FIND(hh, ret, &oid, sizeof(oid), entry);
         if (entry) continue;

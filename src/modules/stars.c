@@ -417,8 +417,8 @@ static int on_file_tile_loaded(const char type[4],
         s->pde = pde;
         s->plx = plx;
         s->bv = isnan(bv) ? 0 : bv;
-        s->oid = s->hip ? oid_create("HIP ", s->hip) :
-                 s->tyc ? oid_create("TYC ", s->tyc) :
+        s->oid = s->hip ? oid_create("HIP", s->hip) :
+                 s->tyc ? oid_create("TYC", s->tyc) :
                  s->gaia;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
@@ -625,7 +625,7 @@ static int stars_get_visitor(int order, int pix, void *user)
     }
 
     // For HIP lookup, we can use the bundled hip -> pix data if available.
-    if (d->cat == 3 && oid_is_catalog(d->n, "HIP ")) {
+    if (d->cat == 3 && oid_is_catalog(d->n, "HIP")) {
         p = hip_get_pix(oid_get_index(d->n), order);
         if ((p != -1) && (p != pix)) return 0;
     }
@@ -689,8 +689,8 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     } d = {.stars=(void*)obj, .cat=3, .n=oid};
 
     if (!hint) {
-        if (    !oid_is_catalog(oid, "HIP ") &&
-                !oid_is_catalog(oid, "TYC ") &&
+        if (    !oid_is_catalog(oid, "HIP") &&
+                !oid_is_catalog(oid, "TYC") &&
                 !oid_is_gaia(oid)) return NULL;
         hips_traverse(&d, stars_get_visitor);
         return d.ret;

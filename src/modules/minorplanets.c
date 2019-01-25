@@ -62,7 +62,7 @@ static uint64_t compute_nsid(int number, const char *name, const char *desig)
 
 static uint64_t compute_oid(int number, const char desig[static 22])
 {
-    if (number) return oid_create("MPl ", number);
+    if (number) return oid_create("MPl", number);
     // No number, default to the crc32 of the designation.
     return oid_create("MPl*", crc32(0L, (const Bytef*)desig, 22));
 }
@@ -196,7 +196,7 @@ static int mplanet_init(obj_t *obj, json_value *args)
     if (name) {
         strncpy(mp->name, name, sizeof(mp->name));
         if (sscanf(name, "(%d)", &num) == 1) {
-            mp->obj.oid = oid_create("MPl ", num);
+            mp->obj.oid = oid_create("MPl", num);
             mp->mpl_number = num;
         }
     }
@@ -334,7 +334,7 @@ static obj_t *mplanets_get_by_oid(
         const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     obj_t *child;
-    if (    !oid_is_catalog(oid, "MPl ") &&
+    if (    !oid_is_catalog(oid, "MPl") &&
             !oid_is_catalog(oid, "MPl*")) return NULL;
     OBJ_ITER(obj, child, NULL) {
         if (child->oid == oid) {

@@ -14,13 +14,13 @@
  * Function: oid_create
  * Create an oid from a catalog id and index.
  */
-uint64_t oid_create(const char cat[4], uint32_t n);
+uint64_t oid_create(const char *cat, uint32_t n);
 
 /*
  * Function: oid_is_catalog
  * Return whether an oid is using a given catalog
  */
-bool oid_is_catalog(uint64_t oid, const char cat[4]);
+bool oid_is_catalog(uint64_t oid, const char *cat);
 
 /*
  * Function: oid_is_gaia

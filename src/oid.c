@@ -14,27 +14,25 @@
 #include <stdio.h>
 #include <string.h>
 
-uint64_t oid_create(const char cat[4], uint32_t n)
+uint64_t oid_create(const char *cat, uint32_t n)
 {
     uint64_t oid;
-    // Make sure we passed a 4 char catalog name.
-    assert(cat[0] && cat[1] && cat[2] && cat[3]);
+    assert(cat[strlen(cat) - 1] != ' ');
     memcpy(((uint32_t*)&oid) + 0, &n, 4);
-    memcpy(((uint32_t*)&oid) + 1, cat, 4);
+    strncpy(((char*)&oid) + 4, cat, 4);
     // Set first bit to 1 so that we can differentiate from Gaia.
     oid |= 0x8000000000000000UL;
     return oid;
 }
 
-bool oid_is_catalog(uint64_t oid, const char cat[4])
+bool oid_is_catalog(uint64_t oid, const char *cat)
 {
     uint32_t cat_n;
-    // Make sure we passed a 4 char catalog name.
-    assert(cat[0] && cat[1] && cat[2] && cat[3]);
+    assert(cat[strlen(cat) - 1] != ' ');
     cat_n = oid >> 32;
     if (!(cat_n & 0x80000000)) return false;
     cat_n &= ~0x80000000;
-    return memcmp(&cat_n, cat, 4) == 0;
+    return strncmp((char*)&cat_n, cat, 4) == 0;
 }
 
 bool oid_is_gaia(uint64_t oid)

@@ -97,7 +97,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     cons->name_translated = *info->name_translated ?
         strdup(info->name_translated) : strdup(info->name);
     strcpy(cons->obj.type, "Con");
-    cons->obj.oid = oid_create("CST ",
+    cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
     identifiers_add("CST", info->id, cons->obj.oid, 0, "Con ", 0,
                     NULL, NULL);
@@ -118,7 +118,7 @@ static int constellation_create_stars(constellation_t *cons)
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
         hip = cons->info.lines[i / 2][i % 2];
         assert(hip);
-        oid = oid_create("HIP ", hip);
+        oid = oid_create("HIP", hip);
         cons->stars[i] = obj_get_by_oid(NULL, oid, 0);
         if (!cons->stars[i]) {
             LOG_W("Cannot find cst star: %s, HIP %d", cons->info.id, hip);
@@ -139,7 +139,7 @@ static int compute_img_mat(const anchor_t anchors[static 3], double mat[3][3])
     for (i = 0; i < 3; i++) {
         vec2_copy(anchors[i].uv, uvs[i]);
         uvs[i][2] = 1.0;
-        oid = oid_create("HIP ", anchors[i].hip);
+        oid = oid_create("HIP", anchors[i].hip);
         star = obj_get_by_oid(NULL, oid, 0);
         if (!star) {
             LOG_W("Cannot find star HIP %d", anchors[i].hip);
