@@ -220,13 +220,31 @@ static int parse_properties(hips_t *hips)
     return 0;
 }
 
-void get_child_uv_mat(int i, const double m[3][3], double out[3][3])
+/*
+ * Compute the transformation matrix to map a helpix pixel UV to one of its 4
+ * child UV.
+ *
+ * Parameters:
+ *   i      - Index of the child [0-3].
+ *   m      - Input matrix.
+ *   out    - Input matrix multiplied by the transformation mat.
+ *
+ * If we call the function several time with the same mat we can go down more
+ * that one level, e.g, to get the transformation from a tile to its child
+ * two order higher following the pixels 0 -> 1, we can do:
+ *
+ *   double m[3][3];
+ *   mat3_set_identity(m);
+ *   get_child_uv_mat(0, m, m);
+ *   get_child_uv_mat(1, m, m);
+ */
+static void get_child_uv_mat(int i, const double m[3][3], double out[3][3])
 {
     double tmp[3][3];
-    mat3_copy(m, tmp);
+    mat3_set_identity(tmp);
     mat3_iscale(tmp, 0.5, 0.5, 1.0);
     mat3_itranslate(tmp, i / 2, i % 2);
-    mat3_copy(tmp, out);
+    mat3_mul(tmp, m, out);
 }
 
 // Used by the cache.
