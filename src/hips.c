@@ -307,14 +307,31 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
     return 0;
 }
 
-// Get the texture for a given hips tile.
-// Output:
-//  uv      the uv coordinates of the texture.
-//  proj    an heapix projector already setup for the tile.
-//  split   recommended spliting of the texture when we render it.
-//  loading_complete  set to true if the tile is totally loaded.
-// Return:
-//  The texture_t, or NULL if none is found.
+/*
+ * Function: hips_get_tile_texture
+ * Get the texture for a given hips tile.
+ *
+ * The algorithm is more or less:
+ *   - If the tile is loaded, return its texture.
+ *   - If not, try to use a parent tile as a fallback.
+ *   - If no parent is loaded, but we have an allsky image, use it.
+ *   - If all else failed, return NULL.  In that case the UV and projection
+ *     are still set, so that the client can still render a fallback texture.
+ *
+ * Parameters:
+ *   flags   - <HIPS_FLAGS> union.
+ *   order   - Order of the tile we are looking for.
+ *   pix     - Pixel index of the tile we are looking for.
+ *   uv      - Output the uv coordinates of the texture.  This can represent
+ *             only a part of the texture if we used a parent fallback.
+ *   proj    - Output an heapix projector already setup for the texture.
+ *   split   - Recommended splitting of the texture when we render it.
+ *   fade    - Recommended fade alpha.
+ *   loading_complete - set to true if the tile is totally loaded.
+ *
+ * Return:
+ *   The texture_t, or NULL if none is found.
+ */
 texture_t *hips_get_tile_texture(
         hips_t *hips, int order, int pix, int flags,
         double uv[4][2], projection_t *proj, int *split, double *fade,
