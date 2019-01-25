@@ -188,6 +188,9 @@ void core_add_default_sources(void)
 
     obj_add_data_source(NULL, "https://alaskybis.unistra.fr/DSS/DSSColor",
                         "hips", NULL);
+
+    // Asteroid data.
+    obj_add_data_source(NULL, "asset://mpcorb.dat", "mpc_asteroids", NULL);
     #undef BASE_URL
 }
 

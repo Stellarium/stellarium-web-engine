@@ -160,14 +160,19 @@ static void load_data(mplanets_t *mplanets, const char *data)
     LOG_I("Parsed %d asteroids", nb);
 }
 
-
-static int mplanets_init(obj_t *obj, json_value *args)
+static int mplanets_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
 {
-    int size;
     const char *data;
     mplanets_t *mplanets = (void*)obj;
-    data = asset_get_data("asset://mpcorb.dat", &size, NULL);
+    if (strcmp(type, "mpc_asteroids") != 0) return 1;
+    data = asset_get_data(url, NULL, NULL);
+    if (!data) {
+        LOG_W("Cannot read asteroids data (%s)", url);
+        return 0;
+    }
     load_data(mplanets, data);
+    asset_release(url);
     return 0;
 }
 
@@ -374,7 +379,7 @@ static obj_klass_t mplanets_klass = {
     .id             = "minor_planets",
     .size           = sizeof(mplanets_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
-    .init           = mplanets_init,
+    .add_data_source    = mplanets_add_data_source,
     .update         = mplanets_update,
     .render         = mplanets_render,
     .get_by_oid     = mplanets_get_by_oid,
