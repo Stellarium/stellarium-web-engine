@@ -415,8 +415,7 @@ end:
         projection_init_healpix(proj, 1 << rend_order, rend_pix, true, outside);
     }
     if (split) {
-        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 :
-                 max(4, 12 >> rend_order);
+        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
     }
     return tex;
 }
