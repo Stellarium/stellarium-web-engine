@@ -351,6 +351,7 @@ texture_t *hips_get_tile_texture(
         if (loading_complete) *loading_complete = true;
         return NULL;
     }
+    if (tile && loading_complete) *loading_complete = true;
 
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
@@ -366,7 +367,6 @@ texture_t *hips_get_tile_texture(
     }
     if (!rend_tile) return NULL;
     if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
-    if (loading_complete && tile == rend_tile) *loading_complete = true;
 
     // Create texture if needed.
     if (rend_tile->img && !rend_tile->tex) {
