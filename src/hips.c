@@ -322,12 +322,14 @@ texture_t *hips_get_tile_texture(
 {
     PROFILE(hips_get_tile_texture, PROFILE_AGGREGATE)
     texture_t *tex;
-    img_tile_t *tile, *render_tile;
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
     const bool outside = !(flags & HIPS_EXTERIOR);
     int i, code, x, y, nbw;
+    // The actual tile used might be at a lowe order than requested.
+    img_tile_t *tile, *rend_tile;
+    int rend_order, rend_pix;
 
     // Set all the default values.
     if (loading_complete) *loading_complete = false;
@@ -352,49 +354,53 @@ texture_t *hips_get_tile_texture(
 
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
-    render_tile = tile;
+    rend_tile = tile;
+    rend_order = order;
+    rend_pix = pix;
     mat3_set_identity(mat);
-    while (!(render_tile) && (order > hips->order_min)) {
-        get_child_uv_mat(pix % 4, mat, mat);
-        order -= 1;
-        pix /= 4;
-        render_tile = hips_get_tile(hips, order, pix, flags, &code);
+    while (!(rend_tile) && (rend_order > hips->order_min)) {
+        get_child_uv_mat(rend_pix % 4, mat, mat);
+        rend_order -= 1;
+        rend_pix /= 4;
+        rend_tile = hips_get_tile(hips, rend_order, rend_pix, flags, &code);
     }
-    if (!render_tile) return NULL;
+    if (!rend_tile) return NULL;
     if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
-    if (loading_complete && tile == render_tile) *loading_complete = true;
+    if (loading_complete && tile == rend_tile) *loading_complete = true;
 
     // Create texture if needed.
-    if (render_tile->img && !render_tile->tex) {
-        render_tile->tex = texture_from_data(render_tile->img,
-                render_tile->w, render_tile->h, render_tile->bpp,
-                0, 0, render_tile->w, render_tile->h, 0);
-        free(render_tile->img);
-        render_tile->img = NULL;
+    if (rend_tile->img && !rend_tile->tex) {
+        rend_tile->tex = texture_from_data(rend_tile->img,
+                rend_tile->w, rend_tile->h, rend_tile->bpp,
+                0, 0, rend_tile->w, rend_tile->h, 0);
+        free(rend_tile->img);
+        rend_tile->img = NULL;
     }
 
     // Create allsky texture if needed.
     if (    (flags & HIPS_FORCE_USE_ALLSKY) &&
-            order == hips->order_min &&
-            !render_tile->tex &&
-            !render_tile->allsky_tex)
+            rend_order == hips->order_min &&
+            !rend_tile->tex &&
+            !rend_tile->allsky_tex)
     {
-        nbw = (int)sqrt(12 * (1 << (2 * order)));
-        x = (pix % nbw) * hips->allsky.w / nbw;
-        y = (pix / nbw) * hips->allsky.w / nbw;
-        render_tile->allsky_tex = texture_from_data(
+        nbw = (int)sqrt(12 * (1 << (2 * hips->order_min)));
+        x = (rend_pix % nbw) * hips->allsky.w / nbw;
+        y = (rend_pix / nbw) * hips->allsky.w / nbw;
+        rend_tile->allsky_tex = texture_from_data(
                 hips->allsky.data, hips->allsky.w, hips->allsky.h,
                 hips->allsky.bpp,
                 x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
     }
 
-    tex = render_tile->tex ?: render_tile->allsky_tex;
+    tex = rend_tile->tex ?: rend_tile->allsky_tex;
     if (!tex) return NULL;
-    if (proj) projection_init_healpix(
-            proj, 1 << order, pix, true, outside);
-    if (split)
-        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
-    if (fade) *fade = 1.0;
+    if (proj) {
+        projection_init_healpix(proj, 1 << rend_order, rend_pix, true, outside);
+    }
+    if (split) {
+        *split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 :
+                 max(4, 12 >> rend_order);
+    }
     return tex;
 }
 
