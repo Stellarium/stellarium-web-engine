@@ -353,15 +353,15 @@ texture_t *hips_get_tile_texture(
     // If the tile is not loaded yet, we try to use a parent tile texture
     // instead.
     render_tile = tile;
+    mat3_set_identity(mat);
     while (!(render_tile) && (order > hips->order_min)) {
-        mat3_set_identity(mat);
         get_child_uv_mat(pix % 4, mat, mat);
-        if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
         order -= 1;
         pix /= 4;
         render_tile = hips_get_tile(hips, order, pix, flags, &code);
     }
     if (!render_tile) return NULL;
+    if (uv) for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
     if (loading_complete && tile == render_tile) *loading_complete = true;
 
     // Create texture if needed.
