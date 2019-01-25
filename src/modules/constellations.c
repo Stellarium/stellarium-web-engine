@@ -10,6 +10,9 @@
 #include "swe.h"
 #include <zlib.h> // For crc32.
 
+// Don't render the labels passed this separation angle from viewport center.
+static const double LABELS_MAX_SEP = 30 * DD2R;
+
 /*
  * Enum of the label display styles.
  */
@@ -424,7 +427,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     double (*lines)[4];
     double lines_color[4], names_color[4];
     double pos[3] = {0, 0, 0};
-    double mag[2], radius[2];
+    double mag[2], radius[2], sep;
     const char *label;
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
@@ -460,16 +463,23 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
+
+    // Render label only if we are not too far from the observer view
+    // direction, so that we don't show too many labels when zoomed out.
     mat3_mul_vec3(painter.obs->ro2v, pos, pos);
-    if (project(painter.proj,
-                PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                2, pos, pos)) {
+    sep = eraSepp(pos, VEC(0, 0, -1));
+    if (    sep < LABELS_MAX_SEP &&
+            project(painter.proj,
+                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+                    2, pos, pos))
+    {
         label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
                     con->name : con->name_translated;
         labels_add(label, pos, 0, 13, names_color, 0,
                    ALIGN_CENTER | ALIGN_MIDDLE,
                    0, con->obj.oid);
     }
+
     return 0;
 }
 
