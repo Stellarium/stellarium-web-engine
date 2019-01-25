@@ -614,6 +614,7 @@ static void quad(renderer_t          *rend_,
 static void quad_wireframe(renderer_t          *rend_,
                            const painter_t     *painter,
                            int                 frame,
+                           double              uv[4][2],
                            int                 grid_size,
                            const projection_t  *tex_proj)
 {
@@ -621,7 +622,7 @@ static void quad_wireframe(renderer_t          *rend_,
     int n, i, j;
     item_t *item;
     n = grid_size + 1;
-    double p[4], ndc_p[4];
+    double p[4], ndc_p[4], duvx[2], duvy[2];
 
     item = calloc(1, sizeof(*item));
     item->type = ITEM_QUAD_WIREFRAME;
@@ -629,11 +630,16 @@ static void quad_wireframe(renderer_t          *rend_,
     gl_buf_alloc(&item->indices, &INDICES_BUF, grid_size * n * 4);
     vec4_to_float(VEC(1, 0, 0, 0.25), item->color);
 
+    vec2_sub(uv[1], uv[0], duvx);
+    vec2_sub(uv[2], uv[0], duvy);
+
     // Generate grid position.
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
-        vec4_set(p, i / (n - 1.0), j / (n - 1.0), 0, 0);
+        vec4_set(p, uv[0][0], uv[0][1], 0, 1);
+        vec2_addk(p, duvx, (double)j / grid_size, p);
+        vec2_addk(p, duvy, (double)i / grid_size, p);
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);

@@ -63,6 +63,7 @@ struct renderer
     void (*quad_wireframe)(renderer_t           *rend,
                            const painter_t      *painter,
                            int                  frame,
+                           double               uv[4][2],
                            int                  grid_size,
                            const projection_t   *tex_proj);
 

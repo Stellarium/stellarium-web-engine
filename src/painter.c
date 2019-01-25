@@ -70,7 +70,7 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
                         tex_proj);
 
     if (g_debug) {
-        REND(painter->rend, quad_wireframe, painter, frame,
+        REND(painter->rend, quad_wireframe, painter, frame, uv,
              grid_size >> node->level, tex_proj);
     }
     return 0;
