@@ -236,7 +236,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[4], vmag, size, luminance;
+    double pos[4], win_pos[4], vmag, size, luminance;
     double label_color[4] = RGBA(255, 124, 124, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
@@ -247,27 +247,26 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     obj_get_pos_observed(obj, painter->obs, pos);
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
         return 0;
-    vec3_normalize(pos, pos);
+    convert_frame(painter->obs, FRAME_OBSERVED, FRAME_VIEW, false, pos, pos);
+    if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, win_pos))
+        return 0;
+
+    mplanet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
-        .pos = {pos[0], pos[1], pos[2], 0},
+        .pos = {win_pos[0], win_pos[1], 0, 0},
         .size = size,
         .color = {255, 255, 255, luminance * 255},
         .oid = obj->oid,
     };
-    paint_points(painter, 1, &point, FRAME_OBSERVED);
+    paint_points(painter, 1, &point, FRAME_WINDOW);
 
     // Render name if needed.
     if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag)) {
-        mat3_mul_vec3(painter->obs->ro2v, pos, pos);
-        if (project(painter->proj,
-                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                    2, pos, pos)) {
-            labels_add(mplanet->name, pos, size, 13, label_color, 0,
-                       selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
-                       0, obj->oid);
-        }
+        labels_add(mplanet->name, win_pos, size, 13, label_color, 0,
+                selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                0, obj->oid);
     }
     return 0;
 }
@@ -298,40 +297,33 @@ static bool range_contains(int range_start, int range_size, int nb, int i)
     return i > range_start && i < range_start + range_size;
 }
 
-static int mplanets_update(obj_t *obj, const observer_t *obs, double dt)
-{
-    PROFILE(mplanets_update, 0);
-    const int update_nb = 32;
-    int i, nb;
-    mplanets_t *mps = (void*)obj;
-    mplanet_t *child;
-    obj_t *tmp;
-
-    /* To prevent spending too much time computing position of asteroids that
-     * are not visible, we only update a small number of them at each
-     * frame, using a moving range.  The comets who have been flagged as
-     * on screen get updated no matter what.  */
-    // XXX: Actually this should probably be done in the render method.
-    DL_COUNT(obj->children, tmp, nb);
-    i = 0;
-    OBJ_ITER(obj, child, "asteroid") {
-        if (child->on_screen ||
-                range_contains(mps->update_pos, update_nb, nb, i))
-        {
-            obj_update((obj_t*)child, obs, dt);
-        }
-        i++;
-    }
-    mps->update_pos = nb ? (mps->update_pos + update_nb) % nb : 0;
-    return 0;
-}
-
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(mplanets_render, 0);
-    obj_t *child;
-    OBJ_ITER(obj, child, "asteroid")
-        obj_render(child, painter);
+
+    mplanets_t *mps = (void*)obj;
+    int i, nb;
+    const int update_nb = 32;
+    mplanet_t *child;
+    obj_t *tmp;
+    uint64_t selection_oid = core->selection ? core->selection->oid : 0;
+
+    DL_COUNT(obj->children, tmp, nb);
+
+    /* To prevent spending too much time computing position of asteroids that
+     * are not visible, we only update a small number of them at each
+     * frame, using a moving range.  The asteroids who have been flagged as
+     * on screen get updated no matter what.  */
+    i = 0;
+    OBJ_ITER(obj, child, "asteroid") {
+        if (    !child->on_screen &&
+                child->obj.oid != selection_oid &&
+                !range_contains(mps->update_pos, update_nb, nb, i))
+            continue;
+        obj_update((obj_t*)child, painter->obs, 0);
+        obj_render((obj_t*)child, painter);
+    }
+    mps->update_pos = nb ? (mps->update_pos + update_nb) % nb : 0;
     return 0;
 }
 
@@ -380,7 +372,6 @@ static obj_klass_t mplanets_klass = {
     .size           = sizeof(mplanets_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .add_data_source    = mplanets_add_data_source,
-    .update         = mplanets_update,
     .render         = mplanets_render,
     .get_by_oid     = mplanets_get_by_oid,
     .render_order   = 20,
