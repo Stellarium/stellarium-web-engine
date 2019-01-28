@@ -409,4 +409,24 @@ int paint_2d_rect(const painter_t *painter, const double transf[3][3],
 int paint_2d_line(const painter_t *painter, const double transf[3][3],
                   const double p1[2], const double p2[2]);
 
+/*
+ * Function: painter_project_ellipse
+ * Project an ellipse defined on the sphere to the screen.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   frame      - The frame in which the ellipse is defined
+ *   ra         - First spherical pos (rad).
+ *   de         - Second spherical pos (rad).
+ *   angle      - The ellipse angle w.r.t ra axis (rad).
+ *   size_x     - The ellipse large size (rad).
+ *   size_y     - The ellipse small size (rad).
+ *   win_pos    - The ellipse center in screen coordinates (px).
+ *   win_size   - The ellipse small and large sizes in screen coordinates (px).
+ *   win_angle  - The ellipse angle in screen coordinates (radian).
+ */
+void painter_project_ellipse(const painter_t *painter, int frame,
+        float ra, float de, float angle, float size_x, float size_y,
+        double win_pos[2], double win_size[2], double *win_angle);
+
 #endif // PAINTER_H
