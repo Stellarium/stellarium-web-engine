@@ -24,12 +24,14 @@ typedef struct circle {
 
 static int circle_init(obj_t *obj, json_value *args)
 {
+    static uint32_t count = 0;
     circle_t *circle = (circle_t *)obj;
     vec4_set(circle->pos, 0, 0, 1, 0);
     vec2_set(circle->size, 5 * DD2R, 5 * DD2R);
     circle->frame = FRAME_ICRF;
     vec4_set(circle->color, 1, 1, 1, 0.25);
     vec4_set(circle->border_color, 1, 1, 1, 1);
+    obj->oid = oid_create("SHAP", count++);
     return 0;
 }
 
@@ -60,6 +62,24 @@ static void circle_project(const projection_t *proj, int flags,
     vec4_copy(p, out);
 }
 
+static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
+                               const projection_t* proj,
+                               double win_pos[2], double win_size[2],
+                               double* win_angle)
+{
+    const circle_t *circle = (circle_t*)obj;
+    double ra, de;
+
+    painter_t tmp_painter;
+    tmp_painter.obs = obs;
+    tmp_painter.proj = proj;
+    eraC2s(circle->pos, &ra, &de);
+    painter_project_ellipse(&tmp_painter, circle->frame, ra, de, 0,
+            circle->size[0], circle->size[1], win_pos, win_size, win_angle);
+    win_size[0] /= 2.0;
+    win_size[1] /= 2.0;
+}
+
 static int circle_render(const obj_t *obj, const painter_t *painter_)
 {
     circle_t *circle = (circle_t *)obj;
@@ -68,29 +88,46 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
         .backward   = circle_project,
         .user       = obj,
     };
-    double ra, de;
+    const bool selected = core->selection && obj->oid == core->selection->oid;
     int label_flags;
     double win_pos[2], win_size[2], win_angle;
+    static const double white[4] = {1, 1, 1, 1};
+
 
     vec4_copy(circle->color, painter.color);
     paint_quad(&painter, circle->frame, NULL, NULL, NULL, &proj, 64);
-    vec4_copy(circle->border_color, painter.color);
+    if (selected) {
+        painter.lines_width = 2;
+        vec4_copy(white, painter.color);
+    } else {
+        vec4_copy(circle->border_color, painter.color);
+    }
     paint_quad_contour(&painter, circle->frame, &proj, 64, 4);
-    eraC2s(circle->pos, &ra, &de);
-    painter_project_ellipse(&painter, circle->frame, ra, de, 0,
-                            circle->size[0], circle->size[1],
-                            win_pos, win_size, &win_angle);
+    circle_get_2d_ellipse(circle, painter.obs, painter.proj,
+                          win_pos, win_size, &win_angle);
     areas_add_circle(core->areas, win_pos, win_size[0], obj->oid, 0);
     if (circle->label[0]) {
         label_flags = LABEL_AROUND;
-        if (0)
+        if (selected)
             label_flags |= LABEL_BOLD;
-        double radius = min(win_size[0] / 2, win_size[1] / 2) +
+        double radius = min(win_size[0], win_size[1]) +
                 fabs(cos(win_angle - M_PI_4)) *
-                fabs(win_size[0]/2 - win_size[1]/2);
-        labels_add(circle->label, win_pos, radius, 13, circle->border_color, 0,
+                fabs(win_size[0] - win_size[1]);
+        labels_add(circle->label, win_pos, radius, 13, painter.color, 0,
                    label_flags, 0, circle->obj.oid);
     }
+    return 0;
+}
+
+static int circle_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    circle_t *circle = (circle_t*)obj;
+    vec3_normalize(circle->pos, circle->pos);
+    convert_frame(obs, circle->frame, FRAME_ICRF, true, circle->pos,
+                  obj->pvo[0]);
+    obj->pvo[0][3] = 0.0;
+    assert(fabs(vec3_norm2(obj->pvo[0]) - 1.0) <= 0.000001);
+    obj->vmag = 99;
     return 0;
 }
 
@@ -99,7 +136,10 @@ static obj_klass_t circle_klass = {
     .size       = sizeof(circle_t),
     .init       = circle_init,
     .render     = circle_render,
+    .update     = circle_update,
+    .get_2d_ellipse = circle_get_2d_ellipse,
     .attributes = (attribute_t[]) {
+        PROPERTY("radec"),
         PROPERTY("size", "v2", MEMBER(circle_t, size)),
         PROPERTY("pos", "v4", MEMBER(circle_t, pos)),
         PROPERTY("frame", "d", .hint = "frame", MEMBER(circle_t, frame)),
