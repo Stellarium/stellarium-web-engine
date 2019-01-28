@@ -19,6 +19,7 @@ typedef struct circle {
     double      orientation;
     double      color[4];
     double      border_color[4];
+    char        label[255];
 } circle_t;
 
 static int circle_init(obj_t *obj, json_value *args)
@@ -67,10 +68,29 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
         .backward   = circle_project,
         .user       = obj,
     };
+    double ra, de;
+    int label_flags;
+    double win_pos[2], win_size[2], win_angle;
+
     vec4_copy(circle->color, painter.color);
     paint_quad(&painter, circle->frame, NULL, NULL, NULL, &proj, 64);
     vec4_copy(circle->border_color, painter.color);
     paint_quad_contour(&painter, circle->frame, &proj, 64, 4);
+    eraC2s(circle->pos, &ra, &de);
+    painter_project_ellipse(&painter, circle->frame, ra, de, 0,
+                            circle->size[0], circle->size[1],
+                            win_pos, win_size, &win_angle);
+    areas_add_circle(core->areas, win_pos, win_size[0], obj->oid, 0);
+    if (circle->label[0]) {
+        label_flags = LABEL_AROUND;
+        if (0)
+            label_flags |= LABEL_BOLD;
+        double radius = min(win_size[0] / 2, win_size[1] / 2) +
+                fabs(cos(win_angle - M_PI_4)) *
+                fabs(win_size[0]/2 - win_size[1]/2);
+        labels_add(circle->label, win_pos, radius, 13, circle->border_color, 0,
+                   label_flags, 0, circle->obj.oid);
+    }
     return 0;
 }
 
@@ -88,6 +108,7 @@ static obj_klass_t circle_klass = {
         PROPERTY("color", "v4", .hint = "color", MEMBER(circle_t, color)),
         PROPERTY("border_color", "v4", .hint = "color",
                  MEMBER(circle_t, border_color)),
+        PROPERTY("label", "S", MEMBER(circle_t, label)),
         {},
     },
 };
