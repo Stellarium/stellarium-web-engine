@@ -110,12 +110,17 @@ static double illuminance_for_vmag(double vmag)
     return 10.8e4 / (ERFA_DR2AS * ERFA_DR2AS) * pow(10, -0.4 * vmag);
 }
 
-// Precompute values about the star position to make rendering faster.
+/*
+ * Precompute values about the star position to make rendering faster.
+ * Parameters:
+ *   pls    - Parallax (arcseconds).
+ */
 static void compute_pv(double ra, double de,
                        double pra, double pde, double plx, star_data_t *s)
 {
     int r;
     double pv[2][3];
+    if (isnan(plx)) plx = 0;
     r = eraStarpv(ra, de, pra, pde, plx, 0, pv);
     if (r & (2 | 4)) LOG_W("Wrong star coordinates");
     if (r & 1) {
@@ -405,7 +410,6 @@ static int on_file_tile_loaded(const char type[4],
                 &ra, &de, &plx, &pra, &pde, &bv, ids);
         assert(!isnan(ra));
         assert(!isnan(de));
-        assert(!isnan(plx));
         if (isnan(vmag)) vmag = gmag;
         assert(!isnan(vmag));
 
