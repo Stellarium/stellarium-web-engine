@@ -145,7 +145,6 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user));
  *   uv      - Output the uv coordinates of the texture.  This can represent
  *             only a part of the texture if we used a parent fallback.
  *   proj    - Output an heapix projector already setup for the texture.
- *   split   - Recommended splitting of the texture when we render it.
  *   fade    - Recommended fade alpha.
  *   loading_complete - set to true if the tile is totally loaded.
  *
@@ -154,7 +153,7 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user));
  */
 texture_t *hips_get_tile_texture(
         hips_t *hips, int order, int pix, int flags,
-        double uv[4][2], projection_t *proj, int *split, double *fade,
+        double uv[4][2], projection_t *proj, double *fade,
         bool *loading_complete);
 
 /*
