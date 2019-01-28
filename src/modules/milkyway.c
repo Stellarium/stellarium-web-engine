@@ -34,6 +34,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
 {
     PROFILE(milkyway_render, 0);
     double lum, c;
+    int split_order = 2;
     milkyway_t *mw = (milkyway_t*)obj;
     painter_t painter = *painter_;
     if (!mw->hips) return 0;
@@ -45,7 +46,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     c = clamp(c, 0, 1) * 0.35;
     painter.color[3] *= c;
 
-    return hips_render(mw->hips, &painter, 2 * M_PI, -1);
+    return hips_render(mw->hips, &painter, 2 * M_PI, split_order);
 }
 
 static int milkyway_add_data_source(
