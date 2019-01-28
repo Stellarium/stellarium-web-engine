@@ -310,13 +310,6 @@ void star_get_designations(
     }
 }
 
-static json_value *star_get_distance(obj_t *obj, const attribute_t *attr,
-                                      const json_value *args)
-{
-    star_t *star = (star_t*)obj;
-    return args_value_new("f", "dist", star->data.distance);
-}
-
 static star_t *star_create(const star_data_t *data)
 {
     star_t *star;
@@ -826,8 +819,7 @@ static obj_klass_t star_klass = {
     .attributes = (attribute_t[]) {
         // Default properties.
         PROPERTY("name"),
-        { "distance", "f", .hint = "dist", .fn = star_get_distance,
-          .desc = "Distance (AU)." },
+        PROPERTY("distance", "f", .hint="dist", MEMBER(star_t, data.distance)),
         PROPERTY("radec"),
         PROPERTY("vmag"),
         PROPERTY("type"),
