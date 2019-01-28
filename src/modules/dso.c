@@ -49,6 +49,7 @@ typedef struct {
 
     int symbol;
 
+    char morpho[32];
     char short_name[64];
     // List of extra names, separated by '\0', terminated by two '\0'.
     char *names;
@@ -231,6 +232,7 @@ static int on_file_tile_loaded(const char type[4],
         {"smax", 'f', EPH_ARCMIN},
         {"smin", 'f', EPH_ARCMIN},
         {"angl", 'f', EPH_DEG},
+        {"morp", 's', .size=32},
         {"snam", 's', .size=64},
         {"ids",  's', .size=256},
     };
@@ -267,7 +269,7 @@ static int on_file_tile_loaded(const char type[4],
                            &s->nsid, s->type,
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
-                           s->short_name, ids);
+                           s->morpho, s->short_name, ids);
         assert(s->nsid);
         s->ra = tmp_ra * DD2R;
         s->de = tmp_de * DD2R;
@@ -747,6 +749,7 @@ static obj_klass_t dso_klass = {
         PROPERTY("type"),
         PROPERTY("smin", "f", MEMBER(dso_t, data.smin)),
         PROPERTY("smax", "f", MEMBER(dso_t, data.smax)),
+        PROPERTY("morpho", "S", MEMBER(dso_t, data.morpho)),
         {},
     },
 };
