@@ -49,7 +49,7 @@ typedef struct {
 
     int symbol;
 
-    char morpho[32];
+    char *morpho;
     char short_name[64];
     // List of extra names, separated by '\0', terminated by two '\0'.
     char *names;
@@ -199,6 +199,7 @@ static int del_tile(void *data)
     tile_t *tile = data;
     for (i = 0; i < tile->nb; i++) {
         free(tile->sources[i].names);
+        free(tile->sources[i].morpho);
     }
     free(tile->sources);
     free(tile->sources_quick);
@@ -218,7 +219,7 @@ static int on_file_tile_loaded(const char type[4],
     tile_t *tile;
     dso_data_t *s;
     int nb, i, j, version, data_ofs = 0, flags, row_size, order, pix;
-    char ids[256] = {};
+    char morpho[32], ids[256] = {};
     double bmag, temp_mag, tmp_ra, tmp_de, tmp_smax, tmp_smin, tmp_angle;
     void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
@@ -269,7 +270,7 @@ static int on_file_tile_loaded(const char type[4],
                            &s->nsid, s->type,
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
-                           s->morpho, s->short_name, ids);
+                           morpho, s->short_name, ids);
         assert(s->nsid);
         s->ra = tmp_ra * DD2R;
         s->de = tmp_de * DD2R;
@@ -296,6 +297,7 @@ static int on_file_tile_loaded(const char type[4],
         tile->mag_max = max(tile->mag_max, s->display_vmag);
         s->oid = make_oid(s);
 
+        if (*morpho) s->morpho = strdup(morpho);
         s->symbol = symbols_get_for_otype(s->type);
 
         // Turn '|' separated ids into '\0' separated values.
@@ -749,7 +751,7 @@ static obj_klass_t dso_klass = {
         PROPERTY("type"),
         PROPERTY("smin", "f", MEMBER(dso_t, data.smin)),
         PROPERTY("smax", "f", MEMBER(dso_t, data.smax)),
-        PROPERTY("morpho", "S", MEMBER(dso_t, data.morpho)),
+        PROPERTY("morpho", "s", MEMBER(dso_t, data.morpho)),
         {},
     },
 };
