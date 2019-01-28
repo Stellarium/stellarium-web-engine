@@ -428,21 +428,21 @@ end:
 }
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
-                          int order, int pix, int flags, void *user)
+                          int order, int pix, int split, int flags,
+                          void *user)
 {
     int *nb_tot = USER_GET(user, 0);
     int *nb_loaded = USER_GET(user, 1);
     painter_t painter = *painter_;
     texture_t *tex;
     projection_t proj;
-    int split;
     bool loaded;
     double fade, uv[4][2];
 
     flags |= HIPS_LOAD_IN_THREAD;
     (*nb_tot)++;
     tex = hips_get_tile_texture(hips, order, pix, flags,
-                                uv, &proj, &split, &fade, &loaded);
+                                uv, &proj, NULL, &fade, &loaded);
     if (loaded) (*nb_loaded)++;
     if (!tex) return 0;
     painter.color[3] *= fade;
@@ -471,16 +471,21 @@ static int render_traverse_visitor(int order, int pix, void *user)
     const painter_t *painter = USER_GET(user, 1);
     int render_order = *(int*)USER_GET(user, 2);
     int flags = *(int*)USER_GET(user, 3);
-    int (*callback)(
-        hips_t *hips, const painter_t *painter,
-        int order, int pix, int flags, void *user) = USER_GET(user, 4);
+    int (*callback)(hips_t *hips, const painter_t *painter,
+                    int order, int pix, int split, int flags,
+                    void *user) = USER_GET(user, 4);
     const bool outside = !(flags & HIPS_EXTERIOR);
+    int split;
     user = USER_GET(user, 5);
     // Early exit if the tile is clipped.
     if (painter_is_tile_clipped(painter, hips->frame, order, pix, outside))
         return 0;
+
+    // XXX: not proper split computation!
+    split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
+
     if (order < render_order) return 1; // Keep going.
-    callback(hips, painter, order, pix, flags, user);
+    callback(hips, painter, order, pix, split, flags, user);
     return 0;
 }
 
@@ -563,7 +568,7 @@ int hips_render_traverse(
         hips_t *hips, const painter_t *painter,
         double angle, void *user,
         int (*callback)(hips_t *hips, const painter_t *painter,
-                        int order, int pix, int flags, void *user))
+                        int order, int pix, int split, int flags, void *user))
 {
     int render_order;
     double pix_per_rad;

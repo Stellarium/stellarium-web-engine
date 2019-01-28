@@ -471,7 +471,7 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
 }
 
 static int on_render_tile(hips_t *hips, const painter_t *painter_,
-                          int order, int pix, int flags, void *user)
+                          int order, int pix, int split, int flags, void *user)
 {
     planet_t *planet = USER_GET(user, 0);
     int *nb_tot = USER_GET(user, 1);
@@ -479,13 +479,12 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_t painter = *painter_;
     texture_t *tex, *normalmap = NULL;
     projection_t proj;
-    int split;
     double fade, uv[4][2];
     bool loaded;
 
     (*nb_tot)++;
     tex = hips_get_tile_texture(hips, order, pix, flags,
-                                uv, &proj, &split, &fade, &loaded);
+                                uv, &proj, NULL, &fade, &loaded);
     if (loaded) (*nb_loaded)++;
     if (planet->hips_normalmap && order > 0) {
         // XXX: need to check if the UVs don't match.

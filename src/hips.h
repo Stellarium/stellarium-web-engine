@@ -211,8 +211,8 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle);
 int hips_render_traverse(hips_t *hips, const painter_t *painter,
                          double angle, void *user,
                          int callback(hips_t *hips, const painter_t *painter,
-                                      int order, int pix, int flags,
-                                      void *user));
+                                      int order, int pix, int split,
+                                      int flags, void *user));
 
 /*
  * Function: hips_parse_date
