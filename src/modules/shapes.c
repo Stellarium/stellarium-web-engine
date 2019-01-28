@@ -103,7 +103,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
         vec4_copy(circle->border_color, painter.color);
     }
     paint_quad_contour(&painter, circle->frame, &proj, 64, 4);
-    circle_get_2d_ellipse(circle, painter.obs, painter.proj,
+    circle_get_2d_ellipse(&circle->obj, painter.obs, painter.proj,
                           win_pos, win_size, &win_angle);
     areas_add_circle(core->areas, win_pos, win_size[0], obj->oid, 0);
     if (circle->label[0]) {
