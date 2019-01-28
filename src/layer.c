@@ -14,6 +14,7 @@
 static double layer_get_render_order(const obj_t *obj);
 static int layer_update(obj_t *obj, const observer_t *obs, double dt);
 static int layer_render(const obj_t *obj, const painter_t *painter);
+static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint);
 
 typedef struct layer {
     obj_t       obj;
@@ -28,6 +29,7 @@ static obj_klass_t layer_klass = {
     .get_render_order   = layer_get_render_order,
     .update             = layer_update,
     .render             = layer_render,
+    .get_by_oid         = layer_get_by_oid,
     .attributes         = (attribute_t[]) {
         PROPERTY("visible", "b", MEMBER(layer_t, visible.target)),
         PROPERTY("z", "f", MEMBER(layer_t, z)),
@@ -61,4 +63,14 @@ static int layer_render(const obj_t *obj, const painter_t *painter_)
         obj_render(child, &painter);
     }
     return 0;
+}
+
+static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    obj_t *o;
+    DL_FOREACH(obj->children, o) {
+        if (o->oid == oid)
+            return o;
+    }
+    return NULL;
 }
