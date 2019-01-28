@@ -45,7 +45,7 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     painter2.color[3] *= c;
 
     if (painter2.color[3] == 0.0) return 0;
-    return hips_render(dss->hips, &painter2, 2 * M_PI);
+    return hips_render(dss->hips, &painter2, 2 * M_PI, -1);
 }
 
 static int dss_update(obj_t *obj, const observer_t *obs, double dt)

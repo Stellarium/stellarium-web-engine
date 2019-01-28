@@ -447,13 +447,14 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
 }
 
 
-int hips_render(hips_t *hips, const painter_t *painter, double angle)
+int hips_render(hips_t *hips, const painter_t *painter, double angle,
+                int split_order)
 {
     PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
     if (painter->color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
-    hips_render_traverse(hips, painter, angle,
+    hips_render_traverse(hips, painter, angle, split_order,
                          USER_PASS(&nb_tot, &nb_loaded),
                          render_visitor);
     progressbar_report(hips->url, hips->label, nb_loaded, nb_tot, -1);
@@ -466,21 +467,21 @@ static int render_traverse_visitor(int order, int pix, void *user)
     hips_t *hips = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
     int render_order = *(int*)USER_GET(user, 2);
-    int flags = *(int*)USER_GET(user, 3);
+    int split_order = *(int*)USER_GET(user, 3);
+    int flags = *(int*)USER_GET(user, 4);
     int (*callback)(hips_t *hips, const painter_t *painter,
                     int order, int pix, int split, int flags,
-                    void *user) = USER_GET(user, 4);
+                    void *user) = USER_GET(user, 5);
     const bool outside = !(flags & HIPS_EXTERIOR);
     int split;
-    user = USER_GET(user, 5);
+    user = USER_GET(user, 6);
     // Early exit if the tile is clipped.
     if (painter_is_tile_clipped(painter, hips->frame, order, pix, outside))
         return 0;
 
-    // XXX: not proper split computation!
-    split = (flags & HIPS_FORCE_USE_ALLSKY) ? 4 : max(4, 12 >> order);
-
     if (order < render_order) return 1; // Keep going.
+
+    split = 1 << (split_order - render_order);
     callback(hips, painter, order, pix, split, flags, user);
     return 0;
 }
@@ -562,7 +563,7 @@ bool hips_is_ready(hips_t *hips)
 // control on the rendering.
 int hips_render_traverse(
         hips_t *hips, const painter_t *painter,
-        double angle, void *user,
+        double angle, int split_order, void *user,
         int (*callback)(hips_t *hips, const painter_t *painter,
                         int order, int pix, int split, int flags, void *user))
 {
@@ -578,13 +579,23 @@ int hips_render_traverse(
     render_order = round(log2(px / (4.0 * sqrt(2.0) * w)));
     if (angle < 2.0 * M_PI)
         flags |= HIPS_EXTERIOR;
+
     // For extrem low resolution force using the allsky if available so that
     // we don't download too much data.
     if (render_order < -5 && hips->allsky.data)
         flags |= HIPS_FORCE_USE_ALLSKY;
     render_order = max(render_order, hips->order_min);
+
+    // Default split order.
+    // XXX: compute it properly.
+    if (split_order == -1)
+        split_order = (flags & HIPS_FORCE_USE_ALLSKY) ? 2 : 3;
+
+    // Can't split less than the rendering order.
+    split_order = max(split_order, render_order);
+
     // XXX: would be nice to have a non callback API for hips_traverse!
-    hips_traverse(USER_PASS(hips, painter, &render_order, &flags,
+    hips_traverse(USER_PASS(hips, painter, &render_order, &split_order, &flags,
                             callback, user), render_traverse_visitor);
     return 0;
 }

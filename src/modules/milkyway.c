@@ -45,7 +45,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     c = clamp(c, 0, 1) * 0.35;
     painter.color[3] *= c;
 
-    return hips_render(mw->hips, &painter, 2 * M_PI);
+    return hips_render(mw->hips, &painter, 2 * M_PI, -1);
 }
 
 static int milkyway_add_data_source(

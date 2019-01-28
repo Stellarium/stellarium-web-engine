@@ -678,7 +678,7 @@ static void planet_render_hips(const planet_t *planet,
         painter.depth_range = &depth_range;
     }
 
-    hips_render_traverse(planet->hips, &painter, angle,
+    hips_render_traverse(planet->hips, &painter, angle, -1,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)

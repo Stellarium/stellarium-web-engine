@@ -181,7 +181,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     if (ls->hips && hips_is_ready(ls->hips)) {
         vec3_mul(brightness, painter.color, painter.color);
         painter.transform = &rg2h;
-        hips_render(ls->hips, &painter, 2 * M_PI);
+        hips_render(ls->hips, &painter, 2 * M_PI, -1);
     } else {
         // XXX: would be better to use an healpix projection and glsl shader.
         div = (painter.flags & PAINTER_FAST_MODE) ? 8 : 32;

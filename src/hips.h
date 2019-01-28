@@ -198,8 +198,13 @@ void hips_set_label(hips_t *hips, const char* label);
  *   painter - The painter used to render.
  *   angle   - Visible angle the survey has in the sky.
  *             (2 * PI for full sky surveys).
+ *   split_order - The requested order of the final quad divisions.
+ *                 Can be set to -1 for a default computed value.  The actual
+ *                 split order could be higher if the rendering order is
+ *                 too high for this value.
  */
-int hips_render(hips_t *hips, const painter_t *painter, double angle);
+int hips_render(hips_t *hips, const painter_t *painter, double angle,
+                int split_order);
 
 /*
  * Function: hips_render_traverse
@@ -208,7 +213,7 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle);
  *  control on the rendering.
  */
 int hips_render_traverse(hips_t *hips, const painter_t *painter,
-                         double angle, void *user,
+                         double angle, int split_order, void *user,
                          int callback(hips_t *hips, const painter_t *painter,
                                       int order, int pix, int split,
                                       int flags, void *user));
