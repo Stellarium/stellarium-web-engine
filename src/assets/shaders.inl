@@ -431,7 +431,7 @@ static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned
 
 ASSET_REGISTER(shaders_planet_glsl, "shaders/planet.glsl", DATA_shaders_planet_glsl, false)
 
-static const unsigned char DATA_shaders_points_glsl[1022] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_glsl[1036] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -463,11 +463,11 @@ static const unsigned char DATA_shaders_points_glsl[1022] __attribute__((aligned
     "#endif\n"
     "#ifdef FRAGMENT_SHADER\n"
     "\n"
-    "lowp float dist;\n"
-    "lowp float k;\n"
-    "\n"
     "void main()\n"
     "{\n"
+    "    mediump float dist;\n"
+    "    mediump float k;\n"
+    "\n"
     "    dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));\n"
     "    k = smoothstep(1.0 - u_smooth, 1.0, dist);\n"
     "    k = sqrt(k);\n"

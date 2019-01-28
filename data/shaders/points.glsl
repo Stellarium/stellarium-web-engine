@@ -29,11 +29,11 @@ void main()
 #endif
 #ifdef FRAGMENT_SHADER
 
-lowp float dist;
-lowp float k;
-
 void main()
 {
+    mediump float dist;
+    mediump float k;
+
     dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));
     k = smoothstep(1.0 - u_smooth, 1.0, dist);
     k = sqrt(k);
