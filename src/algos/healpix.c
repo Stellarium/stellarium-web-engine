@@ -175,6 +175,14 @@ void healpix_xy2vec(const double xy[2], double out[3])
     out[2] = z;
 }
 
+void healpix_xyf2vec(int nside, int x, int y, int f, double out[3])
+{
+    double xy[2];
+    xy[0] = (FACES[f][0] + (x - y + 0.0) / nside) * M_PI / 4;
+    xy[1] = (FACES[f][1] + (x + y + 0.0) / nside) * M_PI / 4;
+    healpix_xy2vec(xy, out);
+}
+
 void healpix_pix2vec(int nside, int pix, double out[3])
 {
     int ix, iy, face;
@@ -286,5 +294,14 @@ void healpix_get_neighbours(int nside, int pix, int out[8])
                 out[i] = -1;
             }
         }
+    }
+}
+
+void healpix_get_boundaries(int nside, int pix, double out[4][3])
+{
+    int ix, iy, face, i;
+    healpix_nest2xyf(nside, pix, &ix, &iy, &face);
+    for (i = 0; i < 4; i++) {
+        healpix_xyf2vec(nside, ix + (i % 2), iy + (i / 2), face, out[i]);
     }
 }

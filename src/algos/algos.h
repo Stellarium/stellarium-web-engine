@@ -54,6 +54,13 @@ void healpix_ang2pix(int nside, double theta, double phi, int *pix);
  */
 void healpix_get_neighbours(int nside, int pix, int out[8]);
 
+/*
+ * Function: healpix_get_boundaries
+ * Return the four corner position of a given healpix nest pixel
+ */
+void healpix_get_boundaries(int nside, int pix, double out[4][3]);
+
+
 /* Compute moon position.
  *
  * inputs:
