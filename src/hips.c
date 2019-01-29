@@ -584,7 +584,10 @@ int hips_render_traverse(
     // we don't download too much data.
     if (render_order < -5 && hips->allsky.data)
         flags |= HIPS_FORCE_USE_ALLSKY;
-    render_order = max(render_order, hips->order_min);
+
+    // Clamp the render order into physically possible range.
+    render_order = clamp(render_order, hips->order_min, hips->order);
+    render_order = min(render_order, 9); // Hard limit.
 
     // Default split order.
     // XXX: compute it properly.
