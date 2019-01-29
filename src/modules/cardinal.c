@@ -41,7 +41,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     int i;
     double pos[3];
     double size = 24;
-    double color[4] = {0.8, 0.2, 0.1, 1.0};
+    double color[4] = {0.5, 0.4, 0.4, 0.5};
     for (i = 0; i < ARRAY_SIZE(POINTS); i++) {
         mat3_mul_vec3(core->observer->ro2v, POINTS[i].pos, pos);
         if (    !project(painter->proj,
@@ -49,7 +49,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
                 2, pos, pos))
             continue;
         labels_add(POINTS[i].text, pos, 0, size, color, 0,
-                   ALIGN_CENTER | ALIGN_MIDDLE, 0, obj->oid);
+                   ALIGN_CENTER | ALIGN_MIDDLE | LABEL_BOLD, 0, obj->oid);
     }
     return 0;
 }
