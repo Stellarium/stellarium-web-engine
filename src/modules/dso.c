@@ -369,65 +369,8 @@ static void compute_hint_transformation(
         float size_x, float size_y, int symbol,
         double win_pos[2], double win_size[2], double *win_angle)
 {
-    double p[4], c[2], a[2], b[2], mat[3][3];
-
-    assert(!isnan(ra));
-    assert(!isnan(de));
-    assert(!isnan(size_x));
-
-    if (isnan(size_y)) {
-        size_y = size_x;
-    }
-
-    // 1. Center.
-    vec4_set(p, 1, 0, 0, 0);
-    mat3_set_identity(mat);
-    mat3_rz(ra, mat, mat);
-    mat3_ry(-de, mat, mat);
-    mat3_mul_vec3(mat, p, p);
-    convert_frame(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
-
-    // Point dso.
-    if (size_x == 0) {
-        vec2_copy(c, win_pos);
-        vec2_set(win_size, 0, 0);
-        *win_angle = 0;
-        return;
-    }
-
-    // 2. Semi major.
-    vec4_set(p, 1, 0, 0, 0);
-    mat3_set_identity(mat);
-    mat3_rz(ra, mat, mat);
-    mat3_ry(-de, mat, mat);
-    if (!isnan(angle)) mat3_rx(-angle, mat, mat);
-    mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
-    mat3_rz(size_x / 2.0, mat, mat);
-    mat3_mul_vec3(mat, p, p);
-    vec3_normalize(p, p);
-    convert_frame(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
-    // 3. Semi minor.
-    vec4_set(p, 1, 0, 0, 0);
-    mat3_set_identity(mat);
-    mat3_rz(ra, mat, mat);
-    mat3_ry(-de, mat, mat);
-    if (!isnan(angle)) mat3_rx(-angle, mat, mat);
-    mat3_iscale(mat, 1.0, size_y / size_x, 1.0);
-    mat3_rx(-M_PI / 2, mat, mat);
-    mat3_rz(size_x / 2.0, mat, mat);
-    mat3_mul_vec3(mat, p, p);
-    vec3_normalize(p, p);
-    convert_frame(painter->obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
-
-    vec2_copy(c, win_pos);
-    vec2_sub(a, c, a);
-    vec2_sub(b, c, b);
-    *win_angle = isnan(angle) ? 0 : atan2(a[1], a[0]);
-    win_size[0] = 2 * vec2_norm(a);
-    win_size[1] = 2 * vec2_norm(b);
+    painter_project_ellipse(painter, FRAME_ASTROM, ra, de, angle,
+                            size_x, size_y, win_pos, win_size, win_angle);
 
     win_size[0] = max(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
     win_size[1] = max(win_size[1], 12);
