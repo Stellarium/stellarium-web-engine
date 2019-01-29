@@ -134,10 +134,20 @@ static void convert_frame_backward(const observer_t *obs,
         }
         mat3_mul_vec3(obs->rh2i, p, p);
     }
+    // JNow to CIRS
+    if (origin == FRAME_JNOW && dest < FRAME_JNOW) {
+        // The bridge between the classical and CIRS systems is the equation of
+        // the origins, which is ERA−GST or equivalently αCIRS − αapparent; its
+        // value is returned by several of the SOFA astrometry functions in
+        // case it is needed.
+        double mat[3][3];
+        mat3_set_identity(mat);
+        mat3_rz(obs->eo, mat, mat);
+        mat3_mul_vec3(mat, p, p);
+    }
     // CIRS to ICRS
     if (origin >= FRAME_CIRS && dest < FRAME_CIRS) {
-        // Bias-precession-nutation, giving CIRS proper direction.
-        //eraRxp(astrom->bpn, p, p); -> reverse operation is regular mult ??
+        // Bias-precession-nutation
         mat3_mul_vec3(astrom->bpn, p, p);
     }
     if (dest < FRAME_ICRF) {
