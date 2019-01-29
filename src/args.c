@@ -169,7 +169,9 @@ json_value *args_vvalue_new(const char *type, const char *hint, va_list *ap)
         val = json_integer_new(va_arg(*ap, int));
     else if (strcmp(type, "f") == 0) {
         f = va_arg(*ap, double);
-        if (isfinite(f)) {
+        if (isnan(f)) {
+            val = json_null_new();
+        } else if (isfinite(f)) {
             val = json_double_new(f);
         } else {
             sprintf(buf, "%f", f);
