@@ -223,12 +223,9 @@ void paint_debug(bool value)
 bool painter_is_tile_clipped(const painter_t *painter, int frame,
                              int order, int pix, bool outside)
 {
-    double quad[4][4] = { {0, 0, 1, 1},
-                          {1, 0, 1, 1},
-                          {0, 1, 1, 1},
-                          {1, 1, 1, 1} };
+    double healpix[4][3];
+    double quad[4][4];
     double p[4][4];
-    double mat3[3][3];
     int i;
 
     // At order zero, the tiles are too big and it can give false positive,
@@ -242,10 +239,10 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         return true;
     }
 
-    healpix_get_mat3(1 << order, pix, mat3);
+    healpix_get_boundaries(1 << order, pix, healpix);
     for (i = 0; i < 4; i++) {
-        mat3_mul_vec3(mat3, quad[i], quad[i]);
-        healpix_xy2vec(quad[i], quad[i]);
+        vec3_copy(healpix[i], quad[i]);
+        quad[i][3] = 1.0;
         mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
         project(painter->proj, 0, 4, quad[i], p[i]);
