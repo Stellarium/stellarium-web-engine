@@ -93,7 +93,7 @@ static struct {
         .name       = "Equatorial",
         .id         = "equatorial",
         .color      = 0x2a81ad80,
-        .frame      = FRAME_CIRS,
+        .frame      = FRAME_ICRF,
         .format     = 'h',
         .grid       = true,
     },
