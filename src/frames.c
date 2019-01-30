@@ -166,8 +166,6 @@ int convert_frame(const observer_t *obs,
     PROFILE(convert_frame, PROFILE_AGGREGATE);
     obs = obs ?: (observer_t*)core->observer;
 
-    // Can't convert to NDC space.
-    assert(dest < FRAME_NDC && origin < FRAME_NDC);
     vec3_copy(in, out);
     assert(!isnan(out[0] + out[1] + out[2]));
 
