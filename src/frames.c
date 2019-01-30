@@ -145,19 +145,16 @@ static void convert_frame_backward(const observer_t *obs,
         mat3_rz(obs->eo, mat, mat);
         mat3_mul_vec3(mat, p, p);
     }
-    // CIRS to ICRS
+    // CIRS to ICRF
     if (origin >= FRAME_CIRS && dest < FRAME_CIRS) {
         // Bias-precession-nutation
         mat3_mul_vec3(astrom->bpn, p, p);
     }
-    if (dest < FRAME_ICRF) {
-        // Unimplemented
-        assert(0);
-    }
     if (dest == FRAME_ASTROM) {
-        // Unimplemented
-        assert(0);
+        apparent_to_astrometric(obs, p, at_inf, p);
     }
+    assert(dest>=FRAME_ASTROM);
+
     vec3_normalize(p, p);
 }
 
@@ -252,6 +249,31 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
         eraAb(out, obs->astrom.v, obs->astrom.em, obs->astrom.bm1, out);
         vec3_mul(dist, out, out);
     }
+}
+
+void apparent_to_astrometric(const observer_t *obs, const double in[3],
+                             bool inf, double out[3])
+{
+    // Currently only implemented for distant objects
+    assert(inf);
+
+    eraCp(in, out);
+    assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
+
+    double delta[3];
+    double a[3], b[3];
+    int i;
+    vec3_copy(in, a);
+    for (i = 0; i < 10 ; ++i) {
+        astrometric_to_apparent(obs, a, inf, b);
+        vec3_normalize(b, b);
+        vec3_sub(b, in, delta);
+        vec3_sub(a, delta, a);
+        vec3_normalize(a, a);
+        if (vec3_dot(b, in) > cos(0.001 / 3600 * M_PI / 180))
+            break;
+    }
+    vec3_copy(a, out);
 }
 
 /******** TESTS ***********************************************************/

@@ -19,10 +19,12 @@ typedef struct observer observer_t;
  * Represent a reference frame. A reference frame is independent of the origin,
  * it just defines the direction of the x,y and z axes.
  *
- * FRAME_ASTROM   - Astrometric ICRF frame. Like FRAME_ICRF but first convert
- *                  from Astrometric to Apparent direction (as seen from the
- *                  current observer). Use this frame to pass directly star
- *                  catalogs directions.
+ * FRAME_ASTROM   - Astrometric ICRF frame. Use this frame to pass directly star
+ *                  catalogs directions (parallax and proper motion must be
+ *                  already taken into account). For solar system objects, it
+ *                  is the direction as seen from earth center, in barycentric
+ *                  inertial frame. Transforming from this frame to FRAME_ICRF
+ *                  is equivalent to calling astrometric_to_apparent().
  * FRAME_ICRF     - ICRF frame. Axes (almost) aligned to equatorial J2000.0.
  *                  This frame is used for all 3D positions/velocities for
  *                  ephemerides of solar system objects or astrometric reference
@@ -185,11 +187,34 @@ void position_to_astrometric(const observer_t *obs, int origin,
  *
  * Parameters:
  *  obs     - The observer.  If NULL we use the current core observer.
- *  in      - The input  ICRF barycentric position/velocity in AU and AU/day as
- *            seen from the observer.
+ *  in      - The input  ICRF barycentric position in AU as seen from
+ *            the earth center.
  *  at_inf  - true for fixed objects (far away from the solar system)
- *  out     - The output ICRF astrometric position/velocity in AU and AU/day as
- *            seen from the observer.
+ *  out     - The output ICRF apparent position in AU as seen from
+ *            the observer.
  */
 void astrometric_to_apparent(const observer_t *obs, const double in[3],
+                             bool at_inf, double out[3]);
+
+/* Function: apparent_to_astrometric
+ * Convert apparent direction to astrometric direction. Input direction is
+ * assumed to be seen from the observer, while ouput direction is seen
+ * from earth center.
+ *
+ * This function change the inertial frame to match the one of the earth center.
+ * This convertion takes into account the following effects:
+ * - position of observer on earth
+ * - annual abberation (space motion of the observer)
+ * - diurnal abberation (daily space motion of the observer)
+ * - light deflection by the sun
+ *
+ * Parameters:
+ *  obs     - The observer.  If NULL we use the current core observer.
+ *  in      - The input  ICRF barycentric position in AU as seen from
+ *            the observer.
+ *  at_inf  - true for fixed objects (far away from the solar system)
+ *  out     - The output ICRF astrometric position in AU as seen from
+ *            the earth center.
+ */
+void apparent_to_astrometric(const observer_t *obs, const double in[3],
                              bool at_inf, double out[3]);
