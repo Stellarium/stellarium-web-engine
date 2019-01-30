@@ -13,6 +13,7 @@
  */
 
 #include "telescope.h"
+#include "utils/utils.h"
 
 #include <math.h>
 
@@ -52,7 +53,7 @@ void telescope_auto(telescope_t *tel, double fov)
 
     fe = 22;
     fo = M * fe;
-    Do = Deye * M;
+    Do = min(10000, Deye * M);
 
     tel->diameter = Do;
     tel->focal_e = fe;
