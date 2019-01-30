@@ -254,21 +254,21 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     eraS2c(aob, 90 * DD2R - zob, p);
     core_get_point_for_mag(s->vmag, &size, &luminance);
     bv_to_rgb(s->bv, color);
+    convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
+    if (!project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+                 2, p, p))
+        return 0;
     point = (point_t) {
-        .pos = {p[0], p[1], p[2]},
+        .pos = {p[0], p[1], 0, 0},
         .size = size,
         .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                   luminance * 255},
         .oid = s->oid,
     };
-    paint_points(&painter, 1, &point, FRAME_OBSERVED);
+    paint_2d_points(&painter, 1, &point);
 
     if (selected || (s->vmag <= painter.hints_limit_mag - 4.0)) {
-        convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW,
-                          true, p, p);
-        if (project(painter.proj,
-                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2, p, p))
-            star_render_name(&painter, s, p, size, s->vmag, color);
+        star_render_name(&painter, s, p, size, s->vmag, color);
     }
     return 0;
 }
@@ -561,7 +561,7 @@ static int render_visitor(int order, int pix, void *user)
             survey != SURVEY_GAIA))
             star_render_name(&painter, s, p_win, size, s->vmag, color);
     }
-    paint_points(&painter, n, points, FRAME_WINDOW);
+    paint_2d_points(&painter, n, points);
     free(points);
 
 end:

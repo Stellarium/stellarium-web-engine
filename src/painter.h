@@ -45,9 +45,8 @@ struct renderer
     void (*finish)(renderer_t *rend);
     void (*flush)(renderer_t *rend);
 
-    void (*points)(renderer_t           *rend,
+    void (*points_2d)(renderer_t        *rend,
                    const painter_t      *painter,
-                   int                  frame,
                    int                  n,
                    const point_t        *points);
 
@@ -215,8 +214,17 @@ int paint_prepare(const painter_t *painter, double win_w, double win_h,
                   double scale);
 int paint_finish(const painter_t *painter);
 int paint_flush(const painter_t *painter);
-int paint_points(const painter_t *painter, int n, const point_t *points,
-                 int frame);
+
+/* Function: paint_2d_points
+ *
+ * Render a list of star-like points in 2d.
+
+ * Parameters:
+ *  painter       - The painter.
+ *  n             - The number of points in the array.
+ *  points        - The array of points to draw.
+ */
+int paint_2d_points(const painter_t *painter, int n, const point_t *points);
 
 /* Function: paint_quad
  *

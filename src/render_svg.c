@@ -32,7 +32,6 @@ static void finish(renderer_t *rend_)
 }
 
 static void points(renderer_t *rend_, const painter_t *painter,
-                   int frame,
                    int n,
                    const point_t *points)
 {
@@ -43,7 +42,6 @@ static void points(renderer_t *rend_, const painter_t *painter,
     const double scale = 320;
     for (i = 0; i < n; i++) {
         p = points[i];
-        convert_framev4(painter->obs, frame, FRAME_VIEW, p.pos, p.pos);
         if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos)) continue;
         pos[0] = (pos[0] + 1.0) * scale;
         pos[1] = (pos[1] + 1.0) * scale;
@@ -128,7 +126,7 @@ renderer_t *render_svg_create(const char *out)
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
-    rend->rend.points = points;
+    rend->rend.points_2d = points;
     rend->rend.text = text;
     rend->rend.line = line;
     return &rend->rend;

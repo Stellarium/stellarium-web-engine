@@ -307,7 +307,6 @@ static item_t *get_item(renderer_gl_t *rend, int type,
 
 static void points(renderer_t *rend_,
                    const painter_t *painter,
-                   int frame,
                    int n,
                    const point_t *points)
 {
@@ -339,12 +338,7 @@ static void points(renderer_t *rend_,
 
     for (i = 0; i < n; i++) {
         p = points[i];
-        if (frame == FRAME_WINDOW) {
-            window_to_ndc(rend, p.pos, p.pos);
-        } else if (frame != FRAME_NDC) {
-            convert_framev4(painter->obs, frame, FRAME_VIEW, p.pos, p.pos);
-            project(painter->proj, PROJ_TO_NDC_SPACE, 3, p.pos, p.pos);
-        }
+        window_to_ndc(rend, p.pos, p.pos);
 
         gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos));
         gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * rend->scale * 2 * sm);
@@ -1387,7 +1381,7 @@ renderer_t* render_gl_create(void)
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
     rend->rend.flush = flush;
-    rend->rend.points = points;
+    rend->rend.points_2d = points;
     rend->rend.quad = quad;
     rend->rend.quad_wireframe = quad_wireframe;
     rend->rend.texture = texture;

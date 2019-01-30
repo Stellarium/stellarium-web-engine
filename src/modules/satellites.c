@@ -349,7 +349,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
                   luminance * 255},
         .oid = obj->oid,
     };
-    paint_points(&painter, 1, &point, FRAME_WINDOW);
+    paint_2d_points(&painter, 1, &point);
 
     // Render name if needed.
     if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 1.0)) {

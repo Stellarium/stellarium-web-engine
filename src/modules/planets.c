@@ -819,7 +819,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                   color[3] * 255},
         .oid = planet->obj.oid,
     };
-    paint_points(&painter, 1, &point, FRAME_WINDOW);
+    paint_2d_points(&painter, 1, &point);
 
     if (hips_alpha > 0) {
         planet_render_hips(planet, planet->radius_m / DAU * r_scale,
