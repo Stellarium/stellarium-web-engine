@@ -259,7 +259,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
                  2, p, p))
         return 0;
     point = (point_t) {
-        .pos = {p[0], p[1], 0, 0},
+        .pos = {p[0], p[1]},
         .size = size,
         .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                   luminance * 255},
@@ -548,7 +548,7 @@ static int render_visitor(int order, int pix, void *user)
         core_get_point_for_mag(s->vmag, &size, &luminance);
         bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
-            .pos = {p_win[0], p_win[1], 0, 0},
+            .pos = {p_win[0], p_win[1]},
             .size = size,
             .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                       luminance * 255},

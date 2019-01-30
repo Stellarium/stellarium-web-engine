@@ -202,7 +202,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
-        .pos = {win_pos[0], win_pos[1], 0, 0},
+        .pos = {win_pos[0], win_pos[1]},
         .size = size,
         .color = {255, 255, 255, luminance * 255},
         .oid = obj->oid,

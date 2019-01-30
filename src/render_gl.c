@@ -173,11 +173,11 @@ static const gl_buf_info_t LINES_BUF = {
 };
 
 static const gl_buf_info_t POINTS_BUF = {
-    .size = 20,
+    .size = 16,
     .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
-        [ATTR_SIZE]     = {GL_FLOAT, 1, false, 12},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 16},
+        [ATTR_POS]      = {GL_FLOAT, 2, false, 0},
+        [ATTR_SIZE]     = {GL_FLOAT, 1, false, 8},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 12},
     },
 };
 
@@ -340,7 +340,7 @@ static void points(renderer_t *rend_,
         p = points[i];
         window_to_ndc(rend, p.pos, p.pos);
 
-        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos));
+        gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(p.pos));
         gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * rend->scale * 2 * sm);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(p.color));
         gl_buf_next(&item->buf);

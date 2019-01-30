@@ -116,7 +116,7 @@ renderer_t* render_svg_create(const char *out);
 
 struct point
 {
-    double  pos[4];
+    double  pos[2];
     double  size;       // Radius in window pixel (pixel with density scale).
     uint8_t color[4];
     uint64_t oid;       // Used instead of id if set.
