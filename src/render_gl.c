@@ -147,6 +147,7 @@ struct item
             char text[128];
             float pos[2];
             float size;
+            float angle;
             int   align;
             const char *font;
         } text;
@@ -753,6 +754,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         item->text.size = size;
         item->text.align = align;
         item->text.font = font;
+        item->text.angle = angle;
         strcpy(item->text.text, text);
         DL_APPEND(rend->items, item);
     }
@@ -889,11 +891,12 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 
 static void item_text_render(renderer_gl_t *rend, const item_t *item)
 {
-    float x, y;
     int font_handle = 0;
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
+    nvgTranslate(rend->vg, item->text.pos[0], item->text.pos[1]);
+    nvgRotate(rend->vg, item->text.angle);
     if (item->text.font) {
         font_handle = nvgFindFont(rend->vg, item->text.font);
         if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
@@ -904,12 +907,8 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
                                    item->color[1] * 255,
                                    item->color[2] * 255,
                                    item->color[3] * 255));
-    // Round the position to the nearest physical pixel.
-    // XXX: is that correct?
-    x = round(item->text.pos[0] * rend->scale) / rend->scale;
-    y = round(item->text.pos[1] * rend->scale) / rend->scale;
     nvgTextAlign(rend->vg, item->text.align);
-    nvgText(rend->vg, x, y, item->text.text, NULL);
+    nvgText(rend->vg, 0, 0, item->text.text, NULL);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);
 }
