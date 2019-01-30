@@ -223,7 +223,6 @@ static void render_label(const double p[2], const double u[2],
     int h[4];
     double n[2];
     double bounds[4], size[2];
-    uint32_t hash;
 
     vec2_normalize(u, n);
 
@@ -262,23 +261,18 @@ static void render_label(const double p[2], const double u[2],
                       13, bounds);
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
+
     vec2_normalize(u, n);
     pos[0] = p[0] + n[0] * size[0] / 2 + v[0] * 4;
     pos[1] = p[1] + n[1] * size[0] / 2 + v[1] * 4;
-    pos[0] += fabs(v[1]) * size[1] * 1.5;
-    pos[1] += fabs(v[0]) * size[1] * 1.5;
+    pos[0] += fabs(v[1]) * size[1] * 0.7;
+    pos[1] += fabs(v[0]) * size[1] * 0.7;
 
     vec4_copy(painter->color, color);
 
-    // Uniq hash so that the labels are differentiated.
-    hash = crc32(dir, (void*)line->obj.id, strlen(line->obj.id));
-    hash = crc32(hash, (void*)&a, sizeof(a));
-    hash = crc32(hash, (void*)v, 2 * sizeof(double));
-
     color[3] = 1.0;
-    labels_add(buff, pos, 0, 13, color, label_angle,
-               ALIGN_CENTER | ALIGN_MIDDLE, 0,
-               oid_create("LINE", hash));
+    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE, 13,
+               color, label_angle);
 }
 
 int on_quad(int step, qtree_node_t *node,
