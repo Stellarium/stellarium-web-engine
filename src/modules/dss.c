@@ -30,7 +30,8 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     double visibility;
     dss_t *dss = (dss_t*)obj;
     painter_t painter2 = *painter;
-    double lum, c;
+    double lum, c, sep;
+    int render_order, split_order;
 
     if (dss->visible.value == 0.0) return 0;
     if (!dss->hips) return 0;
@@ -45,7 +46,24 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     painter2.color[3] *= c;
 
     if (painter2.color[3] == 0.0) return 0;
-    return hips_render(dss->hips, &painter2, 2 * M_PI, -1);
+
+    /*
+     * Compute split order.
+     * When we are around the poles we need a higher resolution (up to order
+     * 11).  We also limit the split so that we don't split a single quad
+     * too much, or the rendering would be too slow.
+     *
+     * Note that this could be done in hips.c, but for the moment we only
+     * need to do this for the DSS survey.
+     */
+    sep = min(eraSepp(painter->viewport_cap, VEC(0, 0, +1)),
+              eraSepp(painter->viewport_cap, VEC(0, 0, -1)));
+    split_order = mix(11, 4, sep / (M_PI / 2));
+    render_order = hips_get_render_order(dss->hips, painter, 2 * M_PI);
+    split_order = min(split_order, render_order + 4);
+
+    hips_render(dss->hips, &painter2, 2 * M_PI, split_order);
+    return 0;
 }
 
 static int dss_update(obj_t *obj, const observer_t *obs, double dt)

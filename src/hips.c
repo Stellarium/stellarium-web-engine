@@ -558,6 +558,19 @@ bool hips_is_ready(hips_t *hips)
     return hips_update(hips);
 }
 
+int hips_get_render_order(const hips_t *hips, const painter_t *painter,
+                          double angle)
+{
+    double pix_per_rad;
+    double w, px; // Size in pixel of the total survey.
+
+    // XXX: is that the proper way to compute it??
+    pix_per_rad = painter->fb_size[0] / atan(painter->proj->scaling[0]) / 2;
+    px = pix_per_rad * angle;
+    w = hips->tile_width ?: 256;
+    return round(log2(px / (4.0 * sqrt(2.0) * w)));
+}
+
 // Similar to hips_render, but instead of actually rendering the tiles
 // we call a callback function.  This can be used when we need better
 // control on the rendering.
@@ -568,15 +581,9 @@ int hips_render_traverse(
                         int order, int pix, int split, int flags, void *user))
 {
     int render_order;
-    double pix_per_rad;
-    double w, px; // Size in pixel of the total survey.
     int flags = 0;
     hips_update(hips);
-    // XXX: is that the proper way to compute it??
-    pix_per_rad = painter->fb_size[0] / atan(painter->proj->scaling[0]) / 2;
-    px = pix_per_rad * angle;
-    w = hips->tile_width ?: 256;
-    render_order = round(log2(px / (4.0 * sqrt(2.0) * w)));
+    render_order = hips_get_render_order(hips, painter, angle);
     if (angle < 2.0 * M_PI)
         flags |= HIPS_EXTERIOR;
 

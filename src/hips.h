@@ -190,6 +190,19 @@ void hips_set_frame(hips_t *hips, int frame);
 void hips_set_label(hips_t *hips, const char* label);
 
 /*
+ * Function: hips_get_render_order
+ * Return the max order at which a survey will be rendered.
+ *
+ * Parameters:
+ *   hips    - A hips survey.
+ *   painter - The painter used to render.
+ *   angle   - Visible angle the survey has in the sky.
+ *             (2 * PI for full sky surveys).
+ */
+int hips_get_render_order(const hips_t *hips, const painter_t *painter,
+                          double angle);
+
+/*
  * Function: hips_render
  * Render a hips survey.
  *
