@@ -402,7 +402,6 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     static const double white[4] = {1, 1, 1, 1};
     double win_pos[2], win_size[2], win_angle;
-    double p[4] = {};
     painter_t painter = *painter_;
     double hints_limit_mag = painter.hints_limit_mag;
     const bool selected = core->selection && s->oid == core->selection->oid;
@@ -416,11 +415,14 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         return 1;
 
     // Check that it's intersecting with current viewport
-    if (!cap_intersects_cap(painter.viewport_cap_astrom, s->bounding_cap))
+    if (!cap_intersects_cap(painter.viewport_caps[FRAME_ASTROM],
+                            s->bounding_cap))
         return 0;
+
     // Skip if below horizon.
     if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&
-            !cap_intersects_cap(painter.sky_cap, s->bounding_cap))
+            !cap_intersects_cap(painter.sky_caps[FRAME_ASTROM],
+                                s->bounding_cap))
         return 0;
 
     // Special case for Open Clusters, for which the limiting magnitude
@@ -443,11 +445,6 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 
     if (vmag > hints_limit_mag + 2)
         return 0;
-
-    convert_frame(painter.obs, FRAME_ASTROM, FRAME_VIEW, true,
-                  s->bounding_cap, p);
-    project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-            2, p, p);
 
     compute_hint_transformation(&painter, s2->ra, s2->de, s2->angle,
             s2->smax, s2->smin, s2->symbol, win_pos, win_size,

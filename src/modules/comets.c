@@ -179,7 +179,7 @@ void comet_get_designations(
 
 static int comet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[4], win_pos[4], vmag, size, luminance;
+    double win_pos[2], vmag, size, luminance;
     comet_t *comet = (comet_t*)obj;
     point_t point;
     double label_color[4] = RGBA(255, 124, 124, 255);
@@ -188,14 +188,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
 
     if (vmag > painter->stars_limit_mag) return 0;
     if (isnan(obj->pvo[0][0])) return 0; // For the moment!
-    convert_frame(painter->obs, FRAME_ICRF, FRAME_OBSERVED, false,
-                        obj->pvo[0], pos);
-
-    if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
-        return 0;
-    convert_frame(painter->obs, FRAME_OBSERVED, FRAME_VIEW, false,
-                      pos, pos);
-    if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, win_pos))
+    if (!painter_project(painter, FRAME_ICRF, obj->pvo[0], false, true,
+                         win_pos))
         return 0;
 
     comet->on_screen = true;

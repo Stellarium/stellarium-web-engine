@@ -317,7 +317,7 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
  */
 static int satellite_render(const obj_t *obj, const painter_t *painter_)
 {
-    double vmag, size, luminance, p[4] = {0, 0, 0, 1}, p_win[4];
+    double vmag, size, luminance, p_win[4];
     painter_t painter = *painter_;
     point_t point;
     double color[3] = {1, 1, 1};
@@ -327,10 +327,10 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     vmag = obj->vmag;
     if (vmag > painter.stars_limit_mag) return 0;
-    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, false, obj->pvo[0], p);
 
-    // Skip if not visible.
-    if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, p, p_win)) return 0;
+    if (!painter_project(&painter, FRAME_ICRF, obj->pvo[0], false, true, p_win))
+        return 0;
+
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.

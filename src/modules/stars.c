@@ -237,27 +237,18 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     // XXX: the code is almost the same as the inner loop in stars_render.
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
-    double ri, di, aob, zob, hob, dob, rob;
-    double p[4], size, luminance;
+    double p[2], size, luminance;
     double color[3];
     painter_t painter = *painter_;
     point_t point;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
-    // XXX: Use convert_coordinates instead!
-    eraAtciq(s->ra, s->de, s->pra, s->pde, s->plx, 0,
-            &painter.obs->astrom, &ri, &di);
-    eraAtioq(ri, di, &painter.obs->astrom,
-            &aob, &zob, &hob, &dob, &rob);
-    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && zob > 90 * DD2R)
+    if (!painter_project(painter_, FRAME_ICRF, obj->pvo[0], true, true, p))
         return 0;
-    eraS2c(aob, 90 * DD2R - zob, p);
+
     core_get_point_for_mag(s->vmag, &size, &luminance);
     bv_to_rgb(s->bv, color);
-    convert_frame(painter.obs, FRAME_OBSERVED, FRAME_VIEW, true, p, p);
-    if (!project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                 2, p, p))
-        return 0;
+
     point = (point_t) {
         .pos = {p[0], p[1]},
         .size = size,
@@ -508,7 +499,7 @@ static int render_visitor(int order, int pix, void *user)
     tile_t *tile;
     int i, n = 0;
     star_data_t *s;
-    double p[4], p_win[4], size, luminance;
+    double p_win[4], size, luminance;
     double color[3];
     bool loaded;
     bool selected;
@@ -529,19 +520,8 @@ static int render_visitor(int order, int pix, void *user)
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
         if (s->vmag > painter.stars_limit_mag) break;
-        if (!cap_contains_vec3(painter.viewport_cap_astrom, s->pos))
-            continue;
-        // Skip if below horizon.
-        if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&
-                !cap_contains_vec3(painter.sky_cap, s->pos))
-            continue;
 
-        // Compute star observed and screen pos.
-        vec3_copy(s->pos, p);
-        p[3] = 0;
-        convert_frame(painter.obs, FRAME_ASTROM, FRAME_VIEW, true, p, p);
-        if (!project(painter.proj, PROJ_TO_WINDOW_SPACE |
-                     PROJ_ALREADY_NORMALIZED, 2, p, p_win))
+        if (!painter_project(&painter, FRAME_ASTROM, s->pos, true, true, p_win))
             continue;
 
         (*illuminance) += s->illuminance;

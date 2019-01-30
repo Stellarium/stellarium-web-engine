@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "projection.h"
+#include "frames.h"
 
 typedef struct observer observer_t;
 typedef struct renderer renderer_t;
@@ -164,26 +165,19 @@ struct painter
     double          points_smoothness;
     double          (*depth_range)[2]; // If set use depth test.
 
-    // Viewport cap for fast clipping test.
+    // Viewport caps for fast clipping test.
     // The cap is defined as the vector xyzw with xyz the observer viewing
-    // direction in ICRF and w the cosinus of the max separation between
+    // direction in all frames and w the cosinus of the max separation between
     // a visible point and xyz.
-    // To test if a pos in ICRF is clipped, we can use:
-    //   vec3_dot(pos, painter.viewport_cap) < painter.viewport_cap[3]
-    double          viewport_cap[4];
-
-    // Viewport cap for fast clipping test.
-    // The cap is defined as the vector xyzw with xyz the observer viewing
-    // direction in Astrometric frame and w the cosinus of the max separation
-    // between a visible point and xyz.
-    // To test if a pos in Astrometric frame is clipped, we can use:
-    //   vec3_dot(pos, painter.viewport_cap) < painter.viewport_cap[3]
-    double          viewport_cap_astrom[4];
+    // To test if a pos in a given frame is clipped, we can use:
+    //   vec3_dot(pos, painter.viewport_caps[frame]) <
+    //       painter.viewport_caps[frame][3]
+    double          viewport_caps[FRAMES_NB][4];
 
     // Sky above ground cap for fast clipping test.
-    // The cap is pointing up, and has an angle of 91 deg (to take refraction
-    // into account), in ICRF.
-    double          sky_cap[4];
+    // The cap is pointing up, and has an angle of 91 deg (1 deg margin to take
+    // refraction into account).
+    double          sky_caps[FRAMES_NB][4];
 
     union {
         // For planet rendering only.
@@ -349,12 +343,42 @@ void paint_debug(bool value);
 // Returns:
 //  True if the tile is clipped, false otherwise.
 //
-//  A clipped tile is guarantied to be not visible, but it is not guarantied
+//  A clipped tile is guaranteed to be not visible, but it is not guaranteed
 //  that a non visible tile is clipped.  So this function can return false
 //  even though a tile is not actually visible.
 bool painter_is_tile_clipped(const painter_t *painter, int frame,
                              int order, int pix,
                              bool outside);
+
+// Function: painter_is_point_clipped_fast
+//
+// Convenience function that checks if a 3D point is visible.
+// This function is fast, especially when is_normalized is true but not very
+// accurate. To refine the clipping test, the point must be projected.
+//
+// Parameters:
+//  painter       - The painter.
+//  frame         - One of the <FRAME> enum frame.
+//  pos           - the 3D point
+//  is_normalized - true if p is already normalized
+//
+// Returns:
+//  True if the point is clipped, false otherwise.
+//
+// When true is returned, the passed point is guaranteed to be outside the
+// viewport. When false is returned, there is no guarantee that the point is
+// visible.
+bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
+                                   const double pos[3], bool is_normalized);
+
+// Function: painter_update_caps
+//
+// Update the bounding caps for each reference frames.
+// Must be called after painter creation to allow for fast clipping tests.
+//
+// Parameters:
+//  painter       - The painter.
+void painter_update_caps(const painter_t *painter);
 
 /*
  * Function: paint_orbit
@@ -444,5 +468,42 @@ int paint_2d_line(const painter_t *painter, const double transf[3][3],
 void painter_project_ellipse(const painter_t *painter, int frame,
         float ra, float de, float angle, float size_x, float size_y,
         double win_pos[2], double win_size[2], double *win_angle);
+
+/*
+ * Function: painter_project
+ * Project a point defined on the sphere to the screen.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   frame      - The frame in which the point is defined.
+ *   pos        - The point 3D coordinates.
+ *   at_inf     - true for fixed objects (far away from the solar system).
+ *                For such objects, pos is assumed to be normalized.
+ *   clip_first - If the point is identified as clipped, skip projection and
+ *                return false. win_pos content is then undefined.
+ *   win_pos    - The point position in screen coordinates (px).
+ *
+ * Returns:
+ *   False if the point is clipped, true otherwise.
+ */
+bool painter_project(const painter_t *painter, int frame, const double pos[3],
+                     bool at_inf, bool clip_first, double win_pos[2]);
+
+
+/*
+ * Function: painter_unproject
+ * Unproject a 2D point defined on the screen to the passed frame.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   frame      - The frame in which the point needs to be unprojected.
+ *   win_pos    - The point 2D coordinates on screen (px).
+ *   pos        - The corresponding 3D unit vector in the given frame.
+ *
+ * Returns:
+ *   False if the point cannot be unprojected, true otherwise.
+ */
+bool painter_unproject(const painter_t *painter, int frame,
+                     const double win_pos[2], double pos[3]);
 
 #endif // PAINTER_H

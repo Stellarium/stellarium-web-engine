@@ -16,6 +16,45 @@ static bool g_debug = false;
         if ((rend)->f) (rend)->f((rend), ##__VA_ARGS__); \
     } while (0)
 
+
+/*
+ * Function: compute_viewport_cap
+ * Compute the viewport cap (in given frame).
+ */
+static void compute_viewport_cap(const painter_t *painter, int frame,
+                                 double cap[4])
+{
+    int i;
+    double p[3];
+    const double w = painter->proj->window_size[0];
+    const double h = painter->proj->window_size[1];
+    double max_sep = 0;
+
+    painter_unproject(painter, frame, VEC(w / 2, h / 2), cap);
+    // Compute max separation from all corners.
+    for (i = 0; i < 4; i++) {
+        painter_unproject(painter, frame, VEC(w * (i % 2), h * (i / 2)), p);
+        max_sep = max(max_sep, eraSepp(cap, p));
+    }
+    cap[3] = cos(max_sep);
+}
+
+static void compute_sky_cap(const observer_t *obs, int frame, double cap[4])
+{
+    double p[3] = {0, 0, 1};
+    convert_frame(obs, FRAME_OBSERVED, frame, true, p, cap);
+    cap[3] = cos(91.0 * M_PI / 180);
+}
+
+void painter_update_caps(const painter_t *painter)
+{
+    int i;
+    for (i = 0; i < FRAMES_NB ; ++i) {
+        compute_viewport_cap(painter, i, painter->viewport_caps[i]);
+        compute_sky_cap(painter->obs, i, painter->sky_caps[i]);
+    }
+}
+
 int paint_prepare(const painter_t *painter, double win_w, double win_h,
                   double scale)
 {
@@ -217,6 +256,20 @@ int paint_lines(const painter_t *painter,
 void paint_debug(bool value)
 {
     g_debug = value;
+}
+
+bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
+                              const double pos[3], bool is_normalized) {
+    double v[3];
+    vec3_copy(pos, v);
+    if (!is_normalized)
+        vec3_normalize(v, v);
+    if (!cap_contains_vec3(painter->viewport_caps[frame], v))
+        return true;
+    if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) &&
+         !cap_contains_vec3(painter->sky_caps[frame], v))
+        return true;
+    return false;
 }
 
 bool painter_is_tile_clipped(const painter_t *painter, int frame,
@@ -536,4 +589,29 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     *win_angle = isnan(angle) ? 0 : atan2(a[1], a[0]);
     win_size[0] = 2 * vec2_norm(a);
     win_size[1] = 2 * vec2_norm(b);
+}
+
+bool painter_project(const painter_t *painter, int frame,
+                     const double pos[3], bool at_inf, bool clip_first,
+                     double win_pos[2]) {
+    double v[3];
+    if (clip_first) {
+        if (painter_is_point_clipped_fast(painter, frame, pos, at_inf))
+            return false;
+    }
+    convert_frame(painter->obs, frame, FRAME_VIEW, at_inf, pos, v);
+    return project(painter->proj, (at_inf ? PROJ_ALREADY_NORMALIZED : 0) |
+                   PROJ_TO_WINDOW_SPACE, 2, v, win_pos);
+}
+
+bool painter_unproject(const painter_t *painter, int frame,
+                     const double win_pos[2], double pos[3]) {
+    double p[4];
+    // Win to NDC.
+    p[0] = win_pos[0] / painter->proj->window_size[0] * 2 - 1;
+    p[1] = 1 - win_pos[1] / painter->proj->window_size[1] * 2;
+    // NDC to view.
+    project(painter->proj, PROJ_BACKWARD, 4, p, p);
+    convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
+    return true;
 }

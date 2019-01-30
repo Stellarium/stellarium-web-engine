@@ -769,19 +769,20 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec3_normalize(cap, cap);
     cap[3] = cos(max(planet->radius * r_scale, point_r));
 
-    if (!cap_intersects_cap(painter.viewport_cap, cap))
+    // TODO: add a painter_is_cap_clipped() from code below
+    if (!cap_intersects_cap(painter.viewport_caps[FRAME_ICRF], cap))
         return;
 
     if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) &&
-         !cap_intersects_cap(painter.sky_cap, cap))
+         !cap_intersects_cap(painter.sky_caps[FRAME_ICRF], cap))
         return;
 
     // Compute 2D position of planetary disk point the closest to the screen
     // center to perform exact clipping.
     vec4_copy(planet->obj.pvo[0], pos);
     vec3_normalize(pos, pos);
-    if (!cap_contains_vec3(cap, painter.viewport_cap)) {
-        vec3_cross(pos, painter.viewport_cap, axis);
+    if (!cap_contains_vec3(cap, painter.viewport_caps[FRAME_ICRF])) {
+        vec3_cross(pos, painter.viewport_caps[FRAME_ICRF], axis);
         quat_from_axis(q, max(planet->radius * r_scale, point_r),
                        axis[0], axis[1], axis[2]);
         quat_mul_vec3(q, pos, closest);

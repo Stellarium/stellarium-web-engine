@@ -236,7 +236,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[4], win_pos[4], vmag, size, luminance;
+    double pos[4], win_pos[2], vmag, size, luminance;
     double label_color[4] = RGBA(255, 124, 124, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
@@ -244,11 +244,8 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     vmag = mplanet->obj.vmag;
     if (vmag > painter->stars_limit_mag) return 0;
-    obj_get_pos_observed(obj, painter->obs, pos);
-    if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
-        return 0;
-    convert_frame(painter->obs, FRAME_OBSERVED, FRAME_VIEW, false, pos, pos);
-    if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, win_pos))
+    obj_get_pos_icrs(obj, painter->obs, pos);
+    if (!painter_project(painter, FRAME_ICRF, pos, false, true, win_pos))
         return 0;
 
     mplanet->on_screen = true;
