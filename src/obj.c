@@ -562,12 +562,21 @@ void obj_foreach_attr(const obj_t *obj,
 {
     int i;
     attribute_t *attr;
-    if (!obj->klass) return;
-    if (obj->klass == &obj_sub_klass) obj = obj->parent;
-    if (!obj->klass->attributes) return;
+    obj_klass_t *klass;
+    const char *sub = NULL;
+
+    klass = obj->klass;
+    if (!klass) return;
+    if (klass == &obj_sub_klass) {
+        sub = obj->id;
+        klass = obj->parent->klass;
+    }
+    if (!klass->attributes) return;
     for (i = 0; ; i++) {
-        attr = &obj->klass->attributes[i];
-        if (!attr->name) return;
+        attr = &klass->attributes[i];
+        if (!attr->name) break;
+        if ((bool)attr->sub != (bool)sub) continue;
+        if (attr->sub && strcmp(attr->sub, sub) != 0) continue;
         f(attr->name, attr->is_prop, user);
     }
 }
