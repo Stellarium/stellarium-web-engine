@@ -13,6 +13,9 @@
  *
  */
 
+#ifndef FRAMES_H
+#define FRAMES_H
+
 typedef struct observer observer_t;
 
 /* Enum: FRAME
@@ -44,13 +47,15 @@ typedef struct observer observer_t;
  * FRAME_VIEW     - Observed frame rotated in the observer view direction.
  */
 enum {
-    FRAME_ASTROM              = -1,
-    FRAME_ICRF                = 0,
-    FRAME_CIRS                = 1,
-    FRAME_JNOW                = 2,
-    FRAME_OBSERVED            = 3,
-    FRAME_VIEW                = 4
+    FRAME_ASTROM              = 0,
+    FRAME_ICRF                = 1,
+    FRAME_CIRS                = 2,
+    FRAME_JNOW                = 3,
+    FRAME_OBSERVED            = 4,
+    FRAME_VIEW                = 5
 };
+
+#define FRAMES_NB (FRAME_VIEW + 1)
 
 /* Function: convert_frame
  * Rotate the passed 3D apparent coordinate vector from a Reference Frame to
@@ -212,3 +217,5 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
  */
 void apparent_to_astrometric(const observer_t *obs, const double in[3],
                              bool at_inf, double out[3]);
+
+#endif // FRAMES_H
