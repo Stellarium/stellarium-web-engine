@@ -309,6 +309,7 @@ static obj_klass_t landscape_klass = {
         PROPERTY("active", "b", MEMBER(landscape_t, active),
                  .on_changed = landscape_on_active_changed),
         PROPERTY("description", "s", MEMBER(landscape_t, description)),
+        PROPERTY("url", "s", MEMBER(landscape_t, uri)),
         {}
     },
 };
