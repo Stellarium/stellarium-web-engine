@@ -529,7 +529,7 @@ static int render_visitor(int order, int pix, void *user)
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
         if (s->vmag > painter.stars_limit_mag) break;
-        if (!cap_contains_vec3(painter.viewport_cap, s->pos))
+        if (!cap_contains_vec3(painter.viewport_cap_astrom, s->pos))
             continue;
         // Skip if below horizon.
         if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&

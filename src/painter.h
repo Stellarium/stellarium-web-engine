@@ -173,6 +173,14 @@ struct painter
     //   vec3_dot(pos, painter.viewport_cap) < painter.viewport_cap[3]
     double          viewport_cap[4];
 
+    // Viewport cap for fast clipping test.
+    // The cap is defined as the vector xyzw with xyz the observer viewing
+    // direction in Astrometric frame and w the cosinus of the max separation
+    // between a visible point and xyz.
+    // To test if a pos in Astrometric frame is clipped, we can use:
+    //   vec3_dot(pos, painter.viewport_cap) < painter.viewport_cap[3]
+    double          viewport_cap_astrom[4];
+
     // Sky above ground cap for fast clipping test.
     // The cap is pointing up, and has an angle of 91 deg (to take refraction
     // into account), in ICRF.

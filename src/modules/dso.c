@@ -416,7 +416,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         return 1;
 
     // Check that it's intersecting with current viewport
-    if (!cap_intersects_cap(painter.viewport_cap, s->bounding_cap))
+    if (!cap_intersects_cap(painter.viewport_cap_astrom, s->bounding_cap))
         return 0;
     // Skip if below horizon.
     if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&

@@ -454,8 +454,8 @@ static double compute_max_vmag(void)
  * Convert a window position to local ICRF position.
  * Approximated version that doesn't take into account the refraction.
  */
-static void win_to_icrf(const observer_t *obs, const projection_t *proj,
-                         const double win_pos[2], double out[3])
+static void win_to_frame(const observer_t *obs, const projection_t *proj,
+                         int frame, const double win_pos[2], double out[3])
 {
     double p[4];
     // Win to NDC.
@@ -463,7 +463,7 @@ static void win_to_icrf(const observer_t *obs, const projection_t *proj,
     p[1] = 1 - win_pos[1] / proj->window_size[1] * 2;
     // NDC to view.
     project(proj, PROJ_BACKWARD, 4, p, p);
-    convert_frame(obs, FRAME_VIEW, FRAME_ICRF, true, p, out);
+    convert_frame(obs, FRAME_VIEW, frame, true, p, out);
 }
 
 /*
@@ -493,7 +493,7 @@ static void win_to_observed(double x, double y, double p[3])
  * Compute the viewport cap (in ICRF) to set into the painter.
  */
 static void compute_viewport_cap(double viewport_cap[4],
-        const observer_t *obs, const projection_t *proj)
+        const observer_t *obs, const projection_t *proj, int frame)
 {
     int i;
     double p[3];
@@ -501,10 +501,10 @@ static void compute_viewport_cap(double viewport_cap[4],
     const double h = proj->window_size[1];
     double max_sep = 0;
 
-    win_to_icrf(obs, proj, VEC(w / 2, h / 2), viewport_cap);
+    win_to_frame(obs, proj, frame, VEC(w / 2, h / 2), viewport_cap);
     // Compute max separation from all corners.
     for (i = 0; i < 4; i++) {
-        win_to_icrf(obs, proj, VEC(w * (i % 2), h * (i / 2)), p);
+        win_to_frame(obs, proj, frame, VEC(w * (i % 2), h * (i / 2)), p);
         max_sep = max(max_sep, eraSepp(viewport_cap, p));
     }
     viewport_cap[3] = cos(max_sep);
@@ -580,7 +580,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
             (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
             (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
     };
-    compute_viewport_cap(painter.viewport_cap, core->observer, &proj);
+    compute_viewport_cap(painter.viewport_cap, core->observer, &proj,
+                         FRAME_ICRF);
+    compute_viewport_cap(painter.viewport_cap_astrom, core->observer, &proj,
+                         FRAME_ASTROM);
     compute_sky_cap(painter.sky_cap, core->observer);
 
     paint_prepare(&painter, win_w, win_h, pixel_scale);
