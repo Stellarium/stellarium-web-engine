@@ -360,8 +360,6 @@ static void info_widget(obj_t *obj)
         sprintf(buf, "%f", v);
         gui_label("VMAG", buf);
     }
-    if (obj_get_attr(obj, "distance", "s", buf) == 0)
-        gui_label("DIST", buf);
 
     sprintf(buf, "%s/%s", format_hangle(buf1, ra), format_dangle(buf2, dec));
     gui_label("RA/DE", buf);
