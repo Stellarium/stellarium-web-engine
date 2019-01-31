@@ -191,15 +191,10 @@ static json_value *constellation_set_image(
     if (json_get_attr_b(args, "uv_in_pixel", false))
         cons->img_need_rescale = true;
     assert(cons->img);
-    // Compute the image transformation matrix, only if we actually render
-    // the image.
-    if (cons->mat[2][2] == 0) {
-        int err = compute_img_mat(cons->anchors, cons->mat);
-        if (err) {
-            cons->error = -1;
-            return 0;
-        }
-    }
+    // Compute the image transformation matrix
+    int err = compute_img_mat(cons->anchors, cons->mat);
+    if (err)
+        cons->error = -1;
     return NULL;
 
 error:
