@@ -146,7 +146,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
     DL_FOREACH(g_labels->labels, label) {
         // We fade in the label slowly, but fade out very fast, otherwise
         // we don't get updated positions for fading out labels.
-        fader_update(&label->fader, label->fader.target ? 0.002 : 0.2);
+        fader_update(&label->fader, label->fader.target ? 0.016 : 0.16);
         painter.font = label->flags & LABEL_BOLD ? "bold" : NULL;
         for (i = 0; ; i++) {
             if (!label_get_possible_bounds(&painter, label, i, label->bounds)) {

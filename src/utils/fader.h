@@ -9,6 +9,8 @@
 
 #include <stdbool.h>
 
+#define FADER_DEFAULT_DURATION 0.3
+
 /*
  * Type: fader_t
  * Smoothly change a value from 0 to 1.
@@ -22,15 +24,39 @@
  * when we render the effect.
  */
 typedef struct {
-    bool    target;
-    double  value;
+    bool    target;    // The value we are moving to (true for 1, false for 0).
+    double  value;     // Current fade value between 0 and 1.
+    double  duration;  // Fade duration (s)
 } fader_t;
 
+/*
+ * Function: fader_init
+ * Initialize a fader using default duration.
+ *
+ * Parameters:
+ *   f        - the fader to initialize.
+ *   v        - the initial value to use.
+ */
 void fader_init(fader_t *f, bool v);
+
+/*
+ * Function: fader_init
+ * Initialize a fader.
+ *
+ * Parameters:
+ *   f        - the fader to initialize.
+ *   v        - the initial value to use.
+ *   duration - the fade duration in seconds.
+ */
+void fader_init2(fader_t *f, bool v, double duration);
 
 /*
  * Function: fader_update
  * Update a fader value.
+ *
+ * Parameters:
+ *   f        - the fader.
+ *   dt       - the time increment (s).
  *
  * Return:
  *   true if the fader value has changed.

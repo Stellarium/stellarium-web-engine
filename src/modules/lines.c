@@ -141,6 +141,7 @@ static int lines_init(obj_t *obj, json_value *args)
         line->grid = LINES[i].grid;
         hex_to_rgba(LINES[i].color, line->color);
         line->format = LINES[i].format;
+        fader_init(&line->visible, false);
     }
     return 0;
 }

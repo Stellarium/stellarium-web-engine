@@ -45,12 +45,22 @@ static bool move_toward(double *x,
 
 void fader_init(fader_t *f, bool v)
 {
+    fader_init2(f, v, FADER_DEFAULT_DURATION);
+}
+
+void fader_init2(fader_t *f, bool v, double duration)
+{
     f->target = v;
     f->value = v ? 1.0 : 0.0;
+    f->duration = duration;
 }
 
 bool fader_update(fader_t *f, double dt)
 {
-    const double speed = 15.0;
+    double speed;
+    if (f->duration <= 0)
+        speed = FADER_DEFAULT_DURATION;
+    else
+        speed = 1. / f->duration;
     return move_toward(&f->value, f->target, 0, speed, dt);
 }
