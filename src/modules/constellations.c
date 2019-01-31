@@ -53,6 +53,7 @@ typedef struct constellation {
 
     int         error; // Set if we couldn't parse the stars.
     double last_update; // Last update time in TT
+    double bounding_cap[4]; // Bounding cap in ICRS
 } constellation_t;
 
 /*
@@ -218,20 +219,19 @@ static bool constellation_is_visible(const painter_t *painter,
     const obj_t *s;
     bool below = true; // Set if all stars are below horizon.
 
+    if (!cap_intersects_cap(painter->viewport_caps[FRAME_ICRF],
+                           con->bounding_cap))
+        return false;
+
+    // Skip if below horizon.
+    if (painter->flags & PAINTER_HIDE_BELOW_HORIZON &&
+            !cap_intersects_cap(painter->sky_caps[FRAME_ICRF],
+                                con->bounding_cap))
+        return false;
+
     if (con->error) return false;
-    pos = calloc(con->count, sizeof(*pos));
-    for (i = 0; i < con->count; i++) {
-        s = con->stars[i];
-        obj_get_pos_observed(s, painter->obs, pos[i]);
-        if (pos[i][2] > 0) below = false;
-        mat3_mul_vec3(painter->obs->ro2v, pos[i], pos[i]);
-        project(painter->proj, PROJ_TO_NDC_SPACE, 4, pos[i], pos[i]);
-    }
-    ret = !is_clipped(con->count, pos);
-    if (ret && below && (painter->flags & PAINTER_HIDE_BELOW_HORIZON))
-        ret = false;
-    free(pos);
-    return ret;
+
+    return true;
 }
 
 static int render_lines(const constellation_t *con, const painter_t *painter);
@@ -260,7 +260,7 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     // The position of a constellation is its middle point.
     constellation_t *con = (constellation_t*)obj;
     constellations_t *cons = (constellations_t*)obj->parent;
-    double pos[4] = {0, 0, 0, 0};
+    double pos[4] = {0, 0, 0, 0}, max_cosdist, d;
     int i, err;
     if (con->error) return 0;
     // Optimization: don't update invisible constellation.
@@ -288,6 +288,15 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_copy(pos, obj->pvo[0]);
     obj->pvo[0][3] = 0; // At infinity.
     vec4_set(obj->pvo[1], 0, 0, 0, 0);
+
+    // Compute bounding cap
+    vec3_copy(pos, con->bounding_cap);
+    max_cosdist = 1.0;
+    for (i = 0; i < con->count; i++) {
+        d = vec3_dot(con->bounding_cap, con->stars[i]->pvo[0]);
+        max_cosdist = min(max_cosdist, d);
+    }
+    con->bounding_cap[3] = max_cosdist;
 
 end:
     // Rescale the image matrix once we got the texture if the anchors
