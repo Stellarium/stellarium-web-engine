@@ -10,9 +10,6 @@
 #include "swe.h"
 #include <zlib.h> // For crc32.
 
-// Don't render the labels passed this separation angle from viewport center.
-static const double LABELS_MAX_SEP = 30 * DD2R;
-
 /*
  * Enum of the label display styles.
  */
@@ -210,30 +207,6 @@ error:
     return NULL;
 }
 
-static bool constellation_is_visible(const painter_t *painter,
-                                     const constellation_t *con)
-{
-    int i;
-    bool ret;
-    double (*pos)[4];
-    const obj_t *s;
-    bool below = true; // Set if all stars are below horizon.
-
-    if (!cap_intersects_cap(painter->viewport_caps[FRAME_ICRF],
-                           con->bounding_cap))
-        return false;
-
-    // Skip if below horizon.
-    if (painter->flags & PAINTER_HIDE_BELOW_HORIZON &&
-            !cap_intersects_cap(painter->sky_caps[FRAME_ICRF],
-                                con->bounding_cap))
-        return false;
-
-    if (con->error) return false;
-
-    return true;
-}
-
 static int render_lines(const constellation_t *con, const painter_t *painter);
 static int render_img(const constellation_t *con, const painter_t *painter);
 
@@ -359,31 +332,22 @@ static int render_bounds(const constellation_t *con,
     return 0;
 }
 
-static bool constellation_is_selected(const constellation_t *con)
-{
-    if (!core->selection || !core->selection->id) return false;
-    return strcmp(core->selection->id, con->obj.id) == 0;
-}
-
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
-    int err;
     constellation_t *con = (const constellation_t*)obj;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
     painter_t painter = *_painter, painter2;
-    bool selected = constellation_is_selected(con);
+    const bool selected = core->selection && obj->oid == core->selection->oid;
+
+    if (con->error)
+        return 0;
 
     if (!selected)
         painter.color[3] *= cons->visible.value * con->visible.value;
     if (painter.color[3] == 0.0) return 0;
 
-    err = constellation_create_stars(con);
-    if (err) {
-        con->error = err;
-        return 0;
-    }
-
-    if (!constellation_is_visible(&painter, con))
+    // Check that it's intersecting with current viewport
+    if (painter_is_cap_clipped_fast(&painter, FRAME_ICRF, con->bounding_cap))
         return 0;
 
     painter2 = painter;
@@ -439,24 +403,22 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     int i;
     double (*lines)[4];
     double lines_color[4], names_color[4];
-    double pos[3] = {0, 0, 0};
-    double mag[2], radius[2], sep;
+    double win_pos[2];
+    double mag[2], radius[2];
     const char *label;
+    double half_cap[4];
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (painter.color[3] == 0.0) return 0;
     vec4_set(lines_color, 0.2, 0.2, 0.6, 1.0);
     vec4_set(names_color, 0.2, 0.4, 0.7, 1.0);
     painter.lines_width = 1.0;
-    // Refraction already taken into account from stars position.
     vec4_emul(lines_color, painter.color, painter.color);
 
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
-        convert_frame(painter.obs, FRAME_ICRF, FRAME_OBSERVED, true,
-                            con->stars[i]->pvo[0], lines[i]);
+        vec3_copy(con->stars[i]->pvo[0], lines[i]);
         lines[i][3] = 0; // To infinity.
-        vec3_add(pos, lines[i], pos);
     }
     for (i = 0; i < con->count; i += 2) {
         mag[0] = con->stars[i + 0]->vmag;
@@ -470,28 +432,24 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
                                  radius[1] * 2 + 0.25 * DD2R);
     }
 
-    vec3_normalize(pos, pos); // Middle pos.
-    paint_lines(&painter, FRAME_OBSERVED, con->count, lines, NULL, 8, 2);
+    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 8, 2);
     free(lines);
-
-    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) && pos[2] < 0)
-        return 0;
 
     // Render label only if we are not too far from the observer view
     // direction, so that we don't show too many labels when zoomed out.
-    mat3_mul_vec3(painter.obs->ro2v, pos, pos);
-    sep = eraSepp(pos, VEC(0, 0, -1));
-    if (    sep < LABELS_MAX_SEP &&
-            project(painter.proj,
-                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                    2, pos, pos))
-    {
-        label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
-                    con->name : con->name_translated;
-        labels_add(label, pos, 0, 13, names_color, 0,
-                   ALIGN_CENTER | ALIGN_MIDDLE,
-                   0, con->obj.oid);
-    }
+    vec4_copy(painter.viewport_caps[FRAME_ICRF], half_cap);
+    half_cap[3] = cos(max(40*M_PI/180, acos(half_cap[3]) * 0.7));
+    if (!cap_contains_vec3(half_cap, con->bounding_cap))
+        return 0;
+
+    if (!painter_project(&painter, FRAME_ICRF, con->bounding_cap, true, true,
+                         win_pos))
+        return 0;
+
+    label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
+                con->name : con->name_translated;
+    labels_add(label, win_pos, 0, 13, names_color, 0,
+               ALIGN_CENTER | ALIGN_MIDDLE, 0, con->obj.oid);
 
     return 0;
 }
