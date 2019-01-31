@@ -769,12 +769,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec3_normalize(cap, cap);
     cap[3] = cos(max(planet->radius * r_scale, point_r));
 
-    // TODO: add a painter_is_cap_clipped() from code below
-    if (!cap_intersects_cap(painter.viewport_caps[FRAME_ICRF], cap))
-        return;
-
-    if ((painter.flags & PAINTER_HIDE_BELOW_HORIZON) &&
-         !cap_intersects_cap(painter.sky_caps[FRAME_ICRF], cap))
+    if (painter_is_cap_clipped_fast(&painter, FRAME_ICRF, cap))
         return;
 
     // Compute 2D position of planetary disk point the closest to the screen

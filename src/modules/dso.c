@@ -415,14 +415,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         return 1;
 
     // Check that it's intersecting with current viewport
-    if (!cap_intersects_cap(painter.viewport_caps[FRAME_ASTROM],
-                            s->bounding_cap))
-        return 0;
-
-    // Skip if below horizon.
-    if (painter.flags & PAINTER_HIDE_BELOW_HORIZON &&
-            !cap_intersects_cap(painter.sky_caps[FRAME_ASTROM],
-                                s->bounding_cap))
+    if (painter_is_cap_clipped_fast(&painter, FRAME_ASTROM, s->bounding_cap))
         return 0;
 
     // Special case for Open Clusters, for which the limiting magnitude
