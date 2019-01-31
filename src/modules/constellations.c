@@ -52,6 +52,7 @@ typedef struct constellation {
     bool        img_need_rescale;
 
     int         error; // Set if we couldn't parse the stars.
+    double last_update; // Last update time in TT
 } constellation_t;
 
 /*
@@ -192,6 +193,15 @@ static json_value *constellation_set_image(
     if (json_get_attr_b(args, "uv_in_pixel", false))
         cons->img_need_rescale = true;
     assert(cons->img);
+    // Compute the image transformation matrix, only if we actually render
+    // the image.
+    if (cons->mat[2][2] == 0) {
+        int err = compute_img_mat(cons->anchors, cons->mat);
+        if (err) {
+            cons->error = -1;
+            return 0;
+        }
+    }
     return NULL;
 
 error:
@@ -262,6 +272,14 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
         return 0;
     }
     if (con->count == 0) return 0;
+
+    if (obs->tt - con->last_update < 1.0) {
+        // Constellation shape change cannot be seen over the course of
+        // one day
+        goto end;
+    }
+    con->last_update = obs->tt;
+
     for (i = 0; i < con->count; i++) {
         obj_update(con->stars[i], obs, 0);
         vec3_add(pos, con->stars[i]->pvo[0], pos);
@@ -271,25 +289,15 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
     obj->pvo[0][3] = 0; // At infinity.
     vec4_set(obj->pvo[1], 0, 0, 0, 0);
 
-    // Compute the image transformation matrix, only if we actually render
-    // the image.
-    if (cons->images_visible.value && con->mat[2][2] == 0) {
-        if (!con->img || !con->img->w) goto end;
-        err = compute_img_mat(con->anchors, con->mat);
-        if (err) {
-            con->error = -1;
-            return 0;
-        }
+end:
+    // Rescale the image matrix once we got the texture if the anchors
+    // coordinates were in pixels.
+    if (con->img_need_rescale && con->img && con->img->w) {
         assert(con->mat[2][2]);
-        // Rescale the image matrix once we got the texture if the anchors
-        // coordinates were in pixels.
-        if (con->img_need_rescale) {
-            mat3_iscale(con->mat, con->img->w, con->img->h, 1.0);
-            con->img_need_rescale = false;
-        }
+        mat3_iscale(con->mat, con->img->w, con->img->h, 1.0);
+        con->img_need_rescale = false;
     }
 
-end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
                           ((obj_t*)con == core->selection);
