@@ -320,9 +320,9 @@ static void spherical_project(
     //     eraEpb2jd(1875.0, &djm0, &djm);
     //     eraPnm06a(djm0, djm, rnpb);
     const double rnpb[3][3] = {
-        {0.999535, 0.027963, 0.012159},
-        {-0.027962, 0.999609, -0.000209},
-        {-0.012160, -0.000131, 0.999926},
+        {0.999535020565168, 0.027962538774844, 0.012158909862936},
+        {-0.027962067406873, 0.999608963139696, -0.000208799220464},
+        {-0.012159993837296, -0.000131286124061, 0.999926055923052},
     };
 
     eraS2c(v[0], v[1], out);
@@ -332,10 +332,6 @@ static void spherical_project(
     // aligned with the meridians and parallels we need to apply the
     // rotation to J2000.
     mat3_mul_vec3(rnpb, out, out);
-
-    // We need to renormalize as the output vectors are not perfectly
-    // normalized after the rotation matrix is applied.
-    vec3_normalize(out, out);
 }
 
 static int render_bounds(const constellation_t *con,
