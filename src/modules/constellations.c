@@ -38,6 +38,7 @@ typedef struct constellation {
     char        *name_translated;
     int         count;
     fader_t     visible;
+    fader_t     image_loaded_fader;
     obj_t       **stars;
     // Texture and associated anchors and transformation matrix.
     texture_t   *img;
@@ -89,6 +90,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     constellation_infos_t *info;
 
     fader_init(&cons->visible, true);
+    fader_init2(&cons->image_loaded_fader, false, 1);
 
     // For the moment, since we create the constellation from within C
     // only, we pass the info as a pointer to the structure!
@@ -195,6 +197,8 @@ static json_value *constellation_set_image(
     int err = compute_img_mat(cons->anchors, cons->mat);
     if (err)
         cons->error = -1;
+    cons->image_loaded_fader.target = false;
+    cons->image_loaded_fader.value = 0;
     return NULL;
 
 error:
@@ -203,7 +207,7 @@ error:
 }
 
 static int render_lines(const constellation_t *con, const painter_t *painter);
-static int render_img(const constellation_t *con, const painter_t *painter);
+static int render_img(constellation_t *con, const painter_t *painter);
 
 // Make a line shorter so that we don't hide the star.
 static void line_truncate(double pos[2][4], double a0, double a1)
@@ -278,7 +282,8 @@ end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
                           ((obj_t*)con == core->selection);
-    return fader_update(&con->visible, dt * 0.1) ? 1 : 0;
+    fader_update(&con->image_loaded_fader, dt);
+    return fader_update(&con->visible, dt) ? 1 : 0;
 }
 
 static void spherical_project(
@@ -449,7 +454,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     return 0;
 }
 
-static int render_img(const constellation_t *con, const painter_t *painter)
+static int render_img(constellation_t *con, const painter_t *painter)
 {
     projection_t proj = {0};
     painter_t painter2 = *painter;
@@ -457,9 +462,11 @@ static int render_img(const constellation_t *con, const painter_t *painter)
     if (!con->img || !texture_load(con->img, NULL)) return 0;
     if (!con->mat[2][2]) return 0; // Not computed yet.
 
+    con->image_loaded_fader.target = true;
+
     painter2.flags |= PAINTER_ADD;
     vec3_set(painter2.color, 1, 1, 1);
-    painter2.color[3] *= 0.5;
+    painter2.color[3] *= 0.5 * con->image_loaded_fader.value;
     mat3_copy(con->mat, proj.mat3);
     proj.backward = proj_backward;
     paint_quad(&painter2, FRAME_ICRF, con->img, NULL, NULL, &proj, 4);
