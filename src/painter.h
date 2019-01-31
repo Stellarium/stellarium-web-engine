@@ -371,6 +371,26 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
 bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
                                    const double pos[3], bool is_normalized);
 
+// Function: painter_is_cap_clipped_fast
+//
+// Convenience function that checks if a cap is clipped.
+// This function is fast but not very accurate.
+// To refine the clipping test, the point must be projected.
+//
+// Parameters:
+//  painter       - The painter.
+//  frame         - One of the <FRAME> enum frame.
+//  cap           - the cap
+//
+// Returns:
+//  True if the cap is clipped, false otherwise.
+//
+// When true is returned, the passed cap is guaranteed to be outside the
+// viewport. When false is returned, there is no guarantee that the cap is
+// visible.
+bool painter_is_cap_clipped_fast(const painter_t *painter, int frame,
+                                   const double cap[4]);
+
 // Function: painter_update_caps
 //
 // Update the bounding caps for each reference frames.

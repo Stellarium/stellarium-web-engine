@@ -258,8 +258,23 @@ void paint_debug(bool value)
     g_debug = value;
 }
 
+bool painter_is_cap_clipped_fast(const painter_t *painter, int frame,
+                                 const double cap[4])
+{
+    if (!cap_intersects_cap(painter->viewport_caps[frame], cap))
+        return true;
+
+    // Skip if below horizon.
+    if (painter->flags & PAINTER_HIDE_BELOW_HORIZON &&
+            !cap_intersects_cap(painter->sky_caps[frame], cap))
+        return true;
+
+    return false;
+}
+
 bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
-                              const double pos[3], bool is_normalized) {
+                                   const double pos[3], bool is_normalized)
+{
     double v[3];
     vec3_copy(pos, v);
     if (!is_normalized)
