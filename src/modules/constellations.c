@@ -432,7 +432,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
                                  radius[1] * 2 + 0.25 * DD2R);
     }
 
-    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 8, 2);
+    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1, 2);
     free(lines);
 
     // Render label only if we are not too far from the observer view
