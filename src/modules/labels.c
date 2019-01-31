@@ -35,7 +35,6 @@ struct label
 
 typedef struct labels {
     obj_t obj;
-    bool skip_selection; // If set, do no render the core selection label.
     label_t *labels;
 } labels_t;
 
@@ -194,10 +193,6 @@ void labels_add(const char *text, const double pos[2],
     label_t *label;
 
     if (!text || !*text) return;
-    if (    g_labels->skip_selection && oid && core->selection &&
-            oid == core->selection->oid) {
-        return;
-    }
     label = label_get(g_labels->labels, text, size, pos, oid);
     if (!label) {
         label = calloc(1, sizeof(*label));
@@ -234,7 +229,6 @@ static obj_klass_t labels_klass = {
     .render = labels_render,
     .render_order = 100,
     .attributes = (attribute_t[]) {
-        PROPERTY("skip_selection", "b", MEMBER(labels_t, skip_selection)),
         {},
     },
 };
