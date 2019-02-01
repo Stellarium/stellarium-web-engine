@@ -433,9 +433,13 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->oid, 0);
 
-    if (vmag <= hints_limit_mag)
+    if (vmag <= hints_limit_mag + 1) {
+        if (!selected)
+            vec4_set(painter.color, 0.5, 0.5, 0.5,
+                     min(1, hints_limit_mag + 1 - vmag));
         symbols_paint(&painter, s2->symbol, win_pos, win_size,
-                      selected ? white : NULL, win_angle);
+                      selected ? white : painter.color, win_angle);
+    }
 
     if (vmag <= hints_limit_mag - 1.5) {
         label_flags = LABEL_AROUND;
