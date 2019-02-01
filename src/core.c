@@ -11,16 +11,14 @@
 
 core_t *core;   // The global core object.
 
+#define CORE_MIN_FOV (1./3600 * DD2R)
+
 static void core_on_fov_changed(obj_t *obj, const attribute_t *attr)
 {
-    // Maybe put this into projection class?
-    const double PROJ_MAX_FOVS[] = {
-        [PROJ_MERCATOR]         = 360 * DD2R,
-        [PROJ_STEREOGRAPHIC]    = 220 * DD2R,
-        [PROJ_PERSPECTIVE]      = 360 * DD2R,
-    };
     // For the moment there is not point going further than 0.5°.
-    core->fov = clamp(core->fov, 0.0001 * DD2R, PROJ_MAX_FOVS[core->proj]);
+    projection_t proj;
+    core_get_proj(&proj);
+    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
 }
 
 static void core_on_utcoffset_changed(obj_t *obj, const attribute_t *attr)
@@ -301,6 +299,7 @@ void core_release(void)
 void core_update_fov(double dt)
 {
     double t;
+    double save_fov = core->fov;
 
     if (core->fov_animation.speed) {
         core->fov_animation.t += dt / core->fov_animation.speed;
@@ -310,7 +309,6 @@ void core_update_fov(double dt)
         if (core->fov_animation.dst_fov) {
             core->fov = mix(core->fov_animation.src_fov,
                             core->fov_animation.dst_fov, t);
-            obj_changed(&core->obj, "fov");
         }
         if (core->fov_animation.t >= 1.0) {
             core->fov_animation.speed = 0.0;
@@ -318,6 +316,22 @@ void core_update_fov(double dt)
             core->fov_animation.dst_fov = 0.0;
         }
     }
+
+    projection_t proj;
+
+    const double ZOOM_FACTOR = 0.05;
+    // Continuous zoom.
+    core_get_proj(&proj);
+    if (core->zoom) {
+        core->fov *= pow(1. + ZOOM_FACTOR * (-core->zoom), dt/(1./60));
+        if (core->fov > proj.max_fov)
+            core->fov = proj.max_fov;
+    }
+
+    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
+
+    if (core->fov != save_fov)
+        obj_changed((obj_t*)core, "fov");
 }
 
 static int core_update_direction(double dt)
@@ -371,17 +385,6 @@ int core_update(double dt)
     double lwmax;
     int r;
     obj_t *atm, *module;
-    const double ZOOM_FACTOR = 0.05;
-    projection_t proj;
-
-    // Continuous zoom.
-    core_get_proj(&proj);
-    if (core->zoom) {
-        core->fov *= pow(1. + ZOOM_FACTOR * -core->zoom, dt/(1./60));
-        if (core->fov > proj.max_fov)
-            core->fov = proj.max_fov;
-        obj_changed((obj_t*)core, "fov");
-    }
 
     atm = core_get_module("atmosphere");
     assert(atm);
