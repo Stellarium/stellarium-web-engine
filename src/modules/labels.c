@@ -18,18 +18,20 @@ typedef struct label label_t;
 struct label
 {
     label_t *next, *prev;
-    uint64_t oid;
-    char    *text; // Original passed text.
+    uint64_t oid;         // Optional unique id for the label.
+    char    *text;        // Original passed text.
     char    *render_text; // Processed text (can point to text).
-    double  pos[2];
-    double  radius;     // Radius of the object (pixel).
-    double  size;
-    double  color[4];
-    double  angle;
-    int     flags;
-    fader_t fader;
+    double  pos[2];       // 2D/3D position in the given frame
+    double  radius;       // Radius of the object (pixel).
+    double  size;         // Height of the text in pixel.
+    double  color[4];     // Color of the text.
+    double  angle;        // Rotation angle on screen (rad).
+    int     flags;        // Union of <LABEL_FLAGS>.  Used to specify anchor
+                          // position and text effects.
+    fader_t fader;        // Use for auto fade-in/out of labels
 
-    double  priority;
+    double  priority;     // Priority used in case of positioning conflicts.
+                          // Higher value is higher priority.
     double  bounds[4];
 };
 
