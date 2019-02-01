@@ -371,13 +371,13 @@ int core_update(double dt)
     double lwmax;
     int r;
     obj_t *atm, *module;
-    const double ZOOM_FACTOR = 1.05;
+    const double ZOOM_FACTOR = 0.05;
     projection_t proj;
 
     // Continuous zoom.
     core_get_proj(&proj);
     if (core->zoom) {
-        core->fov *= pow(ZOOM_FACTOR, -core->zoom);
+        core->fov *= pow(1. + ZOOM_FACTOR * -core->zoom, dt/(1./60));
         if (core->fov > proj.max_fov)
             core->fov = proj.max_fov;
         obj_changed((obj_t*)core, "fov");
