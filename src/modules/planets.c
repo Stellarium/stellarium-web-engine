@@ -774,8 +774,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Compute 2D position of planetary disk point the closest to the screen
     // center to perform exact clipping.
-    vec4_copy(planet->obj.pvo[0], pos);
-    vec3_normalize(pos, pos);
+    vec3_copy(cap, pos);
     if (!cap_contains_vec3(cap, painter.viewport_caps[FRAME_ICRF])) {
         vec3_cross(pos, painter.viewport_caps[FRAME_ICRF], axis);
         quat_from_axis(q, max(planet->radius * r_scale, point_r),
@@ -830,10 +829,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         radius = planet->radius / 2.0 *
             painter.proj->window_size[0] / painter.proj->scaling[0];
         s = max(s, radius);
-        labels_add(sys_translate("skyculture", label), p_win, s + 4, 14,
-                   selected ? white : label_color, 0,
-                   selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
-                   -vmag, planet->obj.oid);
+        labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF, cap,
+                      true, s + 4, 14, selected ? white : label_color, 0,
+                      selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                      -vmag, planet->obj.oid);
     }
 
     // For the moment we never render the orbits!

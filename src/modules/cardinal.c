@@ -39,16 +39,15 @@ typedef struct cardinal {
 static int cardinal_render(const obj_t *obj, const painter_t *painter)
 {
     int i;
-    double pos[2];
     double size = 24;
     double color[4] = {0.5, 0.4, 0.4, 0.5};
     for (i = 0; i < ARRAY_SIZE(POINTS); i++) {
-        if (!painter_project(painter, FRAME_OBSERVED, POINTS[i].pos,
-                                   true, true, pos))
+        if (painter_is_point_clipped_fast(painter, FRAME_OBSERVED,
+                POINTS[i].pos, true))
             continue;
-        labels_add(sys_translate("gui", POINTS[i].text),
-                   pos, 0, size, color, 0,
-                   ALIGN_CENTER | ALIGN_MIDDLE | LABEL_BOLD, 0, obj->oid);
+        labels_add_3d(sys_translate("gui", POINTS[i].text), FRAME_OBSERVED,
+                      POINTS[i].pos, true, 0, size, color, 0,
+                      ALIGN_CENTER | ALIGN_MIDDLE | LABEL_BOLD, 0, obj->oid);
     }
     return 0;
 }

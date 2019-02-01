@@ -182,8 +182,8 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
 }
 
 static void star_render_name(const painter_t *painter, const star_data_t *s,
-                             const double pos[3], double size, double vmag,
-                             double color[3])
+                             int frame, const double pos[3], double radius,
+                             double vmag, double color[3])
 {
     const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
                            "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
@@ -202,7 +202,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         vec4_copy(white, label_color);
         label_flags |= LABEL_BOLD;
     }
-    size += LABEL_SPACING;
+    radius += LABEL_SPACING;
 
     // First try the current skyculture name.
     skycultures = core_get_module("skycultures");
@@ -216,8 +216,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         }
     }
     if (name) {
-        labels_add(sys_translate("skyculture", name),
-                   pos, size, 13, label_color, 0, label_flags, -vmag, s->oid);
+        labels_add_3d(sys_translate("skyculture", name), frame, pos, true,
+                      radius, 13, label_color, 0, label_flags, -vmag, s->oid);
         return;
     }
 
@@ -226,7 +226,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         bayer_get(s->hip, NULL, &bayer, &bayer_n);
         if (bayer) {
             sprintf(buf, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add(buf, pos, size, 13, label_color, 0,
+            labels_add_3d(buf, frame, pos, true, radius, 13, label_color, 0,
                        label_flags, -vmag, s->oid);
         }
     }
@@ -261,7 +261,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (selected || (s->vmag <= painter.hints_limit_mag - 4.0)) {
-        star_render_name(&painter, s, p, size, s->vmag, color);
+        star_render_name(&painter, s, FRAME_ICRF, obj->pvo[0], size,
+                s->vmag, color);
     }
     return 0;
 }
@@ -541,7 +542,8 @@ static int render_visitor(int order, int pix, void *user)
         selected = core->selection && s->oid == core->selection->oid;
         if (selected || (s->vmag <= painter.hints_limit_mag - 4.0 &&
             survey != SURVEY_GAIA))
-            star_render_name(&painter, s, p_win, size, s->vmag, color);
+            star_render_name(&painter, s, FRAME_ASTROM, s->pos, size,
+                             s->vmag, color);
     }
     paint_2d_points(&painter, n, points);
     free(points);

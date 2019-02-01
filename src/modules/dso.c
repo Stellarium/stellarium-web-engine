@@ -350,19 +350,6 @@ static tile_t *get_tile(dsos_t *dsos, int order, int pix, bool load,
     return tile;
 }
 
-static void dso_render_name(const painter_t *painter, const dso_data_t *s,
-                            const double pos[2], double size, double vmag,
-                            int flags)
-{
-    char buff[128] = "";
-    if (s->short_name[0])
-        strcpy(buff, s->short_name);
-    if (buff[0])
-        labels_add(buff, pos, size, 13, painter->color, 0, flags, -vmag,
-                   s->oid);
-}
-
-
 static void compute_hint_transformation(
         const painter_t *painter,
         float ra, float de, float angle,
@@ -460,7 +447,12 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
         radius += 4;
-        dso_render_name(&painter, s2, win_pos, radius, vmag, label_flags);
+        char buff[128] = "";
+        if (s2->short_name[0])
+            strcpy(buff, s2->short_name);
+        if (buff[0])
+            labels_add_3d(buff, FRAME_ASTROM, s->bounding_cap, true, radius,
+                          13, painter.color, 0, label_flags, -vmag, s->oid);
     }
     return 0;
 }

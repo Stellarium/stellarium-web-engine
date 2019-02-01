@@ -21,17 +21,20 @@ struct label
     uint64_t oid;         // Optional unique id for the label.
     char    *text;        // Original passed text.
     char    *render_text; // Processed text (can point to text).
-    double  pos[2];       // 2D/3D position in the given frame
+    double  pos[3];       // 3D position in the given frame.
+    double  win_pos[2];   // 2D position on screen (px).
+    int     frame;        // One of FRAME_XXX or -1 for 2D win position.
+    bool    at_inf;       // True if pos is normalized.
     double  radius;       // Radius of the object (pixel).
     double  size;         // Height of the text in pixel.
     double  color[4];     // Color of the text.
     double  angle;        // Rotation angle on screen (rad).
     int     flags;        // Union of <LABEL_FLAGS>.  Used to specify anchor
                           // position and text effects.
-    fader_t fader;        // Use for auto fade-in/out of labels
+    fader_t fader;        // Use for auto fade-in/out of labels.
 
     double  priority;     // Priority used in case of positioning conflicts.
-                          // Higher value is higher priority.
+                          // Higher value means higher priority.
     double  bounds[4];
 };
 
@@ -58,7 +61,7 @@ void labels_reset(void)
 }
 
 static label_t *label_get(label_t *list, const char *txt, double size,
-                          const double pos[2], uint64_t oid)
+                          uint64_t oid)
 {
     label_t *label;
     DL_FOREACH(list, label) {
@@ -74,7 +77,7 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
 {
     double border;
     double pos[2];
-    vec2_copy(label->pos, pos);
+    vec2_copy(label->win_pos, pos);
     border = label->radius;
     if (label->flags & LABEL_AROUND) border /= sqrt(2.0);
     if (align & ALIGN_LEFT)    pos[0] += border;
@@ -145,9 +148,12 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
-        // We fade in the label slowly, but fade out very fast, otherwise
-        // we don't get updated positions for fading out labels.
-        fader_update(&label->fader, label->fader.target ? 0.016 : 0.16);
+        // Re-project label on screen
+        if (label->frame != -1) {
+            painter_project(painter_, label->frame, label->pos, label->at_inf,
+                            false, label->win_pos);
+        }
+
         painter.font = label->flags & LABEL_BOLD ? "bold" : NULL;
         for (i = 0; ; i++) {
             if (!label_get_possible_bounds(&painter, label, i, label->bounds)) {
@@ -169,25 +175,29 @@ skip:;
     return 0;
 }
 
-/*
- * Function: labels_add
- * Render a label on screen.
- *
- * Parameters:
- *   text       - The text to render.
- *   win_pow    - Position of the text in windows coordinates.
- *   radius     - Radius of the point the label is linked to.  Zero for
- *                independent label.
- *   size       - Height of the text in pixel.
- *   color      - Color of the text.
- *   angle      - Rotation angle (rad).
- *   flags      - Union of <LABEL_FLAGS>.  Used to specify anchor position
- *                and text effects.
- *   oid        - Optional unique id for the label.
- */
+static int labels_update(obj_t *obj, const observer_t *obs, double dt)
+{
+    label_t *label = (label_t *)obj;
+    DL_FOREACH(g_labels->labels, label) {
+        fader_update(&label->fader, dt);
+    }
+    return 0;
+}
+
+
 void labels_add(const char *text, const double pos[2],
                 double radius, double size, const double color[4],
                 double angle, int flags, double priority, uint64_t oid)
+{
+    const double p[3] = {pos[0], pos[1], 0};
+    labels_add_3d(text, -1, p, true, radius, size, color, angle, flags,
+                  priority, oid);
+}
+
+void labels_add_3d(const char *text, int frame, const double pos[3],
+                   bool at_inf, double radius, double size,
+                   const double color[4], double angle, int flags,
+                   double priority, uint64_t oid)
 {
     if (!(flags & LABEL_AROUND)) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
@@ -195,7 +205,8 @@ void labels_add(const char *text, const double pos[2],
     label_t *label;
 
     if (!text || !*text) return;
-    label = label_get(g_labels->labels, text, size, pos, oid);
+
+    label = label_get(g_labels->labels, text, size, oid);
     if (!label) {
         label = calloc(1, sizeof(*label));
         label->oid = oid;
@@ -208,7 +219,13 @@ void labels_add(const char *text, const double pos[2],
         DL_APPEND(g_labels->labels, label);
     }
 
-    vec2_set(label->pos, pos[0], pos[1]);
+    if (frame == -1)
+        vec2_copy(pos, label->win_pos);
+    else {
+        vec3_copy(pos, label->pos);
+    }
+    label->frame = frame;
+    label->at_inf = at_inf;
     label->radius = radius;
     label->size = size;
     vec4_set(label->color, color[0], color[1], color[2], color[3]);
@@ -217,7 +234,6 @@ void labels_add(const char *text, const double pos[2],
     label->priority = priority;
     label->fader.target = true;
 }
-
 
 /*
  * Meta class declarations.
@@ -229,6 +245,7 @@ static obj_klass_t labels_klass = {
     .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init = labels_init,
     .render = labels_render,
+    .update = labels_update,
     .render_order = 100,
     .attributes = (attribute_t[]) {
         {},

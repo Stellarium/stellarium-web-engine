@@ -261,9 +261,9 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     // Render name if needed.
     if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag)) {
-        labels_add(mplanet->name, win_pos, size, 13, label_color, 0,
-                selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
-                0, obj->oid);
+        labels_add_3d(mplanet->name, FRAME_ICRF, pos, false, size, 13,
+            label_color, 0, selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+            0, obj->oid);
     }
     return 0;
 }

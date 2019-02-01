@@ -448,8 +448,9 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
                 con->name : con->name_translated;
-    labels_add(label, win_pos, 0, 13, names_color, 0,
-               ALIGN_CENTER | ALIGN_MIDDLE, 0, con->obj.oid);
+    labels_add_3d(label, FRAME_ICRF, con->bounding_cap, true, 0, 13,
+                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE, 0,
+                  con->obj.oid);
 
     return 0;
 }
