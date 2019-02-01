@@ -830,8 +830,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         radius = planet->radius / 2.0 *
             painter.proj->window_size[0] / painter.proj->scaling[0];
         s = max(s, radius);
-        labels_add(label, p_win, s + 4, 14, selected ? white : label_color,
-                   0, selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+        labels_add(sys_translate("skyculture", label), p_win, s + 4, 14,
+                   selected ? white : label_color, 0,
+                   selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
                    -vmag, planet->obj.oid);
     }
 
