@@ -371,6 +371,32 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
 bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
                                    const double pos[3], bool is_normalized);
 
+// Function: painter_is_2d_point_clipped
+//
+// Convenience function that checks if a 2D point is visible.
+//
+// Parameters:
+//  painter       - The painter.
+//  p             - the 2D point
+//
+// Returns:
+//  True if the point is clipped, false otherwise.
+bool painter_is_2d_point_clipped(const painter_t *painter, const double p[2]);
+
+// Function: painter_is_2d_circle_clipped
+//
+// Convenience function that checks if a 2D circle is visible.
+//
+// Parameters:
+//  painter       - The painter.
+//  p             - the center point
+//  radius        - the circle radius
+//
+// Returns:
+//  True if the circle is clipped, false otherwise.
+bool painter_is_2d_circle_clipped(const painter_t *painter, const double p[2],
+                                 double radius);
+
 // Function: painter_is_cap_clipped_fast
 //
 // Convenience function that checks if a cap is clipped.

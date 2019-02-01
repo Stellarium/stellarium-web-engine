@@ -287,6 +287,20 @@ bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
     return false;
 }
 
+bool painter_is_2d_point_clipped(const painter_t *painter, const double p[2])
+{
+    return p[0] >= 0 && p[0] <= painter->proj->window_size[0] &&
+           p[1] >= 0 && p[1] <= painter->proj->window_size[1];
+}
+
+bool painter_is_2d_circle_clipped(const painter_t *painter, const double p[2],
+                                 double radius)
+{
+    const double rect[4] = {0, 0, painter->proj->window_size[0],
+                            painter->proj->window_size[1]};
+    return !intersect_circle_rect(rect, p, radius);
+}
+
 bool painter_is_tile_clipped(const painter_t *painter, int frame,
                              int order, int pix, bool outside)
 {
