@@ -118,6 +118,9 @@ void *read_file(const char *path, int *size);
  */
 bool is_clipped(int n, double (*pos)[4]);
 
+bool intersect_circle_rect(const double rect[4], const double c_center[2],
+                           double r);
+
 /*
  * Function: img_read
  * Read a png/jpeg image from a file.
