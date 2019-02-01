@@ -387,7 +387,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
                                 const painter_t *painter_)
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
-    static const double white[4] = {1, 1, 1, 1};
+    double color[4];
     double win_pos[2], win_size[2], win_angle;
     painter_t painter = *painter_;
     double hints_limit_mag = painter.hints_limit_mag;
@@ -417,11 +417,8 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         hints_limit_mag = painter.stars_limit_mag - 10;
     }
 
-    if (selected) {
+    if (selected)
         hints_limit_mag = 99;
-        painter.lines_width = 2;
-        vec4_copy(white, painter.color);
-    }
 
     if (vmag > hints_limit_mag + 2)
         return 0;
@@ -434,19 +431,29 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
                       win_size[0] / 2, win_size[1] / 2, s->oid, 0);
 
     if (vmag <= hints_limit_mag + 1) {
-        if (!selected)
-            vec4_set(painter.color, 0.5, 0.5, 0.5,
-                     min(1, hints_limit_mag + 1 - vmag));
-        symbols_paint(&painter, s2->symbol, win_pos, win_size,
-                      selected ? white : painter.color, win_angle);
+        if (selected) {
+            painter.lines_width = 2;
+            vec4_set(color, 1, 1, 1, 1);
+        } else {
+            // Smooth fade in when zooming
+            double opacity = smoothstep(hints_limit_mag + 1, hints_limit_mag,
+                                        vmag);
+            // Smooth fade out when it's getting large
+            opacity *= smoothstep(500, 150, max(win_size[0], win_size[1]));
+            vec4_set(color, 0.5, 0.5, 0.5, opacity);
+        }
+        symbols_paint(&painter, s2->symbol, win_pos, win_size, color,
+                      win_angle);
     }
 
     if (vmag <= hints_limit_mag - 1.5) {
         label_flags = LABEL_AROUND;
-        if (selected)
+        if (selected) {
             label_flags |= LABEL_BOLD;
+            vec4_set(color, 1, 1, 1, 1);
+        }
         else
-            vec4_set(painter.color, 0.9, 0.6, 0.6, 0.9);
+            vec4_set(color, 0.7, 0.7, 0.7, 1);
         double radius = min(win_size[0] / 2, win_size[1] / 2) +
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
@@ -454,9 +461,10 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         char buff[128] = "";
         if (s2->short_name[0])
             strcpy(buff, s2->short_name);
-        if (buff[0])
+        if (buff[0]) {
             labels_add_3d(buff, FRAME_ASTROM, s->bounding_cap, true, radius,
-                          13, painter.color, 0, label_flags, -vmag, s->oid);
+                          13, color, 0, label_flags, -vmag, s->oid);
+        }
     }
     return 0;
 }
