@@ -275,10 +275,6 @@ static int on_file_tile_loaded(const char type[4],
         s->ra = tmp_ra * DD2R;
         s->de = tmp_de * DD2R;
 
-        // Compute the cap containing this DSO
-        s->bounding_cap[3] = cos(s->smin);
-        eraS2c(s->ra, s->de, s->bounding_cap);
-
         s->smax = tmp_smax * DAM2R;
         s->smin = tmp_smin * DAM2R;
         s->angle = tmp_angle;
@@ -287,6 +283,10 @@ static int on_file_tile_loaded(const char type[4],
             s->angle = NAN;
         }
         s->angle *= DD2R;
+
+        // Compute the cap containing this DSO
+        s->bounding_cap[3] = cosf(max(s->smin, s->smax));
+        eraS2c(s->ra, s->de, s->bounding_cap);
 
         s->vmag = temp_mag;
         // For the moment use bmag as fallback vmag value
