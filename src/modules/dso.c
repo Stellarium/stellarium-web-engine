@@ -427,6 +427,11 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
             s2->smax, s2->smin, s2->symbol, win_pos, win_size,
             &win_angle);
 
+    // Skip if 2D circle is outside screen (TODO intersect 2D ellipse instead)
+    if (painter_is_2d_circle_clipped(painter, win_pos,
+                                     max(win_size[0], win_size[1]) / 2))
+        return 0;
+
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->oid, 0);
 
