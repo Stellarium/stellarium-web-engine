@@ -74,9 +74,12 @@
     } while (0)
 
 // I redefine asprintf so that we can ignore the return value.
-// Not sure this is a good idea.
+// XXX: we should probably remove that and just check the return values
+// or don't use asprintf.
+#ifndef __cplusplus
 #define asprintf(...) ({int r = asprintf(__VA_ARGS__); r;})
 #define vasprintf(...) ({int r = vasprintf(__VA_ARGS__); r;})
+#endif
 
 const char *get_compiler_str(void);
 
