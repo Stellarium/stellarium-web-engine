@@ -384,37 +384,37 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
 
 // Render a DSO from its data.
 static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
-                                const painter_t *painter_)
+                                const painter_t *painter)
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
     double win_pos[2], win_size[2], win_angle;
-    painter_t painter = *painter_;
-    double hints_limit_mag = painter.hints_limit_mag;
+    double hints_limit_mag = painter->hints_limit_mag;
     const bool selected = core->selection && s->oid == core->selection->oid;
     int label_flags;
+    painter_t tmp_painter;
 
     const float vmag = s->display_vmag;
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
-    if (vmag > painter.stars_limit_mag + 1.5)
+    if (vmag > painter->stars_limit_mag + 1.5)
         return 1;
 
     // Check that it's intersecting with current viewport
-    if (painter_is_cap_clipped_fast(&painter, FRAME_ASTROM, s->bounding_cap))
+    if (painter_is_cap_clipped_fast(painter, FRAME_ASTROM, s->bounding_cap))
         return 0;
 
     // Special case for Open Clusters, for which the limiting magnitude
     // is more like the one for a star.
     if (s2->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
-        hints_limit_mag = painter.hints_limit_mag - 3;
+        hints_limit_mag = painter->hints_limit_mag - 3;
     }
 
     if (s2->smax == 0) {
         // DSO without shape don't need to have labels displayed unless they are
         // much zoomed or selected
-        hints_limit_mag = painter.stars_limit_mag - 10;
+        hints_limit_mag = painter->stars_limit_mag - 10;
     }
 
     if (selected)
@@ -423,26 +423,28 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     if (vmag > hints_limit_mag + 2)
         return 0;
 
-    compute_hint_transformation(&painter, s2->ra, s2->de, s2->angle,
+    compute_hint_transformation(painter, s2->ra, s2->de, s2->angle,
             s2->smax, s2->smin, s2->symbol, win_pos, win_size,
             &win_angle);
 
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->oid, 0);
 
-    if (vmag <= hints_limit_mag + 1) {
+    if (vmag <= hints_limit_mag + 0.5) {
+        tmp_painter = *painter;
         if (selected) {
-            painter.lines_width = 2;
+            tmp_painter.lines_width = 2;
             vec4_set(color, 1, 1, 1, 1);
         } else {
             // Smooth fade in when zooming
-            double opacity = smoothstep(hints_limit_mag + 1, hints_limit_mag,
-                                        vmag);
+            double opacity = smoothstep(hints_limit_mag + 0.5,
+                                        hints_limit_mag - 0.5, vmag);
             // Smooth fade out when it's getting large
-            opacity *= smoothstep(500, 150, max(win_size[0], win_size[1]));
+            opacity *= smoothstep(400, 120, max(win_size[0], win_size[1]));
             vec4_set(color, 0.5, 0.5, 0.5, opacity);
         }
-        symbols_paint(&painter, s2->symbol, win_pos, win_size, color,
+        if (color[3] > 0.05)
+            symbols_paint(&tmp_painter, s2->symbol, win_pos, win_size, color,
                       win_angle);
     }
 
