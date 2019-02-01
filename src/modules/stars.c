@@ -165,7 +165,9 @@ static int star_update(obj_t *obj, const observer_t *obs, double dt)
 {
     star_t *star = (star_t*)obj;
     eraASTROM *astrom = (void*)&obs->astrom;
-    eraPmpx(star->data.ra, star->data.de, 0, 0, star->data.plx, 0,
+    float plx = star->data.plx;
+    if (isnan(plx)) plx = 0;
+    eraPmpx(star->data.ra, star->data.de, 0, 0, plx, 0,
             astrom->pmt, astrom->eb, obj->pvo[0]);
     assert(!isnan(obj->pvo[0][0]));
 
