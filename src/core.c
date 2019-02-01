@@ -886,6 +886,14 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
         return NULL;
     }
 
+    if (core->fov_animation.t < 1 && core->fov_animation.t > 0) {
+        // We request a new animation while another one is still on going
+        if (fov == core->fov_animation.dst_fov) {
+            // Same animation is going on, just finish it
+            return NULL;
+        }
+    }
+
     core->fov_animation.src_fov = core->fov;
     core->fov_animation.dst_fov = fov;
     core->fov_animation.speed = speed;
