@@ -214,7 +214,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         }
     }
     if (name) {
-        labels_add(sys_translate("star", name),
+        labels_add(sys_translate("skyculture", name),
                    pos, size, 13, label_color, 0, label_flags, -vmag, s->oid);
         return;
     }

@@ -46,7 +46,8 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
         if (!painter_project(painter, FRAME_OBSERVED, POINTS[i].pos,
                                    true, true, pos))
             continue;
-        labels_add(sys_translate(NULL, POINTS[i].text), pos, 0, size, color, 0,
+        labels_add(sys_translate("gui", POINTS[i].text),
+                   pos, 0, size, color, 0,
                    ALIGN_CENTER | ALIGN_MIDDLE | LABEL_BOLD, 0, obj->oid);
     }
     return 0;
