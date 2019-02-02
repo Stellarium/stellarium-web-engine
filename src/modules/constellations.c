@@ -467,7 +467,7 @@ static int render_img(constellation_t *con, const painter_t *painter)
 
     painter2.flags |= PAINTER_ADD;
     vec3_set(painter2.color, 1, 1, 1);
-    painter2.color[3] *= 0.5 * con->image_loaded_fader.value;
+    painter2.color[3] *= 0.4 * con->image_loaded_fader.value;
     mat3_copy(con->mat, proj.mat3);
     proj.backward = proj_backward;
     paint_quad(&painter2, FRAME_ICRF, con->img, NULL, NULL, &proj, 4);
