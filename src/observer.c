@@ -86,18 +86,9 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
 {
     uLong v = 1L;
     #define H(a) v = adler32(v, (const Bytef*)&obs->a, sizeof(obs->a))
-    H(elong);
-    H(phi);
-    H(hm);
-    H(horizon);
-    H(pressure);
-    H(refraction);
+    H(h1);
     *hash_partial = v;
-    H(altitude);
-    H(azimuth);
-    H(roll);
-    H(view_offset_alt);
-    H(tt);
+    H(h2);
     #undef H
     *hash = v;
 }
