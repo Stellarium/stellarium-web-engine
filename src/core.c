@@ -895,6 +895,20 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
             // Same animation is going on, just finish it
             return NULL;
         }
+        // We are looking for a new set of zoom parameters so that:
+        // - we preserve the current zoom level
+        // - the remaining animation time is equal to the new speed
+        double t2 = (core->fov_animation.t * core->fov_animation.speed) /
+                    (core->fov_animation.t * core->fov_animation.speed + speed);
+        assert(t2 >= 0 && t2 <= 1);
+        double st2 = smoothstep(0, 1, t2);
+        double src2 = (core->fov - fov * st2) / (1.0 - st2);
+        core->fov_animation.src_fov = src2;
+        core->fov_animation.dst_fov = fov;
+        core->fov_animation.speed = core->fov_animation.t *
+        core->fov_animation.speed + speed;
+        core->fov_animation.t = t2;
+        return NULL;
     }
 
     core->fov_animation.src_fov = core->fov;
