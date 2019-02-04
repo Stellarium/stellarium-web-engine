@@ -92,9 +92,11 @@ struct hips {
 
     // Stores the allsky image if available.
     struct {
-        bool    not_available;
-        uint8_t *data;
-        int     w, h, bpp;
+        worker_t    worker; // Worker to load the image in a thread.
+        bool        not_available;
+        uint8_t     *src_data; // Encoded image data (png, webp...)
+        uint8_t     *data;     // RGB[A] image data.
+        int         w, h, bpp, size;
     }           allsky;
 
     // Contains all the properties as a json object.
@@ -518,6 +520,16 @@ static void add_allsky_tiles(hips_t *hips)
     }
 }
 
+static int load_allsky_worker(worker_t *worker)
+{
+    typeof(((hips_t*)0)->allsky) *allsky = (void*)worker;
+    allsky->data = img_read_from_mem(allsky->src_data, allsky->size,
+            &allsky->w, &allsky->h, &allsky->bpp);
+    free(allsky->src_data);
+    allsky->src_data = NULL;
+    return 0;
+}
+
 static bool hips_update(hips_t *hips)
 {
     int code, err, size;
@@ -535,21 +547,31 @@ static bool hips_update(hips_t *hips)
     }
 
     // Get the allsky before anything else if available.
-    if (!hips->allsky.not_available && !hips->allsky.data) {
+    if (!hips->allsky.worker.fn &&
+            !hips->allsky.not_available && !hips->allsky.data) {
         asprintf(&url, "%s/Norder%d/Allsky.%s?v=%d", hips->service_url,
                  hips->order_min, hips->ext,
                  (int)hips->release_date);
         data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
         if (code && !data) hips->allsky.not_available = true;
         if (data) {
-            hips->allsky.data = img_read_from_mem(data, size,
-                    &hips->allsky.w, &hips->allsky.h, &hips->allsky.bpp);
-            if (!hips->allsky.data) hips->allsky.not_available = true;
-            if (hips->allsky.data) add_allsky_tiles(hips);
+            worker_init(&hips->allsky.worker, load_allsky_worker);
+            hips->allsky.src_data = malloc(size);
+            hips->allsky.size = size;
+            memcpy(hips->allsky.src_data, data, size);
         }
         free(url);
         return false;
     }
+
+    // If the allsky image is loading wait for it to finish.
+    if (hips->allsky.worker.fn) {
+        if (!worker_iter(&hips->allsky.worker)) return false;
+        if (!hips->allsky.data) hips->allsky.not_available = true;
+        if (hips->allsky.data) add_allsky_tiles(hips); // Still needed?
+        hips->allsky.worker.fn = NULL;
+    }
+
     return true;
 }
 
