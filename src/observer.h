@@ -13,15 +13,6 @@
 #include "obj.h"
 #include "erfa.h"
 
-typedef struct {
-    double d[5];
-    bool   b;
-} _h1_t;
-
-typedef struct {
-    double d[5];
-} _h2_t;
-
 /*
  * Type: observer_t
  * Store informations about the observer current position.
@@ -30,33 +21,21 @@ struct observer
 {
     obj_t  obj;
 
-    union {
-        // Put in this struct all elements contributing to the hash_partial
-        struct {
-            double elong;       // Observer longitude
-            double phi;         // Observer latitude
-            double hm;          // height above ellipsoid (m)
-            double horizon;     // altitude of horizon (used for rise/set).
-            double pressure;    // Set to NAN to compute it from the altitude.
-            bool   refraction;  // Whether we use refraction or not.
-        };
-        _h1_t h1;               // Used for fast hash computation
-    };
+    double elong;       // Observer longitude
+    double phi;         // Observer latitude
+    double hm;          // height above ellipsoid (m)
+    double horizon;     // altitude of horizon (used for rise/set).
+    double pressure;    // Set to NAN to compute it from the altitude.
+    bool   refraction;  // Whether we use refraction or not.
 
-    union {
-        // Put in this struct all elements contributing to the hash (full)
-        struct {
-            double altitude;
-            double azimuth;
-            double roll;
-            // Extra rotations applied to the view matrix in altitude.
-            // Set this to have the centered objet not located at screen center
-            // but somewhere else.
-            double view_offset_alt;
-            double tt;          // TT time in MJD
-        };
-        _h2_t h2;               // Used for fast hash computation
-    };
+    double altitude;
+    double azimuth;
+    double roll;
+    // Extra rotations applied to the view matrix in altitude.
+    // Set this to have the centered objet not located at screen center
+    // but somewhere else.
+    double view_offset_alt;
+    double tt;          // TT time in MJD
 
     obj_t  *city;
 

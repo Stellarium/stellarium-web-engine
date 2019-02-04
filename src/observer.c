@@ -100,9 +100,18 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
 {
     uint32_t v = 1;
     #define H(a) v = hash_xor(v, (const char*)&obs->a, sizeof(obs->a))
-    H(h1);
+    H(elong);
+    H(phi);
+    H(hm);
+    H(horizon);
+    H(pressure);
+    H(refraction);
     *hash_partial = v;
-    H(h2);
+    H(altitude);
+    H(azimuth);
+    H(roll);
+    H(view_offset_alt);
+    H(tt);
     #undef H
     *hash = v;
 }
