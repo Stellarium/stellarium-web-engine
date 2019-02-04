@@ -182,6 +182,7 @@ static int process_source(sources_t *sources, source_t *source)
         break;
     case SOURCE_HIPS:
         data = get_data(source, "properties", 0, &code);
+        if (!data && code) break; // Error.
         if (!data) return 0;
         args = json_object_new(0);
         ini_parse_string(data, hips_property_handler, args);
