@@ -107,7 +107,7 @@ def generator(target, md5):
     """
     def decorator(func):
         @functools.wraps(func)
-        def wrapper():
+        def wrapper(abort_on_wrong_md5=True):
             path = target
             if not path.startswith('./'):
                 path = os.path.join('data-src', path)
@@ -116,11 +116,12 @@ def generator(target, md5):
                 ensure_dir(path)
                 func(path)
             current_md5 = compute_file_md5(path)
-            if  current_md5 != md5:
+            if current_md5 != md5:
                 print 'Md5 for file %s changed!' % target
                 print 'Current md5: %s' % current_md5
                 print 'Expected   : %s' % md5
-                raise ValueError
+                if abort_on_wrong_md5:
+                    raise ValueError
             return path
         return wrapper
     return decorator
