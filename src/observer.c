@@ -9,7 +9,21 @@
 
 #include "observer.h"
 #include "swe.h"
-#include "zlib.h"
+
+// Simple xor hash function.
+static uint32_t hash_xor(uint32_t v, const char *data, int len)
+{
+    int i;
+    // Only works on 4 bytes aligned data, either of size exactly equal to
+    // 1 byte, or with a size that is a multiple of 4 bytes.
+    assert((uintptr_t)data % 4 == 0);
+    assert(len == 1 || len % 4 == 0);
+    if (len == 1) return v ^ *data;
+    for (i = 0; i < len; i += 4) {
+        v ^= *(uint32_t*)(data + i);
+    }
+    return v;
+}
 
 static void update_matrices(observer_t *obs)
 {
@@ -84,8 +98,8 @@ static void update_matrices(observer_t *obs)
 static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
                                   uint64_t* hash)
 {
-    uLong v = 1L;
-    #define H(a) v = adler32(v, (const Bytef*)&obs->a, sizeof(obs->a))
+    uint32_t v = 1;
+    #define H(a) v = hash_xor(v, (const char*)&obs->a, sizeof(obs->a))
     H(h1);
     *hash_partial = v;
     H(h2);
