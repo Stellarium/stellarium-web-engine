@@ -601,7 +601,7 @@ static obj_klass_t constellations_klass = {
                  MEMBER(constellations_t, bounds_visible.target),
                  .sub = "bounds"),
         PROPERTY("show_all", "b", MEMBER(constellations_t, show_all)),
-        PROPERTY("display_style", "i",
+        PROPERTY("display_style", "d",
                  MEMBER(constellations_t, labels_display_style),
                 .sub = "labels"),
         {}
