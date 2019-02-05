@@ -883,6 +883,11 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
     args_get(args, "fov", 1, "f", NULL, &fov);
     args_get(args, "speed", 2, "f", NULL, &duration);
 
+    projection_t proj;
+    core_get_proj(&proj);
+    if (fov > proj.max_fov)
+        fov = proj.max_fov;
+
     // Direct lookat.
     if (duration == 0.0) {
         core->fov = fov;
