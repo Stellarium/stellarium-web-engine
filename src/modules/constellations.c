@@ -493,7 +493,7 @@ static int constellations_init(obj_t *obj, json_value *args)
 static obj_t *constellations_get(const obj_t *obj, const char *id, int flags)
 {
     obj_t *cons;
-    OBJ_ITER(obj, cons, "constellation") {
+    MODULE_ITER(obj, cons, "constellation") {
         if (strcmp(cons->id, id) == 0) {
             cons->ref++; // XXX: make the object static instead?
             return cons;
@@ -520,7 +520,7 @@ static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
         cons->bounds_visible.value == 0.0 &&
         (!core->selection || core->selection->parent != obj)) return 0;
 
-    OBJ_ITER(obj, con, "constellation") {
+    MODULE_ITER(obj, con, "constellation") {
         ret |= obj_update((obj_t*)con, obs, dt);
     }
     return ret;
@@ -536,7 +536,7 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
         cons->bounds_visible.value == 0.0 &&
         (!core->selection || core->selection->parent != obj)) return 0;
 
-    OBJ_ITER(obj, con, "constellation") {
+    MODULE_ITER(obj, con, "constellation") {
         obj_render((obj_t*)con, painter);
     }
     return 0;
@@ -546,7 +546,7 @@ static obj_t *constellations_get_by_oid(const obj_t *obj, uint64_t oid,
                                         uint64_t hint)
 {
     obj_t *con;
-    OBJ_ITER(obj, con, "constellation") {
+    MODULE_ITER(obj, con, "constellation") {
         if (con->oid == oid) {
             con->ref++;
             return con;

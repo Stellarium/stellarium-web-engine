@@ -169,7 +169,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
     if (!load_qsmag(sats)) return 0;
     if (!load_data(sats)) return 0;
 
-    OBJ_ITER(sats, sat, "tle_satellite") {
+    MODULE_ITER(sats, sat, "tle_satellite") {
         obj_update((obj_t*)sat, obs, dt);
     }
 
@@ -180,7 +180,7 @@ static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(satellites_render, 0);
     obj_t *child;
-    OBJ_ITER(obj, child, "tle_satellite")
+    MODULE_ITER(obj, child, "tle_satellite")
         obj_render(child, painter);
     return 0;
 }
@@ -190,7 +190,7 @@ static obj_t *satellites_get_by_oid(
 {
     obj_t *child;
     if (!oid_is_catalog(oid, "NORA")) return NULL;
-    OBJ_ITER(obj, child, "tle_satellite") {
+    MODULE_ITER(obj, child, "tle_satellite") {
         if (child->oid == oid) {
             child->ref++;
             return child;

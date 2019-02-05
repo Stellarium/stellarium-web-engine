@@ -314,7 +314,7 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
      * frame, using a moving range.  The asteroids who have been flagged as
      * on screen get updated no matter what.  */
     i = 0;
-    OBJ_ITER(obj, child, NULL) {
+    MODULE_ITER(obj, child, NULL) {
         if (    !child->on_screen &&
                 child->obj.oid != selection_oid &&
                 !range_contains(mps->update_pos, update_nb, nb, i))
@@ -332,7 +332,7 @@ static obj_t *mplanets_get_by_oid(
     obj_t *child;
     if (    !oid_is_catalog(oid, "MPl") &&
             !oid_is_catalog(oid, "MPl*")) return NULL;
-    OBJ_ITER(obj, child, NULL) {
+    MODULE_ITER(obj, child, NULL) {
         if (child->oid == oid) {
             child->ref++;
             return child;

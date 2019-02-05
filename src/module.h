@@ -102,3 +102,19 @@ void module_add_global_listener(void (*f)(obj_t *module, const char *attr));
  */
 void module_changed(obj_t *module, const char *attr);
 
+/*
+ * Macro: MODULE_ITER
+ * Iter all the children of a given module of a given type.
+ *
+ * Properties:
+ *   module - The module we want to iterate.
+ *   child  - Pointer to an object, that will be set with each child.
+ *   klass_ - Children klass type id string, or NULL for no filter.
+ */
+#define MODULE_ITER(module, child, klass_) \
+    for (child = (void*)(((obj_t*)module)->children); child; \
+                        child = (void*)(((obj_t*)child)->next)) \
+        if (!(klass_) || \
+                ((((obj_t*)child)->klass) && \
+                 (((obj_t*)child)->klass->id) && \
+                 (strcmp(((obj_t*)child)->klass->id, klass_ ?: "") == 0)))

@@ -159,7 +159,7 @@ static int lines_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(lines_render, 0);
     obj_t *line;
-    OBJ_ITER(obj, line, "line")
+    MODULE_ITER(obj, line, "line")
         line->klass->render(line, painter);
     return 0;
 }

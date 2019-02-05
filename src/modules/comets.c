@@ -261,7 +261,7 @@ static int comets_update(obj_t *obj, const observer_t *obs, double dt)
      * on screen get updated no matter what.  */
     DL_COUNT(obj->children, tmp, nb);
     i = 0;
-    OBJ_ITER(obj, child, "mpc_comet") {
+    MODULE_ITER(obj, child, "mpc_comet") {
         if (child->on_screen ||
                 range_contains(comets->update_pos, update_nb, nb, i))
         {
@@ -277,7 +277,7 @@ static int comets_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(comets_render, 0);
     obj_t *child;
-    OBJ_ITER(obj, child, "mpc_comet")
+    MODULE_ITER(obj, child, "mpc_comet")
         obj_render(child, painter);
     return 0;
 }
@@ -286,7 +286,7 @@ static obj_t *comets_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     obj_t *child;
     if (!oid_is_catalog(oid, "Com")) return NULL;
-    OBJ_ITER(obj, child, NULL) {
+    MODULE_ITER(obj, child, NULL) {
         if (child->oid == oid) {
             child->ref++;
             return child;
@@ -303,7 +303,7 @@ static obj_t *comets_get(const obj_t *obj, const char *id, int flags)
     int r;
     r = regexec(&comets->search_reg, id, 3, matches, 0);
     if (r) return NULL;
-    OBJ_ITER(obj, child, "mpc_comet") {
+    MODULE_ITER(obj, child, "mpc_comet") {
         if (str_startswith(child->name, id)) {
             child->obj.ref++;
             return &child->obj;

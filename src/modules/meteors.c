@@ -170,7 +170,7 @@ static int meteors_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(meterors_render, 0);
     obj_t *child;
-    OBJ_ITER(obj, child, "meteor")
+    MODULE_ITER(obj, child, "meteor")
         obj_render(child, painter);
     return 0;
 }

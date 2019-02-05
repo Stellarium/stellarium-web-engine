@@ -886,7 +886,7 @@ static obj_t *planets_get_by_oid(
 {
     obj_t *child;
     if (!oid_is_catalog(oid, "HORI")) return NULL;
-    OBJ_ITER(obj, child, "planet") {
+    MODULE_ITER(obj, child, "planet") {
         if (child->oid == oid) {
             child->ref++;
             return child;

@@ -49,7 +49,7 @@ static int layer_update(obj_t *obj, const observer_t *obs, double dt)
     layer_t *layer = (layer_t*)obj;
     obj_t *child;
     fader_update(&layer->visible, dt);
-    OBJ_ITER(obj, child, NULL) obj_update(child, obs, dt);
+    MODULE_ITER(obj, child, NULL) obj_update(child, obs, dt);
     return 0;
 }
 
@@ -59,7 +59,7 @@ static int layer_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     obj_t *child;
     painter.color[3] *= layer->visible.value;
-    OBJ_ITER(obj, child, NULL) {
+    MODULE_ITER(obj, child, NULL) {
         obj_render(child, &painter);
     }
     return 0;

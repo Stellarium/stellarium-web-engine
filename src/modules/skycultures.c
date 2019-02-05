@@ -82,7 +82,7 @@ static void skyculture_activate(skyculture_t *cult)
     skyculture_t *other;
 
     // Deactivate the current activated skyculture if any.
-    OBJ_ITER(cult->obj.parent, other, "skyculture") {
+    MODULE_ITER(cult->obj.parent, other, "skyculture") {
         if (other != cult && other->active) skyculture_deactivate(other);
     }
 
@@ -150,7 +150,7 @@ static void skyculture_on_active_changed(
 
     // Deactivate the others.
     if (cult->active) {
-        OBJ_ITER(cult->obj.parent, other, "skyculture") {
+        MODULE_ITER(cult->obj.parent, other, "skyculture") {
             if (other == cult) continue;
             obj_set_attr((obj_t*)other, "active", "b", false);
         }
@@ -279,7 +279,7 @@ static void skycultures_gui(obj_t *obj, int location)
     skyculture_t *cult;
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Skycultures")) {
-        OBJ_ITER(obj, cult, "skyculture") {
+        MODULE_ITER(obj, cult, "skyculture") {
             if (!cult->info.name) continue;
             gui_item(&(gui_item_t){
                     .label = cult->info.name,
@@ -293,7 +293,7 @@ static void skycultures_gui(obj_t *obj, int location)
 static int skycultures_update(obj_t *obj, const observer_t *obs, double dt)
 {
     obj_t *skyculture;
-    OBJ_ITER(obj, skyculture, "skyculture") {
+    MODULE_ITER(obj, skyculture, "skyculture") {
         obj_update(skyculture, obs, dt);
     }
     return 0;

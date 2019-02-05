@@ -201,7 +201,7 @@ static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
 
     // Deactivate the others.
     if (ls->active) {
-        OBJ_ITER(ls->obj.parent, other, "landscape") {
+        MODULE_ITER(ls->obj.parent, other, "landscape") {
             if (other == ls) continue;
             obj_set_attr((obj_t*)other, "active", "b", false);
         }
@@ -236,7 +236,7 @@ static int landscapes_update(obj_t *obj, const observer_t *obs, double dt)
 {
     landscapes_t *lss = (landscapes_t*)obj;
     obj_t *ls;
-    OBJ_ITER((obj_t*)lss, ls, "landscape") {
+    MODULE_ITER((obj_t*)lss, ls, "landscape") {
         obj_update(ls, obs, dt);
     }
     return fader_update(&lss->visible, dt);
@@ -249,7 +249,7 @@ static int landscapes_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
 
     painter.color[3] *= lss->visible.value;
-    OBJ_ITER(obj, ls, "landscape") {
+    MODULE_ITER(obj, ls, "landscape") {
         obj_render(ls, &painter);
     }
     return 0;
@@ -260,7 +260,7 @@ static void landscapes_gui(obj_t *obj, int location)
     landscape_t *ls;
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Landscapes")) {
-        OBJ_ITER(obj, ls, "landscape") {
+        MODULE_ITER(obj, ls, "landscape") {
             gui_item(&(gui_item_t){
                     .label = ls->obj.id,
                     .obj = (obj_t*)ls,
