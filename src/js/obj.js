@@ -63,8 +63,6 @@ Module.afterInit(function() {
       Object.defineProperty(that, id, {
         enumerable: true,
         get: function() {
-          var obj_get = Module.cwrap('obj_get', 'number',
-            ['number', 'string', 'number'])
           var obj = obj_get(that.v, id, 0)
           return obj ? new SweObj(obj) : null
         }
