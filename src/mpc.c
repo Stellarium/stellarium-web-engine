@@ -18,8 +18,8 @@
 // Faster than atof.
 static inline int parse_float(const char *str, double *ret)
 {
-    uint32_t x = 0;
-    int div = 1, sign = 1, nb = 0;
+    uint32_t x = 0, f = 0;
+    int div = 1, sign = 1, nb;
     char c;
     while (*str == ' ') str++;
     if (*str == '-') {
@@ -27,6 +27,7 @@ static inline int parse_float(const char *str, double *ret)
         str++;
     }
     // Whole part.
+    nb = 0;
     while (true) {
         c = *str++;
         if (c == '.') break;
@@ -35,15 +36,16 @@ static inline int parse_float(const char *str, double *ret)
         x = x * 10 + (c - '0');
     }
     // Fract part.
+    nb = 0;
     while (true) {
         c = *str++;
         if (c == ' ' || c == '\0' || c == '\n') break;
         if (c < '0' || c > '9') return -1;
         if (nb++ > 8) return -1;
-        x = x * 10 + (c - '0');
+        f = f * 10 + (c - '0');
         div *= 10;
     }
-    *ret = sign * ((double)x / div);
+    *ret = sign * (x + ((double)f / div));
     return 0;
 }
 
@@ -261,7 +263,7 @@ static void test_parse_float(void)
     double x, y;
     int r, i;
     const char *values[] = {
-        "10.5", "-10.6", "0.1", "1.0", "478.878313",
+        "10.5", "-10.6", "0.1", "1.0", "478.878313", "109.8611716"
     };
     for (i = 0; i < ARRAY_SIZE(values); i++) {
         r = parse_float(values[i], &x);
