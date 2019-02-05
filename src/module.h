@@ -48,3 +48,32 @@ int module_add_data_source(obj_t *module, const char *url, const char *type,
  * having to create a special class just for that.
  */
 obj_t *module_add_sub(obj_t *module, const char *name);
+
+
+//XXX: probably should rename this to obj_query.
+/*
+ * Function: obj_get
+ * Find an object by query.
+ *
+ * Parameters:
+ *   module - The parent module we search from, NULL for all modules.
+ *   query  - An identifier that represents the object, can be:
+ *      - A direct object id (HD 456, NGC 8)
+ *      - A module name (constellations)
+ *      - A submodule (constellations.lines)
+ *      - An object name (polaris)
+ *   flags  - always zero for the moment.
+ */
+obj_t *obj_get(const obj_t *module, const char *query, int flags);
+
+/*
+ * Function: obj_get_by_oid
+ * Find an object by its oid.
+ */
+obj_t *obj_get_by_oid(const obj_t *module, uint64_t oid, uint64_t hint);
+
+/*
+ * Function: obj_get_by_nsid
+ * Find an object by its nsid.
+ */
+obj_t *obj_get_by_nsid(const obj_t *module, uint64_t nsid);
