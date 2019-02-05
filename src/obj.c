@@ -177,16 +177,6 @@ obj_t *obj_clone(const obj_t *obj)
     return obj->klass->clone(obj);
 }
 
-// For modules: return the order in which the modules should be rendered.
-// NOTE: if we used deferred rendering this wouldn't be needed at all!
-double obj_get_render_order(const obj_t *obj)
-{
-    if (obj->klass->get_render_order)
-        return obj->klass->get_render_order(obj);
-    else
-        return obj->klass->render_order;
-}
-
 static void name_on_designation(const obj_t *obj, void *user,
                                 const char *cat, const char *value)
 {

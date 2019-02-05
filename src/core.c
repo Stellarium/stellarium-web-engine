@@ -133,7 +133,7 @@ static int modules_sort_cmp(void *a, void *b)
     obj_t *at, *bt;
     at = a;
     bt = b;
-    return cmp(obj_get_render_order(at), obj_get_render_order(bt));
+    return cmp(module_get_render_order(at), module_get_render_order(bt));
 }
 
 

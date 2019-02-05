@@ -337,14 +337,6 @@ obj_t *obj_clone(const obj_t *obj);
 
 
 /*
- * Function: obj_get_render_order
- *
- * For modules: return the order in which the modules should be rendered.
- * NOTE: if we used deferred rendering this wouldn't be needed at all!
- */
-double obj_get_render_order(const obj_t *obj);
-
-/*
  * Function: obj_render
  * Render an object.
  */

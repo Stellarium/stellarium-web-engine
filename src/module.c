@@ -195,3 +195,12 @@ obj_t *obj_get_by_nsid_str(const obj_t *obj, const char *nsid_str)
     return obj_get_by_nsid(obj, nsid);
 }
 
+// For modules: return the order in which the modules should be rendered.
+// NOTE: if we used deferred rendering this wouldn't be needed at all!
+double module_get_render_order(const obj_t *module)
+{
+    if (module->klass->get_render_order)
+        return module->klass->get_render_order(module);
+    else
+        return module->klass->render_order;
+}

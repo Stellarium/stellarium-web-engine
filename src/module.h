@@ -77,3 +77,12 @@ obj_t *obj_get_by_oid(const obj_t *module, uint64_t oid, uint64_t hint);
  * Find an object by its nsid.
  */
 obj_t *obj_get_by_nsid(const obj_t *module, uint64_t nsid);
+
+/*
+ * Function: module_get_render_order
+ *
+ * For modules: return the order in which the modules should be rendered.
+ * NOTE: if we used deferred rendering this wouldn't be needed at all!
+ */
+double module_get_render_order(const obj_t *module);
+
