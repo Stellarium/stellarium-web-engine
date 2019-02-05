@@ -449,7 +449,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     // Render label only if we are not too far from the observer view
     // direction, so that we don't show too many labels when zoomed out.
     vec4_copy(painter.viewport_caps[FRAME_ICRF], half_cap);
-    half_cap[3] = cos(max(40*M_PI/180, acos(half_cap[3]) * 0.7));
+    half_cap[3] = cos(40.0 * M_PI / 180);
     if (!cap_contains_vec3(half_cap, con->bounding_cap))
         return 0;
 
