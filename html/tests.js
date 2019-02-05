@@ -46,24 +46,10 @@ var testBasic = function(stel) {
 };
 
 var testIds = function(stel) {
-  var o1 = stel.getObj('Polaris');
-  var tests = ['HIP 11767', 'HD 8890', 'NAME Polaris']
+  var o1 = stel.getObj('HIP 11767');
+  assert(o1);
+  var tests = ['HIP 11767', 'HD 8890']
   for (var v of tests) assert(o1.names().includes(v))
-
-  var o2 = stel.createObj('tle_satellite', {
-    nsid: '0000000beefbeef2',
-    model_data: {
-      mag: 2.0,
-      norad_number: 19120,
-      tle: [
-        '1 19120U 88039B   18246.93217385  .00000115  00000-0' +
-        '77599-4 0  9998',
-        '2 19120  71.0141 107.3044 0023686 231.5553 128.3447' +
-        '14.19191161569077'
-      ]
-    }
-  })
-  assert(o2.id == 'NORAD 19120');
 }
 
 var testSearch = function(stel) {
@@ -148,7 +134,7 @@ var testTree = function(stel) {
   assert(stel.getValue('selection') === null);
 
   // Test that object values are returned as pointer.
-  var o = stel.getObj('Polaris');
+  var o = stel.getObj('HIP 11767');
   stel.core.selection = o;
   assert(typeof(stel.getValue('selection')) === 'number');
 }
@@ -247,7 +233,7 @@ var testPositions = function(stel) {
   obs.utc = 55080.7083;
   obs.longitude = -84.39 * stel.D2R;
   obs.latitude = 33.75 * stel.D2R;
-  var o = stel.getObj('Polaris');
+  var o = stel.getObj('HIP 11767');
   o.update(obs);
   var icrs = o.icrs;
   var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', icrs);
