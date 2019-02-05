@@ -229,7 +229,18 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     if (sscanf(query, "NSID %" PRIx64, &nsid) == 1)
         return obj_get_by_nsid(obj, nsid);
 
-    obj = obj ?: &g_root_obj;
+    // Turn queries like: obj_get(NULL, "core.abc") into:
+    // obj_get(core, "abc").
+    if (!obj && strncmp(query, "core.", 5) == 0) {
+        obj = &core->obj;
+        query += 5;
+    }
+    // Special case for just 'core':
+    if (!obj && strcmp(query, "core") == 0) return &core->obj;
+
+    // Default to core if we passed NULL.
+    obj = obj ?: &core->obj;
+
     // If the id contains '.', it means we specified a sub object.
     // XXX: might not be a very good idea, what if the object id contains
     // point?
@@ -245,10 +256,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
         }
         assert(child);
         query = sep + 1;
-    }
-    if (obj == &g_root_obj) {
-        if (strcasecmp(query, "core") == 0) return &core->obj;
-        obj = &core->obj;
     }
 
     // Check direct sub objects.
