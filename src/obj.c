@@ -309,9 +309,17 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
             return args_value_new(attr->type, attr->hint, *(bool*)p);
         else if (strcmp(attr->type, "d") == 0)
             return args_value_new(attr->type, attr->hint, *(int*)p);
-        else if (strcmp(attr->type, "f") == 0)
-            return args_value_new(attr->type, attr->hint, *(double*)p);
-        else if (strcmp(attr->type, "p") == 0)
+        else if (strcmp(attr->type, "f") == 0) {
+            // Works for both float and double.
+            if (attr->member.size == sizeof(double)) {
+                return args_value_new(attr->type, attr->hint, *(double*)p);
+            } else if (attr->member.size == sizeof(float)) {
+                return args_value_new(attr->type, attr->hint, *(float*)p);
+            } else {
+                assert(false);
+                return NULL;
+            }
+        } else if (strcmp(attr->type, "p") == 0)
             return args_value_new(attr->type, attr->hint, *(void**)p);
         else if (strcmp(attr->type, "s") == 0)
             return args_value_new(attr->type, attr->hint, *(char**)p);
