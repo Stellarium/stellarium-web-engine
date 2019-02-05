@@ -233,7 +233,7 @@ static void core_set_default(void)
 
 static void on_progressbar(const char *id)
 {
-    obj_changed((obj_t*)core, "progressbars");
+    module_changed((obj_t*)core, "progressbars");
 }
 
 // Callback for texture loading.
@@ -331,7 +331,7 @@ void core_update_fov(double dt)
     core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
 
     if (core->fov != save_fov)
-        obj_changed((obj_t*)core, "fov");
+        module_changed((obj_t*)core, "fov");
 }
 
 static int core_update_direction(double dt)
@@ -363,16 +363,16 @@ static int core_update_direction(double dt)
             core->target.move_to_lock = false;
         }
         // Notify the changes.
-        obj_changed(&core->observer->obj, "altitude");
-        obj_changed(&core->observer->obj, "azimuth");
+        module_changed(&core->observer->obj, "altitude");
+        module_changed(&core->observer->obj, "azimuth");
     }
 
     if (core->target.lock && !core->target.move_to_lock) {
         obj_get_pos_observed(core->target.lock, core->observer, v);
         eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
         // Notify the changes.
-        obj_changed(&core->observer->obj, "altitude");
-        obj_changed(&core->observer->obj, "azimuth");
+        module_changed(&core->observer->obj, "altitude");
+        module_changed(&core->observer->obj, "azimuth");
     }
 
     return 1;
@@ -508,7 +508,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     // Reset counter every 60 frames.
     if (core->prof.nb_frames++ >= 60) {
         core->prof.fps = core->prof.nb_frames / (t - core->prof.start_time);
-        obj_changed(&core->obj, "fps");
+        module_changed(&core->obj, "fps");
         core->prof.start_time = t;
         core->prof.nb_frames = 0;
     }
@@ -667,8 +667,8 @@ void core_on_zoom(double k, double x, double y)
                                      -M_PI / 2, +M_PI / 2);
     core->fast_mode = true;
     // Notify the changes.
-    obj_changed(&core->observer->obj, "altitude");
-    obj_changed(&core->observer->obj, "azimuth");
+    module_changed(&core->observer->obj, "altitude");
+    module_changed(&core->observer->obj, "azimuth");
 }
 
 

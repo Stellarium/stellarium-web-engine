@@ -85,3 +85,20 @@ obj_t *obj_get_by_nsid(const obj_t *module, uint64_t nsid);
  * NOTE: if we used deferred rendering this wouldn't be needed at all!
  */
 double module_get_render_order(const obj_t *module);
+
+/*
+ * Function: module_add_global_listener
+ * Register a callback to be called anytime an attribute of a module changes.
+ *
+ * For the moment we can only have one listener for all the modules.  This
+ * is enough for the javascript binding.
+ */
+void module_add_global_listener(void (*f)(obj_t *module, const char *attr));
+
+/*
+ * Function: module_changed
+ * Should be called by modules after they manually change one of their
+ * attributes.
+ */
+void module_changed(obj_t *module, const char *attr);
+

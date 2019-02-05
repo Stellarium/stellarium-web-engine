@@ -234,7 +234,7 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
                  &data, ASSET_ACCEPT_404))
     {
         cult->description = strdup(data);
-        obj_changed((obj_t*)cult, "description");
+        module_changed((obj_t*)cult, "description");
     }
 
     if (get_file(cult, SK_CONSTELLATIONS_STEL, "constellationship.fab",

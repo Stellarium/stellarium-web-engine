@@ -68,7 +68,7 @@ static int landscape_update(obj_t *obj, const observer_t *obs, double dt)
         ls->parsed |= LS_DESCRIPTION;
         if (!data) return 0;
         ls->description = strdup(data);
-        obj_changed((obj_t*)ls, "description");
+        module_changed((obj_t*)ls, "description");
     }
 
     return fader_update(&ls->visible, dt);

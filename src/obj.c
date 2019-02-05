@@ -24,7 +24,6 @@ typedef struct {
     int         arg1;
 } attr_info_t;
 
-static void (*g_listener)(obj_t *obj, const char *attr) = NULL;
 // Global list of all the registered klasses.
 static obj_klass_t *g_klasses = NULL;
 
@@ -48,18 +47,6 @@ static const attribute_t DEFAULT_ATTRIBUTES[] = {
       .desc = "Type id string as defined by Simbad."},
 };
 
-
-EMSCRIPTEN_KEEPALIVE
-void obj_add_global_listener(void (*f)(obj_t *obj, const char *attr))
-{
-    g_listener = f;
-}
-
-void obj_changed(obj_t *obj, const char *attr)
-{
-    if (g_listener)
-        g_listener(obj, attr);
-}
 
 static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
                           json_value *args)
@@ -344,7 +331,7 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
             }
             memcpy(p, buf, attr->member.size);
             if (attr->on_changed) attr->on_changed(obj, attr);
-            obj_changed(obj, attr->name);
+            module_changed(obj, attr->name);
         }
         return NULL;
     }

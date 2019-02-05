@@ -9,6 +9,8 @@
 
 #include "swe.h"
 
+static void (*g_listener)(obj_t *module, const char *attr) = NULL;
+
 /*
  * Function: module_list_obj
  * List all astro objects in a module.
@@ -203,4 +205,16 @@ double module_get_render_order(const obj_t *module)
         return module->klass->get_render_order(module);
     else
         return module->klass->render_order;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void module_add_global_listener(void (*f)(obj_t *module, const char *attr))
+{
+    g_listener = f;
+}
+
+void module_changed(obj_t *module, const char *attr)
+{
+    if (g_listener)
+        g_listener(module, attr);
 }

@@ -255,8 +255,8 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
         eraUt1tt(DJM0, obs->ut1, dt, &tt1, &tt2);
         obs->tt = tt1 - DJM0 + tt2;
     }
-    obj_changed(obj, "tt");
-    obj_changed(obj, "utc");
+    module_changed(obj, "tt");
+    module_changed(obj, "utc");
 }
 
 // Expose azalt vector to js.

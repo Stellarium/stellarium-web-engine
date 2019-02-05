@@ -443,22 +443,6 @@ char *obj_get_tree(const obj_t *obj, bool detailed);
 char *obj_get_path(const obj_t *obj, const obj_t *root);
 
 /*
- * Function: obj_add_global_listener
- * Register a callback to be called anytime an attribute of an object changes.
- *
- * For the moment we can only have one listener for all the object.  This
- * is enough for the javascript binding.
- */
-void obj_add_global_listener(void (*f)(obj_t *obj, const char *attr));
-
-/*
- * Function: obj_changed
- * Should be called by object after they manually change one of their
- * attributes.
- */
-void obj_changed(obj_t *obj, const char *attr);
-
-/*
  * Section: attributes manipulation.
  */
 

@@ -62,8 +62,8 @@ static int on_pan(const gesture_t *gest, void *user)
     obj_set_attr(&core->obj, "lock", "p", NULL);
     observer_update(core->observer, true);
     // Notify the changes.
-    obj_changed(&core->observer->obj, "altitude");
-    obj_changed(&core->observer->obj, "azimuth");
+    module_changed(&core->observer->obj, "altitude");
+    module_changed(&core->observer->obj, "azimuth");
     return 0;
     return 0;
 }
@@ -77,7 +77,7 @@ static int on_click(const gesture_t *gest, void *user)
         obj_release(obj);
     }
     core->clicks++;
-    obj_changed((obj_t*)core, "clicks");
+    module_changed((obj_t*)core, "clicks");
     return 0;
 }
 
@@ -97,7 +97,7 @@ static int on_pinch(const gesture_t *gest, void *user)
         start_fov = core->fov;
     }
     core->fov = start_fov / gest->pinch;
-    obj_changed((obj_t*)core, "fov");
+    module_changed((obj_t*)core, "fov");
     return 0;
 }
 
