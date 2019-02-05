@@ -104,7 +104,7 @@ static int parse_index(const char *base_url, const char *data)
         key = json->u.object.values[i].name;
         type = json_get_attr_s(json->u.object.values[i].value, "type");
         sprintf(url, "%s/%s", base_url, key);
-        obj_add_data_source(NULL, url, type, NULL);
+        module_add_data_source(NULL, url, type, NULL);
     }
 
     json_value_free(json);
@@ -134,7 +134,7 @@ static int hips_property_handler(void* user, const char* section,
 static int on_sub_dir(void *user, const char *path, int is_dir)
 {
     if (!is_dir) return 0;
-    obj_add_data_source(NULL, path, NULL, NULL);
+    module_add_data_source(NULL, path, NULL, NULL);
     return 0;
 }
 
@@ -155,7 +155,7 @@ static int process_dir(source_t *source)
                     ASSET_ACCEPT_404 | ASSET_USED_ONCE, &code);
     if (!code) return 0;
     if (data) {
-        obj_add_data_source(NULL, source->url, "skyculture", NULL);
+        module_add_data_source(NULL, source->url, "skyculture", NULL);
         return 1;
     }
     // Finally try to iter for subdirectories.
@@ -186,7 +186,7 @@ static int process_source(sources_t *sources, source_t *source)
         if (!data) return 0;
         args = json_object_new(0);
         ini_parse_string(data, hips_property_handler, args);
-        obj_add_data_source(NULL, source->url, "hips", args);
+        module_add_data_source(NULL, source->url, "hips", args);
         json_builder_free(args);
         break;
     default:

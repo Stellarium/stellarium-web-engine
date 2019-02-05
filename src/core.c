@@ -109,7 +109,7 @@ static int core_list(const obj_t *obj, observer_t *obs,
     obj_t *module;
     int nb = 0;
     DL_FOREACH(core->obj.children, module) {
-        nb += obj_list(module, obs, max_mag, hint, user, f);
+        nb += module_list_objs(module, obs, max_mag, hint, user, f);
     }
     return nb;
 }
@@ -121,7 +121,7 @@ static int core_add_data_source(obj_t *obj, const char *url, const char *type,
     int r;
     DL_FOREACH(core->obj.children, module) {
         if (!(module->klass->flags & OBJ_MODULE)) continue;
-        r = obj_add_data_source(module, url, type, args);
+        r = module_add_data_source(module, url, type, args);
         if (r == 1) continue; // Can't add here.
         return r;
     }
@@ -167,28 +167,28 @@ EMSCRIPTEN_KEEPALIVE
 void core_add_default_sources(void)
 {
     #define BASE_URL "https://data.stellarium.org/"
-    obj_add_data_source(NULL, BASE_URL "landscapes", NULL, NULL);
+    module_add_data_source(NULL, BASE_URL "landscapes", NULL, NULL);
 
     // Bundled star survey.
-    obj_add_data_source(NULL, "asset://stars", "hips", NULL);
+    module_add_data_source(NULL, "asset://stars", "hips", NULL);
     // Online DSO survey.
-    obj_add_data_source(NULL, BASE_URL "surveys/dso", "hips", NULL);
+    module_add_data_source(NULL, BASE_URL "surveys/dso", "hips", NULL);
 
     // Skyculture.  We load the western culture immediately so we don't have
     // to wait to parse the online directory index.json file.
     asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
-    obj_add_data_source(NULL, BASE_URL "skycultures/western", "skyculture",
+    module_add_data_source(NULL, BASE_URL "skycultures/western", "skyculture",
                         NULL);
-    obj_add_data_source(NULL, BASE_URL "skycultures", NULL, NULL);
+    module_add_data_source(NULL, BASE_URL "skycultures", NULL, NULL);
 
     // HiPS surveys.
-    obj_add_data_source(NULL, BASE_URL "surveys", "hipslist", NULL);
+    module_add_data_source(NULL, BASE_URL "surveys", "hipslist", NULL);
 
-    obj_add_data_source(NULL, "https://alasky.unistra.fr/DSS/DSSColor",
+    module_add_data_source(NULL, "https://alasky.unistra.fr/DSS/DSSColor",
                         "hips", NULL);
 
     // Asteroid data.
-    obj_add_data_source(NULL, "asset://mpcorb.dat", "mpc_asteroids", NULL);
+    module_add_data_source(NULL, "asset://mpcorb.dat", "mpc_asteroids", NULL);
     #undef BASE_URL
 }
 

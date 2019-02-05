@@ -20,6 +20,7 @@
 #include "hips.h"
 #include "observer.h"
 #include "obj.h"
+#include "module.h"
 #include "otypes.h"
 #include "bayer.h"
 #include "telescope.h"

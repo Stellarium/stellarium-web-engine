@@ -408,12 +408,13 @@ calendar_t *calendar_create(const observer_t *obs,
 
     // Create all the objects.
     i = 0;
-    obj_list(&core->obj, &cal->obs, 2.0, 0, USER_PASS(NULL, &i), obj_add_f);
+    module_list_objs(&core->obj, &cal->obs, 2.0, 0, USER_PASS(NULL, &i),
+                     obj_add_f);
     cal->nb_objs = i;
     cal->objs = calloc(cal->nb_objs, sizeof(*cal->objs));
     i = 0;
-    obj_list(&core->obj, &cal->obs, 2.0, 0, USER_PASS(cal->objs, &i),
-             obj_add_f);
+    module_list_objs(&core->obj, &cal->obs, 2.0, 0, USER_PASS(cal->objs, &i),
+                     obj_add_f);
 
     cal->flags = flags;
     cal->start = start;
