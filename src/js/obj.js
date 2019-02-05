@@ -269,7 +269,7 @@ Module.afterInit(function() {
       }
     }
   }, 'vii');
-  Module._obj_add_global_listener(onObjChanged);
+  Module._module_add_global_listener(onObjChanged);
 
 
   // Add some convenience functions to access swe values directly as a
