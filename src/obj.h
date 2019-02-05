@@ -37,11 +37,13 @@
  * OBJ_LISTABLE         - For modules that maintain a list of children objects,
  *                        like comets, this allows obj_list to directly do
  *                        the listing.
+ * OBJ_SUB              - This is a sub-module (like constellation->lines).
  */
 enum {
     OBJ_IN_JSON_TREE = 1 << 0,
     OBJ_MODULE       = 1 << 1,
     OBJ_LISTABLE     = 1 << 2,
+    OBJ_SUB          = 1 << 3,
 };
 
 enum {
@@ -332,16 +334,6 @@ void obj_release(obj_t *obj);
  * Fails if the object doesn't support cloning.
  */
 obj_t *obj_clone(const obj_t *obj);
-
-/*
- * Function: obj_add_sub
- * Create a dummy sub object
- *
- * This can be used in the obj_call function to Assign attributes to sub
- * object.  For example it can be used to have constellations.images, without
- * having to create a special class just for that.
- */
-obj_t *obj_add_sub(obj_t *parent, const char *name);
 
 //XXX: probably should rename this to obj_query.
 /*

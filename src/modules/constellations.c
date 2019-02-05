@@ -479,10 +479,10 @@ static int constellations_init(obj_t *obj, json_value *args)
 {
     constellations_t *conss = (void*)obj;
     conss->show_all = true;
-    obj_add_sub(&conss->obj, "images");
-    obj_add_sub(&conss->obj, "lines");
-    obj_add_sub(&conss->obj, "bounds");
-    obj_add_sub(&conss->obj, "labels");
+    module_add_sub(&conss->obj, "images");
+    module_add_sub(&conss->obj, "lines");
+    module_add_sub(&conss->obj, "bounds");
+    module_add_sub(&conss->obj, "labels");
     fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->images_visible, false);

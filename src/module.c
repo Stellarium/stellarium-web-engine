@@ -71,3 +71,24 @@ int module_add_data_source(obj_t *obj, const char *url, const char *type,
         return obj->klass->add_data_source(obj, url, type, args);
     return 1; // Not recognised.
 }
+
+/**** Support for obj_sub type ******************************************/
+// An sub obj is a light obj that uses its parent call method.
+// It is useful for example to support constellations.images.VISIBLE
+// attributes.
+
+static obj_klass_t obj_sub_klass = {
+    .size  = sizeof(obj_t),
+    .flags = OBJ_IN_JSON_TREE | OBJ_SUB,
+};
+
+obj_t *module_add_sub(obj_t *parent, const char *name)
+{
+    obj_t *obj;
+    obj = calloc(1, sizeof(*obj));
+    obj->ref = 1;
+    obj->id = strdup(name);
+    obj->klass = &obj_sub_klass;
+    obj_add(parent, obj);
+    return obj;
+}

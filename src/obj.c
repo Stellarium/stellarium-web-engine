@@ -155,30 +155,6 @@ void obj_remove(obj_t *parent, obj_t *child)
     obj_release(child);
 }
 
-/**** Support for obj_sub type ******************************************/
-// An sub obj is a light obj that uses its parent call method.
-// It is useful for example to support constellations.images.VISIBLE
-// attributes.
-
-typedef struct {
-    obj_t       obj;
-    obj_klass_t  *parent_klass;
-} obj_sub_t;
-
-static obj_klass_t obj_sub_klass = {
-    .size  = sizeof(obj_sub_t),
-    .flags = OBJ_IN_JSON_TREE,
-};
-
-obj_t *obj_add_sub(obj_t *parent, const char *name) {
-    obj_sub_t *obj;
-    obj = (obj_sub_t*)obj_create_(&obj_sub_klass, name, parent, NULL);
-    obj->parent_klass = parent->klass;
-    return &obj->obj;
-}
-
-/***********************************************************************/
-
 EMSCRIPTEN_KEEPALIVE
 void obj_release(obj_t *obj)
 {
@@ -463,7 +439,7 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
 static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
                                   const json_value *args)
 {
-    obj_t *container_obj = obj->klass == &obj_sub_klass ? obj->parent : obj;
+    obj_t *container_obj = (obj->klass->flags & OBJ_SUB) ? obj->parent : obj;
     assert(attr->type);
     void *p = ((void*)container_obj) + attr->member.offset;
     // Buffer large enough to contain any kind of property data, including
@@ -512,7 +488,7 @@ const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr_name)
     const char *sub = NULL;
     int i;
     assert(obj);
-    if (obj->klass == &obj_sub_klass) {
+    if (obj->klass->flags & OBJ_SUB) {
         sub = obj->id;
         obj = obj->parent;
     }
@@ -539,7 +515,7 @@ void obj_foreach_attr(const obj_t *obj,
 
     klass = obj->klass;
     if (!klass) return;
-    if (klass == &obj_sub_klass) {
+    if (klass->flags & OBJ_SUB) {
         sub = obj->id;
         klass = obj->parent->klass;
     }
@@ -684,7 +660,7 @@ static json_value *obj_get_tree_json(const obj_t *obj, bool detailed)
 
     assert(obj);
     klass = obj->klass;
-    if (klass == &obj_sub_klass) {
+    if (klass->flags & OBJ_SUB) {
         sub = obj->id;
         klass = obj->parent->klass;
     }
