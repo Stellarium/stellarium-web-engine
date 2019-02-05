@@ -170,14 +170,14 @@ struct core
         double      src_q[4]; // Initial pos quaternion.
         double      dst_q[4]; // Destination pos quaternion.
         double      t;        // Goes from 0 to 1 as we move.
-        double      speed;
-        // Set to true if the move is toward newly locked object
+        double      duration; // Animation duration in sec.
+        // Set to true if the move is toward newly locked object.
         bool        move_to_lock;
     } target;
 
     struct {
         double      t;        // Goes from 0 to 1 as we move.
-        double      speed;
+        double      duration; // Animation duration in sec.
         double      src_fov;  // Initial fov.
         double      dst_fov;  // Destination fov.
     } fov_animation;

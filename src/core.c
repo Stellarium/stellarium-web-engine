@@ -301,8 +301,8 @@ void core_update_fov(double dt)
     double t;
     double save_fov = core->fov;
 
-    if (core->fov_animation.speed) {
-        core->fov_animation.t += dt / core->fov_animation.speed;
+    if (core->fov_animation.duration) {
+        core->fov_animation.t += dt / core->fov_animation.duration;
         t = smoothstep(0.0, 1.0, core->fov_animation.t);
         // Make sure we finish on an exact value.
         if (core->fov_animation.t >= 1.0) t = 1.0;
@@ -311,7 +311,7 @@ void core_update_fov(double dt)
                             core->fov_animation.dst_fov, t);
         }
         if (core->fov_animation.t >= 1.0) {
-            core->fov_animation.speed = 0.0;
+            core->fov_animation.duration = 0.0;
             core->fov_animation.t = 0.0;
             core->fov_animation.dst_fov = 0.0;
         }
@@ -338,8 +338,8 @@ static int core_update_direction(double dt)
 {
     double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
 
-    if (core->target.speed) {
-        core->target.t += dt / core->target.speed;
+    if (core->target.duration) {
+        core->target.t += dt / core->target.duration;
         t = smoothstep(0.0, 1.0, core->target.t);
         // Make sure we finish on an exact value.
         if (core->target.t >= 1.0) t = 1.0;
@@ -358,7 +358,7 @@ static int core_update_direction(double dt)
             eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
         }
         if (core->target.t >= 1.0) {
-            core->target.speed = 0.0;
+            core->target.duration = 0.0;
             core->target.t = 0.0;
             core->target.move_to_lock = false;
         }
@@ -840,7 +840,7 @@ static int do_core_lookat(double* pos, double speed) {
     quat_rz(az, core->target.dst_q, core->target.dst_q);
     quat_ry(-al, core->target.dst_q, core->target.dst_q);
 
-    core->target.speed = speed;
+    core->target.duration = speed;
     core->target.t = 0.0;
     core->fast_mode = true;
     return 0;
@@ -878,43 +878,43 @@ static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
 static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
                                const json_value *args)
 {
-    double speed = 1.0, fov = 0.0;
+    double duration = 1.0, fov = 0.0;
 
     args_get(args, "fov", 1, "f", NULL, &fov);
-    args_get(args, "speed", 2, "f", NULL, &speed);
+    args_get(args, "speed", 2, "f", NULL, &duration);
 
     // Direct lookat.
-    if (speed == 0.0) {
+    if (duration == 0.0) {
         core->fov = fov;
         return NULL;
     }
 
-    if (core->fov_animation.t < 1 && core->fov_animation.t > 0) {
+    typeof(core->fov_animation)* anim = &core->fov_animation;
+    if (anim->t < 1 && anim->t > 0) {
         // We request a new animation while another one is still on going
-        if (fov == core->fov_animation.dst_fov) {
+        if (fov == anim->dst_fov) {
             // Same animation is going on, just finish it
             return NULL;
         }
         // We are looking for a new set of zoom parameters so that:
         // - we preserve the current zoom level
         // - the remaining animation time is equal to the new speed
-        double t2 = (core->fov_animation.t * core->fov_animation.speed) /
-                    (core->fov_animation.t * core->fov_animation.speed + speed);
+        double t2 = (anim->t * anim->duration) / (anim->t * anim->duration +
+                                                  duration);
         assert(t2 >= 0 && t2 <= 1);
         double st2 = smoothstep(0, 1, t2);
         double src2 = (core->fov - fov * st2) / (1.0 - st2);
-        core->fov_animation.src_fov = src2;
-        core->fov_animation.dst_fov = fov;
-        core->fov_animation.speed = core->fov_animation.t *
-        core->fov_animation.speed + speed;
-        core->fov_animation.t = t2;
+        anim->src_fov = src2;
+        anim->dst_fov = fov;
+        anim->duration = anim->t * anim->duration + duration;
+        anim->t = t2;
         return NULL;
     }
 
-    core->fov_animation.src_fov = core->fov;
-    core->fov_animation.dst_fov = fov;
-    core->fov_animation.speed = speed;
-    core->fov_animation.t = 0.0;
+    anim->src_fov = core->fov;
+    anim->dst_fov = fov;
+    anim->duration = duration;
+    anim->t = 0.0;
 
     return NULL;
 }
