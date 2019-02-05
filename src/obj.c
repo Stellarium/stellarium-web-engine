@@ -710,8 +710,7 @@ static json_value *obj_get_tree_json(const obj_t *obj, bool detailed)
     obj_klass_t *klass;
     const char *sub = NULL;
 
-    obj = obj ?: &g_root_obj;
-
+    assert(obj);
     klass = obj->klass;
     if (klass == &obj_sub_klass) {
         sub = obj->id;
