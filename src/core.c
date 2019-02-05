@@ -568,7 +568,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     // Do post render (e.g. for GUI)
     DL_FOREACH(core->obj.children, module) {
-        obj_post_render(module, &painter);
+        if (module->klass->post_render)
+            module->klass->post_render(module, &painter);
     }
 
     core->fast_mode = false;

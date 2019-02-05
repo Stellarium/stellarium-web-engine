@@ -343,12 +343,6 @@ obj_t *obj_clone(const obj_t *obj);
 int obj_render(const obj_t *obj, const painter_t *painter);
 
 /*
- * Function: obj_post_render
- * Post render an object.
- */
-int obj_post_render(const obj_t *obj, const painter_t *painter);
-
-/*
  * Function: obj_update
  * Update the internal state of the object.
  *

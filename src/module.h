@@ -85,4 +85,3 @@ obj_t *obj_get_by_nsid(const obj_t *module, uint64_t nsid);
  * NOTE: if we used deferred rendering this wouldn't be needed at all!
  */
 double module_get_render_order(const obj_t *module);
-
