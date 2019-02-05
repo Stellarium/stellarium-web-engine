@@ -59,7 +59,7 @@ bool fader_update(fader_t *f, double dt)
 {
     double speed;
     if (f->duration <= 0)
-        speed = FADER_DEFAULT_DURATION;
+        speed = 1. / FADER_DEFAULT_DURATION;
     else
         speed = 1. / f->duration;
     return move_toward(&f->value, f->target, 0, speed, dt);
