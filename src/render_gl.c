@@ -13,6 +13,7 @@
 #define NANOVG_GLES2_IMPLEMENTATION
 #include "nanovg.h"
 #include "nanovg_gl.h"
+#include "grid_cache.h"
 
 #include <float.h>
 
@@ -507,6 +508,7 @@ static void quad(renderer_t          *rend_,
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
     double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4];
     float lum;
+    double (*grid)[3] = NULL;
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
@@ -558,6 +560,13 @@ static void quad(renderer_t          *rend_,
     vec2_sub(uv[1], uv[0], duvx);
     vec2_sub(uv[2], uv[0], duvy);
 
+    // If we use a 'normal' healpix projection for the texture, try
+    // to get it directly from the cache to improve performances.
+    if (    tex_proj->type == PROJ_HEALPIX &&
+            tex_proj->at_infinity && tex_proj->swapped) {
+        grid = grid_cache_get(tex_proj->nside, tex_proj->pix, uv, grid_size);
+    }
+
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         vec4_set(p, uv[0][0], uv[0][1], 0, 1);
@@ -574,7 +583,13 @@ static void quad(renderer_t          *rend_,
         if (tex->flags & TF_FLIPPED) tex_pos[1] = 1.0 - tex_pos[1];
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
-        project(tex_proj, PROJ_BACKWARD, 4, p, p);
+        if (grid) {
+            vec4_set(p, VEC3_SPLIT(grid[i * n + j]),
+                     tex_proj->at_infinity ? 0.0 : 1.0);
+        } else {
+            project(tex_proj, PROJ_BACKWARD, 4, p, p);
+        }
+
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);

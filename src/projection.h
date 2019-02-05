@@ -75,6 +75,7 @@ struct projection
         };
         struct {               // Only used by the healpix projection.
             int nside, pix;
+            bool swapped; // To remove?
         };
         void   *user;   // Can be used by custom projection.
     };
