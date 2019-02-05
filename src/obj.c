@@ -24,8 +24,6 @@ typedef struct {
     int         arg1;
 } attr_info_t;
 
-// All unparented objects get added to the root object.
-static obj_t g_root_obj = {0};
 static void (*g_listener)(obj_t *obj, const char *attr) = NULL;
 // Global list of all the registered klasses.
 static obj_klass_t *g_klasses = NULL;
@@ -76,9 +74,6 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
     if (id) obj->id = strdup(id);
     obj->ref = 1;
     obj->klass = klass;
-    // XXX: auto set the parent of core to the root object as a hack.
-    // I think I should totally remove the root_obj.
-    if (id && strcmp(id, "core") == 0) parent = &g_root_obj;
     if (parent) obj_add(parent, obj);
     if (obj->klass->init) obj->klass->init(obj, args);
 
