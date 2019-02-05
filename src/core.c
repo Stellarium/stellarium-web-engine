@@ -822,11 +822,11 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
     }
 }
 
-static int do_core_lookat(double* pos, double speed) {
+static int do_core_lookat(double* pos, double duration) {
     double az, al;
 
     // Direct lookat.
-    if (speed == 0.0) {
+    if (duration == 0.0) {
         eraC2s(pos, &core->observer->azimuth, &core->observer->altitude);
         return 0;
     }
@@ -840,7 +840,7 @@ static int do_core_lookat(double* pos, double speed) {
     quat_rz(az, core->target.dst_q, core->target.dst_q);
     quat_ry(-al, core->target.dst_q, core->target.dst_q);
 
-    core->target.duration = speed;
+    core->target.duration = duration;
     core->target.t = 0.0;
     core->fast_mode = true;
     return 0;
@@ -849,15 +849,15 @@ static int do_core_lookat(double* pos, double speed) {
 static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
                                const json_value *args)
 {
-    double v[4], speed = 1.0;
+    double v[4], duration = 1.0;
     obj_t* target_obj;
     args_get(args, "target", 1, "p", "obj", &target_obj);
-    args_get(args, "speed", 2, "f", NULL, &speed);
+    args_get(args, "speed", 2, "f", NULL, &duration);
 
     obj_set_attr(&core->obj, "lock", "p", target_obj);
 
     obj_get_pos_observed(core->target.lock, core->observer, v);
-    do_core_lookat(v, speed);
+    do_core_lookat(v, duration);
     core->target.move_to_lock = true;
     return NULL;
 }
@@ -866,12 +866,12 @@ static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
                                const json_value *args)
 {
     // XXX find a better way to create a rot quaternion from a direction?
-    double speed = 1.0, pos[3];
+    double duration = 1.0, pos[3];
 
     args_get(args, "target", 1, "v3", "azalt", pos);
-    args_get(args, "speed", 2, "f", NULL, &speed);
+    args_get(args, "speed", 2, "f", NULL, &duration);
 
-    do_core_lookat(pos, speed);
+    do_core_lookat(pos, duration);
     return NULL;
 }
 
@@ -898,7 +898,7 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
         }
         // We are looking for a new set of zoom parameters so that:
         // - we preserve the current zoom level
-        // - the remaining animation time is equal to the new speed
+        // - the remaining animation time is equal to the new duration
         double t2 = (anim->t * anim->duration) / (anim->t * anim->duration +
                                                   duration);
         assert(t2 >= 0 && t2 <= 1);
