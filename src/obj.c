@@ -782,8 +782,8 @@ EMSCRIPTEN_KEEPALIVE
 char *obj_get_path(const obj_t *obj, const obj_t *root)
 {
     char *base, *ret;
-    root = root ?: &g_root_obj;
-    if (!obj->parent) return NULL;
+    assert(root);
+    if (!obj->parent || !obj->id) return NULL;
     if (obj->parent == root) return strdup(obj->id);
     base = obj_get_path(obj->parent, root);
     asprintf(&ret, "%s.%s", base, obj->id);

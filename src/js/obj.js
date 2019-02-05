@@ -23,7 +23,8 @@ Module.afterInit(function() {
     'number', ['string']);
   var obj_get_tree = Module.cwrap('obj_get_tree', 'number',
     ['number', 'number']);
-  var obj_get_path = Module.cwrap('obj_get_path', 'number', ['number']);
+  var obj_get_path = Module.cwrap('obj_get_path', 'number',
+    ['number', 'number']);
   var obj_create_str = Module.cwrap('obj_create_str', 'number',
     ['string', 'string', 'number', 'string'])
 
@@ -181,10 +182,10 @@ Module.afterInit(function() {
   // Add path property to the objects.
   Object.defineProperty(SweObj.prototype, 'path', {
     get: function() {
-      var cret = obj_get_path(this.v)
+      var cret = obj_get_path(this.v, Module.core.v)
       var ret = Module.Pointer_stringify(cret)
       Module._free(cret)
-      return ret
+      return 'core.' + ret
     }
   });
 
