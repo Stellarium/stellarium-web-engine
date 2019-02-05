@@ -177,18 +177,6 @@ obj_t *obj_clone(const obj_t *obj)
     return obj->klass->clone(obj);
 }
 
-typedef union
-{
-    bool    b;
-    int     d;
-    double  f;
-    void   *p;
-    char   *s;
-    char    str[8];
-    double  color[4];
-} any_t;
-
-
 // For modules: return the order in which the modules should be rendered.
 // NOTE: if we used deferred rendering this wouldn't be needed at all!
 double obj_get_render_order(const obj_t *obj)
