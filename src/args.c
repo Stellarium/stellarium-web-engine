@@ -32,30 +32,6 @@ static int convert_to_p(const json_value *val, const char *hint, void **out)
     return 0;
 }
 
-static int convert_to_s(const json_value *val, const char *hint, char **out)
-{
-    const char *vhint = NULL;
-    char buf[64];
-    if (val->type == json_object && json_get_attr(val, "swe_", 0)) {
-        vhint = json_get_attr_s(val, "hint");
-        val = json_get_attr(val, "v", 0);
-    }
-    if (val->type == json_double && vhint && strcmp(vhint, "d_angle") == 0) {
-        asprintf(out, "%s", format_dangle(buf, val->u.dbl));
-        return 0;
-    }
-    if (val->type == json_double && vhint && strcmp(vhint, "h_angle") == 0) {
-        asprintf(out, "%s", format_hangle(buf, val->u.dbl));
-        return 0;
-    }
-    if (val->type == json_string) *out = strdup(val->u.string.ptr);
-    if (val->type == json_boolean)
-        asprintf(out, "%s", val->u.boolean ? "true" : "false");
-    if (val->type == json_integer) asprintf(out, "%" PRId64, val->u.integer);
-    if (val->type == json_double) asprintf(out, "%f", val->u.dbl);
-    return 0;
-}
-
 int args_vget(const json_value *args, const char *name, int pos,
               const char *type, const char *hint, va_list* ap)
 {
@@ -63,7 +39,6 @@ int args_vget(const json_value *args, const char *name, int pos,
     assert(args);
     int i;
     double *v;
-    char *str;
 
     if (args->type == json_array && pos) {
         if (pos <= args->u.array.length) {
@@ -129,9 +104,8 @@ int args_vget(const json_value *args, const char *name, int pos,
         convert_to_p(val, hint, va_arg(*ap, void**));
     }
     else if (strcmp(type, "s") == 0 || strcmp(type, "S") == 0) {
-        convert_to_s(val, hint, &str);
-        strcpy(va_arg(*ap, char*), str);
-        free(str);
+        assert(val->type == json_string);
+        strcpy(va_arg(*ap, char*), val->u.string.ptr);
     }
     else {
         LOG_E("Unknown type '%s'", type);
