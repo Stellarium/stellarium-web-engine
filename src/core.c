@@ -852,8 +852,8 @@ static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
 {
     double v[4], duration = 1.0;
     obj_t* target_obj;
-    args_get(args, "target", 1, TYPE_OBJ, "obj", &target_obj);
-    args_get(args, "speed", 2, TYPE_FLOAT, NULL, &duration);
+    args_get(args, "target", 1, TYPE_OBJ, &target_obj);
+    args_get(args, "speed", 2, TYPE_FLOAT, &duration);
 
     obj_set_attr(&core->obj, "lock", target_obj);
 
@@ -869,8 +869,8 @@ static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
     // XXX find a better way to create a rot quaternion from a direction?
     double duration = 1.0, pos[3];
 
-    args_get(args, "target", 1, TYPE_V3, "azalt", pos);
-    args_get(args, "speed", 2, TYPE_FLOAT, NULL, &duration);
+    args_get(args, "target", 1, TYPE_V3, pos);
+    args_get(args, "speed", 2, TYPE_FLOAT, &duration);
 
     do_core_lookat(pos, duration);
     return NULL;
@@ -881,8 +881,8 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
 {
     double duration = 1.0, fov = 0.0;
 
-    args_get(args, "fov", 1, TYPE_ANGLE, NULL, &fov);
-    args_get(args, "speed", 2, TYPE_FLOAT, NULL, &duration);
+    args_get(args, "fov", 1, TYPE_ANGLE, &fov);
+    args_get(args, "speed", 2, TYPE_FLOAT, &duration);
 
     projection_t proj;
     core_get_proj(&proj);
