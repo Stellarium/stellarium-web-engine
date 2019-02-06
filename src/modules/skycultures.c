@@ -72,6 +72,9 @@ static void skyculture_deactivate(skyculture_t *cult)
     }
 }
 
+// Defined in constellations.c
+int constellation_set_image(obj_t *obj, const json_value *args);
+
 static void skyculture_activate(skyculture_t *cult)
 {
     char id[32];
@@ -110,7 +113,7 @@ static void skyculture_activate(skyculture_t *cult)
             sprintf(id, "CST %s", json_get_attr_s(args, "id"));
             cons = obj_get(constellations, id, 0);
             if (!cons) continue;
-            obj_call_json(cons, "set_image", args);
+            constellation_set_image(cons, args);
             obj_release(cons);
         }
     }

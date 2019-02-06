@@ -177,8 +177,8 @@ static int parse_anchors(const char *str, anchor_t anchors[static 3])
     return 0;
 }
 
-static json_value *constellation_set_image(
-        obj_t *obj, const attribute_t *attr, const json_value *args)
+// Called by skyculture after we enable a new culture.
+int constellation_set_image(obj_t *obj, const json_value *args)
 {
     const char *img, *anchors, *base_path;
     constellation_t *cons = (void*)obj;
@@ -199,11 +199,11 @@ static json_value *constellation_set_image(
         cons->error = -1;
     cons->image_loaded_fader.target = false;
     cons->image_loaded_fader.value = 0;
-    return NULL;
+    return 0;
 
 error:
     LOG_W("Cannot add img to constellation %s", cons->obj.id);
-    return NULL;
+    return -1;
 }
 
 static int render_lines(const constellation_t *con, const painter_t *painter);
@@ -579,7 +579,6 @@ static obj_klass_t constellation_klass = {
     .render_pointer = constellation_render_pointer,
     .del            = constellation_del,
     .attributes     = (attribute_t[]) {
-        FUNCTION(set_image, .fn = constellation_set_image),
         // Default properties.
         INFO(name),
         INFO(distance),
