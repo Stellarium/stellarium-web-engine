@@ -130,3 +130,29 @@ void module_add(obj_t *module, obj_t *child);
  * Remove an object from a parent.
  */
 void module_remove(obj_t *module, obj_t *child);
+
+/*
+ * Function: module_get_tree
+ * Return a json tree of all the attributes and children of this module.
+ *
+ * Parameters:
+ *   obj        - The root object or NULL for global tree (starts at 'core')
+ *   detailed   - Whether to add hints to the values or not.
+ *
+ * Return:
+ *   A newly allocated string.  Caller should delete it.
+ */
+char *module_get_tree(const obj_t *obj, bool detailed);
+
+/*
+ * Function: obj_get_path
+ * Return the path of the module relative to a root module.
+ *
+ * Parameters:
+ *   obj    - The object.
+ *   root   - The base object or NULL for the global path ("core.xyz").
+ *
+ * Return:
+ *   A newly allocated string.  Caller should delete it.
+ */
+char *module_get_path(const obj_t *obj, const obj_t *root);
