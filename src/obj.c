@@ -61,7 +61,7 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
     if (id) obj->id = strdup(id);
     obj->ref = 1;
     obj->klass = klass;
-    if (parent) obj_add(parent, obj);
+    if (parent) module_add(parent, obj);
     if (obj->klass->init) obj->klass->init(obj, args);
 
     // Set the attributes.
@@ -121,25 +121,6 @@ obj_t *obj_create_str(const char *type, const char *id, obj_t *parent,
     ret = obj_create(type, id, parent, jargs);
     json_value_free(jargs);
     return ret;
-}
-
-EMSCRIPTEN_KEEPALIVE
-void obj_add(obj_t *parent, obj_t *child)
-{
-    assert(!child->parent);
-    assert(parent);
-    child->parent = parent;
-    DL_APPEND(parent->children, child);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void obj_remove(obj_t *parent, obj_t *child)
-{
-    assert(child->parent == parent);
-    assert(parent);
-    child->parent = NULL;
-    DL_DELETE(parent->children, child);
-    obj_release(child);
 }
 
 EMSCRIPTEN_KEEPALIVE

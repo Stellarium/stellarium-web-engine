@@ -68,7 +68,7 @@ static void skyculture_deactivate(skyculture_t *cult)
     assert(constellations);
     DL_FOREACH_SAFE(constellations->children, cst, tmp) {
         if (str_startswith(cst->id, "CST "))
-            obj_remove(constellations, cst);
+            module_remove(constellations, cst);
     }
 }
 

@@ -91,7 +91,7 @@ obj_t *module_add_sub(obj_t *parent, const char *name)
     obj->ref = 1;
     obj->id = strdup(name);
     obj->klass = &obj_sub_klass;
-    obj_add(parent, obj);
+    module_add(parent, obj);
     return obj;
 }
 
@@ -217,4 +217,23 @@ void module_changed(obj_t *module, const char *attr)
 {
     if (g_listener)
         g_listener(module, attr);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void module_add(obj_t *parent, obj_t *child)
+{
+    assert(!child->parent);
+    assert(parent);
+    child->parent = parent;
+    DL_APPEND(parent->children, child);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void module_remove(obj_t *parent, obj_t *child)
+{
+    assert(child->parent == parent);
+    assert(parent);
+    child->parent = NULL;
+    DL_DELETE(parent->children, child);
+    obj_release(child);
 }

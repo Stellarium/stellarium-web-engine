@@ -293,18 +293,6 @@ obj_t *obj_create_str(const char *type, const char *id, obj_t *parent,
                       const char *args);
 
 /*
- * Function: obj_add
- * Add an object as a child of an other one.
- */
-void obj_add(obj_t *parent, obj_t *child);
-
-/*
- * Function: obj_remove
- * Remove an object from a parent.
- */
-void obj_remove(obj_t *parent, obj_t *child);
-
-/*
  * Function: obj_release
  * Decrement object ref count and delete it if needed.
  */

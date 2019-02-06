@@ -118,3 +118,15 @@ void module_changed(obj_t *module, const char *attr);
                 ((((obj_t*)child)->klass) && \
                  (((obj_t*)child)->klass->id) && \
                  (strcmp(((obj_t*)child)->klass->id, klass_ ?: "") == 0)))
+
+/*
+ * Function: module_add
+ * Add an object as a child of a module
+ */
+void module_add(obj_t *module, obj_t *child);
+
+/*
+ * Function: module_remove
+ * Remove an object from a parent.
+ */
+void module_remove(obj_t *module, obj_t *child);

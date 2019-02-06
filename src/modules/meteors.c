@@ -160,7 +160,7 @@ static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
         m = (meteor_t*)child;
         obj_update(child, obs, dt);
         if (m->time > m->duration)
-            obj_remove(obj, child);
+            module_remove(obj, child);
     }
 
     return 0;
