@@ -303,13 +303,15 @@ static obj_klass_t landscape_klass = {
     .render = landscape_render,
     .render_order = 40,
     .attributes = (attribute_t[]) {
-        PROPERTY(name, "s", MEMBER(landscape_t, info.name)),
-        PROPERTY(visible, "b", MEMBER(landscape_t, visible.target)),
-        PROPERTY(color, "v4", MEMBER(landscape_t, color), .hint = "color"),
-        PROPERTY(active, "b", MEMBER(landscape_t, active),
+        PROPERTY(name, TYPE_STRING_PTR, MEMBER(landscape_t, info.name)),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(landscape_t, visible.target)),
+        PROPERTY(color, TYPE_COLOR, MEMBER(landscape_t, color),
+                 .hint = "color"),
+        PROPERTY(active, TYPE_BOOL, MEMBER(landscape_t, active),
                  .on_changed = landscape_on_active_changed),
-        PROPERTY(description, "s", MEMBER(landscape_t, description)),
-        PROPERTY(url, "s", MEMBER(landscape_t, uri)),
+        PROPERTY(description, TYPE_STRING_PTR,
+                 MEMBER(landscape_t, description)),
+        PROPERTY(url, TYPE_STRING_PTR, MEMBER(landscape_t, uri)),
         {}
     },
 };
@@ -326,8 +328,8 @@ static obj_klass_t landscapes_klass = {
     .add_data_source    = landscapes_add_data_source,
     .render_order   = 40,
     .attributes = (attribute_t[]) {
-        PROPERTY(visible, "b", MEMBER(landscapes_t, visible.target)),
-        PROPERTY(current, "p", MEMBER(landscapes_t, current),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(landscapes_t, visible.target)),
+        PROPERTY(current, TYPE_OBJ, MEMBER(landscapes_t, current),
                  .hint = "obj"),
         {}
     },

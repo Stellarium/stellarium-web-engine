@@ -693,9 +693,9 @@ static obj_klass_t dso_klass = {
         PROPERTY(radec),
         PROPERTY(vmag),
         PROPERTY(type),
-        PROPERTY(smin, "f", MEMBER(dso_t, data.smin)),
-        PROPERTY(smax, "f", MEMBER(dso_t, data.smax)),
-        PROPERTY(morpho, "s", MEMBER(dso_t, data.morpho)),
+        PROPERTY(smin, TYPE_ANGLE, MEMBER(dso_t, data.smin)),
+        PROPERTY(smax, TYPE_ANGLE, MEMBER(dso_t, data.smax)),
+        PROPERTY(morpho, TYPE_STRING_PTR, MEMBER(dso_t, data.morpho)),
         {},
     },
 };
@@ -715,7 +715,7 @@ static obj_klass_t dsos_klass = {
     .add_data_source = dsos_add_data_source,
     .render_order = 25,
     .attributes = (attribute_t[]) {
-        PROPERTY(visible, "b", MEMBER(dsos_t, visible.target)),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(dsos_t, visible.target)),
         {}
     },
 };

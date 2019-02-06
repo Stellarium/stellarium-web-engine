@@ -34,16 +34,16 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
 
 // List of default attributes for given names.
 static const attribute_t DEFAULT_ATTRIBUTES[] = {
-    { "visible", "b"},
-    { "name", "s", .fn = obj_fn_default_name,
+    { "visible", TYPE_BOOL},
+    { "name", TYPE_STRING, .fn = obj_fn_default_name,
       .desc = "Common name for the object." },
-    { "radec", "v4", .hint = "radec", .fn = obj_fn_default_pos,
+    { "radec", TYPE_V4, .hint = "radec", .fn = obj_fn_default_pos,
       .desc = "Cartesian 3d vector of the ra/dec position (ICRS)."},
-    { "vmag", "f", .hint = "mag", MEMBER(obj_t, vmag),
+    { "vmag", TYPE_MAG, .hint = "mag", MEMBER(obj_t, vmag),
       .desc = "Visual magnitude"},
-    { "distance", "f", .hint = "dist", .fn = obj_fn_default_pos,
+    { "distance", TYPE_DIST, .hint = "dist", .fn = obj_fn_default_pos,
       .desc = "Distance (AU)." },
-    { "type", "S", .hint = "obj_type", MEMBER(obj_t, type),
+    { "type", TYPE_STRING, .hint = "obj_type", MEMBER(obj_t, type),
       .desc = "Type id string as defined by Simbad."},
 };
 
@@ -253,20 +253,20 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
                                        const json_value *args)
 {
     char buf[128];
-    return args_value_new("s", NULL, obj_get_name(obj, buf));
+    return args_value_new(TYPE_STRING, NULL, obj_get_name(obj, buf));
 }
 
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
     if (str_equ(attr->name, "distance")) {
-        return args_value_new("f", "dist",
+        return args_value_new(TYPE_DIST, "dist",
                 obj->pvo[0][3] == 0 ? NAN :
                 vec3_norm(obj->pvo[0]));
     }
     // Radec is in local ICRS, i.e. equatorial J2000 observer centered
     if (str_equ(attr->name, "radec")) {
-        return args_value_new("v4", "radec", obj->pvo[0]);
+        return args_value_new(TYPE_V4, "radec", obj->pvo[0]);
     }
     assert(false);
     return NULL;
@@ -286,11 +286,11 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
 
     // If no input arguents, return the value.
     if (!args || (args->type == json_array && !args->u.array.length)) {
-        if (strcmp(attr->type, "b") == 0)
+        if (attr->type % 16 == TYPE_BOOL)
             return args_value_new(attr->type, attr->hint, *(bool*)p);
-        else if (strcmp(attr->type, "d") == 0)
+        else if (attr->type % 16 == TYPE_INT)
             return args_value_new(attr->type, attr->hint, *(int*)p);
-        else if (strcmp(attr->type, "f") == 0) {
+        else if (attr->type % 16 == TYPE_FLOAT) {
             // Works for both float and double.
             if (attr->member.size == sizeof(double)) {
                 return args_value_new(attr->type, attr->hint, *(double*)p);
@@ -300,9 +300,9 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
                 assert(false);
                 return NULL;
             }
-        } else if (strcmp(attr->type, "p") == 0)
+        } else if (attr->type % 16 == TYPE_PTR)
             return args_value_new(attr->type, attr->hint, *(void**)p);
-        else if (strcmp(attr->type, "s") == 0)
+        else if (attr->type == TYPE_STRING_PTR)
             return args_value_new(attr->type, attr->hint, *(char**)p);
         else
             return args_value_new(attr->type, attr->hint, p);
@@ -563,6 +563,16 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     *win_angle = 0;
 }
 
+const char *obj_info_type_str(int type)
+{
+    const char *names[] = {
+#define X(name, lower, ...) [TYPE_##name] = #lower,
+        ALL_TYPES(X)
+#undef X
+    };
+    return names[type];
+}
+
 /******** TESTS ***********************************************************/
 
 #if COMPILE_TESTS
@@ -600,11 +610,11 @@ static json_value *test_lookat_fn(obj_t *obj, const attribute_t *attr,
 static obj_klass_t test_klass = {
     .id = "test",
     .attributes = (attribute_t[]) {
-        PROPERTY(altitude, "f", MEMBER(test_t, alt)),
-        PROPERTY(my_attr, "f", MEMBER(test_t, my_attr),
+        PROPERTY(altitude, TYPE_FLOAT, MEMBER(test_t, alt)),
+        PROPERTY(my_attr, TYPE_FLOAT, MEMBER(test_t, my_attr),
                  .on_changed = test_my_attr_changed),
-        PROPERTY(projection, "d", MEMBER(test_t, proj), .desc = "Projection",
-                 .choices = test_choices),
+        PROPERTY(projection, TYPE_ENUM, MEMBER(test_t, proj),
+                 .desc = "Projection", .choices = test_choices),
         FUNCTION(lookat, .fn = test_lookat_fn),
         {}
     },

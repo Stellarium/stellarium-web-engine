@@ -104,7 +104,7 @@ static obj_klass_t dss_klass = {
     .render_order = 6,
     .add_data_source = dss_add_data_source,
     .attributes = (attribute_t[]) {
-        PROPERTY(visible, "b", MEMBER(dss_t, visible.target)),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(dss_t, visible.target)),
         {}
     },
 };

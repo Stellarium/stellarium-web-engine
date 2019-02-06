@@ -25,10 +25,10 @@ static obj_klass_t city_klass = {
     .size = sizeof(city_t),
     .attributes = (attribute_t[]) {
         PROPERTY(name),
-        PROPERTY(longitude, "f", MEMBER(city_t, longitude)),
-        PROPERTY(latitude, "f", MEMBER(city_t, latitude)),
-        PROPERTY(elevation, "f", MEMBER(city_t, elevation)),
-        PROPERTY(timezone, "s", MEMBER(city_t, timezone)),
+        PROPERTY(longitude, TYPE_ANGLE, MEMBER(city_t, longitude)),
+        PROPERTY(latitude, TYPE_ANGLE, MEMBER(city_t, latitude)),
+        PROPERTY(elevation, TYPE_FLOAT, MEMBER(city_t, elevation)),
+        PROPERTY(timezone, TYPE_STRING_PTR, MEMBER(city_t, timezone)),
         {}
     },
 };

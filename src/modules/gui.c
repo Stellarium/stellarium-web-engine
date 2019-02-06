@@ -72,13 +72,13 @@ bool gui_item(const gui_item_t *item)
     if (item->attr && !item->small) {
         assert(item->obj);
         attr = obj_get_attr_(item->obj, item->attr);
-        if (attr->type[0] == 'b') { // Boolean attribute
+        if (attr->type % 16 == TYPE_BOOL) { // Boolean attribute
             obj_get_attr(item->obj, item->attr, &b);
             ret = gui_toggle(item->label, &b);
             if (ret) obj_set_attr(item->obj, item->attr, b);
             return ret;
         }
-        if (attr->type[0] == 'f') { // Double attribute
+        if (attr->type % 16 == TYPE_FLOAT) { // Double attribute
             obj_get_attr(item->obj, item->attr, &f);
             ret = gui_double(item->label, &f, -DBL_MAX, DBL_MAX, 1,
                              item->default_value);

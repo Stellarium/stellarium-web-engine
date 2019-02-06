@@ -1129,8 +1129,8 @@ static obj_klass_t planet_klass = {
         PROPERTY(radec),
         PROPERTY(vmag),
         PROPERTY(distance),
-        PROPERTY(phase, "f", MEMBER(planet_t, phase)),
-        PROPERTY(radius, "f", MEMBER(planet_t, radius)),
+        PROPERTY(phase, TYPE_FLOAT, MEMBER(planet_t, phase)),
+        PROPERTY(radius, TYPE_RADIUS, MEMBER(planet_t, radius)),
         PROPERTY(type),
         {}
     },

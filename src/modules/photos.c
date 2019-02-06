@@ -40,10 +40,11 @@ static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
     char url[1024];
     if (args->u.array.length) {
         texture_release(photo->img);
-        args_get(args, NULL, 1, "s", NULL, &url);
+        args_get(args, NULL, 1, TYPE_STRING, NULL, &url);
         photo->img = texture_from_url(url, 0);
     }
-    return photo->img ? args_value_new("s", NULL, photo->img->url) : NULL;
+    if (!photo->img) return NULL;
+    return args_value_new(TYPE_STRING, NULL, photo->img->url);
 }
 
 static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
@@ -135,10 +136,10 @@ static obj_klass_t photo_klass = {
     .size       = sizeof(photo_t),
     .render     = photo_render,
     .attributes = (attribute_t[]) {
-        PROPERTY(visible, "b", MEMBER(photo_t, visible.target)),
-        PROPERTY(url, "s", .fn = photo_fn_url),
-        PROPERTY(calibration, "json", .fn = photo_fn_calibration),
-        PROPERTY(render_shape, "b", MEMBER(photo_t, render_shape)),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(photo_t, visible.target)),
+        PROPERTY(url, TYPE_STRING_PTR, .fn = photo_fn_url),
+        PROPERTY(calibration, TYPE_JSON, .fn = photo_fn_calibration),
+        PROPERTY(render_shape, TYPE_BOOL, MEMBER(photo_t, render_shape)),
         // Default properties.
         PROPERTY(radec),
         {}

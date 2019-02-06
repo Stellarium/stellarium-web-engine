@@ -14,6 +14,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "obj_info.h"
+
 /*
  * Base class for all the objects in swe (modules, sky objects, etc).
  *
@@ -224,7 +226,7 @@ struct obj
  *
  * Attributes:
  *   name       - Name of this attribute.
- *   type       - Base type id ('d', 'f', 'i', 'v2', 'v3, 'v4', 's')
+ *   type       - Base type (one of the TYPE values from obj_info.h).
  *   is_prop    - Set to true if the attribute is a property.
  *   fn         - Attribute function (setter/getter for property).
  *   member     - Member info for common case of attributes that map directly
@@ -238,7 +240,7 @@ struct obj
  */
 struct attribute {
     const char *name;
-    const char *type;
+    int type;
     bool is_prop;
     json_value *(*fn)(obj_t *obj, const attribute_t *attr,
                       const json_value *args);

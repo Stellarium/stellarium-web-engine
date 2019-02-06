@@ -852,8 +852,8 @@ static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
 {
     double v[4], duration = 1.0;
     obj_t* target_obj;
-    args_get(args, "target", 1, "p", "obj", &target_obj);
-    args_get(args, "speed", 2, "f", NULL, &duration);
+    args_get(args, "target", 1, TYPE_OBJ, "obj", &target_obj);
+    args_get(args, "speed", 2, TYPE_FLOAT, NULL, &duration);
 
     obj_set_attr(&core->obj, "lock", target_obj);
 
@@ -869,8 +869,8 @@ static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
     // XXX find a better way to create a rot quaternion from a direction?
     double duration = 1.0, pos[3];
 
-    args_get(args, "target", 1, "v3", "azalt", pos);
-    args_get(args, "speed", 2, "f", NULL, &duration);
+    args_get(args, "target", 1, TYPE_V3, "azalt", pos);
+    args_get(args, "speed", 2, TYPE_FLOAT, NULL, &duration);
 
     do_core_lookat(pos, duration);
     return NULL;
@@ -881,8 +881,8 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
 {
     double duration = 1.0, fov = 0.0;
 
-    args_get(args, "fov", 1, "f", NULL, &fov);
-    args_get(args, "speed", 2, "f", NULL, &duration);
+    args_get(args, "fov", 1, TYPE_ANGLE, NULL, &fov);
+    args_get(args, "speed", 2, TYPE_FLOAT, NULL, &duration);
 
     projection_t proj;
     core_get_proj(&proj);
@@ -993,25 +993,25 @@ static obj_klass_t core_klass = {
     .list = core_list,
     .add_data_source = core_add_data_source,
     .attributes = (attribute_t[]) {
-        PROPERTY(utcoffset, "d", MEMBER(core_t, utc_offset),
+        PROPERTY(utcoffset, TYPE_INT, MEMBER(core_t, utc_offset),
                  .on_changed = core_on_utcoffset_changed),
-        PROPERTY(fov, "f", MEMBER(core_t, fov),
+        PROPERTY(fov, TYPE_ANGLE, MEMBER(core_t, fov),
                  .on_changed = core_on_fov_changed),
-        PROPERTY(projection, "d", MEMBER(core_t, proj)),
-        PROPERTY(selection, "p", MEMBER(core_t, selection),
+        PROPERTY(projection, TYPE_INT, MEMBER(core_t, proj)),
+        PROPERTY(selection, TYPE_OBJ, MEMBER(core_t, selection),
                  .hint = "obj"),
-        PROPERTY(lock, "p", MEMBER(core_t, target.lock),
+        PROPERTY(lock, TYPE_OBJ, MEMBER(core_t, target.lock),
                  .hint = "obj"),
-        PROPERTY(hovered, "p", MEMBER(core_t, hovered),
+        PROPERTY(hovered, TYPE_OBJ, MEMBER(core_t, hovered),
                  .hint = "obj"),
-        PROPERTY(hints_mag_offset, "f", MEMBER(core_t, hints_mag_offset),
+        PROPERTY(hints_mag_offset, TYPE_MAG, MEMBER(core_t, hints_mag_offset),
                  .sub = "hints"),
-        PROPERTY(progressbars, "json", .fn = core_fn_progressbars),
-        PROPERTY(fps, "f", MEMBER(core_t, prof.fps)),
-        PROPERTY(clicks, "d", MEMBER(core_t, clicks)),
-        PROPERTY(ignore_clicks, "b", MEMBER(core_t, ignore_clicks)),
-        PROPERTY(zoom, "f", MEMBER(core_t, zoom)),
-        PROPERTY(test, "b", MEMBER(core_t, test)),
+        PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),
+        PROPERTY(fps, TYPE_FLOAT, MEMBER(core_t, prof.fps)),
+        PROPERTY(clicks, TYPE_INT, MEMBER(core_t, clicks)),
+        PROPERTY(ignore_clicks, TYPE_BOOL, MEMBER(core_t, ignore_clicks)),
+        PROPERTY(zoom, TYPE_FLOAT, MEMBER(core_t, zoom)),
+        PROPERTY(test, TYPE_BOOL, MEMBER(core_t, test)),
         FUNCTION(lookat, .fn = core_lookat),
         FUNCTION(point_and_lock, .fn = core_point_and_lock),
         FUNCTION(zoomto, .fn = core_zoomto),

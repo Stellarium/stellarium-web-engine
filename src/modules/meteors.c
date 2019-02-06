@@ -196,7 +196,7 @@ static obj_klass_t meteors_klass = {
     .update         = meteors_update,
     .render         = meteors_render,
     .attributes = (attribute_t[]) {
-        PROPERTY(zhr, "f", MEMBER(meteors_t, zhr)),
+        PROPERTY(zhr, TYPE_FLOAT, MEMBER(meteors_t, zhr)),
         {}
     },
 };

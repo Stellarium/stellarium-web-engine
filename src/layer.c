@@ -31,8 +31,8 @@ static obj_klass_t layer_klass = {
     .render             = layer_render,
     .get_by_oid         = layer_get_by_oid,
     .attributes         = (attribute_t[]) {
-        PROPERTY(visible, "b", MEMBER(layer_t, visible.target)),
-        PROPERTY(z, "f", MEMBER(layer_t, z)),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(layer_t, visible.target)),
+        PROPERTY(z, TYPE_FLOAT, MEMBER(layer_t, z)),
         {}
     },
 };

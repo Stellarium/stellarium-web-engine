@@ -266,7 +266,7 @@ static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
     observer_t *obs = (observer_t*)obj;
     double v[3];
     eraS2c(obs->azimuth, obs->altitude, v);
-    return args_value_new("v3", "azalt", v);
+    return args_value_new(TYPE_V3, "azalt", v);
 }
 
 static void observer_on_city_changed(obj_t *obj, const attribute_t *attr)
@@ -290,29 +290,30 @@ static obj_klass_t observer_klass = {
     .init = observer_init,
     .clone = observer_clone,
     .attributes = (attribute_t[]) {
-        PROPERTY(longitude, "f", MEMBER(observer_t, elong),
+        PROPERTY(longitude, TYPE_ANGLE, MEMBER(observer_t, elong),
                  .hint = "d_angle"),
-        PROPERTY(latitude, "f", MEMBER(observer_t, phi),
+        PROPERTY(latitude, TYPE_ANGLE, MEMBER(observer_t, phi),
                  .hint = "d_angle"),
-        PROPERTY(elevation, "f", MEMBER(observer_t, hm)),
-        PROPERTY(refraction, "b", MEMBER(observer_t, refraction)),
-        PROPERTY(tt, "f", MEMBER(observer_t, tt),
+        PROPERTY(elevation, TYPE_FLOAT, MEMBER(observer_t, hm)),
+        PROPERTY(refraction, TYPE_BOOL, MEMBER(observer_t, refraction)),
+        PROPERTY(tt, TYPE_MJD, MEMBER(observer_t, tt),
                  .hint = "mjd", .on_changed = observer_on_timeattr_changed),
-        PROPERTY(ut1, "f", MEMBER(observer_t, ut1),
+        PROPERTY(ut1, TYPE_MJD, MEMBER(observer_t, ut1),
                  .hint = "mjd", .on_changed = observer_on_timeattr_changed),
-        PROPERTY(utc, "f", MEMBER(observer_t, utc),
+        PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
                  .hint = "mjd", .on_changed = observer_on_timeattr_changed),
-        PROPERTY(city, "p", MEMBER(observer_t, city),
+        PROPERTY(city, TYPE_OBJ, MEMBER(observer_t, city),
                  .hint = "obj", .choices = city_get_choices,
                  .on_changed = observer_on_city_changed),
-        PROPERTY(altitude, "f", MEMBER(observer_t, altitude),
+        PROPERTY(altitude, TYPE_ANGLE, MEMBER(observer_t, altitude),
                 .hint = "d_angle"),
-        PROPERTY(azimuth, "f", MEMBER(observer_t, azimuth),
+        PROPERTY(azimuth, TYPE_ANGLE, MEMBER(observer_t, azimuth),
                 .hint = "h_angle"),
-        PROPERTY(roll, "f", MEMBER(observer_t, roll)),
-        PROPERTY(view_offset_alt, "f", MEMBER(observer_t, view_offset_alt),
+        PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll)),
+        PROPERTY(view_offset_alt, TYPE_ANGLE,
+                 MEMBER(observer_t, view_offset_alt),
                 .hint = "d_angle"),
-        PROPERTY(azalt, "v3", .hint = "azalt", .fn = observer_get_azalt),
+        PROPERTY(azalt, TYPE_V3, .hint = "azalt", .fn = observer_get_azalt),
         {}
     },
 };
