@@ -11,7 +11,7 @@
 
 
 int args_vget(const json_value *args, const char *name, int pos,
-              int type, const char *hint, va_list* ap)
+              int type, va_list* ap)
 {
     const json_value *val;
     assert(args);
@@ -22,14 +22,14 @@ int args_vget(const json_value *args, const char *name, int pos,
     if (args->type == json_array && pos) {
         if (pos <= args->u.array.length) {
             val = args->u.array.values[pos - 1];
-            return args_vget(val, NULL, 0, type, hint, ap);
+            return args_vget(val, NULL, 0, type, ap);
         }
     }
 
     // An Swe object.
     if (args->type == json_object && json_get_attr(args, "swe_", 0)) {
         val = json_get_attr(args, "v", 0);
-        return args_vget(val, NULL, 0, type, hint, ap);
+        return args_vget(val, NULL, 0, type, ap);
     }
 
     // Named arguments.
@@ -37,7 +37,7 @@ int args_vget(const json_value *args, const char *name, int pos,
             !json_get_attr(args, "swe_", 0)) {
         val = json_get_attr(args, name, 0);
         assert(val);
-        return args_vget(val, NULL, 0, type, hint, ap);
+        return args_vget(val, NULL, 0, type, ap);
     }
 
     if (pos != 0) {
@@ -67,21 +67,21 @@ int args_vget(const json_value *args, const char *name, int pos,
         assert(val->type == json_array);
         assert(val->u.array.length == 2);
         for (i = 0; i < 2; i++)
-            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, NULL, &v[i]);
+            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_V3) {
         v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 3);
         for (i = 0; i < 3; i++)
-            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, NULL, &v[i]);
+            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_V4) {
         v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 4);
         for (i = 0; i < 4; i++)
-            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, NULL, &v[i]);
+            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_PTR) {
         assert(val->type == json_integer);
@@ -98,18 +98,17 @@ int args_vget(const json_value *args, const char *name, int pos,
     return 0;
 }
 
-int args_get(const json_value *args, const char *name, int pos,
-             int type, const char *hint, ...)
+int args_get(const json_value *args, const char *name, int pos, int type, ...)
 {
     va_list ap;
     int ret;
-    va_start(ap, hint);
-    ret = args_vget(args, name, pos, type, hint, &ap);
+    va_start(ap, type);
+    ret = args_vget(args, name, pos, type, &ap);
     va_end(ap);
     return ret;
 }
 
-json_value *args_vvalue_new(int type, const char *hint, va_list *ap)
+json_value *args_vvalue_new(int type, va_list *ap)
 {
     json_value *ret, *val;
     double f;
@@ -120,7 +119,6 @@ json_value *args_vvalue_new(int type, const char *hint, va_list *ap)
     ret = json_object_new(0);
     json_object_push(ret, "swe_", json_integer_new(1));
     json_object_push(ret, "type", json_integer_new(type));
-    if (hint) json_object_push(ret, "hint", json_string_new(hint));
 
     if (type == TYPE_BOOL)
         val = json_boolean_new(va_arg(*ap, int));
@@ -171,12 +169,12 @@ json_value *args_vvalue_new(int type, const char *hint, va_list *ap)
     return ret;
 }
 
-json_value *args_value_new(int type, const char *hint, ...)
+json_value *args_value_new(int type, ...)
 {
     va_list ap;
     json_value *ret;
-    va_start(ap, hint);
-    ret = args_vvalue_new(type, hint, &ap);
+    va_start(ap, type);
+    ret = args_vvalue_new(type, &ap);
     va_end(ap);
     return ret;
 }

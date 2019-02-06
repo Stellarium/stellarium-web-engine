@@ -48,14 +48,13 @@
  *            Zero if we want a named argument only.
  *   type   - Type of the argument ("f", "v4", etc...).  The function will
  *            try to convert to the type if it doesn't match.
- *   hint   - Optional hint string that will be used in the conversion.
  *   ...    - A pointer to the returned value, whose type must match the
  *            given type.
  */
 int args_get(const json_value *args, const char *name, int pos,
-             int type, const char *hint, ...);
+             int type, ...);
 int args_vget(const json_value *args, const char *name, int pos,
-              int type, const char *hint, va_list* ap);
+              int type, va_list* ap);
 
 /*
  * Function: args_value_new
@@ -64,9 +63,8 @@ int args_vget(const json_value *args, const char *name, int pos,
  * {
  *      "swe_": 1,
  *      "type": <type>,
- *      "hint": <hint>,
  *      "v": <value>
  *  }
  */
-json_value *args_value_new(int type, const char *hint, ...);
-json_value *args_vvalue_new(int type, const char *hint, va_list *ap);
+json_value *args_value_new(int type, ...);
+json_value *args_vvalue_new(int type, va_list *ap);

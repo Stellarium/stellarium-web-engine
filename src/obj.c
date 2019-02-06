@@ -253,20 +253,20 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
                                        const json_value *args)
 {
     char buf[128];
-    return args_value_new(TYPE_STRING, NULL, obj_get_name(obj, buf));
+    return args_value_new(TYPE_STRING, obj_get_name(obj, buf));
 }
 
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
     if (str_equ(attr->name, "distance")) {
-        return args_value_new(TYPE_DIST, "dist",
+        return args_value_new(TYPE_DIST,
                 obj->pvo[0][3] == 0 ? NAN :
                 vec3_norm(obj->pvo[0]));
     }
     // Radec is in local ICRS, i.e. equatorial J2000 observer centered
     if (str_equ(attr->name, "radec")) {
-        return args_value_new(TYPE_V4, "radec", obj->pvo[0]);
+        return args_value_new(TYPE_V4, obj->pvo[0]);
     }
     assert(false);
     return NULL;
@@ -287,32 +287,32 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
     // If no input arguents, return the value.
     if (!args || (args->type == json_array && !args->u.array.length)) {
         if (attr->type % 16 == TYPE_BOOL)
-            return args_value_new(attr->type, attr->hint, *(bool*)p);
+            return args_value_new(attr->type, *(bool*)p);
         else if (attr->type % 16 == TYPE_INT)
-            return args_value_new(attr->type, attr->hint, *(int*)p);
+            return args_value_new(attr->type, *(int*)p);
         else if (attr->type % 16 == TYPE_FLOAT) {
             // Works for both float and double.
             if (attr->member.size == sizeof(double)) {
-                return args_value_new(attr->type, attr->hint, *(double*)p);
+                return args_value_new(attr->type, *(double*)p);
             } else if (attr->member.size == sizeof(float)) {
-                return args_value_new(attr->type, attr->hint, *(float*)p);
+                return args_value_new(attr->type, *(float*)p);
             } else {
                 assert(false);
                 return NULL;
             }
         } else if (attr->type % 16 == TYPE_PTR)
-            return args_value_new(attr->type, attr->hint, *(void**)p);
+            return args_value_new(attr->type, *(void**)p);
         else if (attr->type == TYPE_STRING_PTR)
-            return args_value_new(attr->type, attr->hint, *(char**)p);
+            return args_value_new(attr->type, *(char**)p);
         else
-            return args_value_new(attr->type, attr->hint, p);
+            return args_value_new(attr->type, p);
     } else { // Set the value.
         assert(attr->member.size <= sizeof(buf));
-        args_get(args, NULL, 1, attr->type, attr->hint, buf);
+        args_get(args, NULL, 1, attr->type, buf);
         if (memcmp(p, buf, attr->member.size) != 0) {
             // If we override an object, don't forget to release the
             // previous value and increment the ref to the new one.
-            if (attr->hint && strcmp(attr->hint, "obj") == 0) {
+            if (attr->type == TYPE_OBJ) {
                 o = *(obj_t**)p;
                 obj_release(o);
                 memcpy(&o, buf, sizeof(o));
@@ -432,7 +432,7 @@ int obj_get_attr(const obj_t *obj, const char *name, ...)
     va_start(ap, name);
     ret = obj_call_json(obj, name, NULL);
     assert(ret);
-    args_vget(ret, NULL, 1, attr->type, NULL, &ap);
+    args_vget(ret, NULL, 1, attr->type, &ap);
     json_builder_free(ret);
     va_end(ap);
     return 0;
@@ -446,7 +446,7 @@ int obj_set_attr(const obj_t *obj, const char *name, ...)
 
     attr = obj_get_attr_(obj, name);
     va_start(ap, name);
-    arg = args_vvalue_new(attr->type, NULL, &ap);
+    arg = args_vvalue_new(attr->type, &ap);
     ret = obj_call_json(obj, name, arg);
     json_builder_free(arg);
     json_builder_free(ret);
