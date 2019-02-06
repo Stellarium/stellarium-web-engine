@@ -581,11 +581,11 @@ static obj_klass_t constellation_klass = {
     .attributes     = (attribute_t[]) {
         FUNCTION(set_image, .fn = constellation_set_image),
         // Default properties.
-        PROPERTY(name),
-        PROPERTY(distance),
-        PROPERTY(radec),
-        PROPERTY(vmag),
-        PROPERTY(type),
+        INFO(name),
+        INFO(distance),
+        INFO(radec),
+        INFO(vmag),
+        INFO(type),
         {}
     },
 };

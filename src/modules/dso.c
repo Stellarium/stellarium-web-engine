@@ -688,14 +688,14 @@ static obj_klass_t dso_klass = {
     .get_2d_ellipse = dso_get_2d_ellipse,
     .attributes = (attribute_t[]) {
         // Default properties.
-        PROPERTY(name),
-        PROPERTY(distance),
-        PROPERTY(radec),
-        PROPERTY(vmag),
-        PROPERTY(type),
-        PROPERTY(smin, TYPE_ANGLE, MEMBER(dso_t, data.smin)),
-        PROPERTY(smax, TYPE_ANGLE, MEMBER(dso_t, data.smax)),
-        PROPERTY(morpho, TYPE_STRING_PTR, MEMBER(dso_t, data.morpho)),
+        INFO(name),
+        INFO(distance),
+        INFO(radec),
+        INFO(vmag),
+        INFO(type),
+        INFO(smin, TYPE_ANGLE, MEMBER(dso_t, data.smin)),
+        INFO(smax, TYPE_ANGLE, MEMBER(dso_t, data.smax)),
+        INFO(morpho, TYPE_STRING_PTR, MEMBER(dso_t, data.morpho)),
         {},
     },
 };

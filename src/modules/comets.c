@@ -324,11 +324,11 @@ static obj_klass_t comet_klass = {
     .get_designations = comet_get_designations,
     .attributes = (attribute_t[]) {
         // Default properties.
-        PROPERTY(name),
-        PROPERTY(distance),
-        PROPERTY(radec),
-        PROPERTY(vmag),
-        PROPERTY(type),
+        INFO(name),
+        INFO(distance),
+        INFO(radec),
+        INFO(vmag),
+        INFO(type),
         {},
     },
 };

@@ -805,12 +805,11 @@ static obj_klass_t star_klass = {
     .get_designations = star_get_designations,
     .attributes = (attribute_t[]) {
         // Default properties.
-        PROPERTY(name),
-        PROPERTY(distance, TYPE_DIST, .hint="dist",
-                 MEMBER(star_t, data.distance)),
-        PROPERTY(radec),
-        PROPERTY(vmag),
-        PROPERTY(type),
+        INFO(vmag),
+        INFO(type),
+        INFO(name),
+        INFO(distance, MEMBER(star_t, data.distance)),
+        INFO(radec),
         {},
     },
 };

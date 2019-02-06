@@ -465,6 +465,7 @@ static void init_attribute(attribute_t *attr)
     if (i == ARRAY_SIZE(DEFAULT_ATTRIBUTES)) return;
     attr->hint = attr->hint ?: DEFAULT_ATTRIBUTES[i].hint;
     attr->desc = attr->desc ?: DEFAULT_ATTRIBUTES[i].desc;
+    attr->type = attr->type ?: DEFAULT_ATTRIBUTES[i].type;
     if (!attr->member.size) {
         attr->member = DEFAULT_ATTRIBUTES[i].member;
         attr->type = attr->type ?: DEFAULT_ATTRIBUTES[i].type;

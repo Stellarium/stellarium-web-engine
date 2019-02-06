@@ -241,6 +241,7 @@ struct obj
 struct attribute {
     const char *name;
     int type;
+    int info;       // Sky object info id (see obj_info.h)
     bool is_prop;
     json_value *(*fn)(obj_t *obj, const attribute_t *attr,
                       const json_value *args);
@@ -261,6 +262,14 @@ struct attribute {
  * Convenience macro to define a property attribute.
  */
 #define PROPERTY(name, ...) {#name, ##__VA_ARGS__, .is_prop = true}
+
+/*
+ * Macro: INFO
+ * Convenience macro to define an info property.
+ */
+#define INFO(name, ...) {#name, ##__VA_ARGS__, .is_prop = true, \
+                         .info = INFO_##name}
+
 
 /*
  * Macro: FUNCTION
