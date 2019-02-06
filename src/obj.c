@@ -425,7 +425,14 @@ char *obj_call_json_str(obj_t *obj, const char *attr, const char *args)
 int obj_get_attr(const obj_t *obj, const char *name, const char *type, ...)
 {
     json_value *ret;
+    const attribute_t *attr;
     va_list ap;
+
+    // Make sure the type we passed matched the actual attribute type.
+    attr = obj_get_attr_(obj, name);
+    assert(strcmp(attr->type, type) == 0 ||
+            (strcmp(attr->type, "s") == 0 && strcmp(type, "S") == 0));
+
     va_start(ap, type);
     ret = obj_call_json(obj, name, NULL);
     assert(ret);
@@ -439,6 +446,12 @@ int obj_set_attr(const obj_t *obj, const char *name, const char *type, ...)
 {
     json_value *arg, *ret;
     va_list ap;
+    const attribute_t *attr;
+
+    // Make sure the type we passed matched the actual attribute type.
+    attr = obj_get_attr_(obj, name);
+    assert(strcmp(attr->type, type) == 0);
+
     va_start(ap, type);
     arg = args_vvalue_new(type, NULL, &ap);
     ret = obj_call_json(obj, name, arg);
