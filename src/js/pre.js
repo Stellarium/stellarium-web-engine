@@ -74,6 +74,10 @@ Module['MJD2date'] = function(v) {
   return new Date(Math.round((v + 2400000.5 - 2440587.5) * 86400000));
 }
 
+Module['date2MJD'] = function(date) {
+  return date / 86400000 - 2400000.5 + 2440587.5;
+}
+
 /*
  * Function: formatAngle
  * format an angle to a human readable representation.

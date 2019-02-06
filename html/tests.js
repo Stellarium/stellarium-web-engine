@@ -17,7 +17,7 @@ var testCore = function(stel) {
 
 var testBasic = function(stel) {
   // Set Atlanta, on 2009/09/06 17:00 UTC
-  stel.observer.utc = new Date(Date.UTC(2009, 8, 6, 17, 0, 0));
+  stel.observer.utc = stel.date2MJD(Date.UTC(2009, 8, 6, 17, 0, 0));
   assert(isNear(stel.observer.utc, 55080.71, 0.01));
 
   stel.observer.longitude = -84.4 * stel.D2R;
@@ -67,8 +67,6 @@ var testSearch = function(stel) {
 var testCloneObserver = function(stel) {
   var obs = stel.observer.clone();
   var jupiter = stel.getObj('jupiter');
-  obs.city = 'CITY GB LONDON';
-  assert(obs.city.name != stel.observer.city.name);
   jupiter.update(obs);
   obs.destroy();
 };
@@ -79,9 +77,8 @@ var testListener = function(stel) {
   stel.change(function(obj, attr) {
     if (obj.path == 'core.observer' && attr == 'latitude') test++;
   })
-  stel.observer.city = "CITY FR PARIS";
+  stel.observer.latitude = 10.0;
   assert(test == 2);
-  assert(stel.observer.city.name == 'Paris (FR)');
 };
 
 var testCalendar = function(stel) {
