@@ -600,12 +600,12 @@ static json_value *test_lookat_fn(obj_t *obj, const attribute_t *attr,
 static obj_klass_t test_klass = {
     .id = "test",
     .attributes = (attribute_t[]) {
-        PROPERTY("altitude", "f", MEMBER(test_t, alt)),
-        PROPERTY("my_attr", "f", MEMBER(test_t, my_attr),
+        PROPERTY(altitude, "f", MEMBER(test_t, alt)),
+        PROPERTY(my_attr, "f", MEMBER(test_t, my_attr),
                  .on_changed = test_my_attr_changed),
-        PROPERTY("projection", "d", MEMBER(test_t, proj), .desc = "Projection",
+        PROPERTY(projection, "d", MEMBER(test_t, proj), .desc = "Projection",
                  .choices = test_choices),
-        FUNCTION("lookat", .fn = test_lookat_fn),
+        FUNCTION(lookat, .fn = test_lookat_fn),
         {}
     },
 };

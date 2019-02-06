@@ -512,7 +512,7 @@ static obj_klass_t line_klass = {
     .update = line_update,
     .render = line_render,
     .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(line_t, visible.target)),
+        PROPERTY(visible, "b", MEMBER(line_t, visible.target)),
         {}
     },
 };

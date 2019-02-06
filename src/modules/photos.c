@@ -135,12 +135,12 @@ static obj_klass_t photo_klass = {
     .size       = sizeof(photo_t),
     .render     = photo_render,
     .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(photo_t, visible.target)),
-        PROPERTY("url", "s", .fn = photo_fn_url),
-        PROPERTY("calibration", "json", .fn = photo_fn_calibration),
-        PROPERTY("render_shape", "b", MEMBER(photo_t, render_shape)),
+        PROPERTY(visible, "b", MEMBER(photo_t, visible.target)),
+        PROPERTY(url, "s", .fn = photo_fn_url),
+        PROPERTY(calibration, "json", .fn = photo_fn_calibration),
+        PROPERTY(render_shape, "b", MEMBER(photo_t, render_shape)),
         // Default properties.
-        PROPERTY("radec"),
+        PROPERTY(radec),
         {}
     },
 };

@@ -355,11 +355,11 @@ static obj_klass_t skyculture_klass = {
     .flags  = 0,
     .update = skyculture_update,
     .attributes = (attribute_t[]) {
-        PROPERTY("name", "s", MEMBER(skyculture_t, info.name)),
-        PROPERTY("active", "b", MEMBER(skyculture_t, active),
+        PROPERTY(name, "s", MEMBER(skyculture_t, info.name)),
+        PROPERTY(active, "b", MEMBER(skyculture_t, active),
                  .on_changed = skyculture_on_active_changed),
-        PROPERTY("description", "s", MEMBER(skyculture_t, description)),
-        PROPERTY("url", "s", MEMBER(skyculture_t, uri)),
+        PROPERTY(description, "s", MEMBER(skyculture_t, description)),
+        PROPERTY(url, "s", MEMBER(skyculture_t, uri)),
         {}
     },
 };
@@ -375,7 +375,7 @@ static obj_klass_t skycultures_klass = {
     .add_data_source    = skycultures_add_data_source,
     .create_order   = 30, // After constellations.
     .attributes = (attribute_t[]) {
-        PROPERTY("current", "p", MEMBER(skycultures_t, current),
+        PROPERTY(current, "p", MEMBER(skycultures_t, current),
                  .hint = "obj"),
         {}
     },

@@ -579,13 +579,13 @@ static obj_klass_t constellation_klass = {
     .render_pointer = constellation_render_pointer,
     .del            = constellation_del,
     .attributes     = (attribute_t[]) {
-        FUNCTION("set_image", .fn = constellation_set_image),
+        FUNCTION(set_image, .fn = constellation_set_image),
         // Default properties.
-        PROPERTY("name"),
-        PROPERTY("distance"),
-        PROPERTY("radec"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
+        PROPERTY(name),
+        PROPERTY(distance),
+        PROPERTY(radec),
+        PROPERTY(vmag),
+        PROPERTY(type),
         {}
     },
 };
@@ -602,17 +602,17 @@ static obj_klass_t constellations_klass = {
     .get_by_oid = constellations_get_by_oid,
     .render_order = 25,
     .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b",
+        PROPERTY(visible, "b",
                  MEMBER(constellations_t, lines_visible.target),
                  .sub = "lines"),
-        PROPERTY("visible", "b",
+        PROPERTY(visible, "b",
                  MEMBER(constellations_t, images_visible.target),
                  .sub = "images"),
-        PROPERTY("visible", "b",
+        PROPERTY(visible, "b",
                  MEMBER(constellations_t, bounds_visible.target),
                  .sub = "bounds"),
-        PROPERTY("show_all", "b", MEMBER(constellations_t, show_all)),
-        PROPERTY("display_style", "d",
+        PROPERTY(show_all, "b", MEMBER(constellations_t, show_all)),
+        PROPERTY(display_style, "d",
                  MEMBER(constellations_t, labels_display_style),
                 .sub = "labels"),
         {}

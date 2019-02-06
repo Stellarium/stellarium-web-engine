@@ -356,11 +356,11 @@ static obj_klass_t mplanet_klass = {
     .get_designations = mplanet_get_designations,
     .attributes = (attribute_t[]) {
         // Default properties.
-        PROPERTY("name"),
-        PROPERTY("distance"),
-        PROPERTY("radec"),
-        PROPERTY("vmag"),
-        PROPERTY("type"),
+        PROPERTY(name),
+        PROPERTY(distance),
+        PROPERTY(radec),
+        PROPERTY(vmag),
+        PROPERTY(type),
         {},
     },
 };

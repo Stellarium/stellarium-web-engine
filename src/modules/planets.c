@@ -1125,13 +1125,13 @@ static obj_klass_t planet_klass = {
     .size = sizeof(planet_t),
     .update = planet_update,
     .attributes = (attribute_t[]) {
-        PROPERTY("name"),
-        PROPERTY("radec"),
-        PROPERTY("vmag"),
-        PROPERTY("distance"),
-        PROPERTY("phase", "f", MEMBER(planet_t, phase)),
-        PROPERTY("radius", "f", MEMBER(planet_t, radius)),
-        PROPERTY("type"),
+        PROPERTY(name),
+        PROPERTY(radec),
+        PROPERTY(vmag),
+        PROPERTY(distance),
+        PROPERTY(phase, "f", MEMBER(planet_t, phase)),
+        PROPERTY(radius, "f", MEMBER(planet_t, radius)),
+        PROPERTY(type),
         {}
     },
 };

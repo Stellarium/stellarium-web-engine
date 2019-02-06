@@ -258,13 +258,13 @@ struct attribute {
  * Macro: PROPERTY
  * Convenience macro to define a property attribute.
  */
-#define PROPERTY(name, ...) {name, ##__VA_ARGS__, .is_prop = true}
+#define PROPERTY(name, ...) {#name, ##__VA_ARGS__, .is_prop = true}
 
 /*
  * Macro: FUNCTION
  * Convenience macro to define a function attribute.
  */
-#define FUNCTION(name, ...) {name, ##__VA_ARGS__}
+#define FUNCTION(name, ...) {#name, ##__VA_ARGS__}
 
 /*
  * Macro: MEMBER

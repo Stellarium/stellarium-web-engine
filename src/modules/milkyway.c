@@ -82,7 +82,7 @@ static obj_klass_t milkyway_klass = {
     .add_data_source = milkyway_add_data_source,
     .render_order = 5,
     .attributes = (attribute_t[]) {
-        PROPERTY("visible", "b", MEMBER(milkyway_t, visible.target)),
+        PROPERTY(visible, "b", MEMBER(milkyway_t, visible.target)),
         {}
     },
 };
