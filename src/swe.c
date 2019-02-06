@@ -83,9 +83,7 @@ void swe_gen_doc(void)
         for (attr = &klass->attributes[0]; attr->name; attr++) {
             printf("  %s - %s", attr->name, attr->desc ?: "");
             if (attr->is_prop) {
-                printf(" *(%s%s%s)* ",
-                       obj_info_type_str(attr->type), attr->hint ? ", " : "",
-                       attr->hint ?: "");
+                printf(" *(%s)* ", obj_info_type_str(attr->type));
             } else {
                 printf(" *(function)*");
             }

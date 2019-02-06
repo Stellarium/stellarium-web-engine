@@ -231,7 +231,6 @@ struct obj
  *   fn         - Attribute function (setter/getter for property).
  *   member     - Member info for common case of attributes that map directly
  *                to an object struct member.
- *   hint       - Hint about the type of the attribute.
  *   sub        - Sub-object name for special attributes: XXX to cleanup.
  *   desc       - Description of the attribute.
  *   on_changed - Callback called when a property changed.
@@ -249,7 +248,6 @@ struct attribute {
         int offset;
         int size;
     } member;
-    const char *hint;
     const char *sub;
     const char *desc;
     void (*on_changed)(obj_t *obj, const attribute_t *attr);

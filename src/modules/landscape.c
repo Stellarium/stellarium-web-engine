@@ -305,8 +305,7 @@ static obj_klass_t landscape_klass = {
     .attributes = (attribute_t[]) {
         PROPERTY(name, TYPE_STRING_PTR, MEMBER(landscape_t, info.name)),
         PROPERTY(visible, TYPE_BOOL, MEMBER(landscape_t, visible.target)),
-        PROPERTY(color, TYPE_COLOR, MEMBER(landscape_t, color),
-                 .hint = "color"),
+        PROPERTY(color, TYPE_COLOR, MEMBER(landscape_t, color)),
         PROPERTY(active, TYPE_BOOL, MEMBER(landscape_t, active),
                  .on_changed = landscape_on_active_changed),
         PROPERTY(description, TYPE_STRING_PTR,
@@ -329,8 +328,7 @@ static obj_klass_t landscapes_klass = {
     .render_order   = 40,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(landscapes_t, visible.target)),
-        PROPERTY(current, TYPE_OBJ, MEMBER(landscapes_t, current),
-                 .hint = "obj"),
+        PROPERTY(current, TYPE_OBJ, MEMBER(landscapes_t, current)),
         {}
     },
 };

@@ -37,13 +37,13 @@ static const attribute_t DEFAULT_ATTRIBUTES[] = {
     { "visible", TYPE_BOOL},
     { "name", TYPE_STRING, .fn = obj_fn_default_name,
       .desc = "Common name for the object." },
-    { "radec", TYPE_V4, .hint = "radec", .fn = obj_fn_default_pos,
+    { "radec", TYPE_V4, .fn = obj_fn_default_pos,
       .desc = "Cartesian 3d vector of the ra/dec position (ICRS)."},
-    { "vmag", TYPE_MAG, .hint = "mag", MEMBER(obj_t, vmag),
+    { "vmag", TYPE_MAG, MEMBER(obj_t, vmag),
       .desc = "Visual magnitude"},
-    { "distance", TYPE_DIST, .hint = "dist", .fn = obj_fn_default_pos,
+    { "distance", TYPE_DIST, .fn = obj_fn_default_pos,
       .desc = "Distance (AU)." },
-    { "type", TYPE_STRING, .hint = "obj_type", MEMBER(obj_t, type),
+    { "type", TYPE_STRING, MEMBER(obj_t, type),
       .desc = "Type id string as defined by Simbad."},
 };
 
@@ -463,7 +463,6 @@ static void init_attribute(attribute_t *attr)
         if (str_equ(attr->name, DEFAULT_ATTRIBUTES[i].name)) break;
     }
     if (i == ARRAY_SIZE(DEFAULT_ATTRIBUTES)) return;
-    attr->hint = attr->hint ?: DEFAULT_ATTRIBUTES[i].hint;
     attr->desc = attr->desc ?: DEFAULT_ATTRIBUTES[i].desc;
     attr->type = attr->type ?: DEFAULT_ATTRIBUTES[i].type;
     if (!attr->member.size) {

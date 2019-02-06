@@ -376,8 +376,7 @@ static obj_klass_t skycultures_klass = {
     .add_data_source    = skycultures_add_data_source,
     .create_order   = 30, // After constellations.
     .attributes = (attribute_t[]) {
-        PROPERTY(current, TYPE_OBJ, MEMBER(skycultures_t, current),
-                 .hint = "obj"),
+        PROPERTY(current, TYPE_OBJ, MEMBER(skycultures_t, current)),
         {}
     },
 };
