@@ -221,15 +221,3 @@ json_value *args_value_new(const char *type, const char *hint, ...)
     va_end(ap);
     return ret;
 }
-
-// Format a json value to a printable string.
-EMSCRIPTEN_KEEPALIVE
-char *args_format_json_str(const char *str)
-{
-    char *ret;
-    json_value *val;
-    val = json_parse(str, strlen(str));
-    convert_to_s(val, NULL, &ret);
-    json_value_free(val);
-    return ret;
-}

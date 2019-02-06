@@ -19,8 +19,6 @@ Module.afterInit(function() {
   var obj_get_nsid_str = Module.cwrap('obj_get_nsid_str',
     'void', ['number', 'number']);
   var module_add = Module.cwrap('module_add', null, ['number', 'number']);
-  var args_format_json_str = Module.cwrap('args_format_json_str',
-    'number', ['string']);
   var module_get_tree = Module.cwrap('module_get_tree', 'number',
     ['number', 'number']);
   var module_get_path = Module.cwrap('module_get_path', 'number',
