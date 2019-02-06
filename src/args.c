@@ -21,17 +21,6 @@ static int convert_to_f(const json_value *val, const char *hint, double *out)
     return 0;
 }
 
-static int convert_to_p(const json_value *val, const char *hint, void **out)
-{
-    // String to object.
-    if (val->type == json_string && strcmp(hint, "obj") == 0) {
-        *out = obj_get(NULL, val->u.string.ptr, 0);
-        return 0;
-    }
-    if (val->type == json_integer) *out = (void*)val->u.integer;
-    return 0;
-}
-
 int args_vget(const json_value *args, const char *name, int pos,
               int type, const char *hint, va_list* ap)
 {
@@ -102,7 +91,8 @@ int args_vget(const json_value *args, const char *name, int pos,
             args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, NULL, &v[i]);
     }
     else if (type == TYPE_PTR) {
-        convert_to_p(val, hint, va_arg(*ap, void**));
+        assert(val->type == json_integer);
+        *va_arg(*ap, void**) = (void*)val->u.integer;
     }
     else if (type == TYPE_STRING) {
         assert(val->type == json_string);
