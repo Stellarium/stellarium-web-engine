@@ -274,12 +274,12 @@ static void observer_on_city_changed(obj_t *obj, const attribute_t *attr)
     observer_t *obs = (observer_t*)obj;
     double lat, lon, el;
     if (!obs->city) return;
-    obj_get_attr(obs->city, "latitude", "f", &lat);
-    obj_get_attr(obs->city, "longitude", "f", &lon);
-    obj_get_attr(obs->city, "elevation", "f", &el);
-    obj_set_attr(obj, "latitude", "f", lat);
-    obj_set_attr(obj, "longitude", "f", lon);
-    obj_set_attr(obj, "elevation", "f", el);
+    obj_get_attr(obs->city, "latitude", &lat);
+    obj_get_attr(obs->city, "longitude", &lon);
+    obj_get_attr(obs->city, "elevation", &el);
+    obj_set_attr(obj, "latitude", lat);
+    obj_set_attr(obj, "longitude", lon);
+    obj_set_attr(obj, "elevation", el);
 }
 
 

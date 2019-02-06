@@ -265,16 +265,16 @@ static void test_ephemeris(void)
     core_init(100, 100, 1.0);
     for (i = 0; i < ARRAY_SIZE(ephs); i++) {
         obs = core->observer;
-        obj_set_attr((obj_t*)obs, "utc", "f", ephs[i].date);
-        obj_set_attr((obj_t*)obs, "longitude", "f", ephs[i].lon * DD2R);
-        obj_set_attr((obj_t*)obs, "latitude", "f", ephs[i].lat * DD2R);
+        obj_set_attr((obj_t*)obs, "utc", ephs[i].date);
+        obj_set_attr((obj_t*)obs, "longitude", ephs[i].lon * DD2R);
+        obj_set_attr((obj_t*)obs, "latitude", ephs[i].lat * DD2R);
         obs->refraction = false;
         observer_update(obs, false);
         obj = obj_get_by_oid(NULL, ephs[i].oid, 0);
         assert(obj);
 
         obj_update(obj, core->observer, 0);
-        obj_get_attr(obj, "radec", "v4", apparent_radec_icrf);
+        obj_get_attr(obj, "radec", apparent_radec_icrf);
         convert_framev4(obs, FRAME_ICRF, FRAME_JNOW,
                           apparent_radec_icrf, got.apparent_radec);
         convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED,

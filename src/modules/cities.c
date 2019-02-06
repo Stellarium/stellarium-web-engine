@@ -188,9 +188,9 @@ static void test_cities(void)
     assert(city);
     name = identifiers_get(city->oid, "NAME");
     test_str(name, "London (GB)");
-    obj_get_attr(city, "timezone", "S", tz);
+    obj_get_attr(city, "timezone", tz);
     test_str(tz, "Europe/London");
-    obj_get_attr(city, "latitude", "f", &lat);
+    obj_get_attr(city, "latitude", &lat);
     assert(fabs(lat * DR2D - 51.50853) < 0.01);
     city = city_create("taipei", "TW", NULL,
                        25.09319 * DD2R, 121.558442 * DD2R, 0, 100);

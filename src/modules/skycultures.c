@@ -116,7 +116,7 @@ static void skyculture_activate(skyculture_t *cult)
     }
 
     // Set the current attribute of the skycultures manager object.
-    obj_set_attr(cult->obj.parent, "current", "p", cult);
+    obj_set_attr(cult->obj.parent, "current", cult);
 }
 
 static int info_ini_handler(void* user, const char* section,
@@ -152,7 +152,7 @@ static void skyculture_on_active_changed(
     if (cult->active) {
         MODULE_ITER(cult->obj.parent, other, "skyculture") {
             if (other == cult) continue;
-            obj_set_attr((obj_t*)other, "active", "b", false);
+            obj_set_attr((obj_t*)other, "active", false);
         }
     }
 
@@ -314,7 +314,7 @@ static int skycultures_add_data_source(
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
     // If it's the default skyculture (western) activate it immediatly.
     if (str_endswith(url, "western"))
-        obj_set_attr((obj_t*)cult, "active", "b", true);
+        obj_set_attr((obj_t*)cult, "active", true);
     return 0;
 }
 

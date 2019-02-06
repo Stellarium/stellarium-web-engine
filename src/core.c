@@ -199,9 +199,9 @@ static void core_set_default(void)
     observer_t *obs = core->observer;
 
     // Reset to Taipei.
-    obj_set_attr(&obs->obj, "latitude", "f", 25.066667 * DD2R);
-    obj_set_attr(&obs->obj, "longitude", "f", 121.516667 * DD2R);
-    obj_set_attr(&obs->obj, "elevation", "f", 0.0);
+    obj_set_attr(&obs->obj, "latitude", 25.066667 * DD2R);
+    obj_set_attr(&obs->obj, "longitude", 121.516667 * DD2R);
+    obj_set_attr(&obs->obj, "elevation", 0.0);
     obs->tt = unix_to_mjd(sys_get_unix_time());
 
     // We approximate the pressure from the altitude and the sea level
@@ -388,7 +388,7 @@ int core_update(double dt)
 
     atm = core_get_module("atmosphere");
     assert(atm);
-    obj_get_attr(atm, "visible", "b", &atm_visible);
+    obj_get_attr(atm, "visible", &atm_visible);
     observer_update(core->observer, true);
     // Update telescope according to the fov.
     if (core->telescope_auto)
@@ -421,7 +421,7 @@ static bool is_below_horizon_hidden(void)
     obj_t *ls;
     bool visible;
     ls = core_get_module("landscapes");
-    obj_get_attr(ls, "visible", "b", &visible);
+    obj_get_attr(ls, "visible", &visible);
     // XXX: we should let the lanscape module notify the core that it hides
     // the stars instead.
     return (visible && core->observer->altitude >= 0);
@@ -520,7 +520,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     // Show bayer only if the constellations are visible.
     module = core_get_module("constellations");
     assert(module);
-    obj_get_attr(module, "visible", "b", &cst_visible);
+    obj_get_attr(module, "visible", &cst_visible);
 
     painter_t painter = {
         .rend = core->rend,
@@ -555,10 +555,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
         p[3] = 0;
         r = acos(painter.viewport_caps[FRAME_ICRF][3]) * 2;
         obj_t* obj = obj_create("circle", "cap_circle", NULL, NULL);
-        obj_set_attr(obj, "pos", "v4", p);
-        obj_set_attr(obj, "frame", "d", FRAME_ICRF);
+        obj_set_attr(obj, "pos", p);
+        obj_set_attr(obj, "frame", FRAME_ICRF);
         double size[2] = {r, r};
-        obj_set_attr(obj, "size", "v2", size);
+        obj_set_attr(obj, "size", size);
         obj_render(obj, &painter);
         obj_release(obj);
     }
@@ -622,14 +622,14 @@ void core_on_key(int key, int action)
         if (SC[i][0][0] == key) {
             attr = SC[i][2] ?: "visible";
             obj = obj_get(NULL, SC[i][1], 0);
-            obj_get_attr(obj, attr, "b", &v);
-            obj_set_attr(obj, attr, "b", !v);
+            obj_get_attr(obj, attr, &v);
+            obj_set_attr(obj, attr, !v);
             return;
         }
     }
     if (key == ' ' && core->selection) {
         LOG_D("lock to %s", obj_get_name(core->selection, buf));
-        obj_set_attr(&core->obj, "lock", "p", core->selection);
+        obj_set_attr(&core->obj, "lock", core->selection);
     }
 }
 
@@ -653,9 +653,9 @@ void core_on_zoom(double k, double x, double y)
     double sal, saz, dal, daz;
 
     win_to_observed(x, y, pos_start);
-    obj_get_attr(&core->obj, "fov", "f", &fov);
+    obj_get_attr(&core->obj, "fov", &fov);
     fov /= k;
-    obj_set_attr(&core->obj, "fov", "f", fov);
+    obj_set_attr(&core->obj, "fov", fov);
     win_to_observed(x, y, pos_end);
 
     // Adjust lat/az to keep the mouse point at the same position.
@@ -855,7 +855,7 @@ static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
     args_get(args, "target", 1, "p", "obj", &target_obj);
     args_get(args, "speed", 2, "f", NULL, &duration);
 
-    obj_set_attr(&core->obj, "lock", "p", target_obj);
+    obj_set_attr(&core->obj, "lock", target_obj);
 
     obj_get_pos_observed(core->target.lock, core->observer, v);
     do_core_lookat(v, duration);
@@ -1048,11 +1048,11 @@ static void test_core(void)
     core->observer->hm = 10.0;
     obj_t *obs = obj_get(NULL, "core.observer", 0);
     assert(obs);
-    obj_get_attr(obs, "elevation", "f", &v); assert(v == 10.0);
-    obj_set_attr(obs, "longitude", "f", 1.0);
+    obj_get_attr(obs, "elevation", &v); assert(v == 10.0);
+    obj_set_attr(obs, "longitude", 1.0);
     assert(core->observer->elong == 1.0);
-    obj_get_attr(obs, "longitude", "f", &v); assert(v == 1.0);
-    obj_get_attr(obs, "utc", "f", &v);
+    obj_get_attr(obs, "longitude", &v); assert(v == 1.0);
+    obj_get_attr(obs, "utc", &v);
 }
 
 static void test_basic(void)
@@ -1077,12 +1077,12 @@ static void test_set_city(void)
 
     // Make sure that after we set the city, the position has been updated.
     city = obj_get(NULL, "CITY GB London", 0);
-    obj_get_attr(city, "latitude", "f", &lat);
+    obj_get_attr(city, "latitude", &lat);
     assert(fabs(lat * DR2D - 51.50853) < 0.01);
-    obj_set_attr(obs, "city", "p", obj_get(NULL, "CITY GB London", 0));
-    obj_get_attr(obs, "latitude", "f", &lat);
+    obj_set_attr(obs, "city", obj_get(NULL, "CITY GB London", 0));
+    obj_get_attr(obs, "latitude", &lat);
     assert(fabs(lat * DR2D - 51.50853) < 0.01);
-    obj_get_attr(obs, "city", "p", &city);
+    obj_get_attr(obs, "city", &city);
     assert(city == core->observer->city);
 }
 

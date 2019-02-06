@@ -86,9 +86,9 @@ static void show_target(const target_t *t)
     LOG_D("Jump to target: %s", t->name);
     parse_date(t->date, &utc);
     parse_location(t->location, &lon, &lat);
-    obj_set_attr((obj_t*)core->observer, "utc", "f", utc);
-    obj_set_attr((obj_t*)core->observer, "longitude", "f", lon);
-    obj_set_attr((obj_t*)core->observer, "latitude", "f", lat);
+    obj_set_attr((obj_t*)core->observer, "utc", utc);
+    obj_set_attr((obj_t*)core->observer, "longitude", lon);
+    obj_set_attr((obj_t*)core->observer, "latitude", lat);
 }
 
 static void debug_gui(obj_t *obj, int location)

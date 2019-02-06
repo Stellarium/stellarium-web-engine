@@ -73,23 +73,23 @@ bool gui_item(const gui_item_t *item)
         assert(item->obj);
         attr = obj_get_attr_(item->obj, item->attr);
         if (attr->type[0] == 'b') { // Boolean attribute
-            obj_get_attr(item->obj, item->attr, "b", &b);
+            obj_get_attr(item->obj, item->attr, &b);
             ret = gui_toggle(item->label, &b);
-            if (ret) obj_set_attr(item->obj, item->attr, "b", b);
+            if (ret) obj_set_attr(item->obj, item->attr, b);
             return ret;
         }
         if (attr->type[0] == 'f') { // Double attribute
-            obj_get_attr(item->obj, item->attr, "f", &f);
+            obj_get_attr(item->obj, item->attr, &f);
             ret = gui_double(item->label, &f, -DBL_MAX, DBL_MAX, 1,
                              item->default_value);
-            if (ret) obj_set_attr(item->obj, item->attr, "f", f);
+            if (ret) obj_set_attr(item->obj, item->attr, f);
             return ret;
         }
         return false;
     }
     if (item->attr && item->small) {
         attr = obj_get_attr_(item->obj, item->attr);
-        obj_get_attr(item->obj, item->attr, "s", buffer);
+        obj_get_attr(item->obj, item->attr, buffer);
         gui_label(attr->name, buffer);
     }
 
@@ -131,8 +131,8 @@ static void search_widget(void)
         if (obj) {
             memset(buf, 0, sizeof(buf));
             obj_update(obj, core->observer, 0);
-            obj_set_attr(&core->obj, "selection", "p", obj);
-            obj_set_attr(&core->obj, "lock", "p", obj);
+            obj_set_attr(&core->obj, "selection", obj);
+            obj_set_attr(&core->obj, "lock", obj);
         }
     }
 }
@@ -163,7 +163,7 @@ static void city_widget(void)
                          NULL, NULL) {
             if (oid_is_catalog(oid, "CITY") && str_equ(value, buf)) {
                 city = obj_get_by_oid(NULL, oid, 0);
-                obj_set_attr(&core->observer->obj, "city", "p", city);
+                obj_set_attr(&core->observer->obj, "city", city);
                 break;
             }
         }
@@ -210,11 +210,11 @@ static void menu_main(void *user)
 
     if (gui_tab("Observer")) {
         city_widget();
-        obj_get_attr(&core->obj, "fov", "f", &f);
+        obj_get_attr(&core->obj, "fov", &f);
         f *= DR2D;
         if (gui_double("FOV", &f, 0.1, 360, 1, NAN)) {
             f *= DD2R;
-            obj_set_attr(&core->obj, "fov", "f", f);
+            obj_set_attr(&core->obj, "fov", f);
         }
         gui_tab_end();
     }
@@ -290,7 +290,7 @@ static void time_widget(void *user)
     utc = core->observer->utc + utc_offset / 24.;
     eraD2dtf("UTC", 0, DJM0, utc, &iy, &im, &id, ihmsf);
     if (gui_date(&utc))
-        obj_set_attr(&core->observer->obj, "utc", "f", utc - utc_offset / 24.);
+        obj_set_attr(&core->observer->obj, "utc", utc - utc_offset / 24.);
     memcpy(new_ihmsf, ihmsf, sizeof(ihmsf));
 
     gui_separator();
@@ -302,7 +302,7 @@ static void time_widget(void *user)
                      new_ihmsf[0], new_ihmsf[1], new_ihmsf[2], &djm0,
                      &new_utc);
         if (r == 0) {
-            obj_set_attr(&core->observer->obj, "utc", "f",
+            obj_set_attr(&core->observer->obj, "utc",
                          djm0 - DJM0 + new_utc - utc_offset / 24.);
         } else {
             // We cannot convert to MJD.  This can happen if for example we set
@@ -311,17 +311,17 @@ static void time_widget(void *user)
             utc += (new_ihmsf[0] - ihmsf[0]) / 24. +
                    (new_ihmsf[1] - ihmsf[1]) / (60. * 24.) +
                    (new_ihmsf[2] - ihmsf[2]) / (60. * 60. * 24.);
-            obj_set_attr(&core->observer->obj, "utc", "f",
+            obj_set_attr(&core->observer->obj, "utc",
                      utc - utc_offset / 24.);
         }
     }
     gui_separator();
     if (gui_item(&(gui_item_t){.label = "UTC offset",
                                .value.d = &utc_offset})) {
-        obj_set_attr(&core->obj, "utcoffset", "d", utc_offset * 60);
+        obj_set_attr(&core->obj, "utcoffset", utc_offset * 60);
     }
     if (gui_button("Set to now", -1)) {
-        obj_set_attr(&core->observer->obj, "utc", "f",
+        obj_set_attr(&core->observer->obj, "utc",
                                 unix_to_mjd(sys_get_unix_time()));
     }
 
@@ -342,13 +342,13 @@ static void info_widget(obj_t *obj)
     if (!obj) return;
     obj_update(obj, core->observer, 0);
     gui_text_unformatted(obj_get_name(obj, buf));
-    if (obj_get_attr(obj, "type", "s", buf1) == 0)
+    if (obj_get_attr(obj, "type", buf1) == 0)
         gui_label("TYPE", otype_get_str(buf1));
     gui_separator();
     obj_get_designations(obj, NULL, on_designation);
     gui_separator();
 
-    obj_get_attr(obj, "radec", "v4", icrs);
+    obj_get_attr(obj, "radec", icrs);
     convert_framev4(NULL, FRAME_ICRF, FRAME_CIRS, icrs, cirs);
     convert_framev4(NULL, FRAME_ICRF, FRAME_OBSERVED, icrs, observed);
     eraC2s(cirs, &ra, &dec);
@@ -356,7 +356,7 @@ static void info_widget(obj_t *obj)
     dec = eraAnpm(dec);
     eraC2s(observed, &az, &alt);
 
-    if (obj_get_attr(obj, "vmag", "f", &v) == 0) {
+    if (obj_get_attr(obj, "vmag", &v) == 0) {
         sprintf(buf, "%f", v);
         gui_label("VMAG", buf);
     }
@@ -370,7 +370,7 @@ static void info_widget(obj_t *obj)
     gui_label("CST", buf);
 
     if (obj_has_attr(obj, "phase")) {
-        obj_get_attr(obj, "phase", "f", &v);
+        obj_get_attr(obj, "phase", &v);
         if (!isnan(v)) {
             sprintf(buf, "%.0f%%", v * 100);
             gui_label("PHASE", buf);
@@ -418,7 +418,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_text("%.1f°/%.1f°", core->observer->phi * DR2D,
                             core->observer->elong * DR2D);
     gui_same_line();
-    obj_get_attr(&core->observer->obj, "utc", "f", &utc);
+    obj_get_attr(&core->observer->obj, "utc", &utc);
     gui_text("%s", format_time(buf, utc, core->utc_offset / 60. / 24., NULL));
     gui_same_line();
     gui_text("FOV: %.1f°", core->fov * DR2D);

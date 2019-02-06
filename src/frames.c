@@ -366,9 +366,9 @@ static void test_convert_origin(void)
 
     core_init(100, 100, 1.0);
     obs = core->observer;
-    obj_set_attr((obj_t*)obs, "utc", "f", date);
-    obj_set_attr((obj_t*)obs, "longitude", "f", lon * DD2R);
-    obj_set_attr((obj_t*)obs, "latitude", "f", lat * DD2R);
+    obj_set_attr((obj_t*)obs, "utc", date);
+    obj_set_attr((obj_t*)obs, "longitude", lon * DD2R);
+    obj_set_attr((obj_t*)obs, "latitude", lat * DD2R);
     obs->refraction = false;
     observer_update(core->observer, false);
 

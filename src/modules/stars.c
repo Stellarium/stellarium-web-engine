@@ -855,7 +855,7 @@ static void test_create_from_json(void)
     star = obj_create_str("star", NULL, NULL, data);
     assert(star);
     obj_update(star, core->observer, 0);
-    obj_get_attr(star, "vmag", "f", &vmag);
+    obj_get_attr(star, "vmag", &vmag);
     assert(fabs(vmag - 5.153) < 0.0001);
     obj_release(star);
 }

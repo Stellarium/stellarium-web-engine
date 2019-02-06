@@ -422,38 +422,31 @@ char *obj_call_json_str(obj_t *obj, const char *attr, const char *args)
     return ret;
 }
 
-int obj_get_attr(const obj_t *obj, const char *name, const char *type, ...)
+int obj_get_attr(const obj_t *obj, const char *name, ...)
 {
     json_value *ret;
     const attribute_t *attr;
     va_list ap;
 
-    // Make sure the type we passed matched the actual attribute type.
     attr = obj_get_attr_(obj, name);
-    assert(strcmp(attr->type, type) == 0 ||
-            (strcmp(attr->type, "s") == 0 && strcmp(type, "S") == 0));
-
-    va_start(ap, type);
+    va_start(ap, name);
     ret = obj_call_json(obj, name, NULL);
     assert(ret);
-    args_vget(ret, NULL, 1, type, NULL, &ap);
+    args_vget(ret, NULL, 1, attr->type, NULL, &ap);
     json_builder_free(ret);
     va_end(ap);
     return 0;
 }
 
-int obj_set_attr(const obj_t *obj, const char *name, const char *type, ...)
+int obj_set_attr(const obj_t *obj, const char *name, ...)
 {
     json_value *arg, *ret;
     va_list ap;
     const attribute_t *attr;
 
-    // Make sure the type we passed matched the actual attribute type.
     attr = obj_get_attr_(obj, name);
-    assert(strcmp(attr->type, type) == 0);
-
-    va_start(ap, type);
-    arg = args_vvalue_new(type, NULL, &ap);
+    va_start(ap, name);
+    arg = args_vvalue_new(attr->type, NULL, &ap);
     ret = obj_call_json(obj, name, arg);
     json_builder_free(arg);
     json_builder_free(ret);
@@ -559,7 +552,7 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     s *= 2;
 
     if (obj_has_attr(obj, "radius")) {
-        obj_get_attr(obj, "radius", "f", &radius);
+        obj_get_attr(obj, "radius", &radius);
         radius = radius / 2.0 * proj->window_size[0] /
                 proj->scaling[0];
         s = max(s, radius);
@@ -624,17 +617,17 @@ static void test_simple(void)
 
     test.obj.klass = &test_klass;
     test.alt = 10.0;
-    obj_get_attr(&test.obj, "altitude", "f", &alt);
+    obj_get_attr(&test.obj, "altitude", &alt);
     assert(alt == 10.0);
-    obj_set_attr(&test.obj, "altitude", "f", 5.0);
+    obj_set_attr(&test.obj, "altitude", 5.0);
     assert(test.alt == 5.0);
 
-    obj_set_attr(&test.obj, "my_attr", "f", 20.0);
+    obj_set_attr(&test.obj, "my_attr", 20.0);
     assert(test.my_attr == 20.0);
     assert(test.nb_changes == 1);
-    obj_set_attr(&test.obj, "my_attr", "f", 20.0);
+    obj_set_attr(&test.obj, "my_attr", 20.0);
     assert(test.nb_changes == 1);
-    obj_set_attr(&test.obj, "my_attr", "f", 30.0);
+    obj_set_attr(&test.obj, "my_attr", 30.0);
     assert(test.nb_changes == 2);
 }
 

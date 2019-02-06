@@ -398,10 +398,9 @@ int obj_get_designations(const obj_t *obj, void *user,
  * Parameters:
  *   obj    - An object.
  *   attr   - The name of the attribute.
- *   type   - Type string of the attribute (to remove?)
  *   ...    - Pointer to the output value.
  */
-int obj_get_attr(const obj_t *obj, const char *attr, const char *type, ...);
+int obj_get_attr(const obj_t *obj, const char *attr, ...);
 
 /*
  * Function: obj_set_attr
@@ -410,10 +409,9 @@ int obj_get_attr(const obj_t *obj, const char *attr, const char *type, ...);
  * Parameters:
  *   obj    - An object.
  *   attr   - The name of the attribute.
- *   type   - Type string of the attribute (to remove?)
  *   ...    - Pointer to the new value.
  */
-int obj_set_attr(const obj_t *obj, const char *attr, const char *type, ...);
+int obj_set_attr(const obj_t *obj, const char *attr, ...);
 
 
 /*

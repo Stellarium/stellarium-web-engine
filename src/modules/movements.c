@@ -59,7 +59,7 @@ static int on_pan(const gesture_t *gest, void *user)
     core->observer->altitude = clamp(core->observer->altitude,
                                      -M_PI / 2, +M_PI / 2);
     core->fast_mode = true;
-    obj_set_attr(&core->obj, "lock", "p", NULL);
+    obj_set_attr(&core->obj, "lock", NULL);
     observer_update(core->observer, true);
     // Notify the changes.
     module_changed(&core->observer->obj, "altitude");
@@ -73,7 +73,7 @@ static int on_click(const gesture_t *gest, void *user)
     obj_t *obj;
     if (!core->ignore_clicks) {
         obj = core_get_obj_at(gest->pos[0], gest->pos[1], 18);
-        obj_set_attr(&core->obj, "selection", "p", obj);
+        obj_set_attr(&core->obj, "selection", obj);
         obj_release(obj);
     }
     core->clicks++;
@@ -85,7 +85,7 @@ static int on_hover(const gesture_t *gest, void *user)
 {
     obj_t *obj;
     obj = core_get_obj_at(gest->pos[0], gest->pos[1], 18);
-    obj_set_attr(&core->obj, "hovered", "p", obj);
+    obj_set_attr(&core->obj, "hovered", obj);
     obj_release(obj);
     return 0;
 }

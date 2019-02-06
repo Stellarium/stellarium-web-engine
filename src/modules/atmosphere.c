@@ -234,7 +234,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
     data.lum_scale = atm->lum_scale;
-    obj_get_attr(moon, "phase", "f", &moon_phase);
+    obj_get_attr(moon, "phase", &moon_phase);
     prepare_skybrightness(&data.skybrightness,
             &painter, sun_pos, moon_pos, moon->vmag, moon_phase,
             atm->twilight_coef);

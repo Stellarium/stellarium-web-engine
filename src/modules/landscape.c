@@ -104,7 +104,7 @@ static double get_global_brightness(void)
 
     moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
     obj_get_pos_observed(moon, core->observer, pos);
-    obj_get_attr(moon, "phase", "f", &moon_phase);
+    obj_get_attr(moon, "phase", &moon_phase);
     vec3_normalize(pos, pos);
     sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
     if (sin_angle > -0.1 / 1.5 )
@@ -203,13 +203,13 @@ static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
     if (ls->active) {
         MODULE_ITER(ls->obj.parent, other, "landscape") {
             if (other == ls) continue;
-            obj_set_attr((obj_t*)other, "active", "b", false);
+            obj_set_attr((obj_t*)other, "active", false);
         }
     }
     ls->visible.target = ls->active;
     // Set the current attribute of the landscape manager object.
     if (ls->active)
-        obj_set_attr(ls->obj.parent, "current", "p", ls);
+        obj_set_attr(ls->obj.parent, "current", ls);
 }
 
 static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
@@ -284,7 +284,7 @@ static int landscapes_add_data_source(
     ls = add_from_uri(lss, url, key);
     // If this is the first landscape, use it immediatly.
     if (ls == (void*)lss->obj.children) {
-        obj_set_attr((obj_t*)ls, "active", "b", true);
+        obj_set_attr((obj_t*)ls, "active", true);
         ls->visible.value = 1.0;
     }
     return 0;
