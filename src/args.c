@@ -114,12 +114,12 @@ json_value *args_vvalue_new(int type, va_list *ap)
     double f;
     double *v;
     char buf[16];
-    type = type % 16;
 
     ret = json_object_new(0);
     json_object_push(ret, "swe_", json_integer_new(1));
-    json_object_push(ret, "type", json_integer_new(type));
+    json_object_push(ret, "type", json_string_new(obj_info_type_str(type)));
 
+    type = type % 16;
     if (type == TYPE_BOOL)
         val = json_boolean_new(va_arg(*ap, int));
     else if (type == TYPE_INT)
