@@ -421,8 +421,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (painter.color[3] == 0.0) return 0;
-    vec4_set(lines_color, 0.2, 0.2, 0.6, 1.0);
-    vec4_set(names_color, 0.2, 0.4, 0.7, 1.0);
+    vec4_set(lines_color, 0.2, 0.4, 0.7, 0.5);
+    vec4_set(names_color, 0.2, 0.4, 0.7, 1);
     painter.lines_width = 1.0;
     vec4_emul(lines_color, painter.color, painter.color);
 
@@ -460,8 +460,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
                 con->name : con->name_translated;
     labels_add_3d(label, FRAME_ICRF, con->bounding_cap, true, 0, 13,
-                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE, 0,
-                  con->obj.oid);
+                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE | LABEL_UPPERCASE,
+                  0, con->obj.oid);
 
     return 0;
 }
