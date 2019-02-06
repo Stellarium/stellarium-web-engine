@@ -18,12 +18,12 @@ Module.afterInit(function() {
   var obj_get_id = Module.cwrap('obj_get_id', 'string', ['number']);
   var obj_get_nsid_str = Module.cwrap('obj_get_nsid_str',
     'void', ['number', 'number']);
-  var obj_add = Module.cwrap('obj_add', null, ['number', 'number']);
+  var module_add = Module.cwrap('module_add', null, ['number', 'number']);
   var args_format_json_str = Module.cwrap('args_format_json_str',
     'number', ['string']);
-  var obj_get_tree = Module.cwrap('obj_get_tree', 'number',
+  var module_get_tree = Module.cwrap('module_get_tree', 'number',
     ['number', 'number']);
-  var obj_get_path = Module.cwrap('obj_get_path', 'number',
+  var module_get_path = Module.cwrap('module_get_path', 'number',
     ['number', 'number']);
   var obj_create_str = Module.cwrap('obj_create_str', 'number',
     ['string', 'string', 'number', 'string'])
@@ -107,7 +107,7 @@ Module.afterInit(function() {
   SweObj.prototype.add = function(type, args) {
     if (args === undefined) {
       var obj = type
-      obj_add(this.v, obj.v)
+      module_add(this.v, obj.v)
       return obj
     } else {
       args = JSON.stringify(args)
@@ -150,7 +150,7 @@ Module.afterInit(function() {
   // XXX: deprecated.
   SweObj.prototype.getTree = function(detailed) {
     detailed = (detailed !== undefined) ? detailed : false
-    var cret = obj_get_tree(this.v, detailed)
+    var cret = module_get_tree(this.v, detailed)
     var ret = Module.Pointer_stringify(cret)
     Module._free(cret)
     ret = JSON.parse(ret)
@@ -180,7 +180,7 @@ Module.afterInit(function() {
   // Add path property to the objects.
   Object.defineProperty(SweObj.prototype, 'path', {
     get: function() {
-      var cret = obj_get_path(this.v, Module.core.v)
+      var cret = module_get_path(this.v, Module.core.v)
       var ret = Module.Pointer_stringify(cret)
       Module._free(cret)
       return 'core.' + ret
