@@ -139,7 +139,7 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
         strncpy(tmp, query, sep - query);
         tmp[sep - query] = '\0';
         DL_FOREACH(obj->children, child) {
-            if (strcasecmp(child->id, tmp) == 0) {
+            if (child->id && strcasecmp(child->id, tmp) == 0) {
                 obj = child;
                 break;
             }
