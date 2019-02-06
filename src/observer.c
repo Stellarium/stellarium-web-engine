@@ -201,22 +201,6 @@ void observer_update(observer_t *obs, bool fast)
     find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
 }
 
-static int city_get_choices(
-        int (*f)(const char* name, uint64_t oid, void *user),
-        void *user)
-{
-    // XXX: we are iterating all the registered names, this is too slow.
-    // We should have a way to index the objects by catalog in identifiers.
-    const char *cat, *value, *search_str;
-    uint64_t oid;
-    IDENTIFIERS_ITER(0, "NAME", &oid, NULL, &cat, &value, &search_str, NULL,
-                     NULL, NULL) {
-        if (oid_is_catalog(oid, "CITY"))
-            if (f(value, oid, user)) return 0;
-    }
-    return 0;
-}
-
 static int observer_init(obj_t *obj, json_value *args)
 {
     observer_t*  obs = (observer_t*)obj;
@@ -301,7 +285,6 @@ static obj_klass_t observer_klass = {
         PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
                  .on_changed = observer_on_timeattr_changed),
         PROPERTY(city, TYPE_OBJ, MEMBER(observer_t, city),
-                 .choices = city_get_choices,
                  .on_changed = observer_on_city_changed),
         PROPERTY(altitude, TYPE_ANGLE, MEMBER(observer_t, altitude)),
         PROPERTY(azimuth, TYPE_ANGLE, MEMBER(observer_t, azimuth)),

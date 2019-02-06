@@ -590,17 +590,6 @@ static void test_my_attr_changed(obj_t *obj, const attribute_t *attr)
     ((test_t*)obj)->nb_changes++;
 }
 
-static int test_choices(
-        int (*f)(const char *name, uint64_t oid, void *user),
-        void *user)
-{
-    if (f) {
-        f("TEST1", 1, user);
-        f("TEST2", 2, user);
-    }
-    return 2;
-}
-
 static json_value *test_lookat_fn(obj_t *obj, const attribute_t *attr,
                                   const json_value *args)
 {
@@ -614,7 +603,7 @@ static obj_klass_t test_klass = {
         PROPERTY(my_attr, TYPE_FLOAT, MEMBER(test_t, my_attr),
                  .on_changed = test_my_attr_changed),
         PROPERTY(projection, TYPE_ENUM, MEMBER(test_t, proj),
-                 .desc = "Projection", .choices = test_choices),
+                 .desc = "Projection"),
         FUNCTION(lookat, .fn = test_lookat_fn),
         {}
     },

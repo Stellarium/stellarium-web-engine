@@ -234,8 +234,6 @@ struct obj
  *   sub        - Sub-object name for special attributes: XXX to cleanup.
  *   desc       - Description of the attribute.
  *   on_changed - Callback called when a property changed.
- *   choices    - Function that returns a list of possible values for an
- *                attribute (deprecated?)
  */
 struct attribute {
     const char *name;
@@ -251,8 +249,6 @@ struct attribute {
     const char *sub;
     const char *desc;
     void (*on_changed)(obj_t *obj, const attribute_t *attr);
-    int (*choices)(int (*f)(const char *name, uint64_t oid, void *user),
-                   void *user);
 };
 
 /*
