@@ -481,15 +481,6 @@ char *obj_call_json_str(obj_t *obj, const char *attr, const char *args);
  */
 const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr);
 
-/*
- * Function: obj_call
- * Call an object attribute function with array attributes.
- *
- * I think I will deprecate this and only allow to call functions using
- * json attribute.
- */
-int obj_call(obj_t *obj, const char *attr, const char *sig, ...);
-
 
 // Register an object klass, so that we can create instances dynamically
 #define OBJ_REGISTER(klass) \

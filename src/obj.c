@@ -424,39 +424,6 @@ json_value *obj_call_json(obj_t *obj, const char *name,
     return (attr->fn ?: obj_fn_default)(obj, attr, args);
 }
 
-static int split_types(const char *sig, char (*out)[4])
-{
-    int i;
-    for (i = 0; *sig; i++, sig++) {
-        out[i][0] = sig[0];
-        out[i][1] = '\0';
-        if (sig[1] >= '0' && sig[1] <= '9') {
-            out[i][1] = sig[1];
-            out[i][2] = '\0';
-            sig++;
-        }
-    }
-    return i;
-}
-
-int obj_call(obj_t *obj, const char *attr, const char *sig, ...)
-{
-    char types[8][4];
-    int i, nb_args;
-    va_list ap;
-    json_value *args, *ret;
-
-    va_start(ap, sig);
-    nb_args = split_types(sig, types);
-    args = json_array_new(nb_args);
-    for (i = 0; i < nb_args; i++)
-        json_array_push(args, args_vvalue_new(types[i], NULL, &ap));
-    ret = obj_call_json(obj, attr, args);
-    json_builder_free(args);
-    json_builder_free(ret);
-    return 0;
-}
-
 EMSCRIPTEN_KEEPALIVE
 char *obj_call_json_str(obj_t *obj, const char *attr, const char *args)
 {
@@ -769,7 +736,6 @@ static void test_simple(void)
     assert(alt == 10.0);
     obj_set_attr(&test.obj, "altitude", "f", 5.0);
     assert(test.alt == 5.0);
-    obj_call(&test.obj, "lookat", "pf", NULL, 10.0);
 
     obj_set_attr(&test.obj, "my_attr", "f", 20.0);
     assert(test.my_attr == 20.0);
