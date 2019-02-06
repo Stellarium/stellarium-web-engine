@@ -9,17 +9,6 @@
 
 #include "swe.h"
 
-static int convert_to_f(const json_value *val, const char *hint, double *out)
-{
-    // String to MJD:
-    // 2009-09-06T17:00:00.000Z
-    if (val->type == json_string && hint && strcmp(hint, "mjd") == 0) {
-        return time_parse_iso("UTC", val->u.string.ptr, out);
-    }
-    if (val->type == json_double) *out = val->u.dbl;
-    if (val->type == json_integer) *out = val->u.integer;
-    return 0;
-}
 
 int args_vget(const json_value *args, const char *name, int pos,
               int type, const char *hint, va_list* ap)
@@ -67,7 +56,11 @@ int args_vget(const json_value *args, const char *name, int pos,
         *va_arg(*ap, int*) = val->u.integer;
     }
     else if (type == TYPE_FLOAT) {
-        convert_to_f(val, hint, va_arg(*ap, double*));
+        if (val->type == json_double)
+            *va_arg(*ap, double*) = val->u.dbl;
+        else if (val->type == json_integer)
+            *va_arg(*ap, double*) = val->u.integer;
+        else assert(false);
     }
     else if (type == TYPE_V2) {
         v = va_arg(*ap, double*);
