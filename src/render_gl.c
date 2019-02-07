@@ -918,6 +918,21 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
                                    item->color[3] * 255));
     nvgTextAlign(rend->vg, item->text.align);
     nvgText(rend->vg, 0, 0, item->text.text, NULL);
+
+    // Uncomment to see labels bounding box
+    if ((0)) {
+        float bounds[4];
+        nvgTextBounds(rend->vg, 0, 0, item->text.text, NULL, bounds);
+        nvgBeginPath(rend->vg);
+        nvgRect(rend->vg, bounds[0],bounds[1], bounds[2]-bounds[0],
+                bounds[3]-bounds[1]);
+        nvgStrokeColor(rend->vg, nvgRGBA(item->color[0] * 255,
+                       item->color[1] * 255,
+                       item->color[2] * 255,
+                       item->color[3] * 255));
+        nvgStroke(rend->vg);
+    }
+
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);
 }
