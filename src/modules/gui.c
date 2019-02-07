@@ -232,18 +232,18 @@ static void menu_main(void *user)
         for (i = 0; i < ARRAY_SIZE(modules); i++) {
             gui_item(&(gui_item_t){
                     .label = modules[i][2],
-                    .obj = obj_get(NULL, modules[i][0], 0),
+                    .obj = core_get_module(modules[i][0]),
                     .attr = modules[i][1]});
         }
         gui_item(&(gui_item_t){
                 .label = "Hints mag offset",
-                .obj = obj_get(NULL, "core", 0),
+                .obj = &core->obj,
                 .attr = "hints_mag_offset",
                 .default_value = 0.0,
                 });
         gui_item(&(gui_item_t){
                 .label = "Refraction",
-                .obj = obj_get(NULL, "core.observer", 0),
+                .obj = core_get_module("observer"),
                 .attr = "refraction",
                 });
         gui_tab_end();
