@@ -111,10 +111,11 @@ static bool label_get_possible_bounds(const painter_t *painter,
 
 static bool bounds_overlap(const double a[4], const double b[4])
 {
-    return a[2] >  b[0] &&
-           a[0] <= b[2] &&
-           a[3] >  b[1] &&
-           a[1] <= b[3];
+    static const double margin = -5;
+    return a[2] > b[0] - margin &&
+           a[0] < b[2] + margin &&
+           a[3] > b[1] - margin &&
+           a[1] < b[3] + margin;
 }
 
 static bool test_label_overlaps(const label_t *label)
