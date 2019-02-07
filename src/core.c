@@ -269,7 +269,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    module_add_sub(&core->obj, "hints");
     core->hints_mag_offset = 0;
 
     core->observer = (observer_t*)obj_create("observer", "observer",
@@ -1001,8 +1000,7 @@ static obj_klass_t core_klass = {
         PROPERTY(selection, TYPE_OBJ, MEMBER(core_t, selection)),
         PROPERTY(lock, TYPE_OBJ, MEMBER(core_t, target.lock)),
         PROPERTY(hovered, TYPE_OBJ, MEMBER(core_t, hovered)),
-        PROPERTY(hints_mag_offset, TYPE_MAG, MEMBER(core_t, hints_mag_offset),
-                 .sub = "hints"),
+        PROPERTY(hints_mag_offset, TYPE_MAG, MEMBER(core_t, hints_mag_offset)),
         PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),
         PROPERTY(fps, TYPE_FLOAT, MEMBER(core_t, prof.fps)),
         PROPERTY(clicks, TYPE_INT, MEMBER(core_t, clicks)),
