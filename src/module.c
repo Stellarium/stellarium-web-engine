@@ -110,23 +110,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     // Default to core if we passed NULL.
     obj = obj ?: &core->obj;
 
-    // If the id contains '.', it means we specified a sub object.
-    // XXX: might not be a very good idea, what if the object id contains
-    // point?
-    while ((sep = strchr(query, '.'))) {
-        if (sep > query && *(sep - 1) == ' ') break;
-        strncpy(tmp, query, sep - query);
-        tmp[sep - query] = '\0';
-        DL_FOREACH(obj->children, child) {
-            if (child->id && strcasecmp(child->id, tmp) == 0) {
-                obj = child;
-                break;
-            }
-        }
-        assert(child);
-        query = sep + 1;
-    }
-
     // Check direct sub objects.
     // XXX: this is a waste of time in most cases!
     DL_FOREACH(obj->children, child) {
