@@ -70,6 +70,7 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
     return NULL;
 }
 
+EMSCRIPTEN_KEEPALIVE
 obj_t *core_get_module(const char *id)
 {
     int len;
