@@ -25,6 +25,8 @@ Module.afterInit(function() {
     ['number', 'number']);
   var obj_create_str = Module.cwrap('obj_create_str', 'number',
     ['string', 'string', 'number', 'string'])
+  var module_get_child = Module.cwrap('module_get_child', 'number',
+    ['number', 'string']);
 
   // List of {obj, attr, callback}
   var g_listeners = [];
@@ -61,7 +63,7 @@ Module.afterInit(function() {
       Object.defineProperty(that, id, {
         enumerable: true,
         get: function() {
-          var obj = obj_get(that.v, id, 0)
+          var obj = module_get_child(that.v, id)
           return obj ? new SweObj(obj) : null
         }
       })
