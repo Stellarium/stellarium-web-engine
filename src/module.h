@@ -121,6 +121,14 @@ void module_add(obj_t *module, obj_t *child);
 void module_remove(obj_t *module, obj_t *child);
 
 /*
+ * Function: module_get_child
+ * Return a module child by id.
+ *
+ * Note: this increases the ref counting of the returned module.
+ */
+obj_t *module_get_child(const obj_t *module, const char *id);
+
+/*
  * Function: module_get_tree
  * Return a json tree of all the attributes and children of this module.
  *

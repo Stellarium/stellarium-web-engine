@@ -217,6 +217,20 @@ void module_remove(obj_t *parent, obj_t *child)
     obj_release(child);
 }
 
+EMSCRIPTEN_KEEPALIVE
+obj_t *module_get_child(const obj_t *module, const char *id)
+{
+    obj_t *ret;
+    assert(id);
+    DL_FOREACH(module->children, ret) {
+        if (ret->id && strcmp(ret->id, id) == 0) {
+            ret->ref++;
+            return ret;
+        }
+    }
+    return NULL;
+}
+
 static json_value *json_extract_attr(json_value *val, const char *attr)
 {
     int i;
