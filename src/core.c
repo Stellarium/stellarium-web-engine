@@ -1041,7 +1041,7 @@ static void test_core(void)
     double v;
     core_init(100, 100, 1.0);
     core->observer->hm = 10.0;
-    obj_t *obs = obj_get(NULL, "core.observer", 0);
+    obj_t *obs = core_get_module("observer");
     assert(obs);
     obj_get_attr(obs, "elevation", &v); assert(v == 10.0);
     obj_set_attr(obs, "longitude", 1.0);

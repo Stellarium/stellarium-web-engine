@@ -64,7 +64,7 @@ static void skyculture_deactivate(skyculture_t *cult)
 {
     obj_t *constellations, *cst, *tmp;
     // Remove all the constellation objects.
-    constellations = obj_get(NULL, "constellations", 0);
+    constellations = core_get_module("constellations");
     assert(constellations);
     DL_FOREACH_SAFE(constellations->children, cst, tmp) {
         if (str_startswith(cst->id, "CST "))
@@ -90,7 +90,7 @@ static void skyculture_activate(skyculture_t *cult)
     }
 
     // Create all the constellations object.
-    constellations = obj_get(NULL, "constellations", 0);
+    constellations = core_get_module("constellations");
     assert(constellations);
     for (i = 0; i < cult->nb_constellations; i++) {
         cst = &cult->constellations[i];
