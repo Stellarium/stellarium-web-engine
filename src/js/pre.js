@@ -42,10 +42,8 @@ Module['onRuntimeInitialized'] = function() {
 
   Module._core_init();
   Module._core_add_default_sources();
-  Module.core = Module.getObj('core');
-  Module.observer = Module.getObj('core.observer');
-  // Why is core init not doing this already?
-  Module.observer.city = Module.getObj("CITY US MILWAUKEE");
+  Module.core = Module.getModule('core');
+  Module.observer = Module.getModule('observer');
   if (Module.onReady) Module.onReady(Module);
 }
 

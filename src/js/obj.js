@@ -27,6 +27,7 @@ Module.afterInit(function() {
     ['string', 'string', 'number', 'string'])
   var module_get_child = Module.cwrap('module_get_child', 'number',
     ['number', 'string']);
+  var core_get_module = Module.cwrap('core_get_module', 'number', ['string']);
 
   // List of {obj, attr, callback}
   var g_listeners = [];
@@ -210,6 +211,11 @@ Module.afterInit(function() {
     return ret.v;
   }
 
+  Module['getModule'] = function(name) {
+    var obj = core_get_module(name);
+    return obj ? new SweObj(obj) : null;
+  };
+
   // Return a child object by identifier.
   //
   // Inputs:
@@ -283,7 +289,7 @@ Module.afterInit(function() {
     var elems = path.split('.');
     var attr = elems.pop();
     var objPath = elems.join('.');
-    var obj = Module.getObj(objPath);
+    var obj = Module.getModule(objPath);
     var value = obj[attr];
     if (value && typeof(value) === 'object' && value.swe_)
       value = value.v;
@@ -295,7 +301,7 @@ Module.afterInit(function() {
     var elems = path.split('.');
     var attr = elems.pop();
     var objPath = elems.join('.');
-    var obj = Module.getObj(objPath);
+    var obj = Module.getModule(objPath);
     obj[attr] = value;
   }
 
