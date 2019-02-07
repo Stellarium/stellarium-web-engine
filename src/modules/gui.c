@@ -237,7 +237,7 @@ static void menu_main(void *user)
         }
         gui_item(&(gui_item_t){
                 .label = "Hints mag offset",
-                .obj = obj_get(NULL, "core.hints", 0),
+                .obj = obj_get(NULL, "core", 0),
                 .attr = "hints_mag_offset",
                 .default_value = 0.0,
                 });
