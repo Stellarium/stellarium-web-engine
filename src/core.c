@@ -1085,18 +1085,21 @@ static void test_set_city(void)
 {
     double lat;
     core_init(100, 100, 1.0);
-    obj_t *city;
+    obj_t *cities, *london;
     obj_t *obs = &core->observer->obj;
 
+    cities = core_get_module("cities");
+    assert(cities);
     // Make sure that after we set the city, the position has been updated.
-    city = obj_get(NULL, "CITY GB London", 0);
-    obj_get_attr(city, "latitude", &lat);
+    london = module_get_child(cities, "CITY GB LONDON");
+    assert(london);
+    obj_get_attr(london, "latitude", &lat);
     assert(fabs(lat * DR2D - 51.50853) < 0.01);
-    obj_set_attr(obs, "city", obj_get(NULL, "CITY GB London", 0));
+    obj_set_attr(obs, "city", london);
     obj_get_attr(obs, "latitude", &lat);
     assert(fabs(lat * DR2D - 51.50853) < 0.01);
-    obj_get_attr(obs, "city", &city);
-    assert(city == core->observer->city);
+    obj_get_attr(obs, "city", &london);
+    assert(london == core->observer->city);
 }
 
 TEST_REGISTER(NULL, test_core, TEST_AUTO);

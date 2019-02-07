@@ -178,13 +178,15 @@ obj_t *city_create(const char *name, const char *country_code,
 
 static void test_cities(void)
 {
-    obj_t *city;
+    obj_t *cities, *city;
     const char *name;
     const char tz[64];
     double lat;
 
     core_init(100, 100, 1.0);
-    city = obj_get(NULL, "CITY GB London", 0);
+    cities = core_get_module("cities");
+    assert(cities);
+    city = module_get_child(cities, "CITY GB LONDON");
     assert(city);
     name = identifiers_get(city->oid, "NAME");
     test_str(name, "London (GB)");
