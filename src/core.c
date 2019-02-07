@@ -72,11 +72,29 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
 
 obj_t *core_get_module(const char *id)
 {
-    obj_t *module;
-    DL_FOREACH(core->obj.children, module) {
-        if (module->id && strcmp(module->id, id) == 0) return module;
+    int len;
+    const char *end;
+    obj_t *m, *ret = (obj_t*)core;
+
+    // Make the first 'core' optional.
+    if (strcmp(id, "core") == 0) return (obj_t*)core;
+    if (strncmp(id, "core.", 5) == 0) id += 5;
+
+    while (*id) {
+        end = strchr(id, '.') ?: id + strlen(id);
+        len = end - id;
+        DL_FOREACH(ret->children, m) {
+            if (!m->id) continue;
+            if (strncmp(m->id, id, len) == 0 && m->id[len] == '\0') {
+                ret = m;
+                id += len;
+                if (*id == '.') id++;
+                break;
+            }
+        }
+        if (!m) return NULL;
     }
-    return NULL;
+    return ret;
 }
 
 static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)

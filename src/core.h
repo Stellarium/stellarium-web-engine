@@ -278,6 +278,14 @@ obj_t *core_get_obj_at(double x, double y, double max_dist);
 /*
  * Function: core_get_module
  * Return a core module by name
+ *
+ * Parameter:
+ *    id    - Id or dot separated path to a module.  All the modules have
+ *            the path 'core.<something>', but to make it simpler, here
+ *            we also accept to search without the initial 'core.'.
+ *
+ * Return:
+ *    The module object, or NULL if none was found.
  */
 obj_t *core_get_module(const char *id);
 
