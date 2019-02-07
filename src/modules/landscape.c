@@ -208,8 +208,10 @@ static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
     }
     ls->visible.target = ls->active;
     // Set the current attribute of the landscape manager object.
-    if (ls->active)
+    if (ls->active) {
         obj_set_attr(ls->obj.parent, "current", ls);
+        module_changed(ls->obj.parent, "current_id");
+    }
 }
 
 static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
@@ -290,6 +292,25 @@ static int landscapes_add_data_source(
     return 0;
 }
 
+// Set/Get the current landscape by id.
+static json_value *landscapes_current_id_fn(
+        obj_t *obj, const attribute_t *attr, const json_value *args)
+{
+    char id[128];
+    landscapes_t *lss = (void*)obj;
+    landscape_t *ls;
+    if (args && args->u.array.length) {
+        args_get(args, NULL, 1, TYPE_STRING, id);
+        MODULE_ITER(lss, ls, "landscape") {
+            if (strcmp(ls->obj.id, id) == 0) {
+                obj_set_attr((obj_t*)ls, "active", true);
+                break;
+            }
+        }
+    }
+    return args_value_new(TYPE_STRING, lss->current->obj.id);
+}
+
 /*
  * Meta class declarations.
  */
@@ -329,6 +350,7 @@ static obj_klass_t landscapes_klass = {
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(landscapes_t, visible.target)),
         PROPERTY(current, TYPE_OBJ, MEMBER(landscapes_t, current)),
+        PROPERTY(current_id, TYPE_STRING, .fn = landscapes_current_id_fn),
         {}
     },
 };
