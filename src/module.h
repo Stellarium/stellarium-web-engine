@@ -39,16 +39,6 @@ int module_list_objs(const obj_t *module, observer_t *obs,
 int module_add_data_source(obj_t *module, const char *url, const char *type,
                            json_value *args);
 
-/*
- * Function: module_add_sub
- * Create a dummy sub object
- *
- * This can be used in the obj_call function to Assign attributes to sub
- * object.  For example it can be used to have constellations.images, without
- * having to create a special class just for that.
- */
-obj_t *module_add_sub(obj_t *module, const char *name);
-
 
 //XXX: probably should rename this to obj_query.
 /*
@@ -60,7 +50,6 @@ obj_t *module_add_sub(obj_t *module, const char *name);
  *   query  - An identifier that represents the object, can be:
  *      - A direct object id (HD 456, NGC 8)
  *      - A module name (constellations)
- *      - A submodule (constellations.lines)
  *      - An object name (polaris)
  *   flags  - always zero for the moment.
  */

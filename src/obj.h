@@ -39,13 +39,11 @@
  * OBJ_LISTABLE         - For modules that maintain a list of children objects,
  *                        like comets, this allows obj_list to directly do
  *                        the listing.
- * OBJ_SUB              - This is a sub-module (like constellation->lines).
  */
 enum {
     OBJ_IN_JSON_TREE = 1 << 0,
     OBJ_MODULE       = 1 << 1,
     OBJ_LISTABLE     = 1 << 2,
-    OBJ_SUB          = 1 << 3,
 };
 
 enum {
@@ -120,11 +118,11 @@ struct obj_klass
                            double* win_angle);
     int (*on_mouse)(obj_t *obj, int id, int state, double x, double y);
 
-    // Find a sub object given an id.
+    // Find a sky object given an id.
     obj_t *(*get)(const obj_t *obj, const char *id, int flags);
-    // Find a sub object given a NSID.
+    // Find a sky object given a NSID.
     obj_t *(*get_by_nsid)(const obj_t *obj, uint64_t nsid);
-    // Find a sub object given an oid
+    // Find a sky object given an oid
     obj_t *(*get_by_oid)(const obj_t *obj, uint64_t oid, uint64_t hint);
 
     // List all the names associated with an object.
@@ -231,7 +229,6 @@ struct obj
  *   fn         - Attribute function (setter/getter for property).
  *   member     - Member info for common case of attributes that map directly
  *                to an object struct member.
- *   sub        - Sub-object name for special attributes: XXX to cleanup.
  *   desc       - Description of the attribute.
  *   on_changed - Callback called when a property changed.
  */
@@ -246,7 +243,6 @@ struct attribute {
         int offset;
         int size;
     } member;
-    const char *sub;
     const char *desc;
     void (*on_changed)(obj_t *obj, const attribute_t *attr);
 };

@@ -74,27 +74,6 @@ int module_add_data_source(obj_t *obj, const char *url, const char *type,
     return 1; // Not recognised.
 }
 
-/**** Support for obj_sub type ******************************************/
-// An sub obj is a light obj that uses its parent call method.
-// It is useful for example to support constellations.images.VISIBLE
-// attributes.
-
-static obj_klass_t obj_sub_klass = {
-    .size  = sizeof(obj_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_SUB,
-};
-
-obj_t *module_add_sub(obj_t *parent, const char *name)
-{
-    obj_t *obj;
-    obj = calloc(1, sizeof(*obj));
-    obj->ref = 1;
-    obj->id = strdup(name);
-    obj->klass = &obj_sub_klass;
-    module_add(parent, obj);
-    return obj;
-}
-
 
 EMSCRIPTEN_KEEPALIVE
 obj_t *obj_get(const obj_t *obj, const char *query, int flags)
@@ -258,14 +237,9 @@ static json_value *module_get_tree_json(const obj_t *obj, bool detailed)
     json_value *ret, *val, *tmp;
     obj_t *child;
     obj_klass_t *klass;
-    const char *sub = NULL;
 
     assert(obj);
     klass = obj->klass;
-    if (klass->flags & OBJ_SUB) {
-        sub = obj->id;
-        klass = obj->parent->klass;
-    }
 
     ret = json_object_new(0);
     // Add all the properties.
@@ -274,8 +248,6 @@ static json_value *module_get_tree_json(const obj_t *obj, bool detailed)
         attr = &klass->attributes[i];
         if (!attr->name) break;
         if (!attr->is_prop) continue;
-        if ((bool)attr->sub != (bool)sub) continue;
-        if (attr->sub && !str_equ(attr->sub, sub)) continue;
         val = obj_call_json(obj, attr->name, NULL);
         // Remove the attributes informations if we want a simple tree.
         if (!detailed && json_get_attr(val, "swe_", 0)) {

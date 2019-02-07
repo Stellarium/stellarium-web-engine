@@ -276,9 +276,8 @@ static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
 static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
                                   const json_value *args)
 {
-    obj_t *container_obj = (obj->klass->flags & OBJ_SUB) ? obj->parent : obj;
     assert(attr->type);
-    void *p = ((void*)container_obj) + attr->member.offset;
+    void *p = ((void*)obj) + attr->member.offset;
     // Buffer large enough to contain any kind of property data, including
     // static strings.
     char buf[4096] __attribute__((aligned(8)));
@@ -330,19 +329,13 @@ EMSCRIPTEN_KEEPALIVE
 const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr_name)
 {
     attribute_t *attr;
-    const char *sub = NULL;
     int i;
     assert(obj);
-    if (obj->klass->flags & OBJ_SUB) {
-        sub = obj->id;
-        obj = obj->parent;
-    }
     ASSERT(obj->klass->attributes, "type '%s' has no attributes '%s'",
            obj->klass->id, attr_name);
     for (i = 0; ; i++) {
         attr = &obj->klass->attributes[i];
         if (!attr->name) return NULL;
-        if (sub && attr->sub && !str_equ(attr->sub, sub)) continue;
         if (str_equ(attr->name, attr_name)) break;
     }
     return attr;
@@ -356,20 +349,13 @@ void obj_foreach_attr(const obj_t *obj,
     int i;
     attribute_t *attr;
     obj_klass_t *klass;
-    const char *sub = NULL;
 
     klass = obj->klass;
     if (!klass) return;
-    if (klass->flags & OBJ_SUB) {
-        sub = obj->id;
-        klass = obj->parent->klass;
-    }
     if (!klass->attributes) return;
     for (i = 0; ; i++) {
         attr = &klass->attributes[i];
         if (!attr->name) break;
-        if ((bool)attr->sub != (bool)sub) continue;
-        if (attr->sub && strcmp(attr->sub, sub) != 0) continue;
         f(attr->name, attr->is_prop, user);
     }
 }
