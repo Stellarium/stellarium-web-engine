@@ -44,7 +44,7 @@ static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
         photo->img = texture_from_url(url, 0);
     }
     if (!photo->img) return NULL;
-    return args_value_new(TYPE_STRING, NULL, photo->img->url);
+    return args_value_new(TYPE_STRING, photo->img->url);
 }
 
 static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
