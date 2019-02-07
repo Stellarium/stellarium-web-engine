@@ -490,10 +490,6 @@ static int constellations_init(obj_t *obj, json_value *args)
 {
     constellations_t *conss = (void*)obj;
     conss->show_all = true;
-    module_add_sub(&conss->obj, "images");
-    module_add_sub(&conss->obj, "lines");
-    module_add_sub(&conss->obj, "bounds");
-    module_add_sub(&conss->obj, "labels");
     fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->images_visible, false);
@@ -601,19 +597,15 @@ static obj_klass_t constellations_klass = {
     .get_by_oid = constellations_get_by_oid,
     .render_order = 25,
     .attributes = (attribute_t[]) {
-        PROPERTY(visible, TYPE_BOOL,
-                 MEMBER(constellations_t, lines_visible.target),
-                 .sub = "lines"),
-        PROPERTY(visible, TYPE_BOOL,
-                 MEMBER(constellations_t, images_visible.target),
-                 .sub = "images"),
-        PROPERTY(visible, TYPE_BOOL,
-                 MEMBER(constellations_t, bounds_visible.target),
-                 .sub = "bounds"),
+        PROPERTY(lines_visible, TYPE_BOOL,
+                 MEMBER(constellations_t, lines_visible.target)),
+        PROPERTY(images_visible, TYPE_BOOL,
+                 MEMBER(constellations_t, images_visible.target)),
+        PROPERTY(bounds_visible, TYPE_BOOL,
+                 MEMBER(constellations_t, bounds_visible.target)),
         PROPERTY(show_all, TYPE_BOOL, MEMBER(constellations_t, show_all)),
-        PROPERTY(display_style, TYPE_ENUM,
-                 MEMBER(constellations_t, labels_display_style),
-                .sub = "labels"),
+        PROPERTY(labels_display_style, TYPE_ENUM,
+                 MEMBER(constellations_t, labels_display_style)),
         {}
     },
 };

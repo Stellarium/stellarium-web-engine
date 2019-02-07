@@ -517,10 +517,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
         core->rend = render_gl_create();
     labels_reset();
 
-    // Show bayer only if the constellations are visible.
+    // Show bayer only if the constellations lines are visible.
     module = core_get_module("constellations");
     assert(module);
-    obj_get_attr(module, "visible", &cst_visible);
+    obj_get_attr(module, "lines_visible", &cst_visible);
 
     painter_t painter = {
         .rend = core->rend,
@@ -597,8 +597,8 @@ void core_on_key(int key, int action)
     static char *SC[][3] = {
         {"A", "core.atmosphere"},
         {"G", "core.landscapes"},
-        {"C", "core.constellations.lines"},
-        {"R", "core.constellations.images"},
+        {"C", "core.constellations", "lines_visible"},
+        {"R", "core.constellations", "images_visible"},
         {"Z", "core.lines.azimuthal"},
         {"E", "core.lines.equatorial"},
         {"M", "core.lines.meridian"},
