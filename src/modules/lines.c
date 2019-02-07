@@ -166,13 +166,16 @@ static int lines_render(const obj_t *obj, const painter_t *painter)
 static void lines_gui(obj_t *obj, int location)
 {
     int i;
+    obj_t *m;
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Grids")) {
         for (i = 0; i < ARRAY_SIZE(LINES); i++) {
+            m = module_get_child(obj, LINES[i].id);
             gui_item(&(gui_item_t){
                     .label = LINES[i].name,
-                    .obj = obj_get(obj, LINES[i].id, 0),
+                    .obj = m,
                     .attr = "visible"});
+            obj_release(m);
         }
         gui_tab_end();
     }
