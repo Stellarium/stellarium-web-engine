@@ -98,15 +98,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     if (sscanf(query, "NSID %" PRIx64, &nsid) == 1)
         return obj_get_by_nsid(obj, nsid);
 
-    // Turn queries like: obj_get(NULL, "core.abc") into:
-    // obj_get(core, "abc").
-    if (!obj && strncmp(query, "core.", 5) == 0) {
-        obj = &core->obj;
-        query += 5;
-    }
-    // Special case for just 'core':
-    if (!obj && strcmp(query, "core") == 0) return &core->obj;
-
     // Default to core if we passed NULL.
     obj = obj ?: &core->obj;
 
