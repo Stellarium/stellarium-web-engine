@@ -125,6 +125,7 @@ static bool test_label_overlaps(const label_t *label)
     DL_FOREACH(g_labels->labels, other) {
         if (other == label) break;
         if (other->flags & SKIPPED) continue;
+        if (other->fader.target == false) continue;
         if (bounds_overlap(other->bounds, label->bounds)) return true;
     }
     return false;
@@ -161,6 +162,25 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
                 label->flags |= SKIPPED;
                 goto skip;
             }
+
+            // Don't try to fit label currently fading out
+            if (label->fader.target == false) break;
+
+            if (!test_label_overlaps(label)) break;
+
+            // The label is colliding with another one, try to fit up and
+            // down around position before giving up
+            label->bounds[1] -= 2;
+            label->bounds[3] -= 2;
+            if (!test_label_overlaps(label)) break;
+            label->bounds[1] += 4;
+            label->bounds[3] += 4;
+            if (!test_label_overlaps(label)) break;
+            label->bounds[1] -= 6;
+            label->bounds[3] -= 6;
+            if (!test_label_overlaps(label)) break;
+            label->bounds[1] -= 2;
+            label->bounds[3] -= 2;
             if (!test_label_overlaps(label)) break;
         }
         pos[0] = label->bounds[0];
