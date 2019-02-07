@@ -133,7 +133,7 @@ obj_t *city_create(const char *name, const char *country_code,
                    double elevation,
                    double nearby)
 {
-    obj_t *cities = obj_get(&core->obj, "CITIES", 0);
+    obj_t *cities = core_get_module("cities");
     char id[256], namebuf[256], asciiname_upper[256];
     double dist, best_dist = FLT_MAX;
     const double EARTH_RADIUS_KM = 6371;
