@@ -120,6 +120,7 @@ static void skyculture_activate(skyculture_t *cult)
 
     // Set the current attribute of the skycultures manager object.
     obj_set_attr(cult->obj.parent, "current", cult);
+    module_changed(cult->obj.parent, "current_id");
 }
 
 static int info_ini_handler(void* user, const char* section,
@@ -348,6 +349,25 @@ const char *skycultures_get_name(obj_t *skycultures, uint64_t oid,
     return buf;
 }
 
+// Set/Get the current skyculture by id.
+static json_value *skycultures_current_id_fn(
+        obj_t *obj, const attribute_t *attr, const json_value *args)
+{
+    char id[128];
+    skycultures_t *cults = (skycultures_t*)obj;
+    skyculture_t *cult;
+    if (args && args->u.array.length) {
+        args_get(args, NULL, 1, TYPE_STRING, id);
+        MODULE_ITER(cults, cult, "skyculture") {
+            if (strcmp(cult->obj.id, id) == 0) {
+                obj_set_attr((obj_t*)cult, "active", true);
+                break;
+            }
+        }
+    }
+    return args_value_new(TYPE_STRING, cults->current->obj.id);
+}
+
 /*
  * Meta class declarations.
  */
@@ -380,6 +400,7 @@ static obj_klass_t skycultures_klass = {
     .create_order   = 30, // After constellations.
     .attributes = (attribute_t[]) {
         PROPERTY(current, TYPE_OBJ, MEMBER(skycultures_t, current)),
+        PROPERTY(current_id, TYPE_STRING, .fn = skycultures_current_id_fn),
         {}
     },
 };
