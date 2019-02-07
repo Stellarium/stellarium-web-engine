@@ -238,7 +238,7 @@ static void render_label(const double p[2], const double u[2],
     }
 
     label_angle = atan2(u[1], u[0]);
-    if (fabs(label_angle) > M_PI / 2) label_angle += M_PI;
+    if (fabs(label_angle) > M_PI / 2) label_angle -= M_PI;
 
     if (dir == 0) a = mix(-90, +90 , uv[1]) * DD2R;
     else          a = mix(  0, +360, uv[0]) * DD2R;
@@ -261,20 +261,28 @@ static void render_label(const double p[2], const double u[2],
     }
 
     paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE,
-                      13, bounds);
+                      11, bounds);
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
 
     vec2_normalize(u, n);
-    pos[0] = p[0] + n[0] * size[0] / 2 + v[0] * 4;
-    pos[1] = p[1] + n[1] * size[0] / 2 + v[1] * 4;
-    pos[0] += fabs(v[1]) * size[1] * 0.7;
-    pos[1] += fabs(v[0]) * size[1] * 0.7;
+    double h_offset = size[0] / 2;
+    if ((fabs(v[1]) < 0.001 && n[1] < 0) || fabs(v[1]) > 0.999)
+        h_offset += max(0, size[1] * tan(acos(vec2_dot(n, v))));
+    pos[0] = p[0] + n[0] * h_offset;
+    pos[1] = p[1] + n[1] * h_offset;
+
+    // Offset to put the text above the line
+    double n3[3] = {n[0], n[1], 0};
+    double up[3] = {0, 0, n[0] > 0 ? 1 : -1};
+    vec3_cross(n3, up, n3);
+    pos[0] += n3[0] * size[1] / 2;
+    pos[1] += n3[1] * size[1] / 2;
 
     vec4_copy(painter->color, color);
 
     color[3] = 1.0;
-    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE, 13,
+    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE, 11,
                color, label_angle);
 }
 
