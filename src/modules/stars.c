@@ -661,7 +661,7 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
 
 static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
-    int order, pix, i;
+    int order, pix, s, i;
     stars_t *stars = (void*)obj;
     tile_t *tile = NULL;
 
@@ -683,13 +683,14 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
     // Try both surveys (bundled and gaia).
-    for (i = 0; !tile && i < 2; i++) {
-        tile = get_tile(stars, i, order, pix, NULL);
-    }
-    if (!tile) return NULL;
-    for (i = 0; i < tile->nb; i++) {
-        if (tile->sources[i].oid == oid)
-            return (obj_t*)star_create(&tile->sources[i]);
+    for (s = 0; s < 2; s++) {
+        tile = get_tile(stars, s, order, pix, NULL);
+        if (!tile) continue;
+        for (i = 0; i < tile->nb; i++) {
+            if (tile->sources[i].oid == oid) {
+                return (obj_t*)star_create(&tile->sources[i]);
+            }
+        }
     }
     return NULL;
 }
