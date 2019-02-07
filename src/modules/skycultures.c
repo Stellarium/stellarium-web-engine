@@ -313,7 +313,7 @@ static int skycultures_add_data_source(
     if (!type || strcmp(type, "skyculture") != 0) return 1;
     key = strrchr(url, '/') + 1;
     // Skip if we already have it.
-    if (obj_get((obj_t*)cults, key, 0)) return 0;
+    if (module_get_child(&cults->obj, key)) return 0;
     cult = add_from_uri(cults, url, key);
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
     // If it's the default skyculture (western) activate it immediatly.
