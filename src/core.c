@@ -626,7 +626,7 @@ void core_on_key(int key, int action)
     };
     int i;
     bool v;
-    obj_t *obj;
+    obj_t *module;
     const char *attr;
     char buf[128];
 
@@ -638,9 +638,9 @@ void core_on_key(int key, int action)
     for (i = 0; i < ARRAY_SIZE(SC); i++) {
         if (SC[i][0][0] == key) {
             attr = SC[i][2] ?: "visible";
-            obj = obj_get(NULL, SC[i][1], 0);
-            obj_get_attr(obj, attr, &v);
-            obj_set_attr(obj, attr, !v);
+            module = core_get_module(SC[i][1]);
+            obj_get_attr(module, attr, &v);
+            obj_set_attr(module, attr, !v);
             return;
         }
     }
