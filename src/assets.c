@@ -47,11 +47,11 @@ static struct {
     char *alias;
 } g_alias[8] = {};
 
-// Only support a single custom handler for the moment.
+// Global list of handlers for special url schemes.
 static struct {
     char *prefix;
     void *(*fn)(const char *path, int *size, int *code);
-} g_handler = {};
+} g_handlers[2] = {};
 
 /*
  * Convenience function to log return code errors if needed.
@@ -181,12 +181,15 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     }
 
     // Check if we have a special handler for this asset.
-    if (g_handler.prefix && str_startswith(url, g_handler.prefix)) {
-        asset->data = g_handler.fn(url, &asset->size, code);
-        asset->flags |= FREE_DATA;
-        *size = asset->size;
-        data = asset->data;
-        goto end;
+    for (i = 0; i < ARRAY_SIZE(g_handlers); i++) {
+        if (!g_handlers[i].prefix) break;
+        if (str_startswith(url, g_handlers[i].prefix)) {
+            asset->data = g_handlers[i].fn(url, &asset->size, code);
+            asset->flags |= FREE_DATA;
+            *size = asset->size;
+            data = asset->data;
+            goto end;
+        }
     }
 
     if (!asset->request) {
@@ -275,9 +278,13 @@ void asset_add_handler(
         const char *prefix,
         void *(*handler)(const char *path, int *size, int *code))
 {
-    assert(!g_handler.prefix);
-    g_handler.prefix = strdup(prefix);
-    g_handler.fn = handler;
+    int i;
+    for (i = 0; i < ARRAY_SIZE(g_handlers); i++) {
+        if (!g_handlers[i].prefix) break;
+    }
+    assert(i < ARRAY_SIZE(g_handlers));
+    g_handlers[i].prefix = strdup(prefix);
+    g_handlers[i].fn = handler;
 }
 
 #include "assets/cities.txt.inl"
