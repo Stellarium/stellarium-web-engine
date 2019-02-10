@@ -276,10 +276,18 @@ static int landscapes_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
     const char *key;
+    const char *args_type;
     landscapes_t *lss = (landscapes_t*)obj;
     landscape_t *ls;
 
-    if (!type || strcmp(type, "landscape") != 0) return 1;
+    if (!type) return 1;
+    if (strcmp(type, "landscape") && strcmp(type, "hips")) return 1;
+    if (strcmp(type, "hips") == 0) {
+        if (!args) return 1;
+        args_type = json_get_attr_s(args, "type");
+        if (!args_type || strcmp(args_type, "landscape")) return 1;
+    }
+
     key = strrchr(url, '/') + 1;
     // Skip if we already have it.
     if (obj_get((obj_t*)lss, key, 0)) return 0;
