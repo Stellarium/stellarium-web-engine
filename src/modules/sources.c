@@ -150,6 +150,7 @@ static int process_dir(source_t *source)
         parse_index(source->url, data);
         return 1;
     }
+
     // Check for a skyculture dir.
     data = get_data(source, "constellationship.fab",
                     ASSET_ACCEPT_404 | ASSET_USED_ONCE, &code);
@@ -158,6 +159,16 @@ static int process_dir(source_t *source)
         module_add_data_source(NULL, source->url, "skyculture", NULL);
         return 1;
     }
+
+    // Check for a HiPS survey.
+    data = get_data(source, "properties",
+                    ASSET_ACCEPT_404 | ASSET_USED_ONCE, &code);
+    if (!code) return 0;
+    if (data) {
+        module_add_data_source(NULL, source->url, "hips", NULL);
+        return 1;
+    }
+
     // Finally try to iter for subdirectories.
     if (strncmp(source->url, "http", 4) != 0) {
         sys_list_dir(source->url, NULL, on_sub_dir);
