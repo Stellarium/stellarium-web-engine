@@ -46,8 +46,10 @@ static int process_source(sources_t *sources, source_t *source);
 static int add_data_source(obj_t *obj, const char *url, const char *type,
                            json_value *args)
 {
+    char *tmp;
     source_t *source = NULL;
     sources_t *sources = (sources_t*)obj;
+
     if (!type) {
         source = calloc(1, sizeof(*source));
         source->url = strdup(url);
@@ -61,6 +63,13 @@ static int add_data_source(obj_t *obj, const char *url, const char *type,
         source->type = SOURCE_HIPS;
     }
     if (!source) return 1;
+
+    // Parse url of the form: <URL>?v=date for cache invalidation.
+    if ((tmp = strstr(source->url, "?v="))) {
+        *tmp = '\0';
+        source->release_date = hips_parse_date(tmp + 3);
+    }
+
     DL_APPEND(sources->sources, source);
     // Immediatly process only if offline source.
     if (strncmp(url, "http", 4) != 0)
