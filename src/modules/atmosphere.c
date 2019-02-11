@@ -181,7 +181,10 @@ static float compute_lum(void *user, const float pos[3])
         d->sum_lum += lum;
         d->max_lum = max(d->max_lum, lum);
     }
-    else d->sum_lum += d->landscape_lum;
+    else {
+        d->sum_lum += d->landscape_lum;
+        d->max_lum = max(d->max_lum, d->landscape_lum);
+    }
     d->nb_lum++;
     return lum;
 }
