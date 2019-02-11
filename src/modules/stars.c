@@ -781,7 +781,6 @@ static int stars_add_data_source(
     sprintf(stars->surveys[survey].url, "%s", url);
     stars->surveys[survey].hips = hips_create(
             stars->surveys[survey].url, release_date, &survey_settings);
-    stars->surveys[survey].min_vmag = NAN;
 
     order_min_str = json_get_attr_s(args, "hips_order_min");
     if (order_min_str)
@@ -793,6 +792,7 @@ static int stars_add_data_source(
         max_vmag_str = json_get_attr_s(args, "max_vmag");
         if (max_vmag_str)
             stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
+        stars->surveys[survey].min_vmag = NAN;
     }
 
     return 0;
