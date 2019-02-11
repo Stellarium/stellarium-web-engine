@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include "skybrightness.h"
+#include "utils/utils.h"
 
 #define exp10(x) exp((x) * log(10.f))
 #define exp10f(x) expf((x) * logf(10.f))
@@ -48,7 +49,6 @@ void skybrightness_prepare(skybrightness_t *sb,
         float latitude, float altitude,
         float temperature, float relative_humidity,
         float dist_moon_zenith, float dist_sun_zenith,
-        float max_moon_brightness,
         float twilight_coef, float moon_brightness_coef,
         float darknight_brightness_coef)
 {
@@ -61,7 +61,6 @@ void skybrightness_prepare(skybrightness_t *sb,
     sb->RH = relative_humidity;
     sb->ZM = dist_moon_zenith * DR;
     sb->ZS = dist_sun_zenith * DR;
-    sb->max_BM = max_moon_brightness * (1.11e-15f / NLAMBERT_TO_CDM2);
     sb->k_BT = twilight_coef;
     sb->k_BM = moon_brightness_coef;
     sb->k_BN = darknight_brightness_coef;
@@ -115,9 +114,9 @@ float skybrightness_get_luminance(
     // 80 Input for Moon and Sun
     const float AM = sb->AM; // Moon phase (deg.; 0=FM, 90=FQ/LQ, 180=NM)
     const float ZM = sb->ZM; // Zenith distance of Moon (deg.)
-    const float RM = moon_dist * DR; // Angular distance to Moon (deg.)
+    const float RM = max(moon_dist * DR, 1.); // Angular distance to Moon (deg)
     const float ZS = sb->ZS; // Zenith distance of Sun (deg.)
-    const float RS = sun_dist * DR; // Angular distance to Sun (deg.)
+    const float RS = max(sun_dist * DR, 1.); // Angular distance to Sun (deg.)
     // 140 Input for the Site, Date, Observer
     const float Y = sb->Y; // Year
     const float Z = zenith_dist * DR; // Zenith distance (deg.)
@@ -148,9 +147,7 @@ float skybrightness_get_luminance(
     BM = BM * (1 - exp10f(-.4f * K * X));
     BM = BM * (FM * C3 + 440000.0f * (1 - C3));
 
-    // Added from the original code, a clamping value to prevent the
-    // moon brightness to get too high.
-    if (sb->max_BM >= 0 && BM > sb->max_BM) BM = sb->max_BM;
+    // Added from the original code, a scale factor
     BM *= sb->k_BM;
 
     // 2260 Twilight brightness
