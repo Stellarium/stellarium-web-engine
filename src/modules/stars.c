@@ -752,7 +752,8 @@ static int stars_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
     stars_t *stars = (stars_t*)obj;
-    const char *args_type, *title, *release_date_str, *max_vmag_str;
+    const char *args_type, *title, *release_date_str, *max_vmag_str,
+               *order_min_str;
     hips_settings_t survey_settings = {
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
@@ -782,17 +783,16 @@ static int stars_add_data_source(
             stars->surveys[survey].url, release_date, &survey_settings);
     stars->surveys[survey].min_vmag = NAN;
 
+    order_min_str = json_get_attr_s(args, "hips_order_min");
+    if (order_min_str)
+        stars->surveys[survey].min_order = atoi(order_min_str);
+
     // Tell online gaia survey to only start after the vmag for this survey.
     // XXX: We should remove that.
     if (survey == SURVEY_DEFAULT) {
         max_vmag_str = json_get_attr_s(args, "max_vmag");
         if (max_vmag_str)
             stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
-    }
-
-    // XXX: Get it from hips properties!
-    if (survey == SURVEY_GAIA) {
-        stars->surveys[SURVEY_GAIA].min_order = 3;
     }
 
     return 0;
