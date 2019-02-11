@@ -188,8 +188,14 @@ void core_add_default_sources(void)
     #define BASE_URL "https://data.stellarium.org/"
     module_add_data_source(NULL, BASE_URL "landscapes", NULL, NULL);
 
+    // Online gaia survey.
+    module_add_data_source(NULL,
+            BASE_URL "surveys/gaia_dr2_v2?v=2019-02-11T05:34Z",
+            "hips", NULL);
+
     // Bundled star survey.
     module_add_data_source(NULL, "asset://stars", "hips", NULL);
+
     // Online DSO survey.
     module_add_data_source(NULL, BASE_URL "surveys/dso", "hips", NULL);
 

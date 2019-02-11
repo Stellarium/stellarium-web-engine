@@ -450,23 +450,9 @@ static const void *stars_create_tile(
 static int stars_init(obj_t *obj, json_value *args)
 {
     stars_t *stars = (stars_t*)obj;
-    hips_settings_t survey_settings = {
-        .create_tile = stars_create_tile,
-        .delete_tile = del_tile,
-    };
-
     stars->visible = true;
-
     regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
-
-    // Online gaia survey at index 1.
-    survey_settings.user = &stars->surveys[SURVEY_GAIA];
-    sprintf(stars->surveys[SURVEY_GAIA].url,
-            "https://data.stellarium.org/surveys/gaia_dr2_v2");
-    stars->surveys[SURVEY_GAIA].hips = hips_create(
-            stars->surveys[SURVEY_GAIA].url, 0, &survey_settings);
-    stars->surveys[SURVEY_GAIA].min_order = 3; // Hardcoded!
     return 0;
 }
 
@@ -766,29 +752,48 @@ static int stars_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
     stars_t *stars = (stars_t*)obj;
-    const char *args_type, *max_vmag_str;
+    const char *args_type, *title, *release_date_str, *max_vmag_str;
     hips_settings_t survey_settings = {
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
     };
+    int survey = SURVEY_DEFAULT;
+    double release_date = 0;
 
     if (!type || !args || strcmp(type, "hips")) return 1;
     args_type = json_get_attr_s(args, "type");
+    title = json_get_attr_s(args, "obs_title");
     if (!args_type || strcmp(args_type, "stars")) return 1;
 
-    // For the moment we only support one stars source in addition to the
-    // only gaia survey.
-    assert(!stars->surveys[SURVEY_DEFAULT].hips);
-    survey_settings.user = &stars->surveys[0];
-    sprintf(stars->surveys[SURVEY_DEFAULT].url, "%s", url);
-    stars->surveys[SURVEY_DEFAULT].hips = hips_create(
-            stars->surveys[SURVEY_DEFAULT].url, 0, &survey_settings);
-    stars->surveys[SURVEY_DEFAULT].min_vmag = NAN;
+    if (title && strcasecmp(title, "gaia") == 0) {
+        survey = SURVEY_GAIA;
+    }
+
+    // Already filled.
+    if (stars->surveys[survey].hips) return 1;
+
+    release_date_str = json_get_attr_s(args, "hips_release_date");
+    if (release_date_str)
+        release_date = hips_parse_date(release_date_str);
+
+    survey_settings.user = &stars->surveys[survey];
+    sprintf(stars->surveys[survey].url, "%s", url);
+    stars->surveys[survey].hips = hips_create(
+            stars->surveys[survey].url, release_date, &survey_settings);
+    stars->surveys[survey].min_vmag = NAN;
 
     // Tell online gaia survey to only start after the vmag for this survey.
-    max_vmag_str = json_get_attr_s(args, "max_vmag");
-    if (max_vmag_str)
-        stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
+    // XXX: We should remove that.
+    if (survey == SURVEY_DEFAULT) {
+        max_vmag_str = json_get_attr_s(args, "max_vmag");
+        if (max_vmag_str)
+            stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
+    }
+
+    // XXX: Get it from hips properties!
+    if (survey == SURVEY_GAIA) {
+        stars->surveys[SURVEY_GAIA].min_order = 3;
+    }
 
     return 0;
 }
