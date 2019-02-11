@@ -41,10 +41,10 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     if (mw->visible.value == 0.0) return 0;
 
     // Ad-hock formula for tone mapping.
-    lum = 2.4;
-    c = tonemapper_map(&core->tonemapper, lum);
-    c = clamp(c, 0, 1) * 0.35;
-    painter.color[3] *= c;
+    lum = 0.002;
+    c = tonemapper_map(&core->tonemapper, lum) * 10;
+    c = clamp(c, 0, 1) * 0.64;
+    painter.color[3] = c;
 
     hips_render(mw->hips, &painter, 2 * M_PI, split_order);
     return 0;
