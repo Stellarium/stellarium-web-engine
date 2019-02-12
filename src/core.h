@@ -128,6 +128,7 @@ struct core
     double          lwmax; // Max visible luminance.
     double          lwmax_min; // Min value for lwmax.
     double          lwmax_scale; // Manual scale of lwmax.
+    double          lwsky_average;  // Current average sky luminance
     double          max_point_radius; // Max radius in pixel.
     double          min_point_radius;
     double          skip_point_radius;

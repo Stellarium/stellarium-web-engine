@@ -184,13 +184,12 @@ static float compute_lum(void *user, const float pos[3])
     // If we are below horizon use the precomputed landscape luminance.
     if (pos[2] > 0) {
         d->sum_lum += lum;
+        d->nb_lum++;
         d->max_lum = max(d->max_lum, lum);
     }
     else {
-        d->sum_lum += d->landscape_lum;
         d->max_lum = max(d->max_lum, d->landscape_lum);
     }
-    d->nb_lum++;
     return lum;
 }
 
@@ -228,6 +227,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     const double T = 5.0;
     int i;
     painter_t painter = *painter_;
+    core->lwsky_average = 0.0001;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
@@ -274,6 +274,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
         render_tile(atm, &painter, 0, i);
     }
     core_report_luminance_in_fov(data.max_lum, true);
+    core->lwsky_average = data.sum_lum / data.nb_lum;
     return 0;
 }
 

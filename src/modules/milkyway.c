@@ -43,7 +43,14 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     // Ad-hock formula for tone mapping.
     lum = 0.002;
     c = tonemapper_map(&core->tonemapper, lum) * 10;
+
+    // Modulate luminance from atmosphere average brightness so that
+    // milky way becomes less visible with a full moon
+    c *= min(0.0002 / core->lwsky_average, 1.0);
     c = clamp(c, 0, 1) * 0.64;
+
+    if (c < 1./255)
+        return 0;
     painter.color[3] = c;
 
     hips_render(mw->hips, &painter, 2 * M_PI, split_order);
