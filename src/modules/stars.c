@@ -457,20 +457,20 @@ static int stars_init(obj_t *obj, json_value *args)
 }
 
 static tile_t *get_tile(stars_t *stars, int survey, int order, int pix,
-                        bool *loading_complete)
+                        int *code)
 {
-    int code, flags = 0;
+    int flags = 0;
     tile_t *tile;
+    assert(code);
     // Immediate load of the level 0 stars (they are needed for the
     // constellations).  The other tiles can be loaded in a thread.
     if (order > 0) flags |= HIPS_LOAD_IN_THREAD;
     if (!stars->surveys[survey].hips) {
-        if (loading_complete) *loading_complete = false;
+        *code = 0;
         return NULL;
     }
     tile = hips_get_tile(stars->surveys[survey].hips,
-                         order, pix, flags, &code);
-    if (loading_complete) *loading_complete = (code != 0);
+                         order, pix, flags, code);
     return tile;
 }
 
@@ -486,11 +486,10 @@ static int render_visitor(int order, int pix, void *user)
     int *nb_loaded = USER_GET(user, 4);
     double *illuminance = USER_GET(user, 5);
     tile_t *tile;
-    int i, n = 0;
+    int i, n = 0, code;
     star_data_t *s;
     double p_win[4], size, luminance;
     double color[3];
-    bool loaded;
     bool selected;
 
     // Early exit if the tile is clipped.
@@ -499,8 +498,8 @@ static int render_visitor(int order, int pix, void *user)
     if (order < stars->surveys[survey].min_order) return 1;
 
     (*nb_tot)++;
-    tile = get_tile(stars, survey, order, pix, &loaded);
-    if (loaded) (*nb_loaded)++;
+    tile = get_tile(stars, survey, order, pix, &code);
+    if (code) (*nb_loaded)++;
 
     if (!tile) goto end;
     if (tile->mag_min > painter.stars_limit_mag) goto end;
@@ -576,7 +575,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 
 static int stars_get_visitor(int order, int pix, void *user)
 {
-    int i, p;
+    int i, p, code;
     bool is_gaia;
     struct {
         stars_t     *stars;
@@ -602,7 +601,7 @@ static int stars_get_visitor(int order, int pix, void *user)
 
     // Try both surveys (bundled and gaia).
     for (i = 0; !tile && i < 2; i++) {
-        tile = get_tile(d->stars, i, order, pix, NULL);
+        tile = get_tile(d->stars, i, order, pix, &code);
     }
 
     // Gaia survey has a min order of 3.
@@ -647,7 +646,7 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
 
 static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
-    int order, pix, s, i;
+    int order, pix, s, i, code;
     stars_t *stars = (void*)obj;
     tile_t *tile = NULL;
 
@@ -670,7 +669,7 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     nuniq_to_pix(hint, &order, &pix);
     // Try both surveys (bundled and gaia).
     for (s = 0; s < 2; s++) {
-        tile = get_tile(stars, s, order, pix, NULL);
+        tile = get_tile(stars, s, order, pix, &code);
         if (!tile) continue;
         for (i = 0; i < tile->nb; i++) {
             if (tile->sources[i].oid == oid) {
@@ -684,7 +683,7 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 // XXX: we can probably merge this with stars_get_visitor!
 static int stars_list_visitor(int order, int pix, void *user)
 {
-    int i, r;
+    int i, r, code;
     star_t *star = NULL;
     struct {
         stars_t *stars;
@@ -694,7 +693,7 @@ static int stars_list_visitor(int order, int pix, void *user)
         void *user;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, 0, order, pix, NULL);
+    tile = get_tile(d->stars, 0, order, pix, &code);
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
         if (tile->sources[i].vmag > d->max_mag) continue;
@@ -712,8 +711,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
                       double max_mag, uint64_t hint, void *user,
                       int (*f)(void *user, obj_t *obj))
 {
-    int order, pix, i, r;
-    bool complete;
+    int order, pix, i, r, code;
     tile_t *tile;
     stars_t *stars = (void*)obj;
     star_t *star;
@@ -733,9 +731,9 @@ static int stars_list(const obj_t *obj, observer_t *obs,
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    tile = get_tile(stars, 0, order, pix, &complete);
+    tile = get_tile(stars, 0, order, pix, &code);
     if (!tile) {
-        if (!complete) return OBJ_AGAIN; // Try again later.
+        if (!code) return OBJ_AGAIN; // Try again later.
         return -1;
     }
     for (i = 0; i < tile->nb; i++) {
