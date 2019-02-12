@@ -427,6 +427,13 @@ int core_update(double dt)
     tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
+    // Adjust star linear scale in function of screen resolution
+    // It ranges from 0.7 for a small screen to 1.4 for large screens
+    double resol = core->fov / min(core->win_size[0], core->win_size[1]);
+    double delta = 0.7 * (1.0 - resol / (120. * DD2R / 400));
+    delta = max(0, delta);
+    core->star_linear_scale = 0.7 + delta;
+
     core_update_direction(dt);
 
     DL_SORT(core->obj.children, modules_sort_cmp);
