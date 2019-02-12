@@ -745,7 +745,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     // If the tile doesn't exists, mark it in the parent tile so that we
     // won't have to search for it again.
-    if ((*code) == 404) {
+    if ((*code) / 100 == 4) {
         if (order > hips->order_min) {
             parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
             if (parent) parent->flags |= (TILE_NO_CHILD_0 << (pix % 4));
