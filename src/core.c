@@ -212,8 +212,10 @@ void core_add_default_sources(void)
     module_add_data_source(NULL, "https://alasky.unistra.fr/DSS/DSSColor",
                         "hips", NULL);
 
-    // Asteroid data.
+    // MPC data.
     module_add_data_source(NULL, "asset://mpcorb.dat", "mpc_asteroids", NULL);
+    module_add_data_source(NULL, BASE_URL "mpc/CometEls.txt",
+                           "mpc_comets", NULL);
     #undef BASE_URL
 }
 

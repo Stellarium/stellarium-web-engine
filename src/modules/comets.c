@@ -11,9 +11,6 @@
 #include <zlib.h> // For crc32.
 #include <regex.h>
 
-// Data source url.
-static const char *URL = "https://data.stellarium.org/mpc/CometEls.txt";
-
 typedef struct orbit_t {
     double d;    // date (julian day).
     double i;    // inclination (rad).
@@ -44,6 +41,7 @@ typedef struct {
  */
 typedef struct {
     obj_t   obj;
+    char    *source_url;
     bool    parsed; // Set to true once the data has been parsed.
     int     update_pos; // Index of the position for iterative update.
     regex_t search_reg;
@@ -223,6 +221,15 @@ static int comets_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+static int comets_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
+{
+    comets_t *comets = (void*)obj;
+    if (strcmp(type, "mpc_comets") != 0) return 1;
+    comets->source_url = strdup(url);
+    return 0;
+}
+
 static bool range_contains(int range_start, int range_size, int nb, int i)
 {
     if (i < range_start) i += nb;
@@ -239,15 +246,17 @@ static int comets_update(obj_t *obj, const observer_t *obs, double dt)
     comets_t *comets = (void*)obj;
     const int update_nb = 32;
 
-    if (!comets->parsed) {
-        data = asset_get_data(URL, &size, &code);
+    if (!comets->parsed && comets->source_url) {
+        data = asset_get_data(comets->source_url, &size, &code);
         if (!code) return 0; // Still loading.
         comets->parsed = true;
         if (!data) {
-            LOG_E("Cannot load comets data: %s", URL);
+            LOG_E("Cannot load comets data: %s (%d)",
+                  comets->source_url, code);
             return 0;
         }
         load_data(comets, data);
+        asset_release(comets->source_url);
         // Make sure the search work.
         assert(strcmp(obj_get(NULL, "C/1995 O1", 0)->klass->id,
                       "mpc_comet") == 0);
@@ -339,6 +348,7 @@ static obj_klass_t comets_klass = {
     .size           = sizeof(comets_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init           = comets_init,
+    .add_data_source = comets_add_data_source,
     .update         = comets_update,
     .render         = comets_render,
     .get            = comets_get,
