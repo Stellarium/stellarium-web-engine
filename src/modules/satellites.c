@@ -44,6 +44,7 @@ typedef struct satellite {
 // Module class.
 typedef struct satellites {
     obj_t   obj;
+    char    *source_url; // Online norad files location.
     qsmag_t *qsmags; // Hash table id -> qsmag entry.
     int     qsmags_status;
     bool    loaded;
@@ -52,6 +53,15 @@ typedef struct satellites {
 
 static int satellites_init(obj_t *obj, json_value *args)
 {
+    return 0;
+}
+
+static int satellites_add_data_source(
+        obj_t *obj, const char *url, const char *type, json_value *args)
+{
+    satellites_t *sats = (void*)obj;
+    if (strcmp(type, "norad") != 0) return 1;
+    sats->source_url = strdup(url);
     return 0;
 }
 
@@ -118,16 +128,19 @@ static bool load_qsmag(satellites_t *sats)
     int size, id;
     double stdmag;
     const char *comp_data;
-    const char *URL = "https://data.stellarium.org/norad/qs.mag.gz";
     char *data, *line;
+    char url[1024];
     qsmag_t *qsmag;
 
     if (sats->qsmags_status < 400) return true;
     if (sats->qsmags_status) return false;
-    comp_data = asset_get_data2(URL, ASSET_USED_ONCE,
+    if (!sats->source_url) return false;
+
+    snprintf(url, sizeof(url), "%s/%s", sats->source_url, "qs.mag.gz");
+    comp_data = asset_get_data2(url, ASSET_USED_ONCE,
                                 &size, &sats->qsmags_status);
     if (sats->qsmags_status && !comp_data)
-        LOG_E("Error while loading qs.mag: %d", sats->qsmags_status);
+        LOG_E("Error while loading %s: %d", url, sats->qsmags_status);
     if (!comp_data) return false;
 
     // Uncompress and parse the data.
@@ -151,9 +164,14 @@ static bool load_data(satellites_t *sats)
 {
     int size, code, nb;
     const char *data;
-    const char *URL = "https://data.stellarium.org/norad/visual.txt";
+    char url[1024];
     if (sats->loaded) return true;
-    data = asset_get_data2(URL, ASSET_USED_ONCE, &size, &code);
+    if (!sats->source_url) return false;
+
+    // Only visual for the moment.
+    snprintf(url, sizeof(url), "%s/%s", sats->source_url, "visual.txt");
+    data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
+    if (!data && code) LOG_E("Cannot load %s: %d", url, code);
     if (!data) return false;
     nb = parse_tle_file(sats, data);
     LOG_D("Parsed %d satellites", nb);
@@ -166,6 +184,7 @@ static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
     PROFILE(satellites_update, 0);
     satellites_t *sats = (satellites_t*)obj;
     satellite_t *sat;
+    if (!sats->source_url) return 0;
     if (!load_qsmag(sats)) return 0;
     if (!load_data(sats)) return 0;
 
@@ -404,6 +423,7 @@ static obj_klass_t satellites_klass = {
     .size           = sizeof(satellites_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init           = satellites_init,
+    .add_data_source = satellites_add_data_source,
     .render_order   = 30,
     .update         = satellites_update,
     .render         = satellites_render,

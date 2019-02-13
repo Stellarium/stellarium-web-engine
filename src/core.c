@@ -214,6 +214,10 @@ void core_add_default_sources(void)
     // MPC data.
     add_source("asset://mpcorb.dat", "mpc_asteroids");
     add_source(BASE_URL "mpc/CometEls.txt", "mpc_comets");
+
+    // Artificial satellites files.
+    add_source(BASE_URL "norad", "norad");
+
     #undef ADD_SOURCE
     #undef BASE_URL
 }
