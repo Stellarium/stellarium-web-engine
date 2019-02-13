@@ -186,36 +186,35 @@ EMSCRIPTEN_KEEPALIVE
 void core_add_default_sources(void)
 {
     #define BASE_URL "https://data.stellarium.org/"
-    module_add_data_source(NULL, BASE_URL "landscapes", NULL, NULL);
+    #define add_source(url, type) \
+        module_add_data_source(NULL, url, type, NULL)
+
+    add_source(BASE_URL "landscapes", NULL);
 
     // Online gaia survey.
-    module_add_data_source(NULL,
-            BASE_URL "surveys/gaia_dr2_v2?v=2019-02-11T05:34Z",
-            "hips", NULL);
+    add_source(BASE_URL "surveys/gaia_dr2_v2?v=2019-02-11T05:34Z", "hips");
 
     // Bundled star survey.
-    module_add_data_source(NULL, "asset://stars", "hips", NULL);
+    add_source("asset://stars", "hips");
 
     // Online DSO survey.
-    module_add_data_source(NULL, BASE_URL "surveys/dso", "hips", NULL);
+    add_source(BASE_URL "surveys/dso", "hips");
 
     // Skyculture.  We load the western culture immediately so we don't have
     // to wait to parse the online directory index.json file.
     asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
-    module_add_data_source(NULL, BASE_URL "skycultures/western", "skyculture",
-                        NULL);
-    module_add_data_source(NULL, BASE_URL "skycultures", NULL, NULL);
+    add_source(BASE_URL "skycultures/western", "skyculture");
+    add_source(BASE_URL "skycultures", NULL);
 
     // HiPS surveys.
-    module_add_data_source(NULL, BASE_URL "surveys", "hipslist", NULL);
+    add_source(BASE_URL "surveys", "hipslist");
 
-    module_add_data_source(NULL, "https://alasky.unistra.fr/DSS/DSSColor",
-                        "hips", NULL);
+    add_source("https://alasky.unistra.fr/DSS/DSSColor", "hips");
 
     // MPC data.
-    module_add_data_source(NULL, "asset://mpcorb.dat", "mpc_asteroids", NULL);
-    module_add_data_source(NULL, BASE_URL "mpc/CometEls.txt",
-                           "mpc_comets", NULL);
+    add_source("asset://mpcorb.dat", "mpc_asteroids");
+    add_source(BASE_URL "mpc/CometEls.txt", "mpc_comets");
+    #undef ADD_SOURCE
     #undef BASE_URL
 }
 
