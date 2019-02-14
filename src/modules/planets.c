@@ -90,6 +90,8 @@ typedef struct planets {
     texture_t *earth_shadow_tex;
     // Sun halo.
     texture_t *halo_tex;
+    // Default HiPS survey.
+    hips_t *default_hips;
 } planets_t;
 
 
@@ -613,6 +615,7 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
 }
 
 static void planet_render_hips(const planet_t *planet,
+                               const hips_t *hips,
                                double radius,
                                double alpha,
                                const painter_t *painter_)
@@ -632,6 +635,9 @@ static void planet_render_hips(const planet_t *planet,
     double depth_range[2];
     double shadow_spheres[4][4];
     double epoch = DJM00; // J2000.
+
+    if (!hips) hips = planet->hips;
+    assert(hips);
 
     painter.planet.shadow_spheres_nb =
         get_shadow_candidates(planet, 4, shadow_spheres);
@@ -678,7 +684,7 @@ static void planet_render_hips(const planet_t *planet,
         painter.depth_range = &depth_range;
     }
 
-    hips_render_traverse(planet->hips, &painter, angle, -1,
+    hips_render_traverse(hips, &painter, angle, -1,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)
@@ -748,6 +754,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double q[4];
     double axis[3];
     double closest[3];
+    const hips_t *hips;
 
     vmag = planet->obj.vmag;
     if (planet->id == EARTH) return;
@@ -796,7 +803,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Planet apparent diameter in rad
     diam = 2.0 * planet->radius;
-    if (planet->hips && hips_k * diam * r_scale >= point_r) {
+    hips = planet->hips ?: planets->default_hips;
+    if (hips && hips_k * diam * r_scale >= point_r) {
         hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * diam * r_scale ));
     }
     vec4_copy(planet->color, color);
@@ -817,7 +825,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (hips_alpha > 0) {
-        planet_render_hips(planet, planet->radius_m / DAU * r_scale,
+        planet_render_hips(planet, hips, planet->radius_m / DAU * r_scale,
                            hips_alpha, &painter);
     }
 
@@ -1099,11 +1107,18 @@ static int planets_add_data_source(
 
     frame = json_get_attr_s(args, "hips_frame");
     if (!frame) return 1;
-    p = planet_get_by_name(planets, frame);
-    if (!p) return 1;
     release_date_str = json_get_attr_s(args, "hips_release_date");
     if (release_date_str)
         release_date = hips_parse_date(release_date_str);
+
+    if (strcmp(frame, "default") == 0) {
+        planets->default_hips = hips_create(url, release_date, NULL);
+        hips_set_frame(planets->default_hips, FRAME_ICRF);
+        return 1;
+    }
+
+    p = planet_get_by_name(planets, frame);
+    if (!p) return 1;
     if (strcmp(args_type, "planet") == 0) {
         p->hips = hips_create(url, release_date, NULL);
         hips_set_frame(p->hips, FRAME_ICRF);
