@@ -10,6 +10,7 @@
 #include "swe.h"
 #include "utstring.h"
 #include <regex.h>
+#include <zlib.h> // For crc32
 
 // XXX: this very similar to stars.c.  I think we could merge most of the code.
 
@@ -98,9 +99,27 @@ static char *make_id(const dso_data_t *data, char buff[128])
     return buff;
 }
 
-static uint64_t make_oid(const dso_data_t *data)
+static uint64_t pix_to_nuniq(int order, int pix)
 {
-    return oid_create("NDSO", (uint32_t)data->nsid);
+    return pix + 4 * (1L << (2 * order));
+}
+
+/*
+ * Generate a uniq oid for a DSO.
+ *
+ * The oid number is generated from the nuniq number of the tile healpix
+ * pixel and the index in the tile.
+ *
+ * We use 20 bits for the nuniq, and 12 bits for the running index.  This
+ * should allow to go up to order 8, with 4096 sources per tile.
+ */
+static uint64_t make_oid(uint64_t nuniq, int index)
+{
+    if (nuniq >= 1 << 20 || index >= 1 << 12) {
+        LOG_W("Cannot generate uniq oid for DSO");
+        LOG_W("Nuniq: %llu, index: %d", nuniq, index);
+    }
+    return oid_create("NDSO", (uint32_t)nuniq << 12 | index);
 }
 
 static int dso_update(obj_t *obj, const observer_t *obs, double dt)
@@ -148,6 +167,8 @@ static char *parse_json_names(json_value *names)
 static int dso_init(obj_t *obj, json_value *args)
 {
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
+    int index;
+
     // Support creating a dso using noctuasky model data json values.
     dso_t *dso = (dso_t*)obj;
     json_value *model, *names, *types, *jstr;
@@ -165,11 +186,16 @@ static int dso_init(obj_t *obj, json_value *args)
     }
     dso->data.display_vmag = isnan(dso->data.vmag) ? DSO_DEFAULT_VMAG :
                                                       dso->data.vmag;
-    dso->data.oid = make_oid(&dso->data);
-
     names = json_get_attr(args, "names", json_array);
     if (names)
         dso->data.names = parse_json_names(names);
+
+    // Since we are not in a tile, we use the hash of the name to generate
+    // the oid.
+    if (dso->data.names) {
+        index = crc32(0, (void*)dso->data.names, strlen(dso->data.names));
+        dso->data.oid = make_oid(0, index % 1024 + 1);
+    }
 
     types = json_get_attr(args, "types", json_array);
     if (types && types->u.array.length > 0) {
@@ -223,6 +249,8 @@ static int on_file_tile_loaded(const char type[4],
     double bmag, temp_mag, tmp_ra, tmp_de, tmp_smax, tmp_smin, tmp_angle;
     void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
+    uint64_t nuniq;
+
     eph_table_column_t columns[] = {
         {"nsid", 'Q'},
         {"type", 's', .size=4},
@@ -295,7 +323,8 @@ static int on_file_tile_loaded(const char type[4],
         s->display_vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
         tile->mag_min = min(tile->mag_min, s->display_vmag);
         tile->mag_max = max(tile->mag_max, s->display_vmag);
-        s->oid = make_oid(s);
+        nuniq = pix_to_nuniq(order, pix);
+        s->oid = make_oid(nuniq, i);
 
         if (*morpho) s->morpho = strdup(morpho);
         s->symbol = symbols_get_for_otype(s->type);
