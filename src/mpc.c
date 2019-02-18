@@ -148,12 +148,27 @@ static void rstrip(char *str, int len)
     }
 }
 
-// Parse packed number: [0-9a-zA-Z][0-9]{5}
-static int parse_number(const char str[static 5], int *number)
+
+static int parse_int(const char *str, int len, int *number)
 {
     int i, v = 0;
     char c;
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < len; i++) {
+        v *= 10;
+        c = str[i];
+        /**/ if (c >= '0' && c <= '9') v += c - '0';
+        else return -1;
+    }
+    *number = v;
+    return 0;
+}
+
+// Parse packed number: [0-9a-zA-Z][0-9]*
+static int parse_packed_int(const char *str, int len, int *number)
+{
+    int i, v = 0;
+    char c;
+    for (i = 0; i < len; i++) {
         v *= 10;
         c = str[i];
         /**/ if (c >= '0' && c <= '9') v += c - '0';
@@ -213,7 +228,7 @@ int mpc_parse_line(const char *line, int len,
     int r;
     if (len < 160) return -1;
     if (line[5] == ' ') { // Got number.
-        if (parse_number(line, number)) return -1;
+        if (parse_packed_int(line, 5, number)) return -1;
     } else {
         *number = 0;
     }
@@ -251,6 +266,84 @@ int mpc_parse_line(const char *line, int len,
     return 0;
 }
 
+/*
+ * Function: mpc_parse_comet_line
+ * Parse a line in the Minor Planet Center comet orbit format:
+ * https://www.minorplanetcenter.net/iau/info/CometOrbitFormat.html
+ * (Ephemerides and Orbital Elements Format)
+ *
+ * Parameters:
+ *   line       - Pointer to a string.  Doesn't have to be NULL terminated.
+ *   len        - Length of the line.
+ *   number     - Periodic comet number.
+ *   orbit_type - Orbit type (generally 'C', 'P', or 'D').
+ *   peri_time  - Time of perihelion passage (MJD TT).
+ *   peri_dist  - Perihelion distance (AU).
+ *   e          - Orbital eccentricity.
+ *   peri       - Argument of perhielion, J2000.0 (degrees).
+ *   node       - Longitude of the ascending node, J2000.0 (degrees).
+ *   i          - Inclination to the ecliptic, J2000.0 (degrees).
+ *   epoch      - Epoch in MJD TT.
+ *   h          - Absolute magnitude, H.
+ *   g          - Slope parameter, G.
+ *   desig      - Designation and Name. e.g: 'C/1995 O1 (Hale-Bopp)'.
+ *                Zero padded.
+ */
+int mpc_parse_comet_line(const char *line, int len,
+                         int    *number,
+                         char   *orbit_type,
+                         double *peri_time,
+                         double *peri_dist,
+                         double *e,
+                         double *peri,
+                         double *node,
+                         double *i,
+                         double *epoch,
+                         double *h,
+                         double *g,
+                         char   desig[static 64])
+{
+    int year, month, dayi;
+    double dayf, djm0;
+
+    if (len < 160) return -1;
+    if (line[0] != ' ') {
+        if (parse_int(line + 0, 4, number)) return -1;
+    } else {
+        *number = 0;
+    }
+    *orbit_type = line[4];
+
+    if (parse_int(line + 14, 4, &year))         return -1;
+    if (parse_int(line + 19, 2, &month))        return -1;
+    if (parse_float(line + 22, &dayf))          return -1;
+    if (eraCal2jd(year, month, (int)dayf, &djm0, peri_time)) return -1;
+    *peri_time += fmod(dayf, 1.0);
+
+    if (parse_float(line + 30, peri_dist))      return -1;
+    if (parse_float(line + 41, e))              return -1;
+    if (parse_float(line + 51, peri))           return -1;
+    if (parse_float(line + 61, node))           return -1;
+    if (parse_float(line + 71, i))              return -1;
+
+    if (line[81] != ' ') {
+        if (parse_int(line + 81, 4, &year))             return -1;
+        if (parse_int(line + 85, 2, &month))            return -1;
+        if (parse_int(line + 87, 2, &dayi))             return -1;
+        if (eraCal2jd(year, month, dayi, &djm0, epoch)) return -1;
+    } else {
+        *epoch = 0.0;
+    }
+
+    if (parse_float(line + 91, h))              return -1;
+    if (parse_float(line + 96, g))              return -1;
+
+    memset(desig, 0, 64);
+    memcpy(desig, line + 102, 56);
+    rstrip(desig, 56);
+
+    return 0;
+}
 
 /******* TESTS **********************************************************/
 
@@ -273,5 +366,33 @@ static void test_parse_float(void)
     }
 }
 
+static void test_parse_comet(void)
+{
+    int r;
+    const char *line =
+        "    CJ95O010  1997 03 29.4673  0.928143  0.994910  130.7602"
+        "  283.2592   89.0370  20190217  -2.0  4.0  "
+        "C/1995 O1 (Hale-Bopp)                                    MPC106342";
+    int n;
+    char o, desig[64];
+    double peri_time, peri_dist, e, peri, node, i, epoch, h, g;
+
+    r = mpc_parse_comet_line(
+            line, strlen(line), &n, &o, &peri_time, &peri_dist, &e, &peri,
+            &node, &i, &epoch, &h, &g, desig);
+    assert(r == 0);
+    assert(n == 0);
+    assert(o == 'C');
+    assert(peri_dist == 0.928143);
+    assert(e == 0.994910);
+    assert(peri == 130.7602);
+    assert(node == 283.2592);
+    assert(i == 89.0370);
+    assert(h == -2.0);
+    assert(g == 4.0);
+    assert(strcmp(desig, "C/1995 O1 (Hale-Bopp)") == 0);
+}
+
 TEST_REGISTER(NULL, test_parse_float, TEST_AUTO);
+TEST_REGISTER(NULL, test_parse_comet, TEST_AUTO);
 #endif
