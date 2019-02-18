@@ -204,6 +204,9 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     if (*code && (flags & ASSET_USED_ONCE))
         asset->flags |= CAN_RELEASE;
 
+    // All error return codes return NULL data.
+    if (*code >= 400) data = NULL;
+
 end:
     LOG_RET(asset, url, *code, flags);
     return data;
