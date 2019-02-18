@@ -31,7 +31,6 @@ typedef struct
     bool run_tests;
     char *tests_filter;
     bool calendar;
-    bool dump;
     bool gen_doc;
     char *args[3];
 } args_t;
@@ -51,7 +50,6 @@ static struct argp_option options[] = {
                                                     "Run the unit tests" },
 #endif
     {"calendar", 'c', NULL, 0, "print events calendar"},
-    {"dump", 'd', NULL, 0, "dump catalog file as json"},
     {"gen-doc", OPT_GEN_DOC, NULL, 0, "print doc for the defined classes"},
     { 0 }
 };
@@ -71,9 +69,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         break;
     case 'c':
         args->calendar = true;
-        break;
-    case 'd':
-        args->dump = true;
         break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 3)
@@ -147,14 +142,6 @@ int main(int argc, char **argv)
         core_init(0, 0, 1);
         core_add_default_sources();
         calendar_print();
-        return 0;
-    }
-    if (args.dump) {
-        if (!args.args[0]) {
-            LOG_E("dump CATALOG_FILE");
-            return -1;
-        }
-        dump_catalog(args.args[0]);
         return 0;
     }
     if (args.gen_doc) {
