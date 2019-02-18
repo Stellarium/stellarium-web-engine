@@ -492,7 +492,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
         // XXX: need to check if the UVs don't match.
         (*nb_tot)++;
         normalmap = hips_get_tile_texture(planet->hips_normalmap,
-                order, pix, false, NULL, NULL, NULL, &loaded);
+                order, pix, 0, NULL, NULL, NULL, &loaded);
         if (loaded) (*nb_loaded)++;
     }
 
