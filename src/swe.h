@@ -35,7 +35,6 @@
 #include "tests.h"
 
 #include "utils/cache.h"
-#include "utils/catalog.h"
 #include "utils/color.h"
 #include "utils/fader.h"
 #include "utils/gesture.h"
