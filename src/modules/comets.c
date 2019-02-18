@@ -8,7 +8,7 @@
  */
 
 #include "swe.h"
-#include <zlib.h> // For crc32.
+#include "mpc.h"
 #include <regex.h>
 
 typedef struct orbit_t {
@@ -64,48 +64,44 @@ static const char *orbit_type_to_otype(char o)
 static void load_data(comets_t *comets, const char *data)
 {
     comet_t *comet;
-    int line, num, year, month;
-    double day, q, e, w, o, i, djm0, amag, slope;
+    int num, nb_err = 0, len, line_idx = 0, r, nb;
+    double peri_time, peri_dist, e, peri, node, i, epoch, h, g;
+    const char *line;
     char orbit_type;
-    char desgn[16] = {};
-    char name[64] = {};
-    const catalog_t CAT[] = {
-        { 1,    4,  "I4",   "Periodic comet number", '?'},
-        { 5,    5,  "A1",   "Orbit type (generally `C', `P' or `D')"},
-        { 6,   12,  "A7",   "Provisional designation (in packed form)"},
-        {15,   18,  "I4",   "Year of perihelion passage"},
-        {20,   21,  "I2",   "Month of perihelion passage"},
-        {23,   29,  "F7.4", "Day of perihelion passage (TT)"},
-        {31,   39,  "F9.6", "Perihelion distance (AU)"},
-        {42,   49,  "F8.6", "Orbital eccentricity"},
-        {52,   59,  "F8.4", "Argument of perihelion, J2000.0 (degrees)"},
-        {62,   69,  "F8.4", "Longitude of the ascending node, J2000.0 (deg)"},
-        {72,   79,  "F8.4", "Inclination in degrees, J2000.0 (degrees)"},
-        {92,   95,  "F4.1", "Absolute magnitude"},
-        {97,  100,  "F4.0", "Slope parameter"},
-        {103, 158,  "A56",  "Designation and Name"},
-        {0}
-    };
-    CATALOG_ITER(CAT, data, line, &num, &orbit_type, desgn,
-                 &year, &month, &day, &q, &e, &w, &o, &i, &amag, &slope,
-                 name) {
+    char desgn[64];
+    obj_t *tmp;
+
+    for (line = data; *line; line = strchr(line, '\n') + 1, line_idx++) {
+        len = strchr(line, '\n') - line;
+        r = mpc_parse_comet_line(
+                line, len, &num, &orbit_type, &peri_time, &peri_dist, &e,
+                &peri, &node, &i, &epoch, &h, &g, desgn);
+        if (r) {
+            nb_err++;
+            continue;
+        }
+
         comet = (void*)obj_create("mpc_comet", NULL, &comets->obj, NULL);
         comet->num = num;
-        comet->amag = amag;
-        comet->slope_param = slope;
-        eraCal2jd(year, month, day, &djm0, &comet->orbit.d);
-        comet->orbit.d += fmod(day, 1.0);
+        comet->amag = h;
+        comet->slope_param = g;
+        comet->orbit.d = peri_time;
         comet->orbit.i = i * DD2R;
-        comet->orbit.o = o * DD2R;
-        comet->orbit.w = w * DD2R;
-        comet->orbit.q = q;
+        comet->orbit.o = node * DD2R;
+        comet->orbit.w = peri * DD2R;
+        comet->orbit.q = peri_dist;
         comet->orbit.e = e;
-        memcpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
-        strcpy(comet->name, name);
-        str_rstrip(comet->name);
-        comet->obj.oid = oid_create("Com", line);
+        strncpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
+        strcpy(comet->name, desgn);
+        comet->obj.oid = oid_create("Com", line_idx);
         comet->obj.pvo[0][0] = NAN;
     }
+
+    if (nb_err) {
+        LOG_W("Comet planet data got %d error lines.", nb_err);
+    }
+    DL_COUNT(comets->obj.children, tmp, nb);
+    LOG_I("Parsed %d comets", nb);
 }
 
 static int comet_update(obj_t *obj, const observer_t *obs, double dt)
