@@ -455,12 +455,6 @@ static void quad_planet(
             gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
-        // XXX: move up.
-        if (tex->flags & TF_FLIPPED) {
-            gl_buf_2f(&item->buf, -1, ATTR_TEX_POS,
-                      p[0] * tex->w / tex->tex_w,
-                      1.0 - p[1] * tex->h / tex->tex_h);
-        }
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
 
         vec3_copy(p, normal);
@@ -574,7 +568,6 @@ static void quad(renderer_t          *rend_,
         vec2_addk(p, duvy, (double)i / grid_size, p);
         tex_pos[0] = p[0] * tex->w / tex->tex_w;
         tex_pos[1] = p[1] * tex->h / tex->tex_h;
-        if (tex->flags & TF_FLIPPED) tex_pos[1] = 1.0 - tex_pos[1];
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
         if (grid) {

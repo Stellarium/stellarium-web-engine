@@ -12,8 +12,7 @@
 
 enum {
     TF_MIPMAP           = 1 << 0,
-    TF_FLIPPED          = 1 << 1,
-    TF_LAZY_LOAD        = 1 << 2
+    TF_LAZY_LOAD        = 1 << 1
 };
 
 /*
