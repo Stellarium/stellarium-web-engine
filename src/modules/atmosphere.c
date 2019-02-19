@@ -273,7 +273,8 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
         render_tile(atm, &painter, 0, i);
     }
     core_report_luminance_in_fov(data.max_lum, true);
-    core->lwsky_average = data.sum_lum / data.nb_lum;
+    if (data.nb_lum)
+        core->lwsky_average = data.sum_lum / data.nb_lum;
     return 0;
 }
 
