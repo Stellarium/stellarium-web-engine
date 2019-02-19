@@ -74,7 +74,7 @@ typedef struct {
 //              For simple case, we can return 0 or 1 at step 0, skipping
 //              all the other steps.
 //      node    The current node visited.
-//      uv      UV coordinates of the current node.
+//      uv      Original UV coordinates passed to the function.
 //      pos     model pos of the current node.
 //      mat     3x3 transformation to go from the original uv to the current
 //              one.

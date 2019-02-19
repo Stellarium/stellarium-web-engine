@@ -135,7 +135,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     // needed.
     if (sep < M_PI && is_clipped(4, clip)) return 0;
 
-    r = d->f(1, node, uv, pos, mat, d->painter, d->user, s);
+    r = d->f(1, node, d->uv, pos, mat, d->painter, d->user, s);
     if (r != 2) return r;
 
     // Check if we intersect a projection discontinuity, in which case we
@@ -152,12 +152,12 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
         for (i = 0; i < 2; i++) {
             node->c = c;
             painter2.proj = &projs[i];
-            r = d->f(2, node, uv, pos, mat, &painter2, d->user, s);
+            r = d->f(2, node, d->uv, pos, mat, &painter2, d->user, s);
         }
         return r;
     }
 
-    return d->f(2, node, uv, pos, mat, d->painter, d->user, s);
+    return d->f(2, node, d->uv, pos, mat, d->painter, d->user, s);
 }
 
 int traverse_surface(qtree_node_t *nodes, int nb_nodes,

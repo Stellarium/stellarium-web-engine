@@ -287,19 +287,19 @@ static void render_label(const double p[2], const double u[2],
 }
 
 int on_quad(int step, qtree_node_t *node,
-            const double uv[4][2],
-            const double pos[4][4],
+            const double uv_[4][2], const double pos[4][4],
             const double mat[3][3],
             const painter_t *painter_,
             void *user, int s[2])
 {
     double lines[4][4] = {};
     double p[2], u[2], v[2]; // For the border labels.
+    double uv[4][2];
     bool visible;
     projection_t *proj_spherical = USER_GET(user, 0);
     line_t *line = USER_GET(user, 1);
     step_t **steps = USER_GET(user, 2);
-    int dir;
+    int i, dir;
     painter_t painter = *painter_;
 
     // Compute the next split.
@@ -318,6 +318,8 @@ int on_quad(int step, qtree_node_t *node,
         if (node->level < 2) return 1;
         return 2;
     }
+
+    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv_[i], uv[i]);
     vec2_copy(uv[0], lines[0]);
     vec2_copy(uv[2], lines[1]);
     vec2_copy(uv[0], lines[2]);

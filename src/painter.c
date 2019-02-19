@@ -113,16 +113,19 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 }
 
 static int paint_quad_visitor(int step, qtree_node_t *node,
-                              const double uv[4][2],
+                              const double uv_[4][2],
                               const double pos[4][4],
                               const double mat[3][3],
                               const painter_t *painter,
                               void *user,
                               int s[2])
 {
+    int i;
     projection_t *tex_proj = USER_GET(user, 0);
     int frame = *(int*)USER_GET(user, 1);
     int grid_size = *(int*)USER_GET(user, 2);
+    double uv[4][2];
+    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv_[i], uv[i]);
 
     if (step == 0) {
         if ((1 << node->level) > grid_size) return 0;
