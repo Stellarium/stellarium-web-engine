@@ -343,7 +343,7 @@ texture_t *hips_get_tile_texture(
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
-    const bool outside = !(flags & HIPS_EXTERIOR);
+    const bool outside = !(flags & HIPS_PLANET);
     bool loading_complete_;
     int i, code, x, y, nbw;
     img_tile_t *tile = NULL, *rend_tile;
@@ -474,7 +474,7 @@ static int render_traverse_visitor(int order, int pix, void *user)
     int (*callback)(hips_t *hips, const painter_t *painter,
                     int order, int pix, int split, int flags,
                     void *user) = USER_GET(user, 5);
-    const bool outside = !(flags & HIPS_EXTERIOR);
+    const bool outside = !(flags & HIPS_PLANET);
     int split;
     user = USER_GET(user, 6);
     // Early exit if the tile is clipped.
@@ -607,7 +607,7 @@ int hips_render_traverse(
     hips_update(hips);
     render_order = hips_get_render_order(hips, painter, angle);
     if (angle < 2.0 * M_PI)
-        flags |= HIPS_EXTERIOR;
+        flags |= HIPS_PLANET;
 
     // For extrem low resolution force using the allsky if available so that
     // we don't download too much data.
