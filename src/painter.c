@@ -86,7 +86,9 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 }
 
 static int paint_quad_visitor(int step, qtree_node_t *node,
-                              const double uv[4][2], const double pos[4][4],
+                              const double uv[4][2],
+                              const double pos[4][4],
+                              const double mat[3][3],
                               const painter_t *painter,
                               void *user,
                               int s[2])

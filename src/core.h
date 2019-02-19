@@ -76,6 +76,8 @@ typedef struct {
 //      node    The current node visited.
 //      uv      UV coordinates of the current node.
 //      pos     model pos of the current node.
+//      mat     3x3 transformation to go from the original uv to the current
+//              one.
 //      painter The painter passed as argument, or, in step 2, eventually
 //              a painter whose projection has been shifted to handle
 //              a discontinuous case.
@@ -97,6 +99,7 @@ int traverse_surface(
                  qtree_node_t *node,
                  const double uv[4][2],
                  const double pos[4][4],
+                 const double mat[3][3],
                  const painter_t *painter,
                  void *user,
                  int s[2]));

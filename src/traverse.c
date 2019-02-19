@@ -88,31 +88,27 @@ typedef struct {
              qtree_node_t *node,
              const double uv[4][2],
              const double pos[4][4],
+             const double mat[3][3],
              const painter_t *painter,
              void *user,
              int s[2]);
 } d_t;
 
-static void get_uv(const d_t *d, const qtree_node_t *node, double uv[4][2])
-{
-    double uv_mat[3][3];
-    int i;
-    mat3_set_identity(uv_mat);
-    mat3_iscale(uv_mat, 1.0 / node->s[0], 1.0 / node->s[1], 1.0);
-    mat3_itranslate(uv_mat, node->x, node->y);
-    for (i = 0; i < 4; i++) mat3_mul_vec2(uv_mat, d->uv[i], uv[i]);
-}
-
 static int on_node(qtree_node_t *node, void *user, int s[2])
 {
     d_t *d = user;
-    double uv[4][2];
+    double mat[3][3], uv[4][2];
     double pos[4][4], clip[4][4];
     double mid_pos[4], sep = 0;
     int i, r, c;
 
-    get_uv(d, node, uv);
-    r = d->f(0, node, uv, NULL, d->painter, d->user, s);
+    // Compute mat and uv.
+    mat3_set_identity(mat);
+    mat3_iscale(mat, 1.0 / node->s[0], 1.0 / node->s[1], 1.0);
+    mat3_itranslate(mat, node->x, node->y);
+    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, d->uv[i], uv[i]);
+
+    r = d->f(0, node, d->uv, NULL, mat, d->painter, d->user, s);
     if (r != 2) return r;
 
     assert(d->painter);
@@ -139,7 +135,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     // needed.
     if (sep < M_PI && is_clipped(4, clip)) return 0;
 
-    r = d->f(1, node, uv, pos, d->painter, d->user, s);
+    r = d->f(1, node, uv, pos, mat, d->painter, d->user, s);
     if (r != 2) return r;
 
     // Check if we intersect a projection discontinuity, in which case we
@@ -156,12 +152,12 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
         for (i = 0; i < 2; i++) {
             node->c = c;
             painter2.proj = &projs[i];
-            r = d->f(2, node, uv, pos, &painter2, d->user, s);
+            r = d->f(2, node, uv, pos, mat, &painter2, d->user, s);
         }
         return r;
     }
 
-    return d->f(2, node, uv, pos, d->painter, d->user, s);
+    return d->f(2, node, uv, pos, mat, d->painter, d->user, s);
 }
 
 int traverse_surface(qtree_node_t *nodes, int nb_nodes,
@@ -175,6 +171,7 @@ int traverse_surface(qtree_node_t *nodes, int nb_nodes,
                               qtree_node_t *node,
                               const double uv[4][2],
                               const double pos[4][4],
+                              const double mat[3][3],
                               const painter_t *painter,
                               void *user,
                               int s[2]))

@@ -287,7 +287,9 @@ static void render_label(const double p[2], const double u[2],
 }
 
 int on_quad(int step, qtree_node_t *node,
-            const double uv[4][2], const double pos[4][4],
+            const double uv[4][2],
+            const double pos[4][4],
+            const double mat[3][3],
             const painter_t *painter_,
             void *user, int s[2])
 {
