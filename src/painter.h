@@ -338,7 +338,7 @@ void paint_debug(bool value);
 //  frame     - One of the <FRAME> enum frame.
 //  order     - Healpix order.
 //  pix       - Healpix pix.
-//  outside   - Set whether the tile is an outside (planet) tile.
+//  outside   - Set whether the tile is an outside (not planet) tile.
 //
 // Returns:
 //  True if the tile is clipped, false otherwise.
