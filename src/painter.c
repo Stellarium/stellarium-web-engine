@@ -142,7 +142,6 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
 
 int paint_quad(const painter_t *painter,
                int frame,
-               const double uv[4][2],
                const projection_t *tex_proj,
                int grid_size)
 {

@@ -109,7 +109,6 @@ static double get_global_brightness(void)
 static void render_fog(const painter_t *painter_)
 {
     int pix, order = 1, split = 2;
-    const double uv[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double theta, phi;
     painter_t painter = *painter_;
     projection_t proj;
@@ -123,7 +122,7 @@ static void render_fog(const painter_t *painter_)
         if (painter_is_tile_clipped(&painter, FRAME_OBSERVED, order, pix, true))
             continue;
         projection_init_healpix(&proj, 1 << order, pix, true, true);
-        paint_quad(&painter, FRAME_OBSERVED, uv, &proj, split);
+        paint_quad(&painter, FRAME_OBSERVED, &proj, split);
     }
 }
 

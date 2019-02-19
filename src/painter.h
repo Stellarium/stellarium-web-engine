@@ -260,7 +260,6 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points);
  */
 int paint_quad(const painter_t *painter,
                int frame,
-               const double uv[4][2],
                const projection_t *proj,
                int grid_size);
 

@@ -482,7 +482,7 @@ static int render_img(constellation_t *con, const painter_t *painter)
     mat3_copy(con->mat, proj.mat3);
     proj.backward = proj_backward;
     painter_set_texture(&painter2, PAINTER_TEX_COLOR, con->img, NULL);
-    paint_quad(&painter2, FRAME_ICRF, NULL, &proj, 4);
+    paint_quad(&painter2, FRAME_ICRF, &proj, 4);
     return 0;
 }
 

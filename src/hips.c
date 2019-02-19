@@ -441,7 +441,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     painter.color[3] *= fade;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     projection_init_healpix(&proj, 1 << order, pix, false, true);
-    paint_quad(&painter, hips->frame, NULL, &proj, split);
+    paint_quad(&painter, hips->frame, &proj, split);
     return 0;
 }
 
