@@ -74,16 +74,6 @@ static int landscape_update(obj_t *obj, const observer_t *obs, double dt)
     return fader_update(&ls->visible, dt);
 }
 
-static void spherical_project(
-        const projection_t *proj, int flags, const double *v, double *out)
-{
-    double az, al;
-    az = v[0] * 360 * DD2R;
-    al = (v[1] - 0.5) * 180 * DD2R;
-    eraS2c(az, al, out);
-    out[3] = 0.0; // At infinity.
-}
-
 // XXX: this should be a function of core, with an observer argument or
 // something.
 static double get_global_brightness(void)
@@ -152,13 +142,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     PROFILE(landscape_render, 0);
     landscape_t *ls = (landscape_t*)obj;
     painter_t painter = *painter_;
-    projection_t proj_spherical = {
-        .name       = "spherical",
-        .backward   = spherical_project,
-    };
     double brightness;
-    double HALF_UV[][2] = {{0.0, 0.5}, {1.0, 0.5},
-                           {0.0, 0.0}, {1.0, 0.0}};
     // Hack matrice to fix the hips survey orientation.
     double rg2h[4][4] = {
         {1,  0,  0,  0},
@@ -166,7 +150,6 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
         {0,  0,  1,  0},
         {0,  0,  0,  1},
     };
-    int div;
 
     painter.color[3] *= ls->visible.value;
     if (painter.color[3] == 0.0) return 0;
@@ -182,16 +165,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
         vec3_mul(brightness, painter.color, painter.color);
         painter.transform = &rg2h;
         hips_render(ls->hips, &painter, 2 * M_PI, -1);
-    } else {
-        // XXX: would be better to use an healpix projection and glsl shader.
-        div = (painter.flags & PAINTER_FAST_MODE) ? 8 : 32;
-        vec4_copy(ls->color, painter.color);
-        vec4_set(painter.color, 0, 0, 0, ls->visible.value);
-        vec3_mul(brightness, painter.color, painter.color);
-        paint_quad(&painter, FRAME_OBSERVED, NULL, NULL,
-                   HALF_UV, &proj_spherical, div);
     }
-
     return 0;
 }
 
