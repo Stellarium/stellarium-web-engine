@@ -113,32 +113,28 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 }
 
 static int paint_quad_visitor(int step, qtree_node_t *node,
-                              const double uv_[4][2],
+                              const double uv[4][2],
                               const double pos[4][4],
                               const double mat[3][3],
                               const painter_t *painter,
                               void *user,
                               int s[2])
 {
-    int i;
     projection_t *tex_proj = USER_GET(user, 0);
     int frame = *(int*)USER_GET(user, 1);
     int grid_size = *(int*)USER_GET(user, 2);
-    double uv[4][2];
-    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv_[i], uv[i]);
 
     if (step == 0) {
         if ((1 << node->level) > grid_size) return 0;
         return 2;
     }
     if (step == 1) return 2;
-    REND(painter->rend, quad, painter, frame,
-                        painter->textures[0].tex, painter->textures[1].tex, uv,
+    REND(painter->rend, quad, painter, frame, mat,
                         grid_size >> node->level,
                         tex_proj);
 
     if (g_debug) {
-        REND(painter->rend, quad_wireframe, painter, frame, uv,
+        REND(painter->rend, quad_wireframe, painter, frame, mat,
              grid_size >> node->level, tex_proj);
     }
     return 0;
@@ -151,15 +147,14 @@ int paint_quad(const painter_t *painter,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
-    const double DEFAULT_UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    const double UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     qtree_node_t nodes[128];
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;
     }
     if (painter->color[3] == 0.0) return 0;
-    uv = uv ?: DEFAULT_UV;
-    traverse_surface(nodes, ARRAY_SIZE(nodes), uv, tex_proj,
+    traverse_surface(nodes, ARRAY_SIZE(nodes), UV, tex_proj,
                      painter, frame, 0,
                      USER_PASS(tex_proj, &frame, &grid_size),
                      paint_quad_visitor);

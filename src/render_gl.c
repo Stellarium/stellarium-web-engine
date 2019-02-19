@@ -57,6 +57,8 @@ typedef struct prog {
     GLuint u_tex_l;
     GLuint u_normal_tex_l;
     GLuint u_shadow_color_tex_l;
+    GLuint u_tex_transf_l;
+    GLuint u_normal_tex_transf_l;
 
     GLuint u_has_normal_tex_l;
     GLuint u_material_l;
@@ -120,7 +122,7 @@ struct item
 
         struct {
             float contrast;
-            const texture_t *normalmap;
+            texture_t *normalmap;
             texture_t *shadow_color_tex;
             float mv[16];
             float sun[4]; // pos + radius.
@@ -128,6 +130,8 @@ struct item
             int   shadow_spheres_nb;
             float shadow_spheres[4][4]; // (pos + radius) * 4
             int   material;
+            float tex_transf[9];
+            float normal_tex_transf[9];
         } planet;
 
         struct {
@@ -382,34 +386,26 @@ static void quad_planet(
                  renderer_t          *rend_,
                  const painter_t     *painter,
                  int                 frame,
-                 texture_t           *tex,
-                 texture_t           *normalmap,
-                 double              uv[4][2],
+                 const double        mat[3][3],
                  int                 grid_size,
                  const projection_t  *tex_proj)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     int n, i, j, k;
-    double duvx[2], duvy[2];
     double p[4], normal[4] = {0}, tangent[4] = {0}, z, mv[4][4];
 
     // Positions of the triangles in the quads.
     const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
                                 {1, 1}, {1, 0}, {0, 1} };
-
-    tex = tex ?: rend->white_tex;
     n = grid_size + 1;
 
     item = calloc(1, sizeof(*item));
     item->type = ITEM_PLANET;
     gl_buf_alloc(&item->buf, &PLANET_BUF, n * n * 4);
     gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
-    item->tex = tex;
-    item->tex->ref++;
     vec4_to_float(painter->color, item->color);
     item->flags = painter->flags;
-    item->planet.normalmap = normalmap;
     item->planet.shadow_color_tex = painter->planet.shadow_color_tex;
     item->planet.contrast = painter->contrast;
     item->planet.shadow_spheres_nb = painter->planet.shadow_spheres_nb;
@@ -438,23 +434,33 @@ static void quad_planet(
     if (painter->flags & PAINTER_RING_SHADER)
         item->planet.material = 2; // Ring
 
-    vec2_sub(uv[1], uv[0], duvx);
-    vec2_sub(uv[2], uv[0], duvy);
+    // Set textures.
+    item->tex = painter->textures[PAINTER_TEX_COLOR].tex ?: rend->white_tex;
+    mat3_to_float(painter->textures[PAINTER_TEX_COLOR].mat,
+                  item->planet.tex_transf);
+    item->tex->ref++;
+    item->planet.normalmap = painter->textures[PAINTER_TEX_NORMAL].tex;
+    mat3_to_float(painter->textures[PAINTER_TEX_NORMAL].mat,
+                  item->planet.normal_tex_transf);
+    if (item->planet.normalmap) item->planet.normalmap->ref++;
+
+    // Only support POT textures for planets.
+    assert(item->tex->w == item->tex->tex_w &&
+           item->tex->h == item->tex->tex_h);
 
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
-        vec4_set(p, uv[0][0], uv[0][1], 0, 1);
-        vec2_addk(p, duvx, (double)j / grid_size, p);
-        vec2_addk(p, duvy, (double)i / grid_size, p);
-        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0] * tex->w / tex->tex_w,
-                                                p[1] * tex->h / tex->tex_h);
-
-        if (normalmap) {
+        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0], p[1]);
+        if (item->planet.normalmap) {
+            mat3_mul_vec3(mat, p, p);
             compute_tangent(p, tex_proj, tangent);
             mat4_mul_vec4(*painter->transform, tangent, tangent);
             gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
+        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
+        mat3_mul_vec3(mat, p, p);
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
 
         vec3_copy(p, normal);
@@ -489,9 +495,7 @@ static void quad_planet(
 static void quad(renderer_t          *rend_,
                  const painter_t     *painter,
                  int                 frame,
-                 texture_t           *tex,
-                 texture_t           *normalmap,
-                 double              uv[4][2],
+                 const double        mat[3][3],
                  int                 grid_size,
                  const projection_t  *tex_proj)
 {
@@ -500,14 +504,14 @@ static void quad(renderer_t          *rend_,
     int n, i, j, k, ofs;
     const int INDICES[6][2] = {
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
-    double p[4], tex_pos[2], duvx[2], duvy[2], ndc_p[4];
+    double p[4], tex_pos[2], ndc_p[4];
     float lum;
     double (*grid)[3] = NULL;
+    texture_t *tex = painter->textures[PAINTER_TEX_COLOR].tex;
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
-        return quad_planet(rend_, painter, frame, tex, normalmap,
-                           uv, grid_size, tex_proj);
+        return quad_planet(rend_, painter, frame, mat, grid_size, tex_proj);
 
     if (!tex) tex = rend->white_tex;
     n = grid_size + 1;
@@ -551,25 +555,24 @@ static void quad(renderer_t          *rend_,
     vec4_to_float(painter->color, item->color);
     item->flags = painter->flags;
 
-    vec2_sub(uv[1], uv[0], duvx);
-    vec2_sub(uv[2], uv[0], duvy);
-
     // If we use a 'normal' healpix projection for the texture, try
     // to get it directly from the cache to improve performances.
     if (    tex_proj->type == PROJ_HEALPIX &&
             tex_proj->at_infinity && tex_proj->swapped) {
-        grid = grid_cache_get(tex_proj->nside, tex_proj->pix, uv, grid_size);
+        grid = grid_cache_get(tex_proj->nside, tex_proj->pix, mat, grid_size);
     }
 
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
-        vec4_set(p, uv[0][0], uv[0][1], 0, 1);
-        vec2_addk(p, duvx, (double)j / grid_size, p);
-        vec2_addk(p, duvy, (double)i / grid_size, p);
+        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
+        mat3_mul_vec3(mat, p, p);
+        mat3_mul_vec3(painter->textures[PAINTER_TEX_COLOR].mat, p, p);
         tex_pos[0] = p[0] * tex->w / tex->tex_w;
         tex_pos[1] = p[1] * tex->h / tex->tex_h;
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
+        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
+        mat3_mul_vec3(mat, p, p);
         if (grid) {
             vec4_set(p, VEC3_SPLIT(grid[i * n + j]),
                      tex_proj->at_infinity ? 0.0 : 1.0);
@@ -611,7 +614,7 @@ static void quad(renderer_t          *rend_,
 static void quad_wireframe(renderer_t          *rend_,
                            const painter_t     *painter,
                            int                 frame,
-                           double              uv[4][2],
+                           const double        mat[3][3],
                            int                 grid_size,
                            const projection_t  *tex_proj)
 {
@@ -619,7 +622,7 @@ static void quad_wireframe(renderer_t          *rend_,
     int n, i, j;
     item_t *item;
     n = grid_size + 1;
-    double p[4], ndc_p[4], duvx[2], duvy[2];
+    double p[4], ndc_p[4];
 
     item = calloc(1, sizeof(*item));
     item->type = ITEM_QUAD_WIREFRAME;
@@ -627,16 +630,12 @@ static void quad_wireframe(renderer_t          *rend_,
     gl_buf_alloc(&item->indices, &INDICES_BUF, grid_size * n * 4);
     vec4_to_float(VEC(1, 0, 0, 0.25), item->color);
 
-    vec2_sub(uv[1], uv[0], duvx);
-    vec2_sub(uv[2], uv[0], duvy);
-
     // Generate grid position.
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
-        vec4_set(p, uv[0][0], uv[0][1], 0, 1);
-        vec2_addk(p, duvx, (double)j / grid_size, p);
-        vec2_addk(p, duvy, (double)i / grid_size, p);
+        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
+        mat3_mul_vec3(mat, p, p);
         project(tex_proj, PROJ_BACKWARD, 4, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
@@ -1131,7 +1130,10 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
                    item->planet.shadow_spheres_nb));
     GL(glUniformMatrix4fv(prog->u_shadow_spheres_l, 1, 0,
                           (void*)item->planet.shadow_spheres));
-
+    GL(glUniformMatrix3fv(prog->u_tex_transf_l, 1, 0,
+                          item->planet.tex_transf));
+    GL(glUniformMatrix3fv(prog->u_normal_tex_transf_l, 1, 0,
+                          item->planet.normal_tex_transf));
     GL(glUniform2f(prog->u_depth_range_l,
                    rend->depth_range[0], rend->depth_range[1]));
 
@@ -1189,6 +1191,8 @@ static void rend_flush(renderer_gl_t *rend)
             item_quad_wireframe_render(rend, item);
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
+        if (item->type == ITEM_PLANET)
+            texture_release(item->planet.normalmap);
         gl_buf_release(&item->buf);
         gl_buf_release(&item->indices);
         free(item);
@@ -1307,6 +1311,8 @@ static void init_prog(prog_t *p, const char *shader)
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
     UNIFORM(u_tex);
     UNIFORM(u_normal_tex);
+    UNIFORM(u_tex_transf);
+    UNIFORM(u_normal_tex_transf);
     UNIFORM(u_has_normal_tex);
     UNIFORM(u_material);
     UNIFORM(u_is_moon);

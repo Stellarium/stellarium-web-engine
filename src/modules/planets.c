@@ -481,7 +481,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_t painter = *painter_;
     texture_t *tex, *normalmap = NULL;
     projection_t proj;
-    double fade, uv[4][2];
+    double fade, uv[4][2], normal_uv[4][2];
     bool loaded;
 
     (*nb_tot)++;
@@ -492,7 +492,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
         // XXX: need to check if the UVs don't match.
         (*nb_tot)++;
         normalmap = hips_get_tile_texture(planet->hips_normalmap,
-                order, pix, 0, NULL, NULL, NULL, &loaded);
+                order, pix, flags, normal_uv, NULL, NULL, &loaded);
         if (loaded) (*nb_loaded)++;
     }
 
@@ -509,9 +509,10 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     if (planet->id == MOON)
         vec3_mul(1.8, painter.color, painter.color);
 
-    painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
-    painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, NULL);
-    paint_quad(&painter, FRAME_ICRF, uv, &proj, split);
+    painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
+    painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
+    projection_init_healpix(&proj, 1 << order, pix, true, false);
+    paint_quad(&painter, FRAME_ICRF, NULL, &proj, split);
     return 0;
 }
 

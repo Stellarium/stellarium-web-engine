@@ -54,16 +54,14 @@ struct renderer
     void (*quad)(renderer_t          *rend,
                  const painter_t     *painter,
                  int                 frame,
-                 texture_t           *tex,
-                 texture_t           *normalmap,
-                 double              uv[4][2],
+                 const double        mat[3][3],
                  int                 grid_size,
                  const projection_t  *tex_proj);
 
     void (*quad_wireframe)(renderer_t           *rend,
                            const painter_t      *painter,
                            int                  frame,
-                           double               uv[4][2],
+                           const double         mat[3][3],
                            int                  grid_size,
                            const projection_t   *tex_proj);
 

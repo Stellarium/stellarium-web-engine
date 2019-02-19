@@ -17,6 +17,8 @@ uniform lowp    vec4      u_color;
 uniform lowp    vec2      u_depth_range;
 uniform mediump sampler2D u_tex;
 uniform mediump sampler2D u_normal_tex;
+uniform mediump mat3      u_tex_transf;
+uniform mediump mat3      u_normal_tex_transf;
 uniform lowp    vec3      u_light_emit;
 uniform mediump mat4      u_mv;  // Model view matrix.
 uniform lowp    int       u_has_normal_tex;
@@ -32,6 +34,7 @@ uniform mediump mat4      u_shadow_spheres;
 
 varying highp   vec3 v_mpos;
 varying mediump vec2 v_tex_pos;
+varying mediump vec2 v_normal_tex_pos;
 varying lowp    vec4 v_color;
 varying highp   vec3 v_normal;
 varying highp   vec3 v_tangent;
@@ -52,7 +55,8 @@ void main()
     gl_Position.z = (gl_Position.z - u_depth_range[0]) /
                     (u_depth_range[1] - u_depth_range[0]);
     v_mpos = a_mpos.xyz;
-    v_tex_pos = a_tex_pos;
+    v_tex_pos = (u_tex_transf * vec3(a_tex_pos, 1.0)).xy;
+    v_normal_tex_pos = (u_normal_tex_transf * vec3(a_tex_pos, 1.0)).xy;
     v_color = vec4(a_color, 1.0) * u_color;
 
     v_normal = normalize(a_normal);
@@ -154,7 +158,7 @@ void main()
     // Compute N in view space
     vec3 n = v_normal;
     if (u_has_normal_tex != 0) {
-        n = texture2D(u_normal_tex, v_tex_pos).rgb - vec3(0.5, 0.5, 0.0);
+        n = texture2D(u_normal_tex, v_normal_tex_pos).rgb - vec3(0.5, 0.5, 0.0);
         // XXX: inverse the Y coordinates, don't know why!
         n = +n.x * v_tangent - n.y * v_bitangent + n.z * v_normal;
     }

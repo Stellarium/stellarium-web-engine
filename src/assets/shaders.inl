@@ -233,7 +233,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_glsl[6911] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -253,6 +253,8 @@ static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned
     "uniform lowp    vec2      u_depth_range;\n"
     "uniform mediump sampler2D u_tex;\n"
     "uniform mediump sampler2D u_normal_tex;\n"
+    "uniform mediump mat3      u_tex_transf;\n"
+    "uniform mediump mat3      u_normal_tex_transf;\n"
     "uniform lowp    vec3      u_light_emit;\n"
     "uniform mediump mat4      u_mv;  // Model view matrix.\n"
     "uniform lowp    int       u_has_normal_tex;\n"
@@ -268,6 +270,7 @@ static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned
     "\n"
     "varying highp   vec3 v_mpos;\n"
     "varying mediump vec2 v_tex_pos;\n"
+    "varying mediump vec2 v_normal_tex_pos;\n"
     "varying lowp    vec4 v_color;\n"
     "varying highp   vec3 v_normal;\n"
     "varying highp   vec3 v_tangent;\n"
@@ -288,7 +291,8 @@ static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned
     "    gl_Position.z = (gl_Position.z - u_depth_range[0]) /\n"
     "                    (u_depth_range[1] - u_depth_range[0]);\n"
     "    v_mpos = a_mpos.xyz;\n"
-    "    v_tex_pos = a_tex_pos;\n"
+    "    v_tex_pos = (u_tex_transf * vec3(a_tex_pos, 1.0)).xy;\n"
+    "    v_normal_tex_pos = (u_normal_tex_transf * vec3(a_tex_pos, 1.0)).xy;\n"
     "    v_color = vec4(a_color, 1.0) * u_color;\n"
     "\n"
     "    v_normal = normalize(a_normal);\n"
@@ -390,7 +394,7 @@ static const unsigned char DATA_shaders_planet_glsl[6675] __attribute__((aligned
     "    // Compute N in view space\n"
     "    vec3 n = v_normal;\n"
     "    if (u_has_normal_tex != 0) {\n"
-    "        n = texture2D(u_normal_tex, v_tex_pos).rgb - vec3(0.5, 0.5, 0.0);\n"
+    "        n = texture2D(u_normal_tex, v_normal_tex_pos).rgb - vec3(0.5, 0.5, 0.0);\n"
     "        // XXX: inverse the Y coordinates, don't know why!\n"
     "        n = +n.x * v_tangent - n.y * v_bitangent + n.z * v_normal;\n"
     "    }\n"

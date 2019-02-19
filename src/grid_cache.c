@@ -25,14 +25,14 @@ static cache_t *g_cache = NULL;
  * Parameters:
  *   nside      - Healpix pixel nside argument.
  *   pix        - Healpix pix.
- *   uv         - UV coordinates of a quad inside the healpix pixel.
+ *   mat        - UV coordinates of a quad inside the healpix pixel.
  *   split      - Number of splits to use for the grid.
  *
  * Return:
  *   A (split + 1)^2 grid of 3d positions.
  */
 const double (*grid_cache_get(int nside, int pix,
-                              const double uv[4][2],
+                              const double mat[3][3],
                               int split))[3]
 {
     int n = split + 1;
@@ -43,26 +43,23 @@ const double (*grid_cache_get(int nside, int pix,
         int pix;
         int split;
         int pad_;
-        double uv[4][2];
+        double mat[3][3];
     } key = { nside, pix, split };
     projection_t proj;
-    double p[4], duvx[2], duvy[2];
+    double p[4];
 
     projection_init_healpix(&proj, nside, pix, true, true);
 
-    vec2_sub(uv[1], uv[0], duvx);
-    vec2_sub(uv[2], uv[0], duvy);
-    _Static_assert(sizeof(key) == 80, "");
-    memcpy(key.uv, uv, sizeof(key.uv));
+    _Static_assert(sizeof(key) == 88, "");
+    memcpy(key.mat, mat, sizeof(key.mat));
     if (!g_cache) g_cache = cache_create(CACHE_SIZE);
     grid = cache_get(g_cache, &key, sizeof(key));
     if (grid) return grid;
     grid = calloc(n * n, sizeof(*grid));
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
-        vec4_set(p, uv[0][0], uv[0][1], 0, 1);
-        vec2_addk(p, duvx, (double)j / split, p);
-        vec2_addk(p, duvy, (double)i / split, p);
+        vec3_set(p, (double)j / split, (double)i / split, 1.0);
+        mat3_mul_vec3(mat, p, p);
         project(&proj, PROJ_BACKWARD, 4, p, p);
         grid[i * n + j][0] = p[0];
         grid[i * n + j][1] = p[1];
