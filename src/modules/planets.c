@@ -485,14 +485,12 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     bool loaded;
 
     (*nb_tot)++;
-    tex = hips_get_tile_texture(hips, order, pix, flags,
-                                uv, &proj, &fade, &loaded);
+    tex = hips_get_tile_texture(hips, order, pix, flags, uv, &fade, &loaded);
     if (loaded) (*nb_loaded)++;
     if (planet->hips_normalmap) {
-        // XXX: need to check if the UVs don't match.
         (*nb_tot)++;
         normalmap = hips_get_tile_texture(planet->hips_normalmap,
-                order, pix, flags, normal_uv, NULL, NULL, &loaded);
+                order, pix, flags, normal_uv, NULL, &loaded);
         if (loaded) (*nb_loaded)++;
     }
 
