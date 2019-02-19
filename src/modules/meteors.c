@@ -112,7 +112,7 @@ static void render_tail(const painter_t *painter,
         .backward   = tail_project,
     };
     mat3_copy(mat, proj.mat3); // XXX: remove that I guess.
-    paint_quad(painter, FRAME_ICRF, NULL, NULL, NULL, &proj, 8);
+    paint_quad(painter, FRAME_ICRF, NULL, &proj, 8);
 }
 
 static int meteor_render(const obj_t *obj, const painter_t *painter_)

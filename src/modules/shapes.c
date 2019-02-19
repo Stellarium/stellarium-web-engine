@@ -95,7 +95,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
 
 
     vec4_copy(circle->color, painter.color);
-    paint_quad(&painter, circle->frame, NULL, NULL, NULL, &proj, 64);
+    paint_quad(&painter, circle->frame, NULL, &proj, 64);
     if (selected) {
         painter.lines_width = 2;
         vec4_copy(white, painter.color);
@@ -210,7 +210,7 @@ static int rect_render(const obj_t *obj, const painter_t *painter_)
         .user       = obj,
     };
     vec4_copy(rect->color, painter.color);
-    paint_quad(&painter, rect->frame, NULL, NULL, NULL, &proj, 8);
+    paint_quad(&painter, rect->frame, NULL, &proj, 8);
     vec4_copy(rect->border_color, painter.color);
     paint_quad_contour(&painter, rect->frame, &proj, 8, 15);
     return 0;

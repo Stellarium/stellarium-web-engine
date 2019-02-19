@@ -509,7 +509,9 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     if (planet->id == MOON)
         vec3_mul(1.8, painter.color, painter.color);
 
-    paint_quad(&painter, FRAME_ICRF, tex, normalmap, uv, &proj, split);
+    painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
+    painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, NULL);
+    paint_quad(&painter, FRAME_ICRF, uv, &proj, split);
     return 0;
 }
 
@@ -553,7 +555,8 @@ static void render_rings(const planet_t *planet,
     painter.planet.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_RING_SHADER;
-    paint_quad(&painter, FRAME_ICRF, tex, NULL, NULL, &proj, 64);
+    painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
+    paint_quad(&painter, FRAME_ICRF, NULL, &proj, 64);
 }
 
 /*

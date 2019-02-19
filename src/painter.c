@@ -55,10 +55,13 @@ void painter_update_caps(const painter_t *painter)
     }
 }
 
-int paint_prepare(const painter_t *painter, double win_w, double win_h,
+int paint_prepare(painter_t *painter, double win_w, double win_h,
                   double scale)
 {
     PROFILE(paint_prepare, 0);
+    int i;
+    for (i = 0; i < ARRAY_SIZE(painter->textures); i++)
+        mat3_set_identity(painter->textures[i].mat);
     areas_clear_all(core->areas);
     REND(painter->rend, prepare, win_w, win_h, scale);
     return 0;
@@ -78,6 +81,30 @@ int paint_flush(const painter_t *painter)
     return 0;
 }
 
+/*
+ * Set the current painter texture.
+ *
+ * Parameters:
+ *   painter    - A painter struct.
+ *   slot       - The texture slot we want to set.  Can be one of:
+ *                PAINTER_TEX_COLOR or PAINTER_TEX_NORMAL.
+ *   uv         - The uv coordinates of the part of the texture we want to
+ *                use.  NULL for the default full texture.
+ */
+void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
+                         const double uv[4][2])
+{
+    assert(!painter->textures[slot].tex);
+    painter->textures[slot].tex = tex;
+    mat3_set_identity(painter->textures[slot].mat);
+    if (uv) {
+        vec2_sub(uv[1], uv[0], painter->textures[slot].mat[0]);
+        vec2_sub(uv[2], uv[0], painter->textures[slot].mat[1]);
+        vec2_copy(uv[0], painter->textures[slot].mat[2]);
+    }
+}
+
+
 int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 {
     PROFILE(paint_2d_points, PROFILE_AGGREGATE);
@@ -93,11 +120,9 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
                               void *user,
                               int s[2])
 {
-    texture_t *tex = USER_GET(user, 0);
-    texture_t *normalmap_tex = USER_GET(user, 1);
-    projection_t *tex_proj = USER_GET(user, 2);
-    int frame = *(int*)USER_GET(user, 3);
-    int grid_size = *(int*)USER_GET(user, 4);
+    projection_t *tex_proj = USER_GET(user, 0);
+    int frame = *(int*)USER_GET(user, 1);
+    int grid_size = *(int*)USER_GET(user, 2);
 
     if (step == 0) {
         if ((1 << node->level) > grid_size) return 0;
@@ -105,7 +130,7 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
     }
     if (step == 1) return 2;
     REND(painter->rend, quad, painter, frame,
-                        tex, normalmap_tex, uv,
+                        painter->textures[0].tex, painter->textures[1].tex, uv,
                         grid_size >> node->level,
                         tex_proj);
 
@@ -118,8 +143,6 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
 
 int paint_quad(const painter_t *painter,
                int frame,
-               texture_t *tex,
-               texture_t *normalmap_tex,
                const double uv[4][2],
                const projection_t *tex_proj,
                int grid_size)
@@ -127,13 +150,15 @@ int paint_quad(const painter_t *painter,
     PROFILE(paint_quad, PROFILE_AGGREGATE);
     const double DEFAULT_UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     qtree_node_t nodes[128];
-    if (tex && !texture_load(tex, NULL)) return 0;
+    if (painter->textures[PAINTER_TEX_COLOR].tex) {
+        if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
+            return 0;
+    }
     if (painter->color[3] == 0.0) return 0;
     uv = uv ?: DEFAULT_UV;
     traverse_surface(nodes, ARRAY_SIZE(nodes), uv, tex_proj,
                      painter, frame, 0,
-                     USER_PASS(tex, normalmap_tex, tex_proj,
-                               &frame, &grid_size),
+                     USER_PASS(tex_proj, &frame, &grid_size),
                      paint_quad_visitor);
     return 0;
 }

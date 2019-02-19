@@ -117,11 +117,12 @@ static int photo_render(const obj_t *obj, const painter_t *painter)
     proj.backward = proj_backward;
 
     if (!photo->render_shape) {
-        paint_quad(&painter2, FRAME_ICRF, photo->img, NULL, NULL, &proj, 4);
+        painter_set_texture(&painter2, PAINTER_TEX_COLOR, photo->img, NULL);
+        paint_quad(&painter2, FRAME_ICRF, NULL, &proj, 4);
     } else {
         paint_quad_contour(&painter2, FRAME_ICRF, &proj, 8, 15);
         painter2.color[3] *= 0.25;
-        paint_quad(&painter2, FRAME_ICRF, NULL, NULL, NULL, &proj, 8);
+        paint_quad(&painter2, FRAME_ICRF, NULL, &proj, 8);
     }
 
     return 0;

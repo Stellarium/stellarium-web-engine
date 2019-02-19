@@ -481,7 +481,8 @@ static int render_img(constellation_t *con, const painter_t *painter)
     painter2.color[3] *= 0.4 * con->image_loaded_fader.value;
     mat3_copy(con->mat, proj.mat3);
     proj.backward = proj_backward;
-    paint_quad(&painter2, FRAME_ICRF, con->img, NULL, NULL, &proj, 4);
+    painter_set_texture(&painter2, PAINTER_TEX_COLOR, con->img, NULL);
+    paint_quad(&painter2, FRAME_ICRF, NULL, &proj, 4);
     return 0;
 }
 

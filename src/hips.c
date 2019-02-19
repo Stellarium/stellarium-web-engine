@@ -444,7 +444,8 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     if (loaded) (*nb_loaded)++;
     if (!tex) return 0;
     painter.color[3] *= fade;
-    paint_quad(&painter, hips->frame, tex, NULL, uv, &proj, split);
+    painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
+    paint_quad(&painter, hips->frame, uv, &proj, split);
     return 0;
 }
 

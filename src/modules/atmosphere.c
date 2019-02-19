@@ -212,7 +212,7 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
     split = 4; // Adhoc split value to look good while not being too slow.
     projection_t proj;
     projection_init_healpix(&proj, 1 << order, pix, true, true);
-    paint_quad(painter, FRAME_OBSERVED, NULL, NULL, NULL, &proj, split);
+    paint_quad(painter, FRAME_OBSERVED, NULL, &proj, split);
 }
 
 static int atmosphere_render(const obj_t *obj, const painter_t *painter_)

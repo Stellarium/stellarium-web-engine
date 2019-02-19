@@ -137,6 +137,11 @@ enum {
     PAINTER_FOG_SHADER          = 1 << 9,
 };
 
+enum {
+    PAINTER_TEX_COLOR = 0,
+    PAINTER_TEX_NORMAL = 1,
+};
+
 struct painter
 {
     renderer_t      *rend;          // The render used.
@@ -164,6 +169,12 @@ struct painter
     double          lines_stripes;
     double          points_smoothness;
     double          (*depth_range)[2]; // If set use depth test.
+
+    struct {
+        int type;
+        texture_t *tex;
+        double mat[3][3];
+    } textures[2];
 
     // Viewport caps for fast clipping test.
     // The cap is defined as the vector xyzw with xyz the observer viewing
@@ -204,10 +215,23 @@ struct painter
     };
 };
 
-int paint_prepare(const painter_t *painter, double win_w, double win_h,
+int paint_prepare(painter_t *painter, double win_w, double win_h,
                   double scale);
 int paint_finish(const painter_t *painter);
 int paint_flush(const painter_t *painter);
+
+/*
+ * Set the current painter texture.
+ *
+ * Parameters:
+ *   painter    - A painter struct.
+ *   slot       - The texture slot we want to set.  Can be one of:
+ *                PAINTER_TEX_COLOR or PAINTER_TEX_NORMAL.
+ *   uv         - The uv coordinates of the part of the texture we want to
+ *                use.  NULL for the default full texture.
+ */
+void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
+                         const double uv[4][2]);
 
 /* Function: paint_2d_points
  *
@@ -238,8 +262,6 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points);
  */
 int paint_quad(const painter_t *painter,
                int frame,
-               texture_t *tex,
-               texture_t *normalmap_tex,
                const double uv[4][2],
                const projection_t *proj,
                int grid_size);
