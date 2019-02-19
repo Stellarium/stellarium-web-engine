@@ -30,7 +30,6 @@ typedef struct atmosphere {
     struct {
         texture_t       *tex;
         float           (*buf)[3];  // color buffer (in xyY).
-        int             border;
         bool            visible;
     } tiles[12];
     fader_t         visible;
