@@ -90,7 +90,6 @@ obj_t *obj_create(const char *type, const char *id, obj_t *parent,
 {
     obj_t *obj;
     obj_klass_t *klass;
-    const char *nsid_str;
 
     for (klass = g_klasses; klass; klass = klass->next) {
         if (klass->id && strcmp(klass->id, type) == 0) break;
@@ -98,13 +97,6 @@ obj_t *obj_create(const char *type, const char *id, obj_t *parent,
     }
     assert(klass);
     obj = obj_create_(klass, id, parent, args);
-    // Special handling for nsid... Eventually it should be passed as
-    // an argument like the id?
-    if (args && (nsid_str = json_get_attr_s(args, "nsid"))) {
-        obj->nsid = strtoull(nsid_str, NULL, 16);
-        // Use it as default id if none has been set.
-        if (!obj->id) asprintf(&obj->id, "NSID %016" PRIx64, obj->nsid);
-    }
     return obj;
 }
 
@@ -201,15 +193,6 @@ const char *obj_get_id(const obj_t *obj)
     return obj->id;
 }
 
-// Return the object nsid as a hex string.
-// If the object doesn't have an nsid, return an empty string.
-EMSCRIPTEN_KEEPALIVE
-void obj_get_nsid_str(const obj_t *obj, char out[32])
-{
-    if (obj->nsid) sprintf(out, "%016" PRIx64, obj->nsid);
-    else out[0] = '\0';
-}
-
 static int on_name(const obj_t *obj, void *user,
                    const char *cat, const char *value)
 {
@@ -230,7 +213,7 @@ int obj_get_designations(const obj_t *obj, void *user,
                   void (*f)(const obj_t *obj, void *user,
                             const char *cat, const char *value))
 {
-    const char *cat, *value, buf[128];
+    const char *cat, *value;
     int nb = 0;
     if (obj->klass->get_designations)
         obj->klass->get_designations(obj, USER_PASS(f, user, &nb), on_name);
@@ -240,11 +223,6 @@ int obj_get_designations(const obj_t *obj, void *user,
             f(obj, user, cat, value);
             nb++;
         }
-    }
-    if (obj->nsid) {
-        sprintf(buf, "%016" PRIx64, obj->nsid);
-        f(obj, user, "NSID", buf);
-        nb++;
     }
     return nb;
 }

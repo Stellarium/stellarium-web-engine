@@ -13,11 +13,7 @@ Module.afterInit(function() {
     'number', ['number', 'string', 'string']);
   var obj_get = Module.cwrap('obj_get',
     'number', ['number', 'string', 'number']);
-  var obj_get_by_nsid_str = Module.cwrap('obj_get_by_nsid_str',
-    'number', ['number', 'string']);
   var obj_get_id = Module.cwrap('obj_get_id', 'string', ['number']);
-  var obj_get_nsid_str = Module.cwrap('obj_get_nsid_str',
-    'void', ['number', 'number']);
   var module_add = Module.cwrap('module_add', null, ['number', 'number']);
   var module_get_tree = Module.cwrap('module_get_tree', 'number',
     ['number', 'number']);
@@ -167,17 +163,6 @@ Module.afterInit(function() {
     }
   })
 
-  // Add nsid property
-  Object.defineProperty(SweObj.prototype, 'nsid', {
-    get: function() {
-      var p = Module._malloc(17)
-      obj_get_nsid_str(this.v, p)
-      var ret = Module.Pointer_stringify(p)
-      Module._free(p)
-      return ret
-    }
-  })
-
   // Add path property to the objects.
   Object.defineProperty(SweObj.prototype, 'path', {
     get: function() {
@@ -224,15 +209,6 @@ Module.afterInit(function() {
   Module['getObj'] = function(name) {
     if (name instanceof Array) name = name.join('|');
     var obj = obj_get(0, name, 0);
-    return obj ? new SweObj(obj) : null;
-  };
-
-  // Return a child object by nsid.
-  //
-  // Inputs:
-  //  nsid     NSID as a 16 bytes hex string.
-  Module['getObjByNSID'] = function(nsid) {
-    var obj = obj_get_by_nsid_str(0, nsid);
     return obj ? new SweObj(obj) : null;
   };
 

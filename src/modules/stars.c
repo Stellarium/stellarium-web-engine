@@ -310,7 +310,6 @@ static star_t *star_create(const star_data_t *data)
     star = (star_t*)obj_create("star", NULL, NULL, NULL);
     strcpy(star->obj.type, "*");
     star->data = *data;
-    star->obj.nsid = star->data.gaia;
     star->obj.oid = star->data.oid;
     star_update(&star->obj, core->observer, 0);
     return star;

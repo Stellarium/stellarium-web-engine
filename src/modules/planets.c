@@ -917,13 +917,6 @@ static planet_t *planet_get_by_name(planets_t *planets, const char *name)
     return planet;
 }
 
-static uint64_t compute_nsid(const char *name)
-{
-    uint64_t crc;
-    crc = crc32(0L, (const Bytef*)name, strlen(name));
-    return (1ULL << 63) | (201326592ULL << 35) | (crc & 0xffffffff);
-}
-
 // Parse an orbit line as returned by HORIZONS online service.
 static int parse_orbit(planet_t *p, const char *v)
 {
@@ -967,7 +960,6 @@ static int planets_ini_handler(void* user, const char* section,
         strcpy(name, section);
         name[0] += 'A' - 'a';
         planet->name = strdup(name);
-        planet->obj.nsid = compute_nsid(name);
         if (strcmp(id, "SUN") == 0) planets->sun = planet;
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
         planet->update_delta_s = 1.f + 1.f * rand() * 1.f / RAND_MAX;

@@ -39,7 +39,7 @@ typedef struct {
         };
         dso_clip_data_t clip_data;
     };
-    uint64_t nsid;
+    uint64_t nsid; // To remove.
     char        type[4];
     float       ra;     // ra equ J2000
     float       de;     // de equ J2000
@@ -131,7 +131,6 @@ static dso_t *dso_create(const dso_data_t *data)
     dso = (dso_t*)obj_create("dso", NULL, NULL, NULL);
     dso->data = *data;
     memcpy(&dso->obj.type, data->type, 4);
-    dso->obj.nsid = data->nsid;
     dso->obj.oid = data->oid;
     dso->obj.vmag = data->vmag;
     dso_update(&dso->obj, core->observer, 0);
@@ -623,18 +622,6 @@ static obj_t *dsos_get(const obj_t *obj, const char *id, int flags)
     return d.ret;
 }
 
-static obj_t *dsos_get_by_nsid(const obj_t *obj, uint64_t nsid)
-{
-    struct {
-        dsos_t      *dsos;
-        obj_t       *ret;
-        int         cat;
-        uint64_t    n;
-    } d = {.dsos=(void*)obj, .cat=3, .n=nsid};
-    hips_traverse(&d, dsos_get_visitor);
-    return d.ret;
-}
-
 static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     struct {
@@ -730,7 +717,6 @@ static obj_klass_t dsos_klass = {
     .render = dsos_render,
     .get    = dsos_get,
     .get_by_oid  = dsos_get_by_oid,
-    .get_by_nsid = dsos_get_by_nsid,
     .list   = dsos_list,
     .add_data_source = dsos_add_data_source,
     .render_order = 25,

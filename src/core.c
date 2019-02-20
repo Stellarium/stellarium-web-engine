@@ -51,7 +51,7 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
 {
     obj_t *module;
     obj_t *ret;
-    uint64_t oid, nsid;
+    uint64_t oid;
     DL_FOREACH(core->obj.children, module) {
         if (module->id && strcmp(module->id, id) == 0) return module;
         ret = obj_get(module, id, flags);
@@ -64,9 +64,6 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
             if (ret) return ret;
         }
     }
-    // Special case for nsid.
-    if (sscanf(id, "NSID %" PRIx64, &nsid) == 1)
-        return obj_get_by_nsid(obj, nsid);
     return NULL;
 }
 
@@ -104,17 +101,6 @@ static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     obj_t *ret;
     DL_FOREACH(core->obj.children, module) {
         ret = obj_get_by_oid(module, oid, hint);
-        if (ret) return ret;
-    }
-    return NULL;
-}
-
-static obj_t *core_get_by_nsid(const obj_t *obj, uint64_t nsid)
-{
-    obj_t *module;
-    obj_t *ret;
-    DL_FOREACH(core->obj.children, module) {
-        ret = obj_get_by_nsid(module, nsid);
         if (ret) return ret;
     }
     return NULL;
@@ -1026,7 +1012,6 @@ static obj_klass_t core_klass = {
     .flags = OBJ_IN_JSON_TREE,
     .get = core_get,
     .get_by_oid = core_get_by_oid,
-    .get_by_nsid = core_get_by_nsid,
     .list = core_list,
     .add_data_source = core_add_data_source,
     .attributes = (attribute_t[]) {

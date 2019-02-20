@@ -85,7 +85,6 @@ typedef struct obj_klass obj_klass_t;
  *                 valid OpenGL context. Useful for e.g. GUI rendering.
  *   clone  - Create a copy of the object.
  *   get    - Find a sub-object for a given query.
- *   get_by_nsid - Find a sub-object for a given nsid.
  *   get_by_oid  - Find a sub-object for a given oid.
  *
  * Module Attributes:
@@ -120,8 +119,6 @@ struct obj_klass
 
     // Find a sky object given an id.
     obj_t *(*get)(const obj_t *obj, const char *id, int flags);
-    // Find a sky object given a NSID.
-    obj_t *(*get_by_nsid)(const obj_t *obj, uint64_t nsid);
     // Find a sky object given an oid
     obj_t *(*get_by_oid)(const obj_t *obj, uint64_t oid, uint64_t hint);
 
@@ -171,7 +168,6 @@ struct obj_klass
  *   ref        - Reference counter.
  *   id         - String id of the object.
  *   oid        - Internal uniq id.
- *   nsid       - Noctuasky internal id if defined, or zero.
  *   type       - Four bytes type id of the object.  Should follow the
  *                condensed values defined by Simbad:
  *                http://simbad.u-strasbg.fr/simbad/sim-display?data=otypes
@@ -193,7 +189,6 @@ struct obj
     int         ref;
     char        *id;    // To be removed.  Use oid instead.
     uint64_t    oid;
-    uint64_t    nsid;
     char        type[4];
     char        type_padding_; // Ensure that type is null terminated.
     obj_t       *parent;

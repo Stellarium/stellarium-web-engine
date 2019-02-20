@@ -60,8 +60,6 @@ var testSearch = function(stel) {
   // Search from multiple idents.
   obj = stel.getObj(['NO RESULT', 'jupiter']);
   assert(obj);
-  obj = stel.getObjByNSID('0');
-  assert(obj === null);
 }
 
 var testCloneObserver = function(stel) {
@@ -150,8 +148,6 @@ var testCreate = function(stel) {
     },
     names: ['NAME 1', 'NAME 2', 'NAME_SINGLE']
   });
-  assert(obj1.nsid == '0000000beefbeef1');
-  assert(obj1.names().includes('NSID 0000000beefbeef1'));
   assert(obj1.names().includes('NAME 1'));
   assert(obj1.names().includes('NAME 2'));
   assert(obj1.names().includes('NAME_SINGLE'));
@@ -168,8 +164,6 @@ var testCreate = function(stel) {
       ]
     }
   });
-  assert(obj2.nsid == '0000000beefbeef2');
-  assert(obj2.names().includes('NSID 0000000beefbeef2'));
 
   var obj3 = stel.createObj('mpc_asteroid', {
     "interest": 3.6,
@@ -219,10 +213,6 @@ var testCreate = function(stel) {
 
   layer.add(obj1);
   layer.add(obj2);
-  assert(stel.getObjByNSID('0000000beefbeef1'));
-  assert(stel.getObjByNSID('0000000beefbeef2'));
-  assert(stel.getObj('NSID 0000000beefbeef1'));
-  assert(stel.getObj('NSID 0000000beefbeef2'));
 }
 
 var testPositions = function(stel) {

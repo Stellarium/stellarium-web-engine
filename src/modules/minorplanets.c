@@ -49,17 +49,6 @@ typedef struct mplanets {
 } mplanets_t;
 
 
-// Compute nsid following the same algo as noctuasky.
-static uint64_t compute_nsid(int number, const char *name, const char *desig)
-{
-    uint64_t crc;
-    char hash_string[32];
-    if (number) sprintf(hash_string, "(%d) %s", number, name ?: desig);
-    else sprintf(hash_string, "%s", desig);
-    crc = crc32(0L, (const Bytef*)hash_string, strlen(hash_string));
-    return (1ULL << 63) | (201326592ULL << 35) | (crc & 0xffffffff);
-}
-
 static uint64_t compute_oid(int number, const char desig[static 22])
 {
     if (number) return oid_create("MPl", number);
@@ -141,9 +130,7 @@ static void load_data(mplanets_t *mplanets, const char *data)
         orbit_type = flags & 0x3f;
         strcpy(mplanet->obj.type, ORBIT_TYPES[orbit_type]);
         mplanet->mpl_number = number;
-        mplanet->obj.nsid = compute_nsid(number, name, desig);
         mplanet->obj.oid = compute_oid(number, desig);
-        if (number == 1) assert(mplanet->obj.nsid == 0xe00000005e96387dL);
         if (name[0]) {
             _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
             memcpy(mplanet->name, name, sizeof(name));

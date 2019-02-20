@@ -81,7 +81,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     obj_t *child;
     char *sep;
     char tmp[128];
-    uint64_t nsid;
 
     assert(flags == 0);
 
@@ -93,10 +92,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
         if (child) return child;
         query = sep + 1;
     }
-
-    // Special case for nsid.
-    if (sscanf(query, "NSID %" PRIx64, &nsid) == 1)
-        return obj_get_by_nsid(obj, nsid);
 
     // Default to core if we passed NULL.
     obj = obj ?: &core->obj;
@@ -114,25 +109,6 @@ obj_t *obj_get(const obj_t *obj, const char *query, int flags)
     return obj->klass->get(obj, query, flags);
 }
 
-// Find an object by its nsid.
-obj_t *obj_get_by_nsid(const obj_t *obj, uint64_t nsid)
-{
-    obj_t *child;
-    obj = obj ?: (obj_t*)core;
-    if (!nsid) return NULL;
-    if (obj->klass->get_by_nsid)
-        return obj->klass->get_by_nsid(obj, nsid);
-    // Default algo: search all the children.
-    // XXX: remove that: let the modules
-    DL_FOREACH(obj->children, child) {
-        if (child->nsid == nsid) {
-            child->ref++;
-            return child;
-        }
-    }
-    return NULL;
-}
-
 // Find an object by its oid.
 obj_t *obj_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
@@ -140,14 +116,6 @@ obj_t *obj_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     if (obj->klass->get_by_oid)
         return obj->klass->get_by_oid(obj, oid, hint);
     return NULL;
-}
-
-EMSCRIPTEN_KEEPALIVE
-obj_t *obj_get_by_nsid_str(const obj_t *obj, const char *nsid_str)
-{
-    uint64_t nsid;
-    nsid = strtoull(nsid_str, NULL, 16);
-    return obj_get_by_nsid(obj, nsid);
 }
 
 // For modules: return the order in which the modules should be rendered.
