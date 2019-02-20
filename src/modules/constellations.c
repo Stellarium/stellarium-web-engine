@@ -103,10 +103,6 @@ static int constellation_init(obj_t *obj, json_value *args)
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
-    identifiers_add("CST", info->id, cons->obj.oid, 0, "Con ", 0,
-                    NULL, NULL);
-    identifiers_add("NAME", info->name, cons->obj.oid, 0, "Con ", 0,
-                    NULL, NULL);
     constellation_update(obj, core->observer, 0);
     return 0;
 }
@@ -398,6 +394,14 @@ static void constellation_del(obj_t *obj)
     free(con->name_translated);
 }
 
+static void constellation_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
+{
+    constellation_t *cst = (void*)obj;
+    f(obj, user, "NAME", cst->name);
+}
+
 // Project from uv to the sphere.
 static void proj_backward(const projection_t *proj, int flags,
                           const double *v, double *out)
@@ -575,6 +579,7 @@ static obj_klass_t constellation_klass = {
     .render         = constellation_render,
     .render_pointer = constellation_render_pointer,
     .del            = constellation_del,
+    .get_designations = constellation_get_designations,
     .attributes     = (attribute_t[]) {
         // Default properties.
         INFO(name),
@@ -590,7 +595,7 @@ OBJ_REGISTER(constellation_klass)
 static obj_klass_t constellations_klass = {
     .id = "constellations",
     .size = sizeof(constellations_t),
-    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .flags = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init = constellations_init,
     .update = constellations_update,
     .render = constellations_render,
