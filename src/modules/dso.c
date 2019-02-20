@@ -92,13 +92,6 @@ typedef struct {
     hips_t      *survey;
 } dsos_t;
 
-static char *make_id(const dso_data_t *data, char buff[128])
-{
-    assert(data->nsid);
-    sprintf(buff, "NSID %" PRIu64, data->nsid);
-    return buff;
-}
-
 static uint64_t pix_to_nuniq(int order, int pix)
 {
     return pix + 4 * (1L << (2 * order));
@@ -135,9 +128,7 @@ static int dso_update(obj_t *obj, const observer_t *obs, double dt)
 static dso_t *dso_create(const dso_data_t *data)
 {
     dso_t *dso;
-    char buff[128];
-    if (data->nsid) sprintf(buff, "NSID %" PRIu64,  data->nsid);
-    dso = (dso_t*)obj_create("dso", make_id(data, buff), NULL, NULL);
+    dso = (dso_t*)obj_create("dso", NULL, NULL, NULL);
     dso->data = *data;
     memcpy(&dso->obj.type, data->type, 4);
     dso->obj.nsid = data->nsid;
