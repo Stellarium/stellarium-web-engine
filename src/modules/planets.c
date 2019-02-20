@@ -96,12 +96,6 @@ typedef struct planets {
 
 
 static int planet_update_(planet_t *planet, const observer_t *obs);
-static int planet_update(obj_t *obj, const observer_t *obs, double dt);
-static planet_t *planet_get_by_name(planets_t *planets, const char *name);
-static int planets_init(obj_t *obj, json_value *args);
-static int planets_update(obj_t *obj, const observer_t *obs, double dt);
-static int planets_render(const obj_t *obj, const painter_t *painter);
-static obj_t *planets_get(const obj_t *obj, const char *id, int flags);
 
 /*
  * List of known bodies id.
