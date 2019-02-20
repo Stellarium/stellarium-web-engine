@@ -100,6 +100,7 @@ static void add_cities(cities_t *cities)
     while (pos && *pos) {
 #define TOK(d, s) ({char *r = d; d = strchr(d, s); *d++ = '\0'; r;})
         name = TOK(pos, '\t');
+        (void)name;
         asciiname = TOK(pos, '\t');
         str_to_upper(asciiname, asciiname_upper);
         lat = atof(TOK(pos, '\t'));
@@ -117,9 +118,6 @@ static void add_cities(cities_t *cities)
         city->longitude = lon * DD2R;
         city->latitude = lat * DD2R;
         city->elevation = el;
-        sprintf(id, "%s (%s)", name, country_code);
-        identifiers_add("NAME", id, city->obj.oid, 0, "CITY", 0,
-                        asciiname_upper, id);
 #undef TOK
     }
     free(data);
@@ -134,7 +132,7 @@ obj_t *city_create(const char *name, const char *country_code,
                    double nearby)
 {
     obj_t *cities = core_get_module("cities");
-    char id[256], namebuf[256], asciiname_upper[256];
+    char id[256], asciiname_upper[256];
     double dist, best_dist = FLT_MAX;
     const double EARTH_RADIUS_KM = 6371;
     city_t *city, *best = NULL;
@@ -168,9 +166,6 @@ obj_t *city_create(const char *name, const char *country_code,
     city->elevation = elevation;
     str_to_upper(name, asciiname_upper);
     city->obj.oid = oid_create("CITY", crc32(0, (void*)id, strlen(id)));
-    sprintf(namebuf, "%s (%s)", name, country_code);
-    identifiers_add("NAME", namebuf, city->obj.oid, 0, "CITY", 0,
-                    asciiname_upper, id);
     return &city->obj;
 }
 
@@ -179,7 +174,6 @@ obj_t *city_create(const char *name, const char *country_code,
 static void test_cities(void)
 {
     obj_t *cities, *city;
-    const char *name;
     const char tz[64];
     double lat;
 
@@ -188,8 +182,6 @@ static void test_cities(void)
     assert(cities);
     city = module_get_child(cities, "CITY GB LONDON");
     assert(city);
-    name = identifiers_get(city->oid, "NAME");
-    test_str(name, "London (GB)");
     obj_get_attr(city, "timezone", tz);
     test_str(tz, "Europe/London");
     obj_get_attr(city, "latitude", &lat);
