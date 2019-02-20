@@ -111,10 +111,6 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         sat->elsetrec = sgp4_twoline2rv(
                 line1, line2, 'c', 'm', 'i',
                 &startmfe, &stopmfe, &deltamin);
-
-        // Register the name in the global ids db.
-        identifiers_add("NAME", sat->name, sat->obj.oid, 0, "Asa ",
-                        sat->stdmag, NULL, NULL);
         nb++;
     }
     return nb;
@@ -382,14 +378,16 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-void satellite_get_designations(
+static void satellite_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user,
              const char *cat, const char *str))
 {
+    satellite_t *sat = (void*)obj;
     char buf[32];
     sprintf(buf, "%05d", (int)(obj->oid));
     f(obj, user, "NORAD", buf);
+    f(obj, user, "NAME", sat->name);
 }
 
 /*
@@ -421,7 +419,7 @@ OBJ_REGISTER(satellite_klass)
 static obj_klass_t satellites_klass = {
     .id             = "satellites",
     .size           = sizeof(satellites_t),
-    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init           = satellites_init,
     .add_data_source = satellites_add_data_source,
     .render_order   = 30,
