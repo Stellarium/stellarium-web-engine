@@ -112,20 +112,6 @@ static void search_widget(void)
     static char buf[128];
     const char *suggestions[9] = {};
     obj_t *obj;
-    char can[128];
-    int i = 0;
-    const char *cat, *canv, *value;
-    uint64_t oid;
-    if (strlen(buf) >= 3) {
-        identifiers_make_canonical(buf, can, sizeof(can));
-        IDENTIFIERS_ITER(0, NULL, &oid, NULL, &cat, NULL, &canv, &value,
-                         NULL, NULL) {
-            if (oid_is_catalog(oid, "CITY")) continue;
-            if (!strstr(canv, can)) continue;
-            suggestions[i++] = value;
-            if (i >= ARRAY_SIZE(suggestions) - 1) break;
-        }
-    }
     if (gui_input("Search", buf, 128, suggestions)) {
         obj = obj_get(NULL, buf, 0);
         if (obj) {
@@ -133,39 +119,6 @@ static void search_widget(void)
             obj_update(obj, core->observer, 0);
             obj_set_attr(&core->obj, "selection", obj);
             obj_set_attr(&core->obj, "lock", obj);
-        }
-    }
-}
-
-static void city_widget(void)
-{
-    static char buf[128];
-    char can[128];
-    int i = 0;
-    const char *value, *canv;
-    const char *suggestions[9] = {};
-    uint64_t oid;
-    obj_t *city;
-
-    if (strlen(buf) >= 3) {
-        identifiers_make_canonical(buf, can, sizeof(can));
-        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, NULL, &canv, &value,
-                         NULL, NULL) {
-            if (!oid_is_catalog(oid, "CITY")) continue;
-            if (!strstr(canv, can)) continue;
-            suggestions[i++] = value;
-            if (i >= ARRAY_SIZE(suggestions) - 1) break;
-        }
-    }
-
-    if (gui_input("City", buf, 128, suggestions)) {
-        IDENTIFIERS_ITER(0, "NAME", &oid, NULL, NULL, NULL, NULL, &value,
-                         NULL, NULL) {
-            if (oid_is_catalog(oid, "CITY") && str_equ(value, buf)) {
-                city = obj_get_by_oid(NULL, oid, 0);
-                obj_set_attr(&core->observer->obj, "city", city);
-                break;
-            }
         }
     }
 }
@@ -209,7 +162,6 @@ static void menu_main(void *user)
     }
 
     if (gui_tab("Observer")) {
-        city_widget();
         obj_get_attr(&core->obj, "fov", &f);
         f *= DR2D;
         if (gui_double("FOV", &f, 0.1, 360, 1, NAN)) {

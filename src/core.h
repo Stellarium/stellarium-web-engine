@@ -13,7 +13,6 @@
 #include "calendar.h"
 #include "events.h"
 #include "frames.h"
-#include "identifiers.h"
 #include "labels.h"
 #include "projection.h"
 #include "skyculture.h"

@@ -51,18 +51,10 @@ static obj_t *core_get(const obj_t *obj, const char *id, int flags)
 {
     obj_t *module;
     obj_t *ret;
-    uint64_t oid;
     DL_FOREACH(core->obj.children, module) {
         if (module->id && strcmp(module->id, id) == 0) return module;
         ret = obj_get(module, id, flags);
         if (ret) return ret;
-    }
-    oid = identifiers_search(id);
-    if (oid) {
-        DL_FOREACH(core->obj.children, module) {
-            ret = obj_get_by_oid(module, oid, 0);
-            if (ret) return ret;
-        }
     }
     return NULL;
 }
@@ -280,7 +272,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
     texture_set_load_callback(NULL, texture_load_function);
     sprintf(cache_dir, "%s/%s", sys_get_user_dir(), ".cache");
     request_init(cache_dir);
-    identifiers_init();
 
     core = (core_t*)obj_create("core", "core", NULL, NULL);
     core->win_size[0] = win_w;

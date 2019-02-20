@@ -213,17 +213,9 @@ int obj_get_designations(const obj_t *obj, void *user,
                   void (*f)(const obj_t *obj, void *user,
                             const char *cat, const char *value))
 {
-    const char *cat, *value;
     int nb = 0;
     if (obj->klass->get_designations)
         obj->klass->get_designations(obj, USER_PASS(f, user, &nb), on_name);
-    if (obj->oid) {
-        IDENTIFIERS_ITER(obj->oid, NULL, NULL, NULL, &cat, &value, NULL, NULL,
-                         NULL, NULL) {
-            f(obj, user, cat, value);
-            nb++;
-        }
-    }
     return nb;
 }
 
