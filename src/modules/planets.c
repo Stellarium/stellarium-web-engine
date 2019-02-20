@@ -472,6 +472,15 @@ static int planet_update(obj_t *obj, const observer_t *obs, double dt)
     return 0;
 }
 
+static void planet_get_designations(
+    const obj_t *obj, void *user,
+    int (*f)(const obj_t *obj, void *user,
+             const char *cat, const char *str))
+{
+    planet_t *planet = (void*)obj;
+    f(obj, user, "NAME", planet->name);
+}
+
 static int on_render_tile(hips_t *hips, const painter_t *painter_,
                           int order, int pix, int split, int flags, void *user)
 {
@@ -1043,13 +1052,6 @@ static int planets_init(obj_t *obj, json_value *args)
     assert(planets->sun);
     assert(planets->earth);
 
-    // Add name identifiers:
-    PLANETS_ITER(planets, p) {
-        if (!p->obj.oid || !p->name) continue;
-        identifiers_add("NAME", p->name, p->obj.oid, 0, p->obj.type,
-                        p->obj.vmag, NULL, NULL);
-    }
-
     // Add rings textures from assets.
     regcomp(&reg, "^.*/([^/]+)_rings.png$", REG_EXTENDED);
     ASSET_ITER("asset://textures/", path) {
@@ -1133,6 +1135,7 @@ static obj_klass_t planet_klass = {
     .model = "jpl_sso",
     .size = sizeof(planet_t),
     .update = planet_update,
+    .get_designations = planet_get_designations,
     .attributes = (attribute_t[]) {
         INFO(name),
         INFO(radec),
