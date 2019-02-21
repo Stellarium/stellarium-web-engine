@@ -468,9 +468,12 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
             opacity *= smoothstep(400, 120, max(win_size[0], win_size[1]));
             vec4_set(color, 0.5, 0.5, 0.5, opacity);
         }
-        if (color[3] > 0.05)
+        if (color[3] > 0.05) {
+            if (isnan(s2->angle) || s2->smin == 0 || s2->smin == s2->smax)
+                win_angle = 0;
             symbols_paint(&tmp_painter, s2->symbol, win_pos, win_size, color,
-                      win_angle);
+                          win_angle);
+        }
     }
 
     if (vmag <= hints_limit_mag - 1.5) {
