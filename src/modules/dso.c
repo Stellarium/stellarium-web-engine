@@ -425,7 +425,9 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 
     // Special case for Open Clusters, for which the limiting magnitude
     // is more like the one for a star.
-    if (s2->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER) {
+    if (s2->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER ||
+        s2->symbol == SYMBOL_CLUSTER_OF_STARS ||
+        s2->symbol == SYMBOL_MULTIPLE_DEFAULT) {
         hints_limit_mag = painter->hints_limit_mag - 3;
     }
 
