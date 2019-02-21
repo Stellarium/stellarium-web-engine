@@ -726,7 +726,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
 
     // Skip if we already know that this tile doesn't exists.
     if (order > hips->order_min) {
-        parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
+        parent = hips_get_tile_(hips, order - 1, pix / 4, flags, &parent_code);
         if (!parent) return NULL; // Always get parent first.
         if (parent->flags & (TILE_NO_CHILD_0 << (pix % 4))) {
             *code = 404;
@@ -744,7 +744,8 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     // won't have to search for it again.
     if ((*code) / 100 == 4) {
         if (order > hips->order_min) {
-            parent = hips_get_tile_(hips, order - 1, pix / 4, 0, &parent_code);
+            parent = hips_get_tile_(hips, order - 1, pix / 4, flags,
+                                    &parent_code);
             if (parent) parent->flags |= (TILE_NO_CHILD_0 << (pix % 4));
         }
         return NULL;
