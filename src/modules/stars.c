@@ -205,9 +205,15 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     }
     radius += LABEL_SPACING;
 
-    // First try the current skyculture name.
-    skycultures = core_get_module("skycultures");
-    name = skycultures_get_name(skycultures, s->oid, buf);
+    // Display the current skyculture's star name, but only
+    // for bright stars (mag < 3) or when very zoomed.
+    // Names for fainter stars tend to be suspiscious, and just
+    // pollute the screen space.
+    // For those, we rather display bayer name below.
+    if (s->vmag < max(3, painter->hints_limit_mag - 8.0)) {
+        skycultures = core_get_module("skycultures");
+        name = skycultures_get_name(skycultures, s->oid, buf);
+    }
 
     if (!name && selected) {
         bayer_get(s->hip, cst, &bayer, &bayer_n);
