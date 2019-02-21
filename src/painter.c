@@ -586,6 +586,9 @@ void painter_project_ellipse(const painter_t *painter, int frame,
 
     if (isnan(size_y)) {
         size_y = size_x;
+    } else {
+        if (isnan(angle))
+            angle = 0;
     }
 
     // 1. Center.
