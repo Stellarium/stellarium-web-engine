@@ -12,14 +12,13 @@
 
 typedef struct telescope {
     // Parameters values:
-    double diameter;    // (mm)
-    double focal_e;     // (mm)
-    double focal_o;     // (mm)
+    double diameter;        // primary mirror diameter (mm)
+    double focal;           // primary mirror focal length (mm)
+    double focal_eyepiece;  // eyepiece focal length (mm)
 
     // Computed values:
-    double magnification;
+    double magnification;   // Telescope magnification
     double light_grasp;
-    double scope_fov;   // (rad).
     double gain_mag;
     double limiting_mag;
 } telescope_t;

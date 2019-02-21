@@ -175,7 +175,7 @@ static void menu_main(void *user)
         gui_text("Telescope:");
         gui_text("diameter: %.0fmm", core->telescope.diameter);
         gui_text("f-ratio: %.1f",
-                core->telescope.focal_e / core->telescope.diameter);
+                core->telescope.focal_eyepiece / core->telescope.diameter);
         gui_toggle("auto", &core->telescope_auto);
         gui_tab_end();
     }
