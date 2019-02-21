@@ -333,8 +333,11 @@ static void render_recursion(
     if (level > 0 && is_clipped(4, pos_clip)) return;
 
     // Nothing to render yet.
-    if (splits[0] < steps[0]->level && splits[1] < steps[1]->level)
+    if (level < steps[0]->level && level < steps[1]->level)
         goto keep_going;
+    // To get a good enough resolution of lines, don't attempt to render
+    // before level 2.
+    if (level < 2) goto keep_going;
 
     for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
     vec2_copy(uv[0], lines[0]);
