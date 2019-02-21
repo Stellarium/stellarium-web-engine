@@ -409,7 +409,7 @@ static void get_steps(double fov, char type, int frame,
         steps[0]--;
 }
 
-static int line_render(const obj_t *obj, const painter_t *painter)
+static int line_render(const obj_t *obj, const painter_t *painter_)
 {
     line_t *line = (line_t*)obj;
     double UV[4][2] = {{0.0, 1.0}, {1.0, 1.0},
@@ -428,22 +428,22 @@ static int line_render(const obj_t *obj, const painter_t *painter)
         .name       = "spherical",
         .backward   = spherical_project,
     };
-    painter_t painter2 = *painter;
+    painter_t painter = *painter_;
 
     if (line->visible.value == 0.0) return 0;
 
-    vec4_copy(line->color, painter2.color);
-    painter2.color[3] *= line->visible.value;
-    painter2.transform = &transform;
+    vec4_copy(line->color, painter.color);
+    painter.color[3] *= line->visible.value;
+    painter.transform = &transform;
     // Compute the number of divisions of the grid.
-    if (line->format)
-        get_steps(core->fov, line->format, line->frame, &painter2, steps);
-    else {
+    if (line->format) {
+        get_steps(core->fov, line->format, line->frame, &painter, steps);
+    } else {
         steps[0] = &STEPS_DEG[1];
         steps[1] = &STEPS_DEG[0];
     }
     traverse_surface(nodes, ARRAY_SIZE(nodes), UV, &proj_spherical,
-                     &painter2, line->frame, 1,
+                     &painter, line->frame, 1,
                      USER_PASS(&proj_spherical, line, steps), on_quad);
     return 0;
 }
