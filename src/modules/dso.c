@@ -289,7 +289,6 @@ static int on_file_tile_loaded(const char type[4],
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
                            morpho, s->short_name, ids);
-        assert(s->nsid);
         s->ra = tmp_ra * DD2R;
         s->de = tmp_de * DD2R;
 
