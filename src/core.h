@@ -43,7 +43,6 @@ typedef struct {
         };
         int xy[2];
     };
-    int s[2];
 } qtree_node_t;
 
 // Generic function to split a surface into sub surfaces using a Depth-first

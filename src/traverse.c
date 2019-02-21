@@ -48,7 +48,6 @@ static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
     int x, y, i, j;
     void (*get)(qtree_node_t*, int, int*, int*, qtree_node_t*) =
         mode == 0 ? dequeue : pop;
-    node.s[0] = node.s[1] = 1;
     r = enqueue(nodes, n, &start, &size, &node);
     assert(size);
     if (r) return r;
@@ -58,8 +57,6 @@ static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
         r = f(&node, user);
         if (r == 3) return 0;
         if (r) {
-            node.s[0] *= 2;
-            node.s[1] *= 2;
             x = node.x * 2;
             y = node.y * 2;
             node.level++;
@@ -102,7 +99,7 @@ static int on_node(qtree_node_t *node, void *user)
 
     // Compute mat and uv.
     mat3_set_identity(mat);
-    mat3_iscale(mat, 1.0 / node->s[0], 1.0 / node->s[1], 1.0);
+    mat3_iscale(mat, 1.0 / (1 << node->level), 1.0 / (1 << node->level), 1.0);
     mat3_itranslate(mat, node->x, node->y);
     for (i = 0; i < 4; i++) mat3_mul_vec2(mat, d->uv[i], uv[i]);
 
