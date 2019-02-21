@@ -39,7 +39,7 @@ static void pop(qtree_node_t *nodes, int n,
 
 
 static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
-                          int (*f)(qtree_node_t *node, void *user, int s[2]))
+                          int (*f)(qtree_node_t *node, void *user))
 {
     int max_size = 0; // For debuging.
     int r, start = 0, size = 0;
@@ -55,16 +55,15 @@ static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
     while (size) {
         get(nodes, n, &start, &size, &node);
         s[0] = s[1] = 2;
-        r = f(&node, user, s);
+        r = f(&node, user);
         if (r == 3) return 0;
         if (r) {
-            assert(s[0] > 1 || s[1] > 1);
-            node.s[0] *= s[0];
-            node.s[1] *= s[1];
-            x = node.x * s[0];
-            y = node.y * s[1];
+            node.s[0] *= 2;
+            node.s[1] *= 2;
+            x = node.x * 2;
+            y = node.y * 2;
             node.level++;
-            for (i = 0; i < s[1]; i++) for (j = 0; j < s[0]; j++) {
+            for (i = 0; i < 2; i++) for (j = 0; j < 2; j++) {
                 node.x = x + j;
                 node.y = y + i;
                 r = enqueue(nodes, n, &start, &size, &node);
@@ -90,11 +89,10 @@ typedef struct {
              const double pos[4][4],
              const double mat[3][3],
              const painter_t *painter,
-             void *user,
-             int s[2]);
+             void *user);
 } d_t;
 
-static int on_node(qtree_node_t *node, void *user, int s[2])
+static int on_node(qtree_node_t *node, void *user)
 {
     d_t *d = user;
     double mat[3][3], uv[4][2];
@@ -108,7 +106,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     mat3_itranslate(mat, node->x, node->y);
     for (i = 0; i < 4; i++) mat3_mul_vec2(mat, d->uv[i], uv[i]);
 
-    r = d->f(0, node, d->uv, NULL, mat, d->painter, d->user, s);
+    r = d->f(0, node, d->uv, NULL, mat, d->painter, d->user);
     if (r != 2) return r;
 
     assert(d->painter);
@@ -135,7 +133,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     // needed.
     if (sep < M_PI && is_clipped(4, clip)) return 0;
 
-    r = d->f(1, node, d->uv, pos, mat, d->painter, d->user, s);
+    r = d->f(1, node, d->uv, pos, mat, d->painter, d->user);
     if (r != 2) return r;
 
     // Check if we intersect a projection discontinuity, in which case we
@@ -150,12 +148,12 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
         d->painter->proj->split(d->painter->proj, projs);
         for (i = 0; i < 2; i++) {
             painter2.proj = &projs[i];
-            r = d->f(2, node, d->uv, pos, mat, &painter2, d->user, s);
+            r = d->f(2, node, d->uv, pos, mat, &painter2, d->user);
         }
         return r;
     }
 
-    return d->f(2, node, d->uv, pos, mat, d->painter, d->user, s);
+    return d->f(2, node, d->uv, pos, mat, d->painter, d->user);
 }
 
 int traverse_surface(qtree_node_t *nodes, int nb_nodes,
@@ -171,8 +169,7 @@ int traverse_surface(qtree_node_t *nodes, int nb_nodes,
                               const double pos[4][4],
                               const double mat[3][3],
                               const painter_t *painter,
-                              void *user,
-                              int s[2]))
+                              void *user))
 {
     const double DEFAULT_UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     uv = uv ?: DEFAULT_UV;

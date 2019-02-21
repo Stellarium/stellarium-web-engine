@@ -82,8 +82,6 @@ typedef struct {
 //      frame   One of the <FRAME> enum.
 //      mode    0: BFS, 1: DFS.
 //      user    The use data passed as argument.
-//      s       The out u and v split factor for the node children.
-//              default to [2, 2].
 int traverse_surface(
         qtree_node_t *nodes,
         int nb_nodes,
@@ -99,8 +97,7 @@ int traverse_surface(
                  const double pos[4][4],
                  const double mat[3][3],
                  const painter_t *painter,
-                 void *user,
-                 int s[2]));
+                 void *user));
 
 /******* Section: Core ****************************************************/
 

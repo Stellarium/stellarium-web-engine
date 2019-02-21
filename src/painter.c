@@ -117,8 +117,7 @@ static int paint_quad_visitor(int step, qtree_node_t *node,
                               const double pos[4][4],
                               const double mat[3][3],
                               const painter_t *painter,
-                              void *user,
-                              int s[2])
+                              void *user)
 {
     projection_t *tex_proj = USER_GET(user, 0);
     int frame = *(int*)USER_GET(user, 1);
