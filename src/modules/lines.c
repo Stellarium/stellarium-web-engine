@@ -12,7 +12,7 @@
 
 /*
  * The grid lines are rendered as the sides or rectangles when we split the
- * sphere recursively (using traverse_surface).
+ * sphere recursively.
  *
  * Since the grid lines separation is not necessarily a power of two, the
  * split recursion need to compute for each step how many splits to make.
