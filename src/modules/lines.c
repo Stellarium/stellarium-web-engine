@@ -296,62 +296,84 @@ static void render_label(const double p[2], const double u[2],
                color, label_angle);
 }
 
-int on_quad(int step, qtree_node_t *node,
-            const double uv_[4][2], const double pos[4][4],
-            const double mat[3][3],
-            const painter_t *painter_,
-            void *user, int s[2])
+/*
+ * Render a grid/line, by splitting the sphere into parts until we reach
+ * the resolution of the grid.
+ */
+static void render_recursion(
+        const line_t *line, const painter_t *painter,
+        int level,
+        const int splits[2],
+        const double mat[3][3],
+        const step_t *steps[2],
+        int done_mask)
 {
-    double lines[4][4] = {};
-    double p[2], u[2], v[2]; // For the border labels.
-    double uv[4][2];
-    bool visible;
-    projection_t *proj_spherical = USER_GET(user, 0);
-    line_t *line = USER_GET(user, 1);
-    step_t **steps = USER_GET(user, 2);
-    int i, dir;
-    painter_t painter = *painter_;
+    int i, j, dir;
+    int split_az, split_al, new_splits[2];
+    double new_mat[3][3], p[4], lines[4][4] = {}, u[2], v[2];
+    double pos[4][4], pos_clip[4][4];
+    double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
+    projection_t proj_spherical = {
+        .name       = "spherical",
+        .backward   = spherical_project,
+    };
 
-    // Compute the next split.
-    if (step == 0) {
-        s[0] = steps[0]->splits[node->level] ?: 1;
-        s[1] = steps[1]->splits[node->level + 1] ?: 1;
-        if (s[0] == 1 && s[1] == 1) {
-            s[0] = s[1] = 2;
-        }
-        if (node->level == 0) return 1;
-        return 2;
+    assert(done_mask < 3);
+    // Compute quad corners in clipping space.
+    for (i = 0; i < 4; i++) {
+        mat3_mul_vec2(mat, uv[i], p);
+        spherical_project(NULL, 0, p, p);
+        mat4_mul_vec4(*painter->transform, p, p);
+        convert_framev4(painter->obs, line->frame, FRAME_VIEW, p, p);
+        vec4_copy(p, pos[i]);
+        project(painter->proj, 0, 4, p, p);
+        vec4_copy(p, pos_clip[i]);
     }
+    // If quad is clipped stop the recursion.
+    if (level > 0 && is_clipped(4, pos_clip)) return;
 
-    if (step == 1) { // After visibility check.
-        if (node->level < min(steps[0]->level, steps[1]->level)) return 1;
-        if (node->level < 2) return 1;
-        return 2;
-    }
+    // Nothing to render yet.
+    if (splits[0] < steps[0]->level && splits[1] < steps[1]->level)
+        goto keep_going;
 
-    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv_[i], uv[i]);
+    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, uv[i], uv[i]);
     vec2_copy(uv[0], lines[0]);
     vec2_copy(uv[2], lines[1]);
     vec2_copy(uv[0], lines[2]);
     vec2_copy(uv[1], lines[3]);
-    assert(node->user <= 3);
 
     for (dir = 0; dir < 2; dir++) {
         if (!line->grid && dir == 1) break;
-        if (node->user & (1 << dir)) continue; // Marked as done already.
-        visible = node->s[dir] == steps[dir]->n / (dir ? 2 : 1);
-        if (!visible) continue;
-        // Mark the node so that we don't render it twice.
-        node->user |= (1 << dir);
-        paint_lines(&painter, line->frame, 2, lines + dir * 2,
-                    proj_spherical, 8, 0);
+        if (done_mask & (1 << dir)) continue; // Marked as done already.
+        if (splits[dir] != steps[dir]->n / (dir ? 2 : 1)) continue;
+        done_mask |= (1 << dir);
+        paint_lines(painter, line->frame, 2, lines + dir * 2,
+                    &proj_spherical, 8, 0);
         if (!line->format) continue;
-        if (check_borders(pos[0], pos[2 - dir], painter.proj, p, u, v)) {
+        if (check_borders(pos[0], pos[2 - dir], painter->proj, p, u, v)) {
             render_label(p, u, v, uv[0], 1 - dir, line,
-                         node->s[dir] * (dir + 1), &painter);
+                         splits[dir] * (dir + 1), painter);
         }
     }
-    return (node->level >= max(steps[0]->level, steps[1]->level)) ? 0 : 1;
+
+    // Nothing left to render.
+    if (level >= steps[0]->level && level >= steps[1]->level) return;
+
+keep_going:
+    // Split this quad into smaller pieces.
+    split_az = steps[0]->splits[level] ?: 1;
+    split_al = steps[1]->splits[level + 1] ?: 1;
+    new_splits[0] = splits[0] * split_az;
+    new_splits[1] = splits[1] * split_al;
+
+    for (i = 0; i < split_az; i++)
+    for (j = 0; j < split_al; j++) {
+        mat3_copy(mat, new_mat);
+        mat3_iscale(new_mat, 1. / split_az, 1. / split_al, 1.0);
+        mat3_itranslate(new_mat, i, j);
+        render_recursion(line, painter, level + 1, new_splits, new_mat,
+                         steps, done_mask);
+    }
 }
 
 // Compute an estimation of the visible range of azimuthal angle.  If we look
@@ -412,23 +434,17 @@ static void get_steps(double fov, char type, int frame,
 static int line_render(const obj_t *obj, const painter_t *painter_)
 {
     line_t *line = (line_t*)obj;
-    double UV[4][2] = {{0.0, 1.0}, {1.0, 1.0},
-                       {0.0, 0.0}, {1.0, 0.0}};
     double transform[4][4];
     const step_t *steps[2];
+    int splits[2] = {1, 1};
+    double mat[3][3];
+    painter_t painter = *painter_;
     mat4_set_identity(transform);
 
     if (strcmp(line->obj.id, "ecliptic") == 0) {
         mat3_to_mat4(core->observer->re2h, transform);
         mat4_rx(M_PI / 2, transform, transform);
     }
-
-    qtree_node_t nodes[128]; // Too little?
-    projection_t proj_spherical = {
-        .name       = "spherical",
-        .backward   = spherical_project,
-    };
-    painter_t painter = *painter_;
 
     if (line->visible.value == 0.0) return 0;
 
@@ -442,9 +458,8 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
         steps[0] = &STEPS_DEG[1];
         steps[1] = &STEPS_DEG[0];
     }
-    traverse_surface(nodes, ARRAY_SIZE(nodes), UV, &proj_spherical,
-                     &painter, line->frame, 1,
-                     USER_PASS(&proj_spherical, line, steps), on_quad);
+    mat3_set_identity(mat);
+    render_recursion(line, &painter, 0, splits, mat, steps, 0);
     return 0;
 }
 
@@ -505,7 +520,7 @@ static bool check_borders(const double a[3], const double b[3],
                           double u[2], // Window direction of the line.
                           double v[2]) // Window Norm of the border.
 {
-    double pos[2][3], q;
+    double pos[2][4], q;
     bool visible[2];
     int border;
     const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
