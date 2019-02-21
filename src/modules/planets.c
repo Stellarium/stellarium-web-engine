@@ -835,14 +835,18 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     }
 
     if (selected || vmag <= painter.hints_limit_mag - 1.0) {
-        if (r_scale == 1.0) strcpy(label, planet->name);
-        else sprintf(label, "%s (x%.1f)", planet->name, r_scale);
+        if (r_scale == 1.0) {
+            strcpy(label, sys_translate("skyculture", planet->name));
+        } else {
+            sprintf(label, "%s x%.1f",
+                    sys_translate("skyculture", planet->name), r_scale);
+        }
         s = point_size;
         // Radius on screen in pixel.
         radius = planet->radius / 2.0 *
             painter.proj->window_size[0] / painter.proj->scaling[0];
         s = max(s, radius);
-        labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF, cap,
+        labels_add_3d(label, FRAME_ICRF, cap,
                       true, s + 4, 14, selected ? white : label_color, 0,
                       selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
                       -vmag, planet->obj.oid);
