@@ -153,7 +153,7 @@ int paint_quad(const painter_t *painter,
     }
     if (painter->color[3] == 0.0) return 0;
     traverse_surface(nodes, ARRAY_SIZE(nodes), UV, tex_proj,
-                     painter, frame, 0,
+                     painter, frame,
                      USER_PASS(tex_proj, &frame, &grid_size),
                      paint_quad_visitor);
     return 0;

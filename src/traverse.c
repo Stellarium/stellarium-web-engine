@@ -28,17 +28,7 @@ static void dequeue(qtree_node_t *nodes, int n,
     *start = ((*start) + 1) % n;
 }
 
-static void pop(qtree_node_t *nodes, int n,
-                int *start, int *size, qtree_node_t *node)
-{
-    int i;
-    (*size)--;
-    i = (*start + *size) % n;
-    *node = nodes[i];
-}
-
-
-static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
+static int qtree_traverse(qtree_node_t *nodes, int n, void *user,
                           int (*f)(qtree_node_t *node, void *user))
 {
     int max_size = 0; // For debuging.
@@ -46,13 +36,11 @@ static int qtree_traverse(qtree_node_t *nodes, int n, int mode, void *user,
     int s[2];
     qtree_node_t node = {0};
     int x, y, i, j;
-    void (*get)(qtree_node_t*, int, int*, int*, qtree_node_t*) =
-        mode == 0 ? dequeue : pop;
     r = enqueue(nodes, n, &start, &size, &node);
     assert(size);
     if (r) return r;
     while (size) {
-        get(nodes, n, &start, &size, &node);
+        dequeue(nodes, n, &start, &size, &node);
         s[0] = s[1] = 2;
         r = f(&node, user);
         if (r == 3) return 0;
@@ -158,7 +146,6 @@ int traverse_surface(qtree_node_t *nodes, int nb_nodes,
                      const projection_t *proj,
                      const painter_t *painter,
                      int frame,
-                     int mode,
                      void *user,
                      int (*f)(int step,
                               qtree_node_t *node,
@@ -178,6 +165,6 @@ int traverse_surface(qtree_node_t *nodes, int nb_nodes,
         .f = f,
     };
     memcpy(d.uv, uv, sizeof(d.uv));
-    return qtree_traverse(nodes, nb_nodes, mode, &d, on_node);
+    return qtree_traverse(nodes, nb_nodes, &d, on_node);
 }
 

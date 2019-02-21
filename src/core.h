@@ -40,7 +40,7 @@ typedef struct {
     int x, y;
 } qtree_node_t;
 
-// Generic function to split a surface into sub surfaces using a Depth-first
+// Generic function to split a surface into sub surfaces using a Breadth-first
 // search.
 //
 //  nodes       An array of node that is used internally by the algo.
@@ -74,7 +74,6 @@ typedef struct {
 //              a painter whose projection has been shifted to handle
 //              a discontinuous case.
 //      frame   One of the <FRAME> enum.
-//      mode    0: BFS, 1: DFS.
 //      user    The use data passed as argument.
 int traverse_surface(
         qtree_node_t *nodes,
@@ -83,7 +82,6 @@ int traverse_surface(
         const projection_t *proj,
         const painter_t *painter,
         int frame,
-        int mode,
         void *user,
         int (*f)(int step,
                  qtree_node_t *node,
