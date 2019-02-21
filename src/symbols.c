@@ -37,6 +37,7 @@ static const struct {
     [SYMBOL_UNKNOWN]                = {"?"   , 0xF2E9267F, ism_paint},
     [SYMBOL_BRIGHT_NEBULA]          = {"BNe" , 0x89ff5f7f, bne_paint},
     [SYMBOL_CLUSTER_OF_STARS]       = {"Cl*" , 0x89ff5f7f, cls_paint},
+    [SYMBOL_MULTIPLE_DEFAULT]       = {"mul" , 0x89ff5f7f, opc_paint},
 };
 
 static texture_t *get_texture(void)
