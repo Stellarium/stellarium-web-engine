@@ -37,12 +37,7 @@ extern core_t *core;    // Global core object.
 // I could try to use uint8_t to save memory here.
 typedef struct {
     int level;
-    union {
-        struct {
-            int x, y;
-        };
-        int xy[2];
-    };
+    int x, y;
 } qtree_node_t;
 
 // Generic function to split a surface into sub surfaces using a Depth-first
