@@ -720,17 +720,21 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
      * Compute illuminance (in lux = lum/m² = cd.sr/m²)
      * Get log10 of the value for optimisation.
      *
-     * S = m + 2.5 * log10(A)         | S: vmag/arcmin², A: arcmin²
-     * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: cd/m²
+     * S = m + 2.5 * log10(A)         | S: Surface Brightness (vmag/arcmin²)
+     *                                | A: visual area of source (arcmin²)
+     *                                | m: source magnitude integrated over A
+     * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: luminance (cd/m²)
      * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
      *
      * => E = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
      * => log10(E) = log10(10.8e4 / R2AS^2) - 0.4 * m
+     *
+     * Same formula at https://en.wikipedia.org/wiki/Illuminance
      */
     log_e = log10(10.8e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
 
     /*
-     * Apply optic from telescope light grasp.
+     * Apply optic from telescope light grasp (Gl).
      *
      * E' = E * Gl
      * Gmag = 2.5 * log10(Gl)
