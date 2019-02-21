@@ -128,16 +128,6 @@ static void render_fog(const painter_t *painter_)
 
 static int landscape_render(const obj_t *obj, const painter_t *painter_)
 {
-    /*
-     *
-     *     +--------------------+ alt = 0
-     *     |                    |
-     *     |                    |
-     *     |                    |
-     *     +--------------------+ alt = -90
-     *    az = 0              az = 360
-     */
-
     PROFILE(landscape_render, 0);
     landscape_t *ls = (landscape_t*)obj;
     painter_t painter = *painter_;
