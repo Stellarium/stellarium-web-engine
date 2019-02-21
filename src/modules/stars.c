@@ -289,8 +289,6 @@ void star_get_designations(
     if (s->gaia) {
         sprintf(buf, "%" PRId64, s->gaia);
         f(obj, user, "GAIA", buf);
-        sprintf(buf, "%016" PRIx64, s->gaia);
-        f(obj, user, "NSID", buf);
     }
     while (names && *names) {
         strncpy(cat, names, sizeof(cat) - 1);
