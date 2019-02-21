@@ -195,6 +195,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     const bool selected = core->selection && s->oid == core->selection->oid;
     int label_flags = LABEL_AROUND;
     char buf[128];
+    char cst[5];
     obj_t *skycultures;
 
     //if (!s->hip) return;
@@ -207,6 +208,15 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     // First try the current skyculture name.
     skycultures = core_get_module("skycultures");
     name = skycultures_get_name(skycultures, s->oid, buf);
+
+    if (!name && selected) {
+        bayer_get(s->hip, cst, &bayer, &bayer_n);
+        if (bayer) {
+            sprintf(buf, "%s%.*d %s", greek[bayer - 1], bayer_n ? 1 : 0,
+                    bayer_n, cst);
+            name = buf;
+        }
+    }
 
     // If no name, try a HD number.
     if (!name && selected) {
