@@ -530,7 +530,7 @@ static int load_allsky_worker(worker_t *worker)
 static bool hips_update(hips_t *hips)
 {
     int code, err, size;
-    char *url;
+    char url[1024];
     char *data;
     if (hips->error) return false;
     if (!hips->properties) {
@@ -546,19 +546,18 @@ static bool hips_update(hips_t *hips)
     // Get the allsky before anything else if available.
     if (!hips->allsky.worker.fn &&
             !hips->allsky.not_available && !hips->allsky.data) {
-        asprintf(&url, "%s/Norder%d/Allsky.%s?v=%d", hips->service_url,
-                 hips->order_min, hips->ext,
+        snprintf(url, sizeof(url), "%s/Norder%d/Allsky.%s?v=%d",
+                 hips->service_url, hips->order_min, hips->ext,
                  (int)hips->release_date);
         data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
-        if (code && !data) hips->allsky.not_available = true;
+        if (!code) return false;
+        if (!data) hips->allsky.not_available = true;
         if (data) {
             worker_init(&hips->allsky.worker, load_allsky_worker);
             hips->allsky.src_data = malloc(size);
             hips->allsky.size = size;
             memcpy(hips->allsky.src_data, data, size);
         }
-        free(url);
-        return false;
     }
 
     // If the allsky image is loading wait for it to finish.
