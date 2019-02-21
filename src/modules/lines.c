@@ -380,13 +380,13 @@ static void get_steps(double fov, char type, int frame,
     int i;
     double theta_range = get_theta_range(painter, frame);
     if (type == 'd') {
-        i = (int)round(1.7 * log(2 * M_PI / a));
+        i = (int)round(1.5 * log(2 * M_PI / a));
         i = min(i, ARRAY_SIZE(STEPS_DEG) - 1);
         if (STEPS_DEG[i].n % 4) i++;
         steps[0] = &STEPS_DEG[i];
         steps[1] = &STEPS_DEG[i];
     } else {
-        i = (int)round(1.7 * log(2 * M_PI / a));
+        i = (int)round(1.5 * log(2 * M_PI / a));
         i = min(i, ARRAY_SIZE(STEPS_DEG) - 1);
         if (STEPS_DEG[i].n % 4) i++;
         steps[1] = &STEPS_DEG[i];
