@@ -38,7 +38,7 @@ def ensure_dir(file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def download(url, dest=None, md5=None, unpacked_md5=False):
+def download(url, dest=None, sha256=None, md5=None, unpacked_md5=False, headers=None):
     '''download a file into data-src and return a path to it'''
     dest = dest or 'data-src/'
     if dest.endswith('/'):
@@ -46,11 +46,13 @@ def download(url, dest=None, md5=None, unpacked_md5=False):
     if not os.path.exists(dest):
         ensure_dir(dest)
         print("Download '{}'".format(url))
-        r = requests.get(url)
+        r = requests.get(url, headers=headers)
         with open(dest, 'wb') as out:
             out.write(r.content)
     if md5:
         assert hashlib.md5(open(dest).read()).hexdigest() == md5
+    if sha256:
+        assert hashlib.sha256(open(dest).read()).hexdigest() == sha256
     if unpacked_md5:
         data_md5 = hashlib.md5(gzip.open(dest).read()).hexdigest()
         assert data_md5 == unpacked_md5
