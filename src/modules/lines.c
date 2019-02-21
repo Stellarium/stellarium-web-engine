@@ -369,11 +369,11 @@ keep_going:
     new_splits[0] = splits[0] * split_az;
     new_splits[1] = splits[1] * split_al;
 
-    for (i = 0; i < split_az; i++)
-    for (j = 0; j < split_al; j++) {
+    for (i = 0; i < split_al; i++)
+    for (j = 0; j < split_az; j++) {
         mat3_copy(mat, new_mat);
         mat3_iscale(new_mat, 1. / split_az, 1. / split_al, 1.0);
-        mat3_itranslate(new_mat, i, j);
+        mat3_itranslate(new_mat, j, i);
         render_recursion(line, painter, level + 1, new_splits, new_mat,
                          steps, done_mask);
     }
