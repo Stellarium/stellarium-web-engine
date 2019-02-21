@@ -226,8 +226,8 @@ static void core_set_default(void)
     core->lwmax = 5000;
 
     // Adjust those values to make the sky look good.
-    core->star_linear_scale = 0.7;
-    core->star_relative_scale = 1.5;
+    core->star_linear_scale = 0.5;
+    core->star_relative_scale = 1.4;
     core->lwmax_min = 0.004;
     core->lwmax_scale = 13.0;
     core->max_point_radius = 6.0;
@@ -410,11 +410,11 @@ int core_update(double dt)
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
     // Adjust star linear scale in function of screen resolution
-    // It ranges from 0.7 for a small screen to 1.4 for large screens
+    // It ranges from 0.5 for a small screen to 1.4 for large screens
     double resol = core->fov / min(core->win_size[0], core->win_size[1]);
-    double delta = 0.7 * (1.0 - resol / (120. * DD2R / 400));
+    double delta = 0.5 * (1.0 - resol / (120. * DD2R / 400));
     delta = max(0, delta);
-    core->star_linear_scale = 0.7 + delta;
+    core->star_linear_scale = 0.5 + delta;
 
     core_update_direction(dt);
 
