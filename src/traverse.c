@@ -100,7 +100,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
     double mat[3][3], uv[4][2];
     double pos[4][4], clip[4][4];
     double mid_pos[4], sep = 0;
-    int i, r, node_user;
+    int i, r;
 
     // Compute mat and uv.
     mat3_set_identity(mat);
@@ -148,9 +148,7 @@ static int on_node(qtree_node_t *node, void *user, int s[2])
         projection_t projs[2];
         if (r & PROJ_CANNOT_SPLIT) return 1;
         d->painter->proj->split(d->painter->proj, projs);
-        node_user = node->user;
         for (i = 0; i < 2; i++) {
-            node->user = node_user;
             painter2.proj = &projs[i];
             r = d->f(2, node, d->uv, pos, mat, &painter2, d->user, s);
         }
