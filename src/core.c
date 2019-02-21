@@ -551,7 +551,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .lines_width = 1.0,
         .flags = (core->fast_mode ? PAINTER_FAST_MODE : 0) |
             (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
-            (cst_visible ? PAINTER_SHOW_BAYER_LABELS : 0),
+            PAINTER_SHOW_BAYER_LABELS,
     };
     painter_update_caps(&painter);
     paint_prepare(&painter, win_w, win_h, pixel_scale);
