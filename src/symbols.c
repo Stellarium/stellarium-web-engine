@@ -97,17 +97,12 @@ static void g_paint(const painter_t *painter, const double transf[3][3])
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
 }
 
-static void pn_paint(const painter_t *painter, const double transf_[3][3])
+static void pn_paint(const painter_t *painter, const double transf[3][3])
 {
-    double transf[3][3];
-    mat3_copy(transf_, transf);
-    paint_2d_line(painter, transf, VEC(-1, 0), VEC(-0.25, 0));
-    paint_2d_line(painter, transf, VEC(+1, 0), VEC(+0.25, 0));
-    paint_2d_line(painter, transf, VEC(0, -1), VEC(0, -0.25));
-    paint_2d_line(painter, transf, VEC(0, +1), VEC(0, +0.25));
-    mat3_iscale(transf, 0.75, 0.75, 1);
-    paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
-    mat3_iscale(transf, 1. / 3, 1. / 3, 1);
+    paint_2d_line(painter, transf, VEC(-1.75, 0), VEC(-1, 0));
+    paint_2d_line(painter, transf, VEC(+1, 0), VEC(+1.75, 0));
+    paint_2d_line(painter, transf, VEC(0, -1), VEC(0, -1.75));
+    paint_2d_line(painter, transf, VEC(0, +1), VEC(0, +1.75));
     paint_2d_ellipse(painter, transf, 0, NULL, NULL, NULL);
 }
 
