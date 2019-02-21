@@ -334,15 +334,15 @@ int on_quad(int step, qtree_node_t *node,
     vec2_copy(uv[2], lines[1]);
     vec2_copy(uv[0], lines[2]);
     vec2_copy(uv[1], lines[3]);
-    assert(node->c <= 3);
+    assert(node->user <= 3);
 
     for (dir = 0; dir < 2; dir++) {
         if (!line->grid && dir == 1) break;
-        if (node->c & (1 << dir)) continue; // Marked as done already.
+        if (node->user & (1 << dir)) continue; // Marked as done already.
         visible = node->s[dir] == steps[dir]->n / (dir ? 2 : 1);
         if (!visible) continue;
         // Mark the node so that we don't render it twice.
-        node->c |= (1 << dir);
+        node->user |= (1 << dir);
         paint_lines(&painter, line->frame, 2, lines + dir * 2,
                     proj_spherical, 8, 0);
         if (!line->format) continue;

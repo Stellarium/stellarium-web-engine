@@ -43,7 +43,7 @@ typedef struct {
         };
         int xy[2];
     };
-    int c;
+    int user; // We can use this how we want in the callback.
     int s[2];
 } qtree_node_t;
 
