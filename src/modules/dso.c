@@ -407,7 +407,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
     double win_pos[2], win_size[2], win_angle;
-    double hints_limit_mag = painter->hints_limit_mag - 1;
+    double hints_limit_mag = painter->hints_limit_mag - 0.5;
     const bool selected = core->selection && s->oid == core->selection->oid;
     int label_flags;
     painter_t tmp_painter;
