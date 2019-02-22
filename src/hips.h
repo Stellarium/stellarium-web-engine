@@ -139,11 +139,12 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user));
  *     are still set, so that the client can still render a fallback texture.
  *
  * Parameters:
- *   flags   - <HIPS_FLAGS> union.
  *   order   - Order of the tile we are looking for.
  *   pix     - Pixel index of the tile we are looking for.
- *   uv      - Output the uv coordinates of the texture.  This can represent
- *             only a part of the texture if we used a parent fallback.
+ *   flags   - <HIPS_FLAGS> union.
+ *   transf  - If the returned texture is larger than the healpix pixel,
+ *             this matrix is multiplied by the transformation to apply
+ *             to the original UV coordinates to get the part of the texture.
  *   fade    - Recommended fade alpha.
  *   loading_complete - set to true if the tile is totally loaded.
  *
@@ -152,7 +153,7 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user));
  */
 texture_t *hips_get_tile_texture(
         hips_t *hips, int order, int pix, int flags,
-        double uv[4][2], double *fade, bool *loading_complete);
+        double transf[3][3], double *fade, bool *loading_complete);
 
 /*
  * Function: hips_parse_hipslist

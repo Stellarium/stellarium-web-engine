@@ -284,9 +284,34 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
 }
 
 
-static texture_t *hips_get_tile_texture_(
+
+/*
+ * Function: hips_get_tile_texture
+ * Get the texture for a given hips tile.
+ *
+ * The algorithm is more or less:
+ *   - If the tile is loaded, return its texture.
+ *   - If not, try to use a parent tile as a fallback.
+ *   - If no parent is loaded, but we have an allsky image, use it.
+ *   - If all else failed, return NULL.  In that case the UV and projection
+ *     are still set, so that the client can still render a fallback texture.
+ *
+ * Parameters:
+ *   order   - Order of the tile we are looking for.
+ *   pix     - Pixel index of the tile we are looking for.
+ *   flags   - <HIPS_FLAGS> union.
+ *   transf  - If the returned texture is larger than the healpix pixel,
+ *             this matrix is multiplied by the transformation to apply
+ *             to the original UV coordinates to get the part of the texture.
+ *   fade    - Recommended fade alpha.
+ *   loading_complete - set to true if the tile is totally loaded.
+ *
+ * Return:
+ *   The texture_t, or NULL if none is found.
+ */
+texture_t *hips_get_tile_texture(
         hips_t *hips, int order, int pix, int flags,
-        double mat[3][3], double *fade,
+        double transf[3][3], double *fade,
         bool *loading_complete)
 {
     PROFILE(hips_get_tile_texture, PROFILE_AGGREGATE)
@@ -337,61 +362,16 @@ static texture_t *hips_get_tile_texture_(
     // If we didn't find the tile, or the texture is not loaded yet,
     // fallback to one of the parent tile texture.
     if (order == hips->order_min) return NULL; // No parent.
-    tex = hips_get_tile_texture_(
-            hips, order - 1, pix / 4, flags, mat, NULL, NULL);
+    tex = hips_get_tile_texture(
+            hips, order - 1, pix / 4, flags, transf, NULL, NULL);
     if (!tex) return NULL;
-    mat3_iscale(mat, 0.5, 0.5, 1.0);
-    mat3_itranslate(mat, (pix % 4) / 2, (pix % 4) % 2);
-    return tex;
-}
-
-/*
- * Function: hips_get_tile_texture
- * Get the texture for a given hips tile.
- *
- * The algorithm is more or less:
- *   - If the tile is loaded, return its texture.
- *   - If not, try to use a parent tile as a fallback.
- *   - If no parent is loaded, but we have an allsky image, use it.
- *   - If all else failed, return NULL.  In that case the UV and projection
- *     are still set, so that the client can still render a fallback texture.
- *
- * Parameters:
- *   flags   - <HIPS_FLAGS> union.
- *   order   - Order of the tile we are looking for.
- *   pix     - Pixel index of the tile we are looking for.
- *   uv      - Output the uv coordinates of the texture.  This can represent
- *             only a part of the texture if we used a parent fallback.
- *   fade    - Recommended fade alpha.
- *   loading_complete - set to true if the tile is totally loaded.
- *
- * Return:
- *   The texture_t, or NULL if none is found.
- */
-texture_t *hips_get_tile_texture(
-        hips_t *hips, int order, int pix, int flags,
-        double uv[4][2], double *fade,
-        bool *loading_complete)
-{
-    double mat[3][3];
-    const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-    const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
-    int i;
-    mat3_set_identity(mat);
-    texture_t *tex;
-    const bool outside = !(flags & HIPS_PLANET);
-
-    tex = hips_get_tile_texture_(hips, order, pix, flags, mat, fade,
-                                 loading_complete);
-    if (uv) {
-        if (outside) memcpy(uv, UV_OUT, sizeof(UV_OUT));
-        else memcpy(uv, UV_IN,  sizeof(UV_IN));
-        for (i = 0; i < 4; i++) {
-            mat3_mul_vec2(mat, uv[i], uv[i]);
-        }
+    if (transf) {
+        mat3_iscale(transf, 0.5, 0.5, 1.0);
+        mat3_itranslate(transf, (pix % 4) / 2, (pix % 4) % 2);
     }
     return tex;
 }
+
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
                           int order, int pix, int split, int flags,
@@ -403,11 +383,15 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     texture_t *tex;
     projection_t proj;
     bool loaded;
-    double fade, uv[4][2];
+    double fade;
+    // UV transfo mat with swapped x and y.
+    const double uv_swap[3][3] = {{0, 1, 0}, {1, 0, 0}, {0, 0, 1}};
+    double uv[3][3] = MAT3_IDENTITY;
 
     flags |= HIPS_LOAD_IN_THREAD;
     (*nb_tot)++;
     tex = hips_get_tile_texture(hips, order, pix, flags, uv, &fade, &loaded);
+    mat3_mul(uv, uv_swap, uv);
     if (loaded) (*nb_loaded)++;
     if (!tex) return 0;
     painter.color[3] *= fade;

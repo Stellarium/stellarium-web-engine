@@ -88,20 +88,17 @@ int paint_flush(const painter_t *painter)
  *   painter    - A painter struct.
  *   slot       - The texture slot we want to set.  Can be one of:
  *                PAINTER_TEX_COLOR or PAINTER_TEX_NORMAL.
- *   uv         - The uv coordinates of the part of the texture we want to
- *                use.  NULL for the default full texture.
+ *   uv_mat     - The transformation to the uv coordinates to get the part
+ *                of the texture we want to use.  NULL default to the
+ *                identity matrix, that is the full texture.
  */
 void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
-                         const double uv[4][2])
+                         const double uv_mat[3][3])
 {
     assert(!painter->textures[slot].tex);
     painter->textures[slot].tex = tex;
     mat3_set_identity(painter->textures[slot].mat);
-    if (uv) {
-        vec2_sub(uv[1], uv[0], painter->textures[slot].mat[0]);
-        vec2_sub(uv[2], uv[0], painter->textures[slot].mat[1]);
-        vec2_copy(uv[0], painter->textures[slot].mat[2]);
-    }
+    mat3_copy(uv_mat ?: mat3_identity, painter->textures[slot].mat);
 }
 
 

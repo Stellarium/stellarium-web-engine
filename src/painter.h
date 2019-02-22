@@ -225,11 +225,12 @@ int paint_flush(const painter_t *painter);
  *   painter    - A painter struct.
  *   slot       - The texture slot we want to set.  Can be one of:
  *                PAINTER_TEX_COLOR or PAINTER_TEX_NORMAL.
- *   uv         - The uv coordinates of the part of the texture we want to
- *                use.  NULL for the default full texture.
+ *   uv_mat     - The transformation to the uv coordinates to get the part
+ *                of the texture we want to use.  NULL default to the
+ *                identity matrix, that is the full texture.
  */
 void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
-                         const double uv[4][2]);
+                         const double uv_mat[3][3]);
 
 /* Function: paint_2d_points
  *

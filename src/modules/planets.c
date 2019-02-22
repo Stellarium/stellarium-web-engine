@@ -484,7 +484,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_t painter = *painter_;
     texture_t *tex, *normalmap = NULL;
     projection_t proj;
-    double fade, uv[4][2], normal_uv[4][2];
+    double fade, uv[3][3] = MAT3_IDENTITY, normal_uv[3][3] = MAT3_IDENTITY;
     bool loaded;
 
     (*nb_tot)++;
