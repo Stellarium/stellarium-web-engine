@@ -318,7 +318,8 @@ static void render_recursion(
         .backward   = spherical_project,
     };
 
-    assert(done_mask < 3);
+    if (done_mask == 3) return; // Already done.
+
     // Compute quad corners in clipping space.
     for (i = 0; i < 4; i++) {
         mat3_mul_vec2(mat, uv[i], p);
