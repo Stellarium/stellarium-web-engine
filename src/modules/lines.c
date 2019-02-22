@@ -330,8 +330,11 @@ static void render_recursion(
         project(painter->proj, 0, 4, p, p);
         vec4_copy(p, pos_clip[i]);
     }
-    // If quad is clipped stop the recursion.
-    if (level > 0 && is_clipped(4, pos_clip)) return;
+    // If the quad is clipped we stop the recursion.
+    // We only start to test after a certain level to prevent distortion
+    // error with big quads at low levels.
+    if (level > 2 && is_clipped(4, pos_clip))
+        return;
 
     // Nothing to render yet.
     if (level < steps[0]->level && level < steps[1]->level)
