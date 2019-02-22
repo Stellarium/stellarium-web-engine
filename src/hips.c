@@ -338,7 +338,6 @@ texture_t *hips_get_tile_texture(
         bool *loading_complete)
 {
     PROFILE(hips_get_tile_texture, PROFILE_AGGREGATE)
-    texture_t *tex = NULL;
     const double UV_OUT[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     const double UV_IN [4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     double mat[3][3];
@@ -358,13 +357,13 @@ texture_t *hips_get_tile_texture(
         else memcpy(uv, UV_IN,  sizeof(UV_IN));
     }
 
-    if (!hips_is_ready(hips)) goto end;
+    if (!hips_is_ready(hips)) return NULL;
 
     if (order <= hips->order) {
         tile = hips_get_tile(hips, order, pix, flags, &code);
         if (!tile && code && code != 598) { // The tile doesn't exists
             *loading_complete = true;
-            goto end;
+            return NULL;
         }
     }
 
@@ -383,7 +382,7 @@ texture_t *hips_get_tile_texture(
     if (!rend_tile) {
         rend_order = order;
         rend_pix = pix;
-        goto end;
+        return NULL;
     }
     if (rend_order == min(order, hips->order))
         *loading_complete = true;
@@ -415,10 +414,7 @@ texture_t *hips_get_tile_texture(
                 x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
     }
 
-    tex = rend_tile->tex ?: rend_tile->allsky_tex;
-
-end:
-    return tex;
+    return rend_tile->tex ?: rend_tile->allsky_tex;
 }
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
