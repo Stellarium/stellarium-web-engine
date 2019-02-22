@@ -233,7 +233,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_planet_glsl[6911] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_glsl[6957] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -377,6 +377,7 @@ static const unsigned char DATA_shaders_planet_glsl[6911] __attribute__((aligned
     " */\n"
     "float illumination(vec3 p)\n"
     "{\n"
+    "    if (u_shadow_spheres_nb == 0) return 1.0;\n"
     "    mediump float ret = 1.0;\n"
     "    highp float sun_r = asin(u_sun.w / length(u_sun.xyz - p));\n"
     "    for (int i = 0; i < 4; ++i) {\n"

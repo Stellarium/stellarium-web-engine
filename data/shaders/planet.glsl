@@ -141,6 +141,7 @@ float illumination_sphere(highp vec3 p, highp vec4 sphere, highp vec3 sun_pos, f
  */
 float illumination(vec3 p)
 {
+    if (u_shadow_spheres_nb == 0) return 1.0;
     mediump float ret = 1.0;
     highp float sun_r = asin(u_sun.w / length(u_sun.xyz - p));
     for (int i = 0; i < 4; ++i) {
