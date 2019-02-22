@@ -455,6 +455,12 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     areas_add_ellipse(core->areas, win_pos, win_angle,
                       win_size[0] / 2, win_size[1] / 2, s->oid, 0);
 
+    // Don't display when DSO global fader is off
+    // But the previous steps are still necessary as we want to be able to
+    // select them even without hints/names
+    if (painter->color[3] < 0.01 && !selected)
+        return 0;
+
     if (vmag <= hints_limit_mag + 0.5) {
         tmp_painter = *painter;
         if (selected) {
@@ -572,7 +578,6 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     if (!dsos->survey) return 0;
     painter.color[3] *= dsos->visible.value;
-    if (painter.color[3] == 0) return 0;
     hips_traverse(USER_PASS(dsos, &painter, &nb_tot, &nb_loaded),
                   render_visitor);
     progressbar_report("DSO", "DSO", nb_loaded, nb_tot, -1);
