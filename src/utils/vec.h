@@ -49,6 +49,15 @@ static const double mat4_identity[4][4] = {
     {0, 0, 0, 1},
 };
 
+#define MAT3_IDENTITY {{1, 0, 0}, \
+                       {0, 1, 0}, \
+                       {0, 0, 1}}
+
+#define MAT4_IDENTITY {{1, 0, 0, 0}, \
+                       {0, 1, 0, 0}, \
+                       {0, 0, 1, 0}, \
+                       {0, 0, 0, 1}}
+
 DEF void vec2_set(double v[S 2], double x, double y);
 DEF void vec3_set(double v[S 3], double x, double y, double z);
 DEF void vec4_set(double v[S 4], double x, double y, double z, double w);
