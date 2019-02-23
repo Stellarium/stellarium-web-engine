@@ -58,7 +58,9 @@
 #   define EMSCRIPTEN_KEEPALIVE
 #endif
 
+#ifndef SWE_VERSION_STR
 #define SWE_VERSION_STR "0.1.0"
+#endif
 
 #if __clang__
 #   define SWE_COMPILER_STR __clang_version__
