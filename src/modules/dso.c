@@ -39,7 +39,6 @@ typedef struct {
         };
         dso_clip_data_t clip_data;
     };
-    uint64_t nsid; // To remove.
     char        type[4];
     float       ra;     // ra equ J2000
     float       de;     // de equ J2000
@@ -242,7 +241,6 @@ static int on_file_tile_loaded(const char type[4],
     uint64_t nuniq;
 
     eph_table_column_t columns[] = {
-        {"nsid", 'Q'},
         {"type", 's', .size=4},
         {"vmag", 'f', EPH_VMAG},
         {"bmag", 'f', EPH_VMAG},
@@ -285,7 +283,7 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->sources[i];
         eph_read_table_row(tile_data, size, &data_ofs,
                            ARRAY_SIZE(columns), columns,
-                           &s->nsid, s->type,
+                           s->type,
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
                            morpho, s->short_name, ids);
@@ -351,7 +349,7 @@ static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
     fader_init(&dsos->visible, true);
-    regcomp(&dsos->search_reg, "(m|ngc|ic|nsid) *([0-9]+)",
+    regcomp(&dsos->search_reg, "(m|ngc|ic) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
     return 0;
 }
@@ -597,8 +595,7 @@ static int dsos_get_visitor(int order, int pix, void *user)
     tile = get_tile(d->dsos, order, pix, false, NULL);
     if (!tile) return 0;
     for (i = 0; i < tile->nb; i++) {
-        if (    (d->cat == 3 && tile->sources[i].nsid == d->n) ||
-                (d->cat == 4 && tile->sources[i].oid == d->n)) {
+        if (d->cat == 4 && tile->sources[i].oid == d->n) {
             d->ret = &dso_create(&tile->sources[i])->obj;
             return -1; // Stop the search.
         }
@@ -619,7 +616,6 @@ static obj_t *dsos_get(const obj_t *obj, const char *id, int flags)
     if (strncasecmp(id, "m", 1) == 0) cat = 0;
     if (strncasecmp(id, "ngc", 3) == 0) cat = 1;
     if (strncasecmp(id, "ic", 2) == 0) cat = 2;
-    if (strncasecmp(id, "nsid", 4) == 0) cat = 3;
 
     struct {
         dsos_t      *dsos;
