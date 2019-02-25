@@ -81,7 +81,7 @@ static int on_node(qtree_node_t *node, void *user)
 {
     d_t *d = user;
     double mat[3][3], uv[4][2];
-    double pos[4][4], clip[4][4];
+    double pos[4][4], clip[5][4];
     double mid_pos[4], sep = 0;
     int i, r;
 
@@ -112,11 +112,13 @@ static int on_node(qtree_node_t *node, void *user)
     mat4_mul_vec4(*d->painter->transform, mid_pos, mid_pos);
     convert_framev4(d->painter->obs, d->frame, FRAME_VIEW,
                         mid_pos, mid_pos);
+    // Add the middle pos in the clip test points.
+    project(d->painter->proj, 0, 4, mid_pos, clip[4]);
     sep = eraSepp(mid_pos, pos[0]) * 2;
 
     // For large angles, we just go down.  I think we could optimize this if
     // needed.
-    if (sep < M_PI && is_clipped(4, clip)) return 0;
+    if (sep < M_PI && is_clipped(5, clip)) return 0;
 
     r = d->f(1, node, d->uv, pos, mat, d->painter, d->user);
     if (r != 2) return r;
