@@ -197,6 +197,7 @@ static int process_source(sources_t *sources, source_t *source)
         break;
     case SOURCE_HIPSLIST:
         data = get_data(source, "hipslist", 0, &code);
+        if (!data && code) break; // Error.
         if (!data) return 0;
         hips_parse_hipslist(data, sources, on_hips);
         break;
