@@ -344,6 +344,7 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
         project(painter->proj, 0, 4, quad[i], p[i]);
+        assert(!isnan(p[i][0]));
     }
     if (is_clipped(4, p)) return true;
 
