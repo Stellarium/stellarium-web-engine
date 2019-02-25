@@ -32,7 +32,7 @@
  *                      z = 1
  *
  *
- * Note: the algorithm will for the moment return x = y = NaN for the
+ * Note: the algorithm will for the moment return x = y = x = w = 0 for the
  * point (0, 0, 1), since this is a discontinuity.  We should maybe implement
  * the intersect_discontinuity method to handle this case properly, I am not
  * totally sure about the best way to do that.
@@ -44,11 +44,9 @@ static void proj_stereographic_project(
     double one_over_h;
     vec3_copy(v, out);
     if (!(flags & PROJ_ALREADY_NORMALIZED)) vec3_normalize(out, out);
+    // Discountinuity case.
     if (out[2] == 1.0) {
-        out[0] = NAN;
-        out[1] = NAN;
-        out[2] = 0.0; // Z = 0 => Center in the clipping space.
-        out[3] = 1.0; // w value.
+        memset(out, 0, 4 * sizeof(double));
         return;
     }
     one_over_h = 1.0 / (0.5 * (1.0 - out[2]));
