@@ -91,7 +91,7 @@ static void add_cities(cities_t *cities)
 {
     char *data, *pos;
     char *name, *asciiname, *country_code, *timezone;
-    char asciiname_upper[256], id[256];
+    char asciiname_upper[128], id[256];
     double lat, lon, el;
     city_t *city;
 
@@ -102,6 +102,7 @@ static void add_cities(cities_t *cities)
         name = TOK(pos, '\t');
         (void)name;
         asciiname = TOK(pos, '\t');
+        assert(strlen(asciiname) < sizeof(asciiname_upper));
         str_to_upper(asciiname, asciiname_upper);
         lat = atof(TOK(pos, '\t'));
         lon = atof(TOK(pos, '\t'));
@@ -109,7 +110,7 @@ static void add_cities(cities_t *cities)
         country_code = TOK(pos, '\t');
         timezone = TOK(pos, '\n');
 
-        sprintf(id, "CITY %s %s", country_code, asciiname_upper);
+        snprintf(id, sizeof(id), "CITY %s %s", country_code, asciiname_upper);
         city = (city_t*)obj_create("city", id, (obj_t*)cities, NULL);
         city->obj.oid = oid_create("CITY", crc32(0, (void*)id, strlen(id)));
 
