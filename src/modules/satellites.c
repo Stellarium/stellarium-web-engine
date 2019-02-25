@@ -167,7 +167,10 @@ static bool load_data(satellites_t *sats)
     // Only visual for the moment.
     snprintf(url, sizeof(url), "%s/%s", sats->source_url, "visual.txt");
     data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
-    if (!data && code) LOG_E("Cannot load %s: %d", url, code);
+    if (!data && code) {
+        LOG_E("Cannot load %s: %d", url, code);
+        sats->loaded = true;
+    }
     if (!data) return false;
     nb = parse_tle_file(sats, data);
     LOG_D("Parsed %d satellites", nb);
