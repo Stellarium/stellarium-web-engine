@@ -207,6 +207,7 @@ static void load_fonts_texture(void)
 
 static void init_ImGui(gui_t *gui)
 {
+    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -270,7 +271,10 @@ void gui_init(void *user)
 
 void gui_release(void)
 {
-    ImGui::Shutdown();
+    ImGuiIO& io = ImGui::GetIO();
+    gui_t *gui = (gui_t*)io.UserData;
+    free(gui);
+    ImGui::DestroyContext();
 }
 
 // Function that create a base widget.

@@ -46,7 +46,7 @@ namespace ImGui {
                     ImVec2(glyph->U1, glyph->V1),
                     ImVec2(glyph->U0, glyph->V1),
                     0xFFFFFFFF);
-            pos.y -= glyph->XAdvance * s;
+            pos.y -= glyph->AdvanceX * s;
         }
         ImGui::PopID();
         return ret;
