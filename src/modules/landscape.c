@@ -131,6 +131,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     PROFILE(landscape_render, 0);
     landscape_t *ls = (landscape_t*)obj;
     painter_t painter = *painter_;
+    double alpha, alt;
     double brightness;
     // Hack matrix to fix the hips survey orientation.
     const double rg2h[4][4] = {
@@ -146,9 +147,13 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     brightness = get_global_brightness();
     render_fog(&painter);
 
-    // Adjust the alpha to make the landscape transparent when we look down.
-    painter.color[3] *= mix(1.0, 0.25,
-                        smoothstep(0, -45, painter.obs->altitude * DR2D));
+    // Adjust the alpha to make the landscape transparent when we look down
+    // and when we zoom in.
+    alt = painter.obs->altitude;
+    alpha = smoothstep(1, 20, core->fov * DR2D);
+    alpha = mix(alpha, alpha / 2, smoothstep(0, -45, alt * DR2D));
+    painter.color[3] *= alpha;
+    if (painter.color[3] == 0.0) return 0;
 
     if (ls->hips && hips_is_ready(ls->hips)) {
         vec3_mul(brightness, painter.color, painter.color);
