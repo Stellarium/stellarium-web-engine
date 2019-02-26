@@ -133,7 +133,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     double brightness;
     // Hack matrix to fix the hips survey orientation.
-    double rg2h[4][4] = {
+    const double rg2h[4][4] = {
         {1,  0,  0,  0},
         {0, -1,  0,  0},
         {0,  0,  1,  0},
