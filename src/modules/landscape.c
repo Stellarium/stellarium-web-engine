@@ -41,6 +41,7 @@ typedef struct landscape {
 typedef struct landscapes {
     obj_t           obj;
     fader_t         visible;
+    fader_t         fog_visible;
     landscape_t     *current; // The current landscape.
     int             loading_code; // Return code of the initial list loading.
 } landscapes_t;
@@ -106,12 +107,16 @@ static double get_global_brightness(void)
 /*
  * Render the fog using a healpix projection and opengl shader.
  */
-static void render_fog(const painter_t *painter_)
+static void render_fog(const painter_t *painter_, double alpha)
 {
     int pix, order = 1, split = 2;
     double theta, phi;
     painter_t painter = *painter_;
     projection_t proj;
+
+    painter.color[3] *= alpha;
+    if (painter.color[3] == 0.0) return;
+
     painter.flags |= PAINTER_FOG_SHADER;
     // Note: we could try to optimize further by doing a breath first
     // iteration to skip level 0 tiles.
@@ -130,6 +135,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
 {
     PROFILE(landscape_render, 0);
     landscape_t *ls = (landscape_t*)obj;
+    landscapes_t *lss = (landscapes_t*)obj->parent;
     painter_t painter = *painter_;
     double alpha, alt;
     double brightness;
@@ -144,8 +150,10 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     painter.color[3] *= ls->visible.value;
     if (painter.color[3] == 0.0) return 0;
 
+    render_fog(&painter, lss->fog_visible.value);
+
+    painter.color[3] *= lss->visible.value;
     brightness = get_global_brightness();
-    render_fog(&painter);
 
     // Adjust the alpha to make the landscape transparent when we look down
     // and when we zoom in.
@@ -199,6 +207,7 @@ static int landscapes_init(obj_t *obj, json_value *args)
 {
     landscapes_t *lss = (landscapes_t*)obj;
     fader_init(&lss->visible, true);
+    fader_init(&lss->fog_visible, true);
     return 0;
 }
 
@@ -209,18 +218,16 @@ static int landscapes_update(obj_t *obj, const observer_t *obs, double dt)
     MODULE_ITER((obj_t*)lss, ls, "landscape") {
         obj_update(ls, obs, dt);
     }
-    return fader_update(&lss->visible, dt);
+    fader_update(&lss->visible, dt);
+    fader_update(&lss->fog_visible, dt);
+    return 0;
 }
 
-static int landscapes_render(const obj_t *obj, const painter_t *painter_)
+static int landscapes_render(const obj_t *obj, const painter_t *painter)
 {
-    landscapes_t *lss = (landscapes_t*)obj;
     obj_t *ls;
-    painter_t painter = *painter_;
-
-    painter.color[3] *= lss->visible.value;
     MODULE_ITER(obj, ls, "landscape") {
-        obj_render(ls, &painter);
+        obj_render(ls, painter);
     }
     return 0;
 }
@@ -325,6 +332,8 @@ static obj_klass_t landscapes_klass = {
     .render_order   = 40,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(landscapes_t, visible.target)),
+        PROPERTY(fog_visible, TYPE_BOOL,
+                 MEMBER(landscapes_t, fog_visible.target)),
         PROPERTY(current, TYPE_OBJ, MEMBER(landscapes_t, current)),
         PROPERTY(current_id, TYPE_STRING, .fn = landscapes_current_id_fn),
         {}

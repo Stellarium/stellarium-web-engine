@@ -611,6 +611,7 @@ void core_on_key(int key, int action)
     static char *SC[][3] = {
         {"A", "core.atmosphere"},
         {"G", "core.landscapes"},
+        {"F", "core.landscapes", "fog_visible"},
         {"C", "core.constellations", "lines_visible"},
         {"R", "core.constellations", "images_visible"},
         {"Z", "core.lines.azimuthal"},
