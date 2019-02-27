@@ -134,18 +134,22 @@ void observer_update(observer_t *obs, bool fast)
             fabs(obs->last_accurate_update - obs->tt) < 1.0;
 
     // Compute UT1 and UTC time.
-    dt = deltat(obs->tt);
-    dut1 = 0;
-    eraTtut1(DJM0, obs->tt, dt, &ut11, &ut12);
-    eraTttai(DJM0, obs->tt, &tai1, &tai2);
-    eraTaiutc(tai1, tai2, &utc1, &utc2);
-    obs->ut1 = ut11 - DJM0 + ut12;
-    obs->utc = utc1 - DJM0 + utc2;
+    if (obs->last_update != obs->tt) {
+        dt = deltat(obs->tt);
+        dut1 = 0;
+        eraTtut1(DJM0, obs->tt, dt, &ut11, &ut12);
+        eraTttai(DJM0, obs->tt, &tai1, &tai2);
+        eraTaiutc(tai1, tai2, &utc1, &utc2);
+        obs->ut1 = ut11 - DJM0 + ut12;
+        obs->utc = utc1 - DJM0 + utc2;
+    }
 
     if (fast) {
-        eraAper13(DJM0, obs->ut1, &obs->astrom);
-        eraPvu(obs->tt - obs->last_update, obs->earth_pvh, obs->earth_pvh);
-        eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
+        if (obs->last_update != obs->tt) {
+            eraAper13(DJM0, obs->ut1, &obs->astrom);
+            eraPvu(obs->tt - obs->last_update, obs->earth_pvh, obs->earth_pvh);
+            eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
+        }
     } else {
         eraApco13(DJM0, obs->utc, dut1,
                 obs->elong, obs->phi,
@@ -165,7 +169,7 @@ void observer_update(observer_t *obs, bool fast)
     }
     eraPvmpv(obs->earth_pvb, obs->earth_pvh, obs->sun_pvb);
 
-    if (fast) {
+    if (fast && obs->last_update != obs->tt) {
         // Update observer geocentric position obs_pvg. We can't use eraPvu here
         // as the movement is a rotation about the earth center and can't
         // be approximated by a linear velocity  on a 24h time span
