@@ -745,7 +745,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double point_size;       // Radius size of point (pixel).
     double point_r;          // Size (rad) and luminance if the planet is seen
     double point_luminance;  // as a point source (like a star).
-    double radius;           // Planet rendered radius (AU).
+    double radius_m, radius;
     double r_scale = 1.0;    // Artificial size scale.
     double diam;                // Angular diameter (rad).
     double s;
@@ -777,10 +777,15 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
     point_r = core_get_apparent_angle_for_point(painter.proj, point_size);
 
+    // Compute max angular radius of the planet, taking into account the
+    // ring and the point size if it is bigger than the planet.
+    radius_m = max(planet->radius_m, planet->rings.outer_radius) * r_scale;
+    radius = max(radius_m / DAU / vec3_norm(planet->obj.pvo[0]), point_r);
+
     // Compute planet's bounding cap in ICRF
     vec4_copy(planet->obj.pvo[0], cap);
     vec3_normalize(cap, cap);
-    cap[3] = cos(max(planet->radius * r_scale, point_r));
+    cap[3] = cos(radius);
 
     if (painter_is_cap_clipped_fast(&painter, FRAME_ICRF, cap))
         return;
@@ -790,8 +795,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec3_copy(cap, pos);
     if (!cap_contains_vec3(cap, painter.viewport_caps[FRAME_ICRF])) {
         vec3_cross(pos, painter.viewport_caps[FRAME_ICRF], axis);
-        quat_from_axis(q, max(planet->radius * r_scale, point_r),
-                       axis[0], axis[1], axis[2]);
+        quat_from_axis(q, radius, axis[0], axis[1], axis[2]);
         quat_mul_vec3(q, pos, closest);
         vec3_normalize(closest, closest);
         convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, closest, vpos);
