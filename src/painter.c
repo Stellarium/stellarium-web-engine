@@ -328,7 +328,9 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
 
     // At order zero, the tiles are too big and it can give false positive,
     // so in that case is check the four tiles of level one.
-    if (outside && order < 1) {
+    // XXX: we could probably avoid this if the level zero tile has a visible
+    // vertex.
+    if (order < 1) {
         for (i = 0; i < 4; i++) {
             if (!painter_is_tile_clipped(
                         painter, frame, order + 1, pix * 4 + i, outside))
