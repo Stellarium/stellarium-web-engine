@@ -74,7 +74,6 @@ typedef struct {
     void        *img;
     int         w, h, bpp;
     texture_t   *tex;
-    texture_t   *allsky_tex;
 } img_tile_t;
 
 // Gobal cache for all the tiles.
@@ -91,12 +90,14 @@ struct hips {
     uint32_t    hash; // Hash of the url.
 
     // Stores the allsky image if available.
+    // We only do it for order zero allsky.
     struct {
         worker_t    worker; // Worker to load the image in a thread.
         bool        not_available;
         uint8_t     *src_data; // Encoded image data (png, webp...)
         uint8_t     *data;     // RGB[A] image data.
         int         w, h, bpp, size;
+        texture_t   *textures[12];
     }           allsky;
 
     // Contains all the properties as a json object.
@@ -342,22 +343,23 @@ texture_t *hips_get_tile_texture(
         free(tile->img);
         tile->img = NULL;
     }
-
-    // Create allsky texture if needed.
-    if (    (flags & HIPS_FORCE_USE_ALLSKY) && order == hips->order_min &&
-            !tile->tex && !tile->allsky_tex)
-    {
-        nbw = (int)sqrt(12 * (1 << (2 * hips->order_min)));
-        x = (pix % nbw) * hips->allsky.w / nbw;
-        y = (pix / nbw) * hips->allsky.w / nbw;
-        tile->allsky_tex = texture_from_data(
-                hips->allsky.data, hips->allsky.w, hips->allsky.h,
-                hips->allsky.bpp,
-                x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
-    }
-
     if (tile && tile->tex) return tile->tex;
-    if (tile && tile->allsky_tex) return tile->allsky_tex;
+
+
+    // Return the allsky texture if the tile is not ready yet.  Only do
+    // it for level 0 allsky for the moment.
+    if (!tile && order == 0 && hips->allsky.data) {
+        if (!hips->allsky.textures[pix]) {
+            nbw = (int)sqrt(12 * (1 << (2 * hips->order_min)));
+            x = (pix % nbw) * hips->allsky.w / nbw;
+            y = (pix / nbw) * hips->allsky.w / nbw;
+            hips->allsky.textures[pix] = texture_from_data(
+                    hips->allsky.data, hips->allsky.w, hips->allsky.h,
+                    hips->allsky.bpp,
+                    x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
+        }
+        return hips->allsky.textures[pix];
+    }
 
     // If we didn't find the tile, or the texture is not loaded yet,
     // fallback to one of the parent tile texture.
@@ -460,48 +462,6 @@ void hips_set_label(hips_t *hips, const char* label)
     asprintf(&hips->label, "%s", label);
 }
 
-static const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
-                                        const void *data, int size)
-{
-    const void *tile_data;
-    int cost = 0, transparency = 0;
-    tile_t *tile;
-    tile_key_t key = {hips->hash, order, pix};
-
-    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
-    tile = cache_get(g_cache, &key, sizeof(key));
-    assert(!tile);
-
-    assert(hips->settings.create_tile);
-    tile_data = hips->settings.create_tile(
-            hips->settings.user, order, pix, data, size, &cost, &transparency);
-    assert(tile_data);
-
-    tile = calloc(1, sizeof(*tile));
-    tile->pos.order = order;
-    tile->pos.pix = pix;
-    tile->data = tile_data;
-    tile->hips = hips;
-    tile->flags = (transparency * TILE_NO_CHILD_0);
-
-    cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
-              del_tile);
-    return tile->data;
-}
-
-/*
- * Add some virtual img tiles for the allsky texture.
- * The trick for the moment is to put the allsky tiles at order -1, with
- * no associated image data.
- */
-static void add_allsky_tiles(hips_t *hips)
-{
-    int pix;
-    for (pix = 0; pix < 12; pix++) {
-        hips_add_manual_tile(hips, -1, pix, NULL, 0);
-    }
-}
-
 static int load_allsky_worker(worker_t *worker)
 {
     typeof(((hips_t*)0)->allsky) *allsky = (void*)worker;
@@ -529,8 +489,10 @@ static bool hips_update(hips_t *hips)
     }
 
     // Get the allsky before anything else if available.
+    // Only for level zero allsky images.  We don't use the other ones.
     if (!hips->allsky.worker.fn &&
-            !hips->allsky.not_available && !hips->allsky.data) {
+            !hips->allsky.not_available && !hips->allsky.data &&
+            hips->order_min == 0) {
         snprintf(url, sizeof(url), "%s/Norder%d/Allsky.%s?v=%d",
                  hips->service_url, hips->order_min, hips->ext,
                  (int)hips->release_date);
@@ -549,7 +511,6 @@ static bool hips_update(hips_t *hips)
     if (hips->allsky.worker.fn) {
         if (!worker_iter(&hips->allsky.worker)) return false;
         if (!hips->allsky.data) hips->allsky.not_available = true;
-        if (hips->allsky.data) add_allsky_tiles(hips); // Still needed?
         hips->allsky.worker.fn = NULL;
     }
 
@@ -678,9 +639,6 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     char url[URL_MAX_SIZE];
     tile_t *tile, *parent;
     tile_key_t key = {hips->hash, order, pix};
-
-    // To handle allsky textures we use the order -1.
-    if (flags & HIPS_FORCE_USE_ALLSKY) key.order = -1;
 
     assert(order >= 0);
     *code = 0;
@@ -825,7 +783,6 @@ static int delete_img_tile(void *tile_)
 {
     img_tile_t *tile = tile_;
     texture_release(tile->tex);
-    texture_release(tile->allsky_tex);
     free(tile);
     return 0;
 }
