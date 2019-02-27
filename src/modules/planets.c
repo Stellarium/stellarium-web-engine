@@ -488,6 +488,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     bool loaded;
 
     (*nb_tot)++;
+    flags |= HIPS_LOAD_IN_THREAD;
     tex = hips_get_tile_texture(hips, order, pix, flags, uv, &fade, &loaded);
     if (loaded) (*nb_loaded)++;
     if (planet->hips_normalmap) {
