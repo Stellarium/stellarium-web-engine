@@ -70,11 +70,12 @@ int sys_make_dir(const char *path)
     return 0;
 }
 
-int sys_device_sensors(int enable, double acc[3], double mag[3], int *rot)
+int sys_device_sensors(bool enable_accelero, bool enable_magneto,
+                       double acc[3], double mag[3], int *rot)
 {
     if (!sys_callbacks.device_sensors) return -1;
     return sys_callbacks.device_sensors(
-            sys_callbacks.user, enable, acc, mag, rot);
+            sys_callbacks.user, enable_accelero, enable_magneto, acc, mag, rot);
 }
 
 int sys_get_position(double *lat, double *lon, double *alt, double *accuracy)
