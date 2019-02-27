@@ -87,16 +87,6 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
                           int *code);
 
 /*
- * Function: hips_add_manual_tile
- * Add some pre loaded tiles into a survey.
- *
- * Don't use this.  This is just there for the moment for the stars survey
- * that mixes different sources.
- */
-const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
-                                 const void *data, int size);
-
-/*
  * Function: hips_is_ready
  * Check if a hips survey is ready to use
  *

@@ -460,6 +460,35 @@ void hips_set_label(hips_t *hips, const char* label)
     asprintf(&hips->label, "%s", label);
 }
 
+static const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
+                                        const void *data, int size)
+{
+    const void *tile_data;
+    int cost = 0, transparency = 0;
+    tile_t *tile;
+    tile_key_t key = {hips->hash, order, pix};
+
+    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
+    tile = cache_get(g_cache, &key, sizeof(key));
+    assert(!tile);
+
+    assert(hips->settings.create_tile);
+    tile_data = hips->settings.create_tile(
+            hips->settings.user, order, pix, data, size, &cost, &transparency);
+    assert(tile_data);
+
+    tile = calloc(1, sizeof(*tile));
+    tile->pos.order = order;
+    tile->pos.pix = pix;
+    tile->data = tile_data;
+    tile->hips = hips;
+    tile->flags = (transparency * TILE_NO_CHILD_0);
+
+    cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
+              del_tile);
+    return tile->data;
+}
+
 /*
  * Add some virtual img tiles for the allsky texture.
  * The trick for the moment is to put the allsky tiles at order -1, with
@@ -752,35 +781,6 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
     if (*code == 200) assert(tile && tile->data);
     if (*code == 0) assert(!tile);
     return tile ? tile->data : NULL;
-}
-
-const void *hips_add_manual_tile(hips_t *hips, int order, int pix,
-                                 const void *data, int size)
-{
-    const void *tile_data;
-    int cost = 0, transparency = 0;
-    tile_t *tile;
-    tile_key_t key = {hips->hash, order, pix};
-
-    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
-    tile = cache_get(g_cache, &key, sizeof(key));
-    assert(!tile);
-
-    assert(hips->settings.create_tile);
-    tile_data = hips->settings.create_tile(
-            hips->settings.user, order, pix, data, size, &cost, &transparency);
-    assert(tile_data);
-
-    tile = calloc(1, sizeof(*tile));
-    tile->pos.order = order;
-    tile->pos.pix = pix;
-    tile->data = tile_data;
-    tile->hips = hips;
-    tile->flags = (transparency * TILE_NO_CHILD_0);
-
-    cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
-              del_tile);
-    return tile->data;
 }
 
 /*
