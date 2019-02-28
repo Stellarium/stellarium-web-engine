@@ -787,15 +787,14 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     radius_m = max(planet->radius_m, planet->rings.outer_radius) * r_scale;
     radius = max(radius_m / DAU / vec3_norm(planet->obj.pvo[0]), point_r);
 
-    // Compute planet's bounding cap in ICRF
-    vec4_copy(planet->obj.pvo[0], cap);
-    vec3_normalize(cap, cap);
+    // Compute planet's pos and bounding cap in ICRF
+    vec3_copy(planet->obj.pvo[0], pos);
+    vec3_normalize(pos, pos);
+    vec3_copy(pos, cap);
     cap[3] = cos(radius);
 
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap, true))
         return;
-
-    vec3_copy(cap, pos);
 
     // At least 1 px of the planet is visible, report it for tonemapping
     core_report_vmag_in_fov(vmag, planet->radius, 0);
