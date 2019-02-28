@@ -112,12 +112,6 @@ double unix_to_mjd(double t);
  */
 void *read_file(const char *path, int *size);
 
-/*
- * Function: is_clipped
- * Test if a shape in clipping coordinate is clipped or not.
- */
-bool is_clipped(int n, double (*pos)[4]);
-
 bool intersect_circle_rect(const double rect[4], const double c_center[2],
                            double r);
 

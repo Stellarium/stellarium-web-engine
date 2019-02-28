@@ -9,6 +9,31 @@
 
 #include "swe.h"
 
+// Test if a shape in clipping coordinates is clipped or not.
+static bool is_clipped(int n, double (*pos)[4])
+{
+    // The six planes equations:
+    const int P[6][4] = {
+        {-1, 0, 0, -1}, {1, 0, 0, -1},
+        {0, -1, 0, -1}, {0, 1, 0, -1},
+        {0, 0, -1, -1}, {0, 0, 1, -1}
+    };
+    int i, p;
+    for (p = 0; p < 6; p++) {
+        for (i = 0; i < n; i++) {
+            if (    P[p][0] * pos[i][0] +
+                    P[p][1] * pos[i][1] +
+                    P[p][2] * pos[i][2] +
+                    P[p][3] * pos[i][3] <= 0) {
+                break;
+            }
+        }
+        if (i == n) // All the points are outside a clipping plane.
+            return true;
+    }
+    return false;
+}
+
 static int enqueue(qtree_node_t *nodes, int n,
                    int *start, int *size,
                    qtree_node_t *node)
