@@ -743,11 +743,43 @@ static void planet_render_orbit(const planet_t *planet,
                 in, om, w, a, n, ec, ma);
 }
 
+static void planet_render_label(
+        const planet_t *planet, const painter_t *painter, double scale,
+        double point_size)
+{
+    const double label_color[4] = RGBA(124, 124, 255, 255);
+    const double white[4] = {1, 1, 1, 1};
+    double s, radius;
+    double pos[3];
+    const char *name;
+    char label[256];
+    bool selected = core->selection && planet->obj.oid == core->selection->oid;
+
+    name = sys_translate("skyculture", planet->name);
+    if (scale == 1.0)
+        snprintf(label, sizeof(label), "%s", name);
+    else
+        snprintf(label, sizeof(label), "%s x%.1f", name, scale);
+
+    vec3_copy(planet->obj.pvo[0], pos);
+    vec3_normalize(pos, pos);
+
+    // Radius on screen in pixel.
+    radius = planet->radius / 2.0 *
+        painter->proj->window_size[0] / painter->proj->scaling[0];
+
+    s = point_size;
+    s = max(s, radius);
+
+    labels_add_3d(label, FRAME_ICRF, pos,
+                  true, s + 4, 14, selected ? white : label_color, 0,
+                  selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                  -planet->obj.vmag, planet->obj.oid);
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], p_win[4];
-    double label_color[4] = RGBA(124, 124, 255, 255);
-    const double white[4] = {1, 1, 1, 1};
     double color[4];
     double vmag;             // Observed magnitude.
     double point_size;       // Radius size of point (pixel).
@@ -756,12 +788,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double radius_m, radius;
     double r_scale = 1.0;    // Artificial size scale.
     double diam;                // Angular diameter (rad).
-    double s;
     double hips_alpha = 0;
     painter_t painter = *painter_;
     point_t point;
     double hips_k = 2.0; // How soon we switch to the hips survey.
-    char label[256];
     planets_t *planets = (planets_t*)planet->obj.parent;
     bool selected = core->selection && planet->obj.oid == core->selection->oid;
     double cap[4];
@@ -832,23 +862,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                            hips_alpha, &painter);
     }
 
-    if (selected || vmag <= painter.hints_limit_mag - 1.0) {
-        if (r_scale == 1.0) {
-            strcpy(label, sys_translate("skyculture", planet->name));
-        } else {
-            sprintf(label, "%s x%.1f",
-                    sys_translate("skyculture", planet->name), r_scale);
-        }
-        s = point_size;
-        // Radius on screen in pixel.
-        radius = planet->radius / 2.0 *
-            painter.proj->window_size[0] / painter.proj->scaling[0];
-        s = max(s, radius);
-        labels_add_3d(label, FRAME_ICRF, cap,
-                      true, s + 4, 14, selected ? white : label_color, 0,
-                      selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
-                      -vmag, planet->obj.oid);
-    }
+    if (selected || vmag <= painter.hints_limit_mag - 1.0)
+        planet_render_label(planet, &painter, r_scale, point_size);
 
     // For the moment we never render the orbits!
     // I think it would be better to render the orbit in a separate module
