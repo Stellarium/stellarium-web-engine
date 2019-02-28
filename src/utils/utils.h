@@ -33,23 +33,6 @@
 
 #define ARRAY_SIZE(x) ((int)(sizeof(x) / sizeof((x)[0])))
 
-// C lambda trick, to be used only when testing small hackish code.
-// Used like this:
-//      func(x, y, LAMBDA(void _(int x) { ... }));
-#if DEBUG
-    #define LAMBDA(f_) ({ f_ _; })
-#endif
-
-// IS_IN(x, ...): returns true if x is equal to any of the other arguments.
-#define IS_IN(x, ...) ({ \
-        bool _ret = false; \
-        const typeof(x) _V[] = {__VA_ARGS__}; \
-        int _i; \
-        for (_i = 0; _i < (int)ARRAY_SIZE(_V); _i++) \
-            if (x == _V[_i]) _ret = true; \
-        _ret; \
-    })
-
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \
       __typeof__ (b) _b = (b); \
