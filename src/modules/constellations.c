@@ -354,7 +354,7 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
     if (painter.color[3] == 0.0) return 0;
 
     // Check that it's intersecting with current viewport
-    if (painter_is_cap_clipped_fast(&painter, FRAME_ICRF, con->bounding_cap))
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->bounding_cap, false))
         return 0;
 
     painter2 = painter;

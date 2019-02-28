@@ -290,9 +290,11 @@ void paint_debug(bool value)
     g_debug = value;
 }
 
-bool painter_is_cap_clipped_fast(const painter_t *painter, int frame,
-                                 const double cap[4])
+bool painter_is_cap_clipped(const painter_t *painter, int frame,
+                            const double cap[4], bool precise)
 {
+    double pos[3], axis[3], q[4];
+
     if (!cap_intersects_cap(painter->viewport_caps[frame], cap))
         return true;
 
@@ -300,6 +302,21 @@ bool painter_is_cap_clipped_fast(const painter_t *painter, int frame,
     if (painter->flags & PAINTER_HIDE_BELOW_HORIZON &&
             !cap_intersects_cap(painter->sky_caps[frame], cap))
         return true;
+
+    if (!precise) return false;
+
+    // Compute 2D position of disk point the closest to the screen
+    // center to perform exact clipping.
+    if (!cap_contains_vec3(cap, painter->viewport_caps[frame])) {
+        vec3_copy(cap, pos);
+        vec3_cross(pos, painter->viewport_caps[frame], axis);
+        quat_from_axis(q, acos(cap[3]), axis[0], axis[1], axis[2]);
+        quat_mul_vec3(q, pos, pos);
+        vec3_normalize(pos, pos);
+        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
+        if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, pos))
+            return true;
+    }
 
     return false;
 }

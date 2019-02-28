@@ -745,7 +745,7 @@ static void planet_render_orbit(const planet_t *planet,
 
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
-    double pos[4], vpos[3], p_win[4];
+    double pos[4], p_win[4];
     double label_color[4] = RGBA(124, 124, 255, 255);
     const double white[4] = {1, 1, 1, 1};
     double color[4];
@@ -765,9 +765,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     planets_t *planets = (planets_t*)planet->obj.parent;
     bool selected = core->selection && planet->obj.oid == core->selection->oid;
     double cap[4];
-    double q[4];
-    double axis[3];
-    double closest[3];
     const hips_t *hips;
 
     vmag = planet->obj.vmag;
@@ -795,21 +792,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec3_normalize(cap, cap);
     cap[3] = cos(radius);
 
-    if (painter_is_cap_clipped_fast(&painter, FRAME_ICRF, cap))
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap, true))
         return;
 
-    // Compute 2D position of planetary disk point the closest to the screen
-    // center to perform exact clipping.
     vec3_copy(cap, pos);
-    if (!cap_contains_vec3(cap, painter.viewport_caps[FRAME_ICRF])) {
-        vec3_cross(pos, painter.viewport_caps[FRAME_ICRF], axis);
-        quat_from_axis(q, radius, axis[0], axis[1], axis[2]);
-        quat_mul_vec3(q, pos, closest);
-        vec3_normalize(closest, closest);
-        convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, closest, vpos);
-        if (!project(painter.proj, PROJ_TO_WINDOW_SPACE, 2, vpos, vpos))
-            return;
-    }
 
     // At least 1 px of the planet is visible, report it for tonemapping
     core_report_vmag_in_fov(vmag, planet->radius, 0);
