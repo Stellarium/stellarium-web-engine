@@ -191,15 +191,18 @@ static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
 }
 
 static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
-                                 const char *id)
+                                 const char *id, json_value *args)
 {
     landscape_t *ls;
+    const char *name = NULL;
+
     ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
     ls->uri = strdup(uri);
     ls->hips = hips_create(uri, 0, NULL);
-    ls->info.name = strdup(id);
     hips_set_label(ls->hips, "Landscape");
     hips_set_frame(ls->hips, FRAME_OBSERVED);
+    if (args) name = json_get_attr_s(args, "obs_title");
+    ls->info.name = strdup(name ?: id);
     return ls;
 }
 
@@ -266,7 +269,7 @@ static int landscapes_add_data_source(
     key = strrchr(url, '/') + 1;
     // Skip if we already have it.
     if (obj_get((obj_t*)lss, key, 0)) return 0;
-    ls = add_from_uri(lss, url, key);
+    ls = add_from_uri(lss, url, key, args);
     // If this is the first landscape, use it immediatly.
     if (ls == (void*)lss->obj.children) {
         obj_set_attr((obj_t*)ls, "active", true);
