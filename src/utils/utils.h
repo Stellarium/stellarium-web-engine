@@ -137,17 +137,3 @@ static inline bool str_startswith(const char *str, const char *s)
 
 bool str_endswith(const char *str, const char *s);
 void str_to_upper(const char *str, char *out);
-
-/*
- * Function: crc64
- * Compute crc64 hash
- *
- * Parameters:
- *   crc    - Initial crc value.
- *   s      - Data pointer.
- *   len    - Data size.
- *
- * Return:
- *   The new crc64 value.
- */
-uint64_t crc64(uint64_t crc, const void *s, uint64_t len);
