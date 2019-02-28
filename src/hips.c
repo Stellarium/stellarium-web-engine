@@ -10,6 +10,7 @@
 #include "swe.h"
 #include "ini.h"
 #include <string.h>
+#include <zlib.h> // For crc32.
 
 // Should be good enough...
 #define URL_MAX_SIZE 4096
@@ -133,7 +134,7 @@ hips_t *hips_create(const char *url, double release_date,
     hips->order_min = 3;
     hips->release_date = release_date;
     hips->frame = FRAME_ASTROM;
-    hips->hash = crc64(0, url, strlen(url)) & 0xffffffff;
+    hips->hash = crc32(0, (void*)url, strlen(url));
     return hips;
 }
 
