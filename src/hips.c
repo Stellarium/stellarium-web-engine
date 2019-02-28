@@ -550,6 +550,7 @@ int hips_render_traverse(
     render_order = hips_get_render_order(hips, painter, angle);
     if (angle < 2.0 * M_PI)
         flags |= HIPS_PLANET;
+    assert(split_order >= 0);
 
     // For extrem low resolution force using the allsky if available so that
     // we don't download too much data.
@@ -559,11 +560,6 @@ int hips_render_traverse(
     // Clamp the render order into physically possible range.
     render_order = clamp(render_order, hips->order_min, hips->order);
     render_order = min(render_order, 9); // Hard limit.
-
-    // Default split order.
-    // XXX: compute it properly.
-    if (split_order == -1)
-        split_order = (flags & HIPS_FORCE_USE_ALLSKY) ? 2 : 3;
 
     // Can't split less than the rendering order.
     split_order = max(split_order, render_order);

@@ -139,6 +139,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     double alpha, alt;
     double brightness;
+    const int split_order = 3;
     // Hack matrix to fix the hips survey orientation.
     const double rg2h[4][4] = {
         {1,  0,  0,  0},
@@ -166,7 +167,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     if (ls->hips && hips_is_ready(ls->hips)) {
         vec3_mul(brightness, painter.color, painter.color);
         painter.transform = &rg2h;
-        hips_render(ls->hips, &painter, 2 * M_PI, -1);
+        hips_render(ls->hips, &painter, 2 * M_PI, split_order);
     }
     return 0;
 }

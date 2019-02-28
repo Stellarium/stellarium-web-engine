@@ -201,9 +201,8 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter,
  *   angle   - Visible angle the survey has in the sky.
  *             (2 * PI for full sky surveys).
  *   split_order - The requested order of the final quad divisions.
- *                 Can be set to -1 for a default computed value.  The actual
- *                 split order could be higher if the rendering order is
- *                 too high for this value.
+ *                 The actual split order could be higher if the rendering
+ *                 order is too high for this value.
  */
 int hips_render(hips_t *hips, const painter_t *painter, double angle,
                 int split_order);
