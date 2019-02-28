@@ -140,24 +140,6 @@ void str_to_upper(const char *s, char *out)
     *out = '\0';
 }
 
-bool str_is_upper(const char *s)
-{
-    char c;
-    while ((c = *s++)) {
-        if (c >= 'a' && c <= 'z') return false;
-    }
-    return true;
-}
-
-void str_rstrip(char *s)
-{
-    int i;
-    for (i = strlen(s) - 1; i >= 0; i--) {
-        if (s[i] != ' ') return;
-        s[i] = '\0';
-    }
-}
-
 // Table vaues taken from redis sources.
 static const uint64_t crc64_tab[256] = {
     UINT64_C(0x0000000000000000), UINT64_C(0x7ad870c830358979),

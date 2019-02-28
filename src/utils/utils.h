@@ -154,8 +154,6 @@ static inline bool str_startswith(const char *str, const char *s)
 
 bool str_endswith(const char *str, const char *s);
 void str_to_upper(const char *str, char *out);
-bool str_is_upper(const char *s);
-void str_rstrip(char *s);
 
 /*
  * Function: crc64
