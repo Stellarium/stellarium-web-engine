@@ -112,9 +112,6 @@ double unix_to_mjd(double t);
  */
 void *read_file(const char *path, int *size);
 
-bool intersect_circle_rect(const double rect[4], const double c_center[2],
-                           double r);
-
 /*
  * Function: img_read
  * Read a png/jpeg image from a file.

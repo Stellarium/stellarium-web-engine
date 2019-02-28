@@ -43,6 +43,27 @@ static bool is_clipped(int n, double (*pos)[4])
 }
 
 
+static bool intersect_circle_rect(
+        const double rect[4], const double c_center[2], double r)
+{
+    #define sqr(x) ((x)*(x))
+    double circle_dist_x = fabs(c_center[0] - (rect[0] + rect[2] / 2));
+    double circle_dist_y = fabs(c_center[1] - (rect[1] + rect[3] / 2));
+
+    if (circle_dist_x > rect[2] / 2 + r) { return false; }
+    if (circle_dist_y > rect[3] / 2 + r) { return false; }
+
+    if (circle_dist_x <= rect[2] / 2) { return true; }
+    if (circle_dist_y <= rect[3] / 2) { return true; }
+
+    double corner_dist_sq = sqr(circle_dist_x - rect[2] / 2) +
+                            sqr(circle_dist_y - rect[3] / 2);
+
+    return corner_dist_sq <= r * r;
+    #undef sqr
+}
+
+
 /*
  * Function: compute_viewport_cap
  * Compute the viewport cap (in given frame).
