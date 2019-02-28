@@ -641,6 +641,8 @@ static void planet_render_hips(const planet_t *planet,
     double depth_range[2];
     double shadow_spheres[4][4];
     double epoch = DJM00; // J2000.
+    double pixel_size;
+    int split_order;
 
     if (!hips) hips = planet->hips;
     assert(hips);
@@ -690,7 +692,13 @@ static void planet_render_hips(const planet_t *planet,
         painter.depth_range = &depth_range;
     }
 
-    hips_render_traverse(hips, &painter, angle, -1,
+    // Compute the required split order, based on the size of the planet
+    // on screen.
+    pixel_size = angle * painter.proj->window_size[0] /
+                 painter.proj->scaling[0] / 2;
+    split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
+
+    hips_render_traverse(hips, &painter, angle, split_order,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)
