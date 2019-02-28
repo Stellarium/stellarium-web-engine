@@ -412,25 +412,28 @@ bool painter_is_2d_point_clipped(const painter_t *painter, const double p[2]);
 bool painter_is_2d_circle_clipped(const painter_t *painter, const double p[2],
                                  double radius);
 
-// Function: painter_is_cap_clipped_fast
-//
-// Convenience function that checks if a cap is clipped.
-// This function is fast but not very accurate.
-// To refine the clipping test, the point must be projected.
-//
-// Parameters:
-//  painter       - The painter.
-//  frame         - One of the <FRAME> enum frame.
-//  cap           - the cap
-//
-// Returns:
-//  True if the cap is clipped, false otherwise.
-//
-// When true is returned, the passed cap is guaranteed to be outside the
-// viewport. When false is returned, there is no guarantee that the cap is
-// visible.
+/*
+ * Function: painter_is_cap_clipped_fast
+ * Test if a spherical cap is clipped.
+ *
+ * Convenience function that checks if a cap is clipped.
+ * This function is fast but not very accurate.  To refine the clipping test,
+ * the point must be projected.
+ *
+ * When true is returned, the passed cap is guaranteed to be outside the
+ * viewport. When false is returned, there is no guarantee that the cap is
+ * visible.
+ *
+ * Parameters:
+ *   painter       - The painter.
+ *   frame         - One of the <FRAME> enum frame.
+ *   cap           - the cap
+ *
+ * Returns:
+ *   True if the cap is clipped, false otherwise.
+ */
 bool painter_is_cap_clipped_fast(const painter_t *painter, int frame,
-                                   const double cap[4]);
+                                 const double cap[4]);
 
 // Function: painter_update_caps
 //
