@@ -264,11 +264,6 @@ int paint_quad(const painter_t *painter,
                const projection_t *proj,
                int grid_size);
 
-// Estimate the number of pixels covered by a quad.
-double paint_quad_area(const painter_t *painter,
-                       const double uv[4][2],
-                       const projection_t *proj);
-
 /* Function: paint_quad_contour
  *
  * Draw the contour lines of a shape.

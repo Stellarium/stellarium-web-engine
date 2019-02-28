@@ -156,38 +156,6 @@ int paint_quad(const painter_t *painter,
     return 0;
 }
 
-// Estimate the number of pixels covered by a quad.
-double paint_quad_area(const painter_t *painter,
-                       const double uv[4][2],
-                       const projection_t *proj)
-{
-    const double DEFAULT_UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
-    double p[4][4] = {};
-    double u[2], v[2];
-    int i;
-    uv = uv ?: DEFAULT_UV;
-    double view_mat[4][4];
-
-    // Clipping space coordinates.
-    for (i = 0; i < 4; i++) {
-        vec4_set(p[i], uv[i][0], uv[i][1], 0, 1);
-        project(proj, PROJ_BACKWARD, 4, p[i], p[i]);
-        mat4_mul_vec3(view_mat, p[i], p[i]);
-        project(painter->proj, 0, 4, p[i], p[i]);
-    }
-    if (is_clipped(4, p)) return NAN;
-    // Screen coordinates.
-    for (i = 0; i < 4; i++) {
-        vec2_mul(1.0 / p[i][3], p[i], p[i]);
-        p[i][0] = (p[i][0] + 1.0) * painter->fb_size[0] / 2;
-        p[i][1] = (p[i][1] + 1.0) * painter->fb_size[1] / 2;
-    }
-    // Return the cross product.
-    vec2_sub(p[1], p[0], u);
-    vec2_sub(p[2], p[0], v);
-    return fabs(u[0] * v[1] - u[1] * v[0]);
-}
-
 int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, double size,
                       double bounds[4])
