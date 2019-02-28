@@ -229,13 +229,13 @@ static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
 static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
                                       const json_value *args)
 {
-    if (str_equ(attr->name, "distance")) {
+    if (strcmp(attr->name, "distance") == 0) {
         return args_value_new(TYPE_DIST,
                 obj->pvo[0][3] == 0 ? NAN :
                 vec3_norm(obj->pvo[0]));
     }
     // Radec is in local ICRS, i.e. equatorial J2000 observer centered
-    if (str_equ(attr->name, "radec")) {
+    if (strcmp(attr->name, "radec") == 0) {
         return args_value_new(TYPE_V4, obj->pvo[0]);
     }
     assert(false);
@@ -306,7 +306,7 @@ const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr_name)
     for (i = 0; ; i++) {
         attr = &obj->klass->attributes[i];
         if (!attr->name) return NULL;
-        if (str_equ(attr->name, attr_name)) break;
+        if (strcmp(attr->name, attr_name) == 0) break;
     }
     return attr;
 }
@@ -416,7 +416,7 @@ static void init_attribute(attribute_t *attr)
     int i;
     if (attr->fn) return;
     for (i = 0; i < ARRAY_SIZE(DEFAULT_ATTRIBUTES); i++) {
-        if (str_equ(attr->name, DEFAULT_ATTRIBUTES[i].name)) break;
+        if (strcmp(attr->name, DEFAULT_ATTRIBUTES[i].name) == 0) break;
     }
     if (i == ARRAY_SIZE(DEFAULT_ATTRIBUTES)) return;
     attr->desc = attr->desc ?: DEFAULT_ATTRIBUTES[i].desc;

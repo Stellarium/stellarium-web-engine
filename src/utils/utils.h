@@ -143,11 +143,6 @@ int z_uncompress(void *dest, int dest_size, const void *src, int src_size);
  */
 void *z_uncompress_gz(const void *src, int src_size, int *out_size);
 
-static inline bool str_equ(const char *a, const char *b)
-{
-    return strcmp(a, b) == 0;
-}
-
 /*
  * Function: str_startswith
  * Test is a string starts with an other one.

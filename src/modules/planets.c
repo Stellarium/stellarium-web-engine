@@ -1089,7 +1089,7 @@ static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
     planet_t *p;
     if (!str_startswith(id, "PLANET")) return NULL;
     PLANETS_ITER(obj, p) {
-        if (str_equ(p->obj.id, id)) {
+        if (strcmp(p->obj.id, id) == 0) {
             p->obj.ref++;
             return &p->obj;
         }

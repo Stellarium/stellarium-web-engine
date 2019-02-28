@@ -65,7 +65,7 @@ int symbols_get_for_otype(const char *type)
     int i;
     while (true) {
         for (i = 1; i < ARRAY_SIZE(ENTRIES); i++) {
-            if (str_equ(ENTRIES[i].id, type)) return i;
+            if (strcmp(ENTRIES[i].id, type) == 0) return i;
         }
         type = otype_get_parent(type);
         if (!type) break;
