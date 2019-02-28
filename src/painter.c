@@ -316,6 +316,8 @@ bool painter_is_cap_clipped(const painter_t *painter, int frame,
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, pos))
             return true;
+        // Uncomment to see where the point is on the screen.
+        // paint_2d_ellipse(painter, NULL, 0, pos, VEC(4, 4), NULL);
     }
 
     return false;
