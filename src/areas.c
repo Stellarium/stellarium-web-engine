@@ -95,8 +95,21 @@ void areas_clear_all(areas_t *areas)
     utarray_clear(areas->items);
 }
 
-// Weight function to decide what item to return during a lookup.
-static double lookup_score(const item_t *item, double dist, double max_dist)
+/*
+ * Function: lookup_score.
+ * Weight function to decide what item to return during a lookup.
+ *
+ * Parameters:
+ *   item       - An area item.
+ *   pos        - The search position.
+ *   max_dist   - The search area.
+ *
+ * Returns:
+ *   The lookup score.  The item with the highest value is the one that
+ *   should be selected.
+ */
+static double lookup_score(const item_t *item, const double pos[static 2],
+                           double max_dist)
 {
     // This is an heuristic function.  Probably need to be adjusted:
     // Works more or less like this:
@@ -107,7 +120,8 @@ static double lookup_score(const item_t *item, double dist, double max_dist)
     //   objects inside.
     // - If an item is extremely large, ignore it totally, so that when we
     //   zoom in a DSO, we can't select it anymore.
-    double area;
+    double dist, area;
+    dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
     dist = max(0, dist);
     if (dist > max_dist) return 0.0;
     area = item->a * item->b;
@@ -120,12 +134,10 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
                  uint64_t *oid, uint64_t *hint)
 {
     item_t *item = NULL, *best = NULL;
-    double dist, score, best_score = 0.0;
+    double score, best_score = 0.0;
 
     while ( (item = (item_t*)utarray_next(areas->items, item)) ) {
-        dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
-        score = lookup_score(item, dist, max_dist);
-
+        score = lookup_score(item, pos, max_dist);
         if (score > best_score) {
             best_score = score;
             best = item;
