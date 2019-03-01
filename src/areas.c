@@ -32,17 +32,28 @@ struct areas
     UT_array *items;
 };
 
+/*
+ * Compute the signed distance between a point and the closest point on an
+ * ellipse.
+ *
+ * Return a negative value when we are inside the ellipse.
+ */
 static double ellipse_dist(const double center[2], double angle,
                            double a, double b, const double p_[2])
 {
     double p[2], p2[2], t;
+
+    // Circle: can use a faster algorithm.
+    if (a == b)
+        return vec2_dist(center, p_) - a;
+
     // Convert into ellipse frame.
     vec2_sub(p_, center, p);
     vec2_rotate(-angle, p, p);
-    t = atan2(p[1], p[0]);
+    t = atan2(a * p[1], b * p[0]);
     p2[0] = a * cos(t);
     p2[1] = b * sin(t);
-    return max(0.0, vec2_norm(p) - vec2_norm(p2));
+    return vec2_norm(p) - vec2_norm(p2);
 }
 
 areas_t *areas_create(void)
@@ -97,6 +108,7 @@ static double lookup_score(const item_t *item, double dist, double max_dist)
     // - If an item is extremely large, ignore it totally, so that when we
     //   zoom in a DSO, we can't select it anymore.
     double area;
+    dist = max(0, dist);
     if (dist > max_dist) return 0.0;
     area = item->a * item->b;
     if (area > 1000.0 * max_dist * max_dist) return 0.0;
@@ -111,11 +123,7 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
     double dist, score, best_score = 0.0;
 
     while ( (item = (item_t*)utarray_next(areas->items, item)) ) {
-        if (item->a == item->b) { // Circle
-            dist = max(0, vec2_dist(item->pos, pos) - item->a);
-        } else { // Ellipse
-            dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
-        }
+        dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
         score = lookup_score(item, dist, max_dist);
 
         if (score > best_score) {
