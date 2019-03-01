@@ -18,10 +18,10 @@ uint64_t oid_create(const char *cat, uint32_t n)
 {
     uint64_t oid;
     assert(cat[strlen(cat) - 1] != ' ');
-    memcpy(((uint32_t*)&oid) + 0, &n, 4);
+    memcpy(&oid, &n, 4);
     strncpy(((char*)&oid) + 4, cat, 4);
     // Set first bit to 1 so that we can differentiate from Gaia.
-    oid |= 0x8000000000000000UL;
+    oid |= 0x8000000000000000ULL;
     return oid;
 }
 
