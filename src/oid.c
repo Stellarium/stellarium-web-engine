@@ -69,9 +69,10 @@ const char *oid_to_str(uint64_t oid, char buf[128])
 {
     char cat[4];
     if (oid_is_gaia(oid)) {
-        sprintf(buf, "Gaia DR2 %" PRIx64, oid);
+        snprintf(buf, 128, "Gaia DR2 %" PRIx64, oid);
     } else {
-        sprintf(buf, "%s %u", oid_get_catalog(oid, cat), (uint32_t)oid);
+        snprintf(buf, 128, "%.4s %u",
+                 oid_get_catalog(oid, cat), (uint32_t)oid);
     }
     return buf;
 }
