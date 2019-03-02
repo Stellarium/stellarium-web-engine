@@ -111,23 +111,20 @@ void areas_clear_all(areas_t *areas)
 static double lookup_score(const item_t *item, const double pos[static 2],
                            double max_dist)
 {
-    // This is an heuristic function.  Probably need to be adjusted:
-    // Works more or less like this:
-    // - If the distance is larger than the max dist, ignore the item.
-    // - Sort items by size, with a small adjustment to favor the ones
-    //   that are centered in the lookup area.
-    // - Large item (DSO ellipse) area is clamped, to give a chance to other
-    //   objects inside.
-    // - If an item is extremely large, ignore it totally, so that when we
-    //   zoom in a DSO, we can't select it anymore.
-    double dist, area;
+    double dist, area, ret;
+
     dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
-    dist = max(0, dist);
-    if (dist > max_dist) return 0.0;
     area = item->a * item->b;
-    if (area > 1000.0 * max_dist * max_dist) return 0.0;
-    area = min(area, max_dist * max_dist / 10.0);
-    return area + max_dist * max_dist - (dist * dist) * 0.2;
+
+    // XXX: probably need to change this algo.
+    if (dist > max_dist) return 0.0;
+    // If we are inside a shape, the distance is clamped so that we still
+    // have a chance to select a DSO when we click in the middle of it.
+    dist = max(dist, -10);
+    ret = max_dist - fabs(dist);
+    ret += min(area, 10); // Up to 10 pixels advantage for larger objects.
+    return ret;
+
 }
 
 int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
