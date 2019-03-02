@@ -94,7 +94,7 @@ static struct {
     {
         .name       = "Azimuthal",
         .id         = "azimuthal",
-        .color      = 0x4c3319ff,
+        .color      = 0x6c4329ff,
         .frame      = FRAME_OBSERVED,
         .format     = 'd',
         .grid       = true,
