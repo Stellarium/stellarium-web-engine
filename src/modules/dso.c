@@ -426,7 +426,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     if (s2->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER ||
         s2->symbol == SYMBOL_CLUSTER_OF_STARS ||
         s2->symbol == SYMBOL_MULTIPLE_DEFAULT) {
-        hints_limit_mag = painter->hints_limit_mag - 3;
+        hints_limit_mag = painter->hints_limit_mag - 2.;
     }
 
     if (s2->smax == 0) {
@@ -470,7 +470,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
                                         hints_limit_mag - 0.5, vmag);
             // Smooth fade out when it's getting large
             opacity *= smoothstep(400, 120, max(win_size[0], win_size[1]));
-            vec4_set(color, 0.5, 0.5, 0.5, opacity);
+            vec4_set(color, 0.6, 0.6, 0.6, opacity);
         }
         if (color[3] > 0.05) {
             if (isnan(s2->angle) || s2->smin == 0 || s2->smin == s2->smax)
@@ -480,7 +480,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         }
     }
 
-    if (vmag <= hints_limit_mag - 1.5) {
+    if (vmag <= hints_limit_mag - 1.) {
         label_flags = LABEL_AROUND;
         if (selected) {
             label_flags |= LABEL_BOLD;
