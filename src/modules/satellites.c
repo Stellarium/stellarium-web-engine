@@ -128,7 +128,7 @@ static bool load_qsmag(satellites_t *sats)
     char url[1024];
     qsmag_t *qsmag;
 
-    if (sats->qsmags_status < 400) return true;
+    if (sats->qsmags_status >= 200 && sats->qsmags_status < 400) return true;
     if (sats->qsmags_status) return false;
     if (!sats->source_url) return false;
 
