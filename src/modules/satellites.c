@@ -338,7 +338,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     double vmag, size, luminance, p_win[4];
     painter_t painter = *painter_;
     point_t point;
-    double color[3] = {1, 1, 1};
+    double color[4];
     double label_color[4] = RGBA(124, 255, 124, 255);
     satellite_t *sat = (satellite_t*)obj;
     const bool selected = core->selection && obj->oid == core->selection->oid;
@@ -353,18 +353,17 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render symbol if needed.
     if (vmag < painter.hints_limit_mag) {
+        double opacity = smoothstep(3, 0, size);
+        vec4_copy(label_color, color);
+        color[3] = opacity;
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
-                      VEC(12.0, 12.0), label_color, 0.0);
-        // Still render an invisible point for the selection.
-        // XXX: should be done in symbols_paint!
-        luminance = 0;
+                      VEC(12.0, 12.0), color, 0.0);
     }
 
     point = (point_t) {
         .pos = {p_win[0], p_win[1]},
         .size = size,
-        .color = {color[0] * 255, color[1] * 255, color[2] * 255,
-                  luminance * 255},
+        .color = {255, 255, 255, luminance * 255},
         .oid = obj->oid,
     };
     paint_2d_points(&painter, 1, &point);
