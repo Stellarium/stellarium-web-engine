@@ -12,6 +12,7 @@ from math import *
 
 import os
 import struct
+import sys
 import zlib
 
 # Unit constants: must be exactly the same as in src/eph-file.h!
@@ -79,7 +80,12 @@ def create_tile(data, chunk_type, nuniq, path, columns):
         for col in columns:
             v = d[col['id']]
             t = col['type']
-            if t == 's': t = '%ds' % col['size']
+            if t == 's':
+                if len(v) > col['size']:
+                    print >>sys.stderr, 'String too long (%s)' % col['id']
+                    print >>sys.stderr, d
+                    assert False
+                t = '%ds' % col['size']
             zerobits = col.get('zerobits', 0)
             if zerobits: v = float_trunc(v, zerobits)
             buf += struct.pack(t, v)
