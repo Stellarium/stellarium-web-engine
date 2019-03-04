@@ -408,6 +408,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     double hints_limit_mag = painter->hints_limit_mag - 0.5;
     const bool selected = core->selection && s->oid == core->selection->oid;
     int label_flags;
+    double opacity;
     painter_t tmp_painter;
 
     const float vmag = s->display_vmag;
@@ -463,11 +464,14 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         tmp_painter = *painter;
         if (selected) {
             tmp_painter.lines_width = 2;
-            vec4_set(color, 1, 1, 1, 1);
+            // Smooth fade out when it's getting large, even when selected
+            // for performance reasons
+            opacity = smoothstep(800, 240, max(win_size[0], win_size[1]));
+            vec4_set(color, 1, 1, 1, opacity);
         } else {
             // Smooth fade in when zooming
-            double opacity = smoothstep(hints_limit_mag + 0.5,
-                                        hints_limit_mag - 0.5, vmag);
+            opacity = smoothstep(hints_limit_mag + 0.5,
+                                 hints_limit_mag - 0.5, vmag);
             // Smooth fade out when it's getting large
             opacity *= smoothstep(400, 120, max(win_size[0], win_size[1]));
             vec4_set(color, 0.6, 0.6, 0.6, opacity);
