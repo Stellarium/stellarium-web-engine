@@ -388,6 +388,26 @@ static void constellation_del(obj_t *obj)
     free(con->name_translated);
 }
 
+static void constellation_get_2d_ellipse(const obj_t *obj,
+                               const observer_t *obs,
+                               const projection_t* proj,
+                               double win_pos[2], double win_size[2],
+                               double* win_angle)
+{
+    const constellation_t *con = (constellation_t*)obj;
+    double ra, de;
+
+    painter_t tmp_painter;
+    tmp_painter.obs = obs;
+    tmp_painter.proj = proj;
+    eraC2s(con->bounding_cap, &ra, &de);
+    double size_x = acos(con->bounding_cap[3]) * 2;
+    painter_project_ellipse(&tmp_painter, FRAME_ICRF, ra, de, 0,
+                            size_x, size_x, win_pos, win_size, win_angle);
+    win_size[0] /= 2.0;
+    win_size[1] /= 2.0;
+}
+
 static void constellation_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
@@ -574,6 +594,7 @@ static obj_klass_t constellation_klass = {
     .render_pointer = constellation_render_pointer,
     .del            = constellation_del,
     .get_designations = constellation_get_designations,
+    .get_2d_ellipse = constellation_get_2d_ellipse,
     .attributes     = (attribute_t[]) {
         // Default properties.
         INFO(name),
