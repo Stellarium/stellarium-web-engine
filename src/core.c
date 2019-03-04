@@ -409,12 +409,17 @@ int core_update(double dt)
     tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
-    // Adjust star linear scale in function of screen resolution
+    // Adjust star linear scale in function of screen angular resolution
     // It ranges from 0.5 for a small screen to 1.4 for large screens
     double resol = core->fov / min(core->win_size[0], core->win_size[1]);
     double delta = 0.5 * (1.0 - resol / (120. * DD2R / 400));
     delta = max(0, delta);
     core->star_linear_scale = 0.5 + delta;
+
+    // Adjust hints/labels amount in function of screen pixel resolution
+    // 0 for 400 px screen, 1 for 800 px screen, 2 for 1200 etc..
+    delta = -1.0 + (min(core->win_size[0], core->win_size[1]) / 400);
+    core->hints_mag_offset = -1 + delta;
 
     core_update_direction(dt);
 
