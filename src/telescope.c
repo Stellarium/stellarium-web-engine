@@ -23,6 +23,50 @@ static const double Deye = 6.3;
 // Naked eye or eyepiece Field Of View (rad)
 static const double FOVeye = 60 / 180. * M_PI;
 
+// Here is a list of typical telescope setups, which could be used
+// for future improved simulation of instrument.
+
+// Visual/binoculars view
+// FOV    Diam  Focal Eyep-Foc Magnif  Name
+//----------------------------------------------------
+// 120     6.3    n/a      n/a   x0.5  Eye
+// 60      6.3    n/a      n/a     x1  Eye
+// 12       30    n/a      n/a     x5  5x30 Binoculars
+//  8.5     35    n/a      n/a     x7  7x35 Binoculars
+//  6       50    n/a      n/a    x10  10x50 Binoculars
+//  3       80    n/a      n/a    x20  20x80 Astro Binoculars
+
+// Cheap amateur telescopes
+// FOV    Diam  Focal Eyep-Foc Magnif  Name
+//----------------------------------------------------
+// 1.71     70    700       20    x35  70/700 Refractor, 20 mm eyepiece
+// 1.66    114    900       25    x36  114/900 Telescope, 25 mm eyepiece
+// 0.89    203   2032       30    x67  C8 Telescope F/10, 30 mm eyepiece
+
+// Largest visual telescopes
+// FOV    Diam  Focal Eyep-Foc Magnif  Name
+//----------------------------------------------------
+// 1.71    356   1650       35    x35  Big Dobsonian F/4.6, 35 mm ep
+// 0.71   1000   3000       35    x85  1m Dobsonian F/3, 35 mm ep
+
+// Amateur DSLR photo on a C8
+// 1 image = 3000 x 2000 px covering 2.1 x 1.4 deg, 30 min exposure
+// For a 800 pixel screen, full res is 0.56 deg
+// FOV    Diam  Focal Exp-time Magnif  Name
+//----------------------------------------------------
+// 1.68    203   2032     30    x36  DSLR on C8, 1/3 resolution
+// 0.56    203   2032     30   x107  DSLR on C8, full resolution
+
+// Typical DSS telescope photo setup (UK Schmidt telescope):
+// 1 image = 23040 x 23040 px covering 6.4 x 6.4 deg, ~30 min exposure
+// For a 800 pixel screen, full res is 0.22 deg
+// FOV    Diam  Focal Exp-time Magnif  Name
+//----------------------------------------------------
+// 0.66   1830   3070     30    x90  DSS, 1/3 resolution
+// 0.22   1830   3070     30   x272  DSS, full resolution
+
+
+
 void telescope_auto(telescope_t *tel, double fov)
 {
     // Magnification is given by the current zoom level
