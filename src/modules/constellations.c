@@ -275,15 +275,9 @@ end:
         con->img_need_rescale = false;
 
         // Update bounding cap to also include image vertices
-        const double uvs[4][2] = {{0, 0}, {con->img->w, 0},
-                                  {con->img->w, con->img->h},
-                                  {0, con->img->h}};
-        for (i = 0; i < 4; ++i) {
-            mat3_mul_vec2(con->mat, uvs[i], pos);
-            vec3_normalize(pos, pos);
-            d = vec3_dot(con->bounding_cap, pos);
-            con->bounding_cap[3] = min(con->bounding_cap[3], d);
-        }
+        // I don't know how to do this properly..
+        // In the mean time, just add a 30% margin
+        con->bounding_cap[3] = cos(acos(con->bounding_cap[3]) * 1.30);
     }
 
     con->visible.target = cons->show_all ||
