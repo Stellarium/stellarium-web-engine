@@ -31,7 +31,6 @@ typedef struct {
     uint64_t gaia;  // Gaia source id (0 if none)
     uint32_t tyc;   // Tycho2 id.
     int     hip;    // HIP number.
-    int     hd;     // HD number.
     float   vmag;
     float   ra;     // ICRS RA  J2000.0 (rad)
     float   de;     // ICRS Dec J2000.0 (rad)
@@ -224,13 +223,6 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         }
     }
 
-    // If no name, try a HD number.
-    if (!name && selected) {
-        if (s->hd) {
-            sprintf(buf, "HD %d", s->hd);
-            name = buf;
-        }
-    }
     if (name) {
         labels_add_3d(sys_translate("skyculture", name), frame, pos, true,
                       radius, 13, label_color, 0, label_flags, -vmag, s->oid);
@@ -294,10 +286,6 @@ void star_get_designations(
     char buf[128];
     char cat[128] = {};
 
-    if (s->hd) {
-        sprintf(buf, "%d", s->hd);
-        f(obj, user, "HD", buf);
-    }
     if (s->hip) {
         sprintf(buf, "%d", s->hip);
         f(obj, user, "HIP", buf);
@@ -361,7 +349,6 @@ static int on_file_tile_loaded(const char type[4],
     eph_table_column_t columns[] = {
         {"gaia", 'Q'},
         {"hip",  'i'},
-        {"hd",   'i'},
         {"tyc",  'i'},
         {"vmag", 'f', EPH_VMAG},
         {"gmag", 'f', EPH_VMAG},
@@ -406,7 +393,7 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->sources[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                &s->gaia, &s->hip, &s->hd, &s->tyc, &vmag, &gmag,
+                &s->gaia, &s->hip, &s->tyc, &vmag, &gmag,
                 &ra, &de, &plx, &pra, &pde, &bv, ids);
         assert(!isnan(ra));
         assert(!isnan(de));
@@ -464,7 +451,7 @@ static int stars_init(obj_t *obj, json_value *args)
 {
     stars_t *stars = (stars_t*)obj;
     stars->visible = true;
-    regcomp(&stars->search_reg, "(hd|hip|gaia) *([0-9]+)",
+    regcomp(&stars->search_reg, "(hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
     return 0;
 }
@@ -623,7 +610,6 @@ static int stars_get_visitor(int order, int pix, void *user)
     if (!tile) return order < 3 ? 1 : 0;
     for (i = 0; i < tile->nb; i++) {
         if (    (d->cat == 0 && tile->sources[i].hip == d->n) ||
-                (d->cat == 1 && tile->sources[i].hd  == d->n) ||
                 (d->cat == 2 && tile->sources[i].gaia == d->n) ||
                 (d->cat == 3 && tile->sources[i].oid  == d->n)) {
             d->ret = &star_create(&tile->sources[i])->obj;
@@ -644,7 +630,6 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
     if (r) return NULL;
     n = strtoull(id + matches[2].rm_so, NULL, 10);
     if (strncasecmp(id, "hip", 3) == 0) cat = 0;
-    if (strncasecmp(id, "hd", 2) == 0) cat = 1;
     if (strncasecmp(id, "gaia", 4) == 0) cat = 2;
 
     struct {
