@@ -217,8 +217,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     if (!name && selected) {
         bayer_get(s->hip, cst, &bayer, &bayer_n);
         if (bayer) {
-            sprintf(buf, "%s%.*d %s", greek[bayer - 1], bayer_n ? 1 : 0,
-                    bayer_n, cst);
+            snprintf(buf, sizeof(buf), "%s%.*d %s",
+                     greek[bayer - 1], bayer_n ? 1 : 0, bayer_n, cst);
             name = buf;
         }
     }
@@ -233,7 +233,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
         bayer_get(s->hip, NULL, &bayer, &bayer_n);
         if (bayer) {
-            sprintf(buf, "%s%.*d", greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
+            snprintf(buf, sizeof(buf), "%s%.*d",
+                     greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
             labels_add_3d(buf, frame, pos, true, radius, 13, label_color, 0,
                        label_flags, -vmag, s->oid);
         }
@@ -775,7 +776,8 @@ static int stars_add_data_source(
         release_date = hips_parse_date(release_date_str);
 
     survey_settings.user = &stars->surveys[survey];
-    sprintf(stars->surveys[survey].url, "%s", url);
+    snprintf(stars->surveys[survey].url, sizeof(stars->surveys[survey].url),
+             "%s", url);
     stars->surveys[survey].hips = hips_create(
             stars->surveys[survey].url, release_date, &survey_settings);
 
