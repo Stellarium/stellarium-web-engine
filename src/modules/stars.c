@@ -287,15 +287,15 @@ void star_get_designations(
     char cat[128] = {};
 
     if (s->hip) {
-        sprintf(buf, "%d", s->hip);
+        snprintf(buf, sizeof(buf), "%d", s->hip);
         f(obj, user, "HIP", buf);
     }
     if (s->gaia) {
-        sprintf(buf, "%" PRId64, s->gaia);
+        snprintf(buf, sizeof(buf), "%" PRId64, s->gaia);
         f(obj, user, "GAIA", buf);
     }
     while (names && *names) {
-        strncpy(cat, names, sizeof(cat) - 1);
+        strncpy(cat, names, sizeof(cat));
         if (!strchr(cat, ' ')) { // No catalog.
             f(obj, user, "", cat);
         } else {
