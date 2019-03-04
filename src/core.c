@@ -415,6 +415,11 @@ int core_update(double dt)
     delta = min(max(0, delta), 0.9);
     core->star_linear_scale = 0.5 + delta;
 
+    // Tiny adjustment
+    if (core->fov > 60 * DD2R) {
+        core->star_linear_scale += 0.1 * (core->fov - 60 * DD2R) / (60 * DD2R);
+    }
+
     core_update_direction(dt);
 
     DL_SORT(core->obj.children, modules_sort_cmp);
