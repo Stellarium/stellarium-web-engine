@@ -37,8 +37,7 @@ void telescope_auto(telescope_t *tel, double fov)
     // http://www.rocketmime.com/astronomy/Telescope/MinimumMagnification.html
     // [FC]: this one doesn't make sense really, for high magnifications
     // we need to adjust the exposure time rather than get huge mirror size
-    // and cap to 10m
-    tel->diameter = min(10000, Deye * tel->magnification);
+    tel->diameter = min(10000000, Deye * tel->magnification);
 
     tel->light_grasp = pow(tel->diameter / Deye, 2);
     tel->gain_mag = 2.5 * log10(tel->light_grasp);
