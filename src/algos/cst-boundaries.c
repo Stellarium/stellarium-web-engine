@@ -14,7 +14,7 @@
 #include "erfa.h"
 
 struct cst {
-    const char id[4];
+    const char id[5];
     double center[2];
     double size[2];
     int n;
@@ -2343,7 +2343,7 @@ static bool test_cst(const struct cst *cst, double ra, double dec)
     return n % 2 == 1;
 }
 
-int find_constellation_at(const double pos[3], char id[4])
+int find_constellation_at(const double pos[3], char id[5])
 {
     const struct cst *cst;
     int i;
@@ -2352,7 +2352,7 @@ int find_constellation_at(const double pos[3], char id[4])
 
     for (i = 0; ((cst = &CSTS[i]))->id[0]; i++) {
         if (test_cst(cst, ra, dec)) {
-            if (id) memcpy(id, cst->id, 4);
+            if (id) memcpy(id, cst->id, 5);
             return i;
         }
     }

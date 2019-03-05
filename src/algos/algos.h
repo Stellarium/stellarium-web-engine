@@ -172,7 +172,7 @@ int l12(double tt1, double tt2, int ks, double pv[2][3]);
  *   The index of the constellation.
  *
  */
-int find_constellation_at(const double pos[3], char id[4]);
+int find_constellation_at(const double pos[3], char id[5]);
 
 /*
  * Function: orbit_compute_pv
