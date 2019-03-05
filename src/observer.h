@@ -82,7 +82,7 @@ struct observer
     // The pointed position and constellation.
     struct {
         double icrs[3];
-        char cst[4];
+        char cst[5];
     } pointer;
 
     // Transformation matrices.
