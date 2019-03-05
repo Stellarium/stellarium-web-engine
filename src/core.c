@@ -415,11 +415,6 @@ int core_update(double dt)
     delta = min(max(0, delta), 0.9);
     core->star_linear_scale = 0.5 + delta;
 
-    // Tiny adjustment
-    if (core->fov > 60 * DD2R) {
-        core->star_linear_scale += 0.1 * (core->fov - 60 * DD2R) / (60 * DD2R);
-    }
-
     core_update_direction(dt);
 
     DL_SORT(core->obj.children, modules_sort_cmp);
@@ -714,8 +709,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
      * https://en.wikipedia.org/wiki/Surface_brightness
      */
 
-    const double foveye = 60 * DD2R;
-    double log_e, log_lw, ld, r, s, pr;
+    double log_e, log_lw, ld, r, pr;
     const telescope_t *tel = &core->telescope;
     const double s_linear = core->star_linear_scale;
     const double s_relative = core->star_relative_scale;
@@ -761,11 +755,8 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     ld = tonemapper_map_log10(&core->tonemapper, log_lw);
     if (ld < 0) ld = 0; // Prevent math error.
 
-    // Extra scale if the telescope magnification is not enough to reach the
-    // current zoom level.
-    s = (foveye / core->fov) / tel->magnification;
     // Compute r, using both manual adjustement factors.
-    r = s_linear * pow(ld, s_relative / 2.0) * s;
+    r = s_linear * pow(ld, s_relative / 2.0);
 
     // If the radius is really too small, we don't render the star.
     if (r < core->skip_point_radius) {

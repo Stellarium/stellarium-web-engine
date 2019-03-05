@@ -71,7 +71,6 @@ void telescope_auto(telescope_t *tel, double fov)
 {
     // Magnification is given by the current zoom level
     tel->magnification = FOVeye / fov;
-    if (tel->magnification < 1) tel->magnification = 1;
 
     // Fix the eyepiece focal
     tel->focal_eyepiece = 22;
@@ -84,6 +83,9 @@ void telescope_auto(telescope_t *tel, double fov)
     tel->diameter = min(10000000, Deye * tel->magnification);
 
     tel->light_grasp = pow(tel->diameter / Deye, 2);
+    // Make sure we never simulate a too small eye pupil. This allows to remove
+    // a number of hacks in different parts of the code
+    tel->light_grasp = max(0.4, tel->light_grasp);
     tel->gain_mag = 2.5 * log10(tel->light_grasp);
     tel->limiting_mag = 2 + 5 * log10(tel->diameter);
 }
