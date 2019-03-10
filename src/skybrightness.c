@@ -78,7 +78,7 @@ void skybrightness_prepare(skybrightness_t *sb,
 
     LT = LA * RD;
     RA = (M - 3) * 30.0f * RD;
-    SL = LA / fabsf(LA);
+    SL = LA > 0.f ? 1.f : -1.f;
     // 1080 Airmass for each component
     // 1130 UBVRI extinction for each component
     KR = .1066f * expf(-1 * AL / 8200) * powf((WA / .55f), -4);
