@@ -359,7 +359,7 @@ static json_value *skycultures_current_id_fn(
     if (args && args->u.array.length) {
         args_get(args, NULL, 1, TYPE_STRING, id);
         MODULE_ITER(cults, cult, "skyculture") {
-            if (strcmp(cult->obj.id, id) == 0) {
+            if (strcmp(cult->info.name, id) == 0) {
                 obj_set_attr((obj_t*)cult, "active", true);
                 break;
             }
