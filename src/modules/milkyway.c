@@ -37,8 +37,14 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     int split_order = 2;
     milkyway_t *mw = (milkyway_t*)obj;
     painter_t painter = *painter_;
+    double visibility;
+
     if (!mw->hips) return 0;
     if (mw->visible.value == 0.0) return 0;
+
+    // For small FOV we use the DSS texture
+    visibility = smoothstep(10 * DD2R, 20 * DD2R, core->fov);
+    painter.color[3] *= mw->visible.value * visibility;
 
     // Ad-hock formula for tone mapping.
     lum = 0.002;
@@ -48,10 +54,10 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     // milky way becomes less visible with a full moon
     c *= min(0.0002 / max(0.000001, core->lwsky_average), 1.0);
     c = clamp(c, 0, 1) * 0.64;
+    painter.color[3] *= c;
 
-    if (c < 1./255)
+    if (painter.color[3] < 1./255)
         return 0;
-    painter.color[3] = c;
 
     hips_render(mw->hips, &painter, 2 * M_PI, split_order);
     return 0;

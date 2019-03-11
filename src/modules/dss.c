@@ -27,7 +27,7 @@ static int dss_init(obj_t *obj, json_value *args)
 static int dss_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(dss_render, 0);
-    //double visibility;
+    double visibility;
     dss_t *dss = (dss_t*)obj;
     painter_t painter2 = *painter;
     double lum, c, sep;
@@ -35,6 +35,10 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
 
     if (dss->visible.value == 0.0) return 0;
     if (!dss->hips) return 0;
+
+    // For large FOV we use the milky way texture
+    visibility = smoothstep(20 * DD2R, 15 * DD2R, core->fov);
+    painter2.color[3] *= dss->visible.value * visibility;
 
     // Adjust for eye adaptation.
     // DSS is darker than dark night sky (cd/m2)
