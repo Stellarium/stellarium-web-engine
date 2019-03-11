@@ -27,7 +27,7 @@ static int dss_init(obj_t *obj, json_value *args)
 static int dss_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(dss_render, 0);
-    double visibility;
+    //double visibility;
     dss_t *dss = (dss_t*)obj;
     painter_t painter2 = *painter;
     double lum, c, sep;
@@ -35,17 +35,17 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
 
     if (dss->visible.value == 0.0) return 0;
     if (!dss->hips) return 0;
-    // Fade the survey between 20° and 10° fov.
-    visibility = smoothstep(20 * DD2R, 10 * DD2R, core->fov);
-    painter2.color[3] *= dss->visible.value * visibility;
 
     // Adjust for eye adaptation.
-    lum = 0.075;
+    // DSS is darker than dark night sky (cd/m2)
+    lum = 0.0002;
+    lum *= core->telescope.light_grasp;
     c = tonemapper_map(&core->tonemapper, lum);
     c = clamp(c, 0, 1);
     painter2.color[3] *= c;
 
-    if (painter2.color[3] == 0.0) return 0;
+    // Don't even try to display if the brightness is too low
+    if (painter2.color[3] < 3.0 / 255) return 0;
 
     /*
      * Compute split order.
