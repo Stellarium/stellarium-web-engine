@@ -453,15 +453,26 @@ static int stars_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+/*
+ * Function: get_tile
+ * Load and return a tile.
+ *
+ * Parameters:
+ *   stars  - The stars module.
+ *   survey - The survey index (SURVEY_DEFAULT or SURVEY_GAIA).
+ *   order  - Healpix order.
+ *   pix    - Healpix pix.
+ *   sync   - If set, don't load in a thread.  This will block the main
+ *            loop so should be avoided.
+ *   code   - http return code (0 if still loading).
+ */
 static tile_t *get_tile(stars_t *stars, int survey, int order, int pix,
-                        int *code)
+                        bool sync, int *code)
 {
     int flags = 0;
     tile_t *tile;
     assert(code);
-    // Immediate load of the level 0 stars (they are needed for the
-    // constellations).  The other tiles can be loaded in a thread.
-    if (order > 0) flags |= HIPS_LOAD_IN_THREAD;
+    if (!sync) flags |= HIPS_LOAD_IN_THREAD;
     if (!stars->surveys[survey].hips) {
         *code = 0;
         return NULL;
@@ -495,7 +506,7 @@ static int render_visitor(int order, int pix, void *user)
     if (order < stars->surveys[survey].min_order) return 1;
 
     (*nb_tot)++;
-    tile = get_tile(stars, survey, order, pix, &code);
+    tile = get_tile(stars, survey, order, pix, false, &code);
     if (code) (*nb_loaded)++;
 
     if (!tile) goto end;
@@ -574,7 +585,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 static int stars_get_visitor(int order, int pix, void *user)
 {
     int i, p, code;
-    bool is_gaia;
+    bool is_gaia, sync;
     struct {
         stars_t     *stars;
         obj_t       *ret;
@@ -597,9 +608,11 @@ static int stars_get_visitor(int order, int pix, void *user)
         if ((p != -1) && (p != pix)) return 0;
     }
 
-    // Try both surveys (bundled and gaia).
+    // Try both surveys (bundled and gaia).  For the bundled survey we
+    // don't load in a thread.  This is a fix for the constellations!
     for (i = 0; !tile && i < 2; i++) {
-        tile = get_tile(d->stars, i, order, pix, &code);
+        sync = i == SURVEY_DEFAULT;
+        tile = get_tile(d->stars, i, order, pix, sync, &code);
     }
 
     // Gaia survey has a min order of 3.
@@ -665,7 +678,7 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     nuniq_to_pix(hint, &order, &pix);
     // Try both surveys (bundled and gaia).
     for (s = 0; s < 2; s++) {
-        tile = get_tile(stars, s, order, pix, &code);
+        tile = get_tile(stars, s, order, pix, false, &code);
         if (!tile) continue;
         for (i = 0; i < tile->nb; i++) {
             if (tile->sources[i].oid == oid) {
@@ -689,7 +702,7 @@ static int stars_list_visitor(int order, int pix, void *user)
         void *user;
     } *d = user;
     tile_t *tile;
-    tile = get_tile(d->stars, 0, order, pix, &code);
+    tile = get_tile(d->stars, 0, order, pix, false, &code);
     if (!tile || tile->mag_max <= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
         if (tile->sources[i].vmag > d->max_mag) continue;
@@ -727,7 +740,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    tile = get_tile(stars, 0, order, pix, &code);
+    tile = get_tile(stars, 0, order, pix, false, &code);
     if (!tile) {
         if (!code) return OBJ_AGAIN; // Try again later.
         return -1;
