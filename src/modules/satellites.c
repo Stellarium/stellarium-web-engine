@@ -388,8 +388,9 @@ static void satellite_get_designations(
     satellite_t *sat = (void*)obj;
     char buf[32];
     sprintf(buf, "%05d", (int)oid_get_index(obj->oid));
+    if (*sat->name)
+        f(obj, user, "NAME", sat->name);
     f(obj, user, "NORAD", buf);
-    f(obj, user, "NAME", sat->name);
 }
 
 /*
