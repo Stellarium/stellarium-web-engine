@@ -43,7 +43,6 @@ typedef struct skyculture {
     skyculture_name_t *names; // Hash table of oid -> names.
     constellation_infos_t *constellations;
     json_value      *imgs;
-    bool            active;
     int             parsed; // union of SK_ enum for each parsed file.
     char            *description;  // html description if any.
 } skyculture_t;
@@ -82,12 +81,6 @@ static void skyculture_activate(skyculture_t *cult)
     json_value *args;
     constellation_infos_t *cst;
     obj_t *constellations, *cons;
-    skyculture_t *other;
-
-    // Deactivate the current activated skyculture if any.
-    MODULE_ITER(cult->obj.parent, other, "skyculture") {
-        if (other != cult && other->active) skyculture_deactivate(other);
-    }
 
     // Create all the constellations object.
     constellations = core_get_module("constellations");
@@ -145,23 +138,6 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
     cult->uri = strdup(uri);
     skyculture_update((obj_t*)cult, NULL, 0);
     return cult;
-}
-
-static void skyculture_on_active_changed(
-        obj_t *obj, const attribute_t *attr)
-{
-    skyculture_t *cult = (void*)obj, *other;
-
-    // Deactivate the others.
-    if (cult->active) {
-        MODULE_ITER(cult->obj.parent, other, "skyculture") {
-            if (other == cult) continue;
-            obj_set_attr((obj_t*)other, "active", false);
-        }
-    }
-
-    if (cult->active) skyculture_activate(cult);
-    else skyculture_deactivate(cult);
 }
 
 /*
@@ -272,7 +248,6 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
         arts = skyculture_parse_stellarium_constellations_art(data, NULL);
         if (arts) cult->imgs = make_imgs_json(arts, cult->uri);
         free(arts);
-        if (cult->active) skyculture_activate(cult);
     }
 
     return 0;
@@ -281,14 +256,22 @@ static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
 static void skycultures_gui(obj_t *obj, int location)
 {
     skyculture_t *cult;
+    skycultures_t *cults = (void*)obj;
+    bool active = false;
+    bool res;
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Skycultures")) {
         MODULE_ITER(obj, cult, "skyculture") {
             if (!cult->info.name) continue;
-            gui_item(&(gui_item_t){
-                    .label = cult->info.name,
-                    .obj = (obj_t*)cult,
-                    .attr = "active"});
+            if (strcmp(cult->info.name, cults->current->info.name) == 0) {
+                active = true;
+            } else {
+                active = false;
+            }
+            res = gui_toggle(cult->info.name, &active);
+            if (res) {
+                obj_set_attr((obj_t*)cults, "current_id", cult->info.name);
+            }
         }
         gui_tab_end();
     }
@@ -318,7 +301,7 @@ static int skycultures_add_data_source(
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
     // If it's the default skyculture (western) activate it immediatly.
     if (str_endswith(url, "western"))
-        obj_set_attr((obj_t*)cult, "active", true);
+        obj_set_attr((obj_t*)cults, "current_id", cult->info.name);
     return 0;
 }
 
@@ -358,14 +341,22 @@ static json_value *skycultures_current_id_fn(
     skyculture_t *cult;
     if (args && args->u.array.length) {
         args_get(args, NULL, 1, TYPE_STRING, id);
+        if (cults->current) {
+            MODULE_ITER(cults, cult, "skyculture") {
+                if (strcmp(cult->info.name, cults->current->info.name) == 0) {
+                    skyculture_deactivate(cult);
+                    break;
+                }
+            }
+        }
         MODULE_ITER(cults, cult, "skyculture") {
             if (strcmp(cult->info.name, id) == 0) {
-                obj_set_attr((obj_t*)cult, "active", true);
+                skyculture_activate(cult);
                 break;
             }
         }
     }
-    return args_value_new(TYPE_STRING, cults->current->obj.id);
+    return args_value_new(TYPE_STRING, cults->current->info.name);
 }
 
 /*
@@ -379,8 +370,6 @@ static obj_klass_t skyculture_klass = {
     .update = skyculture_update,
     .attributes = (attribute_t[]) {
         PROPERTY(name, TYPE_STRING_PTR, MEMBER(skyculture_t, info.name)),
-        PROPERTY(active, TYPE_BOOL, MEMBER(skyculture_t, active),
-                 .on_changed = skyculture_on_active_changed),
         PROPERTY(description, TYPE_STRING_PTR,
                  MEMBER(skyculture_t, description)),
         PROPERTY(url, TYPE_STRING_PTR, MEMBER(skyculture_t, uri)),
