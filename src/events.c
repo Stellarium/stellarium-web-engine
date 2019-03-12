@@ -10,9 +10,11 @@
 #include "swe.h"
 
 // Newton algo.
+#define NEWTON_MAX_STEPS 20
 static double newton(double (*f)(double x, void *user),
                      double x0, double x1, double precision, void *user)
 {
+    int nbiter = 0;
     double f0, f1, tmp;
     double startDelta = fabs(x1 - x0);
     f0 = f(x0, user);
@@ -26,6 +28,8 @@ static double newton(double (*f)(double x, void *user),
             return NAN;
         f0 = f1;
         f1 = f(x1, user);
+        if (nbiter++ > NEWTON_MAX_STEPS)
+            return x1;
     }
     return x1;
 }
