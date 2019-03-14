@@ -819,7 +819,12 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
 
     // Compute flux and luminance.
     vmag -= core->telescope.gain_mag;
+    // E = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
+    // m: source magnitude integrated over A
+    // E: lux (= cd.sr/m²), A: sr, L: cd/m²
     lf = 10.8e4 / (ERFA_DR2AS * ERFA_DR2AS) * pow(10, -0.4 * vmag);
+
+    // L = E / A
     lum = lf / (M_PI * r * r);
 
     lum = min(lum, 700);
