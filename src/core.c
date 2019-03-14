@@ -827,9 +827,23 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
     // L = E / A
     lum = lf / (M_PI * r * r);
 
-    lum = min(lum, 700);
-    r2 = r * (60 * DD2R / core->fov);
-    lum *= pow(r2 / (60 * DD2R), 2);
+    // Radius as seen from the observer eye in the eye piece
+    r2 = r * core->telescope.magnification;
+
+    // Make sure the observed radius can't be smaller as point source radius
+    // assumed to be 2.5 arcmin (see formula in above function)
+    r2 = max(r2, 2.5 / 60 * DD2R);
+
+    // The following 3 lines are 100% ad-hoc formulas adjusted so that:
+    // - the moon should render all but bright stars invisible
+    // - mars should hide most stars and DSS when zoomed
+
+    // Modulate final luminance by the ratio of area covered by the object
+    // in eyepiece field of view (which is always assumed to be 60 deg FOV).
+    lum *= pow(r2 / (60 * DD2R), 1.2);
+    lum = pow(lum, 0.33);
+    lum /= 400;
+
     lum *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
     core_report_luminance_in_fov(lum, false);
 }

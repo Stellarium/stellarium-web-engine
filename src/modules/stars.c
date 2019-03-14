@@ -576,6 +576,12 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
      * I think the illuminance computation is correct, but should we use
      * core_report_illuminance_in_fov? */
     illuminance *= core->telescope.light_grasp;
+
+    // This is 100% ad-hoc formula adjusted so that DSS properly disappears
+    // when stars bright enough are visible
+    illuminance = pow(illuminance, 0.33);
+    illuminance /= 20;
+
     core_report_luminance_in_fov(illuminance, false);
 
     progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);

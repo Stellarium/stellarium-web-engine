@@ -15,9 +15,8 @@ typedef struct telescope {
     double diameter;        // primary mirror diameter (mm)
     double focal;           // primary mirror focal length (mm)
     double focal_eyepiece;  // eyepiece focal length (mm)
-
-    // Computed values:
     double magnification;   // Telescope magnification
+    double exposure;        // Value of 1 means visual observation
     double light_grasp;
     double gain_mag;
     double limiting_mag;

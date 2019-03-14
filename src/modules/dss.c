@@ -37,15 +37,18 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     if (!dss->hips) return 0;
 
     // For large FOV we use the milky way texture
-    visibility = smoothstep(20 * DD2R, 15 * DD2R, core->fov);
-    painter2.color[3] *= dss->visible.value * visibility;
+    visibility = smoothstep(20 * DD2R, 10 * DD2R, core->fov);
+    painter2.color[3] *= dss->visible.value;
 
     // Adjust for eye adaptation.
-    // DSS is darker than dark night sky (cd/m2)
-    lum = 0.0002;
+    // 0.02 cd/m2 luminance should more or less match the brightest
+    // non-saturated pixels brightness inside the DSS images.
+    lum = 0.02;
     lum *= core->telescope.light_grasp;
+    lum /= pow(core->telescope.magnification, 2);
     c = tonemapper_map(&core->tonemapper, lum);
     c = clamp(c, 0, 1);
+    c *= visibility;
     painter2.color[3] *= c;
 
     // Don't even try to display if the brightness is too low
