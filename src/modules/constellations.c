@@ -531,14 +531,13 @@ static obj_t *constellations_get(const obj_t *obj, const char *id, int flags)
 
 static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
 {
-    int ret = 0;
     constellation_t *con;
     constellations_t *cons = (constellations_t*)obj;
 
-    if (fader_update(&cons->visible, dt)) ret = 1;
-    if (fader_update(&cons->images_visible, dt)) ret = 1;
-    if (fader_update(&cons->lines_visible, dt)) ret = 1;
-    if (fader_update(&cons->bounds_visible, dt)) ret = 1;
+    fader_update(&cons->visible, dt);
+    fader_update(&cons->images_visible, dt);
+    fader_update(&cons->lines_visible, dt);
+    fader_update(&cons->bounds_visible, dt);
 
     // Skip update if not visible.
     if (cons->visible.value == 0.0) return 0;
@@ -548,9 +547,9 @@ static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
         (!core->selection || core->selection->parent != obj)) return 0;
 
     MODULE_ITER(obj, con, "constellation") {
-        ret |= obj_update((obj_t*)con, obs, dt);
+        obj_update((obj_t*)con, obs, dt);
     }
-    return ret;
+    return 0;
 }
 
 static int constellations_render(const obj_t *obj, const painter_t *painter)
