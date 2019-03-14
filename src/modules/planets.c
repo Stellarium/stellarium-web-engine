@@ -41,7 +41,7 @@ struct planet {
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      hpos[3];     // ecl, heliocentric pos J2000.0
     double      phase;
-    double      radius;     // XXX ?
+    double      radius;     // Apparent disk radius (rad)
     double      mass;       // kg (0 if unknown).
 
     // Rotation elements
