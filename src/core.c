@@ -405,7 +405,8 @@ int core_update(double dt)
     // Update eye adaptation.
     lwmax = core->lwmax * core->lwmax_scale;
     lwmax = exp(logf(core->tonemapper.lwmax) +
-                (logf(lwmax) - logf(core->tonemapper.lwmax)) * 0.1);
+                (logf(lwmax) - logf(core->tonemapper.lwmax)) *
+                0.05 * dt / 0.01666);
     tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
