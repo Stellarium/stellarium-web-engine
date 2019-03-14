@@ -193,8 +193,6 @@ struct obj
     char        type_padding_; // Ensure that type is null terminated.
     obj_t       *parent;
     obj_t       *children, *prev, *next;
-
-    uint64_t    observer_hash;
     void        *user;
 
     // Must be up to date after a call to obj_update.
