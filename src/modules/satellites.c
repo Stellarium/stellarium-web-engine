@@ -123,8 +123,7 @@ static bool load_qsmag(satellites_t *sats)
 {
     int size, id;
     double stdmag;
-    const char *comp_data;
-    char *data, *line;
+    const char *data, *line;
     char url[1024];
     qsmag_t *qsmag;
 
@@ -132,15 +131,12 @@ static bool load_qsmag(satellites_t *sats)
     if (sats->qsmags_status) return false;
     if (!sats->source_url) return false;
 
-    snprintf(url, sizeof(url), "%s/%s", sats->source_url, "qs.mag.gz");
-    comp_data = asset_get_data2(url, ASSET_USED_ONCE,
-                                &size, &sats->qsmags_status);
-    if (sats->qsmags_status && !comp_data)
+    snprintf(url, sizeof(url), "%s/%s", sats->source_url, "qs.mag");
+    data = asset_get_data2(url, ASSET_USED_ONCE, &size, &sats->qsmags_status);
+    if (sats->qsmags_status && !data)
         LOG_E("Error while loading %s: %d", url, sats->qsmags_status);
-    if (!comp_data) return false;
+    if (!data) return false;
 
-    // Uncompress and parse the data.
-    data = z_uncompress_gz(comp_data, size, &size);
     for (line = data; line; line = strchr(line, '\n')) {
         if (*line == '\n') line++;
         if (!(*line)) break;
@@ -152,7 +148,6 @@ static bool load_qsmag(satellites_t *sats)
         qsmag->stdmag = stdmag;
         HASH_ADD_INT(sats->qsmags, id, qsmag);
     }
-    free(data);
     return true;
 }
 
