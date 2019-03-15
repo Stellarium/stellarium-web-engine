@@ -593,11 +593,18 @@ static bool could_cast_shadow(const planet_t *a, const planet_t *b)
     return (vec3_norm(pp) < penumbra_r + b->radius_m / DAU);
 }
 
+static int sort_shadow_cmp(const void *a, const void *b)
+{
+    return -cmp(((const double*)a)[3], ((const double*)b)[3]);
+}
+
 /*
  * Compute the list of potential shadow spheres that should be considered
  * when rendering a planet.
  *
  * The returned spheres are xyz = position (in view frame) and w = radius (AU).
+ * Sorted with the biggest first.
+ *
  * Return the number of candidates.
  */
 static int get_shadow_candidates(const planet_t *planet, int nb_max,
@@ -611,10 +618,17 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
 
     PLANETS_ITER(planets, other) {
         if (could_cast_shadow(other, planet)) {
-            if (nb >= nb_max) break;
+            // No more space: replace the smallest one in the list if
+            // we can.
+            if (nb >= nb_max) {
+                if (other->radius_m / DAU < spheres[nb_max - 1][3])
+                    continue;
+                nb--; // Remove the last one.
+            }
             vec3_copy(other->obj.pvo[0], spheres[nb]);
             spheres[nb][3] = other->radius_m / DAU;
             nb++;
+            qsort(spheres, nb, 4 * sizeof(double), sort_shadow_cmp);
         }
     }
     return nb;
