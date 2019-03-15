@@ -623,6 +623,7 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
 static void planet_render_hips(const planet_t *planet,
                                const hips_t *hips,
                                double radius,
+                               double r_scale,
                                double alpha,
                                const painter_t *painter_)
 {
@@ -633,8 +634,8 @@ static void planet_render_hips(const planet_t *planet,
     double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
     double rot;
-    double angle = 2 * radius / vec2_norm(planet->obj.pvo[0]);
-    int nb_tot = 0, nb_loaded = 0;
+    double angle = 2 * radius * r_scale / vec2_norm(planet->obj.pvo[0]);
+    int i, nb_tot = 0, nb_loaded = 0;
     double sun_pos[4] = {0, 0, 0, 1};
     planets_t *planets = (planets_t*)planet->obj.parent;
     painter_t painter = *painter_;
@@ -647,9 +648,13 @@ static void planet_render_hips(const planet_t *planet,
     if (!hips) hips = planet->hips;
     assert(hips);
 
+    // Get potential shadow casting sphere, and scale them with the same
+    // artificial scale as the planet.
     painter.planet.shadow_spheres_nb =
         get_shadow_candidates(planet, 4, shadow_spheres);
     painter.planet.shadow_spheres = shadow_spheres;
+    for (i = 0; i < painter.planet.shadow_spheres_nb; i++)
+        shadow_spheres[i][3] *= r_scale;
 
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
@@ -657,7 +662,7 @@ static void planet_render_hips(const planet_t *planet,
     vec4_copy(planet->obj.pvo[0], pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
-    mat4_iscale(mat, radius, radius, radius);
+    mat4_iscale(mat, radius * r_scale, radius * r_scale, radius * r_scale);
 
     // Compute sun position.
     vec3_copy(planets->sun->obj.pvo[0], sun_pos);
@@ -858,7 +863,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (hips_alpha > 0) {
-        planet_render_hips(planet, hips, planet->radius_m / DAU * r_scale,
+        planet_render_hips(planet, hips, planet->radius_m / DAU, r_scale,
                            hips_alpha, &painter);
     }
 
