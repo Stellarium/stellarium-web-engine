@@ -406,7 +406,7 @@ int core_update(double dt)
     lwmax = core->lwmax * core->lwmax_scale;
     lwmax = exp(logf(core->tonemapper.lwmax) +
                 (logf(lwmax) - logf(core->tonemapper.lwmax)) *
-                0.05 * dt / 0.01666);
+                min(0.05 * dt / 0.01666, 0.5));
     tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
