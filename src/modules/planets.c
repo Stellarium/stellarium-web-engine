@@ -846,7 +846,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         return;
 
     // At least 1 px of the planet is visible, report it for tonemapping
-    core_report_vmag_in_fov(vmag, planet->radius, 0);
+    // Exclude the sun because it is already taken into account by the
+    // atmosphere luminance feedack
+    if (planet->id != SUN)
+        core_report_vmag_in_fov(vmag, planet->radius, 0);
 
     // Project planet's center
     convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
