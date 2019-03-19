@@ -809,7 +809,7 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glUseProgram(prog->prog));
 
     GL(glEnable(GL_CULL_FACE));
-    GL(glLineWidth(item->lines.width));
+    GL(glLineWidth(item->lines.width * rend->scale));
 
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
