@@ -441,7 +441,6 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     if (painter.color[3] == 0.0) return 0;
     vec4_set(lines_color, 0.2, 0.4, 0.7, 0.5);
     vec4_set(names_color, 0.2, 0.4, 0.7, 1);
-    painter.lines_width = 1.0;
     vec4_emul(lines_color, painter.color, painter.color);
 
     lines = calloc(con->count, sizeof(*lines));
