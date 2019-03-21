@@ -142,3 +142,25 @@ int sys_list_fonts(void *user,
         return sys_callbacks.list_fonts(sys_callbacks.user, user, f);
     return 0;
 }
+
+/*
+ * Function: sys_render_text
+ * Render text into a texture buffer.
+ *
+ * Parameters:
+ *   txt    - A utf string.
+ *   height - The height of the font.
+ *   flags  - Only accepted flag is LABEL_BOLD.
+ *   w      - Output width of the buffer.
+ *   h      - Output height of the buffer.
+ *
+ * Returns:
+ *   An allocated buffer of one byte per pixel texture.
+ */
+char *sys_render_text(const char *txt, float height, int flags,
+                      int *w, int *h)
+{
+    assert(sys_callbacks.render_text);
+    return sys_callbacks.render_text(
+            sys_callbacks.user, txt, height, flags, w, h);
+}

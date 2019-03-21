@@ -43,6 +43,16 @@ static const char *ATTR_NAMES[] = {
     NULL,
 };
 
+// We keep all the text textures in a cache so that we don't have to recreate
+// them each time.
+typedef struct tex_cache tex_cache_t;
+struct tex_cache {
+    tex_cache_t *next, *prev;
+    double      size;
+    char        *text;
+    bool        in_use;
+    texture_t   *tex;
+};
 
 /*
  * Struct: prog_t
@@ -242,6 +252,7 @@ typedef struct renderer_gl {
     double  depth_range[2];
 
     texture_t   *white_tex;
+    tex_cache_t *tex_cache;
     NVGcontext *vg;
     // Map font handle -> font scale to fix nanovg font sizes.
     float       font_scales[8];
@@ -266,10 +277,14 @@ static void prepare(renderer_t *rend_, double win_w, double win_h,
                     double scale)
 {
     renderer_gl_t *rend = (void*)rend_;
+    tex_cache_t *ctex;
 
     rend->fb_size[0] = win_w * scale;
     rend->fb_size[1] = win_h * scale;
     rend->scale = scale;
+
+    DL_FOREACH(rend->tex_cache, ctex)
+        ctex->in_use = false;
 }
 
 static void rend_flush(renderer_gl_t *rend);
@@ -726,15 +741,81 @@ static void texture(renderer_t *rend_,
     texture2(rend, tex, uv, verts, color);
 }
 
-static void text(renderer_t *rend_, const char *text, const double pos[2],
-                 int align, double size, const double color[4], double angle,
-                 const char *font, double bounds[4])
+// Render text using a system bakend generated texture.
+static void text_using_texture(renderer_gl_t *rend,
+                               const char *text, const double pos[2],
+                               int align, double size, const double color[4],
+                               double angle, const char *font,
+                               double out_bounds[4])
 {
-    renderer_gl_t *rend = (void*)rend_;
+    double uv[4][2], verts[4][2];
+    double p[2], s[2], bounds[4];
+    const double oversample = 2;
+    uint8_t *img;
+    int i, w, h;
+    tex_cache_t *ctex;
+    texture_t *tex;
+
+    DL_FOREACH(rend->tex_cache, ctex) {
+        if (ctex->size == size && strcmp(ctex->text, text) == 0) break;
+    }
+
+    if (!ctex) {
+        img = (void*)sys_render_text(text, size * oversample, 0, &w, &h);
+        ctex = calloc(1, sizeof(*ctex));
+        ctex->size = size;
+        ctex->text = strdup(text);
+        ctex->tex = texture_from_data(img, w, h, 1, 0, 0, w, h, 0);
+        free(img);
+        DL_APPEND(rend->tex_cache, ctex);
+    }
+
+    ctex->in_use = true;
+
+    // Compute bounds taking alignment into account.
+    s[0] = ctex->tex->w / oversample;
+    s[1] = ctex->tex->h / oversample;
+    bounds[0] = pos[0] - s[0] / 2;
+    bounds[1] = pos[1] - s[1] / 2;
+    if (align & ALIGN_LEFT)     bounds[0] += s[0] / 2;
+    if (align & ALIGN_RIGHT)    bounds[0] -= s[0] / 2;
+    if (align & ALIGN_TOP)      bounds[1] += s[1] / 2;
+    if (align & ALIGN_BOTTOM)   bounds[1] -= s[1] / 2;
+    bounds[2] = bounds[0] + s[0];
+    bounds[3] = bounds[1] + s[1];
+
+    if (out_bounds) {
+        memcpy(out_bounds, bounds, sizeof(bounds));
+        return;
+    }
+
+    tex = ctex->tex;
+    p[0] = (bounds[0] + bounds[2]) / 2;
+    p[1] = (bounds[1] + bounds[3]) / 2;
+
+    for (i = 0; i < 4; i++) {
+        uv[i][0] = ((i % 2) * tex->w) / (double)tex->tex_w;
+        uv[i][1] = ((i / 2) * tex->h) / (double)tex->tex_h;
+        verts[i][0] = (i % 2 - 0.5) * tex->w / oversample;
+        verts[i][1] = (0.5 - i / 2) * tex->h / oversample;
+        vec2_rotate(angle, verts[i], verts[i]);
+        verts[i][0] += p[0];
+        verts[i][1] += p[1];
+        window_to_ndc(rend, verts[i], verts[i]);
+    }
+
+    texture2(rend, tex, uv, verts, color);
+}
+
+// Render text using nanovg.
+static void text_using_nanovg(renderer_gl_t *rend, const char *text,
+                              const double pos[2], int align, double size,
+                              const double color[4], double angle,
+                              const char *font, double bounds[4])
+{
     item_t *item;
     float fbounds[4];
     int font_handle = 0;
-    assert(pos);
 
     if (strlen(text) >= sizeof(item->text.text)) {
         LOG_W("Text too large: %s", text);
@@ -769,6 +850,24 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
         bounds[3] = fbounds[3];
         nvgRestore(rend->vg);
     }
+}
+
+static void text(renderer_t *rend_, const char *text, const double pos[2],
+                 int align, double size, const double color[4], double angle,
+                 const char *font, double bounds[4])
+{
+    assert(pos);
+    renderer_gl_t *rend = (void*)rend_;
+    assert(size);
+
+    if (sys_callbacks.render_text) {
+        text_using_texture(rend, text, pos, align, size, color, angle,
+                           font, bounds);
+    } else {
+        text_using_nanovg(rend, text, pos, align, size, color, angle, font,
+                          bounds);
+    }
+
 }
 
 static void item_points_render(renderer_gl_t *rend, const item_t *item)

@@ -95,6 +95,23 @@ int sys_list_dir(const char *dir, void *user,
                  int (*f)(void *user, const char *path, int is_dir));
 
 /*
+ * Function: sys_render_text
+ * Render text into a texture buffer.
+ *
+ * Parameters:
+ *   txt    - A utf string.
+ *   height - The height of the font.
+ *   flags  - Only accepted flag is LABEL_BOLD.
+ *   w      - Output width of the buffer.
+ *   h      - Output height of the buffer.
+ *
+ * Returns:
+ *   An allocated buffer of one byte per pixel texture.
+ */
+char *sys_render_text(const char *txt, float height, int flags,
+                      int *w, int *h);
+
+/*
  * Function: sys_list_fonts
  * List all the font files available.
  *
@@ -132,6 +149,8 @@ typedef struct {
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
+    char *(*render_text)(void *user, const char *txt, float height, int flags,
+                         int *w, int *h);
     int (*list_dir)(void *user, const char *dir, void *cuser,
                     int (*f)(void *user, const char *path, int is_dir));
     int (*list_fonts)(void *user, void *cuser,
