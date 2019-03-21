@@ -752,7 +752,7 @@ static void text_using_texture(renderer_gl_t *rend,
     double p[2], s[2], bounds[4];
     const double oversample = 2;
     uint8_t *img;
-    int i, w, h;
+    int i, w, h, flags;
     tex_cache_t *ctex;
     texture_t *tex;
 
@@ -761,7 +761,8 @@ static void text_using_texture(renderer_gl_t *rend,
     }
 
     if (!ctex) {
-        img = (void*)sys_render_text(text, size * oversample, 0, &w, &h);
+        flags = (font && strcmp(font, "bold") == 0) ? LABEL_BOLD : 0;
+        img = (void*)sys_render_text(text, size * oversample, flags, &w, &h);
         ctex = calloc(1, sizeof(*ctex));
         ctex->size = size;
         ctex->text = strdup(text);
