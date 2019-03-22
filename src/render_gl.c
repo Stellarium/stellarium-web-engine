@@ -51,6 +51,7 @@ struct tex_cache {
     double      size;
     char        *text;
     bool        in_use;
+    bool        bold;
     texture_t   *tex;
 };
 
@@ -753,18 +754,23 @@ static void text_using_texture(renderer_gl_t *rend,
     const double oversample = 2;
     uint8_t *img;
     int i, w, h, flags;
+    bool bold;
     tex_cache_t *ctex;
     texture_t *tex;
 
+    bold = (font && strcmp(font, "bold") == 0);
+
     DL_FOREACH(rend->tex_cache, ctex) {
-        if (ctex->size == size && strcmp(ctex->text, text) == 0) break;
+        if (ctex->size == size && ctex->bold == bold &&
+                strcmp(ctex->text, text) == 0) break;
     }
 
     if (!ctex) {
-        flags = (font && strcmp(font, "bold") == 0) ? LABEL_BOLD : 0;
+        flags = bold ? LABEL_BOLD : 0;
         img = (void*)sys_render_text(text, size * oversample, flags, &w, &h);
         ctex = calloc(1, sizeof(*ctex));
         ctex->size = size;
+        ctex->bold = bold;
         ctex->text = strdup(text);
         ctex->tex = texture_from_data(img, w, h, 1, 0, 0, w, h, 0);
         free(img);
