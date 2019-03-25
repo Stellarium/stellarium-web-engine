@@ -121,6 +121,13 @@ static struct {
         .frame      = FRAME_OBSERVED, // XXX: probably need to change that.
         .grid       = false,
     },
+    {
+        .name       = "Equator",
+        .id         = "equator_line",
+        .color      = 0x2a81ad80,
+        .frame      = FRAME_ICRF,
+        .grid       = false,
+    },
 };
 
 typedef struct lines lines_t;
@@ -466,15 +473,19 @@ static void get_steps(double fov, char type, int frame,
 static int line_render(const obj_t *obj, const painter_t *painter_)
 {
     line_t *line = (line_t*)obj;
-    double transform[4][4];
+    double transform[4][4] = MAT4_IDENTITY;
     const step_t *steps[2];
     int splits[2] = {1, 1};
     double mat[3][3];
     painter_t painter = *painter_;
     mat4_set_identity(transform);
 
+    // XXX: probably need to use enum id for the different lines/grids.
     if (strcmp(line->obj.id, "ecliptic") == 0) {
         mat3_to_mat4(core->observer->re2h, transform);
+        mat4_rx(M_PI / 2, transform, transform);
+    }
+    if (strcmp(line->obj.id, "equator_line") == 0) {
         mat4_rx(M_PI / 2, transform, transform);
     }
 
