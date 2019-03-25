@@ -268,6 +268,7 @@ static void render_label(const double p[2], const double u[2],
     int h[4];
     double n[2];
     double bounds[4], size[2];
+    const double text_size = 12;
 
     vec2_normalize(u, n);
 
@@ -303,7 +304,7 @@ static void render_label(const double p[2], const double u[2],
     }
 
     paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE,
-                      11, bounds);
+                      text_size, bounds);
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
 
@@ -325,7 +326,7 @@ static void render_label(const double p[2], const double u[2],
 
     color[3] = 1.0;
     paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE,
-               12, color, label_angle);
+               text_size, color, label_angle);
 }
 
 /*
