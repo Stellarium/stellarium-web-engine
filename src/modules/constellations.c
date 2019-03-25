@@ -477,7 +477,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
                 con->name : con->name_translated;
     labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
-                  con->bounding_cap, true, 0, 13,
+                  con->bounding_cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE | LABEL_UPPERCASE,
                   0, con->obj.oid);
 

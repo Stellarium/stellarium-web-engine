@@ -501,7 +501,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
             strcpy(buff, s2->short_name);
         if (buff[0]) {
             labels_add_3d(buff, FRAME_ASTROM, s->bounding_cap, true, radius,
-                          13, color, 0, label_flags, -vmag, s->oid);
+                          FONT_SIZE_BASE, color, 0, label_flags, -vmag, s->oid);
         }
     }
     return 0;

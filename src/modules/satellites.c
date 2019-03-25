@@ -366,10 +366,10 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     // Render name if needed.
     size = max(8, size);
     if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 1.0)) {
-        labels_add_3d(sat->name, FRAME_ICRF, obj->pvo[0], false, size, 13,
-                label_color, 0,
-                selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
-                0, obj->oid);
+        labels_add_3d(sat->name, FRAME_ICRF, obj->pvo[0], false, size,
+                      FONT_SIZE_BASE, label_color, 0,
+                      selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                      0, obj->oid);
     }
 
     return 0;

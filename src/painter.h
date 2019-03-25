@@ -21,6 +21,9 @@ typedef struct painter painter_t;
 typedef struct point point_t;
 typedef struct texture texture_t;
 
+// Base font size in pixels
+#define FONT_SIZE_BASE 13
+
 /*
  * Enum: ALIGN_FLAGS
  * Alignment values that can be passed to paint_text.

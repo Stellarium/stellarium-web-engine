@@ -225,7 +225,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
 
     if (name) {
         labels_add_3d(sys_translate("skyculture", name), frame, pos, true,
-                      radius, 13, label_color, 0, label_flags, -vmag, s->oid);
+                      radius, FONT_SIZE_BASE, label_color, 0, label_flags,
+                      -vmag, s->oid);
         return;
     }
 
@@ -235,8 +236,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         if (bayer) {
             snprintf(buf, sizeof(buf), "%s%.*d",
                      greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add_3d(buf, frame, pos, true, radius, 13, label_color, 0,
-                       label_flags, -vmag, s->oid);
+            labels_add_3d(buf, frame, pos, true, radius, FONT_SIZE_BASE,
+                          label_color, 0, label_flags, -vmag, s->oid);
         }
     }
 }

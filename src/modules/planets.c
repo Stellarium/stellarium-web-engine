@@ -791,7 +791,8 @@ static void planet_render_label(
     s = max(s, radius);
 
     labels_add_3d(label, FRAME_ICRF, pos,
-                  true, s + 4, 14, selected ? white : label_color, 0,
+                  true, s + 4, FONT_SIZE_BASE,
+                  selected ? white : label_color, 0,
                   selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
                   -planet->obj.vmag, planet->obj.oid);
 }
