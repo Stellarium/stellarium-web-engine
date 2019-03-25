@@ -22,7 +22,7 @@ typedef struct point point_t;
 typedef struct texture texture_t;
 
 // Base font size in pixels
-#define FONT_SIZE_BASE 13
+#define FONT_SIZE_BASE 15
 
 /*
  * Enum: ALIGN_FLAGS

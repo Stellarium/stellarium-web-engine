@@ -324,8 +324,8 @@ static void render_label(const double p[2], const double u[2],
     vec4_copy(painter->color, color);
 
     color[3] = 1.0;
-    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE, 11,
-               color, label_angle);
+    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE,
+               12, color, label_angle);
 }
 
 /*
