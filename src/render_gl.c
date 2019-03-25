@@ -52,6 +52,8 @@ struct tex_cache {
     char        *text;
     bool        in_use;
     bool        bold;
+    int         xoff;
+    int         yoff;
     texture_t   *tex;
 };
 
@@ -751,9 +753,9 @@ static void text_using_texture(renderer_gl_t *rend,
 {
     double uv[4][2], verts[4][2];
     double p[2], s[2], bounds[4];
-    const double oversample = 2;
+    const double scale = rend->scale;
     uint8_t *img;
-    int i, w, h, flags;
+    int i, w, h, flags, xoff, yoff;
     bool bold;
     tex_cache_t *ctex;
     texture_t *tex;
@@ -767,10 +769,13 @@ static void text_using_texture(renderer_gl_t *rend,
 
     if (!ctex) {
         flags = bold ? LABEL_BOLD : 0;
-        img = (void*)sys_render_text(text, size * oversample, flags, &w, &h);
+        img = (void*)sys_render_text(text, size * scale, flags, &w, &h,
+                                     &xoff, &yoff);
         ctex = calloc(1, sizeof(*ctex));
         ctex->size = size;
         ctex->bold = bold;
+        ctex->xoff = xoff;
+        ctex->yoff = yoff;
         ctex->text = strdup(text);
         ctex->tex = texture_from_data(img, w, h, 1, 0, 0, w, h, 0);
         free(img);
@@ -780,14 +785,14 @@ static void text_using_texture(renderer_gl_t *rend,
     ctex->in_use = true;
 
     // Compute bounds taking alignment into account.
-    s[0] = ctex->tex->w / oversample;
-    s[1] = ctex->tex->h / oversample;
-    bounds[0] = pos[0] - s[0] / 2;
-    bounds[1] = pos[1] - s[1] / 2;
-    if (align & ALIGN_LEFT)     bounds[0] += s[0] / 2;
-    if (align & ALIGN_RIGHT)    bounds[0] -= s[0] / 2;
-    if (align & ALIGN_TOP)      bounds[1] += s[1] / 2;
-    if (align & ALIGN_BOTTOM)   bounds[1] -= s[1] / 2;
+    s[0] = ctex->tex->w / scale;
+    s[1] = ctex->tex->h / scale;
+    bounds[0] = round(pos[0] * scale + ctex->xoff) / scale;
+    bounds[1] = round(pos[1] * scale + ctex->yoff) / scale;
+    if (align & ALIGN_RIGHT)    bounds[0] -= s[0];
+    if (align & ALIGN_BOTTOM)   bounds[1] -= s[1];
+    if (align & ALIGN_CENTER)   bounds[1] -= round(s[1] / 2);
+    if (align & ALIGN_CENTER)   bounds[0] -= round(s[0] / 2);
     bounds[2] = bounds[0] + s[0];
     bounds[3] = bounds[1] + s[1];
 
@@ -803,8 +808,8 @@ static void text_using_texture(renderer_gl_t *rend,
     for (i = 0; i < 4; i++) {
         uv[i][0] = ((i % 2) * tex->w) / (double)tex->tex_w;
         uv[i][1] = ((i / 2) * tex->h) / (double)tex->tex_h;
-        verts[i][0] = (i % 2 - 0.5) * tex->w / oversample;
-        verts[i][1] = (0.5 - i / 2) * tex->h / oversample;
+        verts[i][0] = (i % 2 - 0.5) * tex->w / scale;
+        verts[i][1] = (0.5 - i / 2) * tex->h / scale;
         vec2_rotate(angle, verts[i], verts[i]);
         verts[i][0] += p[0];
         verts[i][1] += p[1];

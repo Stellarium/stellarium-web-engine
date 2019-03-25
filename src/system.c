@@ -158,9 +158,9 @@ int sys_list_fonts(void *user,
  *   An allocated buffer of one byte per pixel texture.
  */
 char *sys_render_text(const char *txt, float height, int flags,
-                      int *w, int *h)
+                      int *w, int *h, int* xoffset, int* yoffset)
 {
     assert(sys_callbacks.render_text);
     return sys_callbacks.render_text(
-            sys_callbacks.user, txt, height, flags, w, h);
+            sys_callbacks.user, txt, height, flags, w, h, xoffset, yoffset);
 }
