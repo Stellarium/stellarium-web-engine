@@ -495,11 +495,12 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
     painter.color[3] *= line->visible.value;
     painter.transform = &transform;
     // Compute the number of divisions of the grid.
-    if (line->format) {
+    if (line->grid) {
         get_steps(core->fov, line->format, line->frame, &painter, steps);
     } else {
-        steps[0] = &STEPS_DEG[1];
-        steps[1] = &STEPS_DEG[0];
+        // Lines are the same as a grid with a split of 180° in one direction.
+        steps[0] = &STEPS_DEG[1]; // 180°
+        steps[1] = &STEPS_DEG[4]; //  20°: enough to avoid clipping errors.
     }
     mat3_set_identity(mat);
     render_recursion(line, &painter, 0, splits, mat, steps, 0);
