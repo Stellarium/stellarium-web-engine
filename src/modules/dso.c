@@ -397,6 +397,35 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
     win_size[1] /= 2.0;
 }
 
+static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
+                             const painter_t *painter,
+                             const double win_size[2], double win_angle)
+{
+    const bool selected = core->selection && s->oid == core->selection->oid;
+    int effects = 0;
+    double color[4], radius;
+    char buf[128] = "";
+    const float vmag = s->display_vmag;
+
+    if (selected) {
+        effects = TEXT_BOLD;
+        vec4_set(color, 1, 1, 1, 1);
+    } else {
+        vec4_set(color, 0.7, 0.7, 0.7, 1);
+    }
+    radius = min(win_size[0] / 2, win_size[1] / 2) +
+                 fabs(cos(win_angle - M_PI_4)) *
+                 fabs(win_size[0] / 2 - win_size[1] / 2);
+    radius += 4;
+    if (s2->short_name[0])
+        snprintf(buf, sizeof(buf), "%s", s2->short_name);
+    if (buf[0]) {
+        labels_add_3d(buf, FRAME_ASTROM, s->bounding_cap, true, radius,
+                      FONT_SIZE_BASE, color, 0, LABEL_AROUND, effects,
+                      -vmag, s->oid);
+    }
+}
+
 
 // Render a DSO from its data.
 static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
@@ -407,7 +436,6 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     double win_pos[2], win_size[2], win_angle;
     double hints_limit_mag = painter->hints_limit_mag - 0.5;
     const bool selected = core->selection && s->oid == core->selection->oid;
-    int label_effects = 0;
     double opacity;
     painter_t tmp_painter;
 
@@ -485,24 +513,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     }
 
     if (vmag <= hints_limit_mag - 1.) {
-        if (selected) {
-            label_effects = TEXT_BOLD;
-            vec4_set(color, 1, 1, 1, 1);
-        } else {
-            vec4_set(color, 0.7, 0.7, 0.7, 1);
-        }
-        double radius = min(win_size[0] / 2, win_size[1] / 2) +
-                fabs(cos(win_angle - M_PI_4)) *
-                fabs(win_size[0]/2 - win_size[1]/2);
-        radius += 4;
-        char buff[128] = "";
-        if (s2->short_name[0])
-            strcpy(buff, s2->short_name);
-        if (buff[0]) {
-            labels_add_3d(buff, FRAME_ASTROM, s->bounding_cap, true, radius,
-                          FONT_SIZE_BASE, color, 0, LABEL_AROUND, label_effects,
-                          -vmag, s->oid);
-        }
+        dso_render_label(s2, s, painter, win_size, win_angle);
     }
     return 0;
 }
