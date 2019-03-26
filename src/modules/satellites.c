@@ -334,7 +334,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
     double color[4];
-    double label_color[4] = RGBA(124, 255, 124, 255);
+    const double label_color[4] = RGBA(124, 255, 124, 255);
     satellite_t *sat = (satellite_t*)obj;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
@@ -348,9 +348,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render symbol if needed.
     if (vmag < painter.hints_limit_mag) {
-        double opacity = smoothstep(3, 0, size);
-        vec4_copy(label_color, color);
-        color[3] = opacity;
+        vec3_copy(label_color, color);
+        color[3] = smoothstep(3, 0, size);
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
                       VEC(12.0, 12.0), color, 0.0);
     }
