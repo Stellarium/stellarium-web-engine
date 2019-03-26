@@ -752,7 +752,7 @@ static void text_using_texture(renderer_gl_t *rend,
                                double out_bounds[4])
 {
     double uv[4][2], verts[4][2];
-    double p[2], s[2], bounds[4];
+    double s[2], ofs[2] = {0, 0}, bounds[4];
     const double scale = rend->scale;
     uint8_t *img;
     int i, w, h, xoff, yoff;
@@ -783,12 +783,14 @@ static void text_using_texture(renderer_gl_t *rend,
     // Compute bounds taking alignment into account.
     s[0] = ctex->tex->w / scale;
     s[1] = ctex->tex->h / scale;
-    bounds[0] = round(pos[0] * scale + ctex->xoff) / scale;
-    bounds[1] = round(pos[1] * scale + ctex->yoff) / scale;
-    if (align & ALIGN_RIGHT)    bounds[0] -= s[0];
-    if (align & ALIGN_BOTTOM)   bounds[1] -= s[1];
-    if (align & ALIGN_CENTER)   bounds[1] -= round(s[1] / 2);
-    if (align & ALIGN_CENTER)   bounds[0] -= round(s[0] / 2);
+    if (align & ALIGN_LEFT)     ofs[0] = +s[0] / 2;
+    if (align & ALIGN_RIGHT)    ofs[0] = -s[0] / 2;
+    if (align & ALIGN_TOP)      ofs[1] = +s[1] / 2;
+    if (align & ALIGN_BOTTOM)   ofs[1] = -s[1] / 2;
+    bounds[0] = pos[0] - s[0] / 2 + ofs[0];
+    bounds[1] = pos[1] - s[1] / 2 + ofs[1];
+    if (angle) bounds[0] = round(bounds[0]);
+    if (angle) bounds[1] = round(bounds[1]);
     bounds[2] = bounds[0] + s[0];
     bounds[3] = bounds[1] + s[1];
 
@@ -796,19 +798,24 @@ static void text_using_texture(renderer_gl_t *rend,
         memcpy(out_bounds, bounds, sizeof(bounds));
         return;
     }
-
     tex = ctex->tex;
-    p[0] = (bounds[0] + bounds[2]) / 2;
-    p[1] = (bounds[1] + bounds[3]) / 2;
 
+    /*
+     * Render the texture, being careful to do the rotation centered on
+     * the anchor point.
+     */
     for (i = 0; i < 4; i++) {
         uv[i][0] = ((i % 2) * tex->w) / (double)tex->tex_w;
         uv[i][1] = ((i / 2) * tex->h) / (double)tex->tex_h;
         verts[i][0] = (i % 2 - 0.5) * tex->w / scale;
         verts[i][1] = (0.5 - i / 2) * tex->h / scale;
+        verts[i][0] += ofs[0];
+        verts[i][1] += ofs[1];
         vec2_rotate(angle, verts[i], verts[i]);
-        verts[i][0] += p[0];
-        verts[i][1] += p[1];
+        verts[i][0] -= ofs[0];
+        verts[i][1] -= ofs[1];
+        verts[i][0] += (bounds[0] + bounds[2]) / 2;
+        verts[i][1] += (bounds[1] + bounds[3]) / 2;
         window_to_ndc(rend, verts[i], verts[i]);
     }
 
