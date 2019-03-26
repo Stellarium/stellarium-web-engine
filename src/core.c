@@ -561,20 +561,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
     }
 
     // Render the viewport cap for debugging.
-    // Reduce the cap size in compute_viewport_cap to see it and debug.
     if ((0)) {
-        double r;
-        double p[4];
-        vec3_copy(painter.viewport_caps[FRAME_ICRF], p);
-        p[3] = 0;
-        r = acos(painter.viewport_caps[FRAME_ICRF][3]) * 2;
-        obj_t* obj = obj_create("circle", "cap_circle", NULL, NULL);
-        obj_set_attr(obj, "pos", p);
-        obj_set_attr(obj, "frame", FRAME_ICRF);
-        double size[2] = {r, r};
-        obj_set_attr(obj, "size", size);
-        obj_render(obj, &painter);
-        obj_release(obj);
+        paint_cap(&painter, FRAME_ICRF, painter.viewport_caps[FRAME_ICRF]);
     }
 
     // Flush all rendering pipeline
