@@ -607,6 +607,25 @@ int paint_2d_line(const painter_t *painter, const double transf[3][3],
     return 0;
 }
 
+void paint_cap(const painter_t *painter, int frame, double cap[4])
+{
+    double r;
+    double p[4];
+
+    if (!cap_intersects_cap(painter->viewport_caps[frame], cap))
+        return;
+
+    vec3_copy(cap, p);
+    p[3] = 0;
+    r = acos(cap[3]) * 2;
+    obj_t* obj = obj_create("circle", "cap_circle", NULL, NULL);
+    obj_set_attr(obj, "pos", p);
+    obj_set_attr(obj, "frame", frame);
+    double size[2] = {r, r};
+    obj_set_attr(obj, "size", size);
+    obj_render(obj, painter);
+    obj_release(obj);
+}
 
 void painter_project_ellipse(const painter_t *painter, int frame,
         float ra, float de, float angle, float size_x, float size_y,

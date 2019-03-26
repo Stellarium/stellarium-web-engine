@@ -526,6 +526,18 @@ int paint_2d_rect(const painter_t *painter, const double transf[3][3],
 int paint_2d_line(const painter_t *painter, const double transf[3][3],
                   const double p1[2], const double p2[2]);
 
+
+/*
+ * Function: paint_cap
+ * Paint a spherical cap.
+ *
+ * Parameters:
+ *   painter    - The painter.
+ *   frame      - The frame in which the cap is defined
+ *   cap        - The spherical cap.
+ */
+void paint_cap(const painter_t *painter, int frame, double cap[4]);
+
 /*
  * Function: painter_project_ellipse
  * Project an ellipse defined on the sphere to the screen.
