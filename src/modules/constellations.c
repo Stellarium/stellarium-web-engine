@@ -432,7 +432,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     double win_pos[2];
     double mag[2], radius[2];
     const char *label;
-    double half_cap[4];
+    double p[3], label_cap[4];
+    double pixel_angular_resolution, label_pixel_length;
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (painter.color[3] == 0.0) return 0;
@@ -460,19 +461,27 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1, 2);
     free(lines);
 
-    // Render label only if we are not too far from the observer view
-    // direction, so that we don't show too many labels when zoomed out.
-    vec4_copy(painter.viewport_caps[FRAME_ICRF], half_cap);
-    half_cap[3] = cos(40.0 * M_PI / 180);
-    if (!cap_contains_vec3(half_cap, con->bounding_cap))
+    // Render label only if its center is visible
+    if (painter_is_point_clipped_fast(&painter, FRAME_ICRF, con->bounding_cap,
+                                      true))
         return 0;
 
-    if (!painter_project(&painter, FRAME_ICRF, con->bounding_cap, true, true,
-                         win_pos))
-        return 0;
+    // Estimate the label bouding cap
+    painter_project(&painter, FRAME_ICRF, con->bounding_cap, true, false,
+                    win_pos);
+    win_pos[0] += 1;
+    painter_unproject(&painter, FRAME_ICRF, win_pos, p);
+    pixel_angular_resolution = acos(vec3_dot(con->bounding_cap, p));
 
     label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
                 con->name : con->name_translated;
+    label_pixel_length = 0.5 * FONT_SIZE_BASE * strlen(label);
+    vec3_copy(con->bounding_cap, label_cap);
+    label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
+
+    if (!cap_contains_cap(con->bounding_cap, label_cap))
+        return 0;
+
     labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
                   con->bounding_cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
