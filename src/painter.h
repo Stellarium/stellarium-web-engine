@@ -49,6 +49,8 @@ enum {
 enum {
     TEXT_UPPERCASE = 1 << 0,
     TEXT_BOLD      = 1 << 1,
+    TEXT_SMALL_CAP = 1 << 2,
+    TEXT_DEMI_BOLD = 1 << 3,
 };
 
 struct renderer
