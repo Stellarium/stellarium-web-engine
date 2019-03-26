@@ -13,8 +13,6 @@
 
 enum {
     LABEL_AROUND    = 1 << 8, // Auto place label around position.
-    LABEL_UPPERCASE = 1 << 10,
-    LABEL_BOLD      = 1 << 11,
 };
 
 void labels_reset(void);
@@ -31,15 +29,15 @@ void labels_reset(void);
  *   size       - Height of the text in pixel.
  *   color      - Color of the text.
  *   angle      - Rotation angle (rad).
- *   flags      - Union of <ALIGN_FLAGS> and <LABEL_FLAGS>.
- *                Used to specify anchor position and text effects.
+ *   align      - Union of <ALIGN_FLAGS> and LABEL_AROUND
+ *   effects    - Union of <TEXT_EFFECT_FLAGS>.
  *   priority   - Priority used in case of positioning conflicts. Higher value
  *                means higher priority.
  *   oid        - Optional unique id for the label.
  */
 void labels_add(const char *text, const double pos[2], double radius,
                 double size, const double color[4], double angle,
-                int flags, double priority, uint64_t oid);
+                int align, int effects, double priority, uint64_t oid);
 
 /*
  * Function: labels_add
@@ -55,13 +53,13 @@ void labels_add(const char *text, const double pos[2], double radius,
  *   size       - Height of the text in pixel.
  *   color      - Color of the text.
  *   angle      - Rotation angle (rad).
- *   flags      - Union of <ALIGN_FLAGS> and <LABEL_FLAGS>.
- *                Used to specify anchor position and text effects.
+ *   align      - Union of <ALIGN_FLAGS> and LABEL_AROUND
+ *   effects    - Union of <TEXT_EFFECT_FLAGS>.
  *   priority   - Priority used in case of positioning conflicts. Higher value
  *                means higher priority.
  *   oid        - Optional unique id for the label.
  */
 void labels_add_3d(const char *text, int frame, const double pos[3],
                    bool at_inf, double radius, double size,
-                   const double color[4], double angle, int flags,
-                   double priority, uint64_t oid);
+                   const double color[4], double angle, int align,
+                   int effects, double priority, uint64_t oid);

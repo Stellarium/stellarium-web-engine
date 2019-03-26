@@ -202,8 +202,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(comet->name, FRAME_ICRF, obj->pvo[0], false, size,
-            FONT_SIZE_BASE, label_color, 0,
-            selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+            FONT_SIZE_BASE, label_color, 0, LABEL_AROUND,
+            selected ? TEXT_BOLD : 0,
             0, obj->oid);
     }
     return 0;

@@ -407,7 +407,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     double win_pos[2], win_size[2], win_angle;
     double hints_limit_mag = painter->hints_limit_mag - 0.5;
     const bool selected = core->selection && s->oid == core->selection->oid;
-    int label_flags;
+    int label_effects = 0;
     double opacity;
     painter_t tmp_painter;
 
@@ -485,13 +485,12 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     }
 
     if (vmag <= hints_limit_mag - 1.) {
-        label_flags = LABEL_AROUND;
         if (selected) {
-            label_flags |= LABEL_BOLD;
+            label_effects = TEXT_BOLD;
             vec4_set(color, 1, 1, 1, 1);
-        }
-        else
+        } else {
             vec4_set(color, 0.7, 0.7, 0.7, 1);
+        }
         double radius = min(win_size[0] / 2, win_size[1] / 2) +
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0]/2 - win_size[1]/2);
@@ -501,7 +500,8 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
             strcpy(buff, s2->short_name);
         if (buff[0]) {
             labels_add_3d(buff, FRAME_ASTROM, s->bounding_cap, true, radius,
-                          FONT_SIZE_BASE, color, 0, label_flags, -vmag, s->oid);
+                          FONT_SIZE_BASE, color, 0, LABEL_AROUND, label_effects,
+                          -vmag, s->oid);
         }
     }
     return 0;

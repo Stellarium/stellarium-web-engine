@@ -768,7 +768,7 @@ static void text_using_texture(renderer_gl_t *rend,
     }
 
     if (!ctex) {
-        flags = bold ? LABEL_BOLD : 0;
+        flags = bold ? TEXT_BOLD : 0;
         img = (void*)sys_render_text(text, size * scale, flags, &w, &h,
                                      &xoff, &yoff);
         ctex = calloc(1, sizeof(*ctex));

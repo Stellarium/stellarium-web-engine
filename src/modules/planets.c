@@ -792,8 +792,8 @@ static void planet_render_label(
 
     labels_add_3d(label, FRAME_ICRF, pos,
                   true, s + 4, FONT_SIZE_BASE,
-                  selected ? white : label_color, 0,
-                  selected ? LABEL_AROUND | LABEL_BOLD : LABEL_AROUND,
+                  selected ? white : label_color, 0, LABEL_AROUND,
+                  selected ? TEXT_BOLD : 0,
                   -planet->obj.vmag, planet->obj.oid);
 }
 

@@ -42,6 +42,15 @@ enum {
     ALIGN_BASELINE  = 1 << 6,   // Default, align text vertically to baseline.
 };
 
+/*
+ * Enum: TEXT_EFFECT_FLAGS
+ * Effects that can be applied to the text.
+ */
+enum {
+    TEXT_UPPERCASE = 1 << 8,
+    TEXT_BOLD      = 1 << 9,
+};
+
 struct renderer
 {
     void (*prepare)(renderer_t *rend,

@@ -9,10 +9,6 @@
 
 #include "swe.h"
 
-// Extra flags (on top of anchors flags).
-enum {
-    SKIPPED = 1 << 16,
-};
 
 typedef struct label label_t;
 struct label
@@ -29,9 +25,10 @@ struct label
     double  size;         // Height of the text in pixel.
     double  color[4];     // Color of the text.
     double  angle;        // Rotation angle on screen (rad).
-    int     flags;        // Union of <LABEL_FLAGS>.  Used to specify anchor
-                          // position and text effects.
+    int     align;        // Union of <ALIGN_FLAGS>.
+    int     effects;      // Union of <TEXT_EFFECT_FLAGS>.
     fader_t fader;        // Use for auto fade-in/out of labels.
+    bool    skipped;      // Set when the label cannot be rendered.
 
     double  priority;     // Priority used in case of positioning conflicts.
                           // Higher value means higher priority.
@@ -73,19 +70,19 @@ static label_t *label_get(label_t *list, const char *txt, double size,
 }
 
 static void label_get_bounds(const painter_t *painter, const label_t *label,
-                             int align, double bounds[4])
+                             int align, int effects, double bounds[4])
 {
     double border;
     double pos[2];
     vec2_copy(label->win_pos, pos);
     border = label->radius;
-    if (label->flags & LABEL_AROUND) border /= sqrt(2.0);
+    if (label->align & LABEL_AROUND) border /= sqrt(2.0);
     if (align & ALIGN_LEFT)    pos[0] += border;
     if (align & ALIGN_RIGHT)   pos[0] -= border;
     if (align & ALIGN_BOTTOM)  pos[1] -= border;
     if (align & ALIGN_TOP)     pos[1] += border;
-    paint_text_bounds(painter, label->render_text, pos, align, label->size,
-                      bounds);
+    paint_text_bounds(painter, label->render_text, pos, align | effects,
+                      label->size, bounds);
 }
 
 static bool label_get_possible_bounds(const painter_t *painter,
@@ -97,14 +94,15 @@ static bool label_get_possible_bounds(const painter_t *painter,
         ALIGN_RIGHT  | ALIGN_BOTTOM,
         ALIGN_RIGHT  | ALIGN_TOP};
 
-    if (!(label->flags & LABEL_AROUND)) {
+    if (!(label->align & LABEL_AROUND)) {
         if (i != 0) return false;
-        label_get_bounds(painter, label, label->flags, bounds);
+        label_get_bounds(painter, label, label->align, label->effects, bounds);
         return true;
     }
-    if (label->flags & LABEL_AROUND) {
+    if (label->align & LABEL_AROUND) {
         if (i >= 4) return false;
-        label_get_bounds(painter, label, anchors_around[i], bounds);
+        label_get_bounds(painter, label, anchors_around[i], label->effects,
+                         bounds);
     }
     return true;
 }
@@ -121,10 +119,10 @@ static bool bounds_overlap(const double a[4], const double b[4])
 static bool test_label_overlaps(const label_t *label)
 {
     label_t *other;
-    if (!(label->flags & LABEL_AROUND)) return false;
+    if (!(label->align & LABEL_AROUND)) return false;
     DL_FOREACH(g_labels->labels, other) {
         if (other == label) break;
-        if (other->flags & SKIPPED) continue;
+        if (other->skipped) continue;
         if (other->fader.target == false) continue;
         if (bounds_overlap(other->bounds, label->bounds)) return true;
     }
@@ -156,10 +154,10 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
                             false, label->win_pos);
         }
 
-        painter.font = label->flags & LABEL_BOLD ? "bold" : NULL;
+        painter.font = label->effects & TEXT_BOLD ? "bold" : NULL;
         for (i = 0; ; i++) {
             if (!label_get_possible_bounds(&painter, label, i, label->bounds)) {
-                label->flags |= SKIPPED;
+                label->skipped = true;
                 goto skip;
             }
 
@@ -190,7 +188,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
         paint_text(&painter, label->render_text, pos,
                    ALIGN_LEFT | ALIGN_TOP, label->size, color,
                    label->angle);
-        label->flags &= ~SKIPPED;
+        label->skipped = false;
 skip:;
     }
     return 0;
@@ -208,19 +206,20 @@ static int labels_update(obj_t *obj, const observer_t *obs, double dt)
 
 void labels_add(const char *text, const double pos[2],
                 double radius, double size, const double color[4],
-                double angle, int flags, double priority, uint64_t oid)
+                double angle, int align, int effects, double priority,
+                uint64_t oid)
 {
     const double p[3] = {pos[0], pos[1], 0};
-    labels_add_3d(text, -1, p, true, radius, size, color, angle, flags,
-                  priority, oid);
+    labels_add_3d(text, -1, p, true, radius, size, color, angle, align,
+                  effects, priority, oid);
 }
 
 void labels_add_3d(const char *text, int frame, const double pos[3],
                    bool at_inf, double radius, double size,
-                   const double color[4], double angle, int flags,
-                   double priority, uint64_t oid)
+                   const double color[4], double angle, int align,
+                   int effects, double priority, uint64_t oid)
 {
-    if (!(flags & LABEL_AROUND)) priority = 1024.0; // Use FLT_MAX ?
+    if (!(align & LABEL_AROUND)) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
     label_t *label;
@@ -233,7 +232,8 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
         label->oid = oid;
         fader_init(&label->fader, false);
         label->render_text = label->text = strdup(text);
-        if (flags & LABEL_UPPERCASE) {
+        // Note: should be done by the painter directly.
+        if (effects & TEXT_UPPERCASE) {
             label->render_text = malloc(strlen(text) + 64);
             u8_upper(label->render_text, text, strlen(text) + 64);
         }
@@ -251,7 +251,8 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
     label->size = size;
     vec4_set(label->color, color[0], color[1], color[2], color[3]);
     label->angle = angle;
-    label->flags = flags;
+    label->align = align;
+    label->effects = effects;
     label->priority = priority;
     label->fader.target = true;
 }

@@ -89,7 +89,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
         .user       = obj,
     };
     const bool selected = core->selection && obj->oid == core->selection->oid;
-    int label_flags;
+    int label_effects = 0;
     double win_pos[2], win_size[2], win_angle;
     static const double white[4] = {1, 1, 1, 1};
 
@@ -107,15 +107,14 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
                           win_pos, win_size, &win_angle);
     areas_add_circle(core->areas, win_pos, win_size[0], obj->oid, 0);
     if (circle->label[0]) {
-        label_flags = LABEL_AROUND;
         if (selected)
-            label_flags |= LABEL_BOLD;
+            label_effects = TEXT_BOLD;
         double radius = min(win_size[0], win_size[1]) +
                 fabs(cos(win_angle - M_PI_4)) *
                 fabs(win_size[0] - win_size[1]);
         labels_add_3d(circle->label, circle->frame, circle->pos, true, radius,
-                      FONT_SIZE_BASE, painter.color, 0, label_flags, 0,
-                      circle->obj.oid);
+                      FONT_SIZE_BASE, painter.color, 0, LABEL_AROUND,
+                      label_effects, 0, circle->obj.oid);
     }
     return 0;
 }
