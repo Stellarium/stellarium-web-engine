@@ -475,7 +475,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
                 con->name : con->name_translated;
     labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
                   con->bounding_cap, true, 0, FONT_SIZE_BASE,
-                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE, TEXT_UPPERCASE,
+                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
+                  TEXT_SMALL_CAP | TEXT_DEMI_BOLD,
                   0, con->obj.oid);
 
     return 0;
