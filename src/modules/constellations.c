@@ -317,7 +317,7 @@ static int render_bounds(const constellation_t *con,
     };
 
     painter.lines_stripes = 10.0; // Why not working anymore?
-    vec4_set(painter.color, 0.5, 0.2, 0.2, 0.3 * painter.color[3]);
+    vec4_set(painter.color, 0.6, 0.3, 0.3, 0.4 * painter.color[3]);
     if (!painter.color[3]) return 0;
     info = &con->info;
     if (!info) return 0;
@@ -437,7 +437,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
     if (painter.color[3] == 0.0) return 0;
     vec4_set(lines_color, 0.2, 0.4, 0.7, 0.5);
-    vec4_set(names_color, 0.2, 0.4, 0.7, 1);
+    vec4_set(names_color, 0.3, 0.4, 0.7, 0.7);
     vec4_emul(lines_color, painter.color, painter.color);
 
     lines = calloc(con->count, sizeof(*lines));
