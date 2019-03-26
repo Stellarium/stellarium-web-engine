@@ -221,6 +221,7 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
     if (!(align & LABEL_AROUND)) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
+    assert(!angle); // Not supported at the moment.
     label_t *label;
 
     if (!text || !*text) return;
