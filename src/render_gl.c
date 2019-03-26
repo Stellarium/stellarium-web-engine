@@ -787,10 +787,10 @@ static void text_using_texture(renderer_gl_t *rend,
     if (align & ALIGN_RIGHT)    ofs[0] = -s[0] / 2;
     if (align & ALIGN_TOP)      ofs[1] = +s[1] / 2;
     if (align & ALIGN_BOTTOM)   ofs[1] = -s[1] / 2;
-    bounds[0] = pos[0] - s[0] / 2 + ofs[0];
-    bounds[1] = pos[1] - s[1] / 2 + ofs[1];
-    if (angle) bounds[0] = round(bounds[0]);
-    if (angle) bounds[1] = round(bounds[1]);
+    bounds[0] = pos[0] - s[0] / 2 + ofs[0] + ctex->xoff / scale;
+    bounds[1] = pos[1] - s[1] / 2 + ofs[1] + ctex->yoff / scale;
+    if (angle) bounds[0] = round(bounds[0] * scale) / scale;
+    if (angle) bounds[1] = round(bounds[1] * scale) / scale;
     bounds[2] = bounds[0] + s[0];
     bounds[3] = bounds[1] + s[1];
 
