@@ -90,9 +90,8 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     };
     const bool selected = core->selection && obj->oid == core->selection->oid;
     int label_effects = 0;
-    double win_pos[2], win_size[2], win_angle;
+    double win_pos[2], win_size[2], win_angle, radius;
     static const double white[4] = {1, 1, 1, 1};
-
 
     vec4_copy(circle->color, painter.color);
     paint_quad(&painter, circle->frame, &proj, 64);
@@ -109,9 +108,9 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     if (circle->label[0]) {
         if (selected)
             label_effects = TEXT_BOLD;
-        double radius = min(win_size[0], win_size[1]) +
-                fabs(cos(win_angle - M_PI_4)) *
-                fabs(win_size[0] - win_size[1]);
+        radius = min(win_size[0], win_size[1]) +
+                 fabs(cos(win_angle - M_PI_4)) *
+                 fabs(win_size[0] - win_size[1]);
         labels_add_3d(circle->label, circle->frame, circle->pos, true, radius,
                       FONT_SIZE_BASE, painter.color, 0, LABEL_AROUND,
                       label_effects, 0, circle->obj.oid);
