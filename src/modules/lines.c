@@ -290,17 +290,17 @@ static void render_label(const double p[2], const double u[2],
         if (step <= 360)
             sprintf(buff, "%c%d°", s, h[0]);
         else if (step <= 21600)
-            sprintf(buff, "%c%d°%2d'", s, h[0], h[1]);
+            sprintf(buff, "%c%d°%02d'", s, h[0], h[1]);
         else
-            sprintf(buff, "%c%d°%2d'%2d\"", s, h[0], h[1], h[2]);
+            sprintf(buff, "%c%d°%02d'%02d\"", s, h[0], h[1], h[2]);
     } else {
         eraA2tf(1, a, &s, h);
         if (step <= 24)
             sprintf(buff, "%c%dh", s, h[0]);
         else  if (step <= 1440)
-            sprintf(buff, "%c%dh%2d", s, h[0], h[1]);
+            sprintf(buff, "%c%dh%02d", s, h[0], h[1]);
         else
-            sprintf(buff, "%c%dh%2dm%2ds", s, h[0], h[1], h[2]);
+            sprintf(buff, "%c%dh%02dm%02ds", s, h[0], h[1], h[2]);
     }
 
     paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
