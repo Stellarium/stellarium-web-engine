@@ -264,7 +264,9 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
         d = vec3_dot(con->bounding_cap, con->stars[i]->pvo[0]);
         max_cosdist = min(max_cosdist, d);
     }
-    con->bounding_cap[3] = max_cosdist;
+    // Constellation caps can't be smaller than 8 deg radius to account for
+    // images and 1-2 stars constellations.
+    con->bounding_cap[3] = min(cos(8.0 * DD2R), cos(acos(max_cosdist) * 1.2));
 
 end:
     // Rescale the image matrix once we got the texture if the anchors
@@ -273,11 +275,6 @@ end:
         assert(con->mat[2][2]);
         mat3_iscale(con->mat, con->img->w, con->img->h, 1.0);
         con->img_need_rescale = false;
-
-        // Update bounding cap to also include image vertices
-        // I don't know how to do this properly..
-        // In the mean time, just add a 30% margin
-        con->bounding_cap[3] = cos(acos(con->bounding_cap[3]) * 1.30);
     }
 
     con->visible.target = cons->show_all ||
