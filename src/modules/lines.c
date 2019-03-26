@@ -303,7 +303,7 @@ static void render_label(const double p[2], const double u[2],
             sprintf(buff, "%c%dh%2dm%2ds", s, h[0], h[1], h[2]);
     }
 
-    paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE,
+    paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                       text_size, bounds);
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
@@ -325,7 +325,7 @@ static void render_label(const double p[2], const double u[2],
     vec4_copy(painter->color, color);
 
     color[3] = 1.0;
-    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE,
+    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                text_size, color, label_angle);
 }
 

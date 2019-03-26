@@ -81,7 +81,7 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
     if (align & ALIGN_RIGHT)   pos[0] -= border;
     if (align & ALIGN_BOTTOM)  pos[1] -= border;
     if (align & ALIGN_TOP)     pos[1] += border;
-    paint_text_bounds(painter, label->render_text, pos, align | effects,
+    paint_text_bounds(painter, label->render_text, pos, align, effects,
                       label->size, bounds);
 }
 
@@ -154,7 +154,6 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
                             false, label->win_pos);
         }
 
-        painter.font = label->effects & TEXT_BOLD ? "bold" : NULL;
         for (i = 0; ; i++) {
             if (!label_get_possible_bounds(&painter, label, i, label->bounds)) {
                 label->skipped = true;
@@ -186,7 +185,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
         vec4_copy(label->color, color);
         color[3] *= label->fader.value;
         paint_text(&painter, label->render_text, pos,
-                   ALIGN_LEFT | ALIGN_TOP, label->size, color,
+                   ALIGN_LEFT | ALIGN_TOP, label->effects, label->size, color,
                    label->angle);
         label->skipped = false;
 skip:;

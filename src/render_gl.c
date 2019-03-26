@@ -50,8 +50,8 @@ struct tex_cache {
     tex_cache_t *next, *prev;
     double      size;
     char        *text;
+    int         effects;
     bool        in_use;
-    bool        bold;
     int         xoff;
     int         yoff;
     texture_t   *tex;
@@ -167,7 +167,7 @@ struct item
             float size;
             float angle;
             int   align;
-            const char *font;
+            int   effects;
         } text;
     };
 
@@ -747,33 +747,29 @@ static void texture(renderer_t *rend_,
 // Render text using a system bakend generated texture.
 static void text_using_texture(renderer_gl_t *rend,
                                const char *text, const double pos[2],
-                               int align, double size, const double color[4],
-                               double angle, const char *font,
+                               int align, int effects, double size,
+                               const double color[4], double angle,
                                double out_bounds[4])
 {
     double uv[4][2], verts[4][2];
     double p[2], s[2], bounds[4];
     const double scale = rend->scale;
     uint8_t *img;
-    int i, w, h, flags, xoff, yoff;
-    bool bold;
+    int i, w, h, xoff, yoff;
     tex_cache_t *ctex;
     texture_t *tex;
 
-    bold = (font && strcmp(font, "bold") == 0);
-
     DL_FOREACH(rend->tex_cache, ctex) {
-        if (ctex->size == size && ctex->bold == bold &&
+        if (ctex->size == size && ctex->effects == effects &&
                 strcmp(ctex->text, text) == 0) break;
     }
 
     if (!ctex) {
-        flags = bold ? TEXT_BOLD : 0;
-        img = (void*)sys_render_text(text, size * scale, flags, &w, &h,
+        img = (void*)sys_render_text(text, size * scale, effects, &w, &h,
                                      &xoff, &yoff);
         ctex = calloc(1, sizeof(*ctex));
         ctex->size = size;
-        ctex->bold = bold;
+        ctex->effects = effects;
         ctex->xoff = xoff;
         ctex->yoff = yoff;
         ctex->text = strdup(text);
@@ -821,9 +817,9 @@ static void text_using_texture(renderer_gl_t *rend,
 
 // Render text using nanovg.
 static void text_using_nanovg(renderer_gl_t *rend, const char *text,
-                              const double pos[2], int align, double size,
-                              const double color[4], double angle,
-                              const char *font, double bounds[4])
+                              const double pos[2], int align, int effects,
+                              double size, const double color[4], double angle,
+                              double bounds[4])
 {
     item_t *item;
     float fbounds[4];
@@ -841,15 +837,15 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
         vec2_to_float(pos, item->text.pos);
         item->text.size = size;
         item->text.align = align;
-        item->text.font = font;
+        item->text.effects = effects;
         item->text.angle = angle;
         strcpy(item->text.text, text);
         DL_APPEND(rend->items, item);
     }
     if (bounds) {
         nvgSave(rend->vg);
-        if (font) {
-            font_handle = nvgFindFont(rend->vg, font);
+        if (effects & TEXT_BOLD) {
+            font_handle = nvgFindFont(rend->vg, "bold");
             if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
             else font_handle = 0;
         }
@@ -865,18 +861,18 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
 }
 
 static void text(renderer_t *rend_, const char *text, const double pos[2],
-                 int align, double size, const double color[4], double angle,
-                 const char *font, double bounds[4])
+                 int align, int effects, double size, const double color[4],
+                 double angle, double bounds[4])
 {
     assert(pos);
     renderer_gl_t *rend = (void*)rend_;
     assert(size);
 
     if (sys_callbacks.render_text) {
-        text_using_texture(rend, text, pos, align, size, color, angle,
-                           font, bounds);
+        text_using_texture(rend, text, pos, align, effects, size, color, angle,
+                           bounds);
     } else {
-        text_using_nanovg(rend, text, pos, align, size, color, angle, font,
+        text_using_nanovg(rend, text, pos, align, effects, size, color, angle,
                           bounds);
     }
 
@@ -1003,8 +999,8 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     nvgSave(rend->vg);
     nvgTranslate(rend->vg, item->text.pos[0], item->text.pos[1]);
     nvgRotate(rend->vg, item->text.angle);
-    if (item->text.font) {
-        font_handle = nvgFindFont(rend->vg, item->text.font);
+    if (item->text.effects & TEXT_BOLD) {
+        font_handle = nvgFindFont(rend->vg, "bold");
         if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
         else font_handle = 0;
     }

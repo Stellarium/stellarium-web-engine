@@ -47,8 +47,8 @@ enum {
  * Effects that can be applied to the text.
  */
 enum {
-    TEXT_UPPERCASE = 1 << 8,
-    TEXT_BOLD      = 1 << 9,
+    TEXT_UPPERCASE = 1 << 0,
+    TEXT_BOLD      = 1 << 1,
 };
 
 struct renderer
@@ -89,10 +89,10 @@ struct renderer
                  const char      *text,
                  const double    pos[2],
                  int             align,
+                 int             effects,
                  double          size,
                  const double    color[4],
                  double          angle,
-                 const char      *font,
                  double          bounds[4]    // Output, can be NULL.
                  );
 
@@ -173,7 +173,6 @@ struct painter
     double          stars_limit_mag;   // Actual stars visual magnitude limit.
     // Base magnitude limit for hints and labels
     double          hints_limit_mag;
-    const char      *font;          // Set to NULL for default font.
 
     double          lines_width;
     double          lines_stripes;
@@ -320,8 +319,8 @@ int paint_lines(const painter_t *painter,
 
 
 int paint_text_bounds(const painter_t *painter, const char *text,
-                      const double pos[2], int align, double size,
-                      double bounds[4]);
+                      const double pos[2], int align, int effects,
+                      double size, double bounds[4]);
 
 /*
  * Function: paint_text
@@ -335,7 +334,7 @@ int paint_text_bounds(const painter_t *painter, const char *text,
  */
 int paint_text(const painter_t *painter,
                const char *text, const double pos[2], int align,
-               double size, const double color[4], double angle);
+               int effects, double size, const double color[4], double angle);
 
 /*
  * Function: paint_texture
