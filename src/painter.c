@@ -251,11 +251,16 @@ static int paint_line(const painter_t *painter,
     double view_pos[2][4];
 
     if (mode > 0 && painter->proj->intersect_discontinuity) {
+        // Test if the line intersect a discontinuity.
         for (i = 0; i < 2; i++) {
             if (line_proj)
                 project(line_proj, PROJ_BACKWARD, 4, line[i], view_pos[i]);
             else
                 memcpy(view_pos[i], line[i], sizeof(view_pos[i]));
+            mat4_mul_vec4(*painter->transform, view_pos[i], view_pos[i]);
+            vec3_normalize(view_pos[i], view_pos[i]);
+            convert_frame(painter->obs, frame, FRAME_VIEW, true,
+                          view_pos[i], view_pos[i]);
         }
         r = painter->proj->intersect_discontinuity(
                             painter->proj, view_pos[0], view_pos[1]);
