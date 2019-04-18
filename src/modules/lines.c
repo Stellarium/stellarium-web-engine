@@ -146,7 +146,7 @@ struct line {
 };
 
 // Test if a shape in clipping coordinates is clipped or not.
-static bool is_clipped(int n, double (*pos)[4])
+static bool is_clipped(const double pos[4][4], double clip[4][4])
 {
     // The six planes equations:
     const int P[6][4] = {
@@ -156,18 +156,35 @@ static bool is_clipped(int n, double (*pos)[4])
     };
     int i, p;
     for (p = 0; p < 6; p++) {
-        for (i = 0; i < n; i++) {
-            if (    P[p][0] * pos[i][0] +
-                    P[p][1] * pos[i][1] +
-                    P[p][2] * pos[i][2] +
-                    P[p][3] * pos[i][3] <= 0) {
+        for (i = 0; i < 4; i++) {
+            if (    P[p][0] * clip[i][0] +
+                    P[p][1] * clip[i][1] +
+                    P[p][2] * clip[i][2] +
+                    P[p][3] * clip[i][3] <= 0) {
                 break;
             }
         }
-        if (i == n) // All the points are outside a clipping plane.
+        if (i == 4) // All the points are outside a clipping plane.
             return true;
     }
-    return false;
+
+    /*
+     * Special case: if all the points are behind us and none are visible
+     * on screen, we assume the tile is clipped.  This fix the problem
+     * that some projections as defined at the moment don't make the clipping
+     * test very accurate.
+     *
+     * This is the same trick used in painter.c to check if an healpix tile
+     * is clipped or not.
+     */
+    for (i = 0; i < 4; i++) {
+        if (clip[i][0] >= -clip[i][3] && clip[i][0] <= +clip[i][3] &&
+            clip[i][1] >= -clip[i][3] && clip[i][1] <= +clip[i][3] &&
+            clip[i][2] >= -clip[i][3] && clip[i][2] <= +clip[i][3])
+                return false;
+        if (pos[i][2] < 0) return false;
+    }
+    return true;
 }
 
 static int lines_init(obj_t *obj, json_value *args)
@@ -366,7 +383,7 @@ static void render_recursion(
     // If the quad is clipped we stop the recursion.
     // We only start to test after a certain level to prevent distortion
     // error with big quads at low levels.
-    if (level > 2 && is_clipped(4, pos_clip))
+    if (level > 2 && is_clipped(pos, pos_clip))
         return;
 
     // Nothing to render yet.
