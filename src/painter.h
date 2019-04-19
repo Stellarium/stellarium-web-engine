@@ -147,6 +147,9 @@ enum {
     PAINTER_SHOW_BAYER_LABELS   = 1 << 7,
     PAINTER_ATMOSPHERE_SHADER   = 1 << 8,
     PAINTER_FOG_SHADER          = 1 << 9,
+
+    // Passed to paint_lines.
+    PAINTER_SKIP_DISCONTINUOUS  = 1 << 10,
 };
 
 enum {
@@ -307,17 +310,28 @@ int paint_tile_contour(const painter_t *painter, int frame,
                        int order, int pix, int split);
 
 /*
- * discontinuity_mode:
- *      0: Do not check.
- *      1: Check and abort if intersect.
- *      2: Check and only fix if simple (we can split the projection).
+ * Function: paint_lines
+ * Render 3d lines.
+ *
+ * Parameters:
+ *   painter    - A painter instance.
+ *   frame      - Frame of the inputs.
+ *   nb         - Number of vertices.
+ *   lines      - Vertices of the lines: [a0, a1, b0, b1, c0, c1, ...]
+ *   line_proj  - Optional function that can be used to represent lines as
+ *                parametric function.  If set then the actual coordinates
+ *                of the lines are the mapping of the point through this
+ *                function.
+ *   split      - How much do we want to split the lines for smooth rendering.
+ *   flags      - Supported flags:
+ *                  PAINTER_SKIP_DISCONTINUOUS - if set, any line that
+ *                  intersects a discontinuity is ignored.
  */
 int paint_lines(const painter_t *painter,
                 int frame,
                 int nb, double (*lines)[4],
                 const projection_t *line_proj,
-                int split,
-                int discontinuity_mode);
+                int split, int flags);
 
 
 int paint_text_bounds(const painter_t *painter, const char *text,

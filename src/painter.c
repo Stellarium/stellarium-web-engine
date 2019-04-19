@@ -243,14 +243,15 @@ int paint_texture(const painter_t *painter,
 static int paint_line(const painter_t *painter,
                       int frame,
                       double line[2][4], const projection_t *line_proj,
-                      int split,
-                      int intersect_discontinuity_mode)
+                      int split, int flags)
 {
-    int mode = intersect_discontinuity_mode;
     int r, i;
     double view_pos[2][4];
 
-    if (mode > 0 && painter->proj->intersect_discontinuity) {
+    assert((flags & PAINTER_SKIP_DISCONTINUOUS) == flags);
+    if (    (flags & PAINTER_SKIP_DISCONTINUOUS) &&
+            painter->proj->intersect_discontinuity)
+    {
         // Test if the line intersect a discontinuity.
         for (i = 0; i < 2; i++) {
             if (line_proj)
@@ -277,8 +278,7 @@ int paint_lines(const painter_t *painter,
                 int frame,
                 int nb, double (*lines)[4],
                 const projection_t *line_proj,
-                int split,
-                int intersect_discontinuity_mode)
+                int split, int flags)
 {
     int i, ret = 0;
     assert(nb % 2 == 0);
@@ -286,7 +286,7 @@ int paint_lines(const painter_t *painter,
     // So that we don't abort in the middle of the rendering.
     for (i = 0; i < nb; i += 2)
         ret |= paint_line(painter, frame, lines ? (void*)lines[i] : NULL,
-                          line_proj, split, intersect_discontinuity_mode);
+                          line_proj, split, flags);
     return ret;
 }
 
