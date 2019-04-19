@@ -405,7 +405,7 @@ static void render_recursion(
         if (splits[dir] != steps[dir]->n / (dir ? 2 : 1)) continue;
         done_mask |= (1 << dir);
         paint_lines(painter, line->frame, 2, lines + dir * 2,
-                    &proj_spherical, 8, 0);
+                    &proj_spherical, 8, PAINTER_SKIP_DISCONTINUOUS);
         if (!line->format) continue;
         if (check_borders(pos[0], pos[2 - dir], painter->proj, p, u, v)) {
             render_label(p, u, v, uv[0], 1 - dir, line,
