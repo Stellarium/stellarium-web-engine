@@ -24,11 +24,14 @@
 void proj_perspective_init(projection_t *p, double fov, double aspect);
 void proj_stereographic_init(projection_t *p, double fov, double aspect);
 void proj_mercator_init(projection_t *p, double fov, double aspect);
+void proj_hammer_init(projection_t *p, double fov, double aspect);
 
 void proj_stereographic_compute_fov(double fov, double aspect,
                                     double *fovx, double *fovy);
 void proj_mercator_compute_fov(double fov, double aspect,
                                double *fovx, double *fovy);
+void proj_hammer_compute_fov(double fov, double aspect,
+                             double *fovx, double *fovy);
 
 void projection_compute_fovs(int type, double fov, double aspect,
                              double *fovx, double *fovy)
@@ -39,6 +42,9 @@ void projection_compute_fovs(int type, double fov, double aspect,
             break;
         case PROJ_MERCATOR:
             proj_mercator_compute_fov(fov, aspect, fovx, fovy);
+            break;
+        case PROJ_HAMMER:
+            proj_hammer_compute_fov(fov, aspect, fovx, fovy);
             break;
         default:
             assert(false);
@@ -61,6 +67,9 @@ void projection_init(projection_t *p, int type, double fov,
             break;
         case PROJ_MERCATOR:
             proj_mercator_init(p, fov, aspect);
+            break;
+        case PROJ_HAMMER:
+            proj_hammer_init(p, fov, aspect);
             break;
         default:
             assert(false);

@@ -23,6 +23,7 @@ enum {
     PROJ_STEREOGRAPHIC,
     PROJ_MERCATOR,
     PROJ_HEALPIX,
+    PROJ_HAMMER,
     PROJ_COUNT,
 };
 
