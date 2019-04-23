@@ -128,7 +128,7 @@ static void load_data(mplanets_t *mplanets, const char *data)
         mplanet->g = g;
 
         orbit_type = flags & 0x3f;
-        strcpy(mplanet->obj.type, ORBIT_TYPES[orbit_type]);
+        strncpy(mplanet->obj.type, ORBIT_TYPES[orbit_type], 4);
         mplanet->mpl_number = number;
         mplanet->obj.oid = compute_oid(number, desig);
         if (name[0]) {
