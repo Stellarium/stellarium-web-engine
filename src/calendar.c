@@ -35,16 +35,6 @@ struct calendar
     int flags;
 };
 
-static inline uint32_t s4toi(const char s[4])
-{
-    char b[4];
-    strncpy(b, s, 4);
-    return ((uint32_t)b[0] << 0) +
-           ((uint32_t)b[1] << 8) +
-           ((uint32_t)b[2] << 16) +
-           ((uint32_t)b[2] << 24);
-}
-
 struct event_type
 {
     const char *name;
@@ -111,8 +101,8 @@ static double conjunction_func(const event_type_t *type,
     double ohpos[3], shpos[3];
     double olon, slon, lat;
     double v;
-    if (s4toi(o1->obj->type) != s4toi(type->obj_type) ||
-        s4toi(sun->obj->type) != s4toi("Sun")) return NAN;
+    if ((memcmp(o1->obj->type, type->obj_type, 4) != 0) ||
+         memcmp(sun->obj->type, "Sun", 4) != 0) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
     mat3_mul_vec3(obs->ri2e, o1->obj->pvo[0], ohpos);
@@ -139,10 +129,11 @@ static double vertical_align_event_func(const event_type_t *type,
     int i;
 
     // Make sure the objects are of the right types.
-    if ((s4toi(o1->obj->type) == s4toi(o2->obj->type)) && o1 > o2) return NAN;
+    if (memcmp(o1->obj->type, o2->obj->type, 4) == 0 && (o1 > o2))
+        return NAN;
     for (i = 0; i < ARRAY_SIZE(types); i++) {
-        if (s4toi(o1->obj->type) == s4toi(types[i][0]) &&
-            s4toi(o2->obj->type) == s4toi(types[i][1])) break;
+        if (memcmp(o1->obj->type, types[i][0], 4) == 0 &&
+            memcmp(o2->obj->type, types[i][1], 4) == 0) break;
     }
     if (i == ARRAY_SIZE(types)) return NAN;
 
