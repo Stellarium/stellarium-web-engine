@@ -159,7 +159,11 @@ static void name_on_designation(const obj_t *obj, void *user,
 const char *obj_get_name(const obj_t *obj, char buf[static 128])
 {
     int score = 0;
+    buf[0] = '\0';
     obj_get_designations(obj, USER_PASS(&score, buf), name_on_designation);
+    // If no designation is found, use the oid.
+    if (!buf[0])
+        oid_to_str(obj->oid, buf);
     return buf;
 }
 
