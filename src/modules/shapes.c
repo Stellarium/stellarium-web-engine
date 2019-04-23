@@ -92,15 +92,15 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     const bool selected = core->selection && obj->oid == core->selection->oid;
     int label_effects = 0;
     double win_pos[2], win_size[2], win_angle, radius;
-    static const double white[4] = {1, 1, 1, 1};
+    const double white[4] = {1, 1, 1, 1};
 
-    vec4_copy(circle->color, painter.color);
+    vec4_emul(painter_->color, circle->color, painter.color);
     paint_quad(&painter, circle->frame, &proj, 64);
     if (selected) {
         painter.lines_width = 2;
         vec4_copy(white, painter.color);
     } else {
-        vec4_copy(circle->border_color, painter.color);
+        vec4_emul(painter_->color, circle->border_color, painter.color);
     }
     paint_quad_contour(&painter, circle->frame, &proj, 64, 4);
     circle_get_2d_ellipse(&circle->obj, painter.obs, painter.proj,
