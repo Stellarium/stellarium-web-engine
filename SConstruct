@@ -40,12 +40,10 @@ if werror:
     env.Append(CCFLAGS='-Werror')
 
 if debug:
-    env.Append(CCFLAGS='-DCOMPILE_TESTS')
+    env.Append(CCFLAGS=['-O0', '-DCOMPILE_TESTS'])
 
 if profile or debug:
     env.Append(CCFLAGS='-g', LINKFLAGS='-g')
-    if target_os != 'js':
-        env.Append(CCFLAGS='-Og')
 
 if not debug:
     env.Append(CCFLAGS='-DNDEBUG')
