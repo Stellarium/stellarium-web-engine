@@ -36,10 +36,12 @@ typedef struct {
 
 static inline uint32_t s4toi(const char s[4])
 {
-    return ((uint32_t)s[0] << 0) +
-           ((uint32_t)s[1] << 8) +
-           ((uint32_t)s[2] << 16) +
-           ((uint32_t)s[2] << 24);
+    char b[4];
+    strncpy(b, s, 4);
+    return ((uint32_t)b[0] << 0) +
+           ((uint32_t)b[1] << 8) +
+           ((uint32_t)b[2] << 16) +
+           ((uint32_t)b[2] << 24);
 }
 
 struct event_type
@@ -109,7 +111,7 @@ static double conjunction_func(const event_type_t *type,
     double olon, slon, lat;
     double v;
     if (s4toi(o1->type) != s4toi(type->obj_type) ||
-        s4toi(sun->type) != s4toi("SUN ")) return NAN;
+        s4toi(sun->type) != s4toi("Sun")) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
     mat3_mul_vec3(obs->ri2e, o1->pvo[0], ohpos);
@@ -127,10 +129,10 @@ static double vertical_align_event_func(const event_type_t *type,
                                         const obj_t *o1, const obj_t *o2)
 {
     const char types[4][2][4] = {
-        {"Moo ", "Pla "},
-        {"Moo ", "*   "},
-        {"Pla ", "Pla "},
-        {"Pla ", "*   "},
+        {"Moo", "Pla"},
+        {"Moo", "*"},
+        {"Pla", "Pla"},
+        {"Pla", "*"},
     };
     double sep;
     int i;
@@ -199,7 +201,7 @@ static const event_type_t event_types[] = {
         .name = "moon-new",
         .nb_objs = 2,
         .func = conjunction_func,
-        .obj_type = "MOO ",
+        .obj_type = "Moo",
         .target = 0,
         .precision = DMIN,
         .format = moon_format,
@@ -208,7 +210,7 @@ static const event_type_t event_types[] = {
         .name = "moon-full",
         .nb_objs = 2,
         .func = conjunction_func,
-        .obj_type = "MOO ",
+        .obj_type = "Moo",
         .target = 180 * DD2R,
         .precision = DMIN,
         .format = moon_format,
@@ -217,7 +219,7 @@ static const event_type_t event_types[] = {
         .name = "moon-first-quarter",
         .nb_objs = 2,
         .func = conjunction_func,
-        .obj_type = "MOO ",
+        .obj_type = "Moo",
         .target = 90 * DD2R,
         .precision = DMIN,
         .format = moon_format,
@@ -226,7 +228,7 @@ static const event_type_t event_types[] = {
         .name = "moon-last-quarter",
         .nb_objs = 2,
         .func = conjunction_func,
-        .obj_type = "MOO ",
+        .obj_type = "Moo",
         .target = -90 * DD2R,
         .precision = DMIN,
         .format = moon_format,
@@ -235,7 +237,7 @@ static const event_type_t event_types[] = {
         .name = "conjunction",
         .nb_objs = 2,
         .func = conjunction_func,
-        .obj_type = "PLA ",
+        .obj_type = "Pla",
         .target = 0,
         .precision = DMIN,
         .format = conjunction_format,
@@ -244,7 +246,7 @@ static const event_type_t event_types[] = {
         .name = "opposition",
         .nb_objs = 2,
         .func = conjunction_func,
-        .obj_type = "PLA ",
+        .obj_type = "Pla",
         .target = 180 * DD2R,
         .precision = DMIN,
         .format = conjunction_format,
