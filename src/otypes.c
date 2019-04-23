@@ -13,6 +13,7 @@
 
 #include "otypes.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -73,6 +74,14 @@ const char *otype_get_parent(const char *id)
             return e->id;
     }
     return NULL;
+}
+
+void otype_get_digits(const char *id, uint8_t out[4])
+{
+    const entry_t *e;
+    e = otype_get(id);
+    assert(e);
+    memcpy(out, e->n, 4);
 }
 
 // STYLE-CHECK OFF
