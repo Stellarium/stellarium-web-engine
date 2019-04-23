@@ -40,6 +40,7 @@ static void circle_project(const projection_t *proj, int flags,
 {
     circle_t *circle = proj->user;
     double theta, r, mat[3][3], p[4] = {1, 0, 0, 0}, ra, dec;
+    bool right_handed = circle->frame != FRAME_OBSERVED;
 
     theta = v[0] * 2 * M_PI;
     r = v[1] * circle->size[0] / 2.0;
@@ -50,7 +51,7 @@ static void circle_project(const projection_t *proj, int flags,
     mat3_ry(-dec, mat, mat);
     mat3_rx(circle->orientation, mat, mat);
     mat3_iscale(mat, 1.0, circle->size[1] / circle->size[0], 1.0);
-    mat3_rx(-theta, mat, mat);
+    mat3_rx(theta * (right_handed ? -1 : +1), mat, mat);
     mat3_rz(r, mat, mat);
 
     mat3_mul_vec3(mat, p, p);
