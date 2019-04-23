@@ -246,6 +246,15 @@ static const event_type_t event_types[] = {
         .format = conjunction_format,
     },
     {
+        .name = "opposition",
+        .nb_objs = 1,
+        .func = conjunction_func,
+        .obj_type = "MPl",
+        .target = 180 * DD2R,
+        .precision = DHOUR,
+        .format = conjunction_format,
+    },
+    {
         .name = "valign",
         .nb_objs = 2,
         .func = vertical_align_event_func,
@@ -384,6 +393,22 @@ static int obj_add_f(void *user, obj_t *obj)
     return 0;
 }
 
+// Function that list all the objects we consider in the calendar computation.
+static void list_objs(observer_t *obs, void *user,
+                      int (*f)(void *user, obj_t *obj))
+{
+    obj_t *stars, *planets, *asteroids;
+
+    // All stars and planets up to mag 2.
+    stars = core_get_module("stars");
+    module_list_objs(stars, obs, 2.0, 0, user, f);
+    planets = core_get_module("planets");
+    module_list_objs(planets, obs, 2.0, 0, user, f);
+    // All asteroids up to mag 10.
+    asteroids = core_get_module("minor_planets");
+    module_list_objs(asteroids, obs, 10.0, 0, user, f);
+}
+
 EMSCRIPTEN_KEEPALIVE
 calendar_t *calendar_create(const observer_t *obs,
                             double start, double end, int flags)
@@ -400,13 +425,11 @@ calendar_t *calendar_create(const observer_t *obs,
 
     // Create all the objects.
     i = 0;
-    module_list_objs(&core->obj, &cal->obs, 2.0, 0, USER_PASS(NULL, &i),
-                     obj_add_f);
+    list_objs(&cal->obs, USER_PASS(NULL, &i), obj_add_f);
     cal->nb_objs = i;
     cal->objs = calloc(cal->nb_objs, sizeof(*cal->objs));
     i = 0;
-    module_list_objs(&core->obj, &cal->obs, 2.0, 0, USER_PASS(cal->objs, &i),
-                     obj_add_f);
+    list_objs(&cal->obs, USER_PASS(cal->objs, &i), obj_add_f);
 
     cal->flags = flags;
     cal->start = start;
