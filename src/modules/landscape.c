@@ -26,6 +26,7 @@ typedef struct landscape {
     fader_t         visible;
     double          color[4];
     hips_t          *hips;
+    obj_t           *shape; // For zero horizon landscape.
     bool            active;
     struct  {
         char        *name;
@@ -169,6 +170,9 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
         painter.transform = &rg2h;
         hips_render(ls->hips, &painter, 2 * M_PI, split_order);
     }
+    if (ls->shape) {
+        obj_render(ls->shape, &painter);
+    }
     return 0;
 }
 
@@ -199,10 +203,22 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
 
     ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
     ls->uri = strdup(uri);
-    ls->hips = hips_create(uri, 0, NULL);
-    hips_set_label(ls->hips, "Landscape");
-    hips_set_frame(ls->hips, FRAME_OBSERVED);
-    if (args) name = json_get_attr_s(args, "obs_title");
+    if (strcmp(id, "zero") != 0) {
+        ls->hips = hips_create(uri, 0, NULL);
+        hips_set_label(ls->hips, "Landscape");
+        hips_set_frame(ls->hips, FRAME_OBSERVED);
+        if (args) name = json_get_attr_s(args, "obs_title");
+    } else {
+        // Zero horizon shape.
+        ls->shape = obj_create("circle", NULL, &ls->obj, NULL);
+        obj_set_attr(ls->shape, "pos", VEC(0, 0, -1, 0));
+        obj_set_attr(ls->shape, "frame", FRAME_OBSERVED);
+        obj_set_attr(ls->shape, "size", VEC(M_PI, M_PI));
+        obj_set_attr(ls->shape, "color", VEC(0.3, 0.6, 0.2, 1.0));
+        obj_set_attr(ls->shape, "border_color", VEC(0.2, 0.4, 0.1, 1.0));
+        name = "Zero Horizon";
+    }
+
     ls->info.name = strdup(name ?: id);
     return ls;
 }
