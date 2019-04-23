@@ -154,13 +154,14 @@ static double vertical_align_event_func(const event_type_t *type,
 static int vertical_align_format(const event_t *ev, char *out, int len)
 {
     char buf[64], buf1[128], buf2[128];
-    double v;
+    double v, ra1, de1, ra2, de2;
     int prec;
-    const extra_data_t *extra1 = ev->o1->user, *extra2 = ev->o2->user;
 
-    v = fabs(eraAnpm(extra1->de - extra2->de));
+    eraC2s(ev->o1->pvo[0], &ra1, &de1);
+    eraC2s(ev->o2->pvo[0], &ra2, &de2);
+    v = fabs(eraAnpm(de2 - de1));
     prec = (v < 2 * DD2R) ? 1 : 0;
-    if (extra1->de < extra2->de)
+    if (de1 < de2)
         sprintf(buf, "%.*f° south", prec, v * DR2D);
     else
         sprintf(buf, "%.*f° north", prec, v * DR2D);
