@@ -634,6 +634,22 @@ static int get_shadow_candidates(const planet_t *planet, int nb_max,
     return nb;
 }
 
+/*
+ * Compute the rotation of a planet along its axis.
+ *
+ * Parameters:
+ *   planet     - A planet.
+ *   tt         - TT time (MJD).
+ *
+ * Return:
+ *   The rotation angle in radian.
+ */
+static double planet_get_rotation(const planet_t *planet, double tt)
+{
+    if (!planet->rot.period) return 0;
+    return (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
+}
+
 static void planet_render_hips(const planet_t *planet,
                                const hips_t *hips,
                                double radius,
@@ -647,7 +663,6 @@ static void planet_render_hips(const planet_t *planet,
     double pos[4];
     double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
-    double rot;
     double angle = 2 * radius * r_scale / vec2_norm(planet->obj.pvo[0]);
     int i, nb_tot = 0, nb_loaded = 0;
     double sun_pos[4] = {0, 0, 0, 1};
@@ -655,7 +670,6 @@ static void planet_render_hips(const planet_t *planet,
     painter_t painter = *painter_;
     double depth_range[2];
     double shadow_spheres[4][4];
-    double epoch = DJM00; // J2000.
     double pixel_size;
     int split_order;
 
@@ -687,12 +701,7 @@ static void planet_render_hips(const planet_t *planet,
     mat3_to_mat4(painter.obs->re2i, tmp_mat);
     mat4_mul(mat, tmp_mat, mat);
     mat4_rx(-planet->rot.obliquity, mat, mat);
-
-    if (planet->rot.period) {
-        rot = (painter.obs->tt - epoch) / planet->rot.period * 2 * M_PI;
-        rot += planet->rot.offset;
-        mat4_rz(rot, mat, mat);
-    }
+    mat4_rz(planet_get_rotation(planet, painter.obs->tt), mat, mat);
     painter.transform = &mat;
 
     if (planet->id == SUN)
