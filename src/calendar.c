@@ -96,17 +96,16 @@ static double newton(double (*f)(double x, void *user),
 
 static double conjunction_func(const event_type_t *type,
                                const observer_t *obs,
-                               const cobj_t *o1, const cobj_t *sun)
+                               const cobj_t *o, const cobj_t *_)
 {
     double ohpos[3], shpos[3];
     double olon, slon, lat;
     double v;
-    if ((memcmp(o1->obj->type, type->obj_type, 4) != 0) ||
-         memcmp(sun->obj->type, "Sun", 4) != 0) return NAN;
+    if (memcmp(o->obj->type, type->obj_type, 4) != 0) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
-    mat3_mul_vec3(obs->ri2e, o1->obj->pvo[0], ohpos);
-    mat3_mul_vec3(obs->ri2e, sun->obj->pvo[0], shpos);
+    mat3_mul_vec3(obs->ri2e, o->obj->pvo[0], ohpos);
+    mat3_mul_vec3(obs->ri2e, obs->sun_pvo[0], shpos);
     eraC2s(ohpos, &olon, &lat);
     eraC2s(shpos, &slon, &lat);
 
@@ -179,15 +178,13 @@ static int moon_format(const event_t *ev, char *out, int len)
 
 static int conjunction_format(const event_t *ev, char *out, int len)
 {
-    char buf1[128], buf2[128];
+    char name[128];
+    obj_get_name(ev->o1->obj, name);
     if (strcmp(ev->type->name, "conjunction") == 0) {
-        snprintf(out, len, "Conjunction %s %s",
-                 obj_get_name(ev->o1->obj, buf1),
-                 obj_get_name(ev->o2->obj, buf2));
+        snprintf(out, len, "%s is in conjunction with the Sun", name);
     }
     if (strcmp(ev->type->name, "opposition") == 0) {
-        snprintf(out, len, "%s is in opposition",
-                 obj_get_name(ev->o1->obj, buf1));
+        snprintf(out, len, "%s is in opposition", name);
     }
     return 0;
 }
@@ -196,7 +193,7 @@ static int conjunction_format(const event_t *ev, char *out, int len)
 static const event_type_t event_types[] = {
     {
         .name = "moon-new",
-        .nb_objs = 2,
+        .nb_objs = 1,
         .func = conjunction_func,
         .obj_type = "Moo",
         .target = 0,
@@ -205,7 +202,7 @@ static const event_type_t event_types[] = {
     },
     {
         .name = "moon-full",
-        .nb_objs = 2,
+        .nb_objs = 1,
         .func = conjunction_func,
         .obj_type = "Moo",
         .target = 180 * DD2R,
@@ -214,7 +211,7 @@ static const event_type_t event_types[] = {
     },
     {
         .name = "moon-first-quarter",
-        .nb_objs = 2,
+        .nb_objs = 1,
         .func = conjunction_func,
         .obj_type = "Moo",
         .target = 90 * DD2R,
@@ -223,7 +220,7 @@ static const event_type_t event_types[] = {
     },
     {
         .name = "moon-last-quarter",
-        .nb_objs = 2,
+        .nb_objs = 1,
         .func = conjunction_func,
         .obj_type = "Moo",
         .target = -90 * DD2R,
@@ -232,7 +229,7 @@ static const event_type_t event_types[] = {
     },
     {
         .name = "conjunction",
-        .nb_objs = 2,
+        .nb_objs = 1,
         .func = conjunction_func,
         .obj_type = "Pla",
         .target = 0,
@@ -241,7 +238,7 @@ static const event_type_t event_types[] = {
     },
     {
         .name = "opposition",
-        .nb_objs = 2,
+        .nb_objs = 1,
         .func = conjunction_func,
         .obj_type = "Pla",
         .target = 180 * DD2R,
@@ -460,6 +457,16 @@ int calendar_compute(calendar_t *cal)
                         cal->objs[i].obj->pvo[0], p);
         cal->objs[i].obs_z = p[2];
     }
+    // Check one body events.
+    for (i = 0; i < cal->nb_objs; i++) {
+        o1 = &cal->objs[i];
+        for (ev_type = &event_types[0]; ev_type->func; ev_type++) {
+            if (ev_type->nb_objs == 1) {
+                check_event(ev_type, &cal->obs, o1, NULL, cal->flags,
+                            &cal->events);
+            }
+        }
+    }
     // Check two bodies events.
     for (i = 0; i < cal->nb_objs; i++)
     for (j = 0; j < cal->nb_objs; j++) {
@@ -513,7 +520,7 @@ int calendar_get_results(calendar_t *cal, void *user,
         if (ev->o2) obj_update(ev->o2->obj, &cal->obs, 0);
         ev->type->format(ev, buf, ARRAY_SIZE(buf));
         callback(ev->time, ev->type->name, buf, ev->flags,
-                 ev->o1->obj, ev->o2->obj, user);
+                 ev->o1->obj, ev->o2 ? ev->o2->obj : NULL, user);
         n++;
     }
     return n;
