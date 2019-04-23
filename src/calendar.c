@@ -12,13 +12,21 @@
 #define DHOUR (1.0 / 24.0)
 #define DMIN  (DHOUR / 60.0)
 
+typedef struct cobj cobj_t;
 typedef struct event event_t;
 typedef struct event_type event_type_t;
+
+// Keep reference to an object plus some extra info for fast event computations
+struct cobj {
+    obj_t *obj;
+    double obs_z;  // Z value of observed position (if < 0 below horizon).
+    double ra, de;
+};
 
 struct calendar
 {
     observer_t obs;
-    obj_t **objs;
+    cobj_t *objs;
     int nb_objs;
     double start;
     double end;
@@ -26,13 +34,6 @@ struct calendar
     event_t *events;
     int flags;
 };
-
-// Extra position data that we compute for each object and needed to check
-// some events.
-typedef struct {
-    double obs_z;  // Z value of observed position (if < 0 below horizon).
-    double ra, de;
-} extra_data_t;
 
 static inline uint32_t s4toi(const char s[4])
 {
@@ -53,7 +54,7 @@ struct event_type
     // Compute the value for the event.
     double (*func)(const event_type_t *type,
                    const observer_t *obs,
-                   const obj_t *o1, const obj_t *o2);
+                   const cobj_t *o1, const cobj_t *o2);
     // Can be used by the function.
     char   obj_type[4];
     double target;
@@ -73,8 +74,8 @@ struct event
 {
     event_t *next, *prev;
     const event_type_t *type;
-    const obj_t *o1;
-    const obj_t *o2;
+    const cobj_t *o1;
+    const cobj_t *o2;
     double time;
     // Range into wich the event occured, and the test function returns a
     // value != NAN.
@@ -105,17 +106,17 @@ static double newton(double (*f)(double x, void *user),
 
 static double conjunction_func(const event_type_t *type,
                                const observer_t *obs,
-                               const obj_t *o1, const obj_t *sun)
+                               const cobj_t *o1, const cobj_t *sun)
 {
     double ohpos[3], shpos[3];
     double olon, slon, lat;
     double v;
-    if (s4toi(o1->type) != s4toi(type->obj_type) ||
-        s4toi(sun->type) != s4toi("Sun")) return NAN;
+    if (s4toi(o1->obj->type) != s4toi(type->obj_type) ||
+        s4toi(sun->obj->type) != s4toi("Sun")) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
-    mat3_mul_vec3(obs->ri2e, o1->pvo[0], ohpos);
-    mat3_mul_vec3(obs->ri2e, sun->pvo[0], shpos);
+    mat3_mul_vec3(obs->ri2e, o1->obj->pvo[0], ohpos);
+    mat3_mul_vec3(obs->ri2e, sun->obj->pvo[0], shpos);
     eraC2s(ohpos, &olon, &lat);
     eraC2s(shpos, &slon, &lat);
 
@@ -126,7 +127,7 @@ static double conjunction_func(const event_type_t *type,
 
 static double vertical_align_event_func(const event_type_t *type,
                                         const observer_t *obs,
-                                        const obj_t *o1, const obj_t *o2)
+                                        const cobj_t *o1, const cobj_t *o2)
 {
     const char types[4][2][4] = {
         {"Moo", "Pla"},
@@ -136,19 +137,18 @@ static double vertical_align_event_func(const event_type_t *type,
     };
     double sep;
     int i;
-    const extra_data_t *extra1 = o1->user, *extra2 = o2->user;
 
     // Make sure the objects are of the right types.
-    if ((s4toi(o1->type) == s4toi(o2->type)) && o1 > o2) return NAN;
+    if ((s4toi(o1->obj->type) == s4toi(o2->obj->type)) && o1 > o2) return NAN;
     for (i = 0; i < ARRAY_SIZE(types); i++) {
-        if (s4toi(o1->type) == s4toi(types[i][0]) &&
-            s4toi(o2->type) == s4toi(types[i][1])) break;
+        if (s4toi(o1->obj->type) == s4toi(types[i][0]) &&
+            s4toi(o2->obj->type) == s4toi(types[i][1])) break;
     }
     if (i == ARRAY_SIZE(types)) return NAN;
 
-    sep = eraSepp(o1->pvo[0], o2->pvo[0]);
+    sep = eraSepp(o1->obj->pvo[0], o2->obj->pvo[0]);
     if (sep > 5 * DD2R) return NAN;
-    return eraAnpm(extra1->ra - extra2->ra);
+    return eraAnpm(o1->ra - o2->ra);
 }
 
 static int vertical_align_format(const event_t *ev, char *out, int len)
@@ -157,8 +157,8 @@ static int vertical_align_format(const event_t *ev, char *out, int len)
     double v, ra1, de1, ra2, de2;
     int prec;
 
-    eraC2s(ev->o1->pvo[0], &ra1, &de1);
-    eraC2s(ev->o2->pvo[0], &ra2, &de2);
+    eraC2s(ev->o1->obj->pvo[0], &ra1, &de1);
+    eraC2s(ev->o2->obj->pvo[0], &ra2, &de2);
     v = fabs(eraAnpm(de2 - de1));
     prec = (v < 2 * DD2R) ? 1 : 0;
     if (de1 < de2)
@@ -167,7 +167,8 @@ static int vertical_align_format(const event_t *ev, char *out, int len)
         sprintf(buf, "%.*f° north", prec, v * DR2D);
 
     snprintf(out, len, "%s passes %s of %s",
-             obj_get_name(ev->o1, buf1), buf, obj_get_name(ev->o2, buf2));
+             obj_get_name(ev->o1->obj, buf1), buf,
+             obj_get_name(ev->o2->obj, buf2));
     return 0;
 }
 
@@ -188,11 +189,15 @@ static int moon_format(const event_t *ev, char *out, int len)
 static int conjunction_format(const event_t *ev, char *out, int len)
 {
     char buf1[128], buf2[128];
-    if (strcmp(ev->type->name, "conjunction") == 0)
+    if (strcmp(ev->type->name, "conjunction") == 0) {
         snprintf(out, len, "Conjunction %s %s",
-                 obj_get_name(ev->o1, buf1), obj_get_name(ev->o2, buf2));
-    if (strcmp(ev->type->name, "opposition") == 0)
-        snprintf(out, len, "%s is in opposition", obj_get_name(ev->o1, buf1));
+                 obj_get_name(ev->o1->obj, buf1),
+                 obj_get_name(ev->o2->obj, buf2));
+    }
+    if (strcmp(ev->type->name, "opposition") == 0) {
+        snprintf(out, len, "%s is in opposition",
+                 obj_get_name(ev->o1->obj, buf1));
+    }
     return 0;
 }
 
@@ -290,17 +295,15 @@ void calendar_print(void)
                  USER_PASS(&utcoffset), print_callback);
 }
 
-static bool is_obj_hidden(obj_t *obj, const observer_t *obs)
+static bool is_obj_hidden(cobj_t *obj, const observer_t *obs)
 {
-    const extra_data_t *extra;
     if (!obj) return true;
-    extra = obj->user;
-    return extra->obs_z < 0;
+    return obj->obs_z < 0;
 }
 
 static int check_event(const event_type_t *ev_type,
                        const observer_t *obs,
-                       const obj_t *o1, const obj_t *o2,
+                       const cobj_t *o1, const cobj_t *o2,
                        int flags,
                        event_t **events)
 {
@@ -367,8 +370,8 @@ static double newton_fn_(double time, void *user)
     event_t *ev = USER_GET(user, 1);
     obs->tt = time;
     observer_update(obs, true);
-    if (ev->o1) obj_update((obj_t*)ev->o1, obs, 0);
-    if (ev->o2) obj_update((obj_t*)ev->o2, obs, 0);
+    if (ev->o1) obj_update(ev->o1->obj, obs, 0);
+    if (ev->o2) obj_update(ev->o2->obj, obs, 0);
     ret = ev->type->func(ev->type, obs, ev->o1, ev->o2);
     assert(!isnan(ret));
     return ret;
@@ -381,15 +384,13 @@ static int event_cmp(const void *e1, const void *e2)
 
 static int obj_add_f(void *user, obj_t *obj)
 {
-    obj_t **objs = USER_GET(user, 0);
+    cobj_t *objs = USER_GET(user, 0);
     int *i = USER_GET(user, 1);
     if (obj->oid == oid_create("HORI", 399)) return 0; // Skip Earth.
     if (objs) {
-        assert(objs[*i] == NULL);
-        objs[*i] = obj;
+        assert(objs[*i].obj == NULL);
+        objs[*i].obj = obj;
         obj->ref++;
-        // Extra data for observed position.
-        objs[*i]->user = calloc(1, sizeof(extra_data_t));
     }
     (*i)++;
     return 0;
@@ -435,8 +436,7 @@ void calendar_delete(calendar_t *cal)
 
     // Release all objects.
     for (i = 0; i < cal->nb_objs; i++) {
-        free(cal->objs[i]->user);
-        obj_release(cal->objs[i]);
+        obj_release(cal->objs[i].obj);
     }
     free(cal->objs);
     // Delete events.
@@ -447,13 +447,12 @@ void calendar_delete(calendar_t *cal)
 EMSCRIPTEN_KEEPALIVE
 int calendar_compute(calendar_t *cal)
 {
-    double step = DHOUR, ra, de;
+    double step = DHOUR;
     double p[3];
     int i, j;
-    obj_t *o1, *o2;
+    cobj_t *o1, *o2;
     const event_type_t *ev_type;
     event_t *ev, *ev_tmp;
-    extra_data_t *extra;
 
     if (cal->time >= cal->end) goto end;
 
@@ -461,21 +460,20 @@ int calendar_compute(calendar_t *cal)
     cal->obs.tt = cal->time;
     observer_update(&cal->obs, true);
     for (i = 0; i < cal->nb_objs; i++) {
-        obj_update(cal->objs[i], &cal->obs, 0);
+        obj_update(cal->objs[i].obj, &cal->obs, 0);
         // Compute extra dat.
-        extra = cal->objs[i]->user;
-        eraC2s(cal->objs[i]->pvo[0], &ra, &de);
-        extra->ra = eraAnp(ra);
-        extra->de = eraAnp(de);
+        eraC2s(cal->objs[i].obj->pvo[0], &cal->objs[i].ra, &cal->objs[i].de);
+        cal->objs[i].ra = eraAnp(cal->objs[i].ra);
+        cal->objs[i].de = eraAnp(cal->objs[i].de);
         convert_framev4(&cal->obs, FRAME_ICRF, FRAME_OBSERVED,
-                            cal->objs[i]->pvo[0], p);
-        extra->obs_z = p[2];
+                        cal->objs[i].obj->pvo[0], p);
+        cal->objs[i].obs_z = p[2];
     }
     // Check two bodies events.
     for (i = 0; i < cal->nb_objs; i++)
     for (j = 0; j < cal->nb_objs; j++) {
-        o1 = cal->objs[i];
-        o2 = cal->objs[j];
+        o1 = &cal->objs[i];
+        o2 = &cal->objs[j];
         if (o1 == o2) continue;
         for (ev_type = &event_types[0]; ev_type->func; ev_type++) {
             if (ev_type->nb_objs == 2) {
@@ -520,11 +518,11 @@ int calendar_get_results(calendar_t *cal, void *user,
     DL_FOREACH(cal->events, ev) {
         cal->obs.tt = ev->time;
         observer_update(&cal->obs, true);
-        if (ev->o1) obj_update((obj_t*)ev->o1, &cal->obs, 0);
-        if (ev->o2) obj_update((obj_t*)ev->o2, &cal->obs, 0);
+        if (ev->o1) obj_update(ev->o1->obj, &cal->obs, 0);
+        if (ev->o2) obj_update(ev->o2->obj, &cal->obs, 0);
         ev->type->format(ev, buf, ARRAY_SIZE(buf));
         callback(ev->time, ev->type->name, buf, ev->flags,
-                 ev->o1, ev->o2, user);
+                 ev->o1->obj, ev->o2->obj, user);
         n++;
     }
     return n;
