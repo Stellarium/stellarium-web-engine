@@ -287,7 +287,13 @@ void star_get_designations(
     const char *names = s->names;
     char buf[128];
     char cat[128] = {};
+    obj_t *skycultures;
 
+    if (!names) {
+        skycultures = core_get_module("skycultures");
+        names = skycultures_get_name(skycultures, obj->oid, buf);
+        if (names) f(obj, user, "NAME", names);
+    }
     while (names && *names) {
         strncpy(cat, names, sizeof(cat));
         if (!strchr(cat, ' ')) { // No catalog.
