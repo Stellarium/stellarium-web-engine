@@ -7,14 +7,17 @@
  * repository.
  */
 
-typedef struct observer observer_t;
-typedef struct calendar calendar_t;
-typedef struct obj obj_t;
-
 /*
  * File: calendar.h
  * Utilities to compute astronomy events calendars.
  */
+
+#ifndef CALENDAR_H
+#define CALENDAR_H
+
+typedef struct observer observer_t;
+typedef struct calendar calendar_t;
+typedef struct obj obj_t;
 
 /*
  * Enum: CALENDAR_FLAG
@@ -96,3 +99,5 @@ int calendar_get(
                         const char *desc, int flags,
                         obj_t *o1, obj_t *o2,
                         void *user));
+
+#endif // CALENDAR_H
