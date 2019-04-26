@@ -325,7 +325,8 @@ static int render_bounds(const constellation_t *con,
         memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
         memcpy(line[1], info->edges[i][1], 2 * sizeof(double));
         if (line[1][0] < line[0][0]) line[1][0] += 2 * M_PI;
-        paint_lines(&painter, FRAME_ICRF, 2, line, &proj, 8, 2);
+        paint_lines(&painter, FRAME_ICRF, 2, line, &proj, 8,
+                    PAINTER_SKIP_DISCONTINUOUS);
     }
     return 0;
 }
@@ -458,7 +459,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
                                  radius[1] * 2 + 0.25 * DD2R);
     }
 
-    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1, 2);
+    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1,
+                PAINTER_SKIP_DISCONTINUOUS);
     free(lines);
 
     // Render label only if its center is visible
