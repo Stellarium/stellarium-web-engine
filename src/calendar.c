@@ -144,11 +144,11 @@ static double vertical_align_event_func(const event_type_t *type,
 static int vertical_align_format(const event_t *ev, char *out, int len)
 {
     char buf[64], buf1[128], buf2[128];
-    double v, ra1, de1, ra2, de2;
+    double v, de1, de2;
     int prec;
 
-    eraC2s(ev->o1->obj->pvo[0], &ra1, &de1);
-    eraC2s(ev->o2->obj->pvo[0], &ra2, &de2);
+    de1 = ev->o1->de;
+    de2 = ev->o2->de;
     v = fabs(eraAnpm(de2 - de1));
     prec = (v < 2 * DD2R) ? 1 : 0;
     if (de1 < de2)
@@ -455,11 +455,22 @@ void calendar_delete(calendar_t *cal)
     free(cal);
 }
 
+static void cobj_update(cobj_t *o, const observer_t *obs)
+{
+    double p[3];
+    if (!o) return;
+    obj_update(o->obj, obs, 0);
+    eraC2s(o->obj->pvo[0], &o->ra, &o->de);
+    o->ra = eraAnp(o->ra);
+    o->de = eraAnp(o->de);
+    convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED, o->obj->pvo[0], p);
+    o->obs_z = p[2];
+}
+
 EMSCRIPTEN_KEEPALIVE
 int calendar_compute(calendar_t *cal)
 {
     double step = DHOUR;
-    double p[3];
     int i, j;
     cobj_t *o1, *o2;
     const event_type_t *ev_type;
@@ -471,14 +482,7 @@ int calendar_compute(calendar_t *cal)
     cal->obs.tt = cal->time;
     observer_update(&cal->obs, true);
     for (i = 0; i < cal->nb_objs; i++) {
-        obj_update(cal->objs[i].obj, &cal->obs, 0);
-        // Compute extra dat.
-        eraC2s(cal->objs[i].obj->pvo[0], &cal->objs[i].ra, &cal->objs[i].de);
-        cal->objs[i].ra = eraAnp(cal->objs[i].ra);
-        cal->objs[i].de = eraAnp(cal->objs[i].de);
-        convert_framev4(&cal->obs, FRAME_ICRF, FRAME_OBSERVED,
-                        cal->objs[i].obj->pvo[0], p);
-        cal->objs[i].obs_z = p[2];
+        cobj_update(&cal->objs[i], &cal->obs);
     }
     // Check one body events.
     for (i = 0; i < cal->nb_objs; i++) {
@@ -539,8 +543,8 @@ int calendar_get_results(calendar_t *cal, void *user,
     DL_FOREACH(cal->events, ev) {
         cal->obs.tt = ev->time;
         observer_update(&cal->obs, true);
-        if (ev->o1) obj_update(ev->o1->obj, &cal->obs, 0);
-        if (ev->o2) obj_update(ev->o2->obj, &cal->obs, 0);
+        cobj_update(ev->o1, &cal->obs);
+        cobj_update(ev->o2, &cal->obs);
         ev->type->format(ev, buf, ARRAY_SIZE(buf));
         callback(ev->time, ev->type->name, buf, ev->flags,
                  ev->o1->obj, ev->o2 ? ev->o2->obj : NULL, user);
