@@ -48,8 +48,7 @@ var testBasic = function(stel) {
 var testIds = function(stel) {
   var o1 = stel.getObj('HIP 11767');
   assert(o1);
-  var tests = ['HIP 11767', 'HD 8890']
-  for (var v of tests) assert(o1.names().includes(v))
+  assert(o1.names().includes('NAME Polaris'));
 }
 
 var testSearch = function(stel) {
@@ -82,7 +81,7 @@ var testListener = function(stel) {
 var testCalendar = function(stel) {
   var gotMoonMars = false;
   var onEvent = function(ev) {
-    if (ev.o1.name == 'Moon' && ev.o2.name == 'Mars') {
+    if (ev.o2 && ev.o1.name == 'Moon' && ev.o2.name == 'Mars') {
       assert(ev.time);
       assert(ev.type);
       assert(ev.desc);
