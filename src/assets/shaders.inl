@@ -108,7 +108,7 @@ static const unsigned char DATA_shaders_blit_glsl[980] __attribute__((aligned(4)
     " * repository.\n"
     " */\n"
     "\n"
-    "uniform lowp    vec4        u_color;\n"
+    "uniform highp   vec4        u_color;\n"
     "uniform mediump sampler2D   u_tex;\n"
     "uniform lowp    float       u_stripes;\n"
     "\n"

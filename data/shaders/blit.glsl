@@ -7,7 +7,7 @@
  * repository.
  */
 
-uniform lowp    vec4        u_color;
+uniform highp   vec4        u_color;
 uniform mediump sampler2D   u_tex;
 uniform lowp    float       u_stripes;
 
