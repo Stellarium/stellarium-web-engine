@@ -125,6 +125,7 @@ struct core
 
     telescope_t     telescope;
     bool            telescope_auto; // Auto adjust telescope.
+    double          exposure_scale;
 
     renderer_t      *rend;
     int             proj;

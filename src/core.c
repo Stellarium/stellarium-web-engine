@@ -234,6 +234,8 @@ static void core_set_default(void)
     core->min_point_radius = 0.5;
     core->skip_point_radius = 0.2;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
+    core->exposure_scale = 1;
+
     tonemapper_update(&core->tonemapper, 1, 1, 1, core->lwmax);
 
     core->telescope_auto = true;
@@ -407,7 +409,7 @@ int core_update(double dt)
     lwmax = exp(logf(core->tonemapper.lwmax) +
                 (logf(lwmax) - logf(core->tonemapper.lwmax)) *
                 min(0.05 * dt / 0.01666, 0.5));
-    tonemapper_update(&core->tonemapper, -1, -1, -1, lwmax);
+    tonemapper_update(&core->tonemapper, -1, -1, core->exposure_scale, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
     // Adjust star linear scale in function of screen pixel size
@@ -840,7 +842,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 {
     core->lwmax = max(core->lwmax, lum);
     if (fast_adaptation && core->lwmax > core->tonemapper.lwmax) {
-        tonemapper_update(&core->tonemapper, -1, -1, -1,
+        tonemapper_update(&core->tonemapper, -1, -1, core->exposure_scale,
                           core->lwmax * core->lwmax_scale);
     }
 }
@@ -1029,6 +1031,7 @@ static obj_klass_t core_klass = {
         PROPERTY(ignore_clicks, TYPE_BOOL, MEMBER(core_t, ignore_clicks)),
         PROPERTY(zoom, TYPE_FLOAT, MEMBER(core_t, zoom)),
         PROPERTY(test, TYPE_BOOL, MEMBER(core_t, test)),
+        PROPERTY(exposure_scale, TYPE_FLOAT, MEMBER(core_t, exposure_scale)),
         FUNCTION(lookat, .fn = core_lookat),
         FUNCTION(point_and_lock, .fn = core_point_and_lock),
         FUNCTION(zoomto, .fn = core_zoomto),
