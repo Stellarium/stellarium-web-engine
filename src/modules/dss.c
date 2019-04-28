@@ -47,9 +47,9 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     lum *= core->telescope.light_grasp;
     lum /= pow(core->telescope.magnification, 2);
     c = tonemapper_map(&core->tonemapper, lum);
-    c = clamp(c, 0, 1);
+    c = max(0, c);
     c *= visibility;
-    painter2.color[3] *= c;
+    vec4_mul(c, painter2.color, painter2.color);
 
     // Don't even try to display if the brightness is too low
     if (painter2.color[3] < 3.0 / 255) return 0;
