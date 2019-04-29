@@ -37,7 +37,7 @@
     X(ENUM,       enum,     TYPE(5, INT)) \
     X(STRING_PTR, string,   TYPE(6, STRING)) \
     X(COLOR,      color,    TYPE(7, V4)) \
-    X(RADIUS,     radius,   TYPE(8, FLOAT)) \
+    X(RADIUS,     radius,   TYPE(8, ANGLE)) \
     X(DIST,       dist,     TYPE(9, FLOAT)) \
     X(MJD,        mjd,      TYPE(10, FLOAT)) \
 
