@@ -694,12 +694,6 @@ void core_on_zoom(double k, double x, double y)
  */
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
-
-    /*
-     * Use the formulas from:
-     * https://en.wikipedia.org/wiki/Surface_brightness
-     */
-
     double log_e, log_lw, ld, r, pr;
     const telescope_t *tel = &core->telescope;
     const double s_linear = core->star_linear_scale;
@@ -710,18 +704,24 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
      * Compute illuminance (in lux = lum/m² = cd.sr/m²)
      * Get log10 of the value for optimisation.
      *
-     * S = m + 2.5 * log10(A)         | S: Surface Brightness (vmag/arcmin²)
-     *                                | A: visual area of source (arcmin²)
+     * From https://en.wikipedia.org/wiki/Surface_brightness
+     * S = m + 2.5 * log10(A)         | S: Surface Brightness (vmag/arcsec²)
+     *                                | A: visual area of source (arcsec²)
      *                                | m: source magnitude integrated over A
-     * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: luminance (cd/m²)
+     *
+     * From https://en.wikipedia.org/wiki/Illuminance (Lux version)
+     * E = 10^(-14.18/2.5) * 10^(-0.4 * m)
+     * E = 10.7646e4 / R2AS^2 * 10^(-0.4 * m)
+     *
+     * From http://members.ziggo.nl/jhm.vangastel/Astronomy/Formules.pdf
+     * L = 10.7646e4 * 10^(-0.4 * S)  | S: vmag/arcsec², L: luminance (cd/m²)
+     *
      * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
      *
-     * => E = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
-     * => log10(E) = log10(10.8e4 / R2AS^2) - 0.4 * m
-     *
-     * Same formula at https://en.wikipedia.org/wiki/Illuminance
+     * => E = 10.7646e4 / R2AS^2 * 10^(-0.4 * m)
+     * => log10(E) = log10(10.7646e4 / R2AS^2) - 0.4 * m
      */
-    log_e = log10(10.8e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
+    log_e = log10(10.7646e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
 
     /*
      * Apply optic from telescope light grasp (Gl).
