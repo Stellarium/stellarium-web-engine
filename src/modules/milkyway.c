@@ -53,7 +53,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     // Modulate luminance from atmosphere average brightness so that
     // milky way becomes less visible with a full moon
     c *= min(0.0002 / max(0.000001, core->lwsky_average), 1.0);
-    c = clamp(c, 0, 1) * 0.64;
+    c = max(c, 0) * 0.7;
     painter.color[3] *= c;
 
     if (painter.color[3] < 1./255)
