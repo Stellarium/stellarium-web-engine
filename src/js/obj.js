@@ -36,7 +36,7 @@ Module.afterInit(function() {
 
     // Create all the dynamic attributes of the object.
     var callback = Module.addFunction(function(attr, isProp, user) {
-      var name = Module.Pointer_stringify(attr);
+      var name = Module.UTF8ToString(attr);
       if (!isProp) {
         that[name] = function() {
           return that._call(name, arguments);
@@ -55,7 +55,7 @@ Module.afterInit(function() {
 
     // Also add the children as properties
     var callback = Module.addFunction(function(id) {
-      id = Module.Pointer_stringify(id);
+      id = Module.UTF8ToString(id);
       if (!id) return; // Child with no id?
       Object.defineProperty(that, id, {
         enumerable: true,
@@ -117,8 +117,8 @@ Module.afterInit(function() {
   // XXX: deprecated: use names instead.
   SweObj.prototype.ids = function(f) {
     var callback = Module.addFunction(function(o, u, k, v) {
-      k = Module.Pointer_stringify(k);
-      v = Module.Pointer_stringify(v);
+      k = Module.UTF8ToString(k);
+      v = Module.UTF8ToString(v);
       f(k, v);
     }, 'viiii');
     Module._obj_get_designations(this.v, 0, callback);
@@ -128,8 +128,8 @@ Module.afterInit(function() {
   SweObj.prototype.names = function() {
     var ret = [];
     var callback = Module.addFunction(function(o, u, cat, v) {
-      cat = Module.Pointer_stringify(cat);
-      v = Module.Pointer_stringify(v);
+      cat = Module.UTF8ToString(cat);
+      v = Module.UTF8ToString(v);
       if (cat) ret.push(cat + ' ' + v);
       else ret.push(v);
     }, 'viiii');
@@ -148,7 +148,7 @@ Module.afterInit(function() {
   SweObj.prototype.getTree = function(detailed) {
     detailed = (detailed !== undefined) ? detailed : false
     var cret = module_get_tree(this.v, detailed)
-    var ret = Module.Pointer_stringify(cret)
+    var ret = Module.UTF8ToString(cret)
     Module._free(cret)
     ret = JSON.parse(ret)
     return ret
@@ -167,7 +167,7 @@ Module.afterInit(function() {
   Object.defineProperty(SweObj.prototype, 'path', {
     get: function() {
       var cret = module_get_path(this.v, Module.core.v)
-      var ret = Module.Pointer_stringify(cret)
+      var ret = Module.UTF8ToString(cret)
       Module._free(cret)
       return 'core.' + ret
     }
@@ -187,7 +187,7 @@ Module.afterInit(function() {
     });
     args = JSON.stringify(args)
     var cret = obj_call_json_str(this.v, attr, args)
-    var ret = Module.Pointer_stringify(cret)
+    var ret = Module.UTF8ToString(cret)
     Module._free(cret)
     if (!ret) return null;
     ret = JSON.parse(ret)
@@ -239,7 +239,7 @@ Module.afterInit(function() {
   }
 
   var onObjChanged = Module.addFunction(function(objPtr, attr) {
-    attr = Module.Pointer_stringify(attr);
+    attr = Module.UTF8ToString(attr);
     for (var i = 0; i < g_listeners.length; i++) {
       var listener = g_listeners[i];
       if (    (listener.obj === null || listener.obj === objPtr) &&

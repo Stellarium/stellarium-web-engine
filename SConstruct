@@ -161,7 +161,7 @@ if target_os == 'js':
     # Needed since emscripten 1.37.
     extra_exported = [
         'GL',
-        'Pointer_stringify',
+        'UTF8ToString',
         'addFunction',
         'cwrap',
         'getValue',

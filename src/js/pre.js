@@ -92,7 +92,7 @@ Module['formatAngle'] = function(angle, format) {
   var format_angle = Module.cwrap('format_angle', 'number',
                                   ['number', 'string']);
   var cret = format_angle(angle, format);
-  var ret = Module.Pointer_stringify(cret);
+  var ret = Module.UTF8ToString(cret);
   Module._free(cret);
   return ret;
 }
@@ -120,7 +120,7 @@ Module['a2tf'] = function(angle, resolution) {
   resolution = resolution || 0;
   var a2tf_json = Module.cwrap('a2tf_json', 'number', ['number', 'number']);
   var cret = a2tf_json(resolution, angle);
-  var ret = Module.Pointer_stringify(cret);
+  var ret = Module.UTF8ToString(cret);
   Module._free(cret);
   ret = JSON.parse(ret);
   return ret;
@@ -149,7 +149,7 @@ Module['a2af'] = function(angle, resolution) {
   resolution = resolution || 0;
   var a2af_json = Module.cwrap('a2af_json', 'number', ['number', 'number']);
   var cret = a2af_json(resolution, angle);
-  var ret = Module.Pointer_stringify(cret);
+  var ret = Module.UTF8ToString(cret);
   Module._free(cret);
   ret = JSON.parse(ret);
   return ret;
@@ -223,8 +223,8 @@ Module['calendar'] = function(args) {
       function(time, type, desc, flags, o1, o2, user) {
         var ev = {
           time: Module.MJD2date(time),
-          type: Module.Pointer_stringify(type),
-          desc: Module.Pointer_stringify(desc),
+          type: Module.UTF8ToString(type),
+          desc: Module.UTF8ToString(desc),
           o1: o1 ? new Module.SweObj(o1) : null,
           o2: o2 ? new Module.SweObj(o2) : null
         };
