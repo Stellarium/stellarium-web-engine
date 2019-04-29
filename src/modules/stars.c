@@ -285,14 +285,15 @@ void star_get_designations(
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
     const char *names = s->names;
+    const char *name;
     char buf[128];
     char cat[128] = {};
     obj_t *skycultures;
 
     if (!names) {
         skycultures = core_get_module("skycultures");
-        names = skycultures_get_name(skycultures, obj->oid, buf);
-        if (names) f(obj, user, "NAME", names);
+        name = skycultures_get_name(skycultures, obj->oid, buf);
+        if (name) f(obj, user, "NAME", name);
     }
     while (names && *names) {
         strncpy(cat, names, sizeof(cat));
