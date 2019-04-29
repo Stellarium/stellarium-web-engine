@@ -62,12 +62,6 @@ obj_t *obj_get(const obj_t *module, const char *query, int flags);
 obj_t *obj_get_by_oid(const obj_t *module, uint64_t oid, uint64_t hint);
 
 /*
- * Function: obj_get_by_nsid
- * Find an object by its nsid.
- */
-obj_t *obj_get_by_nsid(const obj_t *module, uint64_t nsid);
-
-/*
  * Function: module_get_render_order
  *
  * For modules: return the order in which the modules should be rendered.
