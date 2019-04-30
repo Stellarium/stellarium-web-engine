@@ -97,18 +97,6 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
     *pix = nuniq - 4 * (1 << (2 * (*order)));
 }
 
-static double illuminance_for_vmag(double vmag)
-{
-    /*
-     * S = m + 2.5 * log10(A)         | S: vmag/arcmin², A: arcmin²
-     * L = 10.8e4 * 10^(-0.4 * S)     | S: vmag/arcmin², L: cd/m²
-     * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
-     *
-     * => E = 10.8e4 / R2AS^2 * 10^(-0.4 * m)
-     */
-    return 10.8e4 / (ERFA_DR2AS * ERFA_DR2AS) * pow(10, -0.4 * vmag);
-}
-
 /*
  * Precompute values about the star position to make rendering faster.
  * Parameters:
@@ -154,7 +142,7 @@ static int star_init(obj_t *obj, json_value *args)
         d->vmag = json_get_attr_f(model, "Vmag", NAN);
         if (isnan(d->vmag))
             d->vmag = json_get_attr_f(model, "Bmag", NAN);
-        d->illuminance = illuminance_for_vmag(d->vmag);
+        d->illuminance = core_mag_to_illuminance(d->vmag);
         compute_pv(d->ra, d->de, d->pra, d->pde, d->plx, d);
     }
     return 0;
@@ -418,7 +406,7 @@ static int on_file_tile_loaded(const char type[4],
                  s->gaia;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
-        s->illuminance = illuminance_for_vmag(vmag);
+        s->illuminance = core_mag_to_illuminance(vmag);
 
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
@@ -427,7 +415,7 @@ static int on_file_tile_loaded(const char type[4],
                 s->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
 
-        tile->illuminance += illuminance_for_vmag(vmag);
+        tile->illuminance += s->illuminance;
         tile->mag_min = min(tile->mag_min, vmag);
         tile->mag_max = max(tile->mag_max, vmag);
         tile->nb++;
@@ -580,17 +568,14 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
                       render_visitor);
     }
 
-    /* Ad-hoc formula to adjust tonemapping when many stars are visible.
-     * I think the illuminance computation is correct, but should we use
-     * core_report_illuminance_in_fov? */
-    illuminance *= core->telescope.light_grasp;
+    /* Get the global stars luminance */
+    double lum = core_illuminance_to_lum_apparent(illuminance, 0);
 
     // This is 100% ad-hoc formula adjusted so that DSS properly disappears
     // when stars bright enough are visible
-    illuminance = pow(illuminance, 0.33);
-    illuminance /= 20;
-
-    core_report_luminance_in_fov(illuminance, false);
+    lum = pow(lum, 0.333);
+    lum /= 1700;
+    core_report_luminance_in_fov(lum, false);
 
     progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);
     return 0;
