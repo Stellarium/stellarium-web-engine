@@ -318,6 +318,7 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     double mag;
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
+    double i;   // Phase angle.
     planet_t *jupiter = planet->parent;
     planet_update_(jupiter, obs);
     const double dt = obs->ut1 - planet->last_full_update;
@@ -336,6 +337,8 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     planet->obj.pvo[0][3] = 1;
     planet->obj.pvo[1][3] = 1;
 
+    i = eraSepp(planet->pvh[0], planet->obj.pvo[0]);
+    planet->phase = 0.5 * cos(i) + 0.5;
     // Compute visual magnitude.
     // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
     rho = vec3_norm(planet->pvh[0]);
@@ -350,6 +353,7 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 {
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
+    double i;   // Phase angle.
     double p[3], v[3], pv[2][3];
     planet_update_(planet->parent, obs);
     const double dt = obs->tt - planet->last_full_update;
@@ -389,6 +393,8 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     planet->obj.pvo[0][3] = 1;
     planet->obj.pvo[1][3] = 1;
 
+    i = eraSepp(planet->pvh[0], planet->obj.pvo[0]);
+    planet->phase = 0.5 * cos(i) + 0.5;
     // Compute visual magnitude.
     // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
     rho = vec3_norm(planet->pvh[0]);
