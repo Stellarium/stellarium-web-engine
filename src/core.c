@@ -676,6 +676,70 @@ void core_on_zoom(double k, double x, double y)
     module_changed(&core->observer->obj, "azimuth");
 }
 
+double core_mag_to_illuminance(double vmag)
+{
+    /*
+     * Compute illuminance (in lux = lum/m² = cd.sr/m²)
+     *
+     * L = 10.7646e4 * 10^(-0.4 * S)  | S: vmag/arcsec², L: luminance (cd/m²)
+     * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
+     * => E = 10.7646e4 / R2AS^2 * 10^(-0.4 * m)
+     *
+     * Same formula at https://en.wikipedia.org/wiki/Illuminance
+     */
+    return 10.7646e4 / (ERFA_DR2AS * ERFA_DR2AS) * exp10(-0.4 * vmag);
+}
+
+double core_mag_to_surf_brightness(double mag, double surf)
+{
+    // From https://en.wikipedia.org/wiki/Surface_brightness
+    // S = m + 2.5 * log10(A)       | S: Surface Brightness (vmag/arcsec²)
+    //                              | A: visual area of source (arcsec²)
+    //                              | m: source magnitude integrated over A
+    return mag + 2.5 * log10(surf * (ERFA_DR2AS * ERFA_DR2AS));
+}
+
+double core_illuminance_to_lum_apparent(double illum, double surf)
+{
+    const telescope_t *tel = &core->telescope;
+    /*
+     * Apply optic from telescope light grasp (Gl).
+     *
+     * E' = E * Gl
+     */
+    illum *= tel->light_grasp;
+
+    // Scale the object apparent area to transform it into apparent
+    // area in the eyepiece.
+    surf *= tel->magnification * tel->magnification;
+
+    // Assumes point objects (unresolved stars) has a radius of 2.5 arcmin,
+    // roughly corresponding to human eye Point Spread Function.
+    const double pr = 2.5 / 60 * DD2R;
+    const double min_point_area = M_PI * pr * pr;
+
+    surf = max(surf, min_point_area);
+
+    /*
+     * Compute luminance
+     *
+     * L = E / A   |  in sr, E in lux, L in cd/m²
+     */
+    return illum / surf;
+}
+
+double core_surf_brightness_to_lum_apparent(double surf_brightness)
+{
+    const telescope_t *tel = &core->telescope;
+    double lum = 10.7646e4 * exp10(-0.4 * surf_brightness);
+    return lum * tel->light_grasp / (tel->magnification * tel->magnification);
+}
+
+double core_mag_to_lum_apparent(double mag, double surf)
+{
+    double illum = core_mag_to_illuminance(mag);
+    return core_illuminance_to_lum_apparent(illum, surf);
+}
 
 /*
  * Function: core_get_point_for_mag
@@ -768,7 +832,6 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     *radius = r;
     if (luminance) *luminance = clamp(ld, 0, 1);
 }
-
 
 /*
  * Function: core_get_apparent_angle_for_point

@@ -310,6 +310,71 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
 void core_get_point_for_mag(double mag, double *radius, double *luminance);
 
 /*
+ * Function: core_mag_to_illuminance
+ * Compute the illuminance for a given magnitude.
+ *
+ * This function is independent from the object surface area.
+ *
+ * Parameters:
+ *   mag       - The visual magnitude integrated over the object's surface.
+ *
+ * Return:
+ *   Object illuminance in lux (= lum/m² = cd.sr/m²)
+ */
+double core_mag_to_illuminance(double vmag);
+
+/*
+ * Function: core_mag_to_surf_brightness
+ * Compute the sufrace brightness from a mag and surface.
+ *
+ * Parameters:
+ *   mag       - The object's visual magnitude.
+ *   surf      - The object's angular surface in rad^2
+ *
+ * Return:
+ *   Object surface brightness in mag/arcsec²
+ */
+double core_mag_to_surf_brightness(double mag, double surf);
+
+/*
+ * Function: core_illuminance_to_lum_apparent
+ * Compute the apparent luminance from an object's luminance and surface.
+ *
+ * Parameters:
+ *   illum     - The illuminance.
+ *   surf      - The angular surface in rad^2
+ *
+ * Return:
+ *   Object luminance in cd/m².
+ */
+double core_illuminance_to_lum_apparent(double illum, double surf);
+
+/*
+ * Function: core_surf_brightness_to_lum_apparent
+ * Compute the apparent luminance from an objet's surface brightness.
+ *
+ * Parameters:
+ *   surf_brightness - The object surface brightness in mag/arcsec²
+ *
+ * Return:
+ *   Object apparent luminance in cd/m².
+ */
+double core_surf_brightness_to_lum_apparent(double surf_brightness);
+
+/*
+ * Function: core_mag_to_lum_apparent
+ * Compute the apparent luminance from an objet's magnitude and surface.
+ *
+ * Parameters:
+ *   mag       - The visual magnitude integrated over the object's surface.
+ *   surf      - The angular surface in rad^2
+ *
+ * Return:
+ *   Object luminance in cd/m².
+ */
+double core_mag_to_lum_apparent(double mag, double surf);
+
+/*
  * Function: core_get_apparent_angle_for_point
  * Get angular radius of a round object from it's pixel radius on screen.
  *
