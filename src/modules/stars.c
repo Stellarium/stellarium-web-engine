@@ -574,7 +574,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
     // This is 100% ad-hoc formula adjusted so that DSS properly disappears
     // when stars bright enough are visible
     lum = pow(lum, 0.333);
-    lum /= 1700;
+    lum /= 130;
     core_report_luminance_in_fov(lum, false);
 
     progressbar_report("stars", "Stars", nb_loaded, nb_tot, -1);

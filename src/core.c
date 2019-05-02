@@ -229,8 +229,8 @@ static void core_set_default(void)
     core->star_linear_scale = 1.0;
     core->star_scale_screen_factor = 0.5;
     core->star_relative_scale = 1.4;
-    core->lwmax_min = 0.004;
-    core->lwmax_scale = 13.0;
+
+    core->lwmax_min = 0.052;
     core->max_point_radius = 6.0;
     core->min_point_radius = 0.5;
     core->skip_point_radius = 0.2;
@@ -406,7 +406,7 @@ int core_update(double dt)
     progressbar_update();
 
     // Update eye adaptation.
-    lwmax = core->lwmax * core->lwmax_scale;
+    lwmax = core->lwmax;
     lwmax = exp(logf(core->tonemapper.lwmax) +
                 (logf(lwmax) - logf(core->tonemapper.lwmax)) *
                 min(0.05 * dt / 0.01666, 0.5));
@@ -861,7 +861,7 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
     lum /= 400;
 
     lum *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
-    core_report_luminance_in_fov(lum, false);
+    core_report_luminance_in_fov(lum * 13.0, false);
 }
 
 void core_report_luminance_in_fov(double lum, bool fast_adaptation)
@@ -869,7 +869,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
     core->lwmax = max(core->lwmax, lum);
     if (fast_adaptation && core->lwmax > core->tonemapper.lwmax) {
         tonemapper_update(&core->tonemapper, -1, -1, core->exposure_scale,
-                          core->lwmax * core->lwmax_scale);
+                          core->lwmax);
     }
 }
 

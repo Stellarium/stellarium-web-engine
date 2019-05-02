@@ -212,7 +212,6 @@ static void menu_main(void *user)
         gui_double("skip rad", &core->skip_point_radius, 0.001, 10, 3, NAN);
         gui_double("max rad", &core->max_point_radius, 1, 100, 1, NAN);
         gui_double_log("log lmaxmin", &core->lwmax_min, -100, 100, 2, NAN);
-        gui_double_log("log lmaxs", &core->lwmax_scale, -100, 100, 2, NAN);
         gui_float_log("log p", &core->tonemapper.p, -100, 100, 0, NAN);
 
         DL_FOREACH(core->obj.children, module) {
@@ -377,7 +376,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_same_line();
     gui_text("FPS: %.0f", core->prof.fps);
     gui_same_line();
-    gui_text("lwmax: %f cd/m2", core->lwmax * core->lwmax_scale);
+    gui_text("lwmax: %f cd/m2", core->lwmax);
     gui_same_line();
     gui_text("cst: %s", core->observer->pointer.cst);
     gui_panel_end();
