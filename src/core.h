@@ -108,6 +108,7 @@ struct core
 
     // Two parameters to manually adjust the size of the stars.
     double          star_linear_scale;
+    double          star_scale_screen_factor;
     double          star_relative_scale;
 
     // Set the hints magnitude offset.

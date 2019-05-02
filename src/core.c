@@ -226,7 +226,8 @@ static void core_set_default(void)
     core->lwmax = 5000;
 
     // Adjust those values to make the sky look good.
-    core->star_linear_scale = 0.5;
+    core->star_linear_scale = 1.0;
+    core->star_scale_screen_factor = 0.5;
     core->star_relative_scale = 1.4;
     core->lwmax_min = 0.004;
     core->lwmax_scale = 13.0;
@@ -416,7 +417,7 @@ int core_update(double dt)
     // It ranges from 0.5 for a small screen to 1.4 for large screens
     double delta = -1.0 + min(core->win_size[0], core->win_size[1]) / 400;
     delta = min(max(0, delta), 0.9);
-    core->star_linear_scale = 0.5 + delta;
+    core->star_scale_screen_factor = 0.5 + delta;
 
     core_update_direction(dt);
 
@@ -760,7 +761,8 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double log_e, log_lw, ld, r, pr;
     const telescope_t *tel = &core->telescope;
-    const double s_linear = core->star_linear_scale;
+    const double s_linear = core->star_linear_scale *
+            core->star_scale_screen_factor;
     const double s_relative = core->star_relative_scale;
     const double r_min = core->min_point_radius;
 
