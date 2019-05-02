@@ -759,57 +759,18 @@ double core_mag_to_lum_apparent(double mag, double surf)
  */
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
-    double log_e, log_lw, ld, r, pr;
-    const telescope_t *tel = &core->telescope;
+    double ld, r;
     const double s_linear = core->star_linear_scale *
             core->star_scale_screen_factor;
     const double s_relative = core->star_relative_scale;
     const double r_min = core->min_point_radius;
 
-    /*
-     * Compute illuminance (in lux = lum/m² = cd.sr/m²)
-     * Get log10 of the value for optimisation.
-     *
-     * From https://en.wikipedia.org/wiki/Surface_brightness
-     * S = m + 2.5 * log10(A)         | S: Surface Brightness (vmag/arcsec²)
-     *                                | A: visual area of source (arcsec²)
-     *                                | m: source magnitude integrated over A
-     *
-     * From https://en.wikipedia.org/wiki/Illuminance (Lux version)
-     * E = 10^(-14.18/2.5) * 10^(-0.4 * m)
-     * E = 10.7646e4 / R2AS^2 * 10^(-0.4 * m)
-     *
-     * From http://members.ziggo.nl/jhm.vangastel/Astronomy/Formules.pdf
-     * L = 10.7646e4 * 10^(-0.4 * S)  | S: vmag/arcsec², L: luminance (cd/m²)
-     *
-     * E = L * A                      | E: lux (= cd.sr/m²), A: sr, L: cd/m²
-     *
-     * => E = 10.7646e4 / R2AS^2 * 10^(-0.4 * m)
-     * => log10(E) = log10(10.7646e4 / R2AS^2) - 0.4 * m
-     */
-    log_e = log10(10.7646e4 / (ERFA_DR2AS * ERFA_DR2AS)) - 0.4 * mag;
-
-    /*
-     * Apply optic from telescope light grasp (Gl).
-     *
-     * E' = E * Gl
-     * Gmag = 2.5 * log10(Gl)
-     *
-     * Log10(E') = Log10(E) + Gmag / 2.5
-     */
-    log_e += tel->gain_mag / 2.5;
-
-    /*
-     * Compute luminance assuming a point radius of 2.5 arcmin.
-     *
-     * L = E / (pi * R^2)
-     * => Log10(L) = Log10(E) - Log10(pi * R^2)
-     */
-    pr = 2.5 / 60 * DD2R;
-    log_lw = log_e - log10(M_PI * pr * pr);
+    // Compute apparent luminance, i.e. the luminance percieved by the eye
+    // when looking in the telescope eyepiece.
+    double lum_apparent = core_mag_to_lum_apparent(mag, 0);
 
     // Apply eye adaptation.
-    ld = tonemapper_map_log10(&core->tonemapper, log_lw);
+    ld = tonemapper_map(&core->tonemapper, lum_apparent);
     if (ld < 0) ld = 0; // Prevent math error.
 
     // Compute r, using both manual adjustement factors.
