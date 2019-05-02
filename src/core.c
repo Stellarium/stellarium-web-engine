@@ -406,10 +406,14 @@ int core_update(double dt)
     progressbar_update();
 
     // Update eye adaptation.
-    lwmax = core->lwmax;
-    lwmax = exp(logf(core->tonemapper.lwmax) +
-                (logf(lwmax) - logf(core->tonemapper.lwmax)) *
-                min(0.05 * dt / 0.01666, 0.5));
+    if (core->fast_adaptation && core->lwmax > core->tonemapper.lwmax) {
+        lwmax = core->lwmax;
+    } else {
+        lwmax = exp(logf(core->tonemapper.lwmax) +
+                    (logf(core->lwmax) - logf(core->tonemapper.lwmax)) *
+                    min(0.16 * dt / 0.01666, 0.5));
+    }
+
     tonemapper_update(&core->tonemapper, -1, -1, core->exposure_scale, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
@@ -866,10 +870,9 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
 
 void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 {
-    core->lwmax = max(core->lwmax, lum);
-    if (fast_adaptation && core->lwmax > core->tonemapper.lwmax) {
-        tonemapper_update(&core->tonemapper, -1, -1, core->exposure_scale,
-                          core->lwmax);
+    if (lum > core->lwmax) {
+        core->fast_adaptation = fast_adaptation;
+        core->lwmax = lum;
     }
 }
 

@@ -116,6 +116,7 @@ struct core
     double          contrast; // Apply contrast to the rendered stars.
 
     tonemapper_t    tonemapper;
+    bool            fast_adaptation; // True if eye adpatation is fast
     double          lwmax; // Max visible luminance.
     double          lwmax_min; // Min value for lwmax.
     double          lwsky_average;  // Current average sky luminance
