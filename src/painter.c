@@ -361,7 +361,7 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
                              int order, int pix, bool outside)
 {
     double healpix[4][3];
-    double quad[4][4];
+    double quad[4][4], normals[4][4];
     double p[4][4];
     int i;
 
@@ -388,6 +388,23 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         assert(!isnan(p[i][0]));
     }
     if (is_clipped(4, p)) return true;
+
+    /*
+     * For planet tiles, we also do culling test.  Since the quad is not
+     * plane, we check the normal of the four corners.
+     */
+    if (!outside) {
+        for (i = 0; i < 4; i++) {
+            vec3_copy(healpix[i], normals[i]);
+            normals[i][3] = 0.0;
+            mat4_mul_vec4(*painter->transform, normals[i], normals[i]);
+            vec3_normalize(normals[i], normals[i]);
+            convert_framev4(painter->obs, frame, FRAME_VIEW,
+                            normals[i], normals[i]);
+            if (normals[i][2] > 0) return false;
+        }
+        return true;
+    }
 
     /*
      * Special case: if all the points are behind us and none are visible
