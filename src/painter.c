@@ -705,6 +705,7 @@ bool painter_project(const painter_t *painter, int frame,
                      const double pos[3], bool at_inf, bool clip_first,
                      double win_pos[2]) {
     double v[3];
+    assert(mat4_is_identity(*painter->transform)); // Not supported yet.
     if (clip_first) {
         if (painter_is_point_clipped_fast(painter, frame, pos, at_inf))
             return false;
