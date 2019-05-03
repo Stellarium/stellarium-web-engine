@@ -233,7 +233,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_planet_glsl[7031] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_glsl[7123] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -278,8 +278,8 @@ static const unsigned char DATA_shaders_planet_glsl[7031] __attribute__((aligned
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
-    "attribute highp   vec4 a_pos;\n"
-    "attribute highp   vec4 a_mpos;\n"
+    "attribute highp   vec4 a_pos;     // Projected position (with fake scaling).\n"
+    "attribute highp   vec4 a_mpos;    // Model position (without fake scaling).\n"
     "attribute mediump vec2 a_tex_pos;\n"
     "attribute lowp    vec3 a_color;\n"
     "attribute highp   vec3 a_normal;\n"

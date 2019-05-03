@@ -42,8 +42,8 @@ varying highp   vec3 v_bitangent;
 
 #ifdef VERTEX_SHADER
 
-attribute highp   vec4 a_pos;
-attribute highp   vec4 a_mpos;
+attribute highp   vec4 a_pos;     // Projected position (with fake scaling).
+attribute highp   vec4 a_mpos;    // Model position (without fake scaling).
 attribute mediump vec2 a_tex_pos;
 attribute lowp    vec3 a_color;
 attribute highp   vec3 a_normal;
