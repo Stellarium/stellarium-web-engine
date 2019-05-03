@@ -30,6 +30,7 @@ typedef struct {
     uint64_t oid;
     uint64_t gaia;  // Gaia source id (0 if none)
     uint32_t tyc;   // Tycho2 id.
+    char    type[4];
     int     hip;    // HIP number.
     float   vmag;
     float   ra;     // ICRS RA  J2000.0 (rad)
@@ -303,7 +304,7 @@ static star_t *star_create(const star_data_t *data)
 {
     star_t *star;
     star = (star_t*)obj_create("star", NULL, NULL, NULL);
-    strcpy(star->obj.type, "*");
+    strncpy(star->obj.type, data->type, 4);
     star->data = *data;
     star->obj.oid = star->data.oid;
     star_update(&star->obj, core->observer, 0);
@@ -340,6 +341,7 @@ static int on_file_tile_loaded(const char type[4],
 
     // All the columns we care about in the source file.
     eph_table_column_t columns[] = {
+        {"type", 's', .size=4},
         {"gaia", 'Q'},
         {"hip",  'i'},
         {"tyc",  'i'},
@@ -386,7 +388,7 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->sources[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                &s->gaia, &s->hip, &s->tyc, &vmag, &gmag,
+                s->type, &s->gaia, &s->hip, &s->tyc, &vmag, &gmag,
                 &ra, &de, &plx, &pra, &pde, &bv, ids);
         assert(!isnan(ra));
         assert(!isnan(de));
@@ -394,6 +396,7 @@ static int on_file_tile_loaded(const char type[4],
         assert(!isnan(vmag));
 
         if (!isnan(survey->min_vmag) && (vmag < survey->min_vmag)) continue;
+        if (!*s->type) strncpy(s->type, "*", 4); // Default type.
         s->vmag = vmag;
         s->ra = ra;
         s->de = de;
