@@ -88,6 +88,7 @@ typedef struct {
     obj_t       obj;
     regex_t     search_reg;
     fader_t     visible;
+    double      hints_mag_offset;
     hips_t      *survey;
 } dsos_t;
 
@@ -349,6 +350,7 @@ static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
     fader_init(&dsos->visible, true);
+    dsos->hints_mag_offset = 0;
     regcomp(&dsos->search_reg, "(m|ngc|ic) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
     return 0;
@@ -434,7 +436,8 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
     double win_pos[2], win_size[2], win_angle;
-    double hints_limit_mag = painter->hints_limit_mag - 0.5;
+    double hints_limit_mag = painter->hints_limit_mag - 0.5 +
+            core->dso_hints_mag_offset;
     const bool selected = core->selection && s->oid == core->selection->oid;
     double opacity;
     painter_t tmp_painter;
@@ -455,13 +458,15 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     if (s2->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER ||
         s2->symbol == SYMBOL_CLUSTER_OF_STARS ||
         s2->symbol == SYMBOL_MULTIPLE_DEFAULT) {
-        hints_limit_mag = painter->hints_limit_mag - 2.;
+        hints_limit_mag = painter->hints_limit_mag - 2. +
+                core->dso_hints_mag_offset;
     }
 
     if (s2->smax == 0) {
         // DSO without shape don't need to have labels displayed unless they are
         // much zoomed or selected
-        hints_limit_mag = painter->stars_limit_mag - 10;
+        hints_limit_mag = painter->stars_limit_mag - 10 +
+                core->dso_hints_mag_offset;
     }
 
     if (selected)

@@ -113,6 +113,8 @@ struct core
 
     // Set the hints magnitude offset.
     double          hints_mag_offset;
+    // Another offset just for DSOs
+    double          dso_hints_mag_offset;
     double          contrast; // Apply contrast to the rendered stars.
 
     tonemapper_t    tonemapper;
