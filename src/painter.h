@@ -58,7 +58,6 @@ struct renderer
     void (*prepare)(renderer_t *rend,
                     double win_w, double win_h, double scale);
     void (*finish)(renderer_t *rend);
-    void (*flush)(renderer_t *rend);
 
     void (*points_2d)(renderer_t        *rend,
                    const painter_t      *painter,
@@ -232,7 +231,6 @@ struct painter
 int paint_prepare(painter_t *painter, double win_w, double win_h,
                   double scale);
 int paint_finish(const painter_t *painter);
-int paint_flush(const painter_t *painter);
 
 /*
  * Set the current painter texture.

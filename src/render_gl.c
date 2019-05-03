@@ -297,12 +297,6 @@ static void finish(renderer_t *rend_)
     rend_flush(rend);
 }
 
-static void flush(renderer_t *rend_)
-{
-    renderer_gl_t *rend = (void*)rend_;
-    rend_flush(rend);
-}
-
 /*
  * Function: get_item
  * Try to get a render item we can batch with.
@@ -1515,7 +1509,6 @@ renderer_t* render_gl_create(void)
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
-    rend->rend.flush = flush;
     rend->rend.points_2d = points;
     rend->rend.quad = quad;
     rend->rend.quad_wireframe = quad_wireframe;

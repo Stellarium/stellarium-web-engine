@@ -121,13 +121,6 @@ int paint_finish(const painter_t *painter)
     return 0;
 }
 
-int paint_flush(const painter_t *painter)
-{
-    PROFILE(paint_flush, 0);
-    REND(painter->rend, flush);
-    return 0;
-}
-
 /*
  * Set the current painter texture.
  *
