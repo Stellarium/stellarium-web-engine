@@ -893,7 +893,6 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     prog = &rend->progs.points;
     GL(glUseProgram(prog->prog));
 
-    GL(glEnable(GL_CULL_FACE));
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_ONE));
     GL(glDisable(GL_DEPTH_TEST));
@@ -922,7 +921,6 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     prog = &rend->progs.blit;
     GL(glUseProgram(prog->prog));
 
-    GL(glEnable(GL_CULL_FACE));
     GL(glLineWidth(item->lines.width * rend->scale));
 
     GL(glActiveTexture(GL_TEXTURE0));
