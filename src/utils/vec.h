@@ -132,6 +132,7 @@ DEF void mat4_perspective(double mat[S 4][4], double fovy, double aspect,
                           double nearval, double farval);
 DEF void mat4_to_float(const double mat[S 4][4], float out[S 16]);
 DEF void mat4_set_identity(double mat[S 4][4]);
+DEF bool mat4_is_identity(const double mat[S 4][4]);
 DEF void mat4_mul(const double a[S 4][4], const double b[S 4][4],
                   double out[S 4][4]);
 DEF void mat4_rx(double a, const double mat[S 4][4], double out[S 4][4]);
@@ -526,6 +527,11 @@ DEF void mat3_set_identity(double mat[S 3][3])
 DEF void mat4_set_identity(double mat[S 4][4])
 {
     memcpy(mat, mat4_identity, sizeof(mat4_identity));
+}
+
+DEF bool mat4_is_identity(const double mat[S 4][4])
+{
+    return memcmp(mat, mat4_identity, sizeof(mat4_identity)) == 0;
 }
 
 DEF void mat3_mul(const double a[S 3][3], const double b[S 3][3],
