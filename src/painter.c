@@ -113,8 +113,8 @@ int paint_prepare(painter_t *painter, double win_w, double win_h,
         mat3_set_identity(painter->textures[i].mat);
     areas_clear_all(core->areas);
 
-    cull_flipped = (painter->proj->flags & PROJ_FLIP_HORIZONTAL) !=
-                   (painter->proj->flags & PROJ_FLIP_VERTICAL);
+    cull_flipped = (bool)(painter->proj->flags & PROJ_FLIP_HORIZONTAL) !=
+                   (bool)(painter->proj->flags & PROJ_FLIP_VERTICAL);
     REND(painter->rend, prepare, win_w, win_h, scale, cull_flipped);
     return 0;
 }
