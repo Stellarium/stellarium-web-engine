@@ -213,6 +213,7 @@ struct painter
             int             shadow_spheres_nb;
             double          (*shadow_spheres)[4]; // pos + radius.
             texture_t       *shadow_color_tex; // Used for lunar eclipses.
+            float           scale; // The fake scale we used.
         } planet;
 
         // For atmosphere rendering only.

@@ -670,7 +670,7 @@ static void planet_render_hips(const planet_t *planet,
     double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
     double angle = 2 * radius * r_scale / vec2_norm(planet->obj.pvo[0]);
-    int i, nb_tot = 0, nb_loaded = 0;
+    int nb_tot = 0, nb_loaded = 0;
     double sun_pos[4] = {0, 0, 0, 1};
     planets_t *planets = (planets_t*)planet->obj.parent;
     painter_t painter = *painter_;
@@ -682,13 +682,10 @@ static void planet_render_hips(const planet_t *planet,
     if (!hips) hips = planet->hips;
     assert(hips);
 
-    // Get potential shadow casting sphere, and scale them with the same
-    // artificial scale as the planet.
+    // Get potential shadow casting spheres.
     painter.planet.shadow_spheres_nb =
         get_shadow_candidates(planet, 4, shadow_spheres);
     painter.planet.shadow_spheres = shadow_spheres;
-    for (i = 0; i < painter.planet.shadow_spheres_nb; i++)
-        shadow_spheres[i][3] *= r_scale;
 
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
@@ -697,6 +694,7 @@ static void planet_render_hips(const planet_t *planet,
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
     mat4_iscale(mat, radius * r_scale, radius * r_scale, radius * r_scale);
+    painter.planet.scale = r_scale;
 
     // Compute sun position.
     vec3_copy(planets->sun->obj.pvo[0], sun_pos);
