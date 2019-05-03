@@ -30,7 +30,7 @@ uniform lowp    float     u_contrast;
 uniform highp   vec4      u_sun; // Sun pos (xyz) and radius (w).
 // Up to four spheres for illumination ray tracing.
 uniform lowp    int       u_shadow_spheres_nb;
-uniform mediump mat4      u_shadow_spheres;
+uniform highp   mat4      u_shadow_spheres;
 
 varying highp   vec3 v_mpos;
 varying mediump vec2 v_tex_pos;
@@ -99,10 +99,11 @@ float oren_nayar_diffuse(
  *   sun_pos - Position of the sun.
  *   sun_r   - Precomputed sun angular radius from the given point.
  */
-float illumination_sphere(highp vec3 p, highp vec4 sphere, highp vec3 sun_pos, float sun_r)
+float illumination_sphere(highp vec3 p, highp vec4 sphere,
+                          highp vec3 sun_pos, highp float sun_r)
 {
     // Sphere angular radius as viewed from the point.
-    float sph_r = asin(sphere.w / length(sphere.xyz - p));
+    highp float sph_r = asin(sphere.w / length(sphere.xyz - p));
     // Angle <sun, pos, sphere>
     highp float d = acos(min(1.0, dot(normalize(sun_pos - p),
                                 normalize(sphere.xyz - p))));
@@ -125,12 +126,12 @@ float illumination_sphere(highp vec3 p, highp vec4 sphere, highp vec3 sun_pos, f
 
     // Penumbra partially inside.
     // I took this from Stellarium, even though I am not sure how it works.
-    float x = (sun_r * sun_r + d * d - sph_r * sph_r) / (2.0 * d);
-    float alpha = acos(x / sun_r);
-    float beta = acos((d - x) / sph_r);
-    float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
-    float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
-    float AS = sun_r * sun_r * 2.0 * 1.57079633;
+    highp float x = (sun_r * sun_r + d * d - sph_r * sph_r) / (2.0 * d);
+    highp float alpha = acos(x / sun_r);
+    highp float beta = acos((d - x) / sph_r);
+    highp float AR = sun_r * sun_r * (alpha - 0.5 * sin(2.0 * alpha));
+    highp float Ar = sph_r * sph_r * (beta - 0.5 * sin(2.0 * beta));
+    highp float AS = sun_r * sun_r * 2.0 * 1.57079633;
     return 1.0 - (AR + Ar) / AS;
 }
 
