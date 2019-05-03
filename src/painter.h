@@ -56,7 +56,8 @@ enum {
 struct renderer
 {
     void (*prepare)(renderer_t *rend,
-                    double win_w, double win_h, double scale);
+                    double win_w, double win_h, double scale,
+                    bool cull_flipped);
     void (*finish)(renderer_t *rend);
 
     void (*points_2d)(renderer_t        *rend,

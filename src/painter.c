@@ -107,10 +107,15 @@ int paint_prepare(painter_t *painter, double win_w, double win_h,
 {
     PROFILE(paint_prepare, 0);
     int i;
+    bool cull_flipped;
+
     for (i = 0; i < ARRAY_SIZE(painter->textures); i++)
         mat3_set_identity(painter->textures[i].mat);
     areas_clear_all(core->areas);
-    REND(painter->rend, prepare, win_w, win_h, scale);
+
+    cull_flipped = (painter->proj->flags & PROJ_FLIP_HORIZONTAL) !=
+                   (painter->proj->flags & PROJ_FLIP_VERTICAL);
+    REND(painter->rend, prepare, win_w, win_h, scale, cull_flipped);
     return 0;
 }
 

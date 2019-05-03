@@ -36,6 +36,10 @@ enum {
     PROJ_TO_NDC_SPACE       = 1 << 2,
     PROJ_TO_WINDOW_SPACE    = 1 << 3,
     PROJ_ALREADY_NORMALIZED = 1 << 4,
+
+    // Set in the projection flags to flip the rendering.
+    PROJ_FLIP_VERTICAL      = 1 << 5,
+    PROJ_FLIP_HORIZONTAL    = 1 << 6,
 };
 
 // Returns from intersect_discontinuity.

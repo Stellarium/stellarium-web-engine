@@ -85,6 +85,8 @@ bool project(const projection_t *proj, int flags, int out_dim,
 
     if (flags & PROJ_BACKWARD) {
         vec2_copy(v, p);
+        if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
+        if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
         assert(proj->backward);
         assert(out_dim == 4);
         proj->backward(proj, flags, p, out);
@@ -95,6 +97,8 @@ bool project(const projection_t *proj, int flags, int out_dim,
     if (flags & PROJ_ALREADY_NORMALIZED)
         assert(fabs(vec3_norm(p) - 1.0) < 0.00000001);
     proj->project(proj, flags, v, p);
+    if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
+    if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
 
     if (!(flags & (PROJ_TO_NDC_SPACE | PROJ_TO_WINDOW_SPACE))) {
         memcpy(out, p, out_dim * sizeof(double));

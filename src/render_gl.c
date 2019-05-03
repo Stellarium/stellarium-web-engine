@@ -242,6 +242,7 @@ typedef struct renderer_gl {
 
     int     fb_size[2];
     double  scale;
+    bool    cull_flipped;
 
     struct {
         prog_t  points;
@@ -277,7 +278,7 @@ static void window_to_ndc(renderer_gl_t *rend,
 }
 
 static void prepare(renderer_t *rend_, double win_w, double win_h,
-                    double scale)
+                    double scale, bool cull_flipped)
 {
     renderer_gl_t *rend = (void*)rend_;
     tex_cache_t *ctex;
@@ -285,16 +286,10 @@ static void prepare(renderer_t *rend_, double win_w, double win_h,
     rend->fb_size[0] = win_w * scale;
     rend->fb_size[1] = win_h * scale;
     rend->scale = scale;
+    rend->cull_flipped = cull_flipped;
 
     DL_FOREACH(rend->tex_cache, ctex)
         ctex->in_use = false;
-}
-
-static void rend_flush(renderer_gl_t *rend);
-static void finish(renderer_t *rend_)
-{
-    renderer_gl_t *rend = (void*)rend_;
-    rend_flush(rend);
 }
 
 /*
@@ -1041,6 +1036,7 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
     GL(glEnable(GL_CULL_FACE));
+    GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
 
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
@@ -1081,6 +1077,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
     GL(glEnable(GL_CULL_FACE));
+    GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
 
     if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
         GL(glDisable(GL_BLEND));
@@ -1196,10 +1193,12 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     else
         GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
 
-    if (item->flags & PAINTER_RING_SHADER)
+    if (item->flags & PAINTER_RING_SHADER) {
         GL(glDisable(GL_CULL_FACE));
-    else
+    } else {
         GL(glEnable(GL_CULL_FACE));
+        GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
+    }
 
     if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
         GL(glDisable(GL_BLEND));
@@ -1303,6 +1302,12 @@ static void rend_flush(renderer_gl_t *rend)
         gl_buf_release(&item->indices);
         free(item);
     }
+}
+
+static void finish(renderer_t *rend_)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    rend_flush(rend);
 }
 
 static void line(renderer_t           *rend_,
