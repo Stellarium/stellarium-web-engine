@@ -1,3 +1,14 @@
+/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+ *
+ * This program is licensed under the terms of the GNU AGPL v3, or
+ * alternatively under a commercial licence.
+ *
+ * The terms of the AGPL v3 license can be found in the main directory of this
+ * repository.
+ */
+
+#ifndef MODULE_H
+#define MODULE_H
 
 /*
  * Function: module_list_obj
@@ -147,3 +158,5 @@ char *module_get_tree(const obj_t *obj, bool detailed);
  *   A newly allocated string.  Caller should delete it.
  */
 char *module_get_path(const obj_t *obj, const obj_t *root);
+
+#endif // MODULE_H
