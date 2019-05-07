@@ -299,7 +299,7 @@ var asFrame = function(f) {
  * another.
  *
  * Check the 4th component of the input vector
- * to know if the source is at infinity. If in[3] == 1.0, the source is at
+ * to know if the source is at infinity. If in[3] == 0.0, the source is at
  * infinity and the vector must be normalized, otherwise assume the vector to
  * contain the real object's distance in AU.
  *
@@ -313,10 +313,7 @@ var asFrame = function(f) {
  *   origin - Origin frame ('ASTROM', 'ICRF', 'CIRS', 'JNOW', 'OBSERVED',
  *            'VIEW').
  *   dest   - Destination frame (same as origin).
- *   at_inf - true for fixed objects (far away from the solar system).
- *            For such objects, velocity is assumed to be 0 and the position
- *            is assumed to be normalized.
- *   v      - A 3d vector.
+ *   v      - A 4d vector.
  *
  * Return:
  *   A 4d vector.
@@ -325,13 +322,13 @@ Module['convertFrame'] = function(obs, origin, dest, v) {
   origin = asFrame(origin);
   dest = asFrame(dest);
   var v4 = [v[0], v[1], v[2], v[3] || 0.0];
-  var ptr = Module._malloc(7 * 8);
+  var ptr = Module._malloc(8 * 8);
   var i;
   for (i = 0; i < 4; i++)
     Module._setValue(ptr + i * 8, v4[i], 'double');
   Module._convert_framev4(obs.v, origin, dest, ptr, ptr + 4 * 8);
-  var ret = new Array(3);
-  for (i = 0; i < 3; i++)
+  var ret = new Array(4);
+  for (i = 0; i < 4; i++)
     ret[i] = Module._getValue(ptr + (4 + i) * 8, 'double')
   Module._free(ptr);
   return ret;
