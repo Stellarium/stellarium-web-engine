@@ -238,13 +238,14 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     // XXX: the code is almost the same as the inner loop in stars_render.
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
-    double p[2], size, luminance;
+    double pvo[2][4], p[2], size, luminance;
     double color[3];
     painter_t painter = *painter_;
     point_t point;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
-    if (!painter_project(painter_, FRAME_ICRF, obj->pvo[0], true, true, p))
+    obj_get_pvo(obj, painter.obs, pvo);
+    if (!painter_project(painter_, FRAME_ICRF, pvo[0], true, true, p))
         return 0;
 
     core_get_point_for_mag(s->vmag, &size, &luminance);
@@ -260,7 +261,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (selected || (s->vmag <= painter.hints_limit_mag - 4.0)) {
-        star_render_name(&painter, s, FRAME_ICRF, obj->pvo[0], size,
+        star_render_name(&painter, s, FRAME_ICRF, pvo[0], size,
                 s->vmag, color);
     }
     return 0;
