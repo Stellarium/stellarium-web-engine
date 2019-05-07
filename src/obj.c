@@ -301,8 +301,7 @@ const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr_name)
     attribute_t *attr;
     int i;
     assert(obj);
-    ASSERT(obj->klass->attributes, "type '%s' has no attributes '%s'",
-           obj->klass->id, attr_name);
+    if (!obj->klass->attributes) return NULL;
     for (i = 0; ; i++) {
         attr = &obj->klass->attributes[i];
         if (!attr->name) return NULL;
