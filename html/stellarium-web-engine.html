@@ -181,7 +181,6 @@
     methods: {
       getInfos: function(obj) {
         var stel = this.stel;
-        obj.update();
 
         var formatInt = function(num, padLen) {
           let pad = new Array(1 + padLen).join('0')
@@ -223,7 +222,7 @@
 
         var ret = [];
         var obs = stel.core.observer;
-        var cirs = stel.convertFrame(obs, 'ICRS', 'CIRS', obj.icrs);
+        var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', obj.get('radec'));
         var radec = stel.c2s(cirs);
         var ra = stel.anp(radec[0]);
         var dec = stel.anpm(radec[1]);
@@ -231,7 +230,7 @@
         var azalt = stel.c2s(observed);
         var az = stel.anp(azalt[0]);
         var alt = stel.anp(azalt[1]);
-        var vmag = obj.vmag;
+        var vmag = obj.get('vmag');
         ret.push({
           key: 'Magnitude',
           value: vmag === undefined ? 'Unknown' : vmag.toFixed(2)
