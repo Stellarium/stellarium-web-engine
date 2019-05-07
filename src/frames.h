@@ -85,15 +85,25 @@ int convert_frame(const observer_t *obs,
                         int origin, int dest, bool at_inf,
                         const double in[3], double out[3]);
 
-/* Function: convert_framev4
- * Same as convert_frame but check the 4th component of the input vector
- * to know if the source is at infinity. If in[3] == 1.0, the source is at
- * infinity and the vector must be normalized, otherwise assume the vector to
- * contain the real object's distance in AU.
+/*
+ * Function: convert_framev4
+ * Rotate a 4D vector from a frame to an other.
+ *
+ * This is the same as convert_frame, but we use the W component of the
+ * input * to know if the source is at infinity. If in[3] == 0.0, the source is
+ * at infinity and the vector must be normalized, otherwise assume the vector
+ * contains the real object's distance in AU.
+ *
+ * Parameters:
+ *   obs    - The observer.  If NULL we use the current core observer.
+ *   origin - The origin frame.  One of the <FRAME> enum values.
+ *   dest   - The dest frame.  One of the <FRAME> enum values.
+ *   in     - Input 4D vector.
+ *   out    - Output 4D vector.
  */
 int convert_framev4(const observer_t *obs,
-                        int origin, int dest,
-                        const double in[4], double out[3]);
+                    int origin, int dest,
+                    const double in[4], double out[4]);
 
 /* Enum: ORIGIN
  * Represent a reference system, i.e. the origin of a reference frame and the

@@ -182,8 +182,9 @@ int convert_frame(const observer_t *obs,
 EMSCRIPTEN_KEEPALIVE
 int convert_framev4(const observer_t *obs,
                         int origin, int dest,
-                        const double in[4], double out[3])
+                        const double in[4], double out[4])
 {
+    out[3] = in[3];
     if (in[3] == 1.0) {
         return convert_frame(obs, origin, dest, false, in, out);
     } else {
