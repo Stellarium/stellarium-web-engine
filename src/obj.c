@@ -519,6 +519,14 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     *win_angle = 0;
 }
 
+const char *obj_info_str(int info)
+{
+#define X(name, ...) if (INFO_##name == info) return #name;
+    ALL_INFO(X)
+#undef X
+    return NULL;
+}
+
 const char *obj_info_type_str(int type)
 {
     const char *names[] = {
@@ -527,6 +535,15 @@ const char *obj_info_type_str(int type)
 #undef X
     };
     return names[type];
+}
+
+int obj_info_from_str(const char *str)
+{
+#define X(name, ...) if (strcasecmp(str, #name) == 0) return INFO_##name;
+    ALL_INFO(X)
+#undef X
+    LOG_E("No such info name: %s", str);
+    return -1;
 }
 
 /******** TESTS ***********************************************************/

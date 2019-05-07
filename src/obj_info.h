@@ -53,7 +53,9 @@ enum {
 #undef X
 };
 
+const char *obj_info_str(int info);
 const char *obj_info_type_str(int type);
+int obj_info_from_str(const char *str);
 
 #undef TYPE
 
@@ -62,16 +64,17 @@ const char *obj_info_type_str(int type);
  * List of all the sky object info, with associated type.
  */
 #define ALL_INFO(X) \
-    X(VMAG,     vmag,   MAG,    1), \
-    X(TYPE,     type,   OTYPE,  2), \
-    X(NAME,     name,   STRING, 3), \
-    X(DISTANCE, distance, DIST, 4), \
-    X(RADEC,    radec,  V4,     5), \
-    X(SMIN,     smin,   ANGLE,  6), \
-    X(SMAX,     smax,   ANGLE,  7), \
-    X(MORPHO,   morpho, STRING, 8), \
-    X(PHASE,    phase,  FLOAT,  9), \
-    X(RADIUS,   radius, RADIUS, 10), \
+    X(VMAG,     vmag,   MAG,    1) \
+    X(TYPE,     type,   OTYPE,  2) \
+    X(NAME,     name,   STRING, 3) \
+    X(DISTANCE, distance, DIST, 4) \
+    X(RADEC,    radec,  V4,     5) \
+    X(SMIN,     smin,   ANGLE,  6) \
+    X(SMAX,     smax,   ANGLE,  7) \
+    X(MORPHO,   morpho, STRING, 8) \
+    X(PHASE,    phase,  FLOAT,  9) \
+    X(RADIUS,   radius, RADIUS, 10) \
+    X(PVO,      pvo,    V4X2,   11) \
 
 
 /*
@@ -79,13 +82,13 @@ const char *obj_info_type_str(int type);
  * INFO_VMAG, INFO_RADIUS, etc.
  */
 enum {
-#define X(name, lower, type, i) INFO_##name = 1024 * i + TYPE_##type
+#define X(name, lower, type, i) INFO_##name = 1024 * i + TYPE_##type,
     ALL_INFO(X)
 #undef X
 
     // Also add lowercase aliases.
     // INFO_vmag, INFO_radius, etc.
-#define X(name, lower, ...) INFO_##lower = INFO_##name
+#define X(name, lower, ...) INFO_##lower = INFO_##name,
     ALL_INFO(X)
 #undef X
 };
