@@ -99,12 +99,13 @@ static double conjunction_func(const event_type_t *type,
                                const cobj_t *o, const cobj_t *_)
 {
     double ohpos[3], shpos[3];
-    double olon, slon, lat;
+    double pvo[2][4], olon, slon, lat;
     double v;
     if (memcmp(o->obj->type, type->obj_type, 4) != 0) return NAN;
 
     // Compute obj and sun geocentric ecliptic longitudes.
-    mat3_mul_vec3(obs->ri2e, o->obj->pvo[0], ohpos);
+    obj_get_pvo(o->obj, obs, pvo);
+    mat3_mul_vec3(obs->ri2e, pvo[0], ohpos);
     mat3_mul_vec3(obs->ri2e, obs->sun_pvo[0], shpos);
     eraC2s(ohpos, &olon, &lat);
     eraC2s(shpos, &slon, &lat);
@@ -124,7 +125,7 @@ static double vertical_align_event_func(const event_type_t *type,
         {"Pla", "Pla"},
         {"Pla", "*"},
     };
-    double sep;
+    double sep, o1_pvo[2][4], o2_pvo[2][4];
     int i;
 
     // Make sure the objects are of the right types.
@@ -136,7 +137,9 @@ static double vertical_align_event_func(const event_type_t *type,
     }
     if (i == ARRAY_SIZE(types)) return NAN;
 
-    sep = eraSepp(o1->obj->pvo[0], o2->obj->pvo[0]);
+    obj_get_pvo(o1->obj, obs, o1_pvo);
+    obj_get_pvo(o2->obj, obs, o2_pvo);
+    sep = eraSepp(o1_pvo[0], o2_pvo[0]);
     if (sep > 5 * DD2R) return NAN;
     return eraAnpm(o1->ra - o2->ra);
 }
@@ -359,6 +362,19 @@ static int clean_events(event_t **events, const observer_t *obs) {
     return 0;
 }
 
+static void cobj_update(cobj_t *o, const observer_t *obs)
+{
+    double pvo[2][4], p[3];
+    if (!o) return;
+    obj_get_pvo(o->obj, obs, pvo);
+    eraC2s(pvo[0], &o->ra, &o->de);
+    o->ra = eraAnp(o->ra);
+    o->de = eraAnp(o->de);
+    convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], p);
+    o->obs_z = p[2];
+}
+
+
 // Function that can be used in the newton algo (slow).
 static double newton_fn_(double time, void *user)
 {
@@ -367,8 +383,8 @@ static double newton_fn_(double time, void *user)
     event_t *ev = USER_GET(user, 1);
     obs->tt = time;
     observer_update(obs, true);
-    if (ev->o1) obj_update(ev->o1->obj, obs, 0);
-    if (ev->o2) obj_update(ev->o2->obj, obs, 0);
+    if (ev->o1) cobj_update(ev->o1, obs);
+    if (ev->o2) cobj_update(ev->o2, obs);
     ret = ev->type->func(ev->type, obs, ev->o1, ev->o2);
     assert(!isnan(ret));
     return ret;
@@ -453,18 +469,6 @@ void calendar_delete(calendar_t *cal)
     // Delete events.
     DL_FOREACH_SAFE(cal->events, ev, ev_tmp) free(ev);
     free(cal);
-}
-
-static void cobj_update(cobj_t *o, const observer_t *obs)
-{
-    double p[3];
-    if (!o) return;
-    obj_update(o->obj, obs, 0);
-    eraC2s(o->obj->pvo[0], &o->ra, &o->de);
-    o->ra = eraAnp(o->ra);
-    o->de = eraAnp(o->de);
-    convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED, o->obj->pvo[0], p);
-    o->obs_z = p[2];
 }
 
 EMSCRIPTEN_KEEPALIVE
