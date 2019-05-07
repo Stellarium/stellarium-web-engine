@@ -223,7 +223,7 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
 
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
-    double pos[4], win_pos[2], vmag, size, luminance;
+    double pvo[2][4], win_pos[2], vmag, size, luminance;
     double label_color[4] = RGBA(255, 124, 124, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
@@ -231,8 +231,8 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     vmag = mplanet->obj.vmag;
     if (vmag > painter->stars_limit_mag) return 0;
-    obj_get_pos_icrs(obj, painter->obs, pos);
-    if (!painter_project(painter, FRAME_ICRF, pos, false, true, win_pos))
+    obj_get_pvo(obj, painter->obs, pvo);
+    if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
         return 0;
 
     mplanet->on_screen = true;
@@ -250,7 +250,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag)) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
-        labels_add_3d(mplanet->name, FRAME_ICRF, pos, false, size,
+        labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size,
                       FONT_SIZE_BASE, label_color, 0, LABEL_AROUND,
                       selected ? TEXT_BOLD : 0,
                       0, obj->oid);
