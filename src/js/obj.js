@@ -24,6 +24,8 @@ Module.afterInit(function() {
   var module_get_child = Module.cwrap('module_get_child', 'number',
     ['number', 'string']);
   var core_get_module = Module.cwrap('core_get_module', 'number', ['string']);
+  var obj_get_info_json = Module.cwrap('obj_get_info_json', 'number',
+    ['number', 'number', 'string']);
 
   // List of {obj, attr, callback}
   var g_listeners = [];
@@ -74,10 +76,23 @@ Module.afterInit(function() {
     return this.id
   }
 
-  SweObj.prototype.update = function(obs) {
-    obs = obs || Module.observer;
-    Module._obj_update(this.v, obs.v, 0.0);
+  SweObj.prototype.update = function() {
+    Module._module_update(this.v, 0.0);
   }
+
+  SweObj.prototype.get = function(info, obs) {
+    if (obs === undefined)
+      obs = Module.observer
+    var cret = obj_get_info_json(this.v, obs.v, info)
+    if (cret === 0)
+      return undefined
+    var ret = Module.UTF8ToString(cret)
+    Module._free(cret)
+    ret = JSON.parse(ret)
+    if (!ret.swe_) return ret;
+    return ret.v;
+  }
+
 
   SweObj.prototype.clone = function() {
     return new SweObj(Module._obj_clone(this.v));

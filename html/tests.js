@@ -28,9 +28,8 @@ var testBasic = function(stel) {
   assert(JSON.stringify(stel.observer.azalt) === JSON.stringify([0, 1, 0]));
   // Test sun pos.
   var sun = stel.getObj("Sun");
-  sun.update();
-  var icrs = sun.icrs;
-  var cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', icrs);
+  var pvo = sun.get('pvo', stel.observer);
+  var cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
   var ra  = stel.anp(stel.c2s(cirs)[0]);
   var dec = stel.anpm(stel.c2s(cirs)[1]);
   assert(isNear(ra, 165.48 * stel.D2R, 0.01));
@@ -44,6 +43,25 @@ var testBasic = function(stel) {
   stel.core.selection = 0;
   assert(!stel.core.selection);
 };
+
+var testInfo = function(stel) {
+  {
+    let jupiter = stel.getObj('Jupiter');
+    assert(jupiter);
+    let vmag = jupiter.get('VMAG');
+    assert(typeof vmag == 'number');
+    let phase = jupiter.get('PHASE');
+    assert(typeof phase == 'number');
+    let radius = jupiter.get('RADIUS');
+    assert(typeof radius == 'number');
+  }
+
+  {
+    let polaris = stel.getObj('HIP 11767');
+    assert(polaris);
+    let radius = polaris.get('RADIUS');
+  }
+}
 
 var testIds = function(stel) {
   var o1 = stel.getObj('HIP 11767');
@@ -64,7 +82,6 @@ var testSearch = function(stel) {
 var testCloneObserver = function(stel) {
   var obs = stel.observer.clone();
   var jupiter = stel.getObj('jupiter');
-  jupiter.update(obs);
   obs.destroy();
 };
 
@@ -81,7 +98,8 @@ var testListener = function(stel) {
 var testCalendar = function(stel) {
   var gotMoonMars = false;
   var onEvent = function(ev) {
-    if (ev.o2 && ev.o1.name == 'Moon' && ev.o2.name == 'Mars') {
+    if (ev.o2 && ev.o1.names().includes('NAME Moon') &&
+                 ev.o2.names().includes('NAME Mars')) {
       assert(ev.time);
       assert(ev.type);
       assert(ev.desc);
@@ -220,8 +238,7 @@ var testPositions = function(stel) {
   obs.longitude = -84.39 * stel.D2R;
   obs.latitude = 33.75 * stel.D2R;
   var o = stel.getObj('HIP 11767');
-  o.update(obs);
-  var icrs = o.icrs;
+  var icrs = o.get('pvo', obs)[0];
   var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', icrs);
   var a_ra  = stel.anp(stel.c2s(icrs)[0]);
   var a_dec = stel.anpm(stel.c2s(icrs)[1]);
@@ -234,6 +251,7 @@ require('./static/js/stellarium-web-engine.js')({
   onReady: function(stel) {
     testCore(stel);
     testBasic(stel);
+    testInfo(stel);
     testIds(stel);
     testSearch(stel);
     testCloneObserver(stel);
