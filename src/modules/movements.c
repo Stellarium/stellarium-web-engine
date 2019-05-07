@@ -46,8 +46,7 @@ static int on_pan(const gesture_t *gest, void *user)
     static double start_pos[3];
     projection_t proj;
 
-    projection_init(&proj, core->proj, core->fov,
-                    core->win_size[0], core->win_size[1]);
+    core_get_proj(&proj);
     screen_to_observed(core->observer, &proj, gest->pos, pos);
     if (gest->state == GESTURE_BEGIN)
         vec3_copy(pos, start_pos);
