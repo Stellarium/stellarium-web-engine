@@ -63,13 +63,12 @@ static double rise_dist(double time, void *user)
         observer_t *obs;
         obj_t *obj;
     } *data = user;
-    double radius = 0, observed[3], az, alt;
+    double radius = 0, pvo[2][4], observed[3], az, alt;
 
     data->obs->tt = time;
     observer_update(data->obs, false);
-    obj_update(data->obj, data->obs, 0);
-    convert_framev4(data->obs, FRAME_ICRF, FRAME_OBSERVED,
-                        data->obj->pvo[0], observed);
+    obj_get_pvo(data->obj, data->obs, pvo);
+    convert_framev4(data->obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], observed);
     eraC2s(observed, &az, &alt);
     az = eraAnp(az);
     if (obj_has_attr(data->obj, "radius"))
