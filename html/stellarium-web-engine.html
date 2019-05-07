@@ -109,7 +109,7 @@
               style="position:absolute; top: 64px; width:430px;"
               class="transparent">
         <v-card-title primary-title>
-          <h3>{{stel.core.selection.name}}</h3>
+          <h3>{{getTitle(stel.core.selection)}}</h3>
         </v-card-title>
         <v-card-text>
           <v-layout row wrap class="w-100">
@@ -179,6 +179,13 @@
       })
     },
     methods: {
+
+      getTitle: function(obj) {
+        var name = obj.names()[0];
+        name = name.replace(/^NAME /, '');
+        return name;
+      },
+
       getInfos: function(obj) {
         var stel = this.stel;
 
