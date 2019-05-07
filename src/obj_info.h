@@ -29,6 +29,8 @@
     X(V2,         v2,       6) \
     X(V3,         v3,       7) \
     X(V4,         v4,       8) \
+    X(V4X2,       v4x2,     9) \
+    X(OTYPE,      otype,    10) \
     /* Extended types */    \
     X(MAG,        mag,      TYPE(1, FLOAT)) \
     X(ANGLE,      angle,    TYPE(2, FLOAT)) \
@@ -61,7 +63,7 @@ const char *obj_info_type_str(int type);
  */
 #define ALL_INFO(X) \
     X(VMAG,     vmag,   MAG,    1), \
-    X(TYPE,     type,   STRING, 2), \
+    X(TYPE,     type,   OTYPE,  2), \
     X(NAME,     name,   STRING, 3), \
     X(DISTANCE, distance, DIST, 4), \
     X(RADEC,    radec,  V4,     5), \
