@@ -306,6 +306,17 @@ obj_t *obj_clone(const obj_t *obj);
 int obj_render(const obj_t *obj, const painter_t *painter);
 
 /*
+ * Function: obj_get_pvo
+ * Return the position and speed of an object.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   obs    - An observer.
+ *   pvo    - Output ICRF position with origin on the observer.
+ */
+void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4]);
+
+/*
  * Function: obj_update
  * Update the internal state of the object.
  *

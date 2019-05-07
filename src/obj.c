@@ -467,6 +467,22 @@ obj_klass_t *obj_get_klass_by_name(const char *name)
     return NULL;
 }
 
+/*
+ * Function: obj_get_pvo
+ * Return the position and speed of an object.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   obs    - An observer.
+ *   pvo    - Output ICRF position with origin on the observer.
+ */
+void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
+{
+    obj_update(obj, obs, 0);
+    vec4_copy(obj->pvo[0], pvo[0]);
+    vec4_copy(obj->pvo[1], pvo[1]);
+}
+
 void obj_get_pos_icrs(obj_t *obj, observer_t *obs, double pos[4])
 {
     obj_update(obj, obs, 0);
