@@ -119,16 +119,22 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-static int circle_update(obj_t *obj, const observer_t *obs, double dt)
+static int circle_get_info(const obj_t *obj, const observer_t *obs,
+                           int info, void *out)
 {
+    double pvo[2][4];
     circle_t *circle = (circle_t*)obj;
-    vec3_normalize(circle->pos, circle->pos);
-    convert_frame(obs, circle->frame, FRAME_ICRF, true, circle->pos,
-                  obj->pvo[0]);
-    obj->pvo[0][3] = 0.0;
-    assert(fabs(vec3_norm2(obj->pvo[0]) - 1.0) <= 0.000001);
-    obj->vmag = 99;
-    return 0;
+    switch (info) {
+    case INFO_PVO:
+        vec3_normalize(circle->pos, pvo[0]);
+        convert_frame(obs, circle->frame, FRAME_ICRF, true, pvo[0], pvo[0]);
+        pvo[0][3] = 0.0;
+        assert(fabs(vec3_norm2(pvo[0]) - 1.0) <= 0.000001);
+        vec4_set(pvo[1], 0, 0, 0, 0);
+        memcpy(out, pvo, sizeof(pvo));
+    default:
+        return 1;
+    }
 }
 
 static obj_klass_t circle_klass = {
@@ -136,7 +142,7 @@ static obj_klass_t circle_klass = {
     .size       = sizeof(circle_t),
     .init       = circle_init,
     .render     = circle_render,
-    .update     = circle_update,
+    .get_info   = circle_get_info,
     .get_2d_ellipse = circle_get_2d_ellipse,
     .attributes = (attribute_t[]) {
         PROPERTY(radec),

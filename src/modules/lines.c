@@ -204,12 +204,12 @@ static int lines_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int lines_update(obj_t *obj, const observer_t *obs, double dt)
+static int lines_update(obj_t *obj, double dt)
 {
     obj_t *line;
     int ret = 0;
     DL_FOREACH(obj->children, line)
-        ret |= line->klass->update(line, obs, dt);
+        ret |= line->klass->update(line, dt);
     return ret;
 }
 
@@ -240,7 +240,7 @@ static void lines_gui(obj_t *obj, int location)
     }
 }
 
-static int line_update(obj_t *obj, const observer_t *obs, double dt)
+static int line_update(obj_t *obj, double dt)
 {
     bool changed = false;
     line_t *line = (line_t*)obj;

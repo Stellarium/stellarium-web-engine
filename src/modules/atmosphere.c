@@ -192,7 +192,7 @@ static float compute_lum(void *user, const float pos[3])
     return lum;
 }
 
-static int atmosphere_update(obj_t *obj, const observer_t *obs, double dt)
+static int atmosphere_update(obj_t *obj, double dt)
 {
     atmosphere_t *atm = (atmosphere_t*)obj;
     return fader_update(&atm->visible, dt);
@@ -220,12 +220,13 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     PROFILE(atmosphere_render, 0);
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun, *moon;
-    double sun_pos[4], moon_pos[4], moon_phase;
+    double sun_pos[4], moon_pos[4], moon_phase, sun_vmag, moon_vmag;
     render_data_t data;
     const double T = 5.0;
     int i;
     painter_t painter = *painter_;
     core->lwsky_average = 0.0001;
+    observer_t *obs = painter.obs;
 
     if (atm->visible.value == 0.0) return 0;
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
@@ -236,15 +237,17 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     obj_get_pos_observed(moon, painter.obs, moon_pos);
     vec3_normalize(sun_pos, sun_pos);
     vec3_normalize(moon_pos, moon_pos);
+    obj_get_info(sun, obs, INFO_VMAG, &sun_vmag);
+    obj_get_info(moon, obs, INFO_VMAG, &moon_vmag);
 
     // XXX: this could be cached!
-    data = prepare_render_data(sun_pos, sun->vmag, moon_pos, moon->vmag, T);
+    data = prepare_render_data(sun_pos, sun_vmag, moon_pos, moon_vmag, T);
     data.lum_scale = atm->lum_scale;
     // This is quite ad-hoc as in reality we are using a HIPS grid
     data.grid_angular_step = 8. * DD2R;
-    obj_get_attr(moon, "phase", &moon_phase);
+    obj_get_info(moon, obs, INFO_PHASE, &moon_phase);
     prepare_skybrightness(&data.skybrightness,
-            &painter, sun_pos, moon_pos, moon->vmag, moon_phase,
+            &painter, sun_pos, moon_pos, moon_vmag, moon_phase,
             atm->twilight_coef);
 
     // Set the shader attributes.

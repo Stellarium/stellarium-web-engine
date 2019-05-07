@@ -37,6 +37,10 @@ typedef struct {
     char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
     bool        on_screen;  // Set once the object has been visible.
+
+    // Cached values.
+    float       vmag;
+    double      pvo[2][4];
 } mplanet_t;
 
 /*
@@ -197,10 +201,9 @@ static int mplanet_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
+static int mplanet_update(mplanet_t *mp, const observer_t *obs)
 {
     double pvh[2][3], pvo[2][3];
-    mplanet_t *mp = (mplanet_t*)obj;
 
     orbit_compute_pv(0, obs->ut1, pvh[0], pvh[1],
             mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
@@ -210,15 +213,31 @@ static int mplanet_update(obj_t *obj, const observer_t *obs, double dt)
     mat3_mul_vec3(obs->re2i, pvh[0], pvh[0]);
     mat3_mul_vec3(obs->re2i, pvh[1], pvh[1]);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
-    vec3_copy(pvo[0], obj->pvo[0]);
-    vec3_copy(pvo[1], obj->pvo[1]);
-    obj->pvo[0][3] = 1.0; // AU unit.
-    obj->pvo[1][3] = 1.0;
+    vec3_copy(pvo[0], mp->pvo[0]);
+    vec3_copy(pvo[1], mp->pvo[1]);
+    mp->pvo[0][3] = 1.0; // AU unit.
+    mp->pvo[1][3] = 1.0;
 
     // Compute vmag using algo from
     // http://www.britastro.org/asteroids/dymock4.pdf
-    mp->obj.vmag = compute_magnitude(mp->h, mp->g, pvh[0], pvo[0]);
+    mp->vmag = compute_magnitude(mp->h, mp->g, pvh[0], pvo[0]);
     return 0;
+}
+
+static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
+                            void *out)
+{
+    mplanet_t *mp = (mplanet_t*)obj;
+    mplanet_update(mp, obs);
+    switch (info) {
+    case INFO_PVO:
+        memcpy(out, mp->pvo, sizeof(mp->pvo));
+        return 0;
+    case INFO_VMAG:
+        *(double*)out = mp->vmag;
+        return 0;
+    }
+    return 1;
 }
 
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
@@ -229,7 +248,8 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
-    vmag = mplanet->obj.vmag;
+    mplanet_update(mplanet, painter->obs);
+    vmag = mplanet->vmag;
     if (vmag > painter->stars_limit_mag) return 0;
     obj_get_pvo(obj, painter->obs, pvo);
     if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
@@ -307,7 +327,6 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
                 child->obj.oid != selection_oid &&
                 !range_contains(mps->update_pos, update_nb, nb, i))
             continue;
-        obj_update((obj_t*)child, painter->obs, 0);
         obj_render((obj_t*)child, painter);
     }
     mps->update_pos = nb ? (mps->update_pos + update_nb) % nb : 0;
@@ -339,18 +358,9 @@ static obj_klass_t mplanet_klass = {
     .model      = "mpc_asteroid",
     .size       = sizeof(mplanet_t),
     .init       = mplanet_init,
-    .update     = mplanet_update,
+    .get_info   = mplanet_get_info,
     .render     = mplanet_render,
     .get_designations = mplanet_get_designations,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        INFO(name),
-        INFO(distance),
-        INFO(radec),
-        INFO(vmag),
-        INFO(type),
-        {},
-    },
 };
 OBJ_REGISTER(mplanet_klass)
 

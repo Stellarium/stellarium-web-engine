@@ -38,7 +38,9 @@ typedef struct satellite {
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag; // Taken from the qsmag data.
-    double pvg[3];
+    double pvg[3]; // XXX: rename that.
+    double pvo[2][4];
+    double vmag;
 } satellite_t;
 
 // Module class.
@@ -173,19 +175,13 @@ static bool load_data(satellites_t *sats)
     return true;
 }
 
-static int satellites_update(obj_t *obj, const observer_t *obs, double dt)
+static int satellites_update(obj_t *obj, double dt)
 {
     PROFILE(satellites_update, 0);
     satellites_t *sats = (satellites_t*)obj;
-    satellite_t *sat;
     if (!sats->source_url) return 0;
     if (!load_qsmag(sats)) return 0;
     if (!load_data(sats)) return 0;
-
-    MODULE_ITER(sats, sat, "tle_satellite") {
-        obj_update((obj_t*)sat, obs, dt);
-    }
-
     return 0;
 }
 
@@ -248,7 +244,7 @@ static double satellite_compute_vmag(const satellite_t *sat,
     double observed[3];
 
     convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, false,
-                        sat->obj.pvo[0], observed);
+                        sat->pvo[0], observed);
     if (observed[2] < 0.0) return 99; // Below horizon.
     illumination = satellite_compute_earth_shadow(sat, obs);
     if (illumination == 0.0) {
@@ -266,8 +262,8 @@ static double satellite_compute_vmag(const satellite_t *sat,
     //                  [ 0 <= fracil <= 1 ]
     // (https://www.prismnet.com/~mmccants/tles/mccdesc.html)
 
-    range = vec3_norm(sat->obj.pvo[0]) * DAU / 1000; // Distance in km.
-    elong = eraSepp(obs->sun_pvo[0], sat->obj.pvo[0]);
+    range = vec3_norm(sat->pvo[0]) * DAU / 1000; // Distance in km.
+    elong = eraSepp(obs->sun_pvo[0], sat->pvo[0]);
     fracil = 0.5 * (1. + cos(elong));
     return sat->stdmag - 15.75 + 2.5 * log10(range * range / fracil);
 }
@@ -281,7 +277,7 @@ static int satellite_init(obj_t *obj, json_value *args)
     double startmfe, stopmfe, deltamin;
     int norad_num = 0;
 
-    sat->obj.vmag = SATELLITE_DEFAULT_MAG;
+    sat->vmag = SATELLITE_DEFAULT_MAG;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         norad_num = json_get_attr_i(model, "norad_num", 0);
@@ -304,10 +300,9 @@ static int satellite_init(obj_t *obj, json_value *args)
 /*
  * Update an individual satellite.
  */
-static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
+static int satellite_update(satellite_t *sat, const observer_t *obs)
 {
     double pv[2][3];
-    satellite_t *sat = (satellite_t*)obj;
     sgp4(sat->elsetrec, obs->tt, pv[0],  pv[1]); // Orbit computation.
 
     vec3_mul(1000.0 / DAU, pv[0], pv[0]);
@@ -316,14 +311,31 @@ static int satellite_update(obj_t *obj, const observer_t *obs, double dt)
     vec3_copy(pv[0], sat->pvg);
 
     position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
-    vec3_copy(pv[0], obj->pvo[0]);
-    vec3_copy(pv[1], obj->pvo[1]);
-    obj->pvo[0][3] = 1.0; // AU
-    obj->pvo[1][3] = 1.0;
+    vec3_copy(pv[0], sat->pvo[0]);
+    vec3_copy(pv[1], sat->pvo[1]);
+    sat->pvo[0][3] = 1.0; // AU
+    sat->pvo[1][3] = 0.0;
 
-    sat->obj.vmag = satellite_compute_vmag(sat, obs);
+    sat->vmag = satellite_compute_vmag(sat, obs);
     return 0;
 }
+
+static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
+                              void *out)
+{
+    satellite_t *sat = (satellite_t*)obj;
+    satellite_update(sat, obs);
+    switch (info) {
+    case INFO_PVO:
+        memcpy(out, sat->pvo, sizeof(sat->pvo));
+        return 0;
+    case INFO_VMAG:
+        *(double*)out = sat->vmag;
+        return 0;
+    }
+    return 1;
+}
+
 
 /*
  * Render an individual satellite.
@@ -338,10 +350,11 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     satellite_t *sat = (satellite_t*)obj;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
-    vmag = obj->vmag;
+    satellite_update(sat, painter.obs);
+    vmag = sat->vmag;
     if (vmag > painter.stars_limit_mag) return 0;
 
-    if (!painter_project(&painter, FRAME_ICRF, obj->pvo[0], false, true, p_win))
+    if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return 0;
 
     core_get_point_for_mag(vmag, &size, &luminance);
@@ -365,7 +378,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     // Render name if needed.
     size = max(8, size);
     if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 1.0)) {
-        labels_add_3d(sat->name, FRAME_ICRF, obj->pvo[0], false, size,
+        labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size,
                       FONT_SIZE_BASE, label_color, 0, LABEL_AROUND,
                       selected ? TEXT_BOLD : 0,
                       0, obj->oid);
@@ -397,19 +410,9 @@ static obj_klass_t satellite_klass = {
     .flags          = 0,
     .render_order   = 30,
     .init           = satellite_init,
-    .update         = satellite_update,
+    .get_info       = satellite_get_info,
     .render         = satellite_render,
     .get_designations = satellite_get_designations,
-
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        INFO(name),
-        INFO(distance),
-        INFO(radec),
-        INFO(vmag),
-        INFO(type),
-        {}
-    },
 };
 OBJ_REGISTER(satellite_klass)
 

@@ -115,16 +115,6 @@ static uint64_t make_oid(uint64_t nuniq, int index)
     return oid_create("NDSO", (uint32_t)nuniq << 12 | index);
 }
 
-static int dso_update(obj_t *obj, const observer_t *obs, double dt)
-{
-    dso_t *dso = (dso_t*)obj;
-    astrometric_to_apparent(obs, dso->data.bounding_cap, true, obj->pvo[0]);
-    obj->pvo[0][3] = 0.0;
-    assert(fabs(vec3_norm2(obj->pvo[0]) - 1.0) <= 0.000001);
-    obj->vmag = dso->data.vmag;
-    return 0;
-}
-
 static dso_t *dso_create(const dso_data_t *data)
 {
     dso_t *dso;
@@ -132,10 +122,35 @@ static dso_t *dso_create(const dso_data_t *data)
     dso->data = *data;
     memcpy(&dso->obj.type, data->type, 4);
     dso->obj.oid = data->oid;
-    dso->obj.vmag = data->vmag;
-    dso_update(&dso->obj, core->observer, 0);
     return dso;
 }
+
+static int dso_get_info(const obj_t *obj, const observer_t *obs, int info,
+                        void *out)
+{
+    dso_t *dso = (dso_t*)obj;
+    switch (info) {
+    case INFO_PVO:
+        memset(out, 0, 4 * sizeof(double));
+        astrometric_to_apparent(obs, dso->data.bounding_cap, true, out);
+        return 0;
+    case INFO_VMAG:
+        *(double*)out = dso->data.vmag;
+        return 0;
+    case INFO_SMIN:
+        *(double*)out = dso->data.smin;
+        return 0;
+    case INFO_SMAX:
+        *(double*)out = dso->data.smax;
+        return 0;
+    case INFO_MORPHO:
+        *(char**)out = dso->data.morpho;
+        return 0;
+    default:
+        return 1;
+    }
+}
+
 
 // Turn a json array of string into a '\0' separated C string.
 // Move this in utils?
@@ -582,7 +597,7 @@ static int render_visitor(int order, int pix, void *user)
     return 1;
 }
 
-static int dsos_update(obj_t *obj, const observer_t *obs, double dt)
+static int dsos_update(obj_t *obj, double dt)
 {
     dsos_t *dsos = (dsos_t*)obj;
     return fader_update(&dsos->visible, dt);
@@ -714,22 +729,10 @@ static obj_klass_t dso_klass = {
     .id = "dso",
     .size = sizeof(dso_t),
     .init = dso_init,
-    .update = dso_update,
+    .get_info = dso_get_info,
     .render = dso_render,
     .get_designations = dso_get_designations,
     .get_2d_ellipse = dso_get_2d_ellipse,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        INFO(name),
-        INFO(distance),
-        INFO(radec),
-        INFO(vmag),
-        INFO(type),
-        INFO(smin, TYPE_ANGLE, MEMBER(dso_t, data.smin)),
-        INFO(smax, TYPE_ANGLE, MEMBER(dso_t, data.smax)),
-        INFO(morpho, TYPE_STRING_PTR, MEMBER(dso_t, data.morpho)),
-        {},
-    },
 };
 OBJ_REGISTER(dso_klass)
 

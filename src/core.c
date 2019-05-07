@@ -430,7 +430,7 @@ int core_update(double dt)
     DL_SORT(core->obj.children, modules_sort_cmp);
     DL_FOREACH(core->obj.children, module) {
         if (module->klass->update) {
-            r = module->klass->update(module, core->observer, dt);
+            r = module->klass->update(module, dt);
             if (r < 0) LOG_E("Error updating module '%s'", module->id);
         }
     }
@@ -1121,6 +1121,15 @@ static void test_basic(void)
     obj_release(obj);
 }
 
+static void test_info(void)
+{
+    obj_t *obj;
+    double vmag;
+    obj = obj_get_by_oid(NULL, oid_create("HORI", 599), 0); // Jupiter.
+    assert(obj);
+    obj_get_info(obj, core->observer, INFO_VMAG, &vmag);
+}
+
 static void test_set_city(void)
 {
     double lat;
@@ -1145,6 +1154,7 @@ static void test_set_city(void)
 TEST_REGISTER(NULL, test_core, TEST_AUTO);
 TEST_REGISTER(NULL, test_vec, TEST_AUTO);
 TEST_REGISTER(NULL, test_basic, TEST_AUTO);
+TEST_REGISTER(NULL, test_info, TEST_AUTO);
 TEST_REGISTER(NULL, test_set_city, TEST_AUTO);
 
 #endif

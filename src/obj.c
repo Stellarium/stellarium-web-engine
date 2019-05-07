@@ -27,27 +27,6 @@ typedef struct {
 // Global list of all the registered klasses.
 static obj_klass_t *g_klasses = NULL;
 
-static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
-                                      const json_value *args);
-static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
-                                       const json_value *args);
-
-// List of default attributes for given names.
-static const attribute_t DEFAULT_ATTRIBUTES[] = {
-    { "visible", TYPE_BOOL},
-    { "name", TYPE_STRING, .fn = obj_fn_default_name,
-      .desc = "Common name for the object." },
-    { "radec", TYPE_V4, .fn = obj_fn_default_pos,
-      .desc = "Cartesian 3d vector of the ra/dec position (ICRS)."},
-    { "vmag", TYPE_MAG, MEMBER(obj_t, vmag),
-      .desc = "Visual magnitude"},
-    { "distance", TYPE_DIST, .fn = obj_fn_default_pos,
-      .desc = "Distance (AU)." },
-    { "type", TYPE_STRING, MEMBER(obj_t, type),
-      .desc = "Type id string as defined by Simbad."},
-};
-
-
 static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
                           json_value *args)
 {
@@ -175,16 +154,117 @@ int obj_render(const obj_t *obj, const painter_t *painter)
         return 0;
 }
 
-EMSCRIPTEN_KEEPALIVE
-int obj_update(obj_t *obj, observer_t *obs, double dt)
+/*
+ * Function: obj_get_pvo
+ * Return the position and speed of an object.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   obs    - An observer.
+ *   pvo    - Output ICRF position with origin on the observer.
+ */
+void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 {
-    int ret;
-    assert(!obs || obs->hash != 0);
-    if (!obj->klass->update) return 0;
+    assert(obj->klass->get_info);
+    obj->klass->get_info(obj, obs, INFO_PVO, pvo);
+}
+
+int obj_get_info(obj_t *obj, observer_t *obs, int info,
+                 void *out)
+{
+    double pvo[2][4];
+
     observer_update(obs, true);
-    assert(obs->astrom.em);
-    ret = obj->klass->update(obj, obs, dt);
-    return ret;
+    switch (info) {
+    case INFO_TYPE:
+        strncpy(out, obj->type, 4);
+        return 0;
+    case INFO_RADEC: // First component of the PVO info.
+        obj_get_info(obj, obs, INFO_PVO, pvo);
+        memcpy(out, pvo[0], sizeof(pvo[0]));
+        return 0;
+    case INFO_DISTANCE:
+        obj_get_pvo(obj, obs, pvo);
+        *(double*)out = pvo[0][3] ? vec3_norm(pvo[0]) : NAN;
+        return 0;
+    default:
+        break;
+    }
+
+    if (obj->klass->get_info) {
+        observer_update(obs, true);
+        return obj->klass->get_info(obj, obs, info, out);
+    }
+    return 1;
+}
+
+EMSCRIPTEN_KEEPALIVE
+char *obj_get_info_json(const obj_t *obj, observer_t *obs,
+                        const char *info_str)
+{
+    int info = obj_info_from_str(info_str);
+    int type = info % 16;
+    int r = 0;
+    union {
+        bool b;
+        int d;
+        char otype[4];
+        double f;
+        double v2[2];
+        double v3[3];
+        double v4[4];
+        double v4x2[2][4];
+        const char *s_ptr;
+    } v;
+    char *ret = NULL;
+    char *json = NULL;
+
+    r = obj_get_info(obj, obs, info, &v);
+    if (r) return NULL;
+
+    switch (type) {
+    case TYPE_FLOAT:
+        r = asprintf(&ret, "%.12f", v.f);
+        break;
+    case TYPE_INT:
+        r = asprintf(&ret, "%d", v.d);
+        break;
+    case TYPE_BOOL:
+        r = asprintf(&ret, "%s", v.b ? "true" : "fasle");
+        break;
+    case TYPE_OTYPE:
+        r = asprintf(&ret, "\"%.4s\"", v.otype);
+        break;
+    case TYPE_STRING:
+        r = asprintf(&ret, "%s", v.s_ptr);
+        break;
+    case TYPE_V2:
+        r = asprintf(&ret, "[%.12f, %.12f]", VEC2_SPLIT(v.v2));
+        break;
+    case TYPE_V3:
+        r = asprintf(&ret, "[%.12f, %.12f, %.12f]", VEC3_SPLIT(v.v3));
+        break;
+    case TYPE_V4:
+        r = asprintf(&ret, "[%.12f, %.12f, %.12f, %.12f]", VEC4_SPLIT(v.v4));
+        break;
+    case TYPE_V4X2:
+        r = asprintf(&ret, "[[%.12f, %.12f, %.12f, %.12f],"
+                            "[%.12f, %.12f, %.12f, %.12f]]",
+                     VEC4_SPLIT(v.v4x2[0]), VEC4_SPLIT(v.v4x2[1]));
+        break;
+    default:
+        assert(false);
+        return NULL;
+    }
+    if (r < 0) LOG_E("Cannot generate json");
+
+    /* Turn the result into an json object with a 'v' attribute, so that this
+     * is a proper json document.
+     * Also add the 'swe_' attribute as a convention.  */
+    r = asprintf(&json, "{\"swe_\":1, \"v\":%s}", ret);
+    (void)r;
+    free(ret);
+    return json;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -217,29 +297,6 @@ int obj_get_designations(const obj_t *obj, void *user,
     if (obj->klass->get_designations)
         obj->klass->get_designations(obj, USER_PASS(f, user, &nb), on_name);
     return nb;
-}
-
-static json_value *obj_fn_default_name(obj_t *obj, const attribute_t *attr,
-                                       const json_value *args)
-{
-    char buf[128];
-    return args_value_new(TYPE_STRING, obj_get_name(obj, buf));
-}
-
-static json_value *obj_fn_default_pos(obj_t *obj, const attribute_t *attr,
-                                      const json_value *args)
-{
-    if (strcmp(attr->name, "distance") == 0) {
-        return args_value_new(TYPE_DIST,
-                obj->pvo[0][3] == 0 ? NAN :
-                vec3_norm(obj->pvo[0]));
-    }
-    // Radec is in local ICRS, i.e. equatorial J2000 observer centered
-    if (strcmp(attr->name, "radec") == 0) {
-        return args_value_new(TYPE_V4, obj->pvo[0]);
-    }
-    assert(false);
-    return NULL;
 }
 
 // XXX: cleanup this code.
@@ -409,36 +466,10 @@ int obj_set_attr(const obj_t *obj, const char *name, ...)
     return 0;
 }
 
-// Setup the default values of an attribute.
-static void init_attribute(attribute_t *attr)
-{
-    int i;
-    if (attr->fn) return;
-    for (i = 0; i < ARRAY_SIZE(DEFAULT_ATTRIBUTES); i++) {
-        if (strcmp(attr->name, DEFAULT_ATTRIBUTES[i].name) == 0) break;
-    }
-    if (i == ARRAY_SIZE(DEFAULT_ATTRIBUTES)) return;
-    attr->desc = attr->desc ?: DEFAULT_ATTRIBUTES[i].desc;
-    attr->type = attr->type ?: DEFAULT_ATTRIBUTES[i].type;
-    if (!attr->member.size) {
-        attr->member = DEFAULT_ATTRIBUTES[i].member;
-        attr->type = attr->type ?: DEFAULT_ATTRIBUTES[i].type;
-        attr->fn = attr->fn ?: DEFAULT_ATTRIBUTES[i].fn;
-    }
-    if (attr->member.size) assert(attr->type);
-}
-
 void obj_register_(obj_klass_t *klass)
 {
-    attribute_t *attr;
     assert(klass->size);
     LL_PREPEND(g_klasses, klass);
-    // Init all the default attributes.
-    if (klass->attributes) {
-        for (attr = &klass->attributes[0]; attr->name; attr++) {
-            init_attribute(attr);
-        }
-    }
 }
 
 static int klass_sort_cmp(void *a, void *b)
@@ -466,28 +497,11 @@ obj_klass_t *obj_get_klass_by_name(const char *name)
     return NULL;
 }
 
-/*
- * Function: obj_get_pvo
- * Return the position and speed of an object.
- *
- * Parameters:
- *   obj    - A sky object.
- *   obs    - An observer.
- *   pvo    - Output ICRF position with origin on the observer.
- */
-void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
-{
-    obj_update(obj, obs, 0);
-    vec4_copy(obj->pvo[0], pvo[0]);
-    vec4_copy(obj->pvo[1], pvo[1]);
-}
-
 void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])
 {
     double pvo[2][4];
     obj_get_pvo(obj, obs, pvo);
-    convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, 0, pvo[0], pvo[0]);
-    vec4_copy(pvo[0], pos);
+    convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, 0, pvo[0], pos);
 }
 
 void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
@@ -495,8 +509,8 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
                         double win_pos[2], double win_size[2],
                         double* win_angle)
 {
-    double pvo[2][4], p2[4];
-    double s, luminance, radius;
+    double pvo[2][4], p[4];
+    double vmag, s, luminance, radius;
 
     if (obj->klass->get_2d_ellipse) {
         obj->klass->get_2d_ellipse(obj, obs, proj,
@@ -509,11 +523,12 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     // Ellipse center
     obj_get_pvo(obj, obs, pvo);
     vec3_normalize(pvo[0], pvo[0]);
-    convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, pvo[0], p2);
-    project(proj, PROJ_TO_WINDOW_SPACE, 2, p2, win_pos);
+    convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, pvo[0], p);
+    project(proj, PROJ_TO_WINDOW_SPACE, 2, p, win_pos);
 
     // Empirical formula to compute the pointer size.
-    core_get_point_for_mag(obj->vmag, &s, &luminance);
+    obj_get_info(obj, obs, INFO_VMAG, &vmag);
+    core_get_point_for_mag(vmag, &s, &luminance);
     s *= 2;
 
     if (obj_has_attr(obj, "radius")) {

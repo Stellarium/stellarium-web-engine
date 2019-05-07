@@ -79,7 +79,6 @@ typedef struct obj_klass obj_klass_t;
  * Methods:
  *   init   - Called when a new instance is created.
  *   del    - Called when an instance is destroyed.
- *   update - Update the object for a new observer.
  *   render - Render the object.
  *   post_render - Called after all modules are rendered, but with a still
  *                 valid OpenGL context. Useful for e.g. GUI rendering.
@@ -93,6 +92,7 @@ typedef struct obj_klass obj_klass_t;
  *                  created in the right order.
  *
  * Module Methods:
+ *   update  - Update the module.
  *   list    - List all the sky objects children from this module.
  *   get_render_order - Return the render order.
  *   on_mouse   - Called when there is a mouse event.
@@ -106,17 +106,20 @@ struct obj_klass
     // Various methods to manipulate objects of this class.
     int (*init)(obj_t *obj, json_value *args);
     void (*del)(obj_t *obj);
-    int (*update)(obj_t *obj, const observer_t *obs, double dt);
+    int (*get_info)(const obj_t *obj, const observer_t *obs, int info,
+                    void *out);
     int (*render)(const obj_t *obj, const painter_t *painter);
     int (*post_render)(const obj_t *obj, const painter_t *painter);
-    obj_t* (*clone)(const obj_t *obj);
     int (*render_pointer)(const obj_t *obj, const painter_t *painter);
     void (*get_2d_ellipse)(const obj_t *obj, const observer_t *obs,
                            const projection_t *proj,
                            double win_pos[2], double win_size[2],
                            double* win_angle);
+
+    // For modules objects.
     int (*on_mouse)(obj_t *obj, int id, int state, double x, double y);
 
+    int (*update)(obj_t *module, double dt);
     // Find a sky object given an id.
     obj_t *(*get)(const obj_t *obj, const char *id, int flags);
     // Find a sky object given an oid
@@ -129,7 +132,7 @@ struct obj_klass
 
     void (*gui)(obj_t *obj, int location);
 
-    // For modules objects.
+    obj_t* (*clone)(const obj_t *obj);
     // List all the sky objects children from this module.
     int (*list)(const obj_t *obj, observer_t *obs, double max_mag,
                 uint64_t hint, void *user,
@@ -192,11 +195,6 @@ struct obj
     char        type_padding_; // Ensure that type is null terminated.
     obj_t       *parent;
     obj_t       *children, *prev, *next;
-
-    // Must be up to date after a call to obj_update.
-    double      vmag;
-    // Barycentric position/velocity in ICRF as seen from observer
-    double      pvo[2][4];
 };
 
 /*
@@ -243,14 +241,6 @@ struct attribute {
  * Convenience macro to define a property attribute.
  */
 #define PROPERTY(name, ...) {#name, ##__VA_ARGS__, .is_prop = true}
-
-/*
- * Macro: INFO
- * Convenience macro to define an info property.
- */
-#define INFO(name, ...) {#name, ##__VA_ARGS__, .is_prop = true, \
-                         .info = INFO_##name}
-
 
 /*
  * Macro: FUNCTION
@@ -317,14 +307,36 @@ int obj_render(const obj_t *obj, const painter_t *painter);
 void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4]);
 
 /*
- * Function: obj_update
- * Update the internal state of the object.
+ * Function: obj_get_info
+ * Compute an information value from a sky object.
+ *
+ * This is the function that should be used to get any of the informations
+ * listed in obj_info.h from a sky object.  For example to get the visual
+ * magnitude of an object from a given observer:
+ *
+ *   double vmag;
+ *   obj_get_info(obj, obs, INFO_VMAG, &vmag);
+ *
+ * Each object class define what info they support with the get_info method.
  *
  * Parameters:
- *   obs - The observer (can be null for non astro objects, like ui, etc).
- *   dt  - User delta time (used for example for fading effects).
+ *   obj    - A sky object.
+ *   obs    - An observer.
+ *   info   - An info enum, as defined in obj_info.h (INFO_VMAG,
+ *            INFO_TYPE, INFO_NAME, INFO_DISTANCE, etc).
+ *   out    - Pointer to a variable large enough to get the info type.
+ *
+ * Return:
+ *   0 if the info exists, 1 if not.
  */
-int obj_update(obj_t *obj, observer_t *obs, double dt);
+int obj_get_info(obj_t *obj, observer_t *obs, int info, void *out);
+
+/*
+ * Function: obj_get_info_json
+ * Same as obj_get_info, but the info as a string, and return the result
+ * as a json object
+ */
+char *obj_get_info_json(const obj_t *obj, observer_t *obs, const char *info);
 
 /*
  * Function: obj_get_pos_observed

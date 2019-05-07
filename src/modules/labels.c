@@ -193,7 +193,7 @@ skip:;
     return 0;
 }
 
-static int labels_update(obj_t *obj, const observer_t *obs, double dt)
+static int labels_update(obj_t *obj, double dt)
 {
     label_t *label = (label_t *)obj;
     DL_FOREACH(g_labels->labels, label) {

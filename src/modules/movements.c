@@ -158,7 +158,7 @@ static int movements_on_mouse(obj_t *obj, int id, int state,
     return 0;
 }
 
-static int movements_update(obj_t *obj, const observer_t *obs, double dt)
+static int movements_update(obj_t *obj, double dt)
 {
     const double ZOOM_FACTOR = 1.05;
     const double MOVE_SPEED  = 1 * DD2R;

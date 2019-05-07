@@ -73,7 +73,7 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static int dss_update(obj_t *obj, const observer_t *obs, double dt)
+static int dss_update(obj_t *obj, double dt)
 {
     dss_t *dss = (dss_t*)obj;
     return fader_update(&dss->visible, dt);

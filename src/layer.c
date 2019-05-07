@@ -12,7 +12,7 @@
 // Special type of object that is just here to contain other objects.
 
 static double layer_get_render_order(const obj_t *obj);
-static int layer_update(obj_t *obj, const observer_t *obs, double dt);
+static int layer_update(obj_t *obj, double dt);
 static int layer_render(const obj_t *obj, const painter_t *painter);
 static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint);
 
@@ -44,12 +44,15 @@ static double layer_get_render_order(const obj_t *obj)
     return layer->z;
 }
 
-static int layer_update(obj_t *obj, const observer_t *obs, double dt)
+static int layer_update(obj_t *obj, double dt)
 {
     layer_t *layer = (layer_t*)obj;
     obj_t *child;
     fader_update(&layer->visible, dt);
-    MODULE_ITER(obj, child, NULL) obj_update(child, obs, dt);
+    MODULE_ITER(obj, child, NULL) {
+        if (child->klass->flags & OBJ_MODULE)
+            module_update(child, dt);
+    }
     return 0;
 }
 

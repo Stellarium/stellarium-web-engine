@@ -219,7 +219,7 @@ static int process_source(sources_t *sources, source_t *source)
     return 1;
 }
 
-static int sources_update(obj_t *obj, const observer_t *obs, double dt)
+static int sources_update(obj_t *obj, double dt)
 {
     sources_t *sources = (sources_t*)obj;
     source_t *source, *tmp;

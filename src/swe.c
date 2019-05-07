@@ -259,7 +259,7 @@ static void test_ephemeris(void)
     struct { double apparent_radec[4], apparent_azalt[4]; } expected;
     const double precision_radec = 15.0 / 3600;
     const double precision_azalt = 2. / 60;
-    double sep, apparent_radec_icrf[4];
+    double sep, pvo[2][4];
 
     core_init(100, 100, 1.0);
     for (i = 0; i < ARRAY_SIZE(ephs); i++) {
@@ -272,12 +272,11 @@ static void test_ephemeris(void)
         obj = obj_get_by_oid(NULL, ephs[i].oid, 0);
         assert(obj);
 
-        obj_update(obj, core->observer, 0);
-        obj_get_attr(obj, "radec", apparent_radec_icrf);
+        obj_get_pvo(obj, core->observer, pvo);
         convert_framev4(obs, FRAME_ICRF, FRAME_JNOW,
-                          apparent_radec_icrf, got.apparent_radec);
+                        pvo[0], got.apparent_radec);
         convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED,
-                          apparent_radec_icrf, got.apparent_azalt);
+                        pvo[0], got.apparent_azalt);
 
         eraS2c(ephs[i].ra * DD2R, ephs[i].dec * DD2R, expected.apparent_radec);
         eraS2c(ephs[i].az * DD2R, ephs[i].alt * DD2R, expected.apparent_azalt);

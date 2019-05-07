@@ -33,6 +33,10 @@ typedef struct {
     orbit_t     orbit;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
     bool        on_screen;  // Set once the object has been visible.
+
+    // Cached values.
+    double      vmag;
+    double      pvo[2][4];
 } comet_t;
 
 /*
@@ -94,7 +98,7 @@ static void load_data(comets_t *comets, const char *data)
         strncpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
         strcpy(comet->name, desgn);
         comet->obj.oid = oid_create("Com", line_idx);
-        comet->obj.pvo[0][0] = NAN;
+        comet->pvo[0][0] = NAN;
     }
 
     if (nb_err) {
@@ -104,9 +108,8 @@ static void load_data(comets_t *comets, const char *data)
     LOG_I("Parsed %d comets", nb);
 }
 
-static int comet_update(obj_t *obj, const observer_t *obs, double dt)
+static int comet_update(comet_t *comet, const observer_t *obs)
 {
-    comet_t *comet = (comet_t*)obj;
     double a, p, n, ph[2][3], pv[2][3], or, sr, b, v, w, r, o, u, i;
     const double K = 0.01720209895; // AU, day
 
@@ -147,19 +150,35 @@ static int comet_update(obj_t *obj, const observer_t *obs, double dt)
 
     vec3_set(ph[1], 0, 0, 0);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, pv);
-    vec3_copy(pv[0], obj->pvo[0]);
-    obj->pvo[0][3] = 1;
-    vec3_copy(pv[1], obj->pvo[1]);
-    obj->pvo[1][3] = 0;
+    vec3_copy(pv[0], comet->pvo[0]);
+    comet->pvo[0][3] = 1;
+    vec3_copy(pv[1], comet->pvo[1]);
+    comet->pvo[1][3] = 0;
 
     // Compute vmag.
     // We use the g,k model: m = g + 5*log10(D) + 2.5*k*log10(r)
     // (http://www.clearskyinstitute.com/xephem/help/xephem.html)
     sr = vec3_norm(ph[0]);
-    or = vec3_norm(obj->pvo[0]);
-    comet->obj.vmag = comet->amag + 5 * log10(or) +
+    or = vec3_norm(comet->pvo[0]);
+    comet->vmag = comet->amag + 5 * log10(or) +
                       2.5 * comet->slope_param * log10(sr);
     return 0;
+}
+
+static int comet_get_info(const obj_t *obj, const observer_t *obs, int info,
+                          void *out)
+{
+    comet_t *comet = (comet_t*)obj;
+    comet_update(comet, obs);
+    switch (info) {
+    case INFO_PVO:
+        memcpy(out, comet->pvo, sizeof(comet->pvo));
+        return 0;
+    case INFO_VMAG:
+        *(double*)out = comet->vmag;
+        return 0;
+    }
+    return 1;
 }
 
 void comet_get_designations(
@@ -178,11 +197,11 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
     double label_color[4] = RGBA(255, 124, 124, 255);
     const bool selected = core->selection && obj->oid == core->selection->oid;
-    vmag = comet->obj.vmag;
+    vmag = comet->vmag;
 
     if (vmag > painter->stars_limit_mag) return 0;
-    if (isnan(obj->pvo[0][0])) return 0; // For the moment!
-    if (!painter_project(painter, FRAME_ICRF, obj->pvo[0], false, true,
+    if (isnan(comet->pvo[0][0])) return 0; // For the moment!
+    if (!painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true,
                          win_pos))
         return 0;
 
@@ -201,7 +220,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     if (*comet->name && (selected || vmag < painter->hints_limit_mag)) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
-        labels_add_3d(comet->name, FRAME_ICRF, obj->pvo[0], false, size,
+        labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size,
             FONT_SIZE_BASE, label_color, 0, LABEL_AROUND,
             selected ? TEXT_BOLD : 0,
             0, obj->oid);
@@ -233,15 +252,12 @@ static bool range_contains(int range_start, int range_size, int nb, int i)
     return i > range_start && i < range_start + range_size;
 }
 
-static int comets_update(obj_t *obj, const observer_t *obs, double dt)
+static int comets_update(obj_t *obj, double dt)
 {
     PROFILE(comets_update, 0);
-    int size, code, i, nb;
+    int size, code;
     const char *data;
-    obj_t *tmp;
-    comet_t *child;
     comets_t *comets = (void*)obj;
-    const int update_nb = 32;
 
     if (!comets->parsed && comets->source_url) {
         data = asset_get_data(comets->source_url, &size, &code);
@@ -261,30 +277,33 @@ static int comets_update(obj_t *obj, const observer_t *obs, double dt)
                       "mpc_comet") == 0);
     }
 
-    /* To prevent spending too much time computing position of comets that
-     * are not visible, we only update a small number of them at each
-     * frame, using a moving range.  The comets who have been flagged as
-     * on screen get updated no matter what.  */
-    DL_COUNT(obj->children, tmp, nb);
-    i = 0;
-    MODULE_ITER(obj, child, "mpc_comet") {
-        if (child->on_screen ||
-                range_contains(comets->update_pos, update_nb, nb, i))
-        {
-            obj_update((obj_t*)child, obs, dt);
-        }
-        i++;
-    }
-    comets->update_pos = nb ? (comets->update_pos + update_nb) % nb : 0;
     return 0;
 }
 
 static int comets_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(comets_render, 0);
-    obj_t *child;
-    MODULE_ITER(obj, child, "mpc_comet")
-        obj_render(child, painter);
+    comets_t *comets = (void*)obj;
+    comet_t *child;
+    obj_t *tmp;
+    const int update_nb = 32;
+    int nb, i;
+
+    /* To prevent spending too much time computing position of comets that
+     * are not visible, we only render a small number of them at each
+     * frame, using a moving range.  The comets who have been flagged as
+     * on screen get rendered no matter what.  */
+    DL_COUNT(obj->children, tmp, nb);
+    i = 0;
+    MODULE_ITER(obj, child, "mpc_comet") {
+        if (child->on_screen ||
+                range_contains(comets->update_pos, update_nb, nb, i)) {
+            obj_render(&child->obj, painter);
+        }
+        i++;
+    }
+    comets->update_pos = nb ? (comets->update_pos + update_nb) % nb : 0;
+
     return 0;
 }
 
@@ -325,18 +344,9 @@ static obj_t *comets_get(const obj_t *obj, const char *id, int flags)
 static obj_klass_t comet_klass = {
     .id         = "mpc_comet",
     .size       = sizeof(comet_t),
-    .update     = comet_update,
+    .get_info   = comet_get_info,
     .render     = comet_render,
     .get_designations = comet_get_designations,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        INFO(name),
-        INFO(distance),
-        INFO(radec),
-        INFO(vmag),
-        INFO(type),
-        {},
-    },
 };
 OBJ_REGISTER(comet_klass)
 

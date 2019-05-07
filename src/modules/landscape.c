@@ -56,7 +56,7 @@ static int landscape_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int landscape_update(obj_t *obj, const observer_t *obs, double dt)
+static int landscape_update(obj_t *obj, double dt)
 {
     landscape_t *ls = (landscape_t*)obj;
     const char *data;
@@ -96,7 +96,7 @@ static double get_global_brightness(void)
 
     moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
     obj_get_pos_observed(moon, core->observer, pos);
-    obj_get_attr(moon, "phase", &moon_phase);
+    obj_get_info(moon, core->observer, INFO_PHASE, &moon_phase);
     vec3_normalize(pos, pos);
     sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
     if (sin_angle > -0.1 / 1.5 )
@@ -231,12 +231,12 @@ static int landscapes_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int landscapes_update(obj_t *obj, const observer_t *obs, double dt)
+static int landscapes_update(obj_t *obj, double dt)
 {
     landscapes_t *lss = (landscapes_t*)obj;
     obj_t *ls;
     MODULE_ITER((obj_t*)lss, ls, "landscape") {
-        obj_update(ls, obs, dt);
+        landscape_update(ls, dt);
     }
     fader_update(&lss->visible, dt);
     fader_update(&lss->fog_visible, dt);

@@ -149,24 +149,44 @@ static int star_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int star_update(obj_t *obj, const observer_t *obs, double dt)
+// Return position and velocity in ICRF with origin on observer (AU).
+static int star_get_pvo(const obj_t *obj, const observer_t *obs,
+                        double pvo[2][4])
+{
+    star_data_t *s = &((star_t*)obj)->data;
+    int r;
+    double plx = s->plx, astro_pv[2][3];
+
+    if (isnan(plx)) plx = 0;
+    r = eraStarpv(s->ra, s->de, s->pra, s->pde, plx, 0, astro_pv);
+    if (r & 1) { // At infinity.
+        vec3_normalize(astro_pv[0], astro_pv[0]);
+        astrometric_to_apparent(obs, astro_pv[0], true, pvo[0]);
+        pvo[0][3] = 0.0;
+        pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0;
+    } else {
+        astrometric_to_apparent(obs, astro_pv[0], false, pvo[0]);
+        pvo[0][3] = 1.0;
+        vec3_copy(astro_pv[1], pvo[1]); // XXX probably not correct.
+        pvo[1][3] = 0.0;
+    }
+    return 0;
+}
+
+static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
+                         void *out)
 {
     star_t *star = (star_t*)obj;
-    eraASTROM *astrom = (void*)&obs->astrom;
-    float plx = star->data.plx;
-    if (isnan(plx)) plx = 0;
-    eraPmpx(star->data.ra, star->data.de, 0, 0, plx, 0,
-            astrom->pmt, astrom->eb, obj->pvo[0]);
-    assert(!isnan(obj->pvo[0][0]));
-
-    obj->pvo[0][3] = 0.0;
-    obj->vmag = star->data.vmag;
-    // We need to renormalize
-    vec3_normalize(obj->pvo[0], obj->pvo[0]);
-    // Set speed to 0.
-    obj->pvo[1][0] = obj->pvo[1][1] = obj->pvo[1][2] = 0;
-    astrometric_to_apparent(obs, obj->pvo[0], true, obj->pvo[0]);
-    return 0;
+    switch (info) {
+    case INFO_PVO:
+        star_get_pvo(obj, obs, out);
+        return 0;
+    case INFO_VMAG:
+        *(double*)out = star->data.vmag;
+        return 0;
+    default:
+        return 1;
+    }
 }
 
 static void star_render_name(const painter_t *painter, const star_data_t *s,
@@ -308,7 +328,6 @@ static star_t *star_create(const star_data_t *data)
     strncpy(star->obj.type, data->type, 4);
     star->data = *data;
     star->obj.oid = star->data.oid;
-    star_update(&star->obj, core->observer, 0);
     return star;
 }
 
@@ -817,18 +836,9 @@ static obj_klass_t star_klass = {
     .id         = "star",
     .init       = star_init,
     .size       = sizeof(star_t),
-    .update     = star_update,
+    .get_info   = star_get_info,
     .render     = star_render,
     .get_designations = star_get_designations,
-    .attributes = (attribute_t[]) {
-        // Default properties.
-        INFO(vmag),
-        INFO(type),
-        INFO(name),
-        INFO(distance, MEMBER(star_t, data.distance)),
-        INFO(radec),
-        {},
-    },
 };
 OBJ_REGISTER(star_klass)
 
@@ -871,8 +881,7 @@ static void test_create_from_json(void)
         "}";
     star = obj_create_str("star", NULL, NULL, data);
     assert(star);
-    obj_update(star, core->observer, 0);
-    obj_get_attr(star, "vmag", &vmag);
+    obj_get_info(star, core->observer, INFO_VMAG, &vmag);
     assert(fabs(vmag - 5.153) < 0.0001);
     obj_release(star);
 }

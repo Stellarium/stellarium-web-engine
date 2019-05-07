@@ -19,6 +19,7 @@
  */
 typedef struct {
     obj_t       obj;
+    double      pvo[2][4];
     double      duration; // Duration (sec).
     double      time; // From 0 to duration.
 } meteor_t;
@@ -47,22 +48,22 @@ static int meteor_init(obj_t *obj, json_value *args)
     mat3_set_identity(mat);
     mat3_rz(frand(0, 360 * DD2R), mat, mat);
     mat3_ry(frand(-90 * DD2R, +90 * DD2R), mat, mat);
-    mat3_mul_vec3(mat, VEC(1, 0, 0), obj->pvo[0]);
-    vec3_mul(z, obj->pvo[0], obj->pvo[0]);
-    obj->pvo[0][3] = 1.0;
+    mat3_mul_vec3(mat, VEC(1, 0, 0), m->pvo[0]);
+    vec3_mul(z, m->pvo[0], m->pvo[0]);
+    m->pvo[0][3] = 1.0;
 
-    vec4_set(obj->pvo[1], frand(-1, 1), frand(-1, 1), frand(-1, 1), 1);
-    vec3_mul(0.00001, obj->pvo[1], obj->pvo[1]);
+    vec4_set(m->pvo[1], frand(-1, 1), frand(-1, 1), frand(-1, 1), 1);
+    vec3_mul(0.00001, m->pvo[1], m->pvo[1]);
 
     m->duration = 4.0;
 
     return 0;
 }
 
-static int meteor_update(obj_t *obj, const observer_t *obs, double dt)
+static int meteor_update(obj_t *obj, double dt)
 {
     meteor_t *m = (meteor_t*)obj;
-    vec3_addk(obj->pvo[0], obj->pvo[1], dt, obj->pvo[0]);
+    vec3_addk(m->pvo[0], m->pvo[1], dt, m->pvo[0]);
     m->time += dt;
     return 0;
 }
@@ -125,8 +126,8 @@ static int meteor_render(const obj_t *obj, const painter_t *painter_)
     // Very basic fade out.
     painter.color[3] *= max(0.0, 1.0 - m->time / m->duration);
 
-    vec4_copy(obj->pvo[0], p1);
-    vec3_addk(p1, obj->pvo[1], -2, p2);
+    vec4_copy(m->pvo[0], p1);
+    vec3_addk(p1, m->pvo[1], -2, p2);
 
     render_tail(&painter, p1, p2);
     return 0;
@@ -139,7 +140,7 @@ static int meteors_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
+static int meteors_update(obj_t *obj, double dt)
 {
     PROFILE(meterors_update, 0);
     meteors_t *ms = (meteors_t*)obj;
@@ -158,7 +159,7 @@ static int meteors_update(obj_t *obj, const observer_t *obs, double dt)
 
     DL_FOREACH_SAFE(obj->children, child, tmp) {
         m = (meteor_t*)child;
-        obj_update(child, obs, dt);
+        meteor_update(child, dt);
         if (m->time > m->duration)
             module_remove(obj, child);
     }

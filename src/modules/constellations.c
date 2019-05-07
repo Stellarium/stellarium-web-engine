@@ -52,6 +52,8 @@ typedef struct constellation {
     int         error; // Set if we couldn't parse the stars.
     double last_update; // Last update time in TT
     double bounding_cap[4]; // Bounding cap in ICRS
+
+    double pvo[2][4];
 } constellation_t;
 
 /*
@@ -68,7 +70,7 @@ typedef struct constellations {
     int         labels_display_style;
 } constellations_t;
 
-static int constellation_update(obj_t *obj, const observer_t *obs, double dt);
+static int constellation_update(constellation_t *con, const observer_t *obs);
 
 /*
  * Function: join_path
@@ -103,8 +105,23 @@ static int constellation_init(obj_t *obj, json_value *args)
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
-    constellation_update(obj, core->observer, 0);
+    // XXX: remove that.
+    constellation_update(cons, core->observer);
     return 0;
+}
+
+static int constellation_get_info(const obj_t *obj, const observer_t *obs,
+                                  int info, void *out)
+{
+    constellation_t *con = (constellation_t*)obj;
+    constellation_update(con, obs);
+    switch (info) {
+    case INFO_PVO:
+        memcpy(out, con->pvo, sizeof(con->pvo));
+        return 0;
+    default:
+        return 1;
+    }
 }
 
 // Get the list of the constellation stars.
@@ -224,11 +241,10 @@ static void line_truncate(double pos[2][4], double a0, double a1)
     eraRxp(rvm, pos[1], pos[1]);
 }
 
-static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
+static int constellation_update(constellation_t *con, const observer_t *obs)
 {
     // The position of a constellation is its middle point.
-    constellation_t *con = (constellation_t*)obj;
-    constellations_t *cons = (constellations_t*)obj->parent;
+    constellations_t *cons = (constellations_t*)con->obj.parent;
     double pvo[2][4], pos[4] = {0, 0, 0, 0}, max_cosdist, d;
     int i, err;
     if (con->error) return 0;
@@ -254,9 +270,9 @@ static int constellation_update(obj_t *obj, const observer_t *obs, double dt)
         vec3_add(pos, pvo[0], pos);
     }
     vec3_normalize(pos, pos);
-    vec3_copy(pos, obj->pvo[0]);
-    obj->pvo[0][3] = 0; // At infinity.
-    vec4_set(obj->pvo[1], 0, 0, 0, 0);
+    vec3_copy(pos, con->pvo[0]);
+    con->pvo[0][3] = 0; // At infinity.
+    vec4_set(con->pvo[1], 0, 0, 0, 0);
 
     // Compute bounding cap
     vec3_copy(pos, con->bounding_cap);
@@ -282,8 +298,7 @@ end:
     con->visible.target = cons->show_all ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
                           ((obj_t*)con == core->selection);
-    fader_update(&con->image_loaded_fader, dt);
-    return fader_update(&con->visible, dt) ? 1 : 0;
+    return 0;
 }
 
 static void spherical_project(
@@ -342,6 +357,8 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
 
     if (con->error)
         return 0;
+
+    constellation_update(con, painter.obs);
 
     if (!selected)
         painter.color[3] *= cons->visible.value * con->visible.value;
@@ -452,8 +469,8 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
         lines[i][3] = 0; // To infinity.
     }
     for (i = 0; i < con->count; i += 2) {
-        mag[0] = con->stars[i + 0]->vmag;
-        mag[1] = con->stars[i + 1]->vmag;
+        obj_get_info(con->stars[i + 0], obs, INFO_VMAG, &mag[0]);
+        obj_get_info(con->stars[i + 1], obs, INFO_VMAG, &mag[0]);
         core_get_point_for_mag(mag[0], &radius[0], NULL);
         core_get_point_for_mag(mag[1], &radius[1], NULL);
         radius[0] = core_get_apparent_angle_for_point(painter.proj, radius[0]);
@@ -541,7 +558,7 @@ static obj_t *constellations_get(const obj_t *obj, const char *id, int flags)
     return NULL;
 }
 
-static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
+static int constellations_update(obj_t *obj, double dt)
 {
     constellation_t *con;
     constellations_t *cons = (constellations_t*)obj;
@@ -559,7 +576,8 @@ static int constellations_update(obj_t *obj, const observer_t *obs, double dt)
         (!core->selection || core->selection->parent != obj)) return 0;
 
     MODULE_ITER(obj, con, "constellation") {
-        obj_update((obj_t*)con, obs, dt);
+        fader_update(&con->image_loaded_fader, dt);
+        fader_update(&con->visible, dt);
     }
     return 0;
 }
@@ -601,21 +619,12 @@ static obj_klass_t constellation_klass = {
     .id             = "constellation",
     .size           = sizeof(constellation_t),
     .init           = constellation_init,
-    .update         = constellation_update,
+    .get_info       = constellation_get_info,
     .render         = constellation_render,
     .render_pointer = constellation_render_pointer,
     .del            = constellation_del,
     .get_designations = constellation_get_designations,
     .get_2d_ellipse = constellation_get_2d_ellipse,
-    .attributes     = (attribute_t[]) {
-        // Default properties.
-        INFO(name),
-        INFO(distance),
-        INFO(radec),
-        INFO(vmag),
-        INFO(type),
-        {}
-    },
 };
 OBJ_REGISTER(constellation_klass)
 

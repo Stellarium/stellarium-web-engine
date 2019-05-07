@@ -65,7 +65,6 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
         cal->pixscale = pixscale / 60 / 60 * DD2R;
         cal->ra = ra * DD2R;
         cal->dec = dec * DD2R;
-        eraS2c(cal->ra, cal->dec, obj->pvo[0]);
     }
 
     val = json_object_new(0);

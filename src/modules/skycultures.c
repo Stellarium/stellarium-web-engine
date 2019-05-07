@@ -129,14 +129,14 @@ static int info_ini_handler(void* user, const char* section,
     return 0;
 }
 
-static int skyculture_update(obj_t *obj, const observer_t *obs, double dt);
+static int skyculture_update(obj_t *obj, double dt);
 static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
                                   const char *id)
 {
     skyculture_t *cult;
     cult = (void*)obj_create("skyculture", id, (obj_t*)cults, NULL);
     cult->uri = strdup(uri);
-    skyculture_update((obj_t*)cult, NULL, 0);
+    skyculture_update((obj_t*)cult, 0);
     return cult;
 }
 
@@ -200,7 +200,7 @@ static bool get_file(skyculture_t *cult, int file_id, const char *name,
     return *data;
 }
 
-static int skyculture_update(obj_t *obj, const observer_t *obs, double dt)
+static int skyculture_update(obj_t *obj, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
     const char *data;
@@ -277,11 +277,11 @@ static void skycultures_gui(obj_t *obj, int location)
     }
 }
 
-static int skycultures_update(obj_t *obj, const observer_t *obs, double dt)
+static int skycultures_update(obj_t *obj, double dt)
 {
     obj_t *skyculture;
     MODULE_ITER(obj, skyculture, "skyculture") {
-        obj_update(skyculture, obs, dt);
+        skyculture_update(skyculture, dt);
     }
     return 0;
 }

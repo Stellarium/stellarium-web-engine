@@ -23,7 +23,7 @@ static int milkyway_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int milkyway_update(obj_t *obj, const observer_t *obs, double dt)
+static int milkyway_update(obj_t *obj, double dt)
 {
     milkyway_t *mw = (milkyway_t*)obj;
     if (!mw->hips) return 0;

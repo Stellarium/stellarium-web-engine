@@ -11,6 +11,15 @@
 #define MODULE_H
 
 /*
+ * Function: module_update
+ * Update the module.
+ *
+ * Parameters:
+ *   dt  - User delta time (used for example for fading effects).
+ */
+int module_update(obj_t *module, double dt);
+
+/*
  * Function: module_list_obj
  * List all astro objects in a module.
  *
