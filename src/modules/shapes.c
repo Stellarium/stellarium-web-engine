@@ -59,6 +59,8 @@ static void circle_project(const projection_t *proj, int flags,
     if (circle->pos[3] != 0) {
         vec3_mul(vec3_norm(circle->pos), p, p);
         p[3] = 1.0;
+    } else {
+        vec3_normalize(p, p);
     }
     vec4_copy(p, out);
 }
