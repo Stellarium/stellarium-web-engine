@@ -145,7 +145,6 @@ static obj_klass_t circle_klass = {
     .get_info   = circle_get_info,
     .get_2d_ellipse = circle_get_2d_ellipse,
     .attributes = (attribute_t[]) {
-        PROPERTY(radec),
         PROPERTY(size, TYPE_V2, MEMBER(circle_t, size)),
         PROPERTY(pos, TYPE_V4, MEMBER(circle_t, pos)),
         PROPERTY(frame, TYPE_ENUM, MEMBER(circle_t, frame)),
