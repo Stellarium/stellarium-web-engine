@@ -167,7 +167,7 @@
     data: function() {
       return {
         obj: null,
-        layer: stel.createLayer({z: 7, visible: true}),
+        layer: stel.createLayer({id: 'layerPhoto', z: 7, visible: true}),
       }
     },
     computed: {
@@ -306,7 +306,7 @@
 
   var testAddStar = function(stel) {
     console.log("Add a fake star near polaris")
-    var layer = stel.createLayer({z: 7, visible: true})
+    var layer = stel.createLayer({id: 'testLayerStars', z: 7, visible: true})
     var star = stel.createObj('star', {
       id: 'my star',
       model_data: {
@@ -323,7 +323,7 @@
 
   var testAddDSO = function(stel) {
     console.log("Add a fake DSO near polaris")
-    var layer = stel.createLayer({z: 7, visible: true})
+    var layer = stel.createLayer({id: 'testLayerDSO', z: 7, visible: true})
     var dso = stel.createObj('dso', {
       id: 'my dso',
       model_data: {
@@ -342,7 +342,7 @@
 
   var testAddAsteroid = function(stel) {
     console.log('Add a fake asteroid next to Ceres')
-    var layer = stel.createLayer({z: 7, visible: true})
+    var layer = stel.createLayer({id: 'testLayerAstero', z: 7, visible: true})
     var asteroid = stel.createObj('minor_planet', {
       id: '60000002f4b1c3ff',
       model_data: {
@@ -383,7 +383,7 @@
     template: '#test-shapes-template',
     data: function() {
       return {
-        layer: stel.createLayer({z: 41, visible: true}),
+        layer: stel.createLayer({id: 'testLayerShape', z: 41, visible: true}),
         shapes: []
       }
     },
