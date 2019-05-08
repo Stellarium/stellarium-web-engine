@@ -122,8 +122,8 @@ Module.afterInit(function() {
       module_add(this.v, obj.v)
       return obj
     } else {
-      args = JSON.stringify(args)
       var id = args ? args.id : undefined;
+      args = JSON.stringify(args)
       var ret = obj_create_str(type, id, this.v, args);
       return ret ? new SweObj(ret) : null;
     }
