@@ -30,13 +30,13 @@
            style="bottom: 0;">
         <stel-button label="Constellations"
                     img="static/imgs/symbols/btn-cst-lines.svg"
-                    :obj="stel.core.constellations.lines"
-                    attr="visible">
+                    :obj="stel.core.constellations"
+                    attr="lines_visible">
         </stel-button>
         <stel-button label="Constellations"
                     img="static/imgs/symbols/btn-cst-art.svg"
-                    :obj="stel.core.constellations.images"
-                    attr="visible">
+                    :obj="stel.core.constellations"
+                    attr="images_visible">
         </stel-button>
         <stel-button label="Atmosphere"
                     img="static/imgs/symbols/btn-atmosphere.svg"
@@ -85,6 +85,7 @@
           <span> FPS: {{stel.core.fps.toFixed(0)}}</span>
         </form>
 
+        <!--
         <stel-photoitem url="http://nova.astrometry.net/image/4227430"
                        name="test1"
                        thumbnail="http://nova.astrometry.net/image/4227432"
@@ -96,6 +97,7 @@
                        thumbnail="http://nova.astrometry.net/image/3860205"
                        calibration-url="http://nova.astrometry.net/api/jobs/2190664/calibration">
         </stel-photoitem>
+        -->
 
         <test-shapes></test-shapes>
 
