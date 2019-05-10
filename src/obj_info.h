@@ -39,9 +39,8 @@
     X(ENUM,       enum,     TYPE(5, INT)) \
     X(STRING_PTR, string,   TYPE(6, STRING)) \
     X(COLOR,      color,    TYPE(7, V4)) \
-    X(RADIUS,     radius,   TYPE(8, ANGLE)) \
-    X(DIST,       dist,     TYPE(9, FLOAT)) \
-    X(MJD,        mjd,      TYPE(10, FLOAT)) \
+    X(DIST,       dist,     TYPE(8, FLOAT)) \
+    X(MJD,        mjd,      TYPE(9, FLOAT)) \
 
 /*
  * Enum of all the types.
@@ -73,7 +72,7 @@ int obj_info_from_str(const char *str);
     X(SMAX,     smax,   ANGLE,  7) \
     X(MORPHO,   morpho, STRING, 8) \
     X(PHASE,    phase,  FLOAT,  9) \
-    X(RADIUS,   radius, RADIUS, 10) \
+    X(RADIUS,   radius, ANGLE,  10) \
     X(PVO,      pvo,    V4X2,   11) \
 
 
