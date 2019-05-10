@@ -169,6 +169,35 @@ Module.afterInit(function() {
     return ret
   };
 
+  /*
+   * Function: computeVisibility
+   *
+   * Arguments:
+   *   obs      - An observer.  If not set use current core observer.
+   *   starTime - TT MJD starting time.  If not set use 12 hours before
+   *              observer time.
+   *   endTime  - TT MJD end time.  If not set use 12 hours after
+   *              observer time.
+   *
+   * Return:
+   *   A an array of dicts of the form:
+   *   [{rise: <riseTime>, set: <setTime>}]
+   *
+   */
+  SweObj.prototype.computeVisibility = function(args) {
+    args = args || {};
+    var obs = args.obs || Module.core.observer;
+    var startTime = args.startTime || obs.tt - 1 / 2;
+    var endTime = args.endTime || obs.tt + 1 / 2;
+    var precision = 1 / 24 / 60 / 2;
+    var rise = Module._compute_event(obs.v, this.v, 1, startTime,
+                                     endTime, precision) || null;
+    var set = Module._compute_event(obs.v, this.v, 2, startTime,
+                                    endTime, precision) || null;
+    if (rise === null && set === null) return [];
+    return [{'rise': rise, 'set': set}];
+  };
+
   // Add id property
   Object.defineProperty(SweObj.prototype, 'id', {
     get: function() {

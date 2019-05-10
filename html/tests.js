@@ -125,6 +125,12 @@ var testCalendar = function(stel) {
   assert(gotMoonMars);
 };
 
+var testVisibility = function(stel) {
+  let vega = stel.getObj('HIP 91262');
+  let polaris = stel.getObj('HIP 11767');
+  polaris.computeVisibility().length == 0;
+};
+
 var testTree = function(stel) {
   var tree = stel.getTree();
   var test = false;
@@ -261,6 +267,7 @@ require('./static/js/stellarium-web-engine.js')({
     testCloneObserver(stel);
     testListener(stel);
     testCalendar(stel);
+    testVisibility(stel);
     testTree(stel);
     testCreate(stel);
     testPositions(stel);

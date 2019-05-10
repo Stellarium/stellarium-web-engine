@@ -75,6 +75,7 @@ static double rise_dist(double time, void *user)
     return alt + radius - data->obs->horizon;
 }
 
+EMSCRIPTEN_KEEPALIVE
 double compute_event(observer_t *obs,
                      obj_t *obj,
                      int event,
