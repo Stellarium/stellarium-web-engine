@@ -513,7 +513,7 @@ int paint_orbit(const painter_t *painter, int frame,
         .user       = (void*)orbit,
     };
     double line[2][4] = {{0}, {1}};
-    // We only support ICRS for the moment to make things simpler.
+    // We only support ICRF for the moment to make things simpler.
     assert(frame == FRAME_ICRF);
     paint_line(painter, frame, line, &orbit_proj, 128, 1);
     return 0;
