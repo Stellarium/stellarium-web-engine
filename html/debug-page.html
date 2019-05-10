@@ -279,6 +279,23 @@
     wasmFile: "static/js/stellarium-web-engine.wasm",
     canvas: document.getElementById('stel-canvas'),
     onReady: function() {
+
+      // Add all data sources.
+      var baseUrl = 'https://data.stellarium.org/';
+      stel.addDataSource({url: 'asset://stars', type: 'hips'});
+      stel.addDataSource({url: 'asset://skycultures/western',
+                          type: 'skyculture'});
+      stel.addDataSource({url: baseUrl + 'surveys/dso', type: 'hips'});
+      stel.addDataSource({url: baseUrl + 'landscapes'});
+      stel.addDataSource({url: baseUrl + 'surveys', type: 'hipslist'});
+      stel.addDataSource({url: 'https://alasky.unistra.fr/DSS/DSSColor',
+                          type: 'hips'});
+      stel.addDataSource({url: 'asset://mpcorb.dat',
+                          type: 'mpc_asteroids'});
+      stel.addDataSource({url: baseUrl + 'mpc/CometEls.txt',
+                          type: 'mpc_comets'});
+      stel.addDataSource({url: baseUrl + 'norad', type: 'norad'});
+
       var app = new Vue({
         el: '#gui',
         data: { stel: stel },
