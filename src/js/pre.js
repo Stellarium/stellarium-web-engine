@@ -13,6 +13,12 @@ Module['locateFile'] = function(path) {
   return path;
 }
 
+Module['addDataSource'] = function(args) {
+  var add_data_source = Module.cwrap('module_add_data_source', 'number', [
+          'number', 'string', 'string', 'number']);
+  add_data_source(0, args.url, args.type || 0, 0);
+}
+
 Module['onRuntimeInitialized'] = function() {
   // Init OpenGL context.
   if (Module.canvasElement) Module.canvas = Module.canvasElement;
@@ -41,7 +47,21 @@ Module['onRuntimeInitialized'] = function() {
   for (var i in Module.extendFns) { Module.extendFns[i]() }
 
   Module._core_init();
-  Module._core_add_default_sources();
+
+  // Add all the default sources.
+  // XXX: should be done by the client code.
+  var baseUrl = 'https://data.stellarium.org/';
+  Module.addDataSource({url: 'asset://stars', type: 'hips'});
+  Module.addDataSource({url: baseUrl + 'landscapes'});
+  Module.addDataSource({url: 'asset://skycultures/western',
+                        type: 'skyculture'});
+  Module.addDataSource({url: baseUrl + 'surveys', type: 'hipslist'});
+  Module.addDataSource({url: 'https://alasky.unistra.fr/DSS/DSSColor',
+                        type: 'hips'});
+  Module.addDataSource({url: 'asset://mpcorb.dat', type: 'mpc_asteroids'});
+  Module.addDataSource({url: baseUrl + 'mpc/CometEls.txt', type: 'mpc_comets'});
+  Module.addDataSource({url: baseUrl + 'norad', type: 'norad'});
+
   Module.core = Module.getModule('core');
   Module.observer = Module.getModule('observer');
   if (Module.onReady) Module.onReady(Module);
