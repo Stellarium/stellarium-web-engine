@@ -249,6 +249,10 @@ var testPositions = function(stel) {
 require('./static/js/stellarium-web-engine.js')({
   wasmFile: './static/js/stellarium-web-engine.wasm',
   onReady: function(stel) {
+    stel.addDataSource({url: 'asset://stars', type: 'hips'});
+    stel.addDataSource({url: 'asset://skycultures/western',
+                        type: 'skyculture'});
+
     testCore(stel);
     testBasic(stel);
     testInfo(stel);
