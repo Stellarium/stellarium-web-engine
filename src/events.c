@@ -71,8 +71,7 @@ static double rise_dist(double time, void *user)
     convert_framev4(data->obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], observed);
     eraC2s(observed, &az, &alt);
     az = eraAnp(az);
-    if (obj_has_attr(data->obj, "radius"))
-        obj_get_attr(data->obj, "radius", &radius);
+    obj_get_info(data->obj, data->obs, INFO_RADIUS, &radius);
     return alt + radius - data->obs->horizon;
 }
 
