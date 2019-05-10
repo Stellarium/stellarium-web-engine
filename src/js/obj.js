@@ -210,6 +210,7 @@ Module.afterInit(function() {
   // Add path property to the objects.
   Object.defineProperty(SweObj.prototype, 'path', {
     get: function() {
+      if (this.v === Module.core.v) return 'core';
       var cret = module_get_path(this.v, Module.core.v)
       var ret = Module.UTF8ToString(cret)
       Module._free(cret)
