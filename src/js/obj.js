@@ -194,7 +194,12 @@ Module.afterInit(function() {
                                      endTime, precision) || null;
     var set = Module._compute_event(obs.v, this.v, 2, startTime,
                                     endTime, precision) || null;
-    if (rise === null && set === null) return [];
+    // Check if the object is never visible:
+    if (rise === null && set === null) {
+      var p = this.get('radec', obs);
+      p = Module.convertFrame(obs, 'ICRF', 'OBSERVED', p);
+      if (p[2] < 0) return [];
+    }
     return [{'rise': rise, 'set': set}];
   };
 

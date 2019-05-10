@@ -127,8 +127,13 @@ var testCalendar = function(stel) {
 
 var testVisibility = function(stel) {
   let vega = stel.getObj('HIP 91262');
+  assert(vega.computeVisibility().length === 1);
   let polaris = stel.getObj('HIP 11767');
-  polaris.computeVisibility().length == 0;
+  assert(JSON.stringify(polaris.computeVisibility()) ==
+          '[{"rise":null,"set":null}]');
+  let sigauct = stel.getObj('HIP 104382');
+  assert(sigauct);
+  assert(sigauct.computeVisibility().length === 0);
 };
 
 var testTree = function(stel) {
