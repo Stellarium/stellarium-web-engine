@@ -394,6 +394,8 @@ void obj_foreach_child(const obj_t *obj, void (*f)(const char *id))
     obj_t *child;
     for (child = obj->children; child; child = child->next) {
         if (!(child->klass->flags & OBJ_IN_JSON_TREE)) continue;
+        if (!child->id)
+            LOG_E("No id to module of type %s", child->klass->id);
         assert(child->id);
         f(child->id);
     }
