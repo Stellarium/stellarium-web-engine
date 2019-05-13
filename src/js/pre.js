@@ -66,12 +66,12 @@ Module['R2D'] = 180 / Math.PI;
 
 // Expose the frame enum.
 // Make sure that correspond to the values in frames.h!
-Module['FRAME_ASTROM'] = -1;
-Module['FRAME_ICRF'] = 0;
-Module['FRAME_CIRS'] = 1;
-Module['FRAME_JNOW'] = 2;
-Module['FRAME_OBSERVED'] = 3;
-Module['FRAME_VIEW'] = 4;
+Module['FRAME_ASTROM'] = 0;
+Module['FRAME_ICRF'] = 1;
+Module['FRAME_CIRS'] = 2;
+Module['FRAME_JNOW'] = 3;
+Module['FRAME_OBSERVED'] = 4;
+Module['FRAME_VIEW'] = 5;
 
 Module['MJD2date'] = function(v) {
   return new Date(Math.round((v + 2400000.5 - 2440587.5) * 86400000));
