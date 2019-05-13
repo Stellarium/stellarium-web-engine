@@ -116,6 +116,11 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     *hash = v;
 }
 
+static void correct_speed_of_light(double pv[2][3]) {
+    double ldt = vec3_norm(pv[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
+    vec3_addk(pv[0], pv[1], -ldt, pv[0]);
+}
+
 void observer_update(observer_t *obs, bool fast)
 {
     double utc1, utc2, ut11, ut12, tai1, tai2;
@@ -188,8 +193,11 @@ void observer_update(observer_t *obs, bool fast)
     }
 
     update_matrices(obs);
-    position_to_apparent(obs, ORIGIN_BARYCENTRIC, false, obs->sun_pvb,
-                         obs->sun_pvo);
+
+    // Compute sun's apparent position in observer reference frame
+    eraPvmpv(obs->sun_pvb, obs->obs_pvb, obs->sun_pvo);
+    // Correct in one shot space motion, annual & diurnal abberrations
+    correct_speed_of_light(obs->sun_pvo);
 
     obs->last_update = obs->tt;
     obs->hash_partial = hash_partial;
