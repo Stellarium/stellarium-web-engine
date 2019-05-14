@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[2602] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[2636] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -26,13 +26,13 @@ static const unsigned char DATA_shaders_atmosphere_glsl[2602] __attribute__((ali
     "attribute highp   vec3       a_sky_pos;\n"
     "attribute highp   float      a_luminance;\n"
     "\n"
-    "vec3 xyy_to_srgb(vec3 xyy)\n"
+    "vec3 xyy_to_srgb(highp vec3 xyy)\n"
     "{\n"
-    "    vec3 xyz;\n"
-    "    vec3 rgb;\n"
-    "    const mat3 xyz_to_rgb = mat3(3.2406, -0.9689, 0.0557,\n"
-    "                                 -1.5372, 1.8758, -0.2040,\n"
-    "                                 -0.4986, 0.0415, 1.0570);\n"
+    "    highp vec3 xyz;\n"
+    "    highp vec3 rgb;\n"
+    "    const highp mat3 xyz_to_rgb = mat3(3.2406, -0.9689, 0.0557,\n"
+    "                                      -1.5372, 1.8758, -0.2040,\n"
+    "                                      -0.4986, 0.0415, 1.0570);\n"
     "    xyz = vec3(xyy[0] * xyy[2] / xyy[1], xyy[2],\n"
     "               (1.0 - xyy[0] - xyy[1]) * xyy[2] / xyy[1]);\n"
     "    rgb = xyz_to_rgb * xyz;\n"

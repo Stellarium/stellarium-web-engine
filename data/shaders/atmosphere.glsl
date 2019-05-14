@@ -23,13 +23,13 @@ attribute highp   vec4       a_pos;
 attribute highp   vec3       a_sky_pos;
 attribute highp   float      a_luminance;
 
-vec3 xyy_to_srgb(vec3 xyy)
+vec3 xyy_to_srgb(highp vec3 xyy)
 {
-    vec3 xyz;
-    vec3 rgb;
-    const mat3 xyz_to_rgb = mat3(3.2406, -0.9689, 0.0557,
-                                 -1.5372, 1.8758, -0.2040,
-                                 -0.4986, 0.0415, 1.0570);
+    highp vec3 xyz;
+    highp vec3 rgb;
+    const highp mat3 xyz_to_rgb = mat3(3.2406, -0.9689, 0.0557,
+                                      -1.5372, 1.8758, -0.2040,
+                                      -0.4986, 0.0415, 1.0570);
     xyz = vec3(xyy[0] * xyy[2] / xyy[1], xyy[2],
                (1.0 - xyy[0] - xyy[1]) * xyy[2] / xyy[1]);
     rgb = xyz_to_rgb * xyz;
