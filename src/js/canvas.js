@@ -10,14 +10,29 @@
 Module.afterInit(function() {
   if (!Module.canvas) return;
 
+  var prevTimestamp;
+
   // Function to be called each time we think the view might have changed.
   var render = function() {
     if (render.called) return;
     render.called = true;
-    window.requestAnimationFrame(function() {
+
+    window.requestAnimationFrame(function(timestamp) {
+      if (!prevTimestamp)
+        prevTimestamp = timestamp;
+      var dt = timestamp - prevTimestamp;
+      prevTimestamp = timestamp;
       render.called = false;
       var canvas = Module.canvas;
-      Module._core_update(1 / 60);
+
+      // TODO: combine those calls
+      Module._core_update_fov(dt / 1000)
+      Module._core_set_view_offset(0)
+      Module._core_observer_update();
+
+      // TODO: manage paning and flicking here
+
+      Module._core_update(dt / 1000);
       Module._core_render(canvas.width, canvas.height, 1);
       render(); // Render again if needed.
     });

@@ -338,3 +338,53 @@ Module['convertFrame'] = function(obs, origin, dest, v) {
   Module._free(ptr);
   return ret;
 }
+
+/*
+ * Function: lookAt
+ * Move view direction to the given position.
+ *
+ * For example this can be used after core_get_point_for_mag to estimate the
+ * angular size a circle should have to exactly fit the object.
+ *
+ * Parameters:
+ *   pos      - The wanted pointing 3D direction in the OBSERVED frame.
+ *   duration - Movement duration in sec.
+ */
+Module['lookAt'] = function(pos, duration) {
+  if (duration === undefined)
+    duration = 1.0;
+  var v = Module._malloc(3 * 8);
+  var i;
+  for (i = 0; i < 3; i++)
+    Module._setValue(v + i * 8, pos[i], 'double');
+  Module._core_lookat(v, duration);
+  Module._free(v);
+}
+
+/*
+ * Function: pointAndLock
+ * Move view direction to the given object and lock on it.
+ *
+ * Parameters:
+ *   target   - The target object.
+ *   duration - Movement duration in sec.
+ */
+Module['pointAndLock'] = function(target, duration) {
+  if (duration === undefined)
+    duration = 1.0;
+  Module._core_point_and_lock(target.v, duration);
+}
+
+/*
+ * Function: zoomTo
+ * Change FOV to the passed value.
+ *
+ * Parameters:
+ *   fov      - The target FOV diameter in rad.
+ *   duration - Movement duration in sec.
+ */
+Module['zoomTo'] = function(fov, duration) {
+  if (duration === undefined)
+    duration = 1.0;
+  Module._core_zoomto(fov, duration);
+}

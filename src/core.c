@@ -308,6 +308,7 @@ void core_release(void)
     profile_release();
 }
 
+EMSCRIPTEN_KEEPALIVE
 void core_update_fov(double dt)
 {
     double t;
@@ -344,6 +345,21 @@ void core_update_fov(double dt)
 
     if (core->fov != save_fov)
         module_changed((obj_t*)core, "fov");
+}
+
+EMSCRIPTEN_KEEPALIVE
+void core_observer_update()
+{
+    observer_update(core->observer, true);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void core_set_view_offset(double center_y_offset)
+{
+    projection_t proj;
+    core_get_proj(&proj);
+    double pix_angular_size = 1.0 * proj.scaling[1] / proj.window_size[1] * 2;
+    core->observer->view_offset_alt = -center_y_offset * pix_angular_size;
 }
 
 static int core_update_direction(double dt)
@@ -878,13 +894,15 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
     }
 }
 
-static int do_core_lookat(double* pos, double duration) {
+EMSCRIPTEN_KEEPALIVE
+void core_lookat(double* pos, double duration)
+{
     double az, al;
 
     // Direct lookat.
     if (duration == 0.0) {
         eraC2s(pos, &core->observer->azimuth, &core->observer->altitude);
-        return 0;
+        return;
     }
 
     quat_set_identity(core->target.src_q);
@@ -899,46 +917,21 @@ static int do_core_lookat(double* pos, double duration) {
     core->target.duration = duration;
     core->target.t = 0.0;
     core->fast_mode = true;
-    return 0;
 }
 
-static json_value *core_point_and_lock(obj_t *obj, const attribute_t *attr,
-                               const json_value *args)
+EMSCRIPTEN_KEEPALIVE
+void core_point_and_lock(obj_t *target, double duration)
 {
-    double v[4], duration = 1.0;
-    obj_t* target_obj;
-    args_get(args, "target", 1, TYPE_OBJ, &target_obj);
-    args_get(args, "speed", 2, TYPE_FLOAT, &duration);
-
-    obj_set_attr(&core->obj, "lock", target_obj);
-
+    double v[4];
+    obj_set_attr(&core->obj, "lock", target);
     obj_get_pos_observed(core->target.lock, core->observer, v);
-    do_core_lookat(v, duration);
+    core_lookat(v, duration);
     core->target.move_to_lock = true;
-    return NULL;
 }
 
-static json_value *core_lookat(obj_t *obj, const attribute_t *attr,
-                               const json_value *args)
+EMSCRIPTEN_KEEPALIVE
+void core_zoomto(double fov, double duration)
 {
-    // XXX find a better way to create a rot quaternion from a direction?
-    double duration = 1.0, pos[3];
-
-    args_get(args, "target", 1, TYPE_V3, pos);
-    args_get(args, "speed", 2, TYPE_FLOAT, &duration);
-
-    do_core_lookat(pos, duration);
-    return NULL;
-}
-
-static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
-                               const json_value *args)
-{
-    double duration = 1.0, fov = 0.0;
-
-    args_get(args, "fov", 1, TYPE_ANGLE, &fov);
-    args_get(args, "speed", 2, TYPE_FLOAT, &duration);
-
     projection_t proj;
     core_get_proj(&proj);
     if (fov > proj.max_fov)
@@ -947,7 +940,7 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
     // Direct lookat.
     if (duration == 0.0) {
         core->fov = fov;
-        return NULL;
+        return;
     }
 
     typeof(core->fov_animation)* anim = &core->fov_animation;
@@ -955,7 +948,7 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
         // We request a new animation while another one is still on going
         if (fov == anim->dst_fov) {
             // Same animation is going on, just finish it
-            return NULL;
+            return;
         }
         // We are looking for a new set of zoom parameters so that:
         // - we preserve the current zoom level
@@ -969,15 +962,13 @@ static json_value *core_zoomto(obj_t *obj, const attribute_t *attr,
         anim->dst_fov = fov;
         anim->duration = anim->t * anim->duration + duration;
         anim->t = t2;
-        return NULL;
+        return;
     }
 
     anim->src_fov = core->fov;
     anim->dst_fov = fov;
     anim->duration = duration;
     anim->t = 0.0;
-
-    return NULL;
 }
 
 // Return a static string representation of a an object type id.
@@ -1065,9 +1056,6 @@ static obj_klass_t core_klass = {
         PROPERTY(zoom, TYPE_FLOAT, MEMBER(core_t, zoom)),
         PROPERTY(test, TYPE_BOOL, MEMBER(core_t, test)),
         PROPERTY(exposure_scale, TYPE_FLOAT, MEMBER(core_t, exposure_scale)),
-        FUNCTION(lookat, .fn = core_lookat),
-        FUNCTION(point_and_lock, .fn = core_point_and_lock),
-        FUNCTION(zoomto, .fn = core_zoomto),
         {}
     }
 };

@@ -242,6 +242,22 @@ int core_update(double dt);
  */
 void core_update_fov(double dt);
 
+/*
+ * Function: core_observer_update
+ * Update the observer.
+ */
+void core_observer_update();
+
+/*
+ * Function: core_set_view_offset
+ * Update the view center vertical offset.
+ *
+ * Call this e.g. when a panel use the bottom or upper part of the screen,
+ * and you want to have the zoom center at the center of the remaining sky
+ * screen space.
+ */
+void core_set_view_offset(double center_y_offset);
+
 int core_render(double win_w, double win_h, double pixel_scale);
 // x and y in screen coordinates.
 void core_on_mouse(int id, int state, double x, double y);
@@ -396,6 +412,38 @@ double core_mag_to_lum_apparent(double mag, double surf);
  */
 double core_get_apparent_angle_for_point(const projection_t *proj, double r);
 
+/*
+ * Function: core_lookat
+ * Move view direction to the given position.
+ *
+ * For example this can be used after core_get_point_for_mag to estimate the
+ * angular size a circle should have to exactly fit the object.
+ *
+ * Parameters:
+ *   pos      - The wanted pointing 3D direction in the OBSERVED frame.
+ *   duration - Movement duration in sec.
+ */
+void core_lookat(double* pos, double duration);
+
+/*
+ * Function: core_point_and_lock
+ * Move view direction to the given object and lock on it.
+ *
+ * Parameters:
+ *   target   - The target object.
+ *   duration - Movement duration in sec.
+ */
+void core_point_and_lock(obj_t *target, double duration);
+
+/*
+ * Function: core_zoomto
+ * Change FOV to the passed value.
+ *
+ * Parameters:
+ *   fov      - The target FOV diameter in rad.
+ *   duration - Movement duration in sec.
+ */
+void core_zoomto(double fov, double duration);
 
 // Return a static string representation of an object type id.
 __attribute__((deprecated)) // Use otype_get_str instead.
