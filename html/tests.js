@@ -86,7 +86,7 @@ var testInfo = function(stel) {
 var testIds = function(stel) {
   var o1 = stel.getObj('HIP 11767');
   assert(o1);
-  assert(o1.names().includes('NAME Polaris'));
+  assert(o1.designations().includes('NAME Polaris'));
 }
 
 var testSearch = function(stel) {
@@ -118,8 +118,8 @@ var testListener = function(stel) {
 var testCalendar = function(stel) {
   var gotMoonMars = false;
   var onEvent = function(ev) {
-    if (ev.o2 && ev.o1.names().includes('NAME Moon') &&
-                 ev.o2.names().includes('NAME Mars')) {
+    if (ev.o2 && ev.o1.designations().includes('NAME Moon') &&
+                 ev.o2.designations().includes('NAME Mars')) {
       assert(ev.time);
       assert(ev.type);
       assert(ev.desc);
@@ -199,9 +199,9 @@ var testCreate = function(stel) {
     },
     names: ['NAME 1', 'NAME 2', 'NAME_SINGLE']
   });
-  assert(obj1.names().includes('NAME 1'));
-  assert(obj1.names().includes('NAME 2'));
-  assert(obj1.names().includes('NAME_SINGLE'));
+  assert(obj1.designations().includes('NAME 1'));
+  assert(obj1.designations().includes('NAME 2'));
+  assert(obj1.designations().includes('NAME_SINGLE'));
 
   var obj2 = stel.createObj('tle_satellite', {
     id: 'my sat',
@@ -259,8 +259,8 @@ var testCreate = function(stel) {
       "SSO"
     ]
   });
-  assert(obj3.names().includes('MPC (1)'));
-  assert(obj3.names().includes('NAME (1) Ceres'));
+  assert(obj3.designations().includes('MPC (1)'));
+  assert(obj3.designations().includes('NAME (1) Ceres'));
 
   layer.add(obj1);
   layer.add(obj2);

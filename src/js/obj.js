@@ -129,18 +129,7 @@ Module.afterInit(function() {
     }
   }
 
-  // XXX: deprecated: use names instead.
-  SweObj.prototype.ids = function(f) {
-    var callback = Module.addFunction(function(o, u, k, v) {
-      k = Module.UTF8ToString(k);
-      v = Module.UTF8ToString(v);
-      f(k, v);
-    }, 'viiii');
-    Module._obj_get_designations(this.v, 0, callback);
-    Module.removeFunction(callback);
-  };
-
-  SweObj.prototype.names = function() {
+  SweObj.prototype.designations = function() {
     var ret = [];
     var callback = Module.addFunction(function(o, u, cat, v) {
       cat = Module.UTF8ToString(cat);
@@ -208,7 +197,8 @@ Module.afterInit(function() {
     get: function() {
       var ret = obj_get_id(this.v);
       if (ret) return ret;
-      return this.names()[0];
+      // XXX: fallback to first designation.  Should probably be removed!
+      return this.designations()[0];
     }
   })
 
