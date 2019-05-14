@@ -220,10 +220,7 @@ char *obj_get_info_json(const obj_t *obj, observer_t *obs,
     char *json = NULL;
 
     r = obj_get_info(obj, obs, info, &v);
-    if (r) {
-        r = asprintf(&json, "{\"swe_\":1, \"v\":null}");
-        return json;
-    }
+    if (r) return NULL;
 
     switch (type) {
     case TYPE_FLOAT:
