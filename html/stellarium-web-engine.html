@@ -245,7 +245,7 @@
 
         var ret = [];
         var obs = stel.core.observer;
-        var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', obj.get('radec'));
+        var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', obj.getInfo('radec'));
         var radec = stel.c2s(cirs);
         var ra = stel.anp(radec[0]);
         var dec = stel.anpm(radec[1]);
@@ -253,7 +253,7 @@
         var azalt = stel.c2s(observed);
         var az = stel.anp(azalt[0]);
         var alt = stel.anp(azalt[1]);
-        var vmag = obj.get('vmag');
+        var vmag = obj.getInfo('vmag');
         ret.push({
           key: 'Magnitude',
           value: vmag === undefined ? 'Unknown' : vmag.toFixed(2)

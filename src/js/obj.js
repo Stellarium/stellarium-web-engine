@@ -80,7 +80,7 @@ Module.afterInit(function() {
     Module._module_update(this.v, 0.0);
   }
 
-  SweObj.prototype.get = function(info, obs) {
+  SweObj.prototype.getInfo = function(info, obs) {
     if (obs === undefined)
       obs = Module.observer
     var cret = obj_get_info_json(this.v, obs.v, info)
@@ -196,7 +196,7 @@ Module.afterInit(function() {
                                     endTime, precision) || null;
     // Check if the object is never visible:
     if (rise === null && set === null) {
-      var p = this.get('radec', obs);
+      var p = this.getInfo('radec', obs);
       p = Module.convertFrame(obs, 'ICRF', 'OBSERVED', p);
       if (p[2] < 0) return [];
     }

@@ -30,7 +30,7 @@ var testBasic = function(stel) {
   // Test Sun pos.
   {
     let sun = stel.getObj("Sun");
-    let pvo = sun.get('pvo', stel.observer);
+    let pvo = sun.getInfo('pvo', stel.observer);
     let cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
     let ra  = stel.anp(stel.c2s(cirs)[0]);
     let dec = stel.anpm(stel.c2s(cirs)[1]);
@@ -42,7 +42,7 @@ var testBasic = function(stel) {
   {
     let polaris = stel.getObj('HIP 11767');
     assert(polaris);
-    let pvo = polaris.get('pvo', stel.observer);
+    let pvo = polaris.getInfo('pvo', stel.observer);
     let cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
     let altaz = stel.convertFrame(stel.observer, 'ICRF', 'OBSERVED', pvo[0]);
     let ra  = stel.anp(stel.c2s(cirs)[0]);
@@ -68,18 +68,18 @@ var testInfo = function(stel) {
   {
     let jupiter = stel.getObj('Jupiter');
     assert(jupiter);
-    let vmag = jupiter.get('VMAG');
+    let vmag = jupiter.getInfo('VMAG');
     assert(typeof vmag == 'number');
-    let phase = jupiter.get('PHASE');
+    let phase = jupiter.getInfo('PHASE');
     assert(typeof phase == 'number');
-    let radius = jupiter.get('RADIUS');
+    let radius = jupiter.getInfo('RADIUS');
     assert(typeof radius == 'number');
   }
 
   {
     let polaris = stel.getObj('HIP 11767');
     assert(polaris);
-    let radius = polaris.get('RADIUS');
+    let radius = polaris.getInfo('RADIUS');
   }
 }
 
@@ -272,7 +272,7 @@ var testPositions = function(stel) {
   obs.longitude = -84.39 * stel.D2R;
   obs.latitude = 33.75 * stel.D2R;
   var o = stel.getObj('HIP 11767');
-  var icrs = o.get('pvo', obs)[0];
+  var icrs = o.getInfo('pvo', obs)[0];
   var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', icrs);
   var a_ra  = stel.anp(stel.c2s(icrs)[0]);
   var a_dec = stel.anpm(stel.c2s(icrs)[1]);
