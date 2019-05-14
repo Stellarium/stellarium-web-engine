@@ -512,7 +512,7 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
                         double* win_angle)
 {
     double pvo[2][4], p[4];
-    double vmag, s, luminance, radius;
+    double vmag, s, luminance, radius = 0;
 
     if (obj->klass->get_2d_ellipse) {
         obj->klass->get_2d_ellipse(obj, obs, proj,
@@ -533,10 +533,8 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     core_get_point_for_mag(vmag, &s, &luminance);
     s *= 2;
 
-    if (obj_has_attr(obj, "radius")) {
-        obj_get_attr(obj, "radius", &radius);
-        radius = radius / 2.0 * proj->window_size[0] /
-                proj->scaling[0];
+    if (obj_get_info(obj, obs, INFO_RADIUS, &radius) == 0) {
+        radius = radius / 2.0 * proj->window_size[0] / proj->scaling[0];
         s = max(s, radius);
     }
 
