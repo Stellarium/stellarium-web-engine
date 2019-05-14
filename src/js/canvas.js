@@ -12,53 +12,41 @@ Module.afterInit(function() {
 
   var prevTimestamp;
 
-  // Function to be called each time we think the view might have changed.
-  var render = function() {
-    if (render.called) return;
-    render.called = true;
+  // Function called at each frame
+  var render = function(timestamp) {
 
-    window.requestAnimationFrame(function(timestamp) {
-      if (!prevTimestamp)
-        prevTimestamp = timestamp;
-      var dt = timestamp - prevTimestamp;
+    // Check for canvas resize
+    var canvas = Module.canvas;
+    var displayWidth  = Math.floor(canvas.clientWidth);
+    var displayHeight = Math.floor(canvas.clientHeight);
+    var sizeChanged = (canvas.width  !== displayWidth) ||
+                      (canvas.height !== displayHeight);
+
+    if (sizeChanged) {
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+    }
+
+    if (!prevTimestamp)
       prevTimestamp = timestamp;
-      render.called = false;
-      var canvas = Module.canvas;
+    var dt = timestamp - prevTimestamp;
+    prevTimestamp = timestamp;
 
-      // TODO: combine those calls
-      Module._core_update_fov(dt / 1000)
-      Module._core_set_view_offset(0)
-      Module._core_observer_update();
+    if (Module.onBeforeRendering)
+      Module.onBeforeRendering(timestamp)
 
-      // TODO: manage paning and flicking here
+    // TODO: combine those calls
+    Module._core_update_fov(dt / 1000)
+    Module._core_set_view_offset(0)
+    Module._core_observer_update();
 
-      Module._core_update(dt / 1000);
-      Module._core_render(canvas.width, canvas.height, 1);
-      render(); // Render again if needed.
-    });
+    // TODO: manage paning and flicking here
+
+    Module._core_update(dt / 1000);
+    Module._core_render(canvas.width, canvas.height, 1);
+
+    window.requestAnimationFrame(render)
   }
-
-  var checkForCanvasResize = function () {
-    window.requestAnimationFrame(function() {
-      var canvas = Module.canvas;
-      var displayWidth  = Math.floor(canvas.clientWidth);
-      var displayHeight = Math.floor(canvas.clientHeight);
-      var sizeChanged = (canvas.width  !== displayWidth) ||
-                        (canvas.height !== displayHeight);
-      checkForCanvasResize(); // Calls itself at each frame
-      if (sizeChanged) {
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
-        render();
-      }
-    })
-  }
-
-  var setup = function() {
-    // Permanently monitor canvas size to trigger refresh if it changed
-    checkForCanvasResize();
-    setupMouse();
-  };
 
   var fixPageXY = function(e) {
     if (e.pageX == null && e.clientX != null ) {
@@ -89,7 +77,6 @@ Module.afterInit(function() {
       mouseDown = true;
       var pos = getMousePos(e);
       Module._core_on_mouse(0, 1, pos.x, pos.y);
-      render();
 
       document.onmouseup = function(e) {
         e = e || event;
@@ -97,7 +84,6 @@ Module.afterInit(function() {
         mouseDown = false;
         var pos = getMousePos(e);
         Module._core_on_mouse(0, 0, pos.x, pos.y);
-        render();
       };
       document.onmouseleave = function(e) {
         mouseDown = false;
@@ -108,7 +94,6 @@ Module.afterInit(function() {
         fixPageXY(e);
         var pos = getMousePos(e);
         Module._core_on_mouse(0, mouseDown ? 1 : 0, pos.x, pos.y);
-        if (mouseDown) render();
       }
     });
 
@@ -120,7 +105,6 @@ Module.afterInit(function() {
         var relY = e.changedTouches[i].pageY - rect.top;
         Module._core_on_mouse(id, 1, relX, relY);
       }
-      render();
     }, {passive: true});
     canvas.addEventListener('touchmove', function(e) {
       e.preventDefault();
@@ -131,7 +115,6 @@ Module.afterInit(function() {
         var relY = e.changedTouches[i].pageY - rect.top;
         Module._core_on_mouse(id, -1, relX, relY);
       }
-      render();
     }, {passive: false});
     canvas.addEventListener('touchend', function(e) {
       var rect = canvas.getBoundingClientRect();
@@ -141,7 +124,6 @@ Module.afterInit(function() {
         var relY = e.changedTouches[i].pageY - rect.top;
         Module._core_on_mouse(id, 0, relX, relY);
       }
-      render();
     });
 
     function getMouseWheelDelta(event) {
@@ -166,19 +148,14 @@ Module.afterInit(function() {
       var zoom_factor = 1.05;
       var delta = getMouseWheelDelta(e);
       Module._core_on_zoom(Math.pow(zoom_factor, delta), pos.x, pos.y);
-      render();
       return false;
     };
     canvas.addEventListener('mousewheel', onWheelEvent, {passive: false});
     canvas.addEventListener('DOMMouseScroll', onWheelEvent, {passive: false});
   };
 
-  Module.change(function() {
-    render();
-  });
+  setupMouse();
 
-  setup();
-  render();
-  // Render at 20 fps.
-  setInterval(render, 50);
+  // Kickoff rendering at max FPS, normally 60 FPS on a browser.
+  window.requestAnimationFrame(render)
 })
