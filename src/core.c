@@ -895,7 +895,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_lookat(double* pos, double duration)
+void core_lookat(const double *pos, double duration)
 {
     double az, al;
 

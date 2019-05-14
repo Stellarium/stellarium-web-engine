@@ -423,7 +423,7 @@ double core_get_apparent_angle_for_point(const projection_t *proj, double r);
  *   pos      - The wanted pointing 3D direction in the OBSERVED frame.
  *   duration - Movement duration in sec.
  */
-void core_lookat(double* pos, double duration);
+void core_lookat(const double *pos, double duration);
 
 /*
  * Function: core_point_and_lock
