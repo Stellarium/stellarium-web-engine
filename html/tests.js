@@ -20,20 +20,40 @@ var testBasic = function(stel) {
   stel.observer.utc = stel.date2MJD(Date.UTC(2009, 8, 6, 17, 0, 0));
   assert(isNear(stel.observer.utc, 55080.71, 0.01));
 
-  stel.observer.longitude = -84.4 * stel.D2R;
-  stel.observer.latitude = 33.8 * stel.D2R;
-  assert(stel.observer.latitude = 33.8 * stel.D2R);
+  stel.observer.longitude = -84.388 * stel.D2R;
+  stel.observer.latitude = 33.749 * stel.D2R;
   stel.observer.azimuth = 90 * stel.D2R;
   stel.observer.altitude = 0;
+  stel.observer.refraction = false;
   assert(JSON.stringify(stel.observer.azalt) === JSON.stringify([0, 1, 0]));
-  // Test sun pos.
-  var sun = stel.getObj("Sun");
-  var pvo = sun.get('pvo', stel.observer);
-  var cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
-  var ra  = stel.anp(stel.c2s(cirs)[0]);
-  var dec = stel.anpm(stel.c2s(cirs)[1]);
-  assert(isNear(ra, 165.48 * stel.D2R, 0.01));
-  assert(isNear(dec,  6.20 * stel.D2R, 0.01));
+
+  // Test Sun pos.
+  {
+    let sun = stel.getObj("Sun");
+    let pvo = sun.get('pvo', stel.observer);
+    let cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
+    let ra  = stel.anp(stel.c2s(cirs)[0]);
+    let dec = stel.anpm(stel.c2s(cirs)[1]);
+    assert(isNear(ra, 165.48 * stel.D2R, 0.01));
+    assert(isNear(dec,  6.20 * stel.D2R, 0.01));
+  }
+
+  // Test Polaris pos.
+  {
+    let polaris = stel.getObj('HIP 11767');
+    assert(polaris);
+    let pvo = polaris.get('pvo', stel.observer);
+    let cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
+    let altaz = stel.convertFrame(stel.observer, 'ICRF', 'OBSERVED', pvo[0]);
+    let ra  = stel.anp(stel.c2s(cirs)[0]);
+    let dec = stel.anpm(stel.c2s(cirs)[1]);
+    let az = stel.anp(stel.c2s(altaz)[0]);
+    let alt = stel.anp(stel.c2s(altaz)[1]);
+    assert(isNear(ra,  41.07 * stel.D2R, 0.01));
+    assert(isNear(dec, 89.30 * stel.D2R, 0.01));
+    assert(isNear(az, 359.24 * stel.D2R, 0.01));
+    assert(isNear(alt, 33.47 * stel.D2R, 0.01));
+  }
 
   // Test different possible values for passing NULL to the core.
   stel.core.selection = null;
