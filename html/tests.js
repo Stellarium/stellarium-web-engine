@@ -111,7 +111,7 @@ var testListener = function(stel) {
   stel.change(function(obj, attr) {
     if (obj.path == 'core.observer' && attr == 'latitude') test++;
   })
-  stel.observer.latitude = 10.0;
+  stel.observer.latitude = 33 * stel.D2R;
   assert(test == 2);
 };
 
@@ -146,6 +146,9 @@ var testCalendar = function(stel) {
 };
 
 var testVisibility = function(stel) {
+  stel.observer.utc = stel.date2MJD(Date.UTC(2009, 8, 6, 17, 0, 0));
+  stel.observer.longitude = -84.388 * stel.D2R;
+  stel.observer.latitude = 33.749 * stel.D2R;
   let vega = stel.getObj('HIP 91262');
   assert(vega.computeVisibility().length === 1);
   let polaris = stel.getObj('HIP 11767');
