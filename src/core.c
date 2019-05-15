@@ -267,6 +267,9 @@ void core_init(double win_w, double win_h, double pixel_scale)
     char cache_dir[1024];
     obj_klass_t *module;
 
+    // Why do we even need those attributes?
+    assert(!isnan(win_w) && !isnan(win_h) && !isnan(pixel_scale));
+
     if (core) {
         // Already initialized.
         core_set_default();
