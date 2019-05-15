@@ -50,6 +50,7 @@ static void update_matrices(observer_t *obs)
     mat3_mul(ro2v, r2gl, ro2v);
 
     // Extra rotation for screen center offset.
+    assert(!isnan(obs->view_offset_alt));
     mat3_set_identity(view_rot);
     mat3_rx(obs->view_offset_alt, view_rot, view_rot);
     mat3_mul(view_rot, ro2v, ro2v);
