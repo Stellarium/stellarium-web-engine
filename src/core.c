@@ -359,9 +359,12 @@ void core_observer_update()
 EMSCRIPTEN_KEEPALIVE
 void core_set_view_offset(double center_y_offset)
 {
+    double pix_angular_size;
     projection_t proj;
+
+    assert(proj.window_size[1]);
     core_get_proj(&proj);
-    double pix_angular_size = 1.0 * proj.scaling[1] / proj.window_size[1] * 2;
+    pix_angular_size = 1.0 * proj.scaling[1] / proj.window_size[1] * 2;
     core->observer->view_offset_alt = -center_y_offset * pix_angular_size;
 }
 
