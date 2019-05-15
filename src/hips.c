@@ -174,6 +174,8 @@ static int property_handler(void* user, const char* section,
                             const char* name, const char* value)
 {
     hips_t *hips = user;
+    double version;
+
     json_object_push(hips->properties, name, json_string_new(value));
     if (strcmp(name, "hips_order") == 0)
         hips->order = atoi(value);
@@ -193,6 +195,15 @@ static int property_handler(void* user, const char* section,
         }
         else LOG_W("Unknown hips format: %s", value);
     }
+
+    /* Starting from version 1.4, hips format doesn't have allsky texture.
+     * XXX: probably better to disable allsky by default, and only use if
+     * the property file has an allsky attribute (for the planets).  */
+    if (strcmp(name, "hips_version") == 0) {
+        version = atof(value);
+        if (version >= 1.4) hips->allsky.not_available = true;
+    }
+
     // Guillaume 2018 Aug 30: disable the hips_service_url, because
     // it poses probleme when it changes the protocole from https to
     // http.  Still not sure if we are supposed to use it of it it's just
