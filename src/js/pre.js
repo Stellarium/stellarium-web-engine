@@ -46,7 +46,7 @@ Module['onRuntimeInitialized'] = function() {
   // Call all the functions registered with Module.afterInit(f)
   for (var i in Module.extendFns) { Module.extendFns[i]() }
 
-  Module._core_init();
+  Module._core_init(0, 0, 1);
   Module.core = Module.getModule('core');
   Module.observer = Module.getModule('observer');
   if (Module.onReady) Module.onReady(Module);
