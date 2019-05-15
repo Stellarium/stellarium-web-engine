@@ -37,7 +37,6 @@ Module.afterInit(function() {
 
     // TODO: combine those calls
     Module._core_update_fov(dt / 1000)
-    Module._core_set_view_offset(0)
     Module._core_observer_update();
 
     // TODO: manage paning and flicking here
