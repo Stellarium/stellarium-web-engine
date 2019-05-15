@@ -355,7 +355,10 @@ texture_t *hips_get_tile_texture(
         free(tile->img);
         tile->img = NULL;
     }
-    if (tile && tile->tex) return tile->tex;
+    if (tile && tile->tex) {
+        *loading_complete = true;
+        return tile->tex;
+    }
 
 
     // Return the allsky texture if the tile is not ready yet.  Only do
