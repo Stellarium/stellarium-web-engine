@@ -59,6 +59,14 @@
       <v-toolbar-side-icon @click.stop="drawer = !drawer">
       </v-toolbar-side-icon>
       <v-toolbar-title>Stellarium<sup>Web</sup></v-toolbar-title>
+      <v-spacer></v-spacer>
+
+      <div v-if="stel && stel.core.progressbars.length">
+        {{getProgress().title}}
+        <v-progress-circular :value="getProgress().value">
+        </v-progress-circular>
+      </div>
+
     </v-toolbar>
 
     <v-footer app fixed class="transparent" style="height:auto;">
@@ -203,6 +211,11 @@
         var name = obj.designations()[0];
         name = name.replace(/^NAME /, '');
         return name;
+      },
+
+      getProgress: function() {
+        var bar = this.stel.core.progressbars[0];
+        return {title: bar.label, value: bar.value / bar.total * 100};
       },
 
       getInfos: function(obj) {
