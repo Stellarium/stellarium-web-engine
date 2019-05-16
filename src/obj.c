@@ -173,8 +173,17 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
                  void *out)
 {
     double pvo[2][4];
+    int ret;
 
     observer_update(obs, true);
+
+    if (obj->klass->get_info) {
+        ret = obj->klass->get_info(obj, obs, info, out);
+        if (!ret) return ret;
+        if (ret != 1) return ret; // An actual error
+    }
+
+    // Somme fallback values.
     switch (info) {
     case INFO_TYPE:
         strncpy(out, obj->type, 4);
@@ -191,9 +200,6 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
         break;
     }
 
-    if (obj->klass->get_info) {
-        return obj->klass->get_info(obj, obs, info, out);
-    }
     return 1;
 }
 
