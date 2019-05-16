@@ -154,22 +154,15 @@ static int star_get_pvo(const obj_t *obj, const observer_t *obs,
                         double pvo[2][4])
 {
     star_data_t *s = &((star_t*)obj)->data;
-    int r;
-    double plx = s->plx, astro_pv[2][3];
+    double plx = s->plx, astro_pv[3];
 
     if (isnan(plx)) plx = 0;
-    r = eraStarpv(s->ra, s->de, s->pra, s->pde, plx, 0, astro_pv);
-    if (r & 1) { // At infinity.
-        vec3_normalize(astro_pv[0], astro_pv[0]);
-        astrometric_to_apparent(obs, astro_pv[0], true, pvo[0]);
-        pvo[0][3] = 0.0;
-        pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0;
-    } else {
-        astrometric_to_apparent(obs, astro_pv[0], false, pvo[0]);
-        pvo[0][3] = 1.0;
-        vec3_copy(astro_pv[1], pvo[1]); // XXX probably not correct.
-        pvo[1][3] = 0.0;
-    }
+    eraPmpx(s->ra, s->de, 0, 0, plx, 0, obs->astrom.pmt, obs->astrom.eb,
+            astro_pv);
+    vec3_normalize(astro_pv, astro_pv);
+    astrometric_to_apparent(obs, astro_pv, true, pvo[0]);
+    pvo[0][3] = 0.0;
+    pvo[1][0] = pvo[1][2] = pvo[1][3] = 0.0;
     return 0;
 }
 
@@ -183,6 +176,9 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
         return 0;
     case INFO_VMAG:
         *(double*)out = star->data.vmag;
+        return 0;
+    case INFO_DISTANCE:
+        *(double*)out = star->data.distance;
         return 0;
     default:
         return 1;
