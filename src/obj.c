@@ -192,7 +192,6 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
     }
 
     if (obj->klass->get_info) {
-        observer_update(obs, true);
         return obj->klass->get_info(obj, obs, info, out);
     }
     return 1;
