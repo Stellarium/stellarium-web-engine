@@ -72,8 +72,10 @@ static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     obj_t *o;
     DL_FOREACH(obj->children, o) {
-        if (o->oid == oid)
+        if (o->oid == oid) {
+            o->ref++;
             return o;
+        }
     }
     return NULL;
 }
