@@ -145,7 +145,7 @@ Module.afterInit(function() {
       fixPageXY(e);
       var pos = getMousePos(e);
       var zoom_factor = 1.05;
-      var delta = getMouseWheelDelta(e);
+      var delta = getMouseWheelDelta(e) * 2;
       Module._core_on_zoom(Math.pow(zoom_factor, delta), pos.x, pos.y);
       return false;
     };
