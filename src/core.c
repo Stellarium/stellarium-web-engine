@@ -978,61 +978,11 @@ void core_zoomto(double fov, double duration)
 }
 
 // Return a static string representation of a an object type id.
-// XXX: deprecated.  Use otypes_get_str instead.
 EMSCRIPTEN_KEEPALIVE
-const char *type_to_str(const char type[4])
+const char *otype_to_str(const char *otype)
 {
-    const char *explanation;
-    explanation = otype_get_str(type);
-    if (explanation) return explanation;
-
-    // Most of yhose values should eventually be removed, since we are now
-    // using Simbad types everywhere.
-    static const char *TABLE[][2] = {
-        // XXX: some are from NGC2000 and could be removed.
-        {"Gx  ", "Galaxy"},
-        {"OC  ", "Open star cluster"},
-        {"Gb  ", "Globular star cluster"},
-        {"Nb  ", "Bright emission or reflection nebula"},
-        {"Pl  ", "Planetary nebula"},
-        {"C+N ", "Cluster associated with nebulosity"},
-        {"Ast ", "Asterism or group of a few stars"},
-        {"Kt  ",  "Knot or nebulous region in an external galaxy"},
-        {"*** ", "Triple star"},
-        {"D*  ",  "Double star"},
-        {"*   ",   "Star"},
-        {"PD  ",  "Photographic plate defect"},
-
-        {"PLA ", "Planet"},
-        {"MOO ", "Moon"},
-        {"SUN ", "Sun"},
-
-        // From OpenNGC
-        {"*Ass", "Association of stars"},
-        {"OCl ", "Open Cluster"},
-        {"GCl ", "Globular Cluster"},
-        {"Cl+N", "Star cluster + Nebula"},
-        {"G   ", "Galaxy"},
-        {"GPai", "Galaxy Pair"},
-        {"GTrp", "Galaxy Triplet"},
-        {"GGro", "Group of galaxies"},
-        {"PN  ", "Planetary Nebula"},
-        {"HII ", "HII Ionized region"},
-        {"EmN ", "Emission Nebula"},
-        {"Neb ", "Nebula"},
-        {"RfN ", "Reflection Nebula"},
-        {"SNR ", "Supernova remnant"},
-        {"Nova", "Nova star"},
-        {"NonE", "Nonexistent object"},
-    };
-    int i;
-    char t[4] = "    ";
-    memcpy(t, type, strlen(type));
-    for (i = 0; i < ARRAY_SIZE(TABLE); i++) {
-        if (strncmp(t, TABLE[i][0], 4) == 0)
-            return TABLE[i][1];
-    }
-    return "?";
+    const char *res = otype_get_str(otype);
+    return res ? res : "";
 }
 
 static obj_klass_t core_klass = {

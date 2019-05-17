@@ -446,8 +446,7 @@ void core_point_and_lock(obj_t *target, double duration);
 void core_zoomto(double fov, double duration);
 
 // Return a static string representation of an object type id.
-__attribute__((deprecated)) // Use otype_get_str instead.
-const char *type_to_str(const char type[4]);
+const char *otype_to_str(const char *type);
 
 // Create or get a city.
 obj_t *city_create(const char *name, const char *country_code,

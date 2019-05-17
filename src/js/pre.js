@@ -388,3 +388,19 @@ Module['zoomTo'] = function(fov, duration) {
     duration = 1.0;
   Module._core_zoomto(fov, duration);
 }
+
+/*
+ * Function: otypeToStr
+ * Get the name for an object's otype.
+ *
+ * Parameters:
+ *   otype    - The input 1-4 chars otype code.
+ *
+ * Return:
+ *   The english name for an otype.
+ */
+Module['otypeToStr'] = function(otype) {
+  var otype_to_str = Module.cwrap('otype_to_str', 'number', ['string']);
+  var cret = otype_to_str(otype);
+  return Module.UTF8ToString(cret);
+}
