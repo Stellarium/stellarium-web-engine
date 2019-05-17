@@ -264,6 +264,9 @@ var testCreate = function(stel) {
 
   layer.add(obj1);
   layer.add(obj2);
+
+  layer.remove(obj1);
+  layer.remove(obj2);
 }
 
 var testPositions = function(stel) {

@@ -15,6 +15,7 @@ Module.afterInit(function() {
     'number', ['number', 'string', 'number']);
   var obj_get_id = Module.cwrap('obj_get_id', 'string', ['number']);
   var module_add = Module.cwrap('module_add', null, ['number', 'number']);
+  var module_remove = Module.cwrap('module_remove', null, ['number', 'number']);
   var module_get_tree = Module.cwrap('module_get_tree', 'number',
     ['number', 'number']);
   var module_get_path = Module.cwrap('module_get_path', 'number',
@@ -127,6 +128,14 @@ Module.afterInit(function() {
       var ret = obj_create_str(type, id, this.v, args);
       return ret ? new SweObj(ret) : null;
     }
+  }
+
+  /*
+   * Methode: remove
+   * Remove a previously added child from a layer
+   */
+  SweObj.prototype.remove = function(obj) {
+    module_remove(this.v, obj.v);
   }
 
   SweObj.prototype.designations = function() {
