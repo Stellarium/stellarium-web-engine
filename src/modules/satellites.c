@@ -26,6 +26,7 @@ struct qsmag {
     UT_hash_handle  hh;    // For the global map.
     int             id;
     double          stdmag;
+    char            name[16];
 };
 
 /*
@@ -35,6 +36,7 @@ struct qsmag {
 typedef struct satellite {
     obj_t obj;
     char name[26];
+    char name2[26]; // Extra name.
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag; // Taken from the qsmag data.
@@ -103,12 +105,20 @@ static int parse_tle_file(satellites_t *sats, const char *data)
 
         // If the sat is in the qsmag file, set its stdmag.
         sat->number = atoi(line2 + 2);
-        HASH_FIND_INT(sats->qsmags, &sat->number, qsmag);
-        if (qsmag) sat->stdmag = qsmag->stdmag;
-
         // Copy and strip name.
         memcpy(sat->name, line0, 24);
         for (i = 23; sat->name[i] == ' '; i--) sat->name[i] = '\0';
+
+        // Use qsmag values if available.
+        HASH_FIND_INT(sats->qsmags, &sat->number, qsmag);
+        if (qsmag) {
+            if (qsmag->stdmag)
+                sat->stdmag = qsmag->stdmag;
+            if (*qsmag->name) {
+                snprintf(sat->name2, sizeof(sat->name2), "%s", sat->name);
+                snprintf(sat->name, sizeof(sat->name), "%s", qsmag->name);
+            }
+        }
 
         sat->elsetrec = sgp4_twoline2rv(
                 line1, line2, 'c', 'm', 'i',
@@ -121,12 +131,21 @@ error:
     return nb;
 }
 
+static void strip_str(char *str)
+{
+    int i;
+    for (i = strlen(str) - 1; i >= 0; i--) {
+        if (str[i] != ' ') break;
+        str[i] = '\0';
+    }
+}
+
 static bool load_qsmag(satellites_t *sats)
 {
     int size, id;
-    double stdmag;
+    float stdmag;
     const char *data, *line;
-    char url[1024];
+    char url[1024], name[16];
     qsmag_t *qsmag;
 
     if (sats->qsmags_status >= 200 && sats->qsmags_status < 400) return true;
@@ -142,12 +161,20 @@ static bool load_qsmag(satellites_t *sats)
     for (line = data; line; line = strchr(line, '\n')) {
         if (*line == '\n') line++;
         if (!(*line)) break;
-        if (strlen(line) < 34 || line[34] < '0' || line[34] > '9') continue;
-        id = atoi(line);
-        stdmag = atof(line + 33);
+        memset(name, 0, sizeof(name));
+        if (sscanf(line, "%5d%*13c%14c %f", &id, name, &stdmag) < 2) {
+            LOG_W("Incorrect qsmag line");
+            continue;
+        }
+        if (id <= 1 || id >= 99999)
+            continue;
+
         qsmag = calloc(1, sizeof(*qsmag));
         qsmag->id = id;
         qsmag->stdmag = stdmag;
+        assert(sizeof(qsmag->name) == 16 && sizeof(name) == 16);
+        memcpy(qsmag->name, name, 16);
+        strip_str(qsmag->name);
         HASH_ADD_INT(sats->qsmags, id, qsmag);
     }
     return true;
@@ -397,6 +424,8 @@ static void satellite_get_designations(
     sprintf(buf, "%05d", (int)oid_get_index(obj->oid));
     if (*sat->name)
         f(obj, user, "NAME", sat->name);
+    if (*sat->name2)
+        f(obj, user, "NAME", sat->name2);
     f(obj, user, "NORAD", buf);
 }
 
