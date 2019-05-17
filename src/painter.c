@@ -389,9 +389,10 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
 
     /*
      * For planet tiles, we also do culling test.  Since the quad is not
-     * plane, we check the normal of the four corners.
+     * plane, to prevent error, we only do it at level > 1, and we check the
+     * normal of the four corners.
      */
-    if (!outside) {
+    if (!outside && order > 1) {
         for (i = 0; i < 4; i++) {
             vec3_copy(healpix[i], normals[i]);
             normals[i][3] = 0.0;
