@@ -233,7 +233,8 @@
   <div class="test-shapes">
     <p>Shapes:</p>
     <ul>
-      <stel-shape v-for="shape in shapes" :obj="shape" :key="shape.id">
+      <stel-shape v-for="shape in shapes" :obj="shape" :layer="layer"
+                  :key="shape.id">
       </stel-shape>
     </ul>
     <button class="btn btn-primary" v-on:click="add('rect')">New rect</button>
@@ -271,6 +272,9 @@
       <input type="number" :value="Math.round(obj.color[3] * 100)"
              @input="obj.color = setAlpha(obj.color, $event.target.value)">
     </div>
+    <button class="btn btn-primary" v-on:click="$parent.remove(obj)">
+      Remove
+    </button>
   </div>
 </script>
 
@@ -411,6 +415,12 @@
           frame: stel.FRAME_ICRS
         })
         this.shapes.push(shape)
+      },
+      remove: function(shape) {
+        this.shapes = this.shapes.filter(function(item) {
+          return item != shape
+        });
+        this.layer.remove(shape)
       }
     }
   })
