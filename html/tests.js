@@ -262,6 +262,26 @@ var testCreate = function(stel) {
   assert(obj3.designations().includes('MPC (1)'));
   assert(obj3.designations().includes('NAME (1) Ceres'));
 
+
+  var obj4 = stel.createObj('star', {
+    "interest": 2.1444,
+    "match": "HR 1234", "model": "star",
+    "model_data": {
+      "Bmag": 6.39, "Umag": 8.18, "Vmag": 6.39,
+      "de": 36.9894734328874, "plx": 6.334, "pm_de": -0.555,
+      "pm_ra": -7.449, "ra": 60.3118000083165, "rv": -11.4,
+      "spect_t": "A0V"
+    }, "names": [ "HD 25152", "HR 1234", "SAO 56899", "HIP 18769",
+      "TYC 2369-193-1", "BD+36 805", "Gaia DR2 219547565555375488",
+      "Gaia DR1 219547561257131776", "ROT 588", "WEB 3613", "GC 4809",
+      "SKY# 6121", "UBV 3900", "UBV M 9865", "AG+36 408", "GCRV 54676",
+      "HIC 18769", "PPM 69012", "TD1 2722", "GEN# +1.00025152",
+      "GSC 02369-00193", "uvby98 100025152", "2MASS J04011482+3659222" ],
+    "short_name": "HD 25152",
+    "types": [ "*iC", "*" ]
+  });
+  assert(obj4.designations().includes('HD 25152'));
+
   layer.add(obj1);
   layer.add(obj2);
 
