@@ -126,11 +126,28 @@ static int gaia_index_to_pix(int order, uint64_t id)
     return (id >> 35) / (1 << (2 * (12 - order)));
 }
 
+// Turn a json array of string into a '\0' separated C string.
+// Move this in utils?
+static char *parse_json_names(json_value *names)
+{
+    int i;
+    json_value *jstr;
+    UT_string ret;
+    utstring_init(&ret);
+    for (i = 0; i < names->u.array.length; i++) {
+        jstr = names->u.array.values[i];
+        if (jstr->type != json_string) continue; // Not normal!
+        utstring_bincpy(&ret, jstr->u.string.ptr, jstr->u.string.length + 1);
+    }
+    utstring_bincpy(&ret, "", 1); // Add extra '\0' at the end.
+    return utstring_body(&ret);
+}
+
 static int star_init(obj_t *obj, json_value *args)
 {
     // Support creating a star using noctuasky model data json values.
     star_t *star = (star_t*)obj;
-    json_value *model;
+    json_value *model, *names;
     star_data_t *d = &star->data;
 
     model= json_get_attr(args, "model_data", json_object);
@@ -146,6 +163,10 @@ static int star_init(obj_t *obj, json_value *args)
         d->illuminance = core_mag_to_illuminance(d->vmag);
         compute_pv(d->ra, d->de, d->pra, d->pde, d->plx, d);
     }
+
+    names = json_get_attr(args, "names", json_array);
+    if (names)
+        d->names = parse_json_names(names);
     return 0;
 }
 
