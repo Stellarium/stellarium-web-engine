@@ -37,7 +37,6 @@ int module_update(obj_t *module, double dt)
  *   OBJ_AGAIN  - Some resources are still loading and so calling the function
  *                again later might return more values.
  */
-EMSCRIPTEN_KEEPALIVE
 int module_list_objs(const obj_t *obj, observer_t *obs,
                      double max_mag, uint64_t hint, void *user,
                      int (*f)(void *user, obj_t *obj))
@@ -57,6 +56,14 @@ int module_list_objs(const obj_t *obj, observer_t *obs,
         if (f && f(user, child)) break;
     }
     return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int module_list_objs2(const obj_t *obj, observer_t *obs,
+                     double max_mag, void *user,
+                     int (*f)(void *, obj_t *))
+{
+    return module_list_objs(obj, obs, max_mag, 0, user, f);
 }
 
 /*

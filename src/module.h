@@ -40,6 +40,10 @@ int module_list_objs(const obj_t *module, observer_t *obs,
                      double max_mag, uint64_t hint, void *user,
                      int (*f)(void *user, obj_t *obj));
 
+int module_list_objs2(const obj_t *obj, observer_t *obs,
+                     double max_mag, void *user,
+                     int (*f)(void *, obj_t *));
+
 /*
  * Function: module_add_data_source
  * Add a data source url to a module
