@@ -161,6 +161,37 @@ Module.afterInit(function() {
     return ret;
   };
 
+  /*
+   * Function: listObjs
+   * Return a list of SweObject for a given module.
+   *
+   * Arguments:
+   *   obs      - An observer.
+   *   maxMag   - The maximum magnitude above which objects are discarded.
+   *   filter   - a function called for each object returning false if the
+   *              object must be filtered out.
+   *
+   * Return:
+   *   An array SweObject. It is the responsibility of the caller to properly
+   *   destroy all the objects of the list when they are not needed, by calling
+  *    obj.destroy() on each of them.
+   *
+   */
+  SweObj.prototype.listObjs = function(obs, maxMag, filter) {
+    var ret = [];
+    var callback = Module.addFunction(function(user, objv) {
+      var obj = new SweObj(objv);
+      if (filter(obj)) {
+        obj.retain();
+        ret.push(obj);
+      }
+      return 0;
+    }, 'iii');
+    Module._module_list_objs2(this.v, obs.v, maxMag, 0, callback);
+    Module.removeFunction(callback);
+    return ret;
+  };
+
   // XXX: deprecated.
   SweObj.prototype.getTree = function(detailed) {
     detailed = (detailed !== undefined) ? detailed : false
