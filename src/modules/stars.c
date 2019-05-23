@@ -752,7 +752,7 @@ static int stars_list_visitor(int order, int pix, void *user)
     } *d = user;
     tile_t *tile;
     tile = get_tile(d->stars, 0, order, pix, false, &code);
-    if (!tile || tile->mag_max <= d->max_mag) return 0;
+    if (!tile || tile->mag_min >= d->max_mag) return 0;
     for (i = 0; i < tile->nb; i++) {
         if (tile->sources[i].vmag > d->max_mag) continue;
         d->nb++;
