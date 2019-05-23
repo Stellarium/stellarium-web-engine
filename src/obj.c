@@ -110,6 +110,14 @@ void obj_release(obj_t *obj)
 }
 
 EMSCRIPTEN_KEEPALIVE
+void obj_retain(obj_t *obj)
+{
+    if (!obj) return;
+    assert(obj->ref);
+    obj->ref++;
+}
+
+EMSCRIPTEN_KEEPALIVE
 obj_t *obj_clone(const obj_t *obj)
 {
     assert(obj->klass->clone);

@@ -281,6 +281,12 @@ obj_t *obj_create_str(const char *type, const char *id, obj_t *parent,
 void obj_release(obj_t *obj);
 
 /*
+ * Function: obj_retain
+ * Increment object ref count by 1.
+ */
+void obj_retain(obj_t *obj);
+
+/*
  * Function: obj_clone
  * Create a clone of the object.
  *

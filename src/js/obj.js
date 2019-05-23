@@ -103,6 +103,10 @@ Module.afterInit(function() {
     Module._obj_release(this.v);
   }
 
+  SweObj.prototype.retain = function() {
+    Module._obj_retain(this.v);
+  }
+
   SweObj.prototype.change = function(attr, callback, context) {
     g_listeners.push({
       'obj': this.v,
