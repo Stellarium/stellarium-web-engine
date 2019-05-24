@@ -57,7 +57,7 @@ static int on_pan(const gesture_t *gest, void *user)
     core->observer->altitude += (sal - dal);
     core->observer->altitude = clamp(core->observer->altitude,
                                      -M_PI / 2, +M_PI / 2);
-    core->fast_mode = true;
+
     obj_set_attr(&core->obj, "lock", NULL);
     observer_update(core->observer, true);
     // Notify the changes.

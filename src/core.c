@@ -580,8 +580,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
         .lines_width = 1.0,
-        .flags = (core->fast_mode ? PAINTER_FAST_MODE : 0) |
-            (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
+        .flags = (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0) |
             PAINTER_SHOW_BAYER_LABELS,
     };
     painter_update_caps(&painter);
@@ -604,8 +603,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
         if (module->klass->post_render)
             module->klass->post_render(module, &painter);
     }
-
-    core->fast_mode = false;
 
     assert(bck.obs.azimuth == core->observer->azimuth);
     assert(bck.obs.altitude == core->observer->altitude);
@@ -699,7 +696,7 @@ void core_on_zoom(double k, double x, double y)
     core->observer->altitude += (sal - dal);
     core->observer->altitude = clamp(core->observer->altitude,
                                      -M_PI / 2, +M_PI / 2);
-    core->fast_mode = true;
+
     // Notify the changes.
     module_changed(&core->observer->obj, "altitude");
     module_changed(&core->observer->obj, "azimuth");
@@ -922,7 +919,6 @@ void core_lookat(const double *pos, double duration)
 
     core->target.duration = duration;
     core->target.t = 0.0;
-    core->fast_mode = true;
 }
 
 EMSCRIPTEN_KEEPALIVE

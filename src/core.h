@@ -135,7 +135,6 @@ struct core
     double          win_pixels_scale;
     obj_t           *selection;
     obj_t           *hovered;
-    bool            fast_mode; // Render as fast as possible.
 
     // Profiling data.
     struct {
