@@ -88,7 +88,6 @@ typedef struct {
     obj_t       obj;
     regex_t     search_reg;
     fader_t     visible;
-    double      hints_mag_offset;
     hips_t      *survey;
 } dsos_t;
 
@@ -365,7 +364,6 @@ static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
     fader_init(&dsos->visible, true);
-    dsos->hints_mag_offset = 0;
     regcomp(&dsos->search_reg, "(m|ngc|ic) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
     return 0;
