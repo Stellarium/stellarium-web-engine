@@ -56,7 +56,8 @@ static bool is_str(const request_t *req)
 {
     return str_endswith(req->url, ".txt") ||
            str_endswith(req->url, ".json") ||
-           str_endswith(req->url, ".html");
+           str_endswith(req->url, ".html") ||
+           str_endswith(req->url, ".fab");
 }
 
 static void onload(unsigned int _, void *arg, void *data, unsigned int size)
