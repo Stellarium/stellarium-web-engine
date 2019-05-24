@@ -28,9 +28,16 @@ static struct {
     int nb;     // Number of current running requests.
 } g = {};
 
+static bool url_has_extension(const char *str, const char *ext);
+
 void request_init(const char *cache_dir)
 {
     // Ignore the cache dir with emscripten.
+
+    // Some checks that 'url_has_extension' works well enough.
+    assert(url_has_extension("https://xyz.test.jpg", ".jpg"));
+    assert(url_has_extension("http://xyz.test.jpg?xyz", ".jpg"));
+    assert(url_has_extension("http://xyz.test.jpg#xyz", ".jpg"));
 }
 
 request_t *request_create(const char *url)
@@ -52,20 +59,27 @@ void request_delete(request_t *req)
     free(req);
 }
 
-static bool has_extension(const char *str, const char *ext)
+// Very basic algo to check the extension of a url file.
+// XXX: should probably use a regex.
+static bool url_has_extension(const char *str, const char *ext)
 {
-    if (strlen(str) < strlen(ext)) return false;
-    const char *start = str + strlen(str) - strlen(ext);
-    return strcasecmp(start, ext) == 0;
+    const char *s;
+    char c;
+
+    s = strcasestr(str, ext);
+    if (!s) return false;
+    c = s[strlen(ext)];
+    if (c != '\0' && c != '?' && c != '#') return false;
+    return true;
 }
 
-static bool is_str(const request_t *req)
+static bool could_be_str(const request_t *req)
 {
-    return has_extension(req->url, ".txt") ||
-           has_extension(req->url, ".json") ||
-           has_extension(req->url, ".html") ||
-           has_extension(req->url, ".utf8") ||
-           has_extension(req->url, ".fab");
+    return !url_has_extension(req->url, ".jpeg") &&
+           !url_has_extension(req->url, ".jpg") &&
+           !url_has_extension(req->url, ".png") &&
+           !url_has_extension(req->url, ".webp") &&
+           !url_has_extension(req->url, ".eph");
 }
 
 static void onload(unsigned int _, void *arg, void *data, unsigned int size)
@@ -75,8 +89,9 @@ static void onload(unsigned int _, void *arg, void *data, unsigned int size)
     req->handle = 0;
     req->status_code = 200; // XXX: get proper code.
 
-    // For NULL terminated string for txt requests.
-    if (is_str(req) && ((char*)data)[size] != 0) {
+    // Even is the content type is not text, we still add a zero padding
+    // if we suspect the data is going to be interpreted as text.
+    if (could_be_str(req) && ((char*)data)[size] != 0) {
         tmp = data;
         data = calloc(1, size + 1);
         memcpy(data, tmp, size);
