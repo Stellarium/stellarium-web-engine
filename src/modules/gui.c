@@ -193,6 +193,12 @@ static void menu_main(void *user)
                 .default_value = 0.0,
                 });
         gui_item(&(gui_item_t){
+                .label = "Display limit mag",
+                .obj = &core->obj,
+                .attr = "display_limit_mag",
+                .default_value = 99,
+                });
+        gui_item(&(gui_item_t){
                 .label = "Refraction",
                 .obj = core_get_module("observer"),
                 .attr = "refraction",
