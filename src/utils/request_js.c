@@ -52,13 +52,20 @@ void request_delete(request_t *req)
     free(req);
 }
 
+static bool has_extension(const char *str, const char *ext)
+{
+    if (strlen(str) < strlen(ext)) return false;
+    const char *start = str + strlen(str) - strlen(ext);
+    return strcasecmp(start, ext) == 0;
+}
+
 static bool is_str(const request_t *req)
 {
-    return str_endswith(req->url, ".txt") ||
-           str_endswith(req->url, ".json") ||
-           str_endswith(req->url, ".html") ||
-           str_endswith(req->url, ".utf8") ||
-           str_endswith(req->url, ".fab");
+    return has_extension(req->url, ".txt") ||
+           has_extension(req->url, ".json") ||
+           has_extension(req->url, ".html") ||
+           has_extension(req->url, ".utf8") ||
+           has_extension(req->url, ".fab");
 }
 
 static void onload(unsigned int _, void *arg, void *data, unsigned int size)
