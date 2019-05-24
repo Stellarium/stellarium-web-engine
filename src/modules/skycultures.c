@@ -300,8 +300,9 @@ static int skycultures_add_data_source(
     cult = add_from_uri(cults, url, key);
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
     // If it's the default skyculture (western) activate it immediatly.
-    if (str_endswith(url, "western"))
-        obj_set_attr((obj_t*)cults, "current_id", cult->info.name);
+    if (str_endswith(url, "western")) {
+        obj_set_attr((obj_t*)cults, "current_id", "western");
+    }
     return 0;
 }
 
@@ -343,20 +344,20 @@ static json_value *skycultures_current_id_fn(
         args_get(args, NULL, 1, TYPE_STRING, id);
         if (cults->current) {
             MODULE_ITER(cults, cult, "skyculture") {
-                if (strcmp(cult->info.name, cults->current->info.name) == 0) {
+                if (strcmp(cult->obj.id, cults->current->obj.id) == 0) {
                     skyculture_deactivate(cult);
                     break;
                 }
             }
         }
         MODULE_ITER(cults, cult, "skyculture") {
-            if (strcmp(cult->info.name, id) == 0) {
+            if (strcmp(cult->obj.id, id) == 0) {
                 skyculture_activate(cult);
                 break;
             }
         }
     }
-    return args_value_new(TYPE_STRING, cults->current->info.name);
+    return args_value_new(TYPE_STRING, cults->current->obj.id);
 }
 
 /*
