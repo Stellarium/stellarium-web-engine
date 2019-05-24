@@ -203,8 +203,10 @@ static bool get_file(skyculture_t *cult, int file_id, const char *name,
 static int skyculture_update(obj_t *obj, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
+    skycultures_t *cults = (skycultures_t*)obj->parent;
     const char *data;
     constellation_art_t *arts;
+    bool active = (cult == cults->current);
 
     if (get_file(cult, SK_INFO, "info.ini", &data, 0)) {
         ini_parse_string(data, info_ini_handler, cult);
@@ -222,6 +224,7 @@ static int skyculture_update(obj_t *obj, double dt)
     {
         cult->constellations = skyculture_parse_stellarium_constellations(
                 data, &cult->nb_constellations);
+        if (active) skyculture_activate(cult);
     }
 
     if (cult->constellations && get_file(cult, SK_CONSTELLATION_NAMES_STEL,
@@ -246,7 +249,10 @@ static int skyculture_update(obj_t *obj, double dt)
                 "constellationsart.fab", &data, ASSET_ACCEPT_404))
     {
         arts = skyculture_parse_stellarium_constellations_art(data, NULL);
-        if (arts) cult->imgs = make_imgs_json(arts, cult->uri);
+        if (arts) {
+            cult->imgs = make_imgs_json(arts, cult->uri);
+            if (active) skyculture_activate(cult);
+        }
         free(arts);
     }
 

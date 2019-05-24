@@ -198,6 +198,7 @@ int constellation_set_image(obj_t *obj, const json_value *args)
     constellation_t *cons = (void*)obj;
     char buf[1024];
 
+    if (cons->img) return 0; // Already set.
     img = json_get_attr_s(args, "img");
     anchors = json_get_attr_s(args, "anchors");
     base_path = json_get_attr_s(args, "base_path");
