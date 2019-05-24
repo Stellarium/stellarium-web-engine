@@ -57,6 +57,7 @@ static bool is_str(const request_t *req)
     return str_endswith(req->url, ".txt") ||
            str_endswith(req->url, ".json") ||
            str_endswith(req->url, ".html") ||
+           str_endswith(req->url, ".utf8") ||
            str_endswith(req->url, ".fab");
 }
 
