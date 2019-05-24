@@ -115,6 +115,9 @@ struct core
     double          hints_mag_offset;
     // Another offset just for DSOs
     double          dso_hints_mag_offset;
+    // Objects fainter than this magnitude won't be displayed, independently
+    // of zoom/exposure levels. Set to e.g. 99 to practically disable.
+    double          display_limit_mag;
 
     tonemapper_t    tonemapper;
     bool            fast_adaptation; // True if eye adpatation is fast

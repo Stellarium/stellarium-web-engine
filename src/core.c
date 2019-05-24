@@ -286,6 +286,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_pixels_scale = pixel_scale;
     core->hints_mag_offset = -1;
     core->dso_hints_mag_offset = 0;
+    core->display_limit_mag = 99;
 
     core->observer = (observer_t*)obj_create("observer", "observer",
                                              (obj_t*)core, NULL);
@@ -545,7 +546,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     core_get_proj(&proj);
 
     observer_update(core->observer, true);
-    max_vmag = compute_max_vmag();
+    max_vmag = min(compute_max_vmag(), core->display_limit_mag);
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
@@ -1001,6 +1002,8 @@ static obj_klass_t core_klass = {
         PROPERTY(zoom, TYPE_FLOAT, MEMBER(core_t, zoom)),
         PROPERTY(test, TYPE_BOOL, MEMBER(core_t, test)),
         PROPERTY(exposure_scale, TYPE_FLOAT, MEMBER(core_t, exposure_scale)),
+        PROPERTY(display_limit_mag, TYPE_FLOAT,
+                 MEMBER(core_t, display_limit_mag)),
         {}
     }
 };
