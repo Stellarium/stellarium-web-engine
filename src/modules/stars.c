@@ -257,14 +257,12 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     }
 
     // Still no name, maybe we can show a bayer id.
-    if (painter->flags & PAINTER_SHOW_BAYER_LABELS) {
-        bayer_get(s->hip, NULL, &bayer, &bayer_n);
-        if (bayer) {
-            snprintf(buf, sizeof(buf), "%s%.*d",
-                     greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-            labels_add_3d(buf, frame, pos, true, radius, FONT_SIZE_BASE,
-                          label_color, 0, LABEL_AROUND, effects, -vmag, s->oid);
-        }
+    bayer_get(s->hip, NULL, &bayer, &bayer_n);
+    if (bayer) {
+        snprintf(buf, sizeof(buf), "%s%.*d",
+                 greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
+        labels_add_3d(buf, frame, pos, true, radius, FONT_SIZE_BASE,
+                      label_color, 0, LABEL_AROUND, effects, -vmag, s->oid);
     }
 }
 
