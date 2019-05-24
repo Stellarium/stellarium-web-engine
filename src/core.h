@@ -115,7 +115,6 @@ struct core
     double          hints_mag_offset;
     // Another offset just for DSOs
     double          dso_hints_mag_offset;
-    double          contrast; // Apply contrast to the rendered stars.
 
     tonemapper_t    tonemapper;
     bool            fast_adaptation; // True if eye adpatation is fast
