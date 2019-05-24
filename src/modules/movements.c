@@ -64,7 +64,6 @@ static int on_pan(const gesture_t *gest, void *user)
     module_changed(&core->observer->obj, "altitude");
     module_changed(&core->observer->obj, "azimuth");
     return 0;
-    return 0;
 }
 
 static int on_click(const gesture_t *gest, void *user)
