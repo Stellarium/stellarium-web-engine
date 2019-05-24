@@ -527,7 +527,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     obj_t *module;
     projection_t proj;
     double t;
-    bool cst_visible;
     double max_vmag;
 
     // Used to make sure some values are not touched during render.
@@ -561,11 +560,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     if (!core->rend)
         core->rend = render_gl_create();
     labels_reset();
-
-    // Show bayer only if the constellations lines are visible.
-    module = core_get_module("constellations");
-    assert(module);
-    obj_get_attr(module, "lines_visible", &cst_visible);
 
     painter_t painter = {
         .rend = core->rend,
