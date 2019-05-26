@@ -364,7 +364,7 @@ static int clean_events(event_t **events, const observer_t *obs) {
 
 static void cobj_update(cobj_t *o, const observer_t *obs)
 {
-    double pvo[2][4], p[3];
+    double pvo[2][4], p[4];
     if (!o) return;
     obj_get_pvo(o->obj, obs, pvo);
     eraC2s(pvo[0], &o->ra, &o->de);
