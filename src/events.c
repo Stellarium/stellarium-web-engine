@@ -63,7 +63,7 @@ static double rise_dist(double time, void *user)
         observer_t *obs;
         obj_t *obj;
     } *data = user;
-    double radius = 0, pvo[2][4], observed[3], az, alt;
+    double radius = 0, pvo[2][4], observed[4], az, alt;
 
     data->obs->tt = time;
     observer_update(data->obs, false);
