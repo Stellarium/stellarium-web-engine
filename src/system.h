@@ -60,12 +60,15 @@ int sys_make_dir(const char *path);
  *   acc    - get the accelerometer readings.
  *   mag    - get the magnetomer readings.
  *   rot    - get the device rotation angle (0, 90, 180 or 270).
+ *   calibration_level - get the compass calibration level. Ranges from 0 to 1,
+ *                       1 meaning fully calibrated.
  *
  * Return:
  *   0 on success.
  */
 int sys_device_sensors(bool enable_accelero, bool enable_magneto,
-                       double acc[3], double mag[3], int *rot);
+                       double acc[3], double mag[3], int *rot,
+                       double *calibration_level);
 
 int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
 
@@ -146,7 +149,8 @@ typedef struct {
     void (*log)(void *user, const char *msg);
     const char *(*get_user_dir)(void *user);
     int (*device_sensors)(void *user, bool accelero_enable, bool magneto_enable,
-                          double acc[3], double mag[3], int *rot);
+                          double acc[3], double mag[3], int *rot,
+                          double *calibration_level);
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
