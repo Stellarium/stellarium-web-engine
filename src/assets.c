@@ -41,12 +41,6 @@ struct asset
 // Global map of all the assets.
 static asset_t *g_assets = NULL;
 
-// Global list of the alias.
-static struct {
-    char *base;
-    char *alias;
-} g_alias[8] = {};
-
 // Global hook function.
 static struct {
     void *user;
@@ -119,8 +113,7 @@ const void *asset_get_data(const char *url, int *size, int *code)
 const void *asset_get_data2(const char *url, int flags, int *size, int *code)
 {
     asset_t *asset;
-    int i, r, default_size, default_code;
-    char alias[1024];
+    int r, default_size, default_code;
     const void *data = NULL;
     (void)r;
     size = size ?: &default_size;
@@ -164,20 +157,6 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         *code = 200;
         *size = asset->size;
         return asset->data;
-    }
-
-    // Check if we can use an alias.
-    for (i = 0; i < ARRAY_SIZE(g_alias); i++) {
-        if (!g_alias[i].base) break;
-        if (str_startswith(url, g_alias[i].base)) {
-            sprintf(alias, "%s%s",
-                    g_alias[i].alias, url + strlen(g_alias[i].base));
-            // Remove http parameters for alias!
-            if (strrchr(alias, '?')) *strrchr(alias, '?') = '\0';
-            data = asset_get_data2(alias, flags | ASSET_ACCEPT_404, size, code);
-            if (data) goto end;
-            *code = 0;
-        }
     }
 
     // Apply hook if set.
@@ -252,21 +231,6 @@ const char *asset_iter_(const char *base, void **i)
     }
     *i = asset;
     return asset ? asset->url : NULL;
-}
-
-void asset_set_alias(const char *base, const char *alias)
-{
-    int i;
-    assert(str_startswith(base, "http://") ||
-           str_startswith(base, "https://"));
-    assert(!str_endswith(base, "/"));
-    assert(!str_endswith(alias, "/"));
-    for (i = 0; i < ARRAY_SIZE(g_alias); i++) {
-        if (!g_alias[i].base) break;
-    }
-    assert(i < ARRAY_SIZE(g_alias));
-    g_alias[i].base = strdup(base);
-    g_alias[i].alias = strdup(alias);
 }
 
 void asset_release(const char *url)
