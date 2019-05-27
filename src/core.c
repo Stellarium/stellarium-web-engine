@@ -164,38 +164,50 @@ obj_t *core_get_obj_at(double x, double y, double max_dist)
 EMSCRIPTEN_KEEPALIVE
 void core_add_default_sources(void)
 {
-    #define BASE_URL "https://data.stellarium.org/"
+    #define BASE_URL "https://stellarium.sfo2.cdn.digitaloceanspaces.com/"
     #define add_source(url, type) \
         module_add_data_source(NULL, url, type, NULL)
 
-    add_source(BASE_URL "landscapes", NULL);
-
-    // Online gaia survey.
-    add_source(BASE_URL "surveys/gaia_dr2_v2?v=2019-02-11T05:34Z", "hips");
+    add_source(BASE_URL "landscapes/v1/guereins", "landscape");
+    add_source(BASE_URL "landscapes/v1", NULL);
 
     // Bundled star survey.
     add_source("asset://stars", "hips");
-
+    // Online gaia survey.
+    add_source(BASE_URL "surveys/gaia/v1?v=2019-02-11T05:34Z", "hips");
     // Online DSO survey.
-    add_source(BASE_URL "surveys/dso", "hips");
+    add_source(BASE_URL "surveys/dso/v1", "hips");
 
-    // Skyculture.  We load the western culture immediately so we don't have
-    // to wait to parse the online directory index.json file.
-    asset_set_alias(BASE_URL "skycultures", "asset://skycultures");
-    add_source(BASE_URL "skycultures/western", "skyculture");
-    add_source(BASE_URL "skycultures", NULL);
+    // Skycultures.
+    add_source(BASE_URL "skycultures/v1/western", "skyculture");
+    add_source(BASE_URL "skycultures/v1", NULL);
 
-    // HiPS surveys.
-    add_source(BASE_URL "surveys", "hipslist");
+    add_source(BASE_URL "surveys/dss/v1", "hips");
+    add_source(BASE_URL "surveys/milkyway/v1", "hips");
 
-    add_source("https://alasky.unistra.fr/DSS/DSSColor", "hips");
+    // All the planets.
+    add_source(BASE_URL "surveys/sso/callisto/v1", "hips");
+    add_source(BASE_URL "surveys/sso/default/v1", "hips");
+    add_source(BASE_URL "surveys/sso/europa/v1", "hips");
+    add_source(BASE_URL "surveys/sso/ganymede/v1", "hips");
+    add_source(BASE_URL "surveys/sso/io/v1", "hips");
+    add_source(BASE_URL "surveys/sso/jupiter/v1", "hips");
+    add_source(BASE_URL "surveys/sso/mars/v1", "hips");
+    add_source(BASE_URL "surveys/sso/mercury/v1", "hips");
+    add_source(BASE_URL "surveys/sso/moon/v1", "hips");
+    add_source(BASE_URL "surveys/sso/moon-normal/v1", "hips");
+    add_source(BASE_URL "surveys/sso/neptune/v1", "hips");
+    add_source(BASE_URL "surveys/sso/saturn/v1", "hips");
+    add_source(BASE_URL "surveys/sso/sun/v1", "hips");
+    add_source(BASE_URL "surveys/sso/uranus/v1", "hips");
+    add_source(BASE_URL "surveys/sso/venus/v1", "hips");
 
     // MPC data.
     add_source("asset://mpcorb.dat", "mpc_asteroids");
-    add_source(BASE_URL "mpc/CometEls.txt", "mpc_comets");
+    add_source(BASE_URL "mpc/v1/CometEls.txt", "mpc_comets");
 
     // Artificial satellites files.
-    add_source(BASE_URL "norad", "norad");
+    add_source(BASE_URL "norad/v1", "norad");
 
     #undef ADD_SOURCE
     #undef BASE_URL
