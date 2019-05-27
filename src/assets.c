@@ -53,6 +53,11 @@ static struct {
     void *(*fn)(const char *path, int *size, int *code);
 } g_handlers[2] = {};
 
+static struct {
+    void *user;
+    void *(*fn)(void *user, const char *path, int *size, int *code);
+} g_hook = {};
+
 /*
  * Convenience function to log return code errors if needed.
  */
@@ -192,6 +197,18 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         }
     }
 
+    // Apply hook if set.
+    if (g_hook.fn && !asset->request) {
+        asset->data = g_hook.fn(g_hook.user, url, &asset->size, code);
+        if (*code != -1) {
+            asset->flags |= FREE_DATA;
+            *size = asset->size;
+            data = asset->data;
+            goto end;
+        }
+        *code = 0;
+    }
+
     if (!asset->request) {
         if (asset->delay) {
             asset->delay--;
@@ -289,6 +306,22 @@ void asset_add_handler(
     g_handlers[i].prefix = strdup(prefix);
     g_handlers[i].fn = handler;
 }
+
+/*
+ * Function: asset_set_hook
+ * Set a global function to handle special urls.
+ *
+ * The hook function will be called for each new requests, and will bypass
+ * the normal query, except if the return code is set to -1.
+ */
+void asset_set_hook(void *user,
+        void *(*fn)(void *user, const char *url, int *size, int *code))
+{
+    assert(!g_hook.fn);
+    g_hook.user = user;
+    g_hook.fn = fn;
+}
+
 
 #include "assets/cities.txt.inl"
 #include "assets/font.inl"

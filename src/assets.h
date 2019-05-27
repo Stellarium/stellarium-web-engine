@@ -126,7 +126,20 @@ void asset_set_alias(const char *base_url, const char *alias);
 /*
  * Function: asset_add_handler
  * Add a custrom asset handler for urls with a given prefix.
+ *
+ * Deprecated: use asset_set_hook instead.
  */
 void asset_add_handler(
         const char *prefix,
         void *(*handler)(const char *path, int *size, int *code));
+
+
+/*
+ * Function: asset_set_hook
+ * Set a global function to handle special urls.
+ *
+ * The hook function will be called for each new requests, and will bypass
+ * the normal query, except if the return code is set to -1.
+ */
+void asset_set_hook(void *user,
+        void *(*fn)(void *user, const char *url, int *size, int *code));
