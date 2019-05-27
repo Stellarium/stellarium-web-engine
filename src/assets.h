@@ -111,19 +111,6 @@ void asset_register(const char *url, const void *data, int size,
         asset_register("asset://" name_, data_, sizeof(data_), comp_); }
 
 /*
- * Function: asset_set_alias
- * Set an alias url for an online directory.
- *
- * Any subsequent call to asset_get_data taking as input an url starting
- * with the base url, will first attempt to retrieve the data using the
- * alias url.
- *
- * This allows to bundle some data in the app, while still accessing it
- * as if it was online.
- */
-void asset_set_alias(const char *base_url, const char *alias);
-
-/*
  * Function: asset_add_handler
  * Add a custrom asset handler for urls with a given prefix.
  */
