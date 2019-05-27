@@ -64,7 +64,7 @@ static int landscape_update(obj_t *obj, double dt)
     int code;
 
     if (!(ls->parsed & LS_DESCRIPTION)) {
-        sprintf(path, "%s/%s", ls->uri, "description.en.html");
+        sprintf(path, "%s/%s", ls->uri, "description.en.utf8");
         data = asset_get_data(path, NULL, &code);
         if (!code) return 0;
         ls->parsed |= LS_DESCRIPTION;
