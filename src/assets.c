@@ -47,12 +47,7 @@ static struct {
     char *alias;
 } g_alias[8] = {};
 
-// Global list of handlers for special url schemes.
-static struct {
-    char *prefix;
-    void *(*fn)(const char *path, int *size, int *code);
-} g_handlers[2] = {};
-
+// Global hook function.
 static struct {
     void *user;
     void *(*fn)(void *user, const char *path, int *size, int *code);
@@ -185,18 +180,6 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         }
     }
 
-    // Check if we have a special handler for this asset.
-    for (i = 0; i < ARRAY_SIZE(g_handlers); i++) {
-        if (!g_handlers[i].prefix) break;
-        if (str_startswith(url, g_handlers[i].prefix)) {
-            asset->data = g_handlers[i].fn(url, &asset->size, code);
-            asset->flags |= FREE_DATA;
-            *size = asset->size;
-            data = asset->data;
-            goto end;
-        }
-    }
-
     // Apply hook if set.
     if (g_hook.fn && !asset->request) {
         asset->data = g_hook.fn(g_hook.user, url, &asset->size, code);
@@ -292,19 +275,6 @@ void asset_release(const char *url)
     HASH_FIND_STR(g_assets, url, asset);
     if (!asset) return;
     asset_release_(asset);
-}
-
-void asset_add_handler(
-        const char *prefix,
-        void *(*handler)(const char *path, int *size, int *code))
-{
-    int i;
-    for (i = 0; i < ARRAY_SIZE(g_handlers); i++) {
-        if (!g_handlers[i].prefix) break;
-    }
-    assert(i < ARRAY_SIZE(g_handlers));
-    g_handlers[i].prefix = strdup(prefix);
-    g_handlers[i].fn = handler;
 }
 
 /*
