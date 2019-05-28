@@ -342,10 +342,8 @@ texture_t *hips_get_tile_texture(
 
     if (order <= hips->order) {
         tile = hips_get_tile(hips, order, pix, flags, &code);
-        if (!tile && code && code != 598) { // The tile doesn't exists
+        if (!tile && code && code != 598)
             *loading_complete = true;
-            return NULL;
-        }
     }
 
     // Create texture if needed.
