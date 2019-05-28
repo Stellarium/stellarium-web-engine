@@ -340,7 +340,7 @@ texture_t *hips_get_tile_texture(
 
     if (!hips_is_ready(hips)) return NULL;
 
-    if (order <= hips->order) {
+    if (order <= hips->order && !(flags & HIPS_FORCE_USE_ALLSKY)) {
         tile = hips_get_tile(hips, order, pix, flags, &code);
         if (!tile && code && code != 598)
             *loading_complete = true;
