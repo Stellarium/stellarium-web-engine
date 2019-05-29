@@ -276,7 +276,7 @@ static void skycultures_gui(obj_t *obj, int location)
             }
             res = gui_toggle(cult->info.name, &active);
             if (res) {
-                obj_set_attr((obj_t*)cults, "current_id", cult->info.name);
+                obj_set_attr((obj_t*)cults, "current_id", cult->obj.id);
             }
         }
         gui_tab_end();
