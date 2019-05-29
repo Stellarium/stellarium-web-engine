@@ -143,6 +143,18 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         assert(r == 0);
     }
 
+    // Apply hook if set.
+    if (g_hook.fn && !asset->request && !asset->data) {
+        asset->data = g_hook.fn(g_hook.user, url, &asset->size, code);
+        if (*code != -1) {
+            asset->flags |= FREE_DATA;
+            *size = asset->size;
+            data = asset->data;
+            goto end;
+        }
+        *code = 0;
+    }
+
     // Special handler for local files.
     if (!asset->data && !strchr(url, ':')) {
         if (!file_exists(url)) {
@@ -157,18 +169,6 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         *code = 200;
         *size = asset->size;
         return asset->data;
-    }
-
-    // Apply hook if set.
-    if (g_hook.fn && !asset->request) {
-        asset->data = g_hook.fn(g_hook.user, url, &asset->size, code);
-        if (*code != -1) {
-            asset->flags |= FREE_DATA;
-            *size = asset->size;
-            data = asset->data;
-            goto end;
-        }
-        *code = 0;
     }
 
     if (!asset->request) {
