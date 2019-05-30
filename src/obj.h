@@ -16,6 +16,13 @@
 
 #include "obj_info.h"
 
+// S macro for C99 static argument array size.
+#ifndef __cplusplus
+#define S static
+#else
+#define S
+#endif
+
 /*
  * Base class for all the objects in swe (modules, sky objects, etc).
  *
@@ -310,7 +317,7 @@ int obj_render(const obj_t *obj, const painter_t *painter);
  *   obs    - An observer.
  *   pvo    - Output ICRF position with origin on the observer.
  */
-void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4]);
+void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
 
 /*
  * Function: obj_get_info
@@ -354,7 +361,7 @@ char *obj_get_info_json(const obj_t *obj, observer_t *obs, const char *info);
  *   obs - An observer.
  *   pos - Get the observed position in homogeneous coordinates (xyzw, AU).
  */
-void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
+void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[S 4]);
 
 /*
  * Function: obj_get_2d_ellipse
@@ -370,14 +377,14 @@ void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4]);
  */
 void obj_get_2d_ellipse(obj_t *obj, const observer_t *obs,
                         const projection_t *proj,
-                        double win_pos[2], double win_size[2],
+                        double win_pos[S 2], double win_size[S 2],
                         double* win_angle);
 
 /*
  * Function: obj_get_name
  * Return the given name for an object or its first designation.
  */
-const char *obj_get_name(const obj_t *obj, char out[128]);
+const char *obj_get_name(const obj_t *obj, char out[S 128]);
 
 /*
  * Function: obj_get_designations
@@ -464,5 +471,7 @@ void obj_foreach_attr(const obj_t *obj,
                       void (*f)(const char *attr, int is_property, void *user));
 
 obj_klass_t *obj_get_klass_by_name(const char *name);
+
+#undef S
 
 #endif // OBJ_H
