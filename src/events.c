@@ -46,7 +46,8 @@ static double find_zero(double (*f)(double x, void *user),
     int last_sign = 0;
     double x, fx;
     // First find an approximate answer simply by stepping.  Not very clever.
-    for (x = x0; x <= x1; x += step) {
+    // Make sure the last iteration is exactly at x1.
+    for (x = x0; x <= x1; x = min(x + step, x1 + ((x == step) ? step : 0))) {
         fx = f(x, user);
         if (sign(fx) * last_sign == -1 && sign(fx) == rising)
             break;
