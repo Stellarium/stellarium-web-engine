@@ -16,6 +16,13 @@
 #ifndef FRAMES_H
 #define FRAMES_H
 
+// S macro for C99 static argument array size.
+#ifndef __cplusplus
+#define S static
+#else
+#define S
+#endif
+
 typedef struct observer observer_t;
 
 /* Enum: FRAME
@@ -103,7 +110,7 @@ int convert_frame(const observer_t *obs,
  */
 int convert_framev4(const observer_t *obs,
                     int origin, int dest,
-                    const double in[4], double out[4]);
+                    const double in[S 4], double out[S 4]);
 
 /* Enum: ORIGIN
  * Represent a reference system, i.e. the origin of a reference frame and the
@@ -158,7 +165,7 @@ enum {
  *            inertial frame of the observer.
  */
 void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
-                          const double in[2][3], double out[2][3]);
+                          const double in[S 2][3], double out[S 2][3]);
 
 /* Function: position_to_astrometric
  * Convert 3D positions/velocity to astrometric direction as seen from earth
@@ -180,7 +187,7 @@ void position_to_apparent(const observer_t *obs, int origin, bool at_inf,
  *            seen from the geocenter.
  */
 void position_to_astrometric(const observer_t *obs, int origin,
-                                const double in[2][3], double out[2][3]);
+                             const double in[S 2][3], double out[S 2][3]);
 
 /* Function: astrometric_to_apparent
  * Convert astrometric direction to apparent direction. Input direction is
@@ -202,8 +209,8 @@ void position_to_astrometric(const observer_t *obs, int origin,
  *  out     - The output ICRF apparent position in AU as seen from
  *            the observer.
  */
-void astrometric_to_apparent(const observer_t *obs, const double in[3],
-                             bool at_inf, double out[3]);
+void astrometric_to_apparent(const observer_t *obs, const double in[S 3],
+                             bool at_inf, double out[S 3]);
 
 /* Function: apparent_to_astrometric
  * Convert apparent direction to astrometric direction. Input direction is
@@ -225,7 +232,9 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
  *  out     - The output ICRF astrometric position in AU as seen from
  *            the earth center.
  */
-void apparent_to_astrometric(const observer_t *obs, const double in[3],
-                             bool at_inf, double out[3]);
+void apparent_to_astrometric(const observer_t *obs, const double in[S 3],
+                             bool at_inf, double out[S 3]);
+
+#undef S
 
 #endif // FRAMES_H
