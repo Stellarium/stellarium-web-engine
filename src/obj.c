@@ -252,7 +252,10 @@ char *obj_get_info_json(const obj_t *obj, observer_t *obs,
         r = asprintf(&ret, "\"%.4s\"", v.otype);
         break;
     case TYPE_STRING:
-        r = asprintf(&ret, "%s", v.s_ptr);
+        if (v.s_ptr == NULL)
+            r = asprintf(&ret, "null");
+        else
+            r = asprintf(&ret, "\"%s\"", v.s_ptr);
         break;
     case TYPE_V2:
         r = asprintf(&ret, "[%.12f, %.12f]", VEC2_SPLIT(v.v2));
