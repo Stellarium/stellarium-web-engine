@@ -36,7 +36,7 @@ static double newton(double (*f)(double x, void *user),
 
 static int sign(double x)
 {
-    return x < 0 ? -1 : x > 0 ? +1 : 0;
+    return x < 0 ? -1 : 1;
 }
 
 static double find_zero(double (*f)(double x, void *user),
@@ -45,17 +45,20 @@ static double find_zero(double (*f)(double x, void *user),
 {
     int last_sign = 0;
     double x, fx;
+    bool found = false;
     // First find an approximate answer simply by stepping.  Not very clever.
     // Make sure the last iteration is exactly at x1.
     for (x = x0; x <= x1; x = min(x + step, x1 + ((x == step) ? step : 0))) {
         fx = f(x, user);
-        if (sign(fx) * last_sign == -1 && sign(fx) == rising)
+        if (sign(fx) * last_sign == -1 && sign(fx) == rising) {
+            found = true;
             break;
+        }
         last_sign = sign(fx);
     }
-    if (x > x1) return NAN;
+    if (!found) return NAN;
     // Once we are near the value, use newton algorithm.
-    return newton(f, x, x + step, precision, user);
+    return newton(f, x - step, x, precision, user);
 }
 
 static double rise_dist(double time, void *user)
@@ -86,14 +89,14 @@ double compute_event(observer_t *obs,
 {
     observer_t obs2 = *obs;
     double ret;
-    const double hour = 1. / 24;
     int rising;
     struct {
         observer_t *obs;
         obj_t *obj;
     } data = {&obs2, obj};
     rising = event == EVENT_RISE ? +1 : -1;
-    ret = find_zero(rise_dist, start_time, end_time, hour, precision,
+    ret = find_zero(rise_dist, start_time, end_time,
+                    (end_time - start_time) / 24, precision,
                     rising, &data);
     return ret;
 }
