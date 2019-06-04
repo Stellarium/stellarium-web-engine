@@ -146,7 +146,6 @@ static int comet_update(comet_t *comet, const observer_t *obs)
     }
 
     mat3_mul_vec3(obs->re2i, ph[0], ph[0]);
-    sr = vec3_norm(ph[0]);
 
     vec3_set(ph[1], 0, 0, 0);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, pv);
