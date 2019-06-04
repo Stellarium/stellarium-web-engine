@@ -393,7 +393,7 @@ double core_mag_to_lum_apparent(double mag, double surf);
 
 /*
  * Function: core_get_apparent_angle_for_point
- * Get angular radius of a round object from it's pixel radius on screen.
+ * Get angular radius of a round object from its pixel radius on screen.
  *
  * For example this can be used after core_get_point_for_mag to estimate the
  * angular size a circle should have to exactly fit the object.
