@@ -125,20 +125,20 @@ static constellation_infos_t *get_constellation(
  *   infos  - Constellation info to update with the edge data.
  *
  * Return:
- *   The number of edges parsed, or -1 in case of error.
+ *   The number of lines parsed, or -1 in case of error.
  */
 int skyculture_parse_edges(const char *edges, constellation_infos_t *csts)
 {
     constellation_infos_t *info = NULL;
     const char *line;
     char cst[2][8];
-    int i, ra1_h, ra1_m, ra1_s, ra2_h, ra2_m, ra2_s;
+    int i, ra1_h, ra1_m, ra1_s, ra2_h, ra2_m, ra2_s, nb;
     char dec1_sign, dec2_sign;
     int dec1_d, dec1_m, dec1_s, dec2_d, dec2_m, dec2_s;
     double ra1, dec1, ra2, dec2;
     const int MAX_EDGES = ARRAY_SIZE(info->edges);
 
-    for (line = edges; *line; line = strchr(line, '\n') + 1) {
+    for (line = edges, nb = 0; *line; line = strchr(line, '\n') + 1, nb++) {
         if (str_startswith(line, "//")) continue;
         if (*line == '\n') continue;
         if (sscanf(line, "%*s %*s"
@@ -171,7 +171,7 @@ int skyculture_parse_edges(const char *edges, constellation_infos_t *csts)
             info->nb_edges++;
         }
     }
-    return info->nb_edges;
+    return nb;
 }
 
 

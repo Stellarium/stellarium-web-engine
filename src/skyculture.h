@@ -90,7 +90,7 @@ constellation_infos_t *skyculture_parse_constellations(
  *   infos  - Constellation info to update with the edge data.
  *
  * Return:
- *   The number of edges parsed, or -1 in case of error.
+ *   The number of lines parsed, or -1 in case of error.
  */
 int skyculture_parse_edges(const char *data, constellation_infos_t *infos);
 
