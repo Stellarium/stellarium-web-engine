@@ -238,7 +238,7 @@ char *obj_get_info_json(const obj_t *obj, observer_t *obs,
     char *ret = NULL;
     char *json = NULL;
 
-    r = obj_get_info(obj, obs, info, &v);
+    r = obj_get_info(obj, obs, info, &v.f);
     if (r) return NULL;
 
     switch (type) {
