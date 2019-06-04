@@ -180,7 +180,7 @@ void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 int obj_get_info(obj_t *obj, observer_t *obs, int info,
                  void *out)
 {
-    double pvo[2][4];
+    double pvo[2][4], pos[3], ra, dec;
     int ret;
 
     observer_update(obs, true);
@@ -191,7 +191,7 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
         if (ret != 1) return ret; // An actual error
     }
 
-    // Somme fallback values.
+    // Some fallback values.
     switch (info) {
     case INFO_TYPE:
         strncpy(out, obj->type, 4);
@@ -199,6 +199,12 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
     case INFO_RADEC: // First component of the PVO info.
         obj_get_info(obj, obs, INFO_PVO, pvo);
         memcpy(out, pvo[0], sizeof(pvo[0]));
+        return 0;
+    case INFO_LHA:
+        obj_get_info(obj, obs, INFO_PVO, pvo);
+        convert_frame(obs, FRAME_ICRF, FRAME_CIRS, 0, pvo[0], pos);
+        eraC2s(pos, &ra, &dec);
+        *(double*)out = eraAnpm(obs->astrom.eral - ra);
         return 0;
     case INFO_DISTANCE:
         obj_get_pvo(obj, obs, pvo);

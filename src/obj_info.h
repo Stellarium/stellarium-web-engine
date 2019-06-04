@@ -74,6 +74,7 @@ int obj_info_from_str(const char *str);
     X(PHASE,    phase,  FLOAT,  9) \
     X(RADIUS,   radius, ANGLE,  10) \
     X(PVO,      pvo,    V4X2,   11) \
+    X(LHA,      lha,    ANGLE,  12) \
 
 
 /*
