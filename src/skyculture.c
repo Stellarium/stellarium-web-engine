@@ -220,6 +220,7 @@ error:
     LOG_W("Could not parse constellations data");
     *nb_cst = 0;
     free(data);
+    free(ret);
     return NULL;
 }
 
