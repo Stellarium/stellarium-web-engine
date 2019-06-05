@@ -85,10 +85,4 @@ enum {
 #define X(name, lower, type, i) INFO_##name = 1024 * i + TYPE_##type,
     ALL_INFO(X)
 #undef X
-
-    // Also add lowercase aliases.
-    // INFO_vmag, INFO_radius, etc.
-#define X(name, lower, ...) INFO_##lower = INFO_##name,
-    ALL_INFO(X)
-#undef X
 };
