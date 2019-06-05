@@ -537,7 +537,7 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
                         double* win_angle)
 {
     double pvo[2][4], p[4];
-    double vmag, s, luminance, radius = 0;
+    double vmag, s = 0, luminance, radius = 0;
 
     if (obj->klass->get_2d_ellipse) {
         obj->klass->get_2d_ellipse(obj, obs, proj,
@@ -554,9 +554,10 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     project(proj, PROJ_TO_WINDOW_SPACE, 2, p, win_pos);
 
     // Empirical formula to compute the pointer size.
-    obj_get_info(obj, obs, INFO_VMAG, &vmag);
-    core_get_point_for_mag(vmag, &s, &luminance);
-    s *= 2;
+    if (obj_get_info(obj, obs, INFO_VMAG, &vmag) == 0) {
+        core_get_point_for_mag(vmag, &s, &luminance);
+        s *= 2;
+    }
 
     if (obj_get_info(obj, obs, INFO_RADIUS, &radius) == 0) {
         radius = radius / 2.0 * proj->window_size[0] / proj->scaling[0];
