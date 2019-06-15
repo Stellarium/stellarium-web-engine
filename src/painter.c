@@ -363,11 +363,11 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
     double p[4][4];
     int i;
 
-    // At order zero, the tiles are too big and it can give false positive,
-    // so in that case is check the four tiles of level one.
-    // XXX: we could probably avoid this if the level zero tile has a visible
-    // vertex.
-    if (order < 1) {
+    // At too low orders, the tiles are too big and it can give false positive,
+    // so we check the children in that case.
+    // One possible optimization is to only do that around the poles where
+    // the deformation is the biggest.
+    if (order < 2) {
         for (i = 0; i < 4; i++) {
             if (!painter_is_tile_clipped(
                         painter, frame, order + 1, pix * 4 + i, outside))
