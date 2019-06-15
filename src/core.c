@@ -297,7 +297,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     core->hints_mag_offset = -1;
-    core->dso_hints_mag_offset = 0;
+    core->dso_hints_mag_offset = 1;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)obj_create("observer", "observer",
