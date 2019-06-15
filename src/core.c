@@ -558,7 +558,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     core_get_proj(&proj);
 
     observer_update(core->observer, true);
-    max_vmag = min(compute_max_vmag(), core->display_limit_mag);
+    max_vmag = compute_max_vmag();
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
@@ -583,6 +583,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .proj = &proj,
         .stars_limit_mag = max_vmag,
         .hints_limit_mag = max_vmag + core->hints_mag_offset,
+        .hard_limit_mag = core->display_limit_mag,
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,

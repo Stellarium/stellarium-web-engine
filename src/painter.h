@@ -176,6 +176,9 @@ struct painter
     double          stars_limit_mag;   // Actual stars visual magnitude limit.
     // Base magnitude limit for hints and labels
     double          hints_limit_mag;
+    // Manual hard limit for anything displayed - takes precedence over
+    // above variables.
+    double          hard_limit_mag;
 
     double          lines_width;
     double          lines_stripes;

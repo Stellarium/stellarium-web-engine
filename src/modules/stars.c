@@ -542,6 +542,7 @@ static int render_visitor(int order, int pix, void *user)
     star_data_t *s;
     double p_win[4], size, luminance;
     double color[3];
+    double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
     bool selected;
 
     // Early exit if the tile is clipped.
@@ -554,12 +555,12 @@ static int render_visitor(int order, int pix, void *user)
     if (code) (*nb_loaded)++;
 
     if (!tile) goto end;
-    if (tile->mag_min > painter.stars_limit_mag) goto end;
+    if (tile->mag_min > limit_mag) goto end;
 
     point_t *points = malloc(tile->nb * sizeof(*points));
     for (i = 0; i < tile->nb; i++) {
         s = &tile->sources[i];
-        if (s->vmag > painter.stars_limit_mag) break;
+        if (s->vmag > limit_mag) break;
 
         if (!painter_project(&painter, FRAME_ASTROM, s->pos, true, true, p_win))
             continue;
@@ -588,7 +589,7 @@ static int render_visitor(int order, int pix, void *user)
 
 end:
     // Test if we should go into higher order tiles.
-    if (!tile || (tile->mag_max > painter.stars_limit_mag))
+    if (!tile || (tile->mag_max > limit_mag))
         return 0;
     return 1;
 }

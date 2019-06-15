@@ -459,7 +459,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
-    if (vmag > painter->stars_limit_mag + 1.5)
+    if (vmag > painter->stars_limit_mag + 1.5 || vmag > painter->hard_limit_mag)
         return 1;
 
     // Check that it's intersecting with current viewport
