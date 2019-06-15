@@ -304,8 +304,60 @@ static void test_ephemeris(void)
     }
 }
 
+
+static void test_clipping(void)
+{
+    double ra, de, lon, lat, pos[3], az, alt, fov, utc1, utc2;
+    int order, pix;
+    bool r;
+    observer_t obs = *core->observer;
+    projection_t proj;
+    painter_t painter;
+
+    // Setup observer, pointing at the target coordinates.
+    // (NGC 4676 viewed from Paris, 2019-06-14 23:16:00 UTC).
+    eraDtf2d("UTC", 2019, 6, 14, 23, 16, 0, &utc1, &utc2);
+    obj_set_attr((obj_t*)&obs, "utc", utc1 - DJM0 + utc2);
+    lat = 48.85341 * DD2R;
+    lon = 2.3488 * DD2R;
+    obj_set_attr((obj_t*)&obs, "longitude", lon);
+    obj_set_attr((obj_t*)&obs, "latitude", lat);
+    observer_update(&obs, false);
+    // Compute aziumth and altitude position.
+    eraTf2a('+', 12, 46, 10.6, &ra);
+    eraAf2a('+', 30, 44,  2.6, &de);
+    eraS2c(ra, de, pos);
+    convert_frame(&obs, FRAME_ICRF, FRAME_OBSERVED, true, pos, pos);
+    eraC2s(pos, &az, &alt);
+    obj_set_attr((obj_t*)&obs, "altitude", alt);
+    obj_set_attr((obj_t*)&obs, "azimuth", az);
+    observer_update(&obs, false);
+
+    // Setup a projection and a painter.
+    fov = 0.5 * DD2R;
+    projection_init(&proj, PROJ_STEREOGRAPHIC, fov, 800, 600);
+    painter = (painter_t) {
+        .obs = &obs,
+        .transform = &mat4_identity,
+        .proj = &proj,
+    };
+
+    // Compute target healpix index at max order.
+    order = 12;
+    healpix_ang2pix(1 << order, M_PI / 2 - de, ra, &pix);
+    // Check that all the healpix tiles are not clipped from the max order down
+    // to the order zero.
+    for (; order >= 0; order--) {
+        r = painter_is_tile_clipped(&painter, FRAME_ICRF, order, pix, true);
+        if (r) LOG_E("Clipping error %d %d", order, pix);
+        assert(!r);
+        pix /= 4;
+    }
+}
+
 TEST_REGISTER(NULL, test_events, 0);
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);
+TEST_REGISTER(NULL, test_clipping, TEST_AUTO);
 
 #endif
 
