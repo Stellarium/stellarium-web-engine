@@ -42,6 +42,10 @@ extern "C" {
 // Imgui configs.
 #define IMGUI_INCLUDE_IMGUI_USER_INL
 
+// Force imgui to only compile stb image for jpeg and png.
+#define STBI_ONLY_JPEG
+#define STBI_ONLY_PNG
+
 #ifndef SWE_GUI
 #   ifdef __EMSCRIPTEN__
 #      define SWE_GUI 0
@@ -53,7 +57,6 @@ extern "C" {
 
 // Ini config.
 #define INI_MAX_LINE 512
-
 
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
