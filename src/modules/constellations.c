@@ -302,7 +302,7 @@ end:
     return 0;
 }
 
-static void spherical_project(
+static bool spherical_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
     // Rotation matrix from 1875.0 to J2000.  Computed with erfa:
@@ -321,6 +321,7 @@ static void spherical_project(
     // aligned with the meridians and parallels we need to apply the
     // rotation to J2000.
     mat3_mul_vec3(rnpb, out, out);
+    return true;
 }
 
 static int render_bounds(const constellation_t *con,
@@ -435,13 +436,14 @@ static void constellation_get_designations(
 }
 
 // Project from uv to the sphere.
-static void proj_backward(const projection_t *proj, int flags,
+static bool proj_backward(const projection_t *proj, int flags,
                           const double *v, double *out)
 {
     double uv[3] = {v[0], v[1], 1.0};
     mat3_mul_vec3(proj->mat3, uv, out);
     vec3_normalize(out, out);
     out[3] = 0;
+    return true;
 }
 
 static int render_lines(const constellation_t *con, const painter_t *_painter)

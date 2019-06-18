@@ -541,7 +541,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     return 0;
 }
 
-static void ring_project(const projection_t *proj, int flags,
+static bool ring_project(const projection_t *proj, int flags,
                            const double *v, double *out)
 {
     const double *radii = proj->user;
@@ -553,6 +553,7 @@ static void ring_project(const projection_t *proj, int flags,
     mat3_iscale(mat, r, r, 1.0);
     mat3_mul_vec3(mat, p, p);
     vec4_copy(p, out);
+    return true;
 }
 
 static void render_rings(const planet_t *planet,

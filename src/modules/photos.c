@@ -78,13 +78,14 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
 }
 
 // Project from uv to the sphere.
-static void proj_backward(const projection_t *proj, int flags,
+static bool proj_backward(const projection_t *proj, int flags,
                           const double *v, double *out)
 {
     double p[4] = {v[0], v[1], 1.0, 1.0};
     mat4_mul_vec4(proj->mat, p, p);
     vec3_normalize(p, p);
     vec3_copy(p, out);
+    return true;
 }
 
 static int photo_render(const obj_t *obj, const painter_t *painter)

@@ -248,7 +248,7 @@ static int line_update(obj_t *obj, double dt)
     return changed ? 1 : 0;
 }
 
-static void spherical_project(
+static bool spherical_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
     double az, al;
@@ -256,6 +256,7 @@ static void spherical_project(
     al = (v[1] - 0.5) * 180 * DD2R;
     eraS2c(az, al, out);
     out[3] = 0; // Project to infinity.
+    return true;
 }
 
 static bool check_borders(const double a[3], const double b[3],

@@ -36,15 +36,18 @@ static void proj_mercator_project(
     vec3_copy(p, out);
 }
 
-static void proj_mercator_backward(const projection_t *proj, int flags,
+static bool proj_mercator_backward(const projection_t *proj, int flags,
             const double *v, double *out)
 {
     double e, h, h1, sin_delta, cos_delta;
     double p[3];
+    bool ret;
     vec3_copy(v, p);
 
     p[0] *= proj->scaling[0];
     p[1] *= proj->scaling[1];
+
+    ret = p[1] < M_PI_2 && p[1] > -M_PI_2 && p[0] > -M_PI && p[0] < M_PI;
 
     e = exp(p[1]);
     h = e * e;
@@ -55,6 +58,7 @@ static void proj_mercator_backward(const projection_t *proj, int flags,
     p[0] = cos_delta * sin(p[0]);
     p[1] = sin_delta;
     vec3_copy(p, out);
+    return ret;
 }
 
 static int proj_mercator_intersect_discontinuity(const projection_t *p,

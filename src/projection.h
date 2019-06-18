@@ -87,7 +87,7 @@ struct projection
 
     void (*project)(const projection_t *proj, int flags,
                     const double *v, double *out);
-    void (*backward)(const projection_t *proj, int flags,
+    bool (*backward)(const projection_t *proj, int flags,
                      const double *v, double *out);
     int (*intersect_discontinuity)(const projection_t *proj,
                                    const double a[3], const double b[3]);

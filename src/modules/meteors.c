@@ -72,7 +72,7 @@ static int meteor_update(obj_t *obj, double dt)
  * Project UV coordinates into a tail shape.
  * For the moment this projects into a triangle.
  */
-static void tail_project(const projection_t *proj, int flags,
+static bool tail_project(const projection_t *proj, int flags,
                          const double *v, double *out)
 {
     double r, p[4] = {1, 0, 0, 0};
@@ -87,6 +87,7 @@ static void tail_project(const projection_t *proj, int flags,
 
     p[3] = 1;
     vec4_copy(p, out);
+    return true;
 }
 
 static void render_tail(const painter_t *painter,

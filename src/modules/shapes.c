@@ -35,7 +35,7 @@ static int circle_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void circle_project(const projection_t *proj, int flags,
+static bool circle_project(const projection_t *proj, int flags,
                            const double *v, double *out)
 {
     circle_t *circle = proj->user;
@@ -63,6 +63,7 @@ static void circle_project(const projection_t *proj, int flags,
         vec3_normalize(p, p);
     }
     vec4_copy(p, out);
+    return true;
 }
 
 static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
@@ -182,7 +183,7 @@ static int rect_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void rect_project(const projection_t *proj, int flags,
+static bool rect_project(const projection_t *proj, int flags,
                          const double *v, double *out)
 {
     rect_t *rect = proj->user;
@@ -206,6 +207,7 @@ static void rect_project(const projection_t *proj, int flags,
         p[3] = 1.0;
     }
     vec4_copy(p, out);
+    return true;
 }
 
 static int rect_render(const obj_t *obj, const painter_t *painter_)

@@ -89,8 +89,7 @@ bool project(const projection_t *proj, int flags, int out_dim,
         if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
         assert(proj->backward);
         assert(out_dim == 4);
-        proj->backward(proj, flags, p, out);
-        return true;
+        return proj->backward(proj, flags, p, out);
     }
     assert(proj->project);
     vec3_copy(v, p);

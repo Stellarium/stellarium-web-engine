@@ -76,11 +76,13 @@ static void compute_viewport_cap(const painter_t *painter, int frame,
     const double w = painter->proj->window_size[0];
     const double h = painter->proj->window_size[1];
     double max_sep = 0;
+    bool r;
 
     painter_unproject(painter, frame, VEC(w / 2, h / 2), cap);
     // Compute max separation from all corners.
     for (i = 0; i < 4; i++) {
-        painter_unproject(painter, frame, VEC(w * (i % 2), h * (i / 2)), p);
+        r = painter_unproject(painter, frame, VEC(w * (i % 2), h * (i / 2)), p);
+        if (!r) max_sep = M_PI;
         max_sep = max(max_sep, eraSepp(cap, p));
     }
     cap[3] = cos(max_sep);
@@ -469,7 +471,7 @@ int paint_tile_contour(const painter_t *painter, int frame,
     return paint_quad_contour(painter, frame, &proj, split, 15);
 }
 
-static void orbit_project(const projection_t *proj, int flags,
+static bool orbit_project(const projection_t *proj, int flags,
                           const double *v, double *out)
 {
     const double *o = proj->user;
@@ -480,6 +482,7 @@ static void orbit_project(const projection_t *proj, int flags,
                      o[0], o[1], o[2], o[3], o[4], o[5], o[6], o[7], 0.0, 0.0);
     vec3_copy(pos, out);
     out[3] = 1.0; // AU.
+    return true;
 }
 
 /*
@@ -734,11 +737,12 @@ bool painter_project(const painter_t *painter, int frame,
 bool painter_unproject(const painter_t *painter, int frame,
                      const double win_pos[2], double pos[3]) {
     double p[4];
+    bool ret;
     // Win to NDC.
     p[0] = win_pos[0] / painter->proj->window_size[0] * 2 - 1;
     p[1] = 1 - win_pos[1] / painter->proj->window_size[1] * 2;
     // NDC to view.
-    project(painter->proj, PROJ_BACKWARD, 4, p, p);
+    ret = project(painter->proj, PROJ_BACKWARD, 4, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
-    return true;
+    return ret;
 }

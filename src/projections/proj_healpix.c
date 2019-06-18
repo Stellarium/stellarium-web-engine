@@ -21,7 +21,7 @@
 /* Radians to degrees */
 #define DR2D (57.29577951308232087679815)
 
-static void proj_healpix_project(
+static bool proj_healpix_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
     double p[3] = {v[0], v[1], 1};
@@ -29,6 +29,7 @@ static void proj_healpix_project(
     mat3_mul_vec3(proj->mat3, p, p);
     healpix_xy2vec(p, out);
     out[3] = proj->at_infinity ? 0.0 : 1.0;
+    return true;
 }
 
 void projection_init_healpix(projection_t *proj, int nside, int pix,

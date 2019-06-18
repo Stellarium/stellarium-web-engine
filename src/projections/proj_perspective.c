@@ -20,7 +20,7 @@ static void proj_perspective_project(
     mat4_mul_vec4((void*)proj->mat, v4, out);
 }
 
-static void proj_perspective_backward(const projection_t *proj, int flags,
+static bool proj_perspective_backward(const projection_t *proj, int flags,
         const double *v, double *out)
 {
     double p[3], r;
@@ -35,6 +35,7 @@ static void proj_perspective_backward(const projection_t *proj, int flags,
     p[2] = -1.0 / r;
 
     vec3_copy(p, out);
+    return true;
 }
 
 void proj_perspective_init(projection_t *p, double fov, double aspect)

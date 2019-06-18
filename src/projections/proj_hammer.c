@@ -26,14 +26,16 @@ static void proj_hammer_project(
     out[3] = 1;
 }
 
-static void proj_hammer_backward(const projection_t *proj, int flags,
+static bool proj_hammer_backward(const projection_t *proj, int flags,
             const double *v, double *out)
 {
     double p[3], zsq, z, alpha, delta, cd;
+    bool ret;
     vec3_copy(v, p);
     p[0] *= proj->scaling[0];
     p[1] *= proj->scaling[1];
     zsq = 1 - 0.25 * 0.25 * p[0] * p[0] - 0.5 * 0.5 * p[1] * p[1];
+    ret = 0.25*p[0]*p[0]+p[1]*p[1] < 2.0;
     z = zsq < 0 ? 0 : sqrt(zsq);
     alpha = 2 * atan2(z * p[0], (2 * (2 * zsq - 1)));
     delta = asin(p[1] * z);
@@ -41,6 +43,7 @@ static void proj_hammer_backward(const projection_t *proj, int flags,
     out[0] = cd * sin(alpha);
     out[1] = p[1] * z;
     out[2] = -cd * cos(alpha);
+    return ret;
 }
 
 void proj_hammer_compute_fov(double fov, double aspect,

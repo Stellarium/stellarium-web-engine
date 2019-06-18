@@ -56,7 +56,7 @@ static void proj_stereographic_project(
     out[3] = 1.0; // w value.
 }
 
-static void proj_stereographic_backward(const projection_t *proj, int flags,
+static bool proj_stereographic_backward(const projection_t *proj, int flags,
                                         const double *v, double *out)
 {
     double lqq;
@@ -67,6 +67,7 @@ static void proj_stereographic_backward(const projection_t *proj, int flags,
     lqq = 0.25 * (p[0] * p[0] + p[1] * p[1]);
     p[2] = lqq - 1.0;
     vec3_mul(1.0 / (lqq + 1.0), p, out);
+    return true;
 }
 
 void proj_stereographic_compute_fov(double fov, double aspect,
