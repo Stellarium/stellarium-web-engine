@@ -80,11 +80,11 @@ void proj_hammer_init(projection_t *p, double fov, double aspect)
 {
     p->name                      = "hammer";
     p->type                      = PROJ_HAMMER;
-    p->max_fov                   = 175.0 * aspect * DD2R;
+    p->max_fov                   = 360 * DD2R;
     p->project                   = proj_hammer_project;
     p->backward                  = proj_hammer_backward;
     p->intersect_discontinuity   = proj_hammer_intersect_discontinuity;
-    p->scaling[0]                = fov / 2;
+    p->scaling[0]                = aspect < 1 ? fov / 2 : fov / aspect / 2;
     p->scaling[1]                = p->scaling[0] / aspect;
 }
 
