@@ -60,6 +60,11 @@ void healpix_get_neighbours(int nside, int pix, int out[8]);
  */
 void healpix_get_boundaries(int nside, int pix, double out[4][3]);
 
+/*
+ * Function: healpix_get_bounding_cap
+ * Return the cap containing the given healpix nest pixel
+ */
+void healpix_get_bounding_cap(int nside, int pix, double out[4]);
 
 /* Compute moon position.
  *

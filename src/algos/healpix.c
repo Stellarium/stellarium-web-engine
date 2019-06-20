@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include "utils/vec.h"
 
 // Some of the code comes from the official healpix C implementation.
 
@@ -303,5 +304,25 @@ void healpix_get_boundaries(int nside, int pix, double out[4][3])
     healpix_nest2xyf(nside, pix, &ix, &iy, &face);
     for (i = 0; i < 4; i++) {
         healpix_xyf2vec(nside, ix + (i % 2), iy + (i / 2), face, out[i]);
+    }
+}
+
+void healpix_get_bounding_cap(int nside, int pix, double out[4])
+{
+    int ix, iy, face, i;
+    double corners[4][3], d;
+    healpix_nest2xyf(nside, pix, &ix, &iy, &face);
+
+    vec4_set(out, 0, 0, 0, 1);
+    for (i = 0; i < 4; i++) {
+        healpix_xyf2vec(nside, ix + (i % 2), iy + (i / 2), face, corners[i]);
+        assert(vec3_is_normalized(corners[i]));
+        vec3_add(out, corners[i], out);
+    }
+    vec3_normalize(out, out);
+    for (i = 0; i < 4; i++) {
+        d = vec3_dot(out, corners[i]);
+        if (d < out[3])
+            out[3] = d;
     }
 }
