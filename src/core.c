@@ -599,7 +599,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     // Render the viewport cap for debugging.
     if ((0)) {
-        paint_cap(&painter, FRAME_ICRF, painter.viewport_caps[FRAME_ICRF]);
+        paint_cap(&painter, FRAME_ICRF,
+                  painter.clip_info[FRAME_ICRF].bounding_cap);
     }
 
     // Flush all rendering pipeline

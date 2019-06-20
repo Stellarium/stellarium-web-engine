@@ -99,8 +99,8 @@ void painter_update_caps(const painter_t *painter)
 {
     int i;
     for (i = 0; i < FRAMES_NB ; ++i) {
-        compute_viewport_cap(painter, i, painter->viewport_caps[i]);
-        compute_sky_cap(painter->obs, i, painter->sky_caps[i]);
+        compute_viewport_cap(painter, i, painter->clip_info[i].bounding_cap);
+        compute_sky_cap(painter->obs, i, painter->clip_info[i].sky_cap);
     }
 }
 
@@ -300,21 +300,21 @@ bool painter_is_cap_clipped(const painter_t *painter, int frame,
 {
     double pos[3], axis[3], q[4];
 
-    if (!cap_intersects_cap(painter->viewport_caps[frame], cap))
+    if (!cap_intersects_cap(painter->clip_info[frame].bounding_cap, cap))
         return true;
 
     // Skip if below horizon.
     if (painter->flags & PAINTER_HIDE_BELOW_HORIZON &&
-            !cap_intersects_cap(painter->sky_caps[frame], cap))
+            !cap_intersects_cap(painter->clip_info[frame].sky_cap, cap))
         return true;
 
     if (!precise) return false;
 
     // Compute 2D position of disk point the closest to the screen
     // center to perform exact clipping.
-    if (!cap_contains_vec3(cap, painter->viewport_caps[frame])) {
+    if (!cap_contains_vec3(cap, painter->clip_info[frame].bounding_cap)) {
         vec3_copy(cap, pos);
-        vec3_cross(pos, painter->viewport_caps[frame], axis);
+        vec3_cross(pos, painter->clip_info[frame].bounding_cap, axis);
         quat_from_axis(q, acos(cap[3]), axis[0], axis[1], axis[2]);
         quat_mul_vec3(q, pos, pos);
         vec3_normalize(pos, pos);
@@ -335,10 +335,10 @@ bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
     vec3_copy(pos, v);
     if (!is_normalized)
         vec3_normalize(v, v);
-    if (!cap_contains_vec3(painter->viewport_caps[frame], v))
+    if (!cap_contains_vec3(painter->clip_info[frame].bounding_cap, v))
         return true;
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) &&
-         !cap_contains_vec3(painter->sky_caps[frame], v))
+         !cap_contains_vec3(painter->clip_info[frame].sky_cap, v))
         return true;
     return false;
 }
@@ -619,7 +619,7 @@ void paint_cap(const painter_t *painter, int frame, double cap[4])
     double r;
     double p[4];
 
-    if (!cap_intersects_cap(painter->viewport_caps[frame], cap))
+    if (!cap_intersects_cap(painter->clip_info[frame].bounding_cap, cap))
         return;
 
     vec3_copy(cap, p);

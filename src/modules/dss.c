@@ -63,8 +63,10 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
      * Note that this could be done in hips.c, but for the moment we only
      * need to do this for the DSS survey.
      */
-    sep = min(eraSepp(painter->viewport_caps[FRAME_ICRF], VEC(0, 0, +1)),
-              eraSepp(painter->viewport_caps[FRAME_ICRF], VEC(0, 0, -1)));
+    sep = min(eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
+                      VEC(0, 0, +1)),
+              eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
+                      VEC(0, 0, -1)));
     split_order = mix(11, 4, sep / (M_PI / 2));
     render_order = hips_get_render_order(dss->hips, painter, 2 * M_PI);
     split_order = min(split_order, render_order + 4);
