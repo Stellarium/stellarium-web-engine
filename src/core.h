@@ -101,8 +101,7 @@ struct core
     obj_t           obj;
     observer_t      *observer;
     double          fov;
-    // Global timezone setting for rendering times, independent of the city.
-    const char      timezone[64];
+
     // Global utc offset used when rendering the time (min)
     int             utc_offset;
 
