@@ -195,6 +195,10 @@ struct painter
         // Viewport caps for fast clipping test.
         double bounding_cap[4];
 
+        // 4 caps representing the 4 sides of the viewport
+        double viewport_caps[4][4];
+        int nb_viewport_caps;
+
         // Sky above ground cap for fast clipping test.
         // The cap is pointing up, and has an angle of 91 deg (1 deg margin to
         // take refraction into account).
@@ -450,14 +454,12 @@ bool painter_is_2d_circle_clipped(const painter_t *painter, const double p[2],
  *   painter       - The painter.
  *   frame         - One of the <FRAME> enum frame.
  *   cap           - The cap
- *   precise       - If true improves the precision of the test to limit false
- *                   positives.
  *
  * Returns:
  *   True if the cap is clipped, false otherwise.
  */
 bool painter_is_cap_clipped(const painter_t *painter, int frame,
-                            const double cap[4], bool precise);
+                            const double cap[4]);
 
 // Function: painter_update_caps
 //
@@ -466,7 +468,7 @@ bool painter_is_cap_clipped(const painter_t *painter, int frame,
 //
 // Parameters:
 //  painter       - The painter.
-void painter_update_clip_info(const painter_t *painter);
+void painter_update_clip_info(painter_t *painter);
 
 /*
  * Function: paint_orbit

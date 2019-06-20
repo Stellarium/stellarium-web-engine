@@ -874,7 +874,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec3_copy(pos, cap);
     cap[3] = cos(radius);
 
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap, true))
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
         return;
 
     // At least 1 px of the planet is visible, report it for tonemapping

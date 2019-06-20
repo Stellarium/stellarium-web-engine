@@ -68,24 +68,47 @@ static bool intersect_circle_rect(
  * Function: compute_viewport_cap
  * Compute the viewport cap (in given frame).
  */
-static void compute_viewport_cap(const painter_t *painter, int frame,
-                                 double cap[4])
+static void compute_viewport_cap(painter_t *painter, int frame)
 {
     int i;
-    double p[3];
+    double p[4][3];
+    double c[3];
     const double w = painter->proj->window_size[0];
     const double h = painter->proj->window_size[1];
     double max_sep = 0;
+    double* cap = painter->clip_info[frame].bounding_cap;
     bool r;
 
     painter_unproject(painter, frame, VEC(w / 2, h / 2), cap);
+    assert(vec3_is_normalized(cap));
+
+    #define MARGIN 0
+    r  = painter_unproject(painter, frame, VEC(MARGIN, MARGIN), p[0]);
+    r &= painter_unproject(painter, frame, VEC(w - MARGIN, MARGIN), p[1]);
+    r &= painter_unproject(painter, frame, VEC(w - MARGIN, h - MARGIN), p[2]);
+    r &= painter_unproject(painter, frame, VEC(MARGIN, h - MARGIN), p[3]);
+    if (!r) max_sep = M_PI;
+
     // Compute max separation from all corners.
     for (i = 0; i < 4; i++) {
-        r = painter_unproject(painter, frame, VEC(w * (i % 2), h * (i / 2)), p);
-        if (!r) max_sep = M_PI;
-        max_sep = max(max_sep, eraSepp(cap, p));
+        assert(vec3_is_normalized(p[i]));
+        max_sep = max(max_sep, eraSepp(cap, p[i]));
     }
     cap[3] = cos(max_sep);
+
+    // Compute side caps
+    if (max_sep > M_PI_2)
+        return;
+
+    painter->clip_info[frame].nb_viewport_caps = 4;
+    for (i = 0; i < 4; i++) {
+        vec3_cross(p[i], p[(i + 1) % 4], c);
+        vec3_normalize(c, c);
+        vec3_copy(c, painter->clip_info[frame].viewport_caps[i]);
+        if (!cap_contains_vec3(painter->clip_info[frame].viewport_caps[i], cap))
+            vec3_mul(-1, painter->clip_info[frame].viewport_caps[i],
+                         painter->clip_info[frame].viewport_caps[i]);
+    }
 }
 
 static void compute_sky_cap(const observer_t *obs, int frame, double cap[4])
@@ -95,11 +118,11 @@ static void compute_sky_cap(const observer_t *obs, int frame, double cap[4])
     cap[3] = cos(91.0 * M_PI / 180);
 }
 
-void painter_update_clip_info(const painter_t *painter)
+void painter_update_clip_info(painter_t *painter)
 {
     int i;
     for (i = 0; i < FRAMES_NB ; ++i) {
-        compute_viewport_cap(painter, i, painter->clip_info[i].bounding_cap);
+        compute_viewport_cap(painter, i);
         compute_sky_cap(painter->obs, i, painter->clip_info[i].sky_cap);
     }
 }
@@ -296,9 +319,9 @@ void paint_debug(bool value)
 }
 
 bool painter_is_cap_clipped(const painter_t *painter, int frame,
-                            const double cap[4], bool precise)
+                            const double cap[4])
 {
-    double pos[3], axis[3], q[4];
+    int i;
 
     if (!cap_intersects_cap(painter->clip_info[frame].bounding_cap, cap))
         return true;
@@ -308,23 +331,16 @@ bool painter_is_cap_clipped(const painter_t *painter, int frame,
             !cap_intersects_cap(painter->clip_info[frame].sky_cap, cap))
         return true;
 
-    if (!precise) return false;
-
-    // Compute 2D position of disk point the closest to the screen
-    // center to perform exact clipping.
-    if (!cap_contains_vec3(cap, painter->clip_info[frame].bounding_cap)) {
-        vec3_copy(cap, pos);
-        vec3_cross(pos, painter->clip_info[frame].bounding_cap, axis);
-        quat_from_axis(q, acos(cap[3]), axis[0], axis[1], axis[2]);
-        quat_mul_vec3(q, pos, pos);
-        vec3_normalize(pos, pos);
-        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
-        if (!project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, pos, pos))
-            return true;
-        // Uncomment to see where the point is on the screen.
-        // paint_2d_ellipse(painter, NULL, 0, pos, VEC(4, 4), NULL);
+    const typeof (painter->clip_info[frame]) *clipinfo =
+            &painter->clip_info[frame];
+    if (clipinfo->nb_viewport_caps > 0) {
+        for (i = 0; i < clipinfo->nb_viewport_caps; ++i) {
+            if (!cap_intersects_cap(clipinfo->viewport_caps[i], cap)) {
+                // LOG_E("clipped cap!");
+                return true;
+            }
+        }
     }
-
     return false;
 }
 
@@ -332,6 +348,7 @@ bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
                                    const double pos[3], bool is_normalized)
 {
     double v[3];
+    int i;
     vec3_copy(pos, v);
     if (!is_normalized)
         vec3_normalize(v, v);
@@ -340,6 +357,15 @@ bool painter_is_point_clipped_fast(const painter_t *painter, int frame,
     if ((painter->flags & PAINTER_HIDE_BELOW_HORIZON) &&
          !cap_contains_vec3(painter->clip_info[frame].sky_cap, v))
         return true;
+    const typeof (painter->clip_info[frame]) *clipinfo =
+            &painter->clip_info[frame];
+    if (clipinfo->nb_viewport_caps > 0) {
+        for (i = 0; i < clipinfo->nb_viewport_caps; ++i) {
+            if (!cap_contains_vec3(clipinfo->viewport_caps[i], v)) {
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -370,7 +396,7 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         healpix_get_bounding_cap(1 << order, pix, bounding_cap);
         mat4_mul_vec3(*painter->transform, bounding_cap, bounding_cap);
         assert(vec3_is_normalized(bounding_cap));
-        if (painter_is_cap_clipped(painter, frame, bounding_cap, false))
+        if (painter_is_cap_clipped(painter, frame, bounding_cap))
             return true;
         if (order < 2)
             return false;

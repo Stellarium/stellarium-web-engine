@@ -463,7 +463,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         return 1;
 
     // Check that it's intersecting with current viewport
-    if (painter_is_cap_clipped(painter, FRAME_ASTROM, s->bounding_cap, false))
+    if (painter_is_cap_clipped(painter, FRAME_ASTROM, s->bounding_cap))
         return 0;
 
     // Special case for Open Clusters, for which the limiting magnitude
