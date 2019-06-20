@@ -152,6 +152,9 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     painter.color[3] *= ls->visible.value;
     if (painter.color[3] == 0.0) return 0;
 
+    // Don't hide below horizon when we draw the horizon!
+    painter.flags &= ~PAINTER_HIDE_BELOW_HORIZON;
+
     render_fog(&painter, lss->fog_visible.value);
 
     painter.color[3] *= lss->visible.value;
