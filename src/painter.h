@@ -466,7 +466,7 @@ bool painter_is_cap_clipped(const painter_t *painter, int frame,
 //
 // Parameters:
 //  painter       - The painter.
-void painter_update_caps(const painter_t *painter);
+void painter_update_clip_info(const painter_t *painter);
 
 /*
  * Function: paint_orbit

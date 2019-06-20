@@ -590,7 +590,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .lines_width = 1.0,
         .flags = (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0)
     };
-    painter_update_caps(&painter);
+    painter_update_clip_info(&painter);
     paint_prepare(&painter, win_w, win_h, pixel_scale);
 
     DL_FOREACH(core->obj.children, module) {

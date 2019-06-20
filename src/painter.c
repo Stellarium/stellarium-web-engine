@@ -95,7 +95,7 @@ static void compute_sky_cap(const observer_t *obs, int frame, double cap[4])
     cap[3] = cos(91.0 * M_PI / 180);
 }
 
-void painter_update_caps(const painter_t *painter)
+void painter_update_clip_info(const painter_t *painter)
 {
     int i;
     for (i = 0; i < FRAMES_NB ; ++i) {
