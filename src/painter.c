@@ -363,19 +363,17 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
     double healpix[4][3];
     double quad[4][4], normals[4][4];
     double p[4][4];
+    double bounding_cap[4];
     int i;
 
-    // At too low orders, the tiles are too big and it can give false positive,
-    // so we check the children in that case.
-    // One possible optimization is to only do that around the poles where
-    // the deformation is the biggest.
-    if (order < 2) {
-        for (i = 0; i < 4; i++) {
-            if (!painter_is_tile_clipped(
-                        painter, frame, order + 1, pix * 4 + i, outside))
-                return false;
-        }
-        return true;
+    if (outside) {
+        healpix_get_bounding_cap(1 << order, pix, bounding_cap);
+        mat4_mul_vec3(*painter->transform, bounding_cap, bounding_cap);
+        assert(vec3_is_normalized(bounding_cap));
+        if (painter_is_cap_clipped(painter, frame, bounding_cap, false))
+            return true;
+        if (order < 2)
+            return false;
     }
 
     healpix_get_boundaries(1 << order, pix, healpix);
@@ -407,21 +405,6 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
         return true;
     }
 
-    /*
-     * Special case: if all the points are behind us and none are visible
-     * on screen, we assume the tile is clipped.  This fix the problem
-     * that the stereographic projection as defined at the moment doesn't
-     * make the clipping test very accurate.
-     */
-    if (outside) {
-        for (i = 0; i < 4; i++) {
-            if (p[i][0] >= -p[i][3] && p[i][0] <= +p[i][3] &&
-                p[i][1] >= -p[i][3] && p[i][1] <= +p[i][3] &&
-                p[i][2] >= -p[i][3] && p[i][2] <= +p[i][3]) return false;
-            if (quad[i][2] < 0) return false;
-        }
-        return true;
-    }
     return false;
 }
 
