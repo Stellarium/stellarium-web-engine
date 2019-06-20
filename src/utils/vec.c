@@ -89,13 +89,11 @@ static void test_caps(void)
     vec3_normalize(seg2, seg2);
     assert(cap_intersects_segment(h1, seg1, seg2));
 
-    // Segment inside cap
+    // Segment fully inside cap
     seg1[1] = 0.1;
     vec3_normalize(seg1, seg1);
     seg2[1] = -0.1;
     vec3_normalize(seg2, seg2);
-    h1[1] = 0.01;
-    vec3_normalize(h1, h1);
     assert(cap_intersects_segment(h1, seg1, seg2));
 
     // Segment outside cap
@@ -103,9 +101,18 @@ static void test_caps(void)
     vec3_normalize(seg1, seg1);
     seg2[1] = -0.9;
     vec3_normalize(seg2, seg2);
-    h1[1] = 0.01;
-    vec3_normalize(h1, h1);
     assert(!cap_intersects_segment(h1, seg1, seg2));
+
+    // Segment partially inside cap
+    assert(cap_intersects_segment(h1, seg1, h1));
+
+    // Segment great circle aligned with cap
+    assert(!cap_intersects_segment(VEC(1, 0, 0, 0.8), VEC(0, 1, 0),
+                                   VEC(0, 0, 1)));
+    assert(cap_intersects_segment(VEC(1, 0, 0, -0.8), VEC(0, 1, 0),
+                                  VEC(0, 0, 1)));
+    assert(cap_intersects_segment(VEC(1, 0, 0, 0), VEC(0, 1, 0),
+                                  VEC(0, 0, 1)));
 }
 
 TEST_REGISTER(NULL, test_caps, TEST_AUTO);

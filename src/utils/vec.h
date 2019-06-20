@@ -956,123 +956,47 @@ DEF bool cap_intersects_cap(const double cap[S 4], const double c[S 4])
       (a <= 1.0 && a * a <= (1.0 - d1 * d1) * (1.0 - d2 * d2));
 }
 
-DEF bool cap_intersects_arc(const double cap[S 4], const double u[S 3],
-                                const double cap_geo[S 4])
+DEF void cap_great_circle_closest_point(const double cap[S 4],
+                                        const double u[S 3], double out[S 3])
 {
-    // u is the cap [u, 0] describing the great circle containing p0 and p1
-    double k[3], p[3], l[3];
-    double u0, u1, u2;
-    double v0, v1, v2, d;
+    double p[3], minusp[3];
 
     assert(vec3_is_normalized(cap));
-    assert(vec3_is_normalized(cap_geo));
-    assert(vec3_is_normalized(u));
 
-    // The segment is within the cap, therefore it intersects
-    if (cap_contains_cap(cap, cap_geo)) {
-        return true;
+    // Look for the point p of the great circle defined by u the closest to cap
+    vec3_cross(u, cap, p);
+    vec3_cross(u, p, p);
+
+    vec3_normalize(p, p);
+    vec3_mul(-1, p, minusp);
+
+    // Pick the correct one from the 2 opposite points
+    if (vec3_dot(cap, p) < vec3_dot(cap, minusp)) {
+        vec3_mul(-1, p, p);
     }
 
-    // Now looks for the 0, 1 or 2 points at the intersections of the great
-    // circle containing our segment and the cap.
-
-    // Convenience variables
-    u0 = u[0]; u1 = u[1]; u2 = u[2];
-    v0 = cap[0]; v1 = cap[1]; v2 = cap[2];
-    d = cap[3];
-
-    const double K = u1 * v2 - u2 * v1;
-    if (K == 0) {
-        // This is the case where the equation degenerates, re-compute in a
-        // different frame
-        const double cap_2[4] = {-cap[1], cap[0], cap[2], cap[3]};
-        const double u_2[3] = {-u[1], u[0], u[2]};
-        const double cap_geo_2[4] = {-cap_geo[1], cap_geo[0], cap_geo[2],
-                                     cap_geo[3]};
-
-        return cap_intersects_arc(cap_2, u_2, cap_geo_2);
-    }
-
-    // Partial computations
-    // A = (v2 u0 - v0 u2)^2 + (u0 v1 - u1 v0)^2 + (u1 v2 - u2 v1)^2
-    const double A = u0 * u0 * v1 * v1 + u0 * u0 * v2 * v2
-                     - 2. * u0 * u1 * v0 * v1 - 2. * u0 * u2 * v0 * v2
-                     + u1 * u1 * v0 * v0 + u2 * u2 * v0 * v0 + K * K;
-
-    // This cannot happen because K^2 > 0
-    assert(A != 0);
-
-    const double B = 2. * d * u0 * u1 * v1 + 2. * d * u0 * u2 * v2
-                   - 2. * d * u1 * u1 * v0 - 2. * d * u2 * u2 * v0;
-    const double C = d * d * u1 * u1 + d * d * u2 * u2 - K * K;
-
-    const double det = B * B - 4. * A * C;
-    if (det < 0) {
-        // No solutions, the caps are disjoint
-        //return false;
-    }
-
-    // Actually this can be optimized because
-    // y = (d u2 + v2 u0 x) / (-K)
-    // z = (d u0 + v0 u1 y - u0 v1 y) / (v2 u0 - v0 u2)
-
-    k[0] = (- B)/(2 * A);
-
-    k[1] = (d * v0 * v0 * u2 * u2 * u2
-        - 2 * d * u0 * v0 * v2 * u2 * u2
-        - d * u2 * A
-        + d * u1 * u1 * v0 * v0 * u2
-        + d * u0 * u0 * v2 * v2 * u2
-        - d * u0 * u1 * v0 * v1 * u2
-        - d * u0 * u1 * u1 * v0 * v2
-        + d * u0 * u0 * u1 * v1 * v2) / A / K;
-
-    k[2] = (d * v0 * v0 * u1 * u1 * u1
-        - 2 * d * u0 * v0 * v1 * u1 * u1
-        - d * u1 * A
-        + d * u2 * u2 * v0 * v0 * u1
-        + d * u0 * u0 * v1 * v1 * u1
-        - d * u0 * u2 * v0 * v2 * u1
-        - d  * u0 * u2 * u2 * v0 * v1
-        + d * u0 * u0 * u2 * v1 * v2) / A / (-K);
-
-    if (det == 0) {
-        // One solution, the caps and the great circle are  adjacent
-        // (just touch in 1 point)
-        return cap_contains_vec3(cap_geo, k);
-    }
-
-    // D > 0, we have 2 solutions
-    const double E = sqrt(det) / (2 * A);
-
-    l[0] = E;
-    l[1] = (v0 * E * u2 - u0 * v2 * E) / K;
-    l[2] = (v0 * E * u1 - u0 * v1 * E) / (-K);
-
-    // First solution
-    p[0] = k[0] + l[0];
-    p[1] = k[1] + l[1];
-    p[2] = k[2] + l[2];
-    if (cap_contains_vec3(cap_geo, p))
-        return true;
-
-    // Second solution
-    p[0] = k[0] - l[0];
-    p[1] = k[1] - l[1];
-    p[2] = k[2] - l[2];
-    if (cap_contains_vec3(cap_geo, p))
-        return true;
-
-    return false;
+    vec3_copy(p, out);
 }
 
 DEF bool cap_intersects_segment(const double cap[S 4], const double p0[S 3],
                                 const double p1[S 3])
 {
-    // Construct the cap [u, 0] describing the great circle containing p0 and p1
-    double u[3], k[3];
+    // Construct the vec3 u, orthogonal to the great circle containing p0 and p1
+    double u[3], k[3], p[3];
+    double c;
+
     vec3_cross(p0, p1, u);
-    vec3_normalize(u, u);
+
+    // Deal with the case where the cap and u are co-linear
+    c = vec3_dot(cap, u);
+    if (c*c >= vec3_norm2(u))
+        return cap[3] <= 0;
+
+    cap_great_circle_closest_point(cap, u, p);
+
+    // If the closest point is not in the cap there is no intersection
+    if (!cap_contains_vec3(cap, p))
+        return false;
 
     // Construct the cap with p0 and p1 on its edge
     double cap_geo[4];
@@ -1080,8 +1004,14 @@ DEF bool cap_intersects_segment(const double cap[S 4], const double p0[S 3],
     vec3_normalize(k, cap_geo);
     cap_geo[3] = vec3_dot(cap_geo, p1);
 
-    return cap_intersects_arc(cap, u, cap_geo);
+    // If the closest point is in the cap and within the segment boundaries
+    // we know that they intersect.
+    if (cap_contains_vec3(cap_geo, p))
+        return true;
+
+    return cap_contains_vec3(cap, p0) || cap_contains_vec3(cap, p1);
 }
+
 #endif
 
 #undef S
