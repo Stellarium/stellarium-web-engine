@@ -188,7 +188,7 @@ int convert_framev4(const observer_t *obs,
     if (in[3] == 1.0) {
         return convert_frame(obs, origin, dest, false, in, out);
     } else {
-        assert(fabs(vec3_norm2(in) - 1.0) <= 0.0000000001);
+        assert(vec3_is_normalized(in));
         return convert_frame(obs, origin, dest, true, in, out);
     }
 }
@@ -232,14 +232,14 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
     eraCp(in, out);
 
     if (inf) {
-        assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
+        assert(vec3_is_normalized(out));
         // Light deflection by the Sun, giving BCRS natural direction.
         // TODO: adapt this formula for solar system bodies, this works only for
         // distant stars.
         eraLdsun(out, obs->astrom.eh, obs->astrom.em, out);
         // Aberration, giving GCRS proper direction.
         eraAb(out, obs->astrom.v, obs->astrom.em, obs->astrom.bm1, out);
-        assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
+        assert(vec3_is_normalized(out));
     } else {
         eraPpp(out, obs->obs_pvb[0], out);
         eraPmp(out, obs->earth_pvb[0], out);
@@ -257,7 +257,7 @@ void apparent_to_astrometric(const observer_t *obs, const double in[3],
     assert(inf);
 
     eraCp(in, out);
-    assert(fabs(vec3_norm2(out) - 1.0) <= 0.0000000001);
+    assert(vec3_is_normalized(out));
 
     double delta[3];
     double a[3], b[3];

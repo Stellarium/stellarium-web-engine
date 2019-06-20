@@ -932,7 +932,8 @@ DEF void quat_slerp(const double a_[S 4], const double b_[S 4], double t,
 
 DEF bool cap_contains_vec3(const double cap[S 4], const double v[S 3])
 {
-  assert(fabs(vec3_norm(cap) - 1.0) <= 0.0000000000001);
+  assert(vec3_is_normalized(cap));
+  assert(vec3_is_normalized(v));
   return vec3_dot(cap, v) >= cap[3];
 }
 

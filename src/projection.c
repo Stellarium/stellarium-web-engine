@@ -94,7 +94,7 @@ bool project(const projection_t *proj, int flags, int out_dim,
     assert(proj->project);
     vec3_copy(v, p);
     if (flags & PROJ_ALREADY_NORMALIZED)
-        assert(fabs(vec3_norm(p) - 1.0) < 0.00000001);
+        assert(vec3_is_normalized(p));
     proj->project(proj, flags, v, p);
     if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
     if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
