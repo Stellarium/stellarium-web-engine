@@ -101,6 +101,7 @@ DEF void vec4_mix(const double a[S 4], const double b[S 4], double k,
                   double out[S 4]);
 DEF void vec3_cross(const double a[S 3], const double b[S 3], double out[S 3]);
 DEF void vec2_rotate(double angle, const double a[S 2], double out[S 2]);
+DEF bool vec3_is_normalized(const double v[S 3]);
 
 DEF void mat3_copy(const double src[S 3][3], double out[S 3][3]);
 DEF void mat3_set_identity(double mat[S 3][3]);
@@ -406,6 +407,10 @@ DEF void vec2_rotate(double angle, const double a[S 2], double out[S 2])
     y = a[0] * sin(angle) + a[1] * cos(angle);
     out[0] = x;
     out[1] = y;
+}
+
+DEF bool vec3_is_normalized(const double v[S 3]) {
+    return fabs(vec3_norm2(v) - 1.0) <= 0.0000000001;
 }
 
 DEF void mat3_to_mat4(const double mat[S 3][3], double out[S 4][4])
