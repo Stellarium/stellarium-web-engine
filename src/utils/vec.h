@@ -956,6 +956,132 @@ DEF bool cap_intersects_cap(const double cap[S 4], const double c[S 4])
       (a <= 1.0 && a * a <= (1.0 - d1 * d1) * (1.0 - d2 * d2));
 }
 
+DEF bool cap_intersects_arc(const double cap[S 4], const double u[S 3],
+                                const double cap_geo[S 4])
+{
+    // u is the cap [u, 0] describing the great circle containing p0 and p1
+    double k[3], p[3], l[3];
+    double u0, u1, u2;
+    double v0, v1, v2, d;
+
+    assert(vec3_is_normalized(cap));
+    assert(vec3_is_normalized(cap_geo));
+    assert(vec3_is_normalized(u));
+
+    // The segment is within the cap, therefore it intersects
+    if (cap_contains_cap(cap, cap_geo)) {
+        return true;
+    }
+
+    // Now looks for the 0, 1 or 2 points at the intersections of the great
+    // circle containing our segment and the cap.
+
+    // Convenience variables
+    u0 = u[0]; u1 = u[1]; u2 = u[2];
+    v0 = cap[0]; v1 = cap[1]; v2 = cap[2];
+    d = cap[3];
+
+    const double K = u1 * v2 - u2 * v1;
+    if (K == 0) {
+        // This is the case where the equation degenerates, re-compute in a
+        // different frame
+        const double cap_2[4] = {-cap[1], cap[0], cap[2], cap[3]};
+        const double u_2[3] = {-u[1], u[0], u[2]};
+        const double cap_geo_2[4] = {-cap_geo[1], cap_geo[0], cap_geo[2],
+                                     cap_geo[3]};
+
+        return cap_intersects_arc(cap_2, u_2, cap_geo_2);
+    }
+
+    // Partial computations
+    // A = (v2 u0 - v0 u2)^2 + (u0 v1 - u1 v0)^2 + (u1 v2 - u2 v1)^2
+    const double A = u0 * u0 * v1 * v1 + u0 * u0 * v2 * v2
+                     - 2. * u0 * u1 * v0 * v1 - 2. * u0 * u2 * v0 * v2
+                     + u1 * u1 * v0 * v0 + u2 * u2 * v0 * v0 + K * K;
+
+    // This cannot happen because K^2 > 0
+    assert(A != 0);
+
+    const double B = 2. * d * u0 * u1 * v1 + 2. * d * u0 * u2 * v2
+                   - 2. * d * u1 * u1 * v0 - 2. * d * u2 * u2 * v0;
+    const double C = d * d * u1 * u1 + d * d * u2 * u2 - K * K;
+
+    const double det = B * B - 4. * A * C;
+    if (det < 0) {
+        // No solutions, the caps are disjoint
+        //return false;
+    }
+
+    // Actually this can be optimized because
+    // y = (d u2 + v2 u0 x) / (-K)
+    // z = (d u0 + v0 u1 y - u0 v1 y) / (v2 u0 - v0 u2)
+
+    k[0] = (- B)/(2 * A);
+
+    k[1] = (d * v0 * v0 * u2 * u2 * u2
+        - 2 * d * u0 * v0 * v2 * u2 * u2
+        - d * u2 * A
+        + d * u1 * u1 * v0 * v0 * u2
+        + d * u0 * u0 * v2 * v2 * u2
+        - d * u0 * u1 * v0 * v1 * u2
+        - d * u0 * u1 * u1 * v0 * v2
+        + d * u0 * u0 * u1 * v1 * v2) / A / K;
+
+    k[2] = (d * v0 * v0 * u1 * u1 * u1
+        - 2 * d * u0 * v0 * v1 * u1 * u1
+        - d * u1 * A
+        + d * u2 * u2 * v0 * v0 * u1
+        + d * u0 * u0 * v1 * v1 * u1
+        - d * u0 * u2 * v0 * v2 * u1
+        - d  * u0 * u2 * u2 * v0 * v1
+        + d * u0 * u0 * u2 * v1 * v2) / A / (-K);
+
+    if (det == 0) {
+        // One solution, the caps and the great circle are  adjacent
+        // (just touch in 1 point)
+        return cap_contains_vec3(cap_geo, k);
+    }
+
+    // D > 0, we have 2 solutions
+    const double E = sqrt(det) / (2 * A);
+
+    l[0] = E;
+    l[1] = (v0 * E * u2 - u0 * v2 * E) / K;
+    l[2] = (v0 * E * u1 - u0 * v1 * E) / (-K);
+
+    // First solution
+    p[0] = k[0] + l[0];
+    p[1] = k[1] + l[1];
+    p[2] = k[2] + l[2];
+    if (cap_contains_vec3(cap_geo, p))
+        return true;
+
+    // Second solution
+    p[0] = k[0] - l[0];
+    p[1] = k[1] - l[1];
+    p[2] = k[2] - l[2];
+    if (cap_contains_vec3(cap_geo, p))
+        return true;
+
+    return false;
+}
+
+DEF bool cap_intersects_segment(const double cap[S 4], const double p0[S 3],
+                                const double p1[S 3])
+{
+    // Construct the cap [u, 0] describing the great circle containing p0 and p1
+    double u[3], k[3];
+    vec3_cross(p0, p1, u);
+    vec3_normalize(u, u);
+
+    // Construct the cap with p0 and p1 on its edge
+    double cap_geo[4];
+    vec3_add(p0, p1, k);
+    vec3_normalize(k, cap_geo);
+    cap_geo[3] = vec3_dot(cap_geo, p1);
+
+    return cap_intersects_arc(cap, u, cap_geo);
+}
 #endif
 
 #undef S

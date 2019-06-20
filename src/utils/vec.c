@@ -81,6 +81,31 @@ static void test_caps(void)
     assert(cap_contains_cap(h3, h3));
     assert(cap_contains_cap(h4, h4));
     assert(cap_contains_cap(h5, h5));
+
+    // Segment completely crosses the cap
+    double seg1[3] = {1, 1, 0};
+    vec3_normalize(seg1, seg1);
+    double seg2[3] = {1, -1, 0};
+    vec3_normalize(seg2, seg2);
+    assert(cap_intersects_segment(h1, seg1, seg2));
+
+    // Segment inside cap
+    seg1[1] = 0.1;
+    vec3_normalize(seg1, seg1);
+    seg2[1] = -0.1;
+    vec3_normalize(seg2, seg2);
+    h1[1] = 0.01;
+    vec3_normalize(h1, h1);
+    assert(cap_intersects_segment(h1, seg1, seg2));
+
+    // Segment outside cap
+    seg1[1] = -0.8;
+    vec3_normalize(seg1, seg1);
+    seg2[1] = -0.9;
+    vec3_normalize(seg2, seg2);
+    h1[1] = 0.01;
+    vec3_normalize(h1, h1);
+    assert(!cap_intersects_segment(h1, seg1, seg2));
 }
 
 TEST_REGISTER(NULL, test_caps, TEST_AUTO);
