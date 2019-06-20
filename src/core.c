@@ -1079,31 +1079,9 @@ static void test_info(void)
     obj_get_info(obj, core->observer, INFO_VMAG, &vmag);
 }
 
-static void test_set_city(void)
-{
-    double lat;
-    core_init(100, 100, 1.0);
-    obj_t *cities, *london;
-    obj_t *obs = &core->observer->obj;
-
-    cities = core_get_module("cities");
-    assert(cities);
-    // Make sure that after we set the city, the position has been updated.
-    london = module_get_child(cities, "CITY GB LONDON");
-    assert(london);
-    obj_get_attr(london, "latitude", &lat);
-    assert(fabs(lat * DR2D - 51.50853) < 0.01);
-    obj_set_attr(obs, "city", london);
-    obj_get_attr(obs, "latitude", &lat);
-    assert(fabs(lat * DR2D - 51.50853) < 0.01);
-    obj_get_attr(obs, "city", &london);
-    assert(london == core->observer->city);
-}
-
 TEST_REGISTER(NULL, test_core, TEST_AUTO);
 TEST_REGISTER(NULL, test_vec, TEST_AUTO);
 TEST_REGISTER(NULL, test_basic, TEST_AUTO);
 TEST_REGISTER(NULL, test_info, TEST_AUTO);
-TEST_REGISTER(NULL, test_set_city, TEST_AUTO);
 
 #endif

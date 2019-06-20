@@ -266,19 +266,6 @@ static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
     return args_value_new(TYPE_V3, v);
 }
 
-static void observer_on_city_changed(obj_t *obj, const attribute_t *attr)
-{
-    observer_t *obs = (observer_t*)obj;
-    double lat, lon, el;
-    if (!obs->city) return;
-    obj_get_attr(obs->city, "latitude", &lat);
-    obj_get_attr(obs->city, "longitude", &lon);
-    obj_get_attr(obs->city, "elevation", &el);
-    obj_set_attr(obj, "latitude", lat);
-    obj_set_attr(obj, "longitude", lon);
-    obj_set_attr(obj, "elevation", el);
-}
-
 
 static obj_klass_t observer_klass = {
     .id = "observer",
@@ -297,8 +284,6 @@ static obj_klass_t observer_klass = {
                  .on_changed = observer_on_timeattr_changed),
         PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
                  .on_changed = observer_on_timeattr_changed),
-        PROPERTY(city, TYPE_OBJ, MEMBER(observer_t, city),
-                 .on_changed = observer_on_city_changed),
         PROPERTY(altitude, TYPE_ANGLE, MEMBER(observer_t, altitude)),
         PROPERTY(azimuth, TYPE_ANGLE, MEMBER(observer_t, azimuth)),
         PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll)),

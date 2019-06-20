@@ -37,8 +37,6 @@ struct observer
     double view_offset_alt;
     double tt;          // TT time in MJD
 
-    obj_t  *city;
-
     double last_update;
     double last_accurate_update;
 
