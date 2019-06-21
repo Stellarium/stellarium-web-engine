@@ -402,6 +402,19 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
             return false;
     }
 
+    // At too low orders, the tiles are too distorted which can give false
+    // positive, so we check the children in that case.
+    if (order < 2) {
+        // Planet case only
+        assert(!outside);
+        for (i = 0; i < 4; i++) {
+            if (!painter_is_tile_clipped(
+                        painter, frame, order + 1, pix * 4 + i, outside))
+                return false;
+        }
+        return true;
+    }
+
     healpix_get_boundaries(1 << order, pix, healpix);
     for (i = 0; i < 4; i++) {
         vec3_copy(healpix[i], quad[i]);
