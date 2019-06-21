@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
 #
@@ -20,7 +20,7 @@ def get_files():
 
 
 def error(file, line, pos, msg):
-    print '%s\n%s:%d\n%s' % (msg, file, pos + 1, line)
+    print('%s\n%s:%d\n%s' % (msg, file, pos + 1, line))
     sys.exit(1)
 
 
@@ -32,7 +32,6 @@ for file in get_files():
         if 'STYLE-CHECK ON' in line: check = True
         if not check: continue
 
-        line = line.decode('utf-8')
         if line.endswith('\n'): line = line[:-1]
 
         if line.endswith(' '):
