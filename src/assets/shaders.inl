@@ -98,7 +98,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[2636] __attribute__((ali
 
 ASSET_REGISTER(shaders_atmosphere_glsl, "shaders/atmosphere.glsl", DATA_shaders_atmosphere_glsl, false)
 
-static const unsigned char DATA_shaders_blit_glsl[980] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_glsl[796] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -110,7 +110,6 @@ static const unsigned char DATA_shaders_blit_glsl[980] __attribute__((aligned(4)
     "\n"
     "uniform highp   vec4        u_color;\n"
     "uniform mediump sampler2D   u_tex;\n"
-    "uniform lowp    float       u_stripes;\n"
     "\n"
     "varying highp   vec2        v_tex_pos;\n"
     "varying lowp    vec4        v_color;\n"
@@ -134,12 +133,6 @@ static const unsigned char DATA_shaders_blit_glsl[980] __attribute__((aligned(4)
     "void main()\n"
     "{\n"
     "    gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;\n"
-    "\n"
-    "    if (u_stripes != 0.0) {\n"
-    "        lowp float k = v_tex_pos.x;\n"
-    "        k = step(0.5, fract(k * u_stripes));\n"
-    "        gl_FragColor.a *= k;\n"
-    "    }\n"
     "}\n"
     "\n"
     "#endif\n"

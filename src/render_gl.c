@@ -80,7 +80,6 @@ typedef struct prog {
     GLuint u_contrast_l;
     GLuint u_smooth_l;
     GLuint u_mv_l;
-    GLuint u_stripes_l;
     GLuint u_depth_range_l;
 
     // For planets.
@@ -1442,7 +1441,6 @@ static void init_prog(prog_t *p, const char *shader)
     UNIFORM(u_shadow_spheres_nb);
     UNIFORM(u_shadow_spheres);
     UNIFORM(u_mv);
-    UNIFORM(u_stripes);
     UNIFORM(u_depth_range);
     UNIFORM(u_atm_p);
     UNIFORM(u_tm);
