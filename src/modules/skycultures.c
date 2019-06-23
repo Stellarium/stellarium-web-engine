@@ -207,6 +207,24 @@ static int skyculture_update(obj_t *obj, double dt)
     const char *data;
     constellation_art_t *arts;
     bool active = (cult == cults->current);
+    const int all_data = SK_INFO | SK_DESCRIPTION_STEL |
+                         SK_CONSTELLATIONS_STEL |
+                         SK_CONSTELLATION_NAMES_STEL |
+                         SK_STAR_NAMES_STEL | SK_EDGES | SK_IMGS_STEL;
+
+    /*
+     * We parse all the data files of the skyculture.
+     * Once they have all been parsed and if the skyculture is active, then
+     * we activate it, that is we set all the constellation and images into
+     * the constellations module.
+     *
+     * Note: we don't have to load all the data unless the skyculture is
+     * active, but we should at least load the info.ini and description
+     * that are needed for the GUI.
+     */
+
+    if (cult->parsed == all_data)
+        return 0;
 
     if (get_file(cult, SK_INFO, "info.ini", &data, 0)) {
         ini_parse_string(data, info_ini_handler, cult);
@@ -219,12 +237,14 @@ static int skyculture_update(obj_t *obj, double dt)
         module_changed((obj_t*)cult, "description");
     }
 
+    // The rest of the data is not needed until the skyculture is activated.
+    if (!active) return 0;
+
     if (get_file(cult, SK_CONSTELLATIONS_STEL, "constellationship.fab",
                  &data, 0))
     {
         cult->constellations = skyculture_parse_stellarium_constellations(
                 data, &cult->nb_constellations);
-        if (active) skyculture_activate(cult);
     }
 
     if (cult->constellations && get_file(cult, SK_CONSTELLATION_NAMES_STEL,
@@ -251,9 +271,13 @@ static int skyculture_update(obj_t *obj, double dt)
         arts = skyculture_parse_stellarium_constellations_art(data, NULL);
         if (arts) {
             cult->imgs = make_imgs_json(arts, cult->uri);
-            if (active) skyculture_activate(cult);
         }
         free(arts);
+    }
+
+    // Once all has beed parsed, we can activate the skyculture.
+    if (cult->parsed == all_data) {
+        if (active) skyculture_activate(cult);
     }
 
     return 0;
