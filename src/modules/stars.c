@@ -526,8 +526,6 @@ static tile_t *get_tile(stars_t *stars, int survey, int order, int pix,
     return tile;
 }
 
-bool debug_stars_show_all = false;
-
 static int render_visitor(int order, int pix, void *user)
 {
     PROFILE(stars_render_visitor, PROFILE_AGGREGATE);
