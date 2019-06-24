@@ -395,17 +395,25 @@ static int event_cmp(const void *e1, const void *e2)
     return cmp(((const event_t*)e1)->time, ((const event_t*)e2)->time);
 }
 
+// Add obj into the calendar objs list, dynamically grow the array if
+// needed.
 static int obj_add_f(void *user, obj_t *obj)
 {
-    cobj_t *objs = USER_GET(user, 0);
-    int *i = USER_GET(user, 1);
+    cobj_t **objs_ptr = USER_GET(user, 0);
+    cobj_t *objs;
+    int *nb = USER_GET(user, 1);
+    int *allocated = USER_GET(user, 2);
     if (obj->oid == oid_create("HORI", 399)) return 0; // Skip Earth.
-    if (objs) {
-        assert(objs[*i].obj == NULL);
-        objs[*i].obj = obj;
-        obj->ref++;
+
+    if (*allocated <= *nb) {
+        *allocated += 128;
+        *objs_ptr = realloc(*objs_ptr, (*allocated) * sizeof(cobj_t));
     }
-    (*i)++;
+
+    objs = *objs_ptr;
+    objs[*nb] = (cobj_t) {.obj = obj};
+    obj->ref++;
+    (*nb)++;
     return 0;
 }
 
@@ -431,7 +439,7 @@ calendar_t *calendar_create(const observer_t *obs,
 {
     calendar_t *cal;
     cal = calloc(1, sizeof(*cal));
-    int i;
+    int allocated = 0;
 
     cal->obs = *obs;
     // Make a full update at mid time, so that we can do fast update after that
@@ -440,12 +448,8 @@ calendar_t *calendar_create(const observer_t *obs,
     observer_update(&cal->obs, false);
 
     // Create all the objects.
-    i = 0;
-    list_objs(&cal->obs, USER_PASS(NULL, &i), obj_add_f);
-    cal->nb_objs = i;
-    cal->objs = calloc(cal->nb_objs, sizeof(*cal->objs));
-    i = 0;
-    list_objs(&cal->obs, USER_PASS(cal->objs, &i), obj_add_f);
+    list_objs(&cal->obs, USER_PASS(&cal->objs, &cal->nb_objs, &allocated),
+              obj_add_f);
 
     cal->flags = flags;
     cal->start = start;
