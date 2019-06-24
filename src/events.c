@@ -48,13 +48,15 @@ static double find_zero(double (*f)(double x, void *user),
     bool found = false;
     // First find an approximate answer simply by stepping.  Not very clever.
     // Make sure the last iteration is exactly at x1.
-    for (x = x0; x <= x1; x = min(x + step, x1 + ((x == step) ? step : 0))) {
+    for (x = x0;; x += step) {
+        if (x > x1) x = x1; // Clamp to x1.
         fx = f(x, user);
         if (sign(fx) * last_sign == -1 && sign(fx) == rising) {
             found = true;
             break;
         }
         last_sign = sign(fx);
+        if (x == x1) break;
     }
     if (!found) return NAN;
     // Once we are near the value, use newton algorithm.
