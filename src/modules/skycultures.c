@@ -332,6 +332,7 @@ static int skycultures_add_data_source(
     // If it's the default skyculture (western) activate it immediatly.
     if (str_endswith(url, "western")) {
         obj_set_attr((obj_t*)cults, "current_id", "western");
+        skyculture_update((obj_t*)cult, 0);
     }
     return 0;
 }
