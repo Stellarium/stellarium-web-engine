@@ -238,7 +238,7 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
     observer_t *obs = (observer_t*)obj;
     double ut11, ut12, tai1, tai2, tt1, tt2, dt = 0;
     if (strcmp(attr->name, "utc") == 0) {
-        // First compute TUC -> TAI -> TT (no deltaT involved)
+        // First compute UTC -> TAI -> TT (no deltaT involved)
         eraUtctai(DJM0, obs->utc, &tai1, &tai2);
         eraTaitt(tai1, tai2, &tt1, &tt2);
         obs->tt = tt1 - DJM0 + tt2;
