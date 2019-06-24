@@ -1367,9 +1367,9 @@ static void line(renderer_t           *rend_,
     }
 }
 
-void ellipse_2d(renderer_t        *rend_,
-                const painter_t   *painter,
-                const double pos[2], const double size[2], double angle)
+static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
+                       const double pos[2], const double size[2],
+                       double angle)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
@@ -1384,9 +1384,8 @@ void ellipse_2d(renderer_t        *rend_,
     DL_APPEND(rend->items, item);
 }
 
-void rect_2d(renderer_t        *rend_,
-             const painter_t   *painter,
-             const double pos[2], const double size[2], double angle)
+static void rect_2d(renderer_t *rend_, const painter_t *painter,
+                    const double pos[2], const double size[2], double angle)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
@@ -1400,10 +1399,8 @@ void rect_2d(renderer_t        *rend_,
     DL_APPEND(rend->items, item);
 }
 
-void line_2d(renderer_t          *rend_,
-             const painter_t     *painter,
-             const double        p1[2],
-             const double        p2[2])
+static void line_2d(renderer_t *rend_, const painter_t *painter,
+                    const double p1[2], const double p2[2])
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
