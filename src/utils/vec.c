@@ -15,6 +15,37 @@
     #include "vec.h"
 #endif
 
+void vec3_get_ortho(const double v_[3], double out[3])
+{
+    int axis;
+    double v[3];
+
+    vec3_copy(v_, v);
+
+    // Get dominant axis:
+    if (fabs(v[0]) >= fabs(v[1]) && fabs(v[0]) > fabs(v[2])) axis = 0;
+    if (fabs(v[1]) >= fabs(v[0]) && fabs(v[1]) > fabs(v[2])) axis = 1;
+    if (fabs(v[2]) >= fabs(v[0]) && fabs(v[2]) > fabs(v[1])) axis = 2;
+
+    switch (axis) {
+    case 0:
+        out[0] = -v[1] - v[2];
+        out[1] =  v[0];
+        out[2] =  v[0];
+        break;
+    case 1:
+        out[0] =  v[1];
+        out[1] = -v[0] - v[2];
+        out[2] =  v[1];
+        break;
+    case 2:
+        out[0] =  v[2];
+        out[1] =  v[2];
+        out[2] = -v[0] - v[1];
+        break;
+    }
+}
+
 /******** TESTS ***********************************************************/
 
 #if COMPILE_TESTS
