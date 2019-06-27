@@ -271,10 +271,13 @@ static void c2lonlat(const double c[3], double lonlat[2])
 static int tesselate_circle(const double center[2], double r, int size,
                             double (*out)[2])
 {
-    double start[3], axis[3], a, quat[4], p[3];
+    double start[3], axis[3], up[3], a, quat[4], p[3];
     int i;
+
     lonlat2c(center, axis);
-    lonlat2c(VEC(center[0] + r, center[1]), start);
+    vec3_get_ortho(axis, up);
+    quat_from_axis(quat, r, up[0], up[1], up[2]);
+    quat_mul_vec3(quat, axis, start);
 
     for (i = 0; i < size; i++) {
         a = i * 2 * M_PI / (size - 1);
@@ -311,7 +314,7 @@ static int parse_circle(const json_value *data, geojson_geometry_t *geo)
                 json_get_attr(data, "center", json_array), 0, 2, center))
         return -1;
 
-    tesselate_circle(center, r, size, ring->coordinates);
+    tesselate_circle(center, r * ERFA_DD2R, size, ring->coordinates);
     return 0;
 }
 
