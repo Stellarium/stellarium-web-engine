@@ -58,12 +58,28 @@ static const double mat4_identity[4][4] = {
                        {0, 0, 1, 0}, \
                        {0, 0, 0, 1}}
 
+/*
+ * Some common functions defined as macro so that they work with both
+ * double and float (for both arguments).
+ */
+
+#define vec3_copy(v, out) do { \
+        (out)[0] = (v)[0]; \
+        (out)[1] = (v)[1]; \
+        (out)[2] = (v)[2]; } while (0)
+
+#define vec4_copy(v, out) do { \
+        (out)[0] = (v)[0]; \
+        (out)[1] = (v)[1]; \
+        (out)[2] = (v)[2]; \
+        (out)[3] = (v)[3]; } while (0)
+
+#define vec3_set(v, x, y, z) do { \
+        (v)[0] = x; (v)[1] = y; (v)[2] = z; } while (0)
+
 DEF void vec2_set(double v[S 2], double x, double y);
-DEF void vec3_set(double v[S 3], double x, double y, double z);
 DEF void vec4_set(double v[S 4], double x, double y, double z, double w);
 DEF void vec2_copy(const double v[S 2], double out[S 2]);
-DEF void vec3_copy(const double v[S 3], double out[S 3]);
-DEF void vec4_copy(const double v[S 3], double out[S 3]);
 DEF bool vec3_equal(const double a[S 3], const double b[S 3]);
 DEF bool vec4_equal(const double a[S 4], const double b[S 4]);
 DEF void vec2_to_float(const double a[S 2], float *out);
@@ -170,13 +186,6 @@ DEF void vec2_set(double v[S 2], double x, double y)
     v[1] = y;
 }
 
-DEF void vec3_set(double v[S 3], double x, double y, double z)
-{
-    v[0] = x;
-    v[1] = y;
-    v[2] = z;
-}
-
 DEF void vec4_set(double v[S 4], double x, double y, double z, double w)
 {
     v[0] = x;
@@ -188,16 +197,6 @@ DEF void vec4_set(double v[S 4], double x, double y, double z, double w)
 DEF void vec2_copy(const double v[S 2], double out[S 2])
 {
     memcpy(out, v, 2 * sizeof(*v));
-}
-
-DEF void vec3_copy(const double v[S 3], double out[S 3])
-{
-    memcpy(out, v, 3 * sizeof(*v));
-}
-
-DEF void vec4_copy(const double v[S 3], double out[S 3])
-{
-    memcpy(out, v, 4 * sizeof(*v));
 }
 
 DEF bool vec3_equal(const double a[S 3], const double b[S 3])
