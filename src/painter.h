@@ -53,6 +53,11 @@ enum {
     TEXT_DEMI_BOLD = 1 << 3,
 };
 
+enum {
+    MODE_TRIANGLES = 0,
+    MODE_LINES,
+};
+
 struct renderer
 {
     void (*prepare)(renderer_t *rend,
@@ -104,6 +109,15 @@ struct renderer
                  double               line[2][4],
                  int                  nb_segs,
                  const projection_t   *line_proj);
+
+    void (*mesh)(renderer_t          *rend,
+                 const painter_t     *painter,
+                 int                 frame,
+                 int                 mode,
+                 int                 verts_count,
+                 const double        verts[][3],
+                 int                 indices_count,
+                 const uint16_t      indices[]);
 
     void (*ellipse_2d)(renderer_t       *rend,
                        const painter_t  *painter,
@@ -333,6 +347,29 @@ int paint_lines(const painter_t *painter,
                 int nb, double (*lines)[4],
                 const projection_t *line_proj,
                 int split, int flags);
+
+/*
+ * Function: paint_mesh
+ * Render a 3d mesh
+ *
+ * Parameters:
+ *   painter        - A painter instance.
+ *   frame          - Frame of the vertex coordinates.
+ *   mode           - MODE_TRIANGLES or MODE_LINES.
+ *   vert_count     - Number of vertices in the mesh.
+ *   verts          - Array of 3d vertices positions.
+ *   indices_count  - Number of indices.
+ *   indices        - Array of indices to the triangles or lines.
+ *   bounding_cap   - Bouding cap of the mesh.
+ */
+int paint_mesh(const painter_t *painter,
+               int frame,
+               int mode,
+               int vert_count,
+               const double verts[][3],
+               int indices_count,
+               const uint16_t indices[],
+               const double bounding_cap[4]);
 
 
 int paint_text_bounds(const painter_t *painter, const char *text,

@@ -313,6 +313,59 @@ int paint_lines(const painter_t *painter,
     return ret;
 }
 
+/*
+ * Function: paint_mesh
+ * Render a 3d mesh
+ *
+ * Parameters:
+ *   painter        - A painter instance.
+ *   frame          - Frame of the vertex coordinates.
+ *   mode           - MODE_TRIANGLES or MODE_LINES.
+ *   vert_count     - Number of vertices in the mesh.
+ *   verts          - Array of 3d vertices positions.
+ *   indices_count  - Number of indices.
+ *   indices        - Array of indices to the triangles or lines.
+ *   bounding_cap   - Bouding cap of the mesh.
+ */
+int paint_mesh(const painter_t *painter_,
+               int frame,
+               int mode,
+               int verts_count,
+               const double verts[][3],
+               int indices_count,
+               const uint16_t indices[],
+               const double bounding_cap[4])
+{
+    int i;
+    painter_t painter = *painter_;
+    projection_t projs[2];
+    double cap[4];
+
+    if (indices_count == 0) return 0;
+    vec4_copy(bounding_cap, cap);
+    convert_frame(painter.obs, frame, FRAME_VIEW, true, cap, cap);
+    cap[3] -= 0.0001; // Security margin. XXX do it better.
+
+    // XXX: Not implemented yet: we will need some way to tell if the
+    // cap intersect the discontinuity.
+    // if (!projection_cap_intersect_discontinuity(painter.proj, cap)) {
+    if (true) {
+        REND(painter.rend, mesh, &painter, frame, mode,
+             verts_count, verts, indices_count, indices);
+        return 0;
+    }
+
+    // At a discontinuity we render the polygon one on the right and once
+    // on the left.
+    painter.proj->split(painter.proj, projs);
+    for (i = 0; i < 2; i++) {
+        painter.proj = &projs[i];
+        REND(painter.rend, mesh, &painter, frame, mode,
+             verts_count, verts, indices_count, indices);
+    }
+    return 0;
+}
+
 void paint_debug(bool value)
 {
     g_debug = value;

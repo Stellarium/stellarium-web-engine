@@ -96,6 +96,7 @@ typedef struct prog {
 
 enum {
     ITEM_LINES = 1,
+    ITEM_MESH,
     ITEM_POINTS,
     ITEM_ALPHA_TEXTURE,
     ITEM_TEXTURE,
@@ -168,6 +169,11 @@ struct item
             int   align;
             int   effects;
         } text;
+
+        struct {
+            int mode;
+            float stroke_width;
+        } mesh;
     };
 
     item_t *next, *prev;
@@ -946,6 +952,56 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
+static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
+{
+    // XXX: almost the same as item_lines_render.
+    prog_t *prog;
+    GLuint  array_buffer;
+    GLuint  index_buffer;
+    int gl_mode;
+
+    gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES : GL_LINES;
+
+    prog = &rend->progs.blit;
+    GL(glUseProgram(prog->prog));
+
+    GL(glLineWidth(item->mesh.stroke_width));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
+
+    GL(glEnable(GL_CULL_FACE));
+    GL(glDisable(GL_DEPTH_TEST));
+
+    if (item->color[3] == 1) {
+        GL(glDisable(GL_BLEND));
+    } else {
+        GL(glEnable(GL_BLEND));
+        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                               GL_ZERO, GL_ONE));
+    }
+
+    GL(glGenBuffers(1, &index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    item->indices.nb * item->indices.info->size,
+                    item->indices.data, GL_DYNAMIC_DRAW));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
+
+    GL(glUniform4f(prog->u_color_l, VEC4_SPLIT(item->color)));
+
+    gl_buf_enable(&item->buf);
+    GL(glDrawElements(gl_mode, item->indices.nb, GL_UNSIGNED_SHORT, 0));
+    gl_buf_disable(&item->buf);
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDeleteBuffers(1, &index_buffer));
+}
+
 static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 {
     double a, da;
@@ -1286,6 +1342,7 @@ static void rend_flush(renderer_gl_t *rend)
 
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         if (item->type == ITEM_LINES) item_lines_render(rend, item);
+        if (item->type == ITEM_MESH) item_mesh_render(rend, item);
         if (item->type == ITEM_POINTS) item_points_render(rend, item);
         if (item->type == ITEM_ALPHA_TEXTURE || item->type == ITEM_FOG)
             item_alpha_texture_render(rend, item);
@@ -1365,6 +1422,53 @@ static void line(renderer_t           *rend_,
         }
         gl_buf_next(&item->buf);
     }
+}
+
+static void mesh(renderer_t          *rend_,
+                 const painter_t     *painter,
+                 int                 frame,
+                 int                 mode,
+                 int                 verts_count,
+                 const double        verts[][3],
+                 int                 indices_count,
+                 const uint16_t      indices[])
+{
+    int i;
+    double pos[4];
+    item_t *item;
+    renderer_gl_t *rend = (void*)rend_;
+
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_MESH;
+    vec4_to_float(painter->color, item->color);
+    item->mesh.mode = mode;
+    item->mesh.stroke_width = painter->lines_width;
+    // XXX: should we use a special buffer for mesh?
+    gl_buf_alloc(&item->buf, &LINES_BUF, verts_count);
+    gl_buf_alloc(&item->indices, &INDICES_BUF, indices_count);
+
+    // Project the vertices.
+    for (i = 0; i < verts_count; i++) {
+        vec3_copy(verts[i], pos);
+        pos[3] = 0.0;
+        mat4_mul_vec4(*painter->transform, pos, pos);
+        vec3_normalize(pos, pos);
+        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
+        pos[3] = 0.0;
+        project(painter->proj, PROJ_ALREADY_NORMALIZED, 4, pos, pos);
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5); // To remove.
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        gl_buf_next(&item->buf);
+    }
+
+    // Fill the indice buffer.
+    for (i = 0; i < indices_count; i++) {
+        gl_buf_1i(&item->indices, -1, 0, indices[i]);
+        gl_buf_next(&item->indices);
+    }
+
+    DL_APPEND(rend->items, item);
 }
 
 static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
@@ -1520,6 +1624,7 @@ renderer_t* render_gl_create(void)
     rend->rend.texture = texture;
     rend->rend.text = text;
     rend->rend.line = line;
+    rend->rend.mesh = mesh;
     rend->rend.ellipse_2d = ellipse_2d;
     rend->rend.rect_2d = rect_2d;
     rend->rend.line_2d = line_2d;
