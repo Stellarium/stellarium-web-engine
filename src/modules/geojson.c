@@ -40,6 +40,34 @@ static void lonlat2c(const double lonlat[2], double c[3])
     eraS2c(-lonlat[0] * DD2R, lonlat[1] * DD2R, c);
 }
 
+static void c2lonlat(const double c[3], double lonlat[2])
+{
+    double lon, lat;
+    eraC2s(c, &lon, &lat);
+    lonlat[0] = -lon * DR2D;
+    lonlat[1] = lat * DR2D;
+}
+
+// Should be in vec.h I guess, but we use eraSepp, so it's not conveniant.
+static void create_rotation_between_vecs(
+        double rot[3][3], const double a[3], const double b[3])
+{
+    double angle = eraSepp(a, b);
+    double axis[3];
+    double quat[4];
+    if (angle < FLT_EPSILON) {
+        mat3_set_identity(rot);
+        return;
+    }
+    if (fabs(angle - M_PI) > FLT_EPSILON) {
+        vec3_cross(a, b, axis);
+    } else {
+        vec3_get_ortho(a, axis);
+    }
+    quat_from_axis(quat, angle, axis[0], axis[1], axis[2]);
+    quat_to_mat3(quat, rot);
+}
+
 // XXX: naive algo.
 static void compute_bounding_cap(int size, const double (*verts)[3],
                                  double cap[4])
@@ -64,6 +92,8 @@ static void add_geojson_feature(image_t *image,
     const geojson_linestring_t *line;
     int i, size, triangles_size;
     const uint16_t *triangles;
+    double rot[3][3], p[3];
+    double (*centered_lonlat)[2];
 
     shape = calloc(1, sizeof(*shape));
 
@@ -88,6 +118,7 @@ static void add_geojson_feature(image_t *image,
     for (i = 0; i < size; i++) {
         lonlat2c(line->coordinates[i], shape->vertices[i]);
     }
+    compute_bounding_cap(size, shape->vertices, shape->bounding_cap);
 
     // Generates contour index.
     shape->lines_count = size * 2;
@@ -97,19 +128,28 @@ static void add_geojson_feature(image_t *image,
         shape->lines[i * 2 + 1] = i + 1;
     }
 
-    // Triangulate the shape.
-    // XXX: only work for trivial cases at the moment!
+
     if (feature->geometry.type == GEOJSON_POLYGON) {
+        // Triangulate the shape.
+        // First we rotate the points so that they are centered around the
+        // origin.
+        create_rotation_between_vecs(rot, shape->bounding_cap, VEC(1, 0, 0));
+        centered_lonlat = calloc(size, sizeof(*centered_lonlat));
+        for (i = 0; i < size; i++) {
+            mat3_mul_vec3(rot, shape->vertices[i], p);
+            c2lonlat(p, centered_lonlat[i]);
+        }
+
         earcut = earcut_new();
-        earcut_set_poly(earcut, size, line->coordinates);
+        earcut_set_poly(earcut, size, centered_lonlat);
         triangles = earcut_triangulate(earcut, &triangles_size);
         shape->triangles_count = triangles_size;
         shape->triangles = malloc(triangles_size * 2);
         memcpy(shape->triangles, triangles, triangles_size * 2);
         earcut_delete(earcut);
+        free(centered_lonlat);
     }
 
-    compute_bounding_cap(size, shape->vertices, shape->bounding_cap);
     LL_APPEND(image->shapes, shape);
 }
 
