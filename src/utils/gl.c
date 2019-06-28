@@ -10,6 +10,7 @@
 #include "gl.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,23 +80,41 @@ static int compile_shader(int shader, const char *code,
     return 0;
 }
 
-int gl_create_program(const char *vertex_shader_code,
-                      const char *fragment_shader_code, const char *include,
-                      const char **attr_names)
+/*
+ * Function: gl_shader_create
+ * Helper function that compiles an opengl shader.
+ *
+ * Parameters:
+ *   vert       - The vertex shader code.
+ *   frag       - The fragment shader code.
+ *   include    - Extra includes added to both shaders.
+ *   attr_names - NULL terminated list of attribute names that will be binded.
+ *
+ * Return:
+ *   A new gl_shader_t instance.
+ */
+gl_shader_t *gl_shader_create(const char *vert, const char *frag,
+                              const char *include, const char **attr_names)
 {
-    int i;
-    int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    int i, status, len, count;
+    int vertex_shader, fragment_shader;
+    char log[1024];
+    gl_shader_t *shader;
+    GLint prog;
+    gl_uniform_t *uni;
+
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     include = include ? : "";
     assert(vertex_shader);
-    if (compile_shader(vertex_shader, vertex_shader_code,
+    if (compile_shader(vertex_shader, vert,
                        "#define VERTEX_SHADER\n", include))
-        return 0;
-    int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        return NULL;
+    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     assert(fragment_shader);
-    if (compile_shader(fragment_shader, fragment_shader_code,
+    if (compile_shader(fragment_shader, frag,
                        "#define FRAGMENT_SHADER\n", include))
-        return 0;
-    int prog = glCreateProgram();
+        return NULL;
+    prog = glCreateProgram();
     glAttachShader(prog, vertex_shader);
     glAttachShader(prog, fragment_shader);
 
@@ -107,18 +126,46 @@ int gl_create_program(const char *vertex_shader_code,
     }
 
     glLinkProgram(prog);
-    int status;
     glGetProgramiv(prog, GL_LINK_STATUS, &status);
     if (status != GL_TRUE) {
         LOG_E("Link Error");
-        int len;
         glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
-        char log[len];
-        glGetProgramInfoLog(prog, len, &len, log);
+        glGetProgramInfoLog(prog, sizeof(log), NULL, log);
         LOG_E("%s", log);
-        return 0;
+        return NULL;
     }
-    return prog;
+
+    shader = calloc(1, sizeof(*shader));
+    shader->prog = prog;
+
+    GL(glGetProgramiv(shader->prog, GL_ACTIVE_UNIFORMS, &count));
+    for (i = 0; i < count; i++) {
+        uni = &shader->uniforms[i];
+        GL(glGetActiveUniform(shader->prog, i, sizeof(uni->name),
+                              NULL, &uni->size, &uni->type, uni->name));
+        // Special case for array uniforms: remove the '[0]'
+        if (uni->size > 1) {
+            assert(uni->type == GL_FLOAT);
+            *strchr(uni->name, '[') = '\0';
+        }
+        GL(uni->loc = glGetUniformLocation(shader->prog, uni->name));
+    }
+
+    return shader;
+}
+
+void gl_shader_delete(gl_shader_t *shader)
+{
+    int i;
+    GLuint shaders[2];
+    GLint count = 0;
+
+    if (!shader) return;
+    GL(glGetAttachedShaders(shader->prog, 2, &count, shaders));
+    for (i = 0; i < count; i++)
+        GL(glDeleteShader(shaders[i]));
+    GL(glDeleteProgram(shader->prog));
+    free(shader);
 }
 
 void gl_buf_alloc(gl_buf_t *buf, const gl_buf_info_t *info, int capacity)
@@ -241,4 +288,56 @@ void gl_buf_disable(const gl_buf_t *buf)
         tot += a->size * gl_size_for_type(a->type);
         if (tot == info->size) break;
     }
+}
+
+bool gl_has_uniform(gl_shader_t *shader, const char *name)
+{
+    gl_uniform_t *uni;
+    for (uni = &shader->uniforms[0]; uni->size; uni++) {
+        if (strcmp(uni->name, name) == 0) return true;
+    }
+    return false;
+}
+
+void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
+{
+    gl_uniform_t *uni;
+    va_list args;
+
+    for (uni = &shader->uniforms[0]; uni->size; uni++) {
+        if (strcmp(uni->name, name) == 0) break;
+    }
+    if (!uni->size) return; // No such uniform.
+
+    va_start(args, name);
+    switch (uni->type) {
+    case GL_INT:
+    case GL_SAMPLER_2D:
+        GL(glUniform1i(uni->loc, va_arg(args, int)));
+        break;
+    case GL_FLOAT:
+        if (uni->size == 1)
+            GL(glUniform1f(uni->loc, va_arg(args, double)));
+        else
+            GL(glUniform1fv(uni->loc, uni->size, va_arg(args, float*)));
+        break;
+    case GL_FLOAT_VEC2:
+        GL(glUniform2fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_VEC3:
+        GL(glUniform3fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_VEC4:
+        GL(glUniform4fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_MAT3:
+        GL(glUniformMatrix3fv(uni->loc, 1, 0, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_MAT4:
+        GL(glUniformMatrix4fv(uni->loc, 1, 0, va_arg(args, const float*)));
+        break;
+    default:
+        assert(false);
+    }
+    va_end(args);
 }

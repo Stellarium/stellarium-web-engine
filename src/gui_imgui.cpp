@@ -77,19 +77,11 @@ static const char *FSHADER =
     "}                                                              \n"
 ;
 
-typedef struct {
-    GLuint prog;
-
-    GLuint u_tex_l;
-    GLuint u_is_alpha_tex_l; // Set to 1.0 if the tex is pure alpha.
-    GLuint u_proj_mat_l;
-} prog_t;
-
 typedef struct gui {
     void    *user;
     fader_t more_info_opened;
 
-    prog_t  prog;
+    gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
 } gui_t;
@@ -120,9 +112,8 @@ static void render_prepare_context(gui_t *gui)
         { 0.0f,         0.0f,          -1.0f, 0.0f },
         { -1.0f,        1.0f,           0.0f, 1.0f },
     };
-    GL(glUseProgram(gui->prog.prog));
-    GL(glUniformMatrix4fv(gui->prog.u_proj_mat_l, 1, 0,
-                          &ortho_projection[0][0]));
+    GL(glUseProgram(gui->shader->prog));
+    gl_update_uniform(gui->shader, "u_proj_mat", ortho_projection);
 
     GL(glBindBuffer(GL_ARRAY_BUFFER, gui->array_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gui->index_buffer));
@@ -177,9 +168,9 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
                              (int)(height - pcmd->ClipRect.w),
                              (int)(pcmd->ClipRect.z - pcmd->ClipRect.x),
                              (int)(pcmd->ClipRect.w - pcmd->ClipRect.y)));
-                GL(glUniform1f(gui->prog.u_is_alpha_tex_l,
+                gl_update_uniform(gui->shader, "u_is_alpha_tex",
                                pcmd->TextureId == io.Fonts->TexID ?
-                               1.0 : 0.0));
+                               1.0 : 0.0);
                 GL(glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                   GL_UNSIGNED_SHORT, idx_buffer_offset));
             }
@@ -257,18 +248,10 @@ static void init_ImGui(gui_t *gui)
 void gui_init(void *user)
 {
     gui_t *gui = (gui_t*)calloc(1, sizeof(*gui));
-    prog_t *p;
 
     gui->user = user;
-    gui->prog.prog = gl_create_program(VSHADER, FSHADER, NULL, ATTR_NAMES);
-    p = &gui->prog;
-    GL(glUseProgram(p->prog));
-#define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
-    UNIFORM(u_proj_mat);
-    UNIFORM(u_tex);
-    UNIFORM(u_is_alpha_tex);
-#undef UNIFORM
-    GL(glUniform1i(p->u_tex_l, 0));
+    gui->shader = gl_shader_create(VSHADER, FSHADER, NULL, ATTR_NAMES);
+    assert(gui->shader);
     GL(glGenBuffers(1, &gui->array_buffer));
     GL(glGenBuffers(1, &gui->index_buffer));
     init_ImGui(gui);
@@ -278,6 +261,7 @@ void gui_release(void)
 {
     ImGuiIO& io = ImGui::GetIO();
     gui_t *gui = (gui_t*)io.UserData;
+    gl_shader_delete(gui->shader);
     free(gui);
     ImGui::DestroyContext();
 }

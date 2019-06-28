@@ -7,6 +7,8 @@
  * repository.
  */
 
+#include <stdbool.h>
+
 // Set the DEBUG macro if needed
 #ifndef DEBUG
 #   if !defined(NDEBUG)
@@ -41,9 +43,6 @@
 #endif
 
 int gl_check_errors(const char *file, int line);
-int gl_create_program(const char *vertex_shader_code,
-                      const char *fragment_shader_code, const char *include,
-                      const char **attr_names);
 
 /*
  * Struct: gl_buf_info
@@ -132,3 +131,44 @@ void gl_buf_enable(const gl_buf_t *buf);
  * Disable a buffer after an opengl draw call.
  */
 void gl_buf_disable(const gl_buf_t *buf);
+
+/*
+ * Struct: gl_uniform_t
+ * Used internally in gl_shader_t
+ */
+typedef struct gl_uniform {
+    char        name[64];
+    GLint       size;
+    GLenum      type;
+    GLint       loc;
+} gl_uniform_t;
+
+/*
+ * Struct: gl_shader_t
+ * Represent an opengl shader and it's uniforms locations.
+ */
+typedef struct gl_shader {
+    GLint           prog;
+    gl_uniform_t    uniforms[32];
+} gl_shader_t;
+
+/*
+ * Function: gl_shader_create
+ * Helper function that compiles an opengl shader.
+ *
+ * Parameters:
+ *   vert       - The vertex shader code.
+ *   frag       - The fragment shader code.
+ *   include    - Extra includes added to both shaders.
+ *   attr_names - NULL terminated list of attribute names that will be binded.
+ *
+ * Return:
+ *   A new gl_shader_t instance.
+ */
+gl_shader_t *gl_shader_create(const char *vert, const char *frag,
+                              const char *include, const char **attr_names);
+
+void gl_shader_delete(gl_shader_t *shader);
+
+bool gl_has_uniform(gl_shader_t *shader, const char *name);
+void gl_update_uniform(gl_shader_t *shader, const char *name, ...);
