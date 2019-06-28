@@ -29,6 +29,7 @@ typedef struct feature {
     float       stroke_width;
     char        *title;
     int         text_anchor;
+    float       text_rotate;
 } feature_t;
 
 typedef struct image {
@@ -107,6 +108,7 @@ static void add_geojson_feature(image_t *image,
     if (geo_feature->properties.title)
         feature->title = strdup(geo_feature->properties.title);
     feature->text_anchor = geo_feature->properties.text_anchor;
+    feature->text_rotate = geo_feature->properties.text_rotate;
 
     switch (geo_feature->geometry.type) {
     case GEOJSON_LINESTRING:
@@ -202,6 +204,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     const image_t *image = (void*)obj;
     painter_t painter = *painter_;
     const feature_t *feature;
+    double pos[2];
 
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->fill_color[3]) {
@@ -222,9 +225,12 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         }
 
         if (feature->title) {
-            labels_add_3d(feature->title, FRAME_ICRF, feature->vertices[0],
-                          true, 0, FONT_SIZE_BASE, VEC(1, 1, 1, 1), 0,
-                          feature->text_anchor, 0, 0, 0);
+            painter_project(&painter, FRAME_ICRF, feature->bounding_cap,
+                            true, false, pos);
+            paint_text(&painter, feature->title, pos, feature->text_anchor,
+                       0, FONT_SIZE_BASE,
+                       VEC(VEC4_SPLIT(feature->stroke_color)),
+                       feature->text_rotate);
         }
     }
     return 0;
