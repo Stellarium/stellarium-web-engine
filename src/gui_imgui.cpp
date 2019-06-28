@@ -18,6 +18,20 @@ extern "C" {
 
 static texture_t *g_font_tex = NULL;
 
+// All the shader attribute locations.
+enum {
+    ATTR_POS,
+    ATTR_TEX_POS,
+    ATTR_COLOR,
+};
+
+static const char *ATTR_NAMES[] = {
+    [ATTR_POS]          = "a_pos",
+    [ATTR_TEX_POS]      = "a_tex_pos",
+    [ATTR_COLOR]        = "a_color",
+    NULL,
+};
+
 namespace ImGui {
     bool VerticalTab(const char *text, bool *v);
 };
@@ -66,10 +80,6 @@ static const char *FSHADER =
 typedef struct {
     GLuint prog;
 
-    GLuint a_pos_l;
-    GLuint a_tex_pos_l;
-    GLuint a_color_l;
-
     GLuint u_tex_l;
     GLuint u_is_alpha_tex_l; // Set to 1.0 if the tex is pure alpha.
     GLuint u_proj_mat_l;
@@ -117,16 +127,16 @@ static void render_prepare_context(gui_t *gui)
     GL(glBindBuffer(GL_ARRAY_BUFFER, gui->array_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gui->index_buffer));
     // This could probably be done only at init time.
-    GL(glEnableVertexAttribArray(gui->prog.a_pos_l));
-    GL(glEnableVertexAttribArray(gui->prog.a_tex_pos_l));
-    GL(glEnableVertexAttribArray(gui->prog.a_color_l));
-    GL(glVertexAttribPointer(gui->prog.a_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(ATTR_POS));
+    GL(glEnableVertexAttribArray(ATTR_TEX_POS));
+    GL(glEnableVertexAttribArray(ATTR_COLOR));
+    GL(glVertexAttribPointer(ATTR_POS, 2, GL_FLOAT, false,
                              sizeof(ImDrawVert),
                              (void*)OFFSETOF(ImDrawVert, pos)));
-    GL(glVertexAttribPointer(gui->prog.a_tex_pos_l, 2, GL_FLOAT, false,
+    GL(glVertexAttribPointer(ATTR_TEX_POS, 2, GL_FLOAT, false,
                              sizeof(ImDrawVert),
                              (void*)OFFSETOF(ImDrawVert, uv)));
-    GL(glVertexAttribPointer(gui->prog.a_color_l, 4, GL_UNSIGNED_BYTE,
+    GL(glVertexAttribPointer(ATTR_COLOR, 4, GL_UNSIGNED_BYTE,
                              true, sizeof(ImDrawVert),
                              (void*)OFFSETOF(ImDrawVert, col)));
     #undef OFFSETOF
@@ -250,18 +260,13 @@ void gui_init(void *user)
     prog_t *p;
 
     gui->user = user;
-    gui->prog.prog = gl_create_program(VSHADER, FSHADER, NULL, NULL);
+    gui->prog.prog = gl_create_program(VSHADER, FSHADER, NULL, ATTR_NAMES);
     p = &gui->prog;
     GL(glUseProgram(p->prog));
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
-#define ATTRIB(x) p->x##_l = glGetAttribLocation(p->prog, #x)
     UNIFORM(u_proj_mat);
     UNIFORM(u_tex);
     UNIFORM(u_is_alpha_tex);
-    ATTRIB(a_pos);
-    ATTRIB(a_tex_pos);
-    ATTRIB(a_color);
-#undef ATTRIB
 #undef UNIFORM
     GL(glUniform1i(p->u_tex_l, 0));
     GL(glGenBuffers(1, &gui->array_buffer));
