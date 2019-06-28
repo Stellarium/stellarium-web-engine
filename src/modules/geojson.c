@@ -175,6 +175,7 @@ static void remove_all_features(image_t *image)
         free(feature->triangles);
         free(feature->lines);
         free(feature);
+        free(feature->title);
     }
 }
 
