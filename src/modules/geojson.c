@@ -12,10 +12,10 @@
 #include "earcut.h"
 #include "geojson.h"
 
-typedef struct shape shape_t;
+typedef struct feature feature_t;
 
-typedef struct shape {
-    shape_t     *next;
+typedef struct feature {
+    feature_t   *next;
     double      bounding_cap[4];
     int         vertices_count;
     double      (*vertices)[3];
@@ -29,11 +29,11 @@ typedef struct shape {
     float       stroke_width;
     char        *title;
     int         text_anchor;
-} shape_t;
+} feature_t;
 
 typedef struct image {
     obj_t       obj;
-    shape_t     *shapes;
+    feature_t   *features;
 } image_t;
 
 
@@ -87,9 +87,9 @@ static void compute_bounding_cap(int size, const double (*verts)[3],
 }
 
 static void add_geojson_feature(image_t *image,
-                                const geojson_feature_t *feature)
+                                const geojson_feature_t *geo_feature)
 {
-    shape_t *shape;
+    feature_t *feature;
     earcut_t *earcut;
     const double (*coordinates)[2];
     int i, size, triangles_size;
@@ -97,84 +97,84 @@ static void add_geojson_feature(image_t *image,
     double rot[3][3], p[3];
     double (*centered_lonlat)[2];
 
-    shape = calloc(1, sizeof(*shape));
+    feature = calloc(1, sizeof(*feature));
 
-    vec3_copy(feature->properties.fill, shape->fill_color);
-    vec3_copy(feature->properties.stroke, shape->stroke_color);
-    shape->fill_color[3] = feature->properties.fill_opacity;
-    shape->stroke_color[3] = feature->properties.stroke_opacity;
-    shape->stroke_width = feature->properties.stroke_width;
-    if (feature->properties.title)
-        shape->title = strdup(feature->properties.title);
-    shape->text_anchor = feature->properties.text_anchor;
+    vec3_copy(geo_feature->properties.fill, feature->fill_color);
+    vec3_copy(geo_feature->properties.stroke, feature->stroke_color);
+    feature->fill_color[3] = geo_feature->properties.fill_opacity;
+    feature->stroke_color[3] = geo_feature->properties.stroke_opacity;
+    feature->stroke_width = geo_feature->properties.stroke_width;
+    if (geo_feature->properties.title)
+        feature->title = strdup(geo_feature->properties.title);
+    feature->text_anchor = geo_feature->properties.text_anchor;
 
-    switch (feature->geometry.type) {
+    switch (geo_feature->geometry.type) {
     case GEOJSON_LINESTRING:
-        coordinates = feature->geometry.linestring.coordinates;
-        size = feature->geometry.linestring.size;
+        coordinates = geo_feature->geometry.linestring.coordinates;
+        size = geo_feature->geometry.linestring.size;
         break;
     case GEOJSON_POLYGON:
-        coordinates = feature->geometry.polygon.rings[0].coordinates;
-        size = feature->geometry.polygon.rings[0].size;
+        coordinates = geo_feature->geometry.polygon.rings[0].coordinates;
+        size = geo_feature->geometry.polygon.rings[0].size;
         break;
     case GEOJSON_POINT:
-        coordinates = &feature->geometry.point.coordinates;
+        coordinates = &geo_feature->geometry.point.coordinates;
         size = 1;
         break;
     default:
         assert(false);
     }
 
-    shape->vertices_count = size;
-    shape->vertices = malloc(size * sizeof(*shape->vertices));
+    feature->vertices_count = size;
+    feature->vertices = malloc(size * sizeof(*feature->vertices));
     for (i = 0; i < size; i++) {
-        lonlat2c(coordinates[i], shape->vertices[i]);
+        lonlat2c(coordinates[i], feature->vertices[i]);
     }
-    compute_bounding_cap(size, shape->vertices, shape->bounding_cap);
+    compute_bounding_cap(size, feature->vertices, feature->bounding_cap);
 
     // Generates contour index.
-    shape->lines_count = size * 2;
-    shape->lines = malloc(size * 2 * 2);
+    feature->lines_count = size * 2;
+    feature->lines = malloc(size * 2 * 2);
     for (i = 0; i < size - 1; i++) {
-        shape->lines[i * 2 + 0] = i;
-        shape->lines[i * 2 + 1] = i + 1;
+        feature->lines[i * 2 + 0] = i;
+        feature->lines[i * 2 + 1] = i + 1;
     }
 
 
-    if (feature->geometry.type == GEOJSON_POLYGON) {
+    if (geo_feature->geometry.type == GEOJSON_POLYGON) {
         // Triangulate the shape.
         // First we rotate the points so that they are centered around the
         // origin.
-        create_rotation_between_vecs(rot, shape->bounding_cap, VEC(1, 0, 0));
+        create_rotation_between_vecs(rot, feature->bounding_cap, VEC(1, 0, 0));
         centered_lonlat = calloc(size, sizeof(*centered_lonlat));
         for (i = 0; i < size; i++) {
-            mat3_mul_vec3(rot, shape->vertices[i], p);
+            mat3_mul_vec3(rot, feature->vertices[i], p);
             c2lonlat(p, centered_lonlat[i]);
         }
 
         earcut = earcut_new();
         earcut_set_poly(earcut, size, centered_lonlat);
         triangles = earcut_triangulate(earcut, &triangles_size);
-        shape->triangles_count = triangles_size;
-        shape->triangles = malloc(triangles_size * 2);
-        memcpy(shape->triangles, triangles, triangles_size * 2);
+        feature->triangles_count = triangles_size;
+        feature->triangles = malloc(triangles_size * 2);
+        memcpy(feature->triangles, triangles, triangles_size * 2);
         earcut_delete(earcut);
         free(centered_lonlat);
     }
 
-    LL_APPEND(image->shapes, shape);
+    LL_APPEND(image->features, feature);
 }
 
 static void remove_all_features(image_t *image)
 {
-    shape_t *shape;
-    while(image->shapes) {
-        shape = image->shapes;
-        LL_DELETE(image->shapes, shape);
-        free(shape->vertices);
-        free(shape->triangles);
-        free(shape->lines);
-        free(shape);
+    feature_t *feature;
+    while(image->features) {
+        feature = image->features;
+        LL_DELETE(image->features, feature);
+        free(feature->vertices);
+        free(feature->triangles);
+        free(feature->lines);
+        free(feature);
     }
 }
 
@@ -200,30 +200,30 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
 {
     const image_t *image = (void*)obj;
     painter_t painter = *painter_;
-    const shape_t *shape;
+    const feature_t *feature;
 
-    for (shape = image->shapes; shape; shape = shape->next) {
-        if (shape->fill_color[3]) {
-            vec4_copy(shape->fill_color, painter.color);
+    for (feature = image->features; feature; feature = feature->next) {
+        if (feature->fill_color[3]) {
+            vec4_copy(feature->fill_color, painter.color);
             paint_mesh(&painter, FRAME_ICRF, MODE_TRIANGLES,
-                       shape->vertices_count, shape->vertices,
-                       shape->triangles_count, shape->triangles,
-                       shape->bounding_cap);
+                       feature->vertices_count, feature->vertices,
+                       feature->triangles_count, feature->triangles,
+                       feature->bounding_cap);
         }
 
-        if (shape->stroke_color[3]) {
-            vec4_copy(shape->stroke_color, painter.color);
-            painter.lines_width = shape->stroke_width;
+        if (feature->stroke_color[3]) {
+            vec4_copy(feature->stroke_color, painter.color);
+            painter.lines_width = feature->stroke_width;
             paint_mesh(&painter, FRAME_ICRF, MODE_LINES,
-                       shape->vertices_count, shape->vertices,
-                       shape->lines_count, shape->lines,
-                       shape->bounding_cap);
+                       feature->vertices_count, feature->vertices,
+                       feature->lines_count, feature->lines,
+                       feature->bounding_cap);
         }
 
-        if (shape->title) {
-            labels_add_3d(shape->title, FRAME_ICRF, shape->vertices[0],
+        if (feature->title) {
+            labels_add_3d(feature->title, FRAME_ICRF, feature->vertices[0],
                           true, 0, FONT_SIZE_BASE, VEC(1, 1, 1, 1), 0,
-                          shape->text_anchor, 0, 0, 0);
+                          feature->text_anchor, 0, 0, 0);
         }
     }
     return 0;
