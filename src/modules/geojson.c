@@ -135,6 +135,7 @@ static void add_geojson_feature(image_t *image,
         break;
     default:
         assert(false);
+        return;
     }
 
     feature->vertices_count = size;
