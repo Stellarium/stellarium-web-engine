@@ -27,6 +27,7 @@ typedef struct shape {
     float       fill_color[4];
     float       stroke_color[4];
     float       stroke_width;
+    char        *title;
 } shape_t;
 
 typedef struct image {
@@ -89,7 +90,7 @@ static void add_geojson_feature(image_t *image,
 {
     shape_t *shape;
     earcut_t *earcut;
-    const geojson_linestring_t *line;
+    const double (*coordinates)[2];
     int i, size, triangles_size;
     const uint16_t *triangles;
     double rot[3][3], p[3];
@@ -102,21 +103,30 @@ static void add_geojson_feature(image_t *image,
     shape->fill_color[3] = feature->properties.fill_opacity;
     shape->stroke_color[3] = feature->properties.stroke_opacity;
     shape->stroke_width = feature->properties.stroke_width;
+    if (feature->properties.title)
+        shape->title = strdup(feature->properties.title);
 
     switch (feature->geometry.type) {
     case GEOJSON_LINESTRING:
-        line = &feature->geometry.linestring;
+        coordinates = feature->geometry.linestring.coordinates;
+        size = feature->geometry.linestring.size;
         break;
     case GEOJSON_POLYGON:
-        line = &feature->geometry.polygon.rings[0];
+        coordinates = feature->geometry.polygon.rings[0].coordinates;
+        size = feature->geometry.polygon.rings[0].size;
         break;
+    case GEOJSON_POINT:
+        coordinates = &feature->geometry.point.coordinates;
+        size = 1;
+        break;
+    default:
+        assert(false);
     }
 
-    size = line->size;
     shape->vertices_count = size;
     shape->vertices = malloc(size * sizeof(*shape->vertices));
     for (i = 0; i < size; i++) {
-        lonlat2c(line->coordinates[i], shape->vertices[i]);
+        lonlat2c(coordinates[i], shape->vertices[i]);
     }
     compute_bounding_cap(size, shape->vertices, shape->bounding_cap);
 
