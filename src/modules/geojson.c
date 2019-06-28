@@ -36,6 +36,7 @@ typedef struct feature {
 typedef struct image {
     obj_t       obj;
     feature_t   *features;
+    int         frame;
 } image_t;
 
 
@@ -86,6 +87,13 @@ static void compute_bounding_cap(int size, const double (*verts)[3],
     for (i = 0; i < size; i++) {
         cap[3] = min(cap[3], vec3_dot(cap, verts[i]));
     }
+}
+
+static int image_init(obj_t *obj, json_value *args)
+{
+    image_t *image = (void*)obj;
+    image->frame = FRAME_ICRF;
+    return 0;
 }
 
 static void add_geojson_feature(image_t *image,
@@ -207,11 +215,12 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     const feature_t *feature;
     double pos[2], ofs[2];
+    int frame = image->frame;
 
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->fill_color[3]) {
             vec4_copy(feature->fill_color, painter.color);
-            paint_mesh(&painter, FRAME_ICRF, MODE_TRIANGLES,
+            paint_mesh(&painter, frame, MODE_TRIANGLES,
                        feature->vertices_count, feature->vertices,
                        feature->triangles_count, feature->triangles,
                        feature->bounding_cap);
@@ -220,14 +229,14 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->stroke_color[3]) {
             vec4_copy(feature->stroke_color, painter.color);
             painter.lines_width = feature->stroke_width;
-            paint_mesh(&painter, FRAME_ICRF, MODE_LINES,
+            paint_mesh(&painter, frame, MODE_LINES,
                        feature->vertices_count, feature->vertices,
                        feature->lines_count, feature->lines,
                        feature->bounding_cap);
         }
 
         if (feature->title) {
-            painter_project(&painter, FRAME_ICRF, feature->bounding_cap,
+            painter_project(&painter, frame, feature->bounding_cap,
                             true, false, pos);
             vec2_copy(feature->text_offset, ofs);
             vec2_rotate(feature->text_rotate, ofs, ofs);
@@ -249,9 +258,11 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
 static obj_klass_t image_klass = {
     .id = "geojson",
     .size = sizeof(image_t),
+    .init = image_init,
     .render = image_render,
     .attributes = (attribute_t[]) {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
+        PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),
         {}
     },
 };
