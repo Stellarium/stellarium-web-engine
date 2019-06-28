@@ -63,6 +63,10 @@ static const double mat4_identity[4][4] = {
  * double and float (for both arguments).
  */
 
+#define vec2_copy(v, out) do { \
+        (out)[0] = (v)[0]; \
+        (out)[1] = (v)[1]; } while (0)
+
 #define vec3_copy(v, out) do { \
         (out)[0] = (v)[0]; \
         (out)[1] = (v)[1]; \
@@ -79,7 +83,6 @@ static const double mat4_identity[4][4] = {
 
 DEF void vec2_set(double v[S 2], double x, double y);
 DEF void vec4_set(double v[S 4], double x, double y, double z, double w);
-DEF void vec2_copy(const double v[S 2], double out[S 2]);
 DEF bool vec3_equal(const double a[S 3], const double b[S 3]);
 DEF bool vec4_equal(const double a[S 4], const double b[S 4]);
 DEF void vec2_to_float(const double a[S 2], float *out);
@@ -193,11 +196,6 @@ DEF void vec4_set(double v[S 4], double x, double y, double z, double w)
     v[1] = y;
     v[2] = z;
     v[3] = w;
-}
-
-DEF void vec2_copy(const double v[S 2], double out[S 2])
-{
-    memcpy(out, v, 2 * sizeof(*v));
 }
 
 DEF bool vec3_equal(const double a[S 3], const double b[S 3])
