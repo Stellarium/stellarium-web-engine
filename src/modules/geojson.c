@@ -30,6 +30,7 @@ typedef struct feature {
     char        *title;
     int         text_anchor;
     float       text_rotate;
+    float       text_offset[2];
 } feature_t;
 
 typedef struct image {
@@ -109,6 +110,7 @@ static void add_geojson_feature(image_t *image,
         feature->title = strdup(geo_feature->properties.title);
     feature->text_anchor = geo_feature->properties.text_anchor;
     feature->text_rotate = geo_feature->properties.text_rotate;
+    vec2_copy(geo_feature->properties.text_offset, feature->text_offset);
 
     switch (geo_feature->geometry.type) {
     case GEOJSON_LINESTRING:
@@ -204,7 +206,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     const image_t *image = (void*)obj;
     painter_t painter = *painter_;
     const feature_t *feature;
-    double pos[2];
+    double pos[2], ofs[2];
 
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->fill_color[3]) {
@@ -227,6 +229,9 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->title) {
             painter_project(&painter, FRAME_ICRF, feature->bounding_cap,
                             true, false, pos);
+            vec2_copy(feature->text_offset, ofs);
+            vec2_rotate(feature->text_rotate, ofs, ofs);
+            vec2_add(pos, ofs, pos);
             paint_text(&painter, feature->title, pos, feature->text_anchor,
                        0, FONT_SIZE_BASE,
                        VEC(VEC4_SPLIT(feature->stroke_color)),

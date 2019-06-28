@@ -357,6 +357,9 @@ static int parse_properties(const json_value *data,
                             geojson_feature_properties_t *props)
 {
     const char *title;
+    const json_value *v;
+    double text_offset[2];
+
     if (!data) return 0;
     parse_color(json_get_attr(data, "stroke", 0), props->stroke);
     parse_color(json_get_attr(data, "fill", 0), props->fill);
@@ -367,6 +370,10 @@ static int parse_properties(const json_value *data,
         props->title = strdup(title);
     props->text_anchor = parse_anchor(json_get_attr_s(data, "text-anchor"));
     props->text_rotate = json_get_attr_f(data, "text-rotate", 0);
+    if ((v = json_get_attr(data, "text-offset", 0))) {
+        parse_float_array(v, 0, 2, text_offset);
+        vec2_copy(text_offset, props->text_offset);
+    }
     return 0;
 }
 
