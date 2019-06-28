@@ -366,6 +366,7 @@ static int parse_properties(const json_value *data,
     if ((title = json_get_attr_s(data, "title")))
         props->title = strdup(title);
     props->text_anchor = parse_anchor(json_get_attr_s(data, "text-anchor"));
+    props->text_rotate = json_get_attr_f(data, "text-rotate", 0);
     return 0;
 }
 
