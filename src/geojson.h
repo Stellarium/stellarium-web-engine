@@ -57,6 +57,7 @@
 enum {
     GEOJSON_POLYGON,
     GEOJSON_LINESTRING,
+    GEOJSON_POINT,
 };
 
 typedef struct geojson_feature_properties
@@ -66,6 +67,7 @@ typedef struct geojson_feature_properties
     float stroke_opacity;
     float fill[3];
     float fill_opacity;
+    char *title;
 } geojson_feature_properties_t;
 
 typedef struct
@@ -73,6 +75,11 @@ typedef struct
     int size;
     double (*coordinates)[2];
 } geojson_linestring_t;
+
+typedef struct
+{
+    double coordinates[2];
+} geojson_point_t;
 
 typedef struct
 {
@@ -86,6 +93,7 @@ typedef struct geojson_geometry
     union {
         geojson_linestring_t linestring;
         geojson_polygon_t polygon;
+        geojson_point_t point;
     };
 } geojson_geometry_t;
 

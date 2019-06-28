@@ -232,6 +232,15 @@ static int parse_polygon(const json_value *data, geojson_polygon_t *poly)
     return 0;
 }
 
+static int parse_point(const json_value *data, geojson_point_t *point)
+{
+    const json_value *coordinates;
+    coordinates = json_get_attr(data, "coordinates", json_array);
+    if (parse_float_array(coordinates, 0, 2, point->coordinates))
+        return -1;
+    return 0;
+}
+
 /*
  * Function: parse_path
  * Parse a path into a geometry instance.
@@ -318,6 +327,21 @@ static int parse_circle(const json_value *data, geojson_geometry_t *geo)
     return 0;
 }
 
+static int parse_properties(const json_value *data,
+                            geojson_feature_properties_t *props)
+{
+    const char *title;
+    if (!data) return 0;
+    parse_color(json_get_attr(data, "stroke", 0), props->stroke);
+    parse_color(json_get_attr(data, "fill", 0), props->fill);
+    props->stroke_width = json_get_attr_f(data, "stroke-width", 1);
+    props->stroke_opacity = json_get_attr_f(data, "stroke-opacity", 1);
+    props->fill_opacity = json_get_attr_f(data, "fill-opacity", 0.5);
+    if ((title = json_get_attr_s(data, "title")))
+        props->title = strdup(title);
+    return 0;
+}
+
 /*
  * Function: parse_feature
  * Parse a single geojson feature.
@@ -342,6 +366,9 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
     } else if (strcmp(type, "LineString") == 0) {
         geo->type = GEOJSON_LINESTRING;
         if (parse_linestring(geometry, &geo->linestring)) goto error;
+    } else if (strcmp(type, "Point") == 0) {
+        geo->type = GEOJSON_POINT;
+        if (parse_point(geometry, &geo->point)) goto error;
     } else if (strcmp(type, "Path") == 0) {
         if (parse_path(geometry, geo)) goto error;
     } else if (strcmp(type, "Circle") == 0) {
@@ -354,19 +381,7 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
     vec3_set(feature->properties.fill, 1, 1, 1);
     vec3_set(feature->properties.stroke, 1, 1, 1);
     feature->properties.stroke_width = 1;
-
-    if (properties) {
-        parse_color(json_get_attr(properties, "stroke", 0),
-                    feature->properties.stroke);
-        parse_color(json_get_attr(properties, "fill", 0),
-                    feature->properties.fill);
-        feature->properties.stroke_width = json_get_attr_f(
-                    properties, "stroke-width", 1);
-        feature->properties.stroke_opacity = json_get_attr_f(
-                    properties, "stroke-opacity", 1);
-        feature->properties.fill_opacity = json_get_attr_f(
-                    properties, "fill-opacity", 0.5);
-    }
+    if (parse_properties(properties, &feature->properties)) goto error;
 
     return 0;
 error:
@@ -426,12 +441,15 @@ error:
 void geojson_delete(geojson_t *geojson)
 {
     int i, j;
+    geojson_feature_t *feature;
     geojson_geometry_t *geo;
 
     if (!geojson) return;
 
     for (i = 0; i < geojson->nb_features; i++) {
-        geo = &geojson->features[i].geometry;
+        feature = &geojson->features[i];
+        free(feature->properties.title);
+        geo = &feature->geometry;
         switch (geo->type) {
         case GEOJSON_LINESTRING:
             free(geo->linestring.coordinates);
@@ -442,7 +460,7 @@ void geojson_delete(geojson_t *geojson)
             free(geo->polygon.rings);
             break;
         default:
-            assert(false);
+            break;
         }
     }
     free(geojson->features);
