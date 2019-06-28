@@ -10,7 +10,7 @@
 #include "swe.h"
 
 #include "earcut.h"
-#include "geojson.h"
+#include "geojson_parser.h"
 
 typedef struct feature feature_t;
 

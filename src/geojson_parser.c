@@ -7,7 +7,7 @@
  * repository.
  */
 
-#include "geojson.h"
+#include "geojson_parser.h"
 
 #include "utils/utils_json.h"
 #include "utils/vec.h"
