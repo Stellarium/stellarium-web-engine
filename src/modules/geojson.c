@@ -28,6 +28,7 @@ typedef struct shape {
     float       stroke_color[4];
     float       stroke_width;
     char        *title;
+    int         text_anchor;
 } shape_t;
 
 typedef struct image {
@@ -105,6 +106,7 @@ static void add_geojson_feature(image_t *image,
     shape->stroke_width = feature->properties.stroke_width;
     if (feature->properties.title)
         shape->title = strdup(feature->properties.title);
+    shape->text_anchor = feature->properties.text_anchor;
 
     switch (feature->geometry.type) {
     case GEOJSON_LINESTRING:
@@ -216,6 +218,12 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                        shape->vertices_count, shape->vertices,
                        shape->lines_count, shape->lines,
                        shape->bounding_cap);
+        }
+
+        if (shape->title) {
+            labels_add_3d(shape->title, FRAME_ICRF, shape->vertices[0],
+                          true, 0, FONT_SIZE_BASE, VEC(1, 1, 1, 1), 0,
+                          shape->text_anchor, 0, 0, 0);
         }
     }
     return 0;

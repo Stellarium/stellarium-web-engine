@@ -60,6 +60,21 @@ enum {
     GEOJSON_POINT,
 };
 
+/*
+ * Enum: GEOJSON_ANCHOR
+ * Used in the text_anchor property.
+ *
+ * Same as nanovg.
+ */
+enum {
+    GEOJSON_ANCHOR_LEFT     = 1 << 0,
+    GEOJSON_ANCHOR_CENTER   = 1 << 1,
+    GEOJSON_ANCHOR_RIGHT    = 1 << 2,
+    GEOJSON_ANCHOR_TOP      = 1 << 3,
+    GEOJSON_ANCHOR_MIDDLE   = 1 << 4,
+    GEOJSON_ANCHOR_BOTTOM   = 1 << 5,
+};
+
 typedef struct geojson_feature_properties
 {
     float stroke[3];
@@ -68,6 +83,7 @@ typedef struct geojson_feature_properties
     float fill[3];
     float fill_opacity;
     char *title;
+    int  text_anchor;
 } geojson_feature_properties_t;
 
 typedef struct

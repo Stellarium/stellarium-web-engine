@@ -327,6 +327,32 @@ static int parse_circle(const json_value *data, geojson_geometry_t *geo)
     return 0;
 }
 
+static int parse_anchor(const char *str)
+{
+    if (!str) return GEOJSON_ANCHOR_CENTER | GEOJSON_ANCHOR_MIDDLE;
+    if (strcmp(str, "left") == 0)
+        return GEOJSON_ANCHOR_LEFT | GEOJSON_ANCHOR_MIDDLE;
+    if (strcmp(str, "center") == 0)
+        return GEOJSON_ANCHOR_CENTER | GEOJSON_ANCHOR_MIDDLE;
+    if (strcmp(str, "right") == 0)
+        return GEOJSON_ANCHOR_RIGHT | GEOJSON_ANCHOR_MIDDLE;
+    if (strcmp(str, "top") == 0)
+        return GEOJSON_ANCHOR_CENTER | GEOJSON_ANCHOR_TOP;
+    if (strcmp(str, "bottom") == 0)
+        return GEOJSON_ANCHOR_CENTER | GEOJSON_ANCHOR_BOTTOM;
+    if (strcmp(str, "top-left") == 0)
+        return GEOJSON_ANCHOR_LEFT | GEOJSON_ANCHOR_TOP;
+    if (strcmp(str, "top-right") == 0)
+        return GEOJSON_ANCHOR_RIGHT | GEOJSON_ANCHOR_TOP;
+    if (strcmp(str, "bottom-left") == 0)
+        return GEOJSON_ANCHOR_LEFT | GEOJSON_ANCHOR_BOTTOM;
+    if (strcmp(str, "bottom-right") == 0)
+        return GEOJSON_ANCHOR_RIGHT | GEOJSON_ANCHOR_BOTTOM;
+
+    LOG_W("Wrong anchor value: %s", str);
+    return 0;
+}
+
 static int parse_properties(const json_value *data,
                             geojson_feature_properties_t *props)
 {
@@ -339,6 +365,7 @@ static int parse_properties(const json_value *data,
     props->fill_opacity = json_get_attr_f(data, "fill-opacity", 0.5);
     if ((title = json_get_attr_s(data, "title")))
         props->title = strdup(title);
+    props->text_anchor = parse_anchor(json_get_attr_s(data, "text-anchor"));
     return 0;
 }
 
