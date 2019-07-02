@@ -200,7 +200,6 @@ static json_value *data_fn(obj_t *obj, const attribute_t *attr,
     geojson_t *geojson;
 
     remove_all_features(image);
-    args = args->u.array.values[0];
     geojson = geojson_parse(args);
     assert(geojson);
     for (i = 0; i < geojson->nb_features; i++) {

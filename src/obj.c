@@ -33,7 +33,6 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
     const char *attr;
     int i;
     obj_t *obj;
-    json_value *v;
 
     assert(klass->size);
     obj = calloc(1, klass->size);
@@ -44,19 +43,11 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
     if (obj->klass->init) obj->klass->init(obj, args);
 
     // Set the attributes.
-    // obj_call_json only accepts array arguments, so we have to put the
-    // values into an array, which is not really supported by the json
-    // library, that's why I set the array value to NULL before calling
-    // json_builder_free!
     if (args && args->type == json_object) {
         for (i = 0; i < args->u.object.length; i++) {
             attr = args->u.object.values[i].name;
             if (obj_has_attr(obj, attr)) {
-                v = json_array_new(1);
-                json_array_push(v, args->u.object.values[i].value);
-                obj_call_json(obj, attr, v);
-                v->u.array.values[0] = NULL;
-                json_builder_free(v);
+                obj_call_json(obj, attr, args->u.object.values[i].value);
             }
         }
     }
