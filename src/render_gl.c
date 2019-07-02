@@ -8,6 +8,8 @@
  */
 
 #include "swe.h"
+
+#include "shader_cache.h"
 #include "utils/gl.h"
 
 #define NANOVG_GLES2_IMPLEMENTATION
@@ -78,7 +80,6 @@ struct item
 {
     int type;
 
-    gl_shader_t *shader;
     float       color[4];
     gl_buf_t    buf;
     gl_buf_t    indices;
@@ -211,16 +212,6 @@ typedef struct renderer_gl {
     int     fb_size[2];
     double  scale;
     bool    cull_flipped;
-
-    struct {
-        gl_shader_t *points;
-        gl_shader_t *blit;
-        gl_shader_t *blit_tag;
-        gl_shader_t *planet;
-        gl_shader_t *atmosphere;
-        gl_shader_t *fog;
-    } shaders;
-
     double  depth_range[2];
 
     texture_t   *white_tex;
@@ -232,6 +223,14 @@ typedef struct renderer_gl {
     item_t  *items;
 } renderer_gl_t;
 
+static void init_shader(gl_shader_t *shader)
+{
+    // Set some common uniforms.
+    GL(glUseProgram(shader->prog));
+    gl_update_uniform(shader, "u_tex", 0);
+    gl_update_uniform(shader, "u_normal_tex", 1);
+    gl_update_uniform(shader, "u_shadow_color_tex", 2);
+}
 
 static bool color_is_white(const float c[4])
 {
@@ -508,7 +507,6 @@ static void quad(renderer_t          *rend_,
             item->type = ITEM_ATMOSPHERE;
             gl_buf_alloc(&item->buf, &ATMOSPHERE_BUF, 256);
             gl_buf_alloc(&item->indices, &INDICES_BUF, 256 * 6);
-            item->shader = rend->shaders.atmosphere;
             memcpy(item->atm.p, painter->atm.p, sizeof(item->atm.p));
             memcpy(item->atm.sun, painter->atm.sun, sizeof(item->atm.sun));
         }
@@ -519,14 +517,12 @@ static void quad(renderer_t          *rend_,
             item->type = ITEM_FOG;
             gl_buf_alloc(&item->buf, &FOG_BUF, 256);
             gl_buf_alloc(&item->indices, &INDICES_BUF, 256 * 6);
-            item->shader = rend->shaders.fog;
         }
     } else {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXTURE;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n);
         gl_buf_alloc(&item->indices, &INDICES_BUF, n * n * 6);
-        item->shader = rend->shaders.blit;
     }
 
     ofs = item->buf.nb;
@@ -661,7 +657,6 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
         item->type = ITEM_ALPHA_TEXTURE;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
-        item->shader = rend->shaders.blit_tag;
         item->tex = tex;
         item->tex->ref++;
         memcpy(item->color, color, sizeof(color));
@@ -852,7 +847,7 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     gl_shader_t *shader;
     GLuint  array_buffer;
 
-    shader = rend->shaders.points;
+    shader = shader_get("points", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glEnable(GL_BLEND));
@@ -880,7 +875,7 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    shader = rend->shaders.blit;
+    shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glLineWidth(item->lines.width * rend->scale));
@@ -924,7 +919,7 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 
     gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES : GL_LINES;
 
-    shader = rend->shaders.blit;
+    shader = shader_get("blit_tag", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glLineWidth(item->mesh.stroke_width));
@@ -1052,7 +1047,18 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    shader = item->shader;
+    switch (item->type) {
+    case ITEM_FOG:
+        shader = shader_get("fog", NULL, ATTR_NAMES, init_shader);
+        break;
+    case ITEM_ALPHA_TEXTURE:
+        shader = shader_get("blit_tag", NULL, ATTR_NAMES, init_shader);
+        break;
+    default:
+        assert(false);
+        return;
+    }
+
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -1093,7 +1099,18 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GLuint  index_buffer;
     float tm[3];
 
-    shader = item->shader;
+    switch (item->type) {
+    case ITEM_ATMOSPHERE:
+        shader = shader_get("atmosphere", NULL, ATTR_NAMES, init_shader);
+        break;
+    case ITEM_TEXTURE:
+        shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
+        break;
+    default:
+        assert(false);
+        return;
+    }
+
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -1157,7 +1174,9 @@ static void item_quad_wireframe_render(renderer_gl_t *rend, const item_t *item)
 {
     GLuint  array_buffer;
     GLuint  index_buffer;
-    gl_shader_t *shader = rend->shaders.blit;
+    gl_shader_t *shader;
+
+    shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     gl_update_uniform(shader, "u_color", item->color);
@@ -1195,7 +1214,7 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     bool is_moon;
     const float depth_range[] = {rend->depth_range[0], rend->depth_range[1]};
 
-    shader = rend->shaders.planet;
+    shader = shader_get("planet", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -1479,23 +1498,6 @@ static void line_2d(renderer_t *rend_, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
-static gl_shader_t *create_shader(const char *path)
-{
-    const char *code;
-    gl_shader_t *shader;
-
-    code = asset_get_data2(path, ASSET_USED_ONCE, NULL, NULL);
-    assert(code);
-    shader = gl_shader_create(code, code, NULL, ATTR_NAMES);
-    assert(shader);
-    // Set default texture locations:
-    GL(glUseProgram(shader->prog));
-    gl_update_uniform(shader, "u_tex", 0);
-    gl_update_uniform(shader, "u_normal_tex", 1);
-    gl_update_uniform(shader, "u_shadow_color_tex", 2);
-    return shader;
-}
-
 static texture_t *create_white_texture(int w, int h)
 {
     uint8_t *data;
@@ -1546,14 +1548,6 @@ renderer_t* render_gl_create(void)
         on_font(rend, "asset://font/NotoSans-Bold.ttf",
                 "bold", NULL, 1.38);
     }
-
-    // Create all the shaders programs.
-    rend->shaders.points = create_shader("asset://shaders/points.glsl");
-    rend->shaders.blit = create_shader("asset://shaders/blit.glsl");
-    rend->shaders.blit_tag = create_shader("asset://shaders/blit_tag.glsl");
-    rend->shaders.planet = create_shader("asset://shaders/planet.glsl");
-    rend->shaders.atmosphere = create_shader("asset://shaders/atmosphere.glsl");
-    rend->shaders.fog = create_shader("asset://shaders/fog.glsl");
 
     // Query the point size range.
     GL(glGetIntegerv(GL_ALIASED_POINT_SIZE_RANGE, range));
