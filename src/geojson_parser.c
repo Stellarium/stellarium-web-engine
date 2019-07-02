@@ -201,8 +201,7 @@ static int parse_linestring_coordinates(const json_value *coordinates,
     for (i = 0; i < linestring->size; i++) {
         point = coordinates->u.array.values[i];
         if (point->type != json_array) return -1;
-        linestring->coordinates[i][0] = point->u.array.values[0]->u.dbl;
-        linestring->coordinates[i][1] = point->u.array.values[1]->u.dbl;
+        parse_float_array(point, 0, 2, linestring->coordinates[i]);
     }
     return 0;
 }
