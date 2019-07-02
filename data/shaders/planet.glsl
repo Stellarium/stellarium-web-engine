@@ -24,13 +24,16 @@ uniform mediump mat4      u_mv;  // Model view matrix.
 uniform lowp    int       u_has_normal_tex;
 uniform lowp    int       u_material; // 0: Oren Nayar, 1: generic, 2: ring
 uniform lowp    int       u_is_moon; // Set to 1 for the Moon only.
-uniform mediump sampler2D u_shadow_color_tex; // Used for the Moon.
 uniform lowp    float     u_contrast;
 
 uniform highp   vec4      u_sun; // Sun pos (xyz) and radius (w).
+
+#ifdef HAS_SHADOW
 // Up to four spheres for illumination ray tracing.
+uniform mediump sampler2D u_shadow_color_tex; // Used for the Moon.
 uniform lowp    int       u_shadow_spheres_nb;
 uniform highp   mat4      u_shadow_spheres;
+#endif
 
 varying highp   vec3 v_mpos;
 varying mediump vec2 v_tex_pos;
@@ -142,6 +145,9 @@ float illumination_sphere(highp vec3 p, highp vec4 sphere,
  */
 float illumination(vec3 p)
 {
+#ifndef HAS_SHADOW
+    return 1.0;
+#else
     if (u_shadow_spheres_nb == 0) return 1.0;
     mediump float ret = 1.0;
     highp float sun_r = asin(u_sun.w / length(u_sun.xyz - p));
@@ -152,6 +158,7 @@ float illumination(vec3 p)
         }
     }
     return ret;
+#endif
 }
 
 void main()
@@ -173,16 +180,21 @@ void main()
                                          normalize(-v_mpos),
                                          n,
                                          0.9, 0.12);
+        #ifdef HAS_SHADOW
         lowp float illu = illumination(v_mpos);
         power *= illu;
+        #endif
+
         gl_FragColor.rgb *= power;
 
         // Earth shadow effect on the moon.
+        #ifdef HAS_SHADOW
         if (u_is_moon == 1 && illu < 0.99) {
             vec4 shadow_col = texture2D(u_shadow_color_tex, vec2(illu, 0.5));
             gl_FragColor.rgb = mix(
                 gl_FragColor.rgb, shadow_col.rgb, shadow_col.a);
         }
+        #endif
 
     } else if (u_material == 1) { // basic
         vec3 light = vec3(0.0, 0.0, 0.0);

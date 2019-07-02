@@ -1213,8 +1213,12 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     GLuint  index_buffer;
     bool is_moon;
     const float depth_range[] = {rend->depth_range[0], rend->depth_range[1]};
+    shader_define_t defines[] = {
+        {"HAS_SHADOW", item->planet.shadow_spheres_nb > 0},
+        {}
+    };
+    shader = shader_get("planet", defines, ATTR_NAMES, init_shader);
 
-    shader = shader_get("planet", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
