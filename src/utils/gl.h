@@ -7,6 +7,9 @@
  * repository.
  */
 
+#ifndef GL_H
+#define GL_H
+
 #include <stdbool.h>
 
 // Set the DEBUG macro if needed
@@ -172,3 +175,5 @@ void gl_shader_delete(gl_shader_t *shader);
 
 bool gl_has_uniform(gl_shader_t *shader, const char *name);
 void gl_update_uniform(gl_shader_t *shader, const char *name, ...);
+
+#endif // GL_H
