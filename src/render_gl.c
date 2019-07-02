@@ -57,43 +57,6 @@ struct tex_cache {
     texture_t   *tex;
 };
 
-/*
- * Struct: prog_t
- * Contains an opengl shader and all it's uniform locations.
- *
- * All the location for all possible shaders are stored, so we can use this
- * struct for any of our shaders.
- */
-typedef struct prog {
-    GLuint prog;
-
-    GLuint u_tex_l;
-    GLuint u_normal_tex_l;
-    GLuint u_shadow_color_tex_l;
-    GLuint u_tex_transf_l;
-    GLuint u_normal_tex_transf_l;
-
-    GLuint u_has_normal_tex_l;
-    GLuint u_material_l;
-    GLuint u_is_moon_l;
-    GLuint u_color_l;
-    GLuint u_contrast_l;
-    GLuint u_smooth_l;
-    GLuint u_mv_l;
-    GLuint u_depth_range_l;
-
-    // For planets.
-    GLuint u_sun_l;
-    GLuint u_light_emit_l;
-    GLuint u_shadow_brightness_l;
-    GLuint u_shadow_spheres_nb_l;
-    GLuint u_shadow_spheres_l;
-
-    // For atmosphere.
-    GLuint u_atm_p_l;
-    GLuint u_tm_l;
-} prog_t;
-
 enum {
     ITEM_LINES = 1,
     ITEM_MESH,
