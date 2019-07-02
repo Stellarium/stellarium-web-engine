@@ -26,27 +26,27 @@ analyze:
 
 .PHONY: js
 js:
-	$(EMSCRIPTEN)/emscons scons -j8 debug=0 emscripten=1
+	emscons scons -j8 debug=0 emscripten=1
 
 .PHONY: js-debug
 js-debug:
-	$(EMSCRIPTEN)/emscons scons -j8 debug=1 emscripten=1
+	emscons scons -j8 debug=1 emscripten=1
 
 .PHONY: js-prof
 js-prof:
-	$(EMSCRIPTEN)/emscons scons -j8 debug=0 profile=1 emscripten=1
+	emscons scons -j8 debug=0 profile=1 emscripten=1
 
 .PHONY: js-es6
 js-es6:
-	$(EMSCRIPTEN)/emscons scons -j8 debug=0 es6=1 emscripten=1
+	emscons scons -j8 debug=0 es6=1 emscripten=1
   
 .PHONY: js-es6-debug
 js-es6-debug:
-	$(EMSCRIPTEN)/emscons scons -j8 debug=1 es6=1 emscripten=1
+	emscons scons -j8 debug=1 es6=1 emscripten=1
 
 .PHONY: js-es6-prof
 js-es6-prof:
-	$(EMSCRIPTEN)/emscons scons -j8 debug=0 profile=1 es6=1 emscripten=1
+	emscons scons -j8 debug=0 profile=1 es6=1 emscripten=1
 
 .PHONY: setup
 

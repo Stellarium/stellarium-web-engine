@@ -146,6 +146,11 @@ sources = ['build/%s' % x for x in sources]
 
 if target_os == 'js':
     assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
+    # EMSCRIPTEN_ROOT need to be set, but current emscripten version doesn't
+    # provide it. Here we set it automatically from EMSCRIPTEN_TOOL_PATH:
+    os.environ['EMSCRIPTEN_ROOT'] = os.path.join(
+        os.environ['EMSCRIPTEN_TOOL_PATH'], '../../../../../')
+    # os.environ['EMSCRIPTEN_ROOT'] = '/home/guillaume/emsdk/fastcomp/emscripten'
     env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
 
     # XXX: when I use it I cannot access the exported functions, why?
