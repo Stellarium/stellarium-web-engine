@@ -194,6 +194,7 @@ static int parse_linestring_coordinates(const json_value *coordinates,
 {
     const json_value *point;
     int i;
+    assert(coordinates->type == json_array);
     linestring->size = coordinates->u.array.length;
     linestring->coordinates = calloc(linestring->size,
                                      sizeof(*linestring->coordinates));
@@ -220,13 +221,35 @@ static int parse_polygon(const json_value *data, geojson_polygon_t *poly)
     const json_value *coordinates, *ring;
     int i;
 
-    coordinates = json_get_attr(data, "coordinates", json_array);
+    if (!data) return -1;
+    if (data->type == json_array)
+        coordinates = data;
+    else
+        coordinates = json_get_attr(data, "coordinates", json_array);
     if (!coordinates) return -1;
     poly->size = coordinates->u.array.length;
     poly->rings = calloc(poly->size, sizeof(*poly->rings));
     for (i = 0; i < poly->size; i++) {
         ring = coordinates->u.array.values[i];
         if (parse_linestring_coordinates(ring, &poly->rings[i])) return -1;
+    }
+    return 0;
+}
+
+static int parse_multipolygon(const json_value *data,
+                              geojson_multipolygon_t *multipoly)
+{
+    const json_value *coordinates;
+    int i;
+
+    coordinates = json_get_attr(data, "coordinates", json_array);
+    if (!coordinates) return -1;
+    multipoly->size = coordinates->u.array.length;
+    multipoly->polygons = calloc(multipoly->size,
+                                 sizeof(*multipoly->polygons));
+    for (i = 0; i < multipoly->size; i++) {
+        if (parse_polygon(coordinates->u.array.values[i],
+                          &multipoly->polygons[i])) return -1;
     }
     return 0;
 }
@@ -397,6 +420,9 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
     if (strcmp(type, "Polygon") == 0) {
         geo->type = GEOJSON_POLYGON;
         if (parse_polygon(geometry, &geo->polygon)) goto error;
+    } else if (strcmp(type, "MultiPolygon") == 0) {
+        geo->type = GEOJSON_MULTIPOLYGON;
+        if (parse_multipolygon(geometry, &geo->multipolygon)) goto error;
     } else if (strcmp(type, "LineString") == 0) {
         geo->type = GEOJSON_LINESTRING;
         if (parse_linestring(geometry, &geo->linestring)) goto error;

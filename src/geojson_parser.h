@@ -56,6 +56,7 @@
 
 enum {
     GEOJSON_POLYGON,
+    GEOJSON_MULTIPOLYGON,
     GEOJSON_LINESTRING,
     GEOJSON_POINT,
 };
@@ -105,12 +106,19 @@ typedef struct
     geojson_linestring_t *rings;
 } geojson_polygon_t;
 
+typedef struct
+{
+    int size;
+    geojson_polygon_t *polygons;
+} geojson_multipolygon_t;
+
 typedef struct geojson_geometry
 {
     int type;
     union {
         geojson_linestring_t linestring;
         geojson_polygon_t polygon;
+        geojson_multipolygon_t multipolygon;
         geojson_point_t point;
     };
 } geojson_geometry_t;
