@@ -8,6 +8,8 @@
  */
 
 #include "utils_json.h"
+
+#include <assert.h>
 #include <string.h>
 
 json_value *json_get_attr(json_value *val, const char *attr, int type)
@@ -57,4 +59,20 @@ bool json_get_attr_b(json_value *val, const char *attr, bool default_value)
     v = json_get_attr(val, attr, json_boolean);
     if (v) return v->u.boolean;
     return default_value;
+}
+
+json_value *json_copy(json_value *val)
+{
+    // XXX: for the moment we assume the value has been created with
+    // json-builder.  We copy by serializing into a string first!
+
+    char *str;
+    json_value *ret;
+
+    assert(val);
+    str = calloc(json_measure(val), 1);
+    json_serialize(str, val);
+    ret = json_parse(str, strlen(str));
+    free(str);
+    return ret;
 }

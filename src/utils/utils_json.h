@@ -24,3 +24,9 @@ double json_get_attr_f(json_value *val, const char *attr, double default_val);
 int64_t json_get_attr_i(json_value *val, const char *attr,
                         int64_t default_value);
 bool json_get_attr_b(json_value *val, const char *attr, bool default_value);
+
+/*
+ * Function: json_copy
+ * Make a deep copy of a json value
+ */
+json_value *json_copy(json_value *val);
