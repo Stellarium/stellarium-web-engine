@@ -34,18 +34,7 @@ void earcut_delete(earcut_t *earcut)
     delete earcut;
 }
 
-void earcut_set_poly(earcut_t *earcut, int size, double vertices[][2])
-{
-    int i;
-    std::vector<Point> poly;
-    poly.reserve(size);
-    for (i = 0; i < size; i++) {
-        poly.push_back({vertices[i][0], vertices[i][1]});
-    }
-    earcut->polygon.push_back(poly);
-}
-
-void earcut_add_hole(earcut_t *earcut, int size, double vertices[][2])
+void earcut_add_poly(earcut_t *earcut, int size, double vertices[][2])
 {
     int i;
     std::vector<Point> poly;

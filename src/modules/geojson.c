@@ -151,10 +151,7 @@ static void mesh_add_poly(mesh_t *mesh, int nb_rings,
             mat3_mul_vec3(rot, mesh->vertices[j++], p);
             c2lonlat(p, centered_lonlat[i]);
         }
-        if (r == 0)
-            earcut_set_poly(earcut, size[r], centered_lonlat);
-        else
-            earcut_add_hole(earcut, size[r], centered_lonlat);
+        earcut_add_poly(earcut, size[r], centered_lonlat);
         free(centered_lonlat);
     }
 
