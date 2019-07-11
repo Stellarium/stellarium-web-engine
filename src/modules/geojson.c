@@ -12,10 +12,11 @@
 #include "earcut.h"
 #include "geojson_parser.h"
 
+typedef struct mesh mesh_t;
 typedef struct feature feature_t;
 
-struct feature {
-    feature_t   *next;
+struct mesh {
+    mesh_t      *next;
     double      bounding_cap[4];
     int         vertices_count;
     double      (*vertices)[3];
@@ -23,7 +24,11 @@ struct feature {
     uint16_t    *triangles;
     int         lines_count; // Number of lines * 2.
     uint16_t    *lines;
+};
 
+struct feature {
+    feature_t   *next;
+    mesh_t      *meshes;
     float       fill_color[4];
     float       stroke_color[4];
     float       stroke_width;
@@ -104,6 +109,8 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     const uint16_t *triangles;
     double rot[3][3], p[3];
     double (*centered_lonlat)[2];
+    mesh_t *mesh;
+    geojson_geometry_t poly;
 
     switch (geo->type) {
     case GEOJSON_LINESTRING:
@@ -119,51 +126,57 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         size = 1;
         break;
     case GEOJSON_MULTIPOLYGON:
-        LOG_W("Multipolygon not supported yet");
+        for (i = 0; i < geo->multipolygon.size; i++) {
+            poly.type = GEOJSON_POLYGON;
+            poly.polygon = geo->multipolygon.polygons[i];
+            feature_add_geo(feature, &poly);
+        }
         return;
     default:
         assert(false);
         return;
     }
+    mesh = calloc(1, sizeof(*mesh));
 
-    feature->vertices_count = size;
-    feature->vertices = malloc(size * sizeof(*feature->vertices));
+    mesh->vertices_count = size;
+    mesh->vertices = malloc(size * sizeof(*mesh->vertices));
     for (i = 0; i < size; i++) {
         assert(!isnan(coordinates[i][0]));
-        lonlat2c(coordinates[i], feature->vertices[i]);
-        assert(!isnan(feature->vertices[i][0]));
+        lonlat2c(coordinates[i], mesh->vertices[i]);
+        assert(!isnan(mesh->vertices[i][0]));
     }
-    compute_bounding_cap(size, feature->vertices, feature->bounding_cap);
+    compute_bounding_cap(size, mesh->vertices, mesh->bounding_cap);
 
     // Generates contour index.
-    feature->lines_count = size * 2;
-    feature->lines = malloc(size * 2 * 2);
+    mesh->lines_count = size * 2;
+    mesh->lines = malloc(size * 2 * 2);
     for (i = 0; i < size - 1; i++) {
-        feature->lines[i * 2 + 0] = i;
-        feature->lines[i * 2 + 1] = i + 1;
+        mesh->lines[i * 2 + 0] = i;
+        mesh->lines[i * 2 + 1] = i + 1;
     }
 
     if (geo->type == GEOJSON_POLYGON) {
         // Triangulate the shape.
         // First we rotate the points so that they are centered around the
         // origin.
-        create_rotation_between_vecs(rot, feature->bounding_cap, VEC(1, 0, 0));
+        create_rotation_between_vecs(rot, mesh->bounding_cap, VEC(1, 0, 0));
         centered_lonlat = calloc(size, sizeof(*centered_lonlat));
         for (i = 0; i < size; i++) {
-            mat3_mul_vec3(rot, feature->vertices[i], p);
+            mat3_mul_vec3(rot, mesh->vertices[i], p);
             c2lonlat(p, centered_lonlat[i]);
         }
 
         earcut = earcut_new();
         earcut_set_poly(earcut, size, centered_lonlat);
         triangles = earcut_triangulate(earcut, &triangles_size);
-        feature->triangles_count = triangles_size;
-        feature->triangles = malloc(triangles_size * 2);
-        memcpy(feature->triangles, triangles, triangles_size * 2);
+        mesh->triangles_count = triangles_size;
+        mesh->triangles = malloc(triangles_size * 2);
+        memcpy(mesh->triangles, triangles, triangles_size * 2);
         earcut_delete(earcut);
         free(centered_lonlat);
     }
 
+    LL_APPEND(feature->meshes, mesh);
 }
 
 static void add_geojson_feature(image_t *image,
@@ -194,11 +207,14 @@ static void remove_all_features(image_t *image)
     while(image->features) {
         feature = image->features;
         LL_DELETE(image->features, feature);
-        free(feature->vertices);
-        free(feature->triangles);
-        free(feature->lines);
-        free(feature);
+        while (feature->meshes) {
+            free(feature->meshes->vertices);
+            free(feature->meshes->triangles);
+            free(feature->meshes->lines);
+            LL_DELETE(feature->meshes, feature->meshes);
+        }
         free(feature->title);
+        free(feature);
     }
 }
 
@@ -226,35 +242,37 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     const feature_t *feature;
     double pos[2], ofs[2];
     int frame = image->frame;
+    const mesh_t *mesh;
 
     for (feature = image->features; feature; feature = feature->next) {
-        if (feature->fill_color[3]) {
-            vec4_copy(feature->fill_color, painter.color);
-            paint_mesh(&painter, frame, MODE_TRIANGLES,
-                       feature->vertices_count, feature->vertices,
-                       feature->triangles_count, feature->triangles,
-                       feature->bounding_cap);
-        }
+        for (mesh = feature->meshes; mesh; mesh = mesh->next) {
+            if (feature->fill_color[3]) {
+                vec4_copy(feature->fill_color, painter.color);
+                paint_mesh(&painter, frame, MODE_TRIANGLES,
+                           mesh->vertices_count, mesh->vertices,
+                           mesh->triangles_count, mesh->triangles,
+                           mesh->bounding_cap);
+            }
 
-        if (feature->stroke_color[3]) {
-            vec4_copy(feature->stroke_color, painter.color);
-            painter.lines_width = feature->stroke_width;
-            paint_mesh(&painter, frame, MODE_LINES,
-                       feature->vertices_count, feature->vertices,
-                       feature->lines_count, feature->lines,
-                       feature->bounding_cap);
-        }
-
-        if (feature->title) {
-            painter_project(&painter, frame, feature->bounding_cap,
-                            true, false, pos);
-            vec2_copy(feature->text_offset, ofs);
-            vec2_rotate(feature->text_rotate, ofs, ofs);
-            vec2_add(pos, ofs, pos);
-            paint_text(&painter, feature->title, pos, feature->text_anchor,
-                       0, FONT_SIZE_BASE,
-                       VEC(VEC4_SPLIT(feature->stroke_color)),
-                       feature->text_rotate);
+            if (feature->stroke_color[3]) {
+                vec4_copy(feature->stroke_color, painter.color);
+                painter.lines_width = feature->stroke_width;
+                paint_mesh(&painter, frame, MODE_LINES,
+                           mesh->vertices_count, mesh->vertices,
+                           mesh->lines_count, mesh->lines,
+                           mesh->bounding_cap);
+            }
+            if (feature->title) {
+                painter_project(&painter, frame, mesh->bounding_cap,
+                                true, false, pos);
+                vec2_copy(feature->text_offset, ofs);
+                vec2_rotate(feature->text_rotate, ofs, ofs);
+                vec2_add(pos, ofs, pos);
+                paint_text(&painter, feature->title, pos, feature->text_anchor,
+                           0, FONT_SIZE_BASE,
+                           VEC(VEC4_SPLIT(feature->stroke_color)),
+                           feature->text_rotate);
+            }
         }
     }
     return 0;
