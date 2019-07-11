@@ -121,7 +121,7 @@ static int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[2])
 static void mesh_add_line(mesh_t *mesh, int ofs, int size)
 {
     int i;
-    mesh->lines = realloc(mesh->lines, mesh->lines_count + (size - 1) * 2 *
+    mesh->lines = realloc(mesh->lines, (mesh->lines_count + (size - 1) * 2) *
                           sizeof(*mesh->lines));
     for (i = 0; i < size - 1; i++) {
         mesh->lines[mesh->lines_count + i * 2 + 0] = ofs + i;
@@ -130,27 +130,34 @@ static void mesh_add_line(mesh_t *mesh, int ofs, int size)
     mesh->lines_count += (size - 1) * 2;
 }
 
-static void mesh_add_poly(mesh_t *mesh, int ofs, int size)
+static void mesh_add_poly(mesh_t *mesh, int nb_rings,
+                          const int ofs, const int *size)
 {
-    int i, triangles_size;
+    int r, i, j = 0, triangles_size;
     double rot[3][3], p[3];
     double (*centered_lonlat)[2];
     const uint16_t *triangles;
     earcut_t *earcut;
 
+    earcut = earcut_new();
     // Triangulate the shape.
     // First we rotate the points so that they are centered around the
     // origin.
     create_rotation_between_vecs(rot, mesh->bounding_cap, VEC(1, 0, 0));
-    centered_lonlat = calloc(size, sizeof(*centered_lonlat));
 
-    for (i = 0; i < size; i++) {
-        mat3_mul_vec3(rot, mesh->vertices[ofs + i], p);
-        c2lonlat(p, centered_lonlat[i]);
+    for (r = 0; r < nb_rings; r++) {
+        centered_lonlat = calloc(size[r], sizeof(*centered_lonlat));
+        for (i = 0; i < size[r]; i++) {
+            mat3_mul_vec3(rot, mesh->vertices[j++], p);
+            c2lonlat(p, centered_lonlat[i]);
+        }
+        if (r == 0)
+            earcut_set_poly(earcut, size[r], centered_lonlat);
+        else
+            earcut_add_hole(earcut, size[r], centered_lonlat);
+        free(centered_lonlat);
     }
 
-    earcut = earcut_new();
-    earcut_set_poly(earcut, size, centered_lonlat);
     triangles = earcut_triangulate(earcut, &triangles_size);
     mesh->triangles = realloc(mesh->triangles,
             (mesh->triangles_count + triangles_size) *
@@ -160,13 +167,13 @@ static void mesh_add_poly(mesh_t *mesh, int ofs, int size)
     }
     mesh->triangles_count += triangles_size;
     earcut_delete(earcut);
-    free(centered_lonlat);
 }
 
 static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 {
     const double (*coordinates)[2];
     int i, size, ofs;
+    int rings_ofs, rings_size[8];
     mesh_t *mesh;
     geojson_geometry_t poly;
 
@@ -176,9 +183,18 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         size = geo->linestring.size;
         break;
     case GEOJSON_POLYGON:
-        coordinates = geo->polygon.rings[0].coordinates;
-        size = geo->polygon.rings[0].size;
-        break;
+        mesh = calloc(1, sizeof(*mesh));
+        for (i = 0; i < geo->polygon.size; i++) {
+            size = geo->polygon.rings[i].size;
+            ofs = mesh_add_vertices(mesh, size,
+                                    geo->polygon.rings[i].coordinates);
+            if (i == 0) rings_ofs = ofs;
+            mesh_add_line(mesh, ofs, size);
+            rings_size[i] = size;
+        }
+        mesh_add_poly(mesh, geo->polygon.size, rings_ofs, rings_size);
+        LL_APPEND(feature->meshes, mesh);
+        return;
     case GEOJSON_POINT:
         coordinates = &geo->point.coordinates;
         size = 1;
@@ -195,11 +211,12 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         return;
     }
     mesh = calloc(1, sizeof(*mesh));
-
     ofs = mesh_add_vertices(mesh, size, coordinates);
     mesh_add_line(mesh, ofs, size);
+    /*
     if (geo->type == GEOJSON_POLYGON)
         mesh_add_poly(mesh, ofs, size);
+    */
 
     LL_APPEND(feature->meshes, mesh);
 }
