@@ -96,10 +96,8 @@ static int image_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void add_geojson_feature(image_t *image,
-                                const geojson_feature_t *geo_feature)
+static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 {
-    feature_t *feature;
     earcut_t *earcut;
     const double (*coordinates)[2];
     int i, size, triangles_size;
@@ -107,30 +105,17 @@ static void add_geojson_feature(image_t *image,
     double rot[3][3], p[3];
     double (*centered_lonlat)[2];
 
-    feature = calloc(1, sizeof(*feature));
-
-    vec3_copy(geo_feature->properties.fill, feature->fill_color);
-    vec3_copy(geo_feature->properties.stroke, feature->stroke_color);
-    feature->fill_color[3] = geo_feature->properties.fill_opacity;
-    feature->stroke_color[3] = geo_feature->properties.stroke_opacity;
-    feature->stroke_width = geo_feature->properties.stroke_width;
-    if (geo_feature->properties.title)
-        feature->title = strdup(geo_feature->properties.title);
-    feature->text_anchor = geo_feature->properties.text_anchor;
-    feature->text_rotate = geo_feature->properties.text_rotate;
-    vec2_copy(geo_feature->properties.text_offset, feature->text_offset);
-
-    switch (geo_feature->geometry.type) {
+    switch (geo->type) {
     case GEOJSON_LINESTRING:
-        coordinates = geo_feature->geometry.linestring.coordinates;
-        size = geo_feature->geometry.linestring.size;
+        coordinates = geo->linestring.coordinates;
+        size = geo->linestring.size;
         break;
     case GEOJSON_POLYGON:
-        coordinates = geo_feature->geometry.polygon.rings[0].coordinates;
-        size = geo_feature->geometry.polygon.rings[0].size;
+        coordinates = geo->polygon.rings[0].coordinates;
+        size = geo->polygon.rings[0].size;
         break;
     case GEOJSON_POINT:
-        coordinates = &geo_feature->geometry.point.coordinates;
+        coordinates = &geo->point.coordinates;
         size = 1;
         break;
     case GEOJSON_MULTIPOLYGON:
@@ -158,8 +143,7 @@ static void add_geojson_feature(image_t *image,
         feature->lines[i * 2 + 1] = i + 1;
     }
 
-
-    if (geo_feature->geometry.type == GEOJSON_POLYGON) {
+    if (geo->type == GEOJSON_POLYGON) {
         // Triangulate the shape.
         // First we rotate the points so that they are centered around the
         // origin.
@@ -180,6 +164,27 @@ static void add_geojson_feature(image_t *image,
         free(centered_lonlat);
     }
 
+}
+
+static void add_geojson_feature(image_t *image,
+                                const geojson_feature_t *geo_feature)
+{
+    feature_t *feature;
+
+    feature = calloc(1, sizeof(*feature));
+
+    vec3_copy(geo_feature->properties.fill, feature->fill_color);
+    vec3_copy(geo_feature->properties.stroke, feature->stroke_color);
+    feature->fill_color[3] = geo_feature->properties.fill_opacity;
+    feature->stroke_color[3] = geo_feature->properties.stroke_opacity;
+    feature->stroke_width = geo_feature->properties.stroke_width;
+    if (geo_feature->properties.title)
+        feature->title = strdup(geo_feature->properties.title);
+    feature->text_anchor = geo_feature->properties.text_anchor;
+    feature->text_rotate = geo_feature->properties.text_rotate;
+    vec2_copy(geo_feature->properties.text_offset, feature->text_offset);
+
+    feature_add_geo(feature, &geo_feature->geometry);
     LL_APPEND(image->features, feature);
 }
 
