@@ -14,7 +14,7 @@
 
 typedef struct feature feature_t;
 
-typedef struct feature {
+struct feature {
     feature_t   *next;
     double      bounding_cap[4];
     int         vertices_count;
@@ -31,7 +31,7 @@ typedef struct feature {
     int         text_anchor;
     float       text_rotate;
     float       text_offset[2];
-} feature_t;
+};
 
 typedef struct image {
     obj_t       obj;
@@ -133,6 +133,9 @@ static void add_geojson_feature(image_t *image,
         coordinates = &geo_feature->geometry.point.coordinates;
         size = 1;
         break;
+    case GEOJSON_MULTIPOLYGON:
+        LOG_W("Multipolygon not supported yet");
+        return;
     default:
         assert(false);
         return;
@@ -141,7 +144,9 @@ static void add_geojson_feature(image_t *image,
     feature->vertices_count = size;
     feature->vertices = malloc(size * sizeof(*feature->vertices));
     for (i = 0; i < size; i++) {
+        assert(!isnan(coordinates[i][0]));
         lonlat2c(coordinates[i], feature->vertices[i]);
+        assert(!isnan(feature->vertices[i][0]));
     }
     compute_bounding_cap(size, feature->vertices, feature->bounding_cap);
 
