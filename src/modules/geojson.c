@@ -40,6 +40,11 @@ struct feature {
 
 typedef struct image {
     obj_t       obj;
+
+    json_value  *geojson;
+    json_value  *filter;
+    bool        dirty;
+
     feature_t   *features;
     int         frame;
 } image_t;
@@ -260,18 +265,36 @@ static void remove_all_features(image_t *image)
 static json_value *data_fn(obj_t *obj, const attribute_t *attr,
                            const json_value *args)
 {
-    int i;
     image_t *image = (void*)obj;
-    geojson_t *geojson;
+    image->geojson = json_copy(args);
+    image->dirty = true;
+    return NULL;
+}
 
+static json_value *filter_fn(obj_t *obj, const attribute_t *attr,
+                             const json_value *args)
+{
+    image_t *image = (void*)obj;
+    image->filter = json_copy(args);
+    image->dirty = true;
+    return NULL;
+}
+
+static int image_update(image_t *image)
+{
+    geojson_t *geojson;
+    int i;
+
+    if (!image->dirty) return 0;
+    image->dirty = false;
     remove_all_features(image);
-    geojson = geojson_parse(args);
+    geojson = geojson_parse(image->geojson, image->filter);
     assert(geojson);
     for (i = 0; i < geojson->nb_features; i++) {
         add_geojson_feature(image, &geojson->features[i]);
     }
     geojson_delete(geojson);
-    return NULL;
+    return 0;
 }
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
@@ -282,6 +305,9 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     double pos[2], ofs[2];
     int frame = image->frame;
     const mesh_t *mesh;
+
+    if (image->dirty)
+        image_update((image_t*) image);
 
     for (feature = image->features; feature; feature = feature->next) {
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
@@ -329,6 +355,7 @@ static obj_klass_t image_klass = {
     .render = image_render,
     .attributes = (attribute_t[]) {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
+        PROPERTY(filter, TYPE_JSON, .fn = filter_fn),
         PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),
         {}
     },

@@ -140,10 +140,16 @@ typedef struct geojson {
  * Function: geojson_parse
  * Parse a geojson into a structure.
  *
+ * Parameters:
+ *   data   - The json data to parse.
+ *   filter - An optional json expression that will be tested agains each
+ *            feature to filter out part of the data.  (See
+ *            src/utils/json_expression.h)
+ *
  * Return:
  *   A new geojson_t instance, or NULL in case of error.
  */
-geojson_t *geojson_parse(const json_value *data);
+geojson_t *geojson_parse(const json_value *data, const json_value *filter);
 
 /*
  * Function: geojson_delete
