@@ -180,7 +180,6 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 }
 
 static int paint_quad_visitor(int step, qtree_node_t *node,
-                              const double uv[4][2],
                               const double pos[4][4],
                               const double mat[3][3],
                               const painter_t *painter,
@@ -212,14 +211,13 @@ int paint_quad(const painter_t *painter,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
-    const double UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     qtree_node_t nodes[128];
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;
     }
     if (painter->color[3] == 0.0) return 0;
-    traverse_surface(nodes, ARRAY_SIZE(nodes), UV, tex_proj,
+    traverse_surface(nodes, ARRAY_SIZE(nodes), tex_proj,
                      painter, frame,
                      USER_PASS(tex_proj, &frame, &grid_size),
                      paint_quad_visitor);

@@ -66,7 +66,6 @@ typedef struct {
 //              For simple case, we can return 0 or 1 at step 0, skipping
 //              all the other steps.
 //      node    The current node visited.
-//      uv      Original UV coordinates passed to the function.
 //      pos     model pos of the current node.
 //      mat     3x3 transformation to go from the original uv to the current
 //              one.
@@ -78,14 +77,12 @@ typedef struct {
 int traverse_surface(
         qtree_node_t *nodes,
         int nb_nodes,
-        const double uv[4][2],
         const projection_t *proj,
         const painter_t *painter,
         int frame,
         void *user,
         int (*f)(int step,
                  qtree_node_t *node,
-                 const double uv[4][2],
                  const double pos[4][4],
                  const double mat[3][3],
                  const painter_t *painter,

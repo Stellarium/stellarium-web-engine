@@ -88,14 +88,12 @@ static int qtree_traverse(qtree_node_t *nodes, int n, void *user,
 // To simplify the code, I put all the constant attributes of split_quad
 // into a struct.
 typedef struct {
-    double uv[4][2];
     void *user;
     const projection_t *proj;
     const painter_t *painter;
     int frame;
     int (*f)(int step,
              qtree_node_t *node,
-             const double uv[4][2],
              const double pos[4][4],
              const double mat[3][3],
              const painter_t *painter,
@@ -109,14 +107,15 @@ static int on_node(qtree_node_t *node, void *user)
     double pos[4][4], clip[4][4];
     double mid_pos[4], sep = 0;
     int i, r;
+    const double UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
 
     // Compute mat and uv.
     mat3_set_identity(mat);
     mat3_iscale(mat, 1.0 / (1 << node->level), 1.0 / (1 << node->level), 1.0);
     mat3_itranslate(mat, node->x, node->y);
-    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, d->uv[i], uv[i]);
+    for (i = 0; i < 4; i++) mat3_mul_vec2(mat, UV[i], uv[i]);
 
-    r = d->f(0, node, d->uv, NULL, mat, d->painter, d->user);
+    r = d->f(0, node, NULL, mat, d->painter, d->user);
     if (r != 2) return r;
 
     assert(d->painter);
@@ -149,7 +148,7 @@ static int on_node(qtree_node_t *node, void *user)
     if (is_clipped(4, clip)) return 0;
 skip_clipping_test:
 
-    r = d->f(1, node, d->uv, pos, mat, d->painter, d->user);
+    r = d->f(1, node, pos, mat, d->painter, d->user);
     if (r != 2) return r;
 
     // Check if we intersect a projection discontinuity, in which case we
@@ -164,30 +163,26 @@ skip_clipping_test:
         d->painter->proj->split(d->painter->proj, projs);
         for (i = 0; i < 2; i++) {
             painter2.proj = &projs[i];
-            r = d->f(2, node, d->uv, pos, mat, &painter2, d->user);
+            r = d->f(2, node, pos, mat, &painter2, d->user);
         }
         return r;
     }
 
-    return d->f(2, node, d->uv, pos, mat, d->painter, d->user);
+    return d->f(2, node, pos, mat, d->painter, d->user);
 }
 
 int traverse_surface(qtree_node_t *nodes, int nb_nodes,
-                     const double uv[4][2],
                      const projection_t *proj,
                      const painter_t *painter,
                      int frame,
                      void *user,
                      int (*f)(int step,
                               qtree_node_t *node,
-                              const double uv[4][2],
                               const double pos[4][4],
                               const double mat[3][3],
                               const painter_t *painter,
                               void *user))
 {
-    const double DEFAULT_UV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
-    uv = uv ?: DEFAULT_UV;
     d_t d = {
         .proj = proj,
         .painter = painter,
@@ -195,7 +190,6 @@ int traverse_surface(qtree_node_t *nodes, int nb_nodes,
         .user = user,
         .f = f,
     };
-    memcpy(d.uv, uv, sizeof(d.uv));
     return qtree_traverse(nodes, nb_nodes, &d, on_node);
 }
 
