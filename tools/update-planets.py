@@ -127,7 +127,7 @@ for id, name in all_bodies:
                 config.get(section, 'orbit').startswith('horizons:'):
             data.update(parse_orbital_data(res.text))
         data['parent'] = [x for x in all_bodies if x[0] == parent][0][1].lower()
-        data['type'] = 'PLA'
+        data['type'] = 'Pla'
 
         print ', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
                         for k, v in data.items())
