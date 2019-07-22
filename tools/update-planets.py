@@ -103,37 +103,41 @@ for id, name in all_bodies:
 
     section = name.lower()
     print 'process %s (%d)' % (name, id)
-    center = '500@%d' % parent # Center of parent body.
-    now = time.time() / 86400.0 + 2440587.5 - 2400000.5
-    # Truncate to the day, so that we can run the script several times
-    # and the values won't change.
-    now = math.floor(now)
 
-    res = requests.get('https://ssd.jpl.nasa.gov/horizons_batch.cgi',
-            params=dict(
-                batch=1, command=id, csv_format='yes',
-                table_type='elements', center=center,
-                tlist=now,
-            ))
+    try:
+        center = '500@%d' % parent # Center of parent body.
+        now = time.time() / 86400.0 + 2440587.5 - 2400000.5
+        # Truncate to the day, so that we can run the script several times
+        # and the values won't change.
+        now = math.floor(now)
 
-    data = dict(horizons_id=str(id))
-    data.update(parse_geophysical_data(res.text))
+        res = requests.get('https://ssd.jpl.nasa.gov/horizons_batch.cgi',
+                params=dict(
+                    batch=1, command=id, csv_format='yes',
+                    table_type='elements', center=center,
+                    tlist=now,
+                ))
 
-    # Only update horizons orbits.
-    if      not config.has_section(section) or \
-            not config.has_option(section, 'orbit') or \
-            config.get(section, 'orbit').startswith('horizons:'):
-        data.update(parse_orbital_data(res.text))
-    data['parent'] = [x for x in all_bodies if x[0] == parent][0][1].lower()
-    data['type'] = 'PLA'
+        data = dict(horizons_id=str(id))
+        data.update(parse_geophysical_data(res.text))
 
-    print ', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
-                    for k, v in data.items())
-    if not 'albedo' in data or not 'radius' in data: continue
-    if not config.has_section(section): config.add_section(section)
+        # Only update horizons orbits.
+        if      not config.has_section(section) or \
+                not config.has_option(section, 'orbit') or \
+                config.get(section, 'orbit').startswith('horizons:'):
+            data.update(parse_orbital_data(res.text))
+        data['parent'] = [x for x in all_bodies if x[0] == parent][0][1].lower()
+        data['type'] = 'PLA'
 
-    for key, value in data.items():
-        config.set(section, key, value)
+        print ', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
+                        for k, v in data.items())
+        if not 'albedo' in data or not 'radius' in data: continue
+        if not config.has_section(section): config.add_section(section)
+
+        for key, value in data.items():
+            config.set(section, key, value)
+    except:
+        print('Failed')
 
 print 'Update planets.ini'
 config.write(open('./data/planets.ini', 'w'))
