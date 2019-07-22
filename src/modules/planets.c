@@ -58,7 +58,7 @@ struct planet {
         int type; // 0: special, 1: kepler.
         union {
             struct {
-                double jd;      // date (MJD).
+                double mjd;      // date (MJD).
                 double in;      // inclination (rad).
                 double om;      // Longitude of the Ascending Node (rad).
                 double w;       // Argument of Perihelion (rad).
@@ -364,7 +364,7 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
         eraPvu(dt, planet->last_full_pvh, planet->pvh);
     } else {
         orbit_compute_pv(0, obs->tt, p, v,
-                planet->orbit.kepler.jd,
+                planet->orbit.kepler.mjd,
                 planet->orbit.kepler.in,
                 planet->orbit.kepler.om,
                 planet->orbit.kepler.w,
@@ -987,17 +987,17 @@ static planet_t *planet_get_by_name(planets_t *planets, const char *name)
 static int parse_orbit(planet_t *p, const char *v)
 {
     int r;
-    double mjd, ec, qr, in, om, w, tp, n, ma, ta, a, ad, pr;
+    double jd, ec, qr, in, om, w, tp, n, ma, ta, a, ad, pr;
     if (!str_startswith(v, "horizons:")) return 0;
     r = sscanf(v, "horizons:%lf, A.D. %*s %*s "
                "%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf",
-               &mjd, &ec, &qr, &in, &om, &w, &tp, &n, &ma, &ta, &a, &ad, &pr);
+               &jd, &ec, &qr, &in, &om, &w, &tp, &n, &ma, &ta, &a, &ad, &pr);
     if (r != 13) {
         LOG_E("Cannot parse orbit line '%s'", v);
         return -1;
     }
     p->orbit.type = 1;
-    p->orbit.kepler.jd = mjd;
+    p->orbit.kepler.mjd = jd - 2400000.5;
     p->orbit.kepler.in = in * DD2R;
     p->orbit.kepler.om = om * DD2R;
     p->orbit.kepler.w = w * DD2R;
@@ -1005,6 +1005,10 @@ static int parse_orbit(planet_t *p, const char *v)
     p->orbit.kepler.n = n * DD2R * 60 * 60 * 24;
     p->orbit.kepler.ec = ec;
     p->orbit.kepler.ma = ma * DD2R;
+
+    // Make sure the epoch was in MJD, and not in JD.
+    assert(fabs(p->orbit.kepler.mjd - DJM00) < DJY * 100);
+
     return 0;
 }
 
