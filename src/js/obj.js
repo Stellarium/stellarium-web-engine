@@ -41,15 +41,15 @@ Module.afterInit(function() {
     var callback = Module.addFunction(function(attr, isProp, user) {
       var name = Module.UTF8ToString(attr);
       if (!isProp) {
-        that[name] = function() {
-          return that._call(name, arguments);
+        that[name] = function(args) {
+          return that._call(name, args);
         };
       } else {
         Object.defineProperty(that, name, {
           configurable: true,
           enumerable: true,
           get: function() {return that._call(name)},
-          set: function(v) {return that._call(name, [v])},
+          set: function(v) {return that._call(name, v)},
         })
       }
     }, 'vii')
@@ -262,15 +262,13 @@ Module.afterInit(function() {
     get: function() { return this.radec }
   })
 
-  SweObj.prototype._call = function(attr, args) {
-    args = args || []
-    args = Array.prototype.slice.call(args)
+  SweObj.prototype._call = function(attr, arg) {
     // Replace null and undefined to 0.
-    args = args.map(function(x) {
-      return (x === undefined || x === null) ? 0 : x;
-    });
-    args = JSON.stringify(args)
-    var cret = obj_call_json_str(this.v, attr, args)
+    if (arg === undefined || arg === null)
+      arg = 0
+    else
+      arg = JSON.stringify(arg)
+    var cret = obj_call_json_str(this.v, attr, arg)
     var ret = Module.UTF8ToString(cret)
     Module._free(cret)
     if (!ret) return null;
