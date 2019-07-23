@@ -274,21 +274,19 @@ void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
  */
 int paint_2d_points(const painter_t *painter, int n, const point_t *points);
 
-/* Function: paint_quad
+/*
+ * Function: paint_quad
  *
  * Render a quad mapped into the 3d sphere
  *
  * The shape of the quad is defined by the projection `proj` called backward,
- * that is, a mapping of (u, v) => (x, y, z).  If unspecified, u and v range
- * from 0 to 1.
+ * that is, a mapping of (u, v) => (x, y, z).  u and v range from 0 to 1.
  *
  * Parameters:
- *  tex           - Optional texture.
- *  normalmap_tex - Normal map texture (NULL for no normal map).
- *  uv            - Tex UV coordinates (NULL for default to whole texture).
- *  proj          - Projection from sphere to uv (used backward).
- *  frame         - Referential frame of the inputs (<FRAME> values).
- *  grid_size     - how many sub vertices we use.
+ *   painter        - A painter.
+ *   frame          - Referential frame of the inputs (<FRAME> values).
+ *   proj           - The texture to sphere projection used.
+ *   grid_size      - how many sub vertices we use.
  */
 int paint_quad(const painter_t *painter,
                int frame,
