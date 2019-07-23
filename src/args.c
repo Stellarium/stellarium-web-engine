@@ -10,8 +10,7 @@
 #include "swe.h"
 
 
-int args_vget(const json_value *args, const char *name, int pos,
-              int type, va_list* ap)
+int args_vget(const json_value *args, int type, va_list* ap)
 {
     const json_value *val;
     assert(args);
@@ -19,31 +18,10 @@ int args_vget(const json_value *args, const char *name, int pos,
     double *v;
     type = type % 16;
 
-    if (args->type == json_array && pos) {
-        if (pos <= args->u.array.length) {
-            val = args->u.array.values[pos - 1];
-            return args_vget(val, NULL, 0, type, ap);
-        }
-    }
-
     // An Swe object.
     if (args->type == json_object && json_get_attr(args, "swe_", 0)) {
         val = json_get_attr(args, "v", 0);
-        return args_vget(val, NULL, 0, type, ap);
-    }
-
-    // Named arguments.
-    if (    name && args->type == json_object &&
-            !json_get_attr(args, "swe_", 0)) {
-        val = json_get_attr(args, name, 0);
-        assert(val);
-        return args_vget(val, NULL, 0, type, ap);
-    }
-
-    if (pos != 0) {
-        // Not necessarily an error.
-        // LOG_E("Cannot get attr '%s' %d", name, pos);
-        return -1;
+        return args_vget(val, type, ap);
     }
     val = args;
 
@@ -67,21 +45,21 @@ int args_vget(const json_value *args, const char *name, int pos,
         assert(val->type == json_array);
         assert(val->u.array.length == 2);
         for (i = 0; i < 2; i++)
-            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, &v[i]);
+            args_get(val->u.array.values[i], TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_V3) {
         v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 3);
         for (i = 0; i < 3; i++)
-            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, &v[i]);
+            args_get(val->u.array.values[i], TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_V4) {
         v = va_arg(*ap, double*);
         assert(val->type == json_array);
         assert(val->u.array.length == 4);
         for (i = 0; i < 4; i++)
-            args_get(val->u.array.values[i], NULL, 0, TYPE_FLOAT, &v[i]);
+            args_get(val->u.array.values[i], TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_PTR) {
         assert(val->type == json_integer);
@@ -98,12 +76,12 @@ int args_vget(const json_value *args, const char *name, int pos,
     return 0;
 }
 
-int args_get(const json_value *args, const char *name, int pos, int type, ...)
+int args_get(const json_value *args, int type, ...)
 {
     va_list ap;
     int ret;
     va_start(ap, type);
-    ret = args_vget(args, name, pos, type, &ap);
+    ret = args_vget(args, type, &ap);
     va_end(ap);
     return ret;
 }

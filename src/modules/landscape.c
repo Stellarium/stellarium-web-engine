@@ -306,7 +306,7 @@ static json_value *landscapes_current_id_fn(
     landscapes_t *lss = (void*)obj;
     landscape_t *ls;
     if (args && args->u.array.length) {
-        args_get(args, NULL, 1, TYPE_STRING, id);
+        args_get(args, TYPE_STRING, id);
         MODULE_ITER(lss, ls, "landscape") {
             if (strcmp(ls->obj.id, id) == 0) {
                 obj_set_attr((obj_t*)ls, "active", true);

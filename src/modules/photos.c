@@ -40,7 +40,7 @@ static json_value *photo_fn_url(obj_t *obj, const attribute_t *attr,
     char url[1024];
     if (args->u.array.length) {
         texture_release(photo->img);
-        args_get(args, NULL, 1, TYPE_STRING, &url);
+        args_get(args, TYPE_STRING, &url);
         photo->img = texture_from_url(url, 0);
     }
     if (!photo->img) return NULL;

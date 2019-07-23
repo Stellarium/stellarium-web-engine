@@ -350,7 +350,7 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
             return args_value_new(attr->type, p);
     } else { // Set the value.
         assert(attr->member.size <= sizeof(buf));
-        args_get(args, NULL, 0, attr->type, buf);
+        args_get(args, attr->type, buf);
         if (memcmp(p, buf, attr->member.size) != 0) {
             // If we override an object, don't forget to release the
             // previous value and increment the ref to the new one.
@@ -462,7 +462,7 @@ int obj_get_attr(const obj_t *obj, const char *name, ...)
     va_start(ap, name);
     ret = obj_call_json(obj, name, NULL);
     assert(ret);
-    args_vget(ret, NULL, 1, attr->type, &ap);
+    args_vget(ret, attr->type, &ap);
     json_builder_free(ret);
     va_end(ap);
     return 0;

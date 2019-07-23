@@ -372,7 +372,7 @@ static json_value *skycultures_current_id_fn(
     skycultures_t *cults = (skycultures_t*)obj;
     skyculture_t *cult;
     if (args && args->u.array.length) {
-        args_get(args, NULL, 1, TYPE_STRING, id);
+        args_get(args, TYPE_STRING, id);
         if (cults->current) {
             MODULE_ITER(cults, cult, "skyculture") {
                 if (strcmp(cult->obj.id, cults->current->obj.id) == 0) {

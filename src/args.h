@@ -19,42 +19,30 @@
 
 /*
  * Function: args_get
- * Extract a value from a json arguments document.
+ * Convert a json value to a given info type value.
  *
- * It works with both dict arguments and array arguments.
+ * We support either direct json value, either dict with the special
+ * 'swe_' attribute set and the value as the 'v' attribute.
  *
- * Example:
+ * Examples:
  *
- *   // With the json document 'args' that can either be a dict:
- *   // {
- *   //   "x": 10,
- *   //   "vect": [10, 20, 30],
- *   // }
- *   //
- *   // or an array:
- *   // [10, [10, 20, 30]]
- *   //
- *   // We can extract the values:
- *   int x;
- *   double v[3];
- *   args_get(args, "x", 1, "d", NULL, &x);
- *   args_get(args, "vect", 2, "vect", NULL, &v);
+ *  json_value *json = json_parse("true");
+ *  bool v;
+ *  args_get(args, TYPE_BOOL, json, &v);
  *
+ *  json_value *json = json_parse('{"swe_": 1, "v": true}');
+ *  bool v;
+ *  args_get(args, TYPE_BOOL, json, &v);
  *
  * Parameters:
  *   args   - A json document that contains the arguments passed.
- *   name   - Name of the argument we want to extrace.  Can be NULL.
- *   pos    - Position of the argument (for array input).  Starts at 1.
- *            Zero if we want a named argument only.
  *   type   - Type of the argument ("f", "v4", etc...).  The function will
  *            try to convert to the type if it doesn't match.
  *   ...    - A pointer to the returned value, whose type must match the
  *            given type.
  */
-int args_get(const json_value *args, const char *name, int pos,
-             int type, ...);
-int args_vget(const json_value *args, const char *name, int pos,
-              int type, va_list* ap);
+int args_get(const json_value *args, int type, ...);
+int args_vget(const json_value *args, int type, va_list* ap);
 
 /*
  * Function: args_value_new
