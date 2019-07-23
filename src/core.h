@@ -30,64 +30,6 @@ typedef struct core core_t;
 
 extern core_t *core;    // Global core object.
 
-/*************************************************************************
- * Section: Rendering
- */
-
-// I could try to use uint8_t to save memory here.
-typedef struct {
-    int level;
-    int x, y;
-} qtree_node_t;
-
-// Generic function to split a surface into sub surfaces using a Breadth-first
-// search.
-//
-//  nodes       An array of node that is used internally by the algo.
-//  nb_nodes    The number of nodes given.
-//  uv          A 2d quad that defines the initial surface.  If NULL, then
-//              a default u in [0 - 1], v in [0 - 1] quad is used.
-//  proj        Optional projection that is used to map uv coordinates (2d)
-//              to model coordinates (3d).
-//  painter     Optional painter used to get the viewport projection.
-//  user        User data passed to the visitor function.
-//  f           The visitor function.  The function is called several times
-//              at each node.  It can return the following values:
-//                  0: stop visiting this node and deeper nodes.
-//                  1: stop visiting this node and go to deeper nodes.
-//                  2: keep visiting this node and go to deeper nodes.
-//
-//      step    For each node, the visitor is called up to 3 times:
-//              step = 0: first call, before any check has been done.
-//              step = 1: called after we checked that the node is visible,
-//              step = 2: called after we checked for discontinuity.  At
-//                        this step, the painter projection should always be
-//                        able to render the quad.
-//              For simple case, we can return 0 or 1 at step 0, skipping
-//              all the other steps.
-//      node    The current node visited.
-//      pos     model pos of the current node.
-//      mat     3x3 transformation to go from the original uv to the current
-//              one.
-//      painter The painter passed as argument, or, in step 2, eventually
-//              a painter whose projection has been shifted to handle
-//              a discontinuous case.
-//      frame   One of the <FRAME> enum.
-//      user    The use data passed as argument.
-int traverse_surface(
-        qtree_node_t *nodes,
-        int nb_nodes,
-        const projection_t *proj,
-        const painter_t *painter,
-        int frame,
-        void *user,
-        int (*f)(int step,
-                 qtree_node_t *node,
-                 const double pos[4][4],
-                 const double mat[3][3],
-                 const painter_t *painter,
-                 void *user));
-
 /******* Section: Core ****************************************************/
 
 /* Type: core_t

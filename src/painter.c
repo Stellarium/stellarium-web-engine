@@ -179,48 +179,23 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
     return 0;
 }
 
-static int paint_quad_visitor(int step, qtree_node_t *node,
-                              const double pos[4][4],
-                              const double mat[3][3],
-                              const painter_t *painter,
-                              void *user)
-{
-    projection_t *tex_proj = USER_GET(user, 0);
-    int frame = *(int*)USER_GET(user, 1);
-    int grid_size = *(int*)USER_GET(user, 2);
-
-    if (step == 0) {
-        if ((1 << node->level) > grid_size) return 0;
-        return 2;
-    }
-    if (step == 1) return 2;
-    REND(painter->rend, quad, painter, frame, mat,
-                        grid_size >> node->level,
-                        tex_proj);
-
-    if (g_debug) {
-        REND(painter->rend, quad_wireframe, painter, frame, mat,
-             grid_size >> node->level, tex_proj);
-    }
-    return 0;
-}
-
 int paint_quad(const painter_t *painter,
                int frame,
                const projection_t *tex_proj,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
-    qtree_node_t nodes[128];
+    double mat[3][3] = MAT3_IDENTITY;
+
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;
     }
     if (painter->color[3] == 0.0) return 0;
-    traverse_surface(nodes, ARRAY_SIZE(nodes), tex_proj,
-                     painter, frame,
-                     USER_PASS(tex_proj, &frame, &grid_size),
-                     paint_quad_visitor);
+
+    // XXX: need to check if we intersect discontinuity, and if so split
+    // the painter projection.
+    REND(painter->rend, quad, painter, frame, mat, grid_size, tex_proj);
     return 0;
 }
 
