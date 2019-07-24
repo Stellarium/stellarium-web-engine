@@ -15,9 +15,10 @@
 #define NANOVG_GLES2_IMPLEMENTATION
 #include "nanovg.h"
 #include "nanovg_gl.h"
-#include "grid_cache.h"
 
 #include <float.h>
+
+#define GRID_CACHE_SIZE (2 * (1 << 20))
 
 // All the shader attribute locations.
 enum {
@@ -221,6 +222,8 @@ typedef struct renderer_gl {
     float       font_scales[8];
 
     item_t  *items;
+    cache_t *grid_cache;
+
 } renderer_gl_t;
 
 static void init_shader(gl_shader_t *shader)
@@ -332,6 +335,46 @@ static void points(renderer_t *rend_,
             areas_add_circle(core->areas, p.pos, p.size, p.oid, p.hint);
         }
     }
+}
+
+/*
+ * Function: get_grid
+ * Compute an uv_map grid, and cache it if possible.
+ */
+static const double (*get_grid(renderer_gl_t *rend,
+                               const uv_map_t *map, int split,
+                               bool *should_delete))[4]
+{
+    int n = split + 1;
+    double (*grid)[4];
+    struct {
+        int order;
+        int pix;
+        int split;
+        int pad_;
+    } key = { map->order, map->pix, split };
+    _Static_assert(sizeof(key) == 16, "");
+    bool can_cache = map->type == UV_MAP_HEALPIX &&
+                     map->at_infinity && map->swapped;
+
+    *should_delete = !can_cache;
+    if (can_cache) {
+        if (!rend->grid_cache)
+            rend->grid_cache = cache_create(GRID_CACHE_SIZE);
+        grid = cache_get(rend->grid_cache, &key, sizeof(key));
+        if (grid)
+            return grid;
+    }
+
+    grid = calloc(n * n, sizeof(*grid));
+    uv_map_grid(map, split, grid);
+
+    if (can_cache) {
+        cache_add(rend->grid_cache, &key, sizeof(key),
+                  grid, sizeof(*grid) * n * n, NULL);
+    }
+
+    return grid;
 }
 
 static void compute_tangent(const double uv[2], const uv_map_t *map,
@@ -481,7 +524,8 @@ static void quad(renderer_t          *rend_,
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
     double p[4], tex_pos[2], ndc_p[4];
     float lum;
-    double (*grid)[4] = NULL;
+    const double (*grid)[4] = NULL;
+    bool should_delete_grid;
     texture_t *tex = painter->textures[PAINTER_TEX_COLOR].tex;
 
     // Special case for planet shader.
@@ -527,13 +571,7 @@ static void quad(renderer_t          *rend_,
     vec4_to_float(painter->color, item->color);
     item->flags = painter->flags;
 
-    // If we use a 'normal' healpix projection for the texture, try
-    // to get it directly from the cache to improve performances.
-    if (    map->type == UV_MAP_HEALPIX &&
-            map->at_infinity && map->swapped) {
-        grid = grid_cache_get(map->order, map->pix, grid_size);
-    }
-
+    grid = get_grid(rend, map, grid_size, &should_delete_grid);
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
@@ -543,12 +581,7 @@ static void quad(renderer_t          *rend_,
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        if (grid) {
-            vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
-        } else {
-            uv_map(map, p, p);
-        }
-
+        vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
@@ -567,6 +600,7 @@ static void quad(renderer_t          *rend_,
         }
         gl_buf_next(&item->buf);
     }
+    if (should_delete_grid) free(grid);
 
     // Set the index buffer.
     for (i = 0; i < grid_size; i++)
