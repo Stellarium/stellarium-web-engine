@@ -202,6 +202,8 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
                         int order, int pix)
 {
     int split, i;
+    uv_map_t map;
+
     if (painter_is_tile_clipped(painter, FRAME_OBSERVED, order, pix, true))
         return;
     if (order < 1) {
@@ -210,9 +212,8 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
         return;
     }
     split = 4; // Adhoc split value to look good while not being too slow.
-    projection_t proj;
-    projection_init_healpix(&proj, 1 << order, pix, true, true);
-    paint_quad(painter, FRAME_OBSERVED, &proj, split);
+    uv_map_init_healpix(&map, order, pix, true, true);
+    paint_quad(painter, FRAME_OBSERVED, &map, split);
 }
 
 static int atmosphere_render(const obj_t *obj, const painter_t *painter_)

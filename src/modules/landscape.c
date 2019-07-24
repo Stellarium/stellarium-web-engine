@@ -113,7 +113,7 @@ static void render_fog(const painter_t *painter_, double alpha)
     int pix, order = 1, split = 2;
     double theta, phi;
     painter_t painter = *painter_;
-    projection_t proj;
+    uv_map_t map;
 
     painter.color[3] *= alpha;
     if (painter.color[3] == 0.0) return;
@@ -127,8 +127,8 @@ static void render_fog(const painter_t *painter_, double alpha)
         if (fabs(theta - M_PI / 2) > 20 * DD2R) continue;
         if (painter_is_tile_clipped(&painter, FRAME_OBSERVED, order, pix, true))
             continue;
-        projection_init_healpix(&proj, 1 << order, pix, true, true);
-        paint_quad(&painter, FRAME_OBSERVED, &proj, split);
+        uv_map_init_healpix(&map, order, pix, true, true);
+        paint_quad(&painter, FRAME_OBSERVED, &map, split);
     }
 }
 

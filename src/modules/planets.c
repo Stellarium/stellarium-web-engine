@@ -506,7 +506,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     int *nb_loaded = USER_GET(user, 2);
     painter_t painter = *painter_;
     texture_t *tex, *normalmap = NULL;
-    projection_t proj;
+    uv_map_t map;
     double fade, uv[3][3] = MAT3_IDENTITY, normal_uv[3][3] = MAT3_IDENTITY;
     bool loaded;
 
@@ -536,15 +536,14 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
 
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
-    projection_init_healpix(&proj, 1 << order, pix, true, false);
-    paint_quad(&painter, FRAME_ICRF, &proj, split);
+    uv_map_init_healpix(&map, order, pix, true, false);
+    paint_quad(&painter, FRAME_ICRF, &map, split);
     return 0;
 }
 
-static bool ring_project(const projection_t *proj, int flags,
-                           const double *v, double *out)
+static void ring_project(const uv_map_t *map, const double v[2], double out[4])
 {
-    const double *radii = proj->user;
+    const double *radii = map->user;
     double theta, r, mat[3][3], p[4] = {1, 0, 0, 1};
     theta = v[0] * 2 * M_PI;
     r = mix(radii[0], radii[1], v[1]);
@@ -553,7 +552,6 @@ static bool ring_project(const projection_t *proj, int flags,
     mat3_iscale(mat, r, r, 1.0);
     mat3_mul_vec3(mat, p, p);
     vec4_copy(p, out);
-    return true;
 }
 
 static void render_rings(const planet_t *planet,
@@ -562,8 +560,8 @@ static void render_rings(const planet_t *planet,
     texture_t *tex = planet->rings.tex;
     double inner_radius = planet->rings.inner_radius / planet->radius_m;
     double outer_radius = planet->rings.outer_radius / planet->radius_m;
-    projection_t proj = {
-        .backward   = ring_project,
+    uv_map_t map = {
+        .map = ring_project,
     };
     painter_t painter = *painter_;
     const double radii[2] = {inner_radius, outer_radius};
@@ -578,12 +576,12 @@ static void render_rings(const planet_t *planet,
         painter.planet.shadow_spheres_nb++;
     }
 
-    proj.user = radii;
+    map.user = radii;
     painter.planet.light_emit = NULL;
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_RING_SHADER;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
-    paint_quad(&painter, FRAME_ICRF, &proj, 64);
+    paint_quad(&painter, FRAME_ICRF, &map, 64);
 }
 
 /*

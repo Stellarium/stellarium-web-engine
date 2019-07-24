@@ -72,8 +72,7 @@ static int meteor_update(obj_t *obj, double dt)
  * Project UV coordinates into a tail shape.
  * For the moment this projects into a triangle.
  */
-static bool tail_project(const projection_t *proj, int flags,
-                         const double *v, double *out)
+static void tail_project(const uv_map_t *map, const double v[2], double out[4])
 {
     double r, p[4] = {1, 0, 0, 0};
     double m[3][3];
@@ -83,11 +82,10 @@ static bool tail_project(const projection_t *proj, int flags,
     mat3_set_identity(m);
     mat3_rz(v[0] * 10 * DD2R, m, m);
     mat3_mul_vec3(m, p, p);
-    mat3_mul_vec3(proj->mat3, p, p);
+    mat3_mul_vec3(map->mat, p, p);
 
     p[3] = 1;
     vec4_copy(p, out);
-    return true;
 }
 
 static void render_tail(const painter_t *painter,
@@ -95,7 +93,7 @@ static void render_tail(const painter_t *painter,
                         const double p2[4])
 {
     double mat[3][3];
-    projection_t proj;
+    uv_map_t map;
     /*
      * Compute the rotation/scale matrix that transforms X into p1 and
      * Y into p1 rotated 90° in the direction of p2.
@@ -110,11 +108,11 @@ static void render_tail(const painter_t *painter,
     // Scale along Z to specify the tail width.
     mat3_iscale(mat, 1, 1, 0.001);
 
-    proj = (projection_t) {
-        .backward   = tail_project,
+    map = (uv_map_t) {
+        .map = tail_project,
     };
-    mat3_copy(mat, proj.mat3); // XXX: remove that I guess.
-    paint_quad(painter, FRAME_ICRF, &proj, 8);
+    mat3_copy(mat, map.mat); // XXX: remove that I guess.
+    paint_quad(painter, FRAME_ICRF, &map, 8);
 }
 
 static int meteor_render(const obj_t *obj, const painter_t *painter_)

@@ -35,10 +35,10 @@ static int circle_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static bool circle_project(const projection_t *proj, int flags,
-                           const double *v, double *out)
+static void circle_project(const uv_map_t *map,
+                           const double v[2], double out[4])
 {
-    circle_t *circle = proj->user;
+    circle_t *circle = map->user;
     double theta, r, mat[3][3], p[4] = {1, 0, 0, 0}, ra, dec;
     bool right_handed = circle->frame != FRAME_OBSERVED;
 
@@ -63,7 +63,6 @@ static bool circle_project(const projection_t *proj, int flags,
         vec3_normalize(p, p);
     }
     vec4_copy(p, out);
-    return true;
 }
 
 static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
@@ -88,9 +87,9 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
 {
     circle_t *circle = (circle_t *)obj;
     painter_t painter = *painter_;
-    projection_t proj = {
-        .backward   = circle_project,
-        .user       = obj,
+    uv_map_t map = {
+        .map  = circle_project,
+        .user = obj,
     };
     const bool selected = core->selection && obj->oid == core->selection->oid;
     int label_effects = 0;
@@ -98,14 +97,14 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     const double white[4] = {1, 1, 1, 1};
 
     vec4_emul(painter_->color, circle->color, painter.color);
-    paint_quad(&painter, circle->frame, &proj, 64);
+    paint_quad(&painter, circle->frame, &map, 64);
     if (selected) {
         painter.lines_width = 2;
         vec4_copy(white, painter.color);
     } else {
         vec4_emul(painter_->color, circle->border_color, painter.color);
     }
-    paint_quad_contour(&painter, circle->frame, &proj, 64, 4);
+    paint_quad_contour(&painter, circle->frame, &map, 64, 4);
     circle_get_2d_ellipse(&circle->obj, painter.obs, painter.proj,
                           win_pos, win_size, &win_angle);
     areas_add_circle(core->areas, win_pos, win_size[0], obj->oid, 0);

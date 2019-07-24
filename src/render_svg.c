@@ -82,7 +82,7 @@ static void line(renderer_t           *rend_,
                  int                  frame,
                  double               line[2][4],
                  int                  nb_segs,
-                 const projection_t   *line_proj)
+                 const uv_map_t       *map)
 {
     renderer_svg_t *rend = (void*)rend_;
     int i, n;
@@ -97,8 +97,8 @@ static void line(renderer_t           *rend_,
     for (i = 0; i < n; i++) {
         k = ((i / 2) + (i % 2)) / (double)nb_segs;
         vec3_mix(line[0], line[1], k, pos);
-        if (line_proj)
-            project(line_proj, PROJ_BACKWARD, 4, pos, pos);
+        if (map)
+            uv_map(map, pos, pos);
         mat4_mul_vec3(*painter->transform, pos, pos);
         convert_framev4(painter->obs, frame, FRAME_VIEW, pos, pos);
         if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos))

@@ -23,7 +23,7 @@ static cache_t *g_cache = NULL;
  * Return a pointer to an healpix grid for fast texture projection
  *
  * Parameters:
- *   nside      - Healpix pixel nside argument.
+ *   order      - Healpix pixel order argument.
  *   pix        - Healpix pix.
  *   mat        - UV coordinates of a quad inside the healpix pixel.
  *   split      - Number of splits to use for the grid.
@@ -31,7 +31,7 @@ static cache_t *g_cache = NULL;
  * Return:
  *   A (split + 1)^2 grid of 3d positions.
  */
-const double (*grid_cache_get(int nside, int pix,
+const double (*grid_cache_get(int order, int pix,
                               const double mat[3][3],
                               int split))[3]
 {
@@ -44,11 +44,11 @@ const double (*grid_cache_get(int nside, int pix,
         int split;
         int pad_;
         double mat[3][3];
-    } key = { nside, pix, split };
-    projection_t proj;
+    } key = { order, pix, split };
+    uv_map_t map;
     double p[4];
 
-    projection_init_healpix(&proj, nside, pix, true, true);
+    uv_map_init_healpix(&map, order, pix, true, true);
 
     _Static_assert(sizeof(key) == 88, "");
     memcpy(key.mat, mat, sizeof(key.mat));
@@ -60,7 +60,7 @@ const double (*grid_cache_get(int nside, int pix,
     for (j = 0; j < n; j++) {
         vec3_set(p, (double)j / split, (double)i / split, 1.0);
         mat3_mul_vec3(mat, p, p);
-        project(&proj, PROJ_BACKWARD, 4, p, p);
+        uv_map(&map, p, p);
         grid[i * n + j][0] = p[0];
         grid[i * n + j][1] = p[1];
         grid[i * n + j][2] = p[2];

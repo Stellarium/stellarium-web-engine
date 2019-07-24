@@ -12,8 +12,9 @@
 
 #include <stdint.h>
 
-#include "projection.h"
 #include "frames.h"
+#include "projection.h"
+#include "uv_map.h"
 
 typedef struct observer observer_t;
 typedef struct renderer renderer_t;
@@ -75,14 +76,14 @@ struct renderer
                  int                 frame,
                  const double        mat[3][3],
                  int                 grid_size,
-                 const projection_t  *tex_proj);
+                 const uv_map_t      *map);
 
     void (*quad_wireframe)(renderer_t           *rend,
                            const painter_t      *painter,
                            int                  frame,
                            const double         mat[3][3],
                            int                  grid_size,
-                           const projection_t   *tex_proj);
+                           const uv_map_t       *map);
 
     void (*texture)(renderer_t       *rend,
                     const texture_t  *tex,
@@ -108,7 +109,7 @@ struct renderer
                  int                  frame,
                  double               line[2][4],
                  int                  nb_segs,
-                 const projection_t   *line_proj);
+                 const uv_map_t       *map);
 
     void (*mesh)(renderer_t          *rend,
                  const painter_t     *painter,
@@ -279,31 +280,26 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points);
  *
  * Render a quad mapped into the 3d sphere
  *
- * The shape of the quad is defined by the projection `proj` called backward,
- * that is, a mapping of (u, v) => (x, y, z).  u and v range from 0 to 1.
- *
  * Parameters:
  *   painter        - A painter.
  *   frame          - Referential frame of the inputs (<FRAME> values).
- *   proj           - The texture to sphere projection used.
+ *   map            - The uv mapping of the quad into the 3d space.
  *   grid_size      - how many sub vertices we use.
  */
 int paint_quad(const painter_t *painter,
                int frame,
-               const projection_t *proj,
+               const uv_map_t *map,
                int grid_size);
 
 /* Function: paint_quad_contour
  *
- * Draw the contour lines of a shape.
- * The shape is defined by the parametric function `proj`, that maps:
- * (u, v) -> (x, y, z) for u and v in the range [0, 1].
+ * Draw the contour lines of a quad.
  *
  * border_mask is a 4 bits mask to decide what side of the uv rect has to be
  * rendered (should be all set for a rect).
  */
 int paint_quad_contour(const painter_t *painter, int frame,
-                       const projection_t *proj,
+                       const uv_map_t *map,
                        int split, int border_mask);
 
 /*
@@ -331,7 +327,7 @@ int paint_tile_contour(const painter_t *painter, int frame,
  *   frame      - Frame of the inputs.
  *   nb         - Number of vertices.
  *   lines      - Vertices of the lines: [a0, a1, b0, b1, c0, c1, ...]
- *   line_proj  - Optional function that can be used to represent lines as
+ *   map        - Optional function that can be used to represent lines as
  *                parametric function.  If set then the actual coordinates
  *                of the lines are the mapping of the point through this
  *                function.
@@ -343,7 +339,7 @@ int paint_tile_contour(const painter_t *painter, int frame,
 int paint_lines(const painter_t *painter,
                 int frame,
                 int nb, double (*lines)[4],
-                const projection_t *line_proj,
+                const uv_map_t *map,
                 int split, int flags);
 
 /*

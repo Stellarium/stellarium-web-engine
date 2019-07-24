@@ -22,7 +22,6 @@ enum {
     PROJ_PERSPECTIVE,
     PROJ_STEREOGRAPHIC,
     PROJ_MERCATOR,
-    PROJ_HEALPIX,
     PROJ_HAMMER,
     PROJ_COUNT,
 };
@@ -63,27 +62,12 @@ struct projection
 
     // Matrices used by some projections.
     double mat[4][4];
-    double mat3[3][3];
-    // Use by some projs to define if we back project into the unit sphere
-    // or into the sphere at infinity.
-    bool   at_infinity;
     // Window size (screen size / screen density).
     double window_size[2];
 
     // Maximum FOV at which we can display
     double max_fov;
-
-    union {
-        int shift;              // Only used by the mercator projection.
-        struct {
-            int level, x, y;    // Only used by toast projections.
-        };
-        struct {               // Only used by the healpix projection.
-            int nside, pix;
-            bool swapped; // To remove?
-        };
-        void   *user;   // Can be used by custom projection.
-    };
+    int shift;              // Only used by the mercator projection.
 
     void (*project)(const projection_t *proj, int flags,
                     const double *v, double *out);
@@ -123,8 +107,6 @@ void projection_compute_fovs(int proj_type, double fov, double aspect,
  */
 void projection_init(projection_t *proj, int type, double fovx,
                      double win_w, double win_h);
-void projection_init_healpix(projection_t *proj, int nside, int pix,
-                             bool swap, bool at_infinity);
 
 /* Function: project
  * Apply a projection to coordinates

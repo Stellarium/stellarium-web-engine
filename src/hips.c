@@ -396,7 +396,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     int *nb_loaded = USER_GET(user, 1);
     painter_t painter = *painter_;
     texture_t *tex;
-    projection_t proj;
+    uv_map_t map;
     bool loaded;
     double fade;
     // UV transfo mat with swapped x and y.
@@ -411,8 +411,8 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     if (!tex) return 0;
     painter.color[3] *= fade;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
-    projection_init_healpix(&proj, 1 << order, pix, false, true);
-    paint_quad(&painter, hips->frame, &proj, split);
+    uv_map_init_healpix(&map, order, pix, false, true);
+    paint_quad(&painter, hips->frame, &map, split);
     return 0;
 }
 

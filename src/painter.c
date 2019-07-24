@@ -181,7 +181,7 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 
 int paint_quad(const painter_t *painter,
                int frame,
-               const projection_t *tex_proj,
+               const uv_map_t *map,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
@@ -195,7 +195,7 @@ int paint_quad(const painter_t *painter,
 
     // XXX: need to check if we intersect discontinuity, and if so split
     // the painter projection.
-    REND(painter->rend, quad, painter, frame, mat, grid_size, tex_proj);
+    REND(painter->rend, quad, painter, frame, mat, grid_size, map);
     return 0;
 }
 
@@ -238,7 +238,7 @@ int paint_texture(const painter_t *painter,
 
 static int paint_line(const painter_t *painter,
                       int frame,
-                      double line[2][4], const projection_t *line_proj,
+                      double line[2][4], const uv_map_t *map,
                       int split, int flags)
 {
     int r, i;
@@ -250,8 +250,8 @@ static int paint_line(const painter_t *painter,
     {
         // Test if the line intersect a discontinuity.
         for (i = 0; i < 2; i++) {
-            if (line_proj)
-                project(line_proj, PROJ_BACKWARD, 4, line[i], view_pos[i]);
+            if (map)
+                uv_map(map, line[i], view_pos[i]);
             else
                 memcpy(view_pos[i], line[i], sizeof(view_pos[i]));
             mat4_mul_vec4(*painter->transform, view_pos[i], view_pos[i]);
@@ -266,14 +266,14 @@ static int paint_line(const painter_t *painter,
         }
     }
 
-    REND(painter->rend, line, painter, frame, line, split, line_proj);
+    REND(painter->rend, line, painter, frame, line, split, map);
     return 0;
 }
 
 int paint_lines(const painter_t *painter,
                 int frame,
                 int nb, double (*lines)[4],
-                const projection_t *line_proj,
+                const uv_map_t *map,
                 int split, int flags)
 {
     int i, ret = 0;
@@ -282,7 +282,7 @@ int paint_lines(const painter_t *painter,
     // So that we don't abort in the middle of the rendering.
     for (i = 0; i < nb; i += 2)
         ret |= paint_line(painter, frame, lines ? (void*)lines[i] : NULL,
-                          line_proj, split, flags);
+                          map, split, flags);
     return ret;
 }
 
@@ -474,14 +474,12 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
 }
 
 /* Draw the contour lines of a shape.
- * The shape is defined by the parametric function `proj`, that maps:
- * (u, v) -> (x, y, z) for u and v in the range [0, 1].
  *
  * borders_mask is a 4 bits mask to decide what side of the uv rect has to be
  * rendered (should be all set for a rect).
  */
 int paint_quad_contour(const painter_t *painter, int frame,
-                       const projection_t *proj,
+                       const uv_map_t *map,
                        int split, int borders_mask)
 {
     const double lines[4][2][4] = {
@@ -493,7 +491,7 @@ int paint_quad_contour(const painter_t *painter, int frame,
     int i;
     for (i = 0; i < 4; i++) {
         if (!((1 << i) & borders_mask)) continue;
-        paint_line(painter, frame, lines[i], proj, split, 0);
+        paint_line(painter, frame, lines[i], map, split, 0);
     }
     return 0;
 }
@@ -514,15 +512,14 @@ int paint_quad_contour(const painter_t *painter, int frame,
 int paint_tile_contour(const painter_t *painter, int frame,
                        int order, int pix, int split)
 {
-    projection_t proj;
-    projection_init_healpix(&proj, 1 << order, pix, false, false);
-    return paint_quad_contour(painter, frame, &proj, split, 15);
+    uv_map_t map;
+    uv_map_init_healpix(&map, order, pix, false, false);
+    return paint_quad_contour(painter, frame, &map, split, 15);
 }
 
-static bool orbit_project(const projection_t *proj, int flags,
-                          const double *v, double *out)
+static void orbit_map(const uv_map_t *map, const double v[2], double out[4])
 {
-    const double *o = proj->user;
+    const double *o = map->user;
     double pos[4];
     double period = 2 * M_PI / o[5]; // Period in day.
     double mjd = o[0] + period * v[0];
@@ -530,7 +527,6 @@ static bool orbit_project(const projection_t *proj, int flags,
                      o[0], o[1], o[2], o[3], o[4], o[5], o[6], o[7], 0.0, 0.0);
     vec3_copy(pos, out);
     out[3] = 1.0; // AU.
-    return true;
 }
 
 /*
@@ -560,14 +556,14 @@ int paint_orbit(const painter_t *painter, int frame,
                 double k_ma)      // Mean Anomaly (rad).
 {
     const double orbit[8] = {k_jd, k_in, k_om, k_w, k_a, k_n, k_ec, k_ma};
-    projection_t orbit_proj = {
-        .backward   = orbit_project,
+    uv_map_t map = {
+        .map        = orbit_map,
         .user       = (void*)orbit,
     };
     double line[2][4] = {{0}, {1}};
     // We only support ICRF for the moment to make things simpler.
     assert(frame == FRAME_ICRF);
-    paint_line(painter, frame, line, &orbit_proj, 128, 1);
+    paint_line(painter, frame, line, &map, 128, 1);
     return 0;
 }
 

@@ -248,15 +248,14 @@ static int line_update(obj_t *obj, double dt)
     return changed ? 1 : 0;
 }
 
-static bool spherical_project(
-        const projection_t *proj, int flags, const double *v, double *out)
+static void spherical_project(
+        const uv_map_t *map, const double v[2], double out[4])
 {
     double az, al;
     az = v[0] * 360 * DD2R;
     al = (v[1] - 0.5) * 180 * DD2R;
     eraS2c(az, al, out);
     out[3] = 0; // Project to infinity.
-    return true;
 }
 
 static bool check_borders(const double a[3], const double b[3],
@@ -364,9 +363,8 @@ static void render_recursion(
     double new_mat[3][3], p[4], lines[4][4] = {}, u[2], v[2];
     double pos[4][4], pos_clip[4][4];
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
-    projection_t proj_spherical = {
-        .name       = "spherical",
-        .backward   = spherical_project,
+    uv_map_t map = {
+        .map   = spherical_project,
     };
 
     if (done_mask == 3) return; // Already done.
@@ -374,7 +372,7 @@ static void render_recursion(
     // Compute quad corners in clipping space.
     for (i = 0; i < 4; i++) {
         mat3_mul_vec2(mat, uv[i], p);
-        spherical_project(NULL, 0, p, p);
+        spherical_project(&map, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, line->frame, FRAME_VIEW, p, p);
         vec4_copy(p, pos[i]);
@@ -406,7 +404,7 @@ static void render_recursion(
         if (splits[dir] != steps[dir]->n / (dir ? 2 : 1)) continue;
         done_mask |= (1 << dir);
         paint_lines(painter, line->frame, 2, lines + dir * 2,
-                    &proj_spherical, 8, PAINTER_SKIP_DISCONTINUOUS);
+                    &map, 8, PAINTER_SKIP_DISCONTINUOUS);
         if (!line->format) continue;
         if (check_borders(pos[0], pos[2 - dir], painter->proj, p, u, v)) {
             render_label(p, u, v, uv[0], 1 - dir, line,

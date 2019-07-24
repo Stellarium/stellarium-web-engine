@@ -78,21 +78,19 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
 }
 
 // Project from uv to the sphere.
-static bool proj_backward(const projection_t *proj, int flags,
-                          const double *v, double *out)
+static void photo_map(const uv_map_t *map, const double v[2], double out[4])
 {
     double p[4] = {v[0], v[1], 1.0, 1.0};
-    mat4_mul_vec4(proj->mat, p, p);
+    mat4_mul_vec4(map->mat4, p, p);
     vec3_normalize(p, p);
     vec3_copy(p, out);
-    return true;
 }
 
 static int photo_render(const obj_t *obj, const painter_t *painter)
 {
     photo_t *photo = (photo_t*)obj;
     typeof(&photo->calibration) calibration = &photo->calibration;
-    projection_t proj = {};
+    uv_map_t map = {};
     painter_t painter2 = *painter;
 
     fader_update(&photo->visible, 0.06);
@@ -113,16 +111,16 @@ static int photo_render(const obj_t *obj, const painter_t *painter)
         mat4_itranslate(photo->mat, -0.5, -0.5, 0.0);
     }
 
-    mat4_copy(photo->mat, proj.mat);
-    proj.backward = proj_backward;
+    mat4_copy(photo->mat, map.mat4);
+    map.map = photo_map;
 
     if (!photo->render_shape) {
         painter_set_texture(&painter2, PAINTER_TEX_COLOR, photo->img, NULL);
-        paint_quad(&painter2, FRAME_ICRF, &proj, 4);
+        paint_quad(&painter2, FRAME_ICRF, &map, 4);
     } else {
-        paint_quad_contour(&painter2, FRAME_ICRF, &proj, 8, 15);
+        paint_quad_contour(&painter2, FRAME_ICRF, &map, 8, 15);
         painter2.color[3] *= 0.25;
-        paint_quad(&painter2, FRAME_ICRF, &proj, 8);
+        paint_quad(&painter2, FRAME_ICRF, &map, 8);
     }
 
     return 0;

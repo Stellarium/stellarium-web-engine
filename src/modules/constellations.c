@@ -302,8 +302,8 @@ end:
     return 0;
 }
 
-static bool spherical_project(
-        const projection_t *proj, int flags, const double *v, double *out)
+static void spherical_project(
+        const uv_map_t *map, const double v[2], double out[4])
 {
     // Rotation matrix from 1875.0 to J2000.  Computed with erfa:
     //     eraEpb2jd(1875.0, &djm0, &djm);
@@ -321,7 +321,6 @@ static bool spherical_project(
     // aligned with the meridians and parallels we need to apply the
     // rotation to J2000.
     mat3_mul_vec3(rnpb, out, out);
-    return true;
 }
 
 static int render_bounds(const constellation_t *con,
@@ -331,8 +330,8 @@ static int render_bounds(const constellation_t *con,
     const constellation_infos_t *info;
     double line[2][4] = {};
     painter_t painter = *painter_;
-    projection_t proj = {
-        .backward = spherical_project,
+    uv_map_t map = {
+        .map = spherical_project,
     };
 
     painter.lines_stripes = 10.0; // Why not working anymore?
@@ -344,7 +343,7 @@ static int render_bounds(const constellation_t *con,
         memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
         memcpy(line[1], info->edges[i][1], 2 * sizeof(double));
         if (line[1][0] < line[0][0]) line[1][0] += 2 * M_PI;
-        paint_lines(&painter, FRAME_ICRF, 2, line, &proj, 8,
+        paint_lines(&painter, FRAME_ICRF, 2, line, &map, 8,
                     PAINTER_SKIP_DISCONTINUOUS);
     }
     return 0;
@@ -436,14 +435,12 @@ static void constellation_get_designations(
 }
 
 // Project from uv to the sphere.
-static bool proj_backward(const projection_t *proj, int flags,
-                          const double *v, double *out)
+static void img_map(const uv_map_t *map, const double v[2], double out[4])
 {
     double uv[3] = {v[0], v[1], 1.0};
-    mat3_mul_vec3(proj->mat3, uv, out);
+    mat3_mul_vec3(map->mat, uv, out);
     vec3_normalize(out, out);
     out[3] = 0;
-    return true;
 }
 
 static int render_lines(const constellation_t *con, const painter_t *_painter)
@@ -519,7 +516,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
 
 static int render_img(constellation_t *con, const painter_t *painter)
 {
-    projection_t proj = {0};
+    uv_map_t map = {0};
     painter_t painter2 = *painter;
     if (!painter2.color[3]) return 0;
     if (!con->img || !texture_load(con->img, NULL)) return 0;
@@ -530,10 +527,10 @@ static int render_img(constellation_t *con, const painter_t *painter)
     painter2.flags |= PAINTER_ADD;
     vec3_set(painter2.color, 1, 1, 1);
     painter2.color[3] *= 0.4 * con->image_loaded_fader.value;
-    mat3_copy(con->mat, proj.mat3);
-    proj.backward = proj_backward;
+    mat3_copy(con->mat, map.mat);
+    map.map = img_map;
     painter_set_texture(&painter2, PAINTER_TEX_COLOR, con->img, NULL);
-    paint_quad(&painter2, FRAME_ICRF, &proj, 4);
+    paint_quad(&painter2, FRAME_ICRF, &map, 4);
     return 0;
 }
 

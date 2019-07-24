@@ -334,7 +334,7 @@ static void points(renderer_t *rend_,
     }
 }
 
-static void compute_tangent(const double uv[2], const projection_t *tex_proj,
+static void compute_tangent(const double uv[2], const uv_map_t *map,
                             double out[3])
 {
     // XXX: this is what the algo should look like, except the normal map
@@ -352,7 +352,7 @@ static void compute_tangent(const double uv[2], const projection_t *tex_proj,
     */
 
     double p[4] = {0};
-    project(tex_proj, PROJ_BACKWARD, 4, uv, p);
+    uv_map(map, uv, p);
     vec3_cross(VEC(0, 0, 1), p, out);
 }
 
@@ -362,7 +362,7 @@ static void quad_planet(
                  int                 frame,
                  const double        mat[3][3],
                  int                 grid_size,
-                 const projection_t  *tex_proj)
+                 const uv_map_t      *map)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
@@ -428,14 +428,14 @@ static void quad_planet(
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0], p[1]);
         if (item->planet.normalmap) {
             mat3_mul_vec3(mat, p, p);
-            compute_tangent(p, tex_proj, tangent);
+            compute_tangent(p, map, tangent);
             mat4_mul_vec4(*painter->transform, tangent, tangent);
             gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
         mat3_mul_vec3(mat, p, p);
-        project(tex_proj, PROJ_BACKWARD, 4, p, p);
+        uv_map(map, p, p);
 
         vec3_copy(p, normal);
         mat4_mul_vec4(*painter->transform, normal, normal);
@@ -476,7 +476,7 @@ static void quad(renderer_t          *rend_,
                  int                 frame,
                  const double        mat[3][3],
                  int                 grid_size,
-                 const projection_t  *tex_proj)
+                 const uv_map_t      *map)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
@@ -490,7 +490,7 @@ static void quad(renderer_t          *rend_,
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
-        return quad_planet(rend_, painter, frame, mat, grid_size, tex_proj);
+        return quad_planet(rend_, painter, frame, mat, grid_size, map);
 
     if (!tex) tex = rend->white_tex;
     n = grid_size + 1;
@@ -533,9 +533,9 @@ static void quad(renderer_t          *rend_,
 
     // If we use a 'normal' healpix projection for the texture, try
     // to get it directly from the cache to improve performances.
-    if (    tex_proj->type == PROJ_HEALPIX &&
-            tex_proj->at_infinity && tex_proj->swapped) {
-        grid = grid_cache_get(tex_proj->nside, tex_proj->pix, mat, grid_size);
+    if (    map->type == UV_MAP_HEALPIX &&
+            map->at_infinity && map->swapped) {
+        grid = grid_cache_get(map->order, map->pix, mat, grid_size);
     }
 
     for (i = 0; i < n; i++)
@@ -551,9 +551,9 @@ static void quad(renderer_t          *rend_,
         mat3_mul_vec3(mat, p, p);
         if (grid) {
             vec4_set(p, VEC3_SPLIT(grid[i * n + j]),
-                     tex_proj->at_infinity ? 0.0 : 1.0);
+                     map->at_infinity ? 0.0 : 1.0);
         } else {
-            project(tex_proj, PROJ_BACKWARD, 4, p, p);
+            uv_map(map, p, p);
         }
 
         mat4_mul_vec4(*painter->transform, p, p);
@@ -592,7 +592,7 @@ static void quad_wireframe(renderer_t          *rend_,
                            int                 frame,
                            const double        mat[3][3],
                            int                 grid_size,
-                           const projection_t  *tex_proj)
+                           const uv_map_t      *map)
 {
     renderer_gl_t *rend = (void*)rend_;
     int n, i, j;
@@ -612,7 +612,7 @@ static void quad_wireframe(renderer_t          *rend_,
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
         mat3_mul_vec3(mat, p, p);
-        project(tex_proj, PROJ_BACKWARD, 4, p, p);
+        uv_map(map, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
@@ -1361,7 +1361,7 @@ static void line(renderer_t           *rend_,
                  int                  frame,
                  double               line[2][4],
                  int                  nb_segs,
-                 const projection_t   *line_proj)
+                 const uv_map_t       *map)
 {
     int i, ofs;
     renderer_gl_t *rend = (void*)rend_;
@@ -1390,8 +1390,8 @@ static void line(renderer_t           *rend_,
         k = i / (double)nb_segs;
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, k, 0);
         vec4_mix(line[0], line[1], k, pos);
-        if (line_proj)
-            project(line_proj, PROJ_BACKWARD, 4, pos, pos);
+        if (map)
+            uv_map(map, pos, pos);
         mat4_mul_vec4(*painter->transform, pos, pos);
         vec3_normalize(pos, pos);
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
