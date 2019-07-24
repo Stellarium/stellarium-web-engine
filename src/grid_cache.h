@@ -15,12 +15,10 @@
  * Parameters:
  *   order      - Healpix pixel order argument.
  *   pix        - Healpix pix.
- *   mat        - UV coordinates of a quad inside the healpix pixel.
  *   split      - Number of splits to use for the grid.
  *
  * Return:
  *   A (split + 1)^2 grid of 3d positions.
  */
 const double (*grid_cache_get(int order, int pix,
-                              const double mat[3][3],
                               int split))[3];

@@ -185,8 +185,6 @@ int paint_quad(const painter_t *painter,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
-    double mat[3][3] = MAT3_IDENTITY;
-
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;
@@ -195,7 +193,7 @@ int paint_quad(const painter_t *painter,
 
     // XXX: need to check if we intersect discontinuity, and if so split
     // the painter projection.
-    REND(painter->rend, quad, painter, frame, mat, grid_size, map);
+    REND(painter->rend, quad, painter, frame, grid_size, map);
     return 0;
 }
 

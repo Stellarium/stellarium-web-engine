@@ -74,14 +74,12 @@ struct renderer
     void (*quad)(renderer_t          *rend,
                  const painter_t     *painter,
                  int                 frame,
-                 const double        mat[3][3],
                  int                 grid_size,
                  const uv_map_t      *map);
 
     void (*quad_wireframe)(renderer_t           *rend,
                            const painter_t      *painter,
                            int                  frame,
-                           const double         mat[3][3],
                            int                  grid_size,
                            const uv_map_t       *map);
 

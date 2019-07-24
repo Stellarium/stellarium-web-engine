@@ -360,7 +360,6 @@ static void quad_planet(
                  renderer_t          *rend_,
                  const painter_t     *painter,
                  int                 frame,
-                 const double        mat[3][3],
                  int                 grid_size,
                  const uv_map_t      *map)
 {
@@ -427,14 +426,12 @@ static void quad_planet(
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0], p[1]);
         if (item->planet.normalmap) {
-            mat3_mul_vec3(mat, p, p);
             compute_tangent(p, map, tangent);
             mat4_mul_vec4(*painter->transform, tangent, tangent);
             gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        mat3_mul_vec3(mat, p, p);
         uv_map(map, p, p);
 
         vec3_copy(p, normal);
@@ -474,7 +471,6 @@ static void quad_planet(
 static void quad(renderer_t          *rend_,
                  const painter_t     *painter,
                  int                 frame,
-                 const double        mat[3][3],
                  int                 grid_size,
                  const uv_map_t      *map)
 {
@@ -490,7 +486,7 @@ static void quad(renderer_t          *rend_,
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
-        return quad_planet(rend_, painter, frame, mat, grid_size, map);
+        return quad_planet(rend_, painter, frame, grid_size, map);
 
     if (!tex) tex = rend->white_tex;
     n = grid_size + 1;
@@ -535,20 +531,18 @@ static void quad(renderer_t          *rend_,
     // to get it directly from the cache to improve performances.
     if (    map->type == UV_MAP_HEALPIX &&
             map->at_infinity && map->swapped) {
-        grid = grid_cache_get(map->order, map->pix, mat, grid_size);
+        grid = grid_cache_get(map->order, map->pix, grid_size);
     }
 
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        mat3_mul_vec3(mat, p, p);
         mat3_mul_vec3(painter->textures[PAINTER_TEX_COLOR].mat, p, p);
         tex_pos[0] = p[0] * tex->w / tex->tex_w;
         tex_pos[1] = p[1] * tex->h / tex->tex_h;
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        mat3_mul_vec3(mat, p, p);
         if (grid) {
             vec4_set(p, VEC3_SPLIT(grid[i * n + j]),
                      map->at_infinity ? 0.0 : 1.0);
@@ -590,7 +584,6 @@ static void quad(renderer_t          *rend_,
 static void quad_wireframe(renderer_t          *rend_,
                            const painter_t     *painter,
                            int                 frame,
-                           const double        mat[3][3],
                            int                 grid_size,
                            const uv_map_t      *map)
 {
@@ -611,7 +604,6 @@ static void quad_wireframe(renderer_t          *rend_,
     for (j = 0; j < n; j++) {
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        mat3_mul_vec3(mat, p, p);
         uv_map(map, p, p);
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
