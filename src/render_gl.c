@@ -481,7 +481,7 @@ static void quad(renderer_t          *rend_,
         {0, 0}, {0, 1}, {1, 0}, {1, 1}, {1, 0}, {0, 1} };
     double p[4], tex_pos[2], ndc_p[4];
     float lum;
-    double (*grid)[3] = NULL;
+    double (*grid)[4] = NULL;
     texture_t *tex = painter->textures[PAINTER_TEX_COLOR].tex;
 
     // Special case for planet shader.
@@ -544,8 +544,7 @@ static void quad(renderer_t          *rend_,
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
         if (grid) {
-            vec4_set(p, VEC3_SPLIT(grid[i * n + j]),
-                     map->at_infinity ? 0.0 : 1.0);
+            vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         } else {
             uv_map(map, p, p);
         }

@@ -21,4 +21,4 @@
  *   A (split + 1)^2 grid of 3d positions.
  */
 const double (*grid_cache_get(int order, int pix,
-                              int split))[3];
+                              int split))[4];

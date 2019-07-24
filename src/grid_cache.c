@@ -31,11 +31,11 @@ static cache_t *g_cache = NULL;
  *   A (split + 1)^2 grid of 3d positions.
  */
 const double (*grid_cache_get(int order, int pix,
-                              int split))[3]
+                              int split))[4]
 {
     int n = split + 1;
     int i, j;
-    double (*grid)[3];
+    double (*grid)[4];
     struct {
         int nside;
         int pix;
@@ -59,6 +59,7 @@ const double (*grid_cache_get(int order, int pix,
         grid[i * n + j][0] = p[0];
         grid[i * n + j][1] = p[1];
         grid[i * n + j][2] = p[2];
+        grid[i * n + j][3] = p[3];
     }
     cache_add(g_cache, &key, sizeof(key), grid, sizeof(*grid) * n * n, NULL);
     return grid;
