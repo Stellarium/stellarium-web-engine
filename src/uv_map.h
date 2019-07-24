@@ -61,6 +61,14 @@ struct uv_map
 void uv_map(const uv_map_t *map, const double v[2], double out[4]);
 
 /*
+ * Function: uv_map_subdivide
+ * Split the mapped shape into four smaller parts.
+ *
+ * Each child will map the full UV quad into 1/4th of the original mapping.
+ */
+void uv_map_subdivide(const uv_map_t *map, uv_map_t children[4]);
+
+/*
  * Function: uv_map_grid
  * Compute the mapped position of a 2d grid covering the mapping.
  *
@@ -71,6 +79,8 @@ void uv_map(const uv_map_t *map, const double v[2], double out[4]);
  *   out    - Output of all the mapped vertices.
  */
 void uv_map_grid(const uv_map_t *map, int size, double (*out)[4]);
+
+void uv_map_get_bounding_cap(const uv_map_t *map, double cap[4]);
 
 /*
  * Function: uv_map_init_healpix

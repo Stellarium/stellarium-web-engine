@@ -401,6 +401,28 @@ int paint_texture(const painter_t *painter,
 // Set painter debug mode on or off.
 void paint_debug(bool value);
 
+
+/*
+ * Function: painter_is_quad_clipped
+ * Test whether the 3d mapping of a quad is clipped.
+ *
+ * Parameters:
+ *   painter    - A painter.
+ *   frame      - One of the <FRAME> enum frame.
+ *   map        - The mapping function from UV to the 3D space.
+ *   outside    - Set whether the quad is an outside (not planet) tile.
+ *
+ * Returns:
+ *   True if the quad is clipped, false otherwise.
+ *
+ *   A clipped quad is guaranteed to be not visible, but it is not guaranteed
+ *   that a non visible quad is clipped.  So this function can return false
+ *   even though a quad is not actually visible.
+ */
+bool painter_is_quad_clipped(const painter_t *painter, int frame,
+                             const uv_map_t *map, bool outside);
+
+
 // Function: painter_is_tile_clipped
 //
 // Convenience function that checks if a healpix tile is not visible.

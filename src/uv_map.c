@@ -43,6 +43,24 @@ void uv_map_grid(const uv_map_t *map, int size, double (*out)[4])
     }
 }
 
+void uv_map_get_bounding_cap(const uv_map_t *map, double out[4])
+{
+    double corners[4][4], d;
+    int i;
+
+    uv_map_grid(map, 1, corners);
+    vec4_set(out, 0, 0, 0, 1);
+    for (i = 0; i < 4; i++) {
+        vec3_add(out, corners[i], out);
+    }
+    vec3_normalize(out, out);
+    for (i = 0; i < 4; i++) {
+        d = vec3_dot(out, corners[i]);
+        if (d < out[3])
+            out[3] = d;
+    }
+}
+
 static void healpix_map(const uv_map_t *map, const double v[2], double out[4])
 {
     double p[3] = {v[0], v[1], 1};
@@ -73,4 +91,21 @@ void uv_map_init_healpix(uv_map_t *map, int order, int pix, bool swap,
     map->at_infinity = at_infinity;
     map->map = healpix_map;
     healpix_map_update_mat(map);
+}
+
+/*
+ * Function: uv_map_subdivide
+ * Split the mapped shape into four smaller parts.
+ *
+ * Each child will map the full UV quad into 1/4th of the original mapping.
+ */
+void uv_map_subdivide(const uv_map_t *map, uv_map_t children[4])
+{
+    int i;
+    // For the moment we only support it for healpix mapping!
+    assert(map->type == UV_MAP_HEALPIX);
+    for (i = 0; i < 4; i++) {
+        uv_map_init_healpix(&children[i], map->order + 1, map->pix * 4 + i,
+                            map->swapped, map->at_infinity);
+    }
 }

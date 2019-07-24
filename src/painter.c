@@ -407,17 +407,19 @@ bool painter_is_2d_circle_clipped(const painter_t *painter, const double p[2],
     return !intersect_circle_rect(rect, p, radius);
 }
 
-bool painter_is_tile_clipped(const painter_t *painter, int frame,
-                             int order, int pix, bool outside)
+bool painter_is_quad_clipped(const painter_t *painter, int frame,
+                             const uv_map_t *map, bool outside)
 {
-    double healpix[4][3];
+    double corners[4][4];
     double quad[4][4], normals[4][4];
     double p[4][4];
     double bounding_cap[4];
+    uv_map_t children[4];
     int i;
+    int order = map->order;
 
     if (outside) {
-        healpix_get_bounding_cap(1 << order, pix, bounding_cap);
+        uv_map_get_bounding_cap(map, bounding_cap);
         mat4_mul_vec3(*painter->transform, bounding_cap, bounding_cap);
         assert(vec3_is_normalized(bounding_cap));
         if (painter_is_cap_clipped(painter, frame, bounding_cap))
@@ -431,17 +433,18 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
     if (order < 2) {
         // Planet case only
         assert(!outside);
+        uv_map_subdivide(map, children);
         for (i = 0; i < 4; i++) {
-            if (!painter_is_tile_clipped(
-                        painter, frame, order + 1, pix * 4 + i, outside))
+            if (!painter_is_quad_clipped(
+                        painter, frame, &children[i], outside))
                 return false;
         }
         return true;
     }
 
-    healpix_get_boundaries(1 << order, pix, healpix);
+    uv_map_grid(map, 1, corners);
     for (i = 0; i < 4; i++) {
-        vec3_copy(healpix[i], quad[i]);
+        vec3_copy(corners[i], quad[i]);
         quad[i][3] = 1.0;
         mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
@@ -457,7 +460,7 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
      */
     if (!outside && order > 1) {
         for (i = 0; i < 4; i++) {
-            vec3_copy(healpix[i], normals[i]);
+            vec3_copy(corners[i], normals[i]);
             normals[i][3] = 0.0;
             mat4_mul_vec4(*painter->transform, normals[i], normals[i]);
             vec3_normalize(normals[i], normals[i]);
@@ -469,6 +472,14 @@ bool painter_is_tile_clipped(const painter_t *painter, int frame,
     }
 
     return false;
+}
+
+bool painter_is_tile_clipped(const painter_t *painter, int frame,
+                             int order, int pix, bool outside)
+{
+    uv_map_t map;
+    uv_map_init_healpix(&map, order, pix, false, false);
+    return painter_is_quad_clipped(painter, frame, &map, outside);
 }
 
 /* Draw the contour lines of a shape.
