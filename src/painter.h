@@ -423,9 +423,9 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
                              const uv_map_t *map, bool outside);
 
 
-// Function: painter_is_tile_clipped
+// Function: painter_is_healpix_clipped
 //
-// Convenience function that checks if a healpix tile is not visible.
+// Convenience function that checks if a healpix pixel is not visible.
 //
 // Parameters:
 //  painter   - The painter.
@@ -440,9 +440,8 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 //  A clipped tile is guaranteed to be not visible, but it is not guaranteed
 //  that a non visible tile is clipped.  So this function can return false
 //  even though a tile is not actually visible.
-bool painter_is_tile_clipped(const painter_t *painter, int frame,
-                             int order, int pix,
-                             bool outside);
+bool painter_is_healpix_clipped(const painter_t *painter, int frame,
+                                int order, int pix, bool outside);
 
 // Function: painter_is_point_clipped_fast
 //

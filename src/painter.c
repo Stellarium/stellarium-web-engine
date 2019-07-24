@@ -474,8 +474,8 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
     return false;
 }
 
-bool painter_is_tile_clipped(const painter_t *painter, int frame,
-                             int order, int pix, bool outside)
+bool painter_is_healpix_clipped(const painter_t *painter, int frame,
+                                int order, int pix, bool outside)
 {
     uv_map_t map;
     uv_map_init_healpix(&map, order, pix, false, false);

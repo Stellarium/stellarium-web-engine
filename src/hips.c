@@ -446,7 +446,7 @@ static int render_traverse_visitor(int order, int pix, void *user)
     int split;
     user = USER_GET(user, 6);
     // Early exit if the tile is clipped.
-    if (painter_is_tile_clipped(painter, hips->frame, order, pix, outside))
+    if (painter_is_healpix_clipped(painter, hips->frame, order, pix, outside))
         return 0;
 
     if (order < render_order) return 1; // Keep going.
