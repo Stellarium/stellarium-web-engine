@@ -61,6 +61,18 @@ struct uv_map
 void uv_map(const uv_map_t *map, const double v[2], double out[4]);
 
 /*
+ * Function: uv_map_grid
+ * Compute the mapped position of a 2d grid covering the mapping.
+ *
+ * Parameters:
+ *   map    - The mapping function used.
+ *   size   - Size of the side of the grid.  The number of vertices computed
+ *            is (size + 1)^2.
+ *   out    - Output of all the mapped vertices.
+ */
+void uv_map_grid(const uv_map_t *map, int size, double (*out)[4]);
+
+/*
  * Function: uv_map_init_healpix
  * Init an UV mapping for an healpix pixel.
  *

@@ -20,6 +20,29 @@ void uv_map(const uv_map_t *map, const double v[2], double out[4])
     map->map(map, v, out);
 }
 
+/*
+ * Function: uv_map_grid
+ * Compute the mapped position of a 2d grid covering the mapping.
+ *
+ * Parameters:
+ *   map    - The mapping function used.
+ *   size   - Size of the side of the grid.  The number of vertices computed
+ *            is (size + 1)^2.
+ *   out    - Output of all the mapped vertices.
+ */
+void uv_map_grid(const uv_map_t *map, int size, double (*out)[4])
+{
+    int i, j;
+    double uv[2];
+
+    for (i = 0; i < size + 1; i++)
+    for (j = 0; j < size + 1; j++) {
+        uv[0] = (double)j / size;
+        uv[1] = (double)i / size;
+        uv_map(map, uv, out[i * (size + 1) + j]);
+    }
+}
+
 static void healpix_map(const uv_map_t *map, const double v[2], double out[4])
 {
     double p[3] = {v[0], v[1], 1};
