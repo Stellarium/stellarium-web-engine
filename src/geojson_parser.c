@@ -438,10 +438,12 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
         ERROR("Unknown geojson type: %s", type);
     }
 
-    properties = json_get_attr(data, "properties", json_object);
     vec3_set(feature->properties.fill, 1, 1, 1);
     vec3_set(feature->properties.stroke, 1, 1, 1);
     feature->properties.stroke_width = 1;
+    feature->properties.stroke_opacity = 1;
+    feature->properties.fill_opacity = 0.5;
+    properties = json_get_attr(data, "properties", json_object);
     if (parse_properties(properties, &feature->properties)) goto error;
 
     return 0;
