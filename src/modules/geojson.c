@@ -52,7 +52,7 @@ typedef struct image {
 
 static void lonlat2c(const double lonlat[2], double c[3])
 {
-    eraS2c(-lonlat[0] * DD2R, lonlat[1] * DD2R, c);
+    eraS2c(lonlat[0] * DD2R, lonlat[1] * DD2R, c);
 }
 
 static void c2lonlat(const double c[3], double lonlat[2])
