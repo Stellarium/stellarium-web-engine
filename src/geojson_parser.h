@@ -52,6 +52,14 @@
  *        ["C", 10.0, 0.0, 10.0, 10.0, 0.0, 10.0]"
  *      ]
  *    }
+ *
+ * Point features accept a few extra properties:
+ *
+ *   title        - A string.
+ *   text-anchor  - One of "left", "center", "right", "top", "bottom",
+ *                  "top-left", "top-right", "bottom-left", "bottom-right".
+ *   text-offset  - [x, y] offset in pixels.
+ *   text-rotate  - rotation angle in degrees.
  */
 
 enum {
