@@ -66,6 +66,8 @@ json_value *json_copy(json_value *val)
     json_value *ret;
     int i;
 
+    if (!val) return json_object_new(0);
+
     switch (val->type) {
     case json_none:
         assert(false);
