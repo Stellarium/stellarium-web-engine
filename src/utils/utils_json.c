@@ -63,16 +63,38 @@ bool json_get_attr_b(json_value *val, const char *attr, bool default_value)
 
 json_value *json_copy(json_value *val)
 {
-    // XXX: for the moment we assume the value has been created with
-    // json-builder.  We copy by serializing into a string first!
-
-    char *str;
     json_value *ret;
+    int i;
 
-    assert(val);
-    str = calloc(json_measure(val), 1);
-    json_serialize(str, val);
-    ret = json_parse(str, strlen(str));
-    free(str);
-    return ret;
+    switch (val->type) {
+    case json_none:
+        assert(false);
+        return NULL;
+    case json_integer:
+        return json_integer_new(val->u.integer);
+    case json_double:
+        return json_double_new(val->u.dbl);
+    case json_string:
+        return json_string_new_length(val->u.string.length, val->u.string.ptr);
+    case json_boolean:
+        return json_boolean_new(val->u.boolean);
+    case json_null:
+        return json_null_new();
+    case json_object:
+        ret = json_object_new(val->u.object.length);
+        for (i = 0; i < val->u.object.length; i++) {
+            json_object_push(ret, val->u.object.values[i].name,
+                             json_copy(val->u.object.values[i].value));
+        }
+        return ret;
+    case json_array:
+        ret = json_array_new(val->u.array.length);
+        for (i = 0; i < val->u.array.length; i++) {
+            json_array_push(ret, json_copy(val->u.array.values[i]));
+        }
+        return ret;
+    }
+
+    assert(false);
+    return NULL;
 }
