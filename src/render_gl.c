@@ -625,6 +625,8 @@ static void quad_wireframe(renderer_t          *rend_,
     item_t *item;
     n = grid_size + 1;
     double p[4], ndc_p[4];
+    const double (*grid)[4] = NULL;
+    bool should_delete_grid;
 
     item = calloc(1, sizeof(*item));
     item->type = ITEM_QUAD_WIREFRAME;
@@ -633,11 +635,11 @@ static void quad_wireframe(renderer_t          *rend_,
     vec4_to_float(VEC(1, 0, 0, 0.25), item->color);
 
     // Generate grid position.
+    grid = get_grid(rend, map, grid_size, &should_delete_grid);
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
-        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        uv_map(map, p, p);
+        vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
@@ -645,6 +647,7 @@ static void quad_wireframe(renderer_t          *rend_,
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
     }
+    if (should_delete_grid) free(grid);
 
     /* Set the index buffer.
      * We render a set of horizontal and vertical lines.  */
