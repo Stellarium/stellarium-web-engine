@@ -110,6 +110,9 @@
         <button class="btn btn-primary" v-on:click="testAddAsteroid">
             Test add Asteroid
         </button>
+        <button class="btn btn-primary" v-on:click="testAddGeojson">
+            Test add GeoJson
+        </button>
         <button class="btn btn-primary" v-on:click="lockToSelection">
             Lock to selection
         </button>
@@ -306,6 +309,7 @@
           testAddStar: function() { testAddStar(this.stel) },
           testAddDSO: function() { testAddDSO(this.stel) },
           testAddAsteroid: function() { testAddAsteroid(this.stel) },
+          testAddGeojson: function() { testAddGeojson(this.stel) },
           lockToSelection: function() {
             stel.core.lock = stel.core.selection
             // Smooth move to selection.
@@ -382,6 +386,57 @@
     layer.add(asteroid)
     stel.core.selection = asteroid
     stel.core.lookat(asteroid.azalt) // XXX: use radec instead?
+  }
+
+  var testAddGeojson = function(stel) {
+    var layer = stel.createLayer({id: 'testLayerGeojson', z: 7, visible: true})
+    var geojson = stel.createObj('geojson', {
+      data: {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "stroke": "#431f1f",
+              "stroke-width": 4,
+              "stroke-opacity": 1,
+              "fill": "#b4b16e",
+              "fill-opacity": 0.5
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-7, 40], [24, 40], [24, 56], [-7, 56], [-7, 40]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Circle",
+              "center": [20, 40],
+              "radius": 1
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "title": "Title",
+              "text-anchor": "top",
+              "text-offset": [0, 8],
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [20, 39],
+            }
+
+          }
+        ]
+      }
+    });
+    layer.add(geojson);
   }
 
   Vue.component('stel-button', {
