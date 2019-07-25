@@ -16,6 +16,8 @@
 #ifndef FRAMES_H
 #define FRAMES_H
 
+#include <stdbool.h>
+
 // S macro for C99 static argument array size.
 #ifndef __cplusplus
 #define S static
