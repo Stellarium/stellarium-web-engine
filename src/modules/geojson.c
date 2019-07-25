@@ -266,6 +266,7 @@ static json_value *data_fn(obj_t *obj, const attribute_t *attr,
                            const json_value *args)
 {
     image_t *image = (void*)obj;
+    if (!args) return json_copy(image->geojson);
     image->geojson = json_copy(args);
     image->dirty = true;
     return NULL;
@@ -275,6 +276,7 @@ static json_value *filter_fn(obj_t *obj, const attribute_t *attr,
                              const json_value *args)
 {
     image_t *image = (void*)obj;
+    if (!args) return json_copy(image->filter);
     image->filter = json_copy(args);
     image->dirty = true;
     return NULL;
