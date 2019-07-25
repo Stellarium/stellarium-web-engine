@@ -580,7 +580,6 @@ static void quad(renderer_t          *rend_,
         tex_pos[1] = p[1] * tex->h / tex->tex_h;
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
-        vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
