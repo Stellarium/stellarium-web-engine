@@ -149,6 +149,10 @@ void core_get_proj(projection_t *proj)
     projection_compute_fovs(core->proj, core->fov, aspect, &fovx, &fovy);
     projection_init(proj, core->proj, fovx,
                     core->win_size[0], core->win_size[1]);
+    if (core->flip_view_vertical)
+        proj->flags |= PROJ_FLIP_VERTICAL;
+    if (core->flip_view_horizontal)
+        proj->flags |= PROJ_FLIP_HORIZONTAL;
 }
 
 obj_t *core_get_obj_at(double x, double y, double max_dist)
@@ -1018,6 +1022,10 @@ static obj_klass_t core_klass = {
         PROPERTY(exposure_scale, TYPE_FLOAT, MEMBER(core_t, exposure_scale)),
         PROPERTY(display_limit_mag, TYPE_FLOAT,
                  MEMBER(core_t, display_limit_mag)),
+        PROPERTY(flip_view_vertical, TYPE_BOOL,
+                 MEMBER(core_t, flip_view_vertical)),
+        PROPERTY(flip_view_horizontal, TYPE_BOOL,
+                 MEMBER(core_t, flip_view_horizontal)),
         {}
     }
 };

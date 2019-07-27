@@ -70,6 +70,9 @@ struct core
     bool            telescope_auto; // Auto adjust telescope.
     double          exposure_scale;
 
+    bool            flip_view_vertical;
+    bool            flip_view_horizontal;
+
     renderer_t      *rend;
     int             proj;
     double          win_size[2];
