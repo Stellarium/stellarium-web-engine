@@ -668,7 +668,7 @@ static void quad_wireframe(renderer_t          *rend_,
 
 static void texture2(renderer_gl_t *rend, texture_t *tex,
                      double uv[4][2], double pos[4][2],
-                     const double color_[4])
+                     const double color_[4], bool swap_indices)
 {
     int i, ofs;
     item_t *item;
@@ -699,7 +699,10 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
         gl_buf_next(&item->buf);
     }
     for (i = 0; i < 6; i++) {
-        gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[i]);
+        if (swap_indices)
+            gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[5 - i]);
+        else
+            gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[i]);
         gl_buf_next(&item->indices);
     }
 }
@@ -725,7 +728,7 @@ static void texture(renderer_t *rend_,
         verts[i][1] = pos[1] + verts[i][1];
         window_to_ndc(rend, verts[i], verts[i]);
     }
-    texture2(rend, tex, uv, verts, color);
+    texture2(rend, tex, uv, verts, color, false);
 }
 
 // Render text using a system bakend generated texture.
@@ -803,7 +806,7 @@ static void text_using_texture(renderer_gl_t *rend,
         window_to_ndc(rend, verts[i], verts[i]);
     }
 
-    texture2(rend, tex, uv, verts, color);
+    texture2(rend, tex, uv, verts, color, rend->cull_flipped);
 }
 
 // Render text using nanovg.
