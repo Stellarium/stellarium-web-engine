@@ -159,8 +159,10 @@ static int meteors_update(obj_t *obj, double dt)
     DL_FOREACH_SAFE(obj->children, child, tmp) {
         m = (meteor_t*)child;
         meteor_update(child, dt);
-        if (m->time > m->duration)
+        if (m->time > m->duration) {
             module_remove(obj, child);
+            obj_release(child);
+        }
     }
 
     return 0;

@@ -174,7 +174,6 @@ void module_remove(obj_t *parent, obj_t *child)
     assert(parent);
     child->parent = NULL;
     DL_DELETE(parent->children, child);
-    obj_release(child);
 }
 
 EMSCRIPTEN_KEEPALIVE
