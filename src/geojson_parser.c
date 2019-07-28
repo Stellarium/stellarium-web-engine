@@ -392,7 +392,7 @@ static int parse_properties(const json_value *data,
     if ((title = json_get_attr_s(data, "title")))
         props->title = strdup(title);
     props->text_anchor = parse_anchor(json_get_attr_s(data, "text-anchor"));
-    props->text_rotate = json_get_attr_f(data, "text-rotate", 0);
+    props->text_rotate = -json_get_attr_f(data, "text-rotate", 0) * ERFA_DD2R;
     if ((v = json_get_attr(data, "text-offset", 0))) {
         parse_float_array(v, 0, 2, text_offset);
         vec2_copy(text_offset, props->text_offset);
