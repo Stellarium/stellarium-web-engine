@@ -92,8 +92,6 @@ void obj_release(obj_t *obj)
     assert(obj->ref);
     obj->ref--;
     if (obj->ref == 0) {
-        if (obj->parent)
-            DL_DELETE(obj->parent->children, obj);
         if (obj->klass->del) obj->klass->del(obj);
         free(obj->id);
         free(obj);
