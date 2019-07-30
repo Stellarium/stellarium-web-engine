@@ -267,6 +267,7 @@ static json_value *data_fn(obj_t *obj, const attribute_t *attr,
 {
     image_t *image = (void*)obj;
     if (!args) return json_copy(image->geojson);
+    if (image->geojson) json_builder_free(image->geojson);
     image->geojson = json_copy(args);
     image->dirty = true;
     return NULL;
@@ -277,6 +278,7 @@ static json_value *filter_fn(obj_t *obj, const attribute_t *attr,
 {
     image_t *image = (void*)obj;
     if (!args) return json_copy(image->filter);
+    if (image->filter) json_builder_free(image->filter);
     image->filter = json_copy(args);
     image->dirty = true;
     return NULL;
@@ -345,6 +347,14 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
+static void image_del(obj_t *obj)
+{
+    image_t *image = (void*)obj;
+    remove_all_features(image);
+    if (image->filter) json_builder_free(image->filter);
+    if (image->geojson) json_builder_free(image->geojson);
+}
+
 
 /*
  * Meta class declarations.
@@ -355,6 +365,7 @@ static obj_klass_t image_klass = {
     .size = sizeof(image_t),
     .init = image_init,
     .render = image_render,
+    .del = image_del,
     .attributes = (attribute_t[]) {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
         PROPERTY(filter, TYPE_JSON, .fn = filter_fn),
