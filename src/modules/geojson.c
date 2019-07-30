@@ -215,11 +215,6 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     mesh = calloc(1, sizeof(*mesh));
     ofs = mesh_add_vertices(mesh, size, coordinates);
     mesh_add_line(mesh, ofs, size);
-    /*
-    if (geo->type == GEOJSON_POLYGON)
-        mesh_add_poly(mesh, ofs, size);
-    */
-
     LL_APPEND(feature->meshes, mesh);
 }
 
