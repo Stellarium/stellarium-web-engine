@@ -373,7 +373,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
     double color[4];
-    const double label_color[4] = RGBA(124, 255, 124, 255);
+    const double label_color[4] = RGBA(124, 205, 124, 205);
+    const double white[4] = RGBA(255, 255, 255, 255);
     satellite_t *sat = (satellite_t*)obj;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
@@ -406,9 +407,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     size = max(8, size);
     if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 1.0)) {
         labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size,
-                      FONT_SIZE_BASE, label_color, 0, LABEL_AROUND,
-                      selected ? TEXT_BOLD : 0,
-                      0, obj->oid);
+                      FONT_SIZE_BASE, selected ? white : label_color, 0,
+                      LABEL_AROUND, selected ? TEXT_BOLD : 0, 0, obj->oid);
     }
 
     return 0;
