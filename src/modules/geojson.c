@@ -248,14 +248,18 @@ static void add_geojson_feature(image_t *image,
 static void remove_all_features(image_t *image)
 {
     feature_t *feature;
+    mesh_t *mesh;
+
     while(image->features) {
         feature = image->features;
         LL_DELETE(image->features, feature);
         while (feature->meshes) {
-            free(feature->meshes->vertices);
-            free(feature->meshes->triangles);
-            free(feature->meshes->lines);
-            LL_DELETE(feature->meshes, feature->meshes);
+            mesh = feature->meshes;
+            LL_DELETE(feature->meshes, mesh);
+            free(mesh->vertices);
+            free(mesh->triangles);
+            free(mesh->lines);
+            free(mesh);
         }
         free(feature->title);
         free(feature);
