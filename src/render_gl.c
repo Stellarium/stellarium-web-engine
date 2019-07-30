@@ -1198,6 +1198,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
+    GL(glCullFace(GL_FRONT));
 }
 
 static void item_quad_wireframe_render(renderer_gl_t *rend, const item_t *item)
@@ -1323,6 +1324,7 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 
     GL(glDeleteBuffers(1, &array_buffer));
     GL(glDeleteBuffers(1, &index_buffer));
+    GL(glCullFace(GL_FRONT));
 }
 
 static void rend_flush(renderer_gl_t *rend)
