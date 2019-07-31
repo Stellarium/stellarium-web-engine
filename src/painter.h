@@ -195,6 +195,7 @@ struct painter
 
     double          lines_width;
     double          lines_stripes;
+    double          lines_glow;
     double          points_smoothness;
     double          (*depth_range)[2]; // If set use depth test.
 
