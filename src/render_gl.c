@@ -1006,7 +1006,8 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
-    float win_size[2] = {rend->fb_size[0], rend->fb_size[1]};
+    float win_size[2] = {rend->fb_size[0] / rend->scale,
+                         rend->fb_size[1] / rend->scale};
 
     shader = shader_get("lines", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
