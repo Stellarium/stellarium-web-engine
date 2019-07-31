@@ -78,10 +78,12 @@ static const double mat4_identity[4][4] = {
         (out)[2] = (v)[2]; \
         (out)[3] = (v)[3]; } while (0)
 
+#define vec2_set(v, x, y) do { \
+        (v)[0] = x; (v)[1] = y; } while (0)
+
 #define vec3_set(v, x, y, z) do { \
         (v)[0] = x; (v)[1] = y; (v)[2] = z; } while (0)
 
-DEF void vec2_set(double v[S 2], double x, double y);
 DEF void vec4_set(double v[S 4], double x, double y, double z, double w);
 DEF bool vec3_equal(const double a[S 3], const double b[S 3]);
 DEF bool vec4_equal(const double a[S 4], const double b[S 4]);
@@ -183,12 +185,6 @@ DEF bool cap_intersects_cap(const double cap[S 4], const double c[S 4]);
 #endif
 
 #if VEC_INLINE || defined(VEC_IMPLEMENTATION)
-
-DEF void vec2_set(double v[S 2], double x, double y)
-{
-    v[0] = x;
-    v[1] = y;
-}
 
 DEF void vec4_set(double v[S 4], double x, double y, double z, double w)
 {
