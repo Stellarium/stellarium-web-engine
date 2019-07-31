@@ -9,7 +9,7 @@
 
 #include "swe.h"
 
-#include "lines.h"
+#include "line_mesh.h"
 #include "shader_cache.h"
 #include "utils/gl.h"
 

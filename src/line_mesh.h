@@ -7,8 +7,8 @@
  * repository.
  */
 
-#ifndef LINES_H
-#define LINES_H
+#ifndef LINE_MESH_H
+#define LINE_MESH_H
 
 #include <stdint.h>
 
@@ -55,4 +55,4 @@ line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width);
  */
 void line_mesh_delete(line_mesh_t *mesh);
 
-#endif // LINES_H
+#endif // LINE_MESH_H

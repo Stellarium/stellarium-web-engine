@@ -7,7 +7,7 @@
  * repository.
  */
 
-#include "lines.h"
+#include "line_mesh.h"
 
 #include "utils/vec.h"
 
