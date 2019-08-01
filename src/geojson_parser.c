@@ -382,6 +382,7 @@ static int parse_properties(const json_value *data,
     const char *title;
     const json_value *v;
     double text_offset[2];
+    char error_msg[128] = "";
 
     if (!data) return 0;
     parse_color(json_get_attr(data, "stroke", 0), props->stroke);
@@ -394,10 +395,14 @@ static int parse_properties(const json_value *data,
     props->text_anchor = parse_anchor(json_get_attr_s(data, "text-anchor"));
     props->text_rotate = -json_get_attr_f(data, "text-rotate", 0) * ERFA_DD2R;
     if ((v = json_get_attr(data, "text-offset", 0))) {
-        parse_float_array(v, 0, 2, text_offset);
+        if (parse_float_array(v, 0, 2, text_offset))
+            ERROR("Can't parse text-offset");
         vec2_copy(text_offset, props->text_offset);
     }
     return 0;
+error:
+    LOG_W("Error parsing geojson properties: %s", error_msg);
+    return -1;
 }
 
 /*
