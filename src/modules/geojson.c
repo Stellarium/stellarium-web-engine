@@ -175,7 +175,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 {
     const double (*coordinates)[2];
     int i, size, ofs;
-    int rings_ofs, rings_size[8];
+    int rings_ofs = 0, rings_size[8];
     mesh_t *mesh;
     geojson_geometry_t poly;
 
