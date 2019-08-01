@@ -77,3 +77,56 @@ void line_mesh_delete(line_mesh_t *mesh)
     free(mesh->verts);
     free(mesh);
 }
+
+static double line_point_dist2(const double a[2], const double b[2],
+                               const double p[2])
+{
+    double ap[2], u[2];
+    vec2_sub(p, a, ap);
+    vec2_sub(b, a, u);
+    return vec2_cross(ap, u) / vec2_norm2(u);
+}
+
+static void line_push_point(double (**line)[2], const double p[2],
+                            int *size, int *allocated)
+{
+    if (*size <= *allocated) {
+        *allocated += 4;
+        *line = realloc(*line, *allocated * sizeof(*line));
+    }
+    vec2_copy(p, (*line)[(*size)++]);
+}
+
+static void line_tesselate_(void (*func)(void *user, double t, double pos[2]),
+                            void *user, double t0, double t1,
+                            double (**out)[2],
+                            int level, int *size, int *allocated)
+{
+    double p0[2], p1[2], pm[2], tm;
+    const double max_dist = 2.0;
+    if (level > 10) return;
+    tm = (t0 + t1) / 2;
+    func(user, t0, p0);
+    func(user, t1, p1);
+    func(user, tm, pm);
+    if (line_point_dist2(p0, p1, pm) < (max_dist * max_dist)) {
+        line_push_point(out, p1, size, allocated);
+        return;
+    }
+
+    line_tesselate_(func, user, t0, tm, out, level + 1, size, allocated);
+    line_tesselate_(func, user, tm, t1, out, level + 1, size, allocated);
+}
+
+
+int line_tesselate(void (*func)(void *user, double t, double pos[2]),
+                   void *user, double (**out)[2])
+{
+    int allocated = 0, size = 0;
+    *out = NULL;
+    double p0[2];
+    func(user, 0, p0);
+    line_push_point(out, p0, &size, &allocated);
+    line_tesselate_(func, user, 0, 1, out, 0, &size, &allocated);
+    return size;
+}

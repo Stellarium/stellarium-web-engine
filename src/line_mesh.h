@@ -55,4 +55,19 @@ line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width);
  */
 void line_mesh_delete(line_mesh_t *mesh);
 
+/*
+ * Function: line_tesselate
+ * Cut a parametric line into a list of points.
+ *
+ * Parameters:
+ *   func   - Parametric line function.  The t argument ranges from 0 to 1.
+ *   user   - User data passed to the function.
+ *   out    - Allocated out line points.
+ *
+ * Return:
+ *   The number of points in the line.
+ */
+int line_tesselate(void (*func)(void *user, double t, double pos[2]),
+                   void *user, double (**out)[2]);
+
 #endif // LINE_MESH_H
