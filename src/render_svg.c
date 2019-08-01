@@ -79,44 +79,10 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
 
 static void line(renderer_t           *rend_,
                  const painter_t      *painter,
-                 int                  frame,
-                 double               line[2][4],
-                 int                  nb_segs,
-                 const uv_map_t       *map)
+                 const double         (*line)[2],
+                 int size)
 {
-    renderer_svg_t *rend = (void*)rend_;
-    int i, n;
-    double k, pos[4], (*segs)[2][2];
-    bool *segs_clipped;
-    const double scale = 320;
-
-    if (nb_segs == 0) return;
-    n = nb_segs * 2;
-    segs = calloc(nb_segs, sizeof(*segs));
-    segs_clipped = calloc(nb_segs, sizeof(*segs_clipped));
-    for (i = 0; i < n; i++) {
-        k = ((i / 2) + (i % 2)) / (double)nb_segs;
-        vec3_mix(line[0], line[1], k, pos);
-        if (map)
-            uv_map(map, pos, pos);
-        mat4_mul_vec3(*painter->transform, pos, pos);
-        convert_framev4(painter->obs, frame, FRAME_VIEW, pos, pos);
-        if (!project(painter->proj, PROJ_TO_NDC_SPACE, 2, pos, pos))
-            segs_clipped[i / 2] = true;
-        pos[0] = (pos[0] + 1.0) * scale;
-        pos[1] = (pos[1] + 1.0) * scale;
-        vec2_copy(pos, segs[i / 2][i % 2]);
-    }
-    for (i = 0; i < nb_segs; i++) {
-        if (segs_clipped[i]) continue;
-        fprintf(rend->out,
-                "<line x1='%f' y1='%f' x2='%f' y2='%f' "
-                "style='stroke:rgb(0,0,0);stroke-width:1'"
-                "/>\n",
-                segs[i][0][0], segs[i][0][1], segs[i][1][0], segs[i][1][1]);
-    }
-    free(segs);
-    free(segs_clipped);
+    // Not supported yet.
 }
 
 renderer_t *render_svg_create(const char *out)

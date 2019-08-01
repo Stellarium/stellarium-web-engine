@@ -8,6 +8,9 @@
  */
 
 #include "swe.h"
+
+#include "line_mesh.h"
+
 #include <float.h>
 
 static bool g_debug = false;
@@ -234,13 +237,33 @@ int paint_texture(const painter_t *painter,
     return 0;
 }
 
+
+static void line_func(void *user, double t, double out[2])
+{
+    double pos[4];
+    const painter_t *painter = USER_GET(user, 0);
+    int frame = *(int*)USER_GET(user, 1);
+    const double (*line)[4] = USER_GET(user, 2);
+    const uv_map_t *map = USER_GET(user, 3);
+
+    vec4_mix(line[0], line[1], t, pos);
+    if (map) uv_map(map, pos, pos);
+    mat4_mul_vec4(*painter->transform, pos, pos);
+    vec3_normalize(pos, pos);
+    convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
+    pos[3] = 0.0;
+    project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2,
+            pos, out);
+}
+
 static int paint_line(const painter_t *painter,
                       int frame,
                       double line[2][4], const uv_map_t *map,
                       int split, int flags)
 {
-    int r, i;
+    int r, i, size;
     double view_pos[2][4];
+    double (*win_line)[2];
 
     assert((flags & PAINTER_SKIP_DISCONTINUOUS) == flags);
     if (    (flags & PAINTER_SKIP_DISCONTINUOUS) &&
@@ -264,7 +287,23 @@ static int paint_line(const painter_t *painter,
         }
     }
 
-    REND(painter->rend, line, painter, frame, line, split, map);
+    if (!split) {
+        size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
+                              &win_line);
+    } else {
+        // XXX: this case could be done in line_tesselate I guess.
+        size = split + 1;
+        win_line = calloc(size, sizeof(*win_line));
+        for (i = 0; i < size; i++) {
+            line_func(USER_PASS(painter, &frame, line, map),
+                      (double)i / split, win_line[i]);
+        }
+    }
+
+    // REND(painter->rend, line, painter, frame, line, split, map);
+    REND(painter->rend, line, painter, win_line, size);
+
+    free(win_line);
     return 0;
 }
 

@@ -1444,36 +1444,17 @@ static void finish(renderer_t *rend_)
 
 static void line_glow(renderer_t           *rend_,
                       const painter_t      *painter,
-                      int                  frame,
-                      double               line[2][4],
-                      int                  nb_segs,
-                      const uv_map_t       *map)
+                      const double         (*line)[2],
+                      int                  size)
 {
     renderer_gl_t *rend = (void*)rend_;
     line_mesh_t *mesh;
-    double (*proj_line)[2], pos[4], k;
     int i, ofs;
     float color[4];
     item_t *item;
 
     vec4_to_float(painter->color, color);
-
-    // Convert the line into a quad mesh.
-    proj_line = calloc(nb_segs + 1, sizeof(*proj_line));
-    for (i = 0; i < nb_segs + 1; i++) {
-        k = i / (double)nb_segs;
-        vec4_mix(line[0], line[1], k, pos);
-        if (map)
-            uv_map(map, pos, pos);
-        mat4_mul_vec4(*painter->transform, pos, pos);
-        vec3_normalize(pos, pos);
-        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
-        pos[3] = 0.0;
-        project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                4, pos, pos);
-        vec2_copy(pos, proj_line[i]);
-    }
-    mesh = line_to_mesh(proj_line, nb_segs + 1, 10);
+    mesh = line_to_mesh(line, size, 10);
 
     // Get the item.
     item = get_item(rend, ITEM_LINES_GLOW, mesh->verts_count,
@@ -1504,29 +1485,26 @@ static void line_glow(renderer_t           *rend_,
     }
 
     line_mesh_delete(mesh);
-    free(proj_line);
 }
 
 static void line(renderer_t           *rend_,
                  const painter_t      *painter,
-                 int                  frame,
-                 double               line[2][4],
-                 int                  nb_segs,
-                 const uv_map_t       *map)
+                 const double         (*line)[2],
+                 int                  size)
 {
     int i, ofs;
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
-    double k, pos[4];
     float color[4];
+    double pos[2];
 
     if (painter->lines_glow) {
-        line_glow(rend_, painter, frame, line, nb_segs, map);
+        line_glow(rend_, painter, line, size);
         return;
     }
 
     vec4_to_float(painter->color, color);
-    item = get_item(rend, ITEM_LINES, nb_segs + 1, nb_segs * 2, NULL);
+    item = get_item(rend, ITEM_LINES, size, size * 2, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
     if (item && item->lines.width != painter->lines_width) item = NULL;
 
@@ -1542,26 +1520,18 @@ static void line(renderer_t           *rend_,
 
     ofs = item->buf.nb;
 
-    for (i = 0; i < nb_segs + 1; i++) {
-        k = i / (double)nb_segs;
-        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, k, 0);
-        vec4_mix(line[0], line[1], k, pos);
-        if (map)
-            uv_map(map, pos, pos);
-        mat4_mul_vec4(*painter->transform, pos, pos);
-        vec3_normalize(pos, pos);
-        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
-        pos[3] = 0.0;
-        project(painter->proj, PROJ_ALREADY_NORMALIZED, 4, pos, pos);
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+    for (i = 0; i < size; i++) {
+        window_to_ndc(rend, line[i], pos);
+        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, (double)i / (size - 1), 0);
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(pos), 0.0, 1.0);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
-        if (i < nb_segs) {
+        gl_buf_next(&item->buf);
+        if (i < size - 1) {
             gl_buf_1i(&item->indices, -1, 0, ofs + i);
             gl_buf_next(&item->indices);
             gl_buf_1i(&item->indices, -1, 0, ofs + i + 1);
             gl_buf_next(&item->indices);
         }
-        gl_buf_next(&item->buf);
     }
 }
 

@@ -104,10 +104,8 @@ struct renderer
 
     void (*line)(renderer_t           *rend,
                  const painter_t      *painter,
-                 int                  frame,
-                 double               line[2][4],
-                 int                  nb_segs,
-                 const uv_map_t       *map);
+                 const double         (*line)[2],
+                 int                  size);
 
     void (*mesh)(renderer_t          *rend,
                  const painter_t     *painter,
