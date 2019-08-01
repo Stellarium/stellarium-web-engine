@@ -120,6 +120,7 @@ DEF void vec3_mix(const double a[S 3], const double b[S 3], double k,
                   double out[S 3]);
 DEF void vec4_mix(const double a[S 4], const double b[S 4], double k,
                   double out[S 4]);
+DEF double vec2_cross(const double a[S 2], const double b[S 2]);
 DEF void vec3_cross(const double a[S 3], const double b[S 3], double out[S 3]);
 DEF void vec2_rotate(double angle, const double a[S 2], double out[S 2]);
 DEF bool vec3_is_normalized(const double v[S 3]);
@@ -383,6 +384,11 @@ DEF void vec4_mix(const double a[S 4], const double b[S 4], double k,
     out[1] = a[1] * (1.0 - k) + b[1] * k;
     out[2] = a[2] * (1.0 - k) + b[2] * k;
     out[3] = a[3] * (1.0 - k) + b[3] * k;
+}
+
+DEF double vec2_cross(const double a[S 2], const double b[S 2])
+{
+    return a[0] * b[1] - a[1] * b[0];
 }
 
 DEF void vec3_cross(const double a[S 3], const double b[S 3], double out[S 3])
