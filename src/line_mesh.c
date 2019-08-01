@@ -11,6 +11,7 @@
 
 #include "utils/vec.h"
 
+#include <float.h>
 #include <stdlib.h>
 
 static void line_get_normal(const double (*line)[2], int size, int i,
@@ -32,7 +33,9 @@ static void line_get_normal(const double (*line)[2], int size, int i,
     // 90deg rotation to get the normal.
     n[0] = -seg[1];
     n[1] = seg[0];
-    vec2_normalize(n, n);
+
+    if (vec2_norm2(n) > DBL_MIN)
+        vec2_normalize(n, n);
 }
 
 line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width)
