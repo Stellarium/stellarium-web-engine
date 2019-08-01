@@ -92,9 +92,9 @@ static void line_push_point(double (**line)[2], const double p[2],
 {
     if (*size <= *allocated) {
         *allocated += 4;
-        *line = realloc(*line, *allocated * sizeof(*line));
+        *line = realloc(*line, *allocated * sizeof(**line));
     }
-    vec2_copy(p, (*line)[(*size)++]);
+    memcpy((*line)[(*size)++], p, sizeof(**line));
 }
 
 static void line_tesselate_(void (*func)(void *user, double t, double pos[2]),
