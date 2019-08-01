@@ -343,7 +343,7 @@ static int render_bounds(const constellation_t *con,
         memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
         memcpy(line[1], info->edges[i][1], 2 * sizeof(double));
         if (line[1][0] < line[0][0]) line[1][0] += 2 * M_PI;
-        paint_lines(&painter, FRAME_ICRF, 2, line, &map, 8,
+        paint_lines(&painter, FRAME_ICRF, 2, line, &map, 0,
                     PAINTER_SKIP_DISCONTINUOUS);
     }
     return 0;
