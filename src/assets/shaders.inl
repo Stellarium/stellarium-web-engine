@@ -226,7 +226,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_lines_glsl[1273] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_lines_glsl[1217] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -241,8 +241,6 @@ static const unsigned char DATA_shaders_lines_glsl[1273] __attribute__((aligned(
     "uniform   lowp      float   u_line_glow;\n"
     "uniform   lowp      vec4    u_color;\n"
     "\n"
-    "varying   lowp      vec4    v_color;\n"
-    "varying   lowp      vec4    v_glow_color;\n"
     "varying   mediump   vec2    v_uv;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
@@ -253,9 +251,6 @@ static const unsigned char DATA_shaders_lines_glsl[1273] __attribute__((aligned(
     "void main()\n"
     "{\n"
     "    gl_Position = vec4((a_pos / u_win_size - 0.5) * vec2(2.0, -2.0), 0.0, 1.0);\n"
-    "    v_color = u_color;\n"
-    "    v_glow_color = vec4(mix(u_color.rgb, vec3(1.0), 0.5),\n"
-    "                        u_color.a * u_line_glow);\n"
     "    v_uv = a_tex_pos;\n"
     "}\n"
     "\n"
@@ -264,14 +259,13 @@ static const unsigned char DATA_shaders_lines_glsl[1273] __attribute__((aligned(
     "\n"
     "void main()\n"
     "{\n"
-    "    mediump vec4 base;\n"
-    "    mediump vec4 glow;\n"
     "    mediump float dist = abs(v_uv.y); // Distance to line in pixel.\n"
-    "    base = v_color;\n"
-    "    base.a *= step(dist, u_line_width / 2.0);\n"
-    "    glow = mix(v_glow_color, vec4(0.0), dist / 5.0);\n"
-    "    gl_FragColor = vec4(base.rgb + glow.rgb * glow.a, max(base.a, glow.a));\n"
-    "\n"
+    "    // Use smooth step on 2.4px to emulate an anti-aliased line\n"
+    "    mediump float base = 1.0 - smoothstep(u_line_width / 2 - 1.2, u_line_width / 2 + 1.2, dist);\n"
+    "    // Generate a glow with 5px radius\n"
+    "    mediump float glow = (1.0 - dist / 5.0) * u_line_glow;\n"
+    "    // Only use the most visible of both to avoid changing brightness\n"
+    "    gl_FragColor = vec4(u_color.rgb, u_color.a * max(glow, base));\n"
     "}\n"
     "\n"
     "#endif\n"
