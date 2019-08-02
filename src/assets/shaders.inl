@@ -226,7 +226,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_lines_glsl[1217] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_lines_glsl[1221] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -261,7 +261,7 @@ static const unsigned char DATA_shaders_lines_glsl[1217] __attribute__((aligned(
     "{\n"
     "    mediump float dist = abs(v_uv.y); // Distance to line in pixel.\n"
     "    // Use smooth step on 2.4px to emulate an anti-aliased line\n"
-    "    mediump float base = 1.0 - smoothstep(u_line_width / 2 - 1.2, u_line_width / 2 + 1.2, dist);\n"
+    "    mediump float base = 1.0 - smoothstep(u_line_width / 2.0 - 1.2, u_line_width / 2.0 + 1.2, dist);\n"
     "    // Generate a glow with 5px radius\n"
     "    mediump float glow = (1.0 - dist / 5.0) * u_line_glow;\n"
     "    // Only use the most visible of both to avoid changing brightness\n"

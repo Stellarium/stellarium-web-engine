@@ -32,7 +32,7 @@ void main()
 {
     mediump float dist = abs(v_uv.y); // Distance to line in pixel.
     // Use smooth step on 2.4px to emulate an anti-aliased line
-    mediump float base = 1.0 - smoothstep(u_line_width / 2 - 1.2, u_line_width / 2 + 1.2, dist);
+    mediump float base = 1.0 - smoothstep(u_line_width / 2.0 - 1.2, u_line_width / 2.0 + 1.2, dist);
     // Generate a glow with 5px radius
     mediump float glow = (1.0 - dist / 5.0) * u_line_glow;
     // Only use the most visible of both to avoid changing brightness
