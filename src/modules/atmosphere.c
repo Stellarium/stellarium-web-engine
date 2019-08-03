@@ -10,10 +10,6 @@
 #include "swe.h"
 #include "skybrightness.h"
 
-// Default decibel offset of the luminance.
-static const double LUM_DB_OFFSET = -0.5;
-static const double TWILIGHT_DB_OFFSET = -2.0;
-
 /*
  * This is all based on the paper: "A Practical Analytic Model for Daylight" by
  * A. J. Preetham, Peter Shirley and Brian Smits.
@@ -33,9 +29,7 @@ typedef struct atmosphere {
         bool            visible;
     } tiles[12];
     fader_t         visible;
-    // Manual factors to adjust the luminance.
-    double      lum_scale;
-    double      twilight_coef;
+    double      turbidity;
 } atmosphere_t;
 
 // All the precomputed data
@@ -46,14 +40,12 @@ typedef struct {
     // Precomputed factors for A. J. Preetham model.
     double Px[5];
     double Py[5];
-    double PY[5];
-    double kx, ky, kY;
+    double kx, ky;
 
     // Skybrightness model.
     skybrightness_t skybrightness;
     double eclipse_factor; // Solar eclipse adjustment.
     double landscape_lum; // Average luminance of the landscape.
-    double lum_scale; // Manual adjustement.
 
     // Updated during rendering.
     double sum_lum;
@@ -85,49 +77,42 @@ static render_data_t prepare_render_data(
 {
     render_data_t data = {};
     double thetaS;
-    double X;
-    double zx, zy, zY;
+    double zx, zy;
     const double base_sun_vmag = -26.74;
 
+    assert(vec3_is_normalized(sun_pos));
+    assert(vec3_is_normalized(moon_pos));
     thetaS = acos(sun_pos[2]); // Zenith angle
-    X = (4.0 / 9.0 - T / 120) * (M_PI - 2 * thetaS);
-    zY = (4.0453 * T - 4.9710) * tan(X) - 0.2155 * T + 2.4192;
 
     double t2 = thetaS * thetaS;
     double t3 = thetaS * thetaS * thetaS;
     double T2 = T * T;
 
     zx =
-        ( 0.00216 * t3 - 0.00375 * t2 + 0.00209 * thetaS) * T2 +
+        ( 0.00166 * t3 - 0.00375 * t2 + 0.00209 * thetaS) * T2 +
         (-0.02903 * t3 + 0.06377 * t2 - 0.03202 * thetaS + 0.00394) * T +
-        ( 0.10169 * t3 - 0.21196 * t2 + 0.06052 * thetaS + 0.25886);
+        ( 0.11693 * t3 - 0.21196 * t2 + 0.06052 * thetaS + 0.25886);
 
     zy =
         ( 0.00275 * t3 - 0.00610 * t2 + 0.00317 * thetaS) * T2 +
         (-0.04214 * t3 + 0.08970 * t2 - 0.04153 * thetaS + 0.00516) * T +
-        ( 0.14535 * t3 - 0.26756 * t2 + 0.06670 * thetaS + 0.26688);
+        ( 0.15346 * t3 - 0.26756 * t2 + 0.06670 * thetaS + 0.26688);
 
-    data.PY[0] =    0.17872 *T  - 1.46303;
-    data.PY[1] =   -0.35540 *T  + 0.42749;
-    data.PY[2] =   -0.02266 *T  + 5.32505;
-    data.PY[3] =    0.12064 *T  - 2.57705;
-    data.PY[4] =   -0.06696 *T  + 0.37027;
 
-    data.Px[0] =   -0.01925 *T  - 0.25922;
-    data.Px[1] =   -0.06651 *T  + 0.00081;
-    data.Px[2] =   -0.00041 *T  + 0.21247;
-    data.Px[3] =   -0.06409 *T  - 0.89887;
-    data.Px[4] =   -0.00325 *T  + 0.04517;
+    data.Px[0] =   -0.01925 * T  - 0.25922;
+    data.Px[1] =   -0.06651 * T  + 0.00081;
+    data.Px[2] =   -0.00041 * T  + 0.21247;
+    data.Px[3] =   -0.06409 * T  - 0.89887;
+    data.Px[4] =   -0.00325 * T  + 0.04517;
 
-    data.Py[0] =   -0.01669 *T  - 0.26078;
-    data.Py[1] =   -0.09495 *T  + 0.00921;
-    data.Py[2] =   -0.00792 *T  + 0.21023;
-    data.Py[3] =   -0.04405 *T  - 1.65369;
-    data.Py[4] =   -0.01092 *T  + 0.05291;
+    data.Py[0] =   -0.01669 * T  - 0.26078;
+    data.Py[1] =   -0.09495 * T  + 0.00921;
+    data.Py[2] =   -0.00792 * T  + 0.21023;
+    data.Py[3] =   -0.04405 * T  - 1.65369;
+    data.Py[4] =   -0.01092 * T  + 0.05291;
 
     data.kx = zx / F(data.Px, 0, thetaS);
     data.ky = zy / F(data.Py, 0, thetaS);
-    data.kY = zY / F(data.PY, 0, thetaS);
 
     vec3_copy(sun_pos, data.sun_pos);
     vec3_copy(moon_pos, data.moon_pos);
@@ -145,22 +130,18 @@ static render_data_t prepare_render_data(
 
 static void prepare_skybrightness(
         skybrightness_t *sb, const painter_t *painter,
-        const double sun_pos[3], const double moon_pos[3], double moon_vmag,
-        double moon_phase, double twilight_coef)
+        const double sun_pos[3], const double moon_pos[3], double moon_vmag)
 {
     int year, month, day, ihmsf[4];
     const observer_t *obs = painter->obs;
     const double zenith[3] = {0, 0, 1};
-    // Convert moon phase to sun/moon/earth separation.
-    moon_phase = acos(2 * (moon_phase - 0.5));
     eraD2dtf("UTC", 0, DJM0, obs->utc, &year, &month, &day, ihmsf);
     skybrightness_prepare(sb, year, month,
-                          moon_phase,
+                          moon_vmag,
                           obs->phi, obs->hm,
                           15, 40,
                           eraSepp(moon_pos, zenith),
-                          eraSepp(sun_pos, zenith),
-                          twilight_coef, 0.4, 2.f);
+                          eraSepp(sun_pos, zenith));
 }
 
 static float compute_lum(void *user, const float pos[3])
@@ -175,9 +156,7 @@ static float compute_lum(void *user, const float pos[3])
                 max(eraSepp(p, d->moon_pos), d->grid_angular_step),
                 max(eraSepp(p, d->sun_pos), d->grid_angular_step),
                 eraSepp(p, zenith));
-    lum *= d->lum_scale * d->eclipse_factor;
-    // Clamp to prevent too much adaptation.
-    lum = min(lum, 100000);
+    lum *= d->eclipse_factor;
 
     // Update luminance sum for eye adaptation.
     // If we are below horizon use the precomputed landscape luminance.
@@ -221,9 +200,8 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     PROFILE(atmosphere_render, 0);
     atmosphere_t *atm = (atmosphere_t*)obj;
     obj_t *sun, *moon;
-    double sun_pos[4], moon_pos[4], moon_phase, sun_vmag, moon_vmag;
+    double sun_pos[4], moon_pos[4], sun_vmag, moon_vmag;
     render_data_t data;
-    const double T = 5.0;
     int i;
     painter_t painter = *painter_;
     core->lwsky_average = 0.0001;
@@ -242,14 +220,12 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     obj_get_info(moon, obs, INFO_VMAG, &moon_vmag);
 
     // XXX: this could be cached!
-    data = prepare_render_data(sun_pos, sun_vmag, moon_pos, moon_vmag, T);
-    data.lum_scale = atm->lum_scale;
+    data = prepare_render_data(sun_pos, sun_vmag, moon_pos, moon_vmag,
+                               atm->turbidity);
     // This is quite ad-hoc as in reality we are using a HIPS grid
-    data.grid_angular_step = 8. * DD2R;
-    obj_get_info(moon, obs, INFO_PHASE, &moon_phase);
+    data.grid_angular_step = 15. * DD2R;
     prepare_skybrightness(&data.skybrightness,
-            &painter, sun_pos, moon_pos, moon_vmag, moon_phase,
-            atm->twilight_coef);
+            &painter, sun_pos, moon_pos, moon_vmag);
 
     // Set the shader attributes.
     painter.atm.p[0]  = data.Px[0];
@@ -272,10 +248,13 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     painter.flags |= PAINTER_ADD | PAINTER_ATMOSPHERE_SHADER;
     painter.color[3] = atm->visible.value;
 
+    data.max_lum = 0;
     for (i = 0; i < 12; i++) {
         render_tile(atm, &painter, 0, i);
     }
-    core_report_luminance_in_fov(data.max_lum * 13.0, true);
+    // The 1 / 4 factor is ad-hoc and is necessary to adjust the amount of
+    // visible stars according to real observations
+    core_report_luminance_in_fov(data.max_lum / 4, true);
     if (data.nb_lum)
         core->lwsky_average = data.sum_lum / data.nb_lum;
     return 0;
@@ -284,8 +263,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 static int atmosphere_init(obj_t *obj, json_value *args)
 {
     atmosphere_t *atm = (void*)obj;
-    atm->lum_scale = pow(10.0, LUM_DB_OFFSET);
-    atm->twilight_coef = pow(10.0, TWILIGHT_DB_OFFSET);
+    atm->turbidity = 0.96;  // Calibrated visually
     fader_init(&atm->visible, true);
     return 0;
 }
@@ -295,8 +273,7 @@ static void atmosphere_gui(obj_t *obj, int location)
     atmosphere_t *atm = (void*)obj;
     if (!DEFINED(SWE_GUI)) return;
     if (location == 1) { // debug.
-        gui_double_log("atm db", &atm->lum_scale, -100, 100, 1, NAN);
-        gui_double_log("twilight db ", &atm->twilight_coef, -100, 100, 1, NAN);
+        gui_double_log("atm turbidity", &atm->turbidity, 0.1, 10, 1, NAN);
     }
 }
 
@@ -315,6 +292,7 @@ static obj_klass_t atmosphere_klass = {
     .gui    = atmosphere_gui,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(atmosphere_t, visible.target)),
+        PROPERTY(turbidity, TYPE_FLOAT, MEMBER(atmosphere_t, turbidity)),
         {}
     },
 };

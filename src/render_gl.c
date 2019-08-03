@@ -1230,7 +1230,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
         // XXX: the tonemapping args should be copied before rendering!
         tm[0] = core->tonemapper.p;
         tm[1] = core->tonemapper.lwmax;
-        tm[2] = core->tonemapper.q;
+        tm[2] = core->tonemapper.exposure;
         gl_update_uniform(shader, "u_tm", tm);
     }
 

@@ -59,6 +59,7 @@ struct core
 
     tonemapper_t    tonemapper;
     bool            fast_adaptation; // True if eye adpatation is fast
+    double          tonemapper_p;
     double          lwmax; // Max visible luminance.
     double          lwmax_min; // Min value for lwmax.
     double          lwsky_average;  // Current average sky luminance

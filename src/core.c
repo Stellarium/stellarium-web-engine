@@ -253,8 +253,9 @@ static void core_set_default(void)
     core->skip_point_radius = 0.2;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
     core->exposure_scale = 1;
+    core->tonemapper_p = 2.2;     // Setup using atmosphere as reference
 
-    tonemapper_update(&core->tonemapper, 1, 1, 1, core->lwmax);
+    tonemapper_update(&core->tonemapper, core->tonemapper_p, 1, 1, core->lwmax);
 
     core->telescope_auto = true;
     observer_update(core->observer, false);
@@ -455,7 +456,8 @@ int core_update(double dt)
                     min(0.16 * dt / 0.01666, 0.5));
     }
 
-    tonemapper_update(&core->tonemapper, -1, -1, core->exposure_scale, lwmax);
+    tonemapper_update(&core->tonemapper, core->tonemapper_p, -1,
+                      core->exposure_scale, lwmax);
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
     // Adjust star linear scale in function of screen pixel size

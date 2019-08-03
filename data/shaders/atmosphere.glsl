@@ -23,34 +23,35 @@ attribute highp   vec4       a_pos;
 attribute highp   vec3       a_sky_pos;
 attribute highp   float      a_luminance;
 
+highp float gammaf(highp float c)
+{
+    if (c < 0.0031308)
+      return 19.92 * c;
+    return 1.055 * pow(c, 1.0 / 2.4) - 0.055;
+}
+
 vec3 xyy_to_srgb(highp vec3 xyy)
 {
-    highp vec3 xyz;
-    highp vec3 rgb;
     const highp mat3 xyz_to_rgb = mat3(3.2406, -0.9689, 0.0557,
                                       -1.5372, 1.8758, -0.2040,
                                       -0.4986, 0.0415, 1.0570);
-    xyz = vec3(xyy[0] * xyy[2] / xyy[1], xyy[2],
+    highp vec3 xyz = vec3(xyy[0] * xyy[2] / xyy[1], xyy[2],
                (1.0 - xyy[0] - xyy[1]) * xyy[2] / xyy[1]);
-    rgb = xyz_to_rgb * xyz;
-    return pow(rgb, vec3(1.0 / 2.2));
-}
-
-float tonemap(float lw)
-{
-    // Logarithmic tonemapping, same as in tonemapper.c
-    // Assumes u_tm[2] == 1.
-    return log(1.0 + u_tm[0] * lw) / log(1.0 + u_tm[0] * u_tm[1]);
+    highp vec3 srgb = xyz_to_rgb * xyz;
+    clamp(srgb, 0.0, 1.0);
+    return srgb;
 }
 
 void main()
 {
-    vec3 xyy;
-    float cos_gamma, cos_gamma2, gamma, cos_theta;
-    vec3 p = a_sky_pos;
+    highp vec3 xyy;
+    highp float cos_gamma, cos_gamma2, gamma, cos_theta;
+    highp vec3 p = a_sky_pos;
 
     gl_Position = a_pos;
 
+    // First compute the xy color component (chromaticity) from Preetham model
+    // and re-inject a_luminance for Y component (luminance).
     p[2] = abs(p[2]); // Mirror below horizon.
     cos_gamma = dot(p, u_sun);
     cos_gamma2 = cos_gamma * cos_gamma;
@@ -65,21 +66,39 @@ void main()
               u_atm_p[10] * cos_gamma2)) * u_atm_p[11];
     xyy.z = a_luminance;
 
-    // Scotopic vision adjustment with blue shift (xy = 0.25, 0.25)
-    // Algo inspired from Stellarium.
-    if (xyy.z < 3.9) {
-        float s, v;
-        // s: ratio between scotopic and photopic vision.
-        s = smoothstep(0.0, 1.0, (log(xyy.z) / log(10.) + 2.) / 2.6);
-        xyy.x = mix(0.25, xyy.x, s);
-        xyy.y = mix(0.25, xyy.y, s);
-        v = xyy.z * (1.33 * (1. + xyy.y / xyy.x + xyy.x *
-                            (1. - xyy.x - xyy.y)) - 1.68);
-        xyy.z = 0.4468 * (1. - s) * v + s * xyy.z;
-    }
+    // Ad-hoc tuning. Scaling before the blue shift allows to obtain proper
+    // blueish colors at sun set instead of very red, which is a shortcoming
+    // of preetham model.
+    xyy.z *= 0.08;
 
-    xyy.z = max(0.0, tonemap(xyy.z));
-    v_color = vec4(clamp(xyy_to_srgb(xyy), 0.0, 1.0), 1.0);
+    // Convert this sky luminance/chromaticity into perceived color using model
+    // from Henrik Wann Jensen (2000)
+    // We deal with 3 cases:
+    //  * Y <= 0.01: scotopic vision. Only the eyes' rods see. No colors,
+    //    everything is converted to night blue (xy = 0.25, 0.25)
+    //  * Y > 3.981: photopic vision. Only the eyes's cones seew ith full colors
+    //  * Y > 0.01 and Y <= 3.981: mesopic vision. Rods and cones see in a
+    //    transition state.
+    //
+    // Compute s, ratio between scotopic and photopic vision
+    highp float op = (log(xyy.z) / log(10.) + 2.) / 2.6;
+    highp float s = (xyy.z <= 0.01) ? 0.0 : (xyy.z > 3.981) ? 1.0 : op * op * (3. - 2. * op);
+
+    // Perform the blue shift on chromaticity
+    xyy.x = mix(0.25, xyy.x, s);
+    xyy.y = mix(0.25, xyy.y, s);
+    // Scale scotopic luminance for scotopic pixels
+    xyy.z = 0.4468 * (1. - s) * xyy.z + s * xyy.z;
+
+    // Apply logarithmic tonemapping on luminance Y only.
+    // Code should be the same as in tonemapper.c, assuming q == 1.
+    xyy.z = log(1.0 + xyy.z * u_tm[0]) / log(1.0 + u_tm[1] * u_tm[0]) * u_tm[2];
+
+    // Convert xyY to sRGB
+    highp vec3 rgb = xyy_to_srgb(xyy);
+
+    // Apply gamma correction
+    v_color = vec4(gammaf(rgb.r), gammaf(rgb.g),gammaf(rgb.b), 1.0);
 }
 
 #endif

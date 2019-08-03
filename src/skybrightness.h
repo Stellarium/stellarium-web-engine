@@ -16,25 +16,31 @@
  * B. Schaefer: To the Visual Limits. Sky&Telescope 5/1998 57-60.
  */
 
+
 typedef struct skybrightness
 {
-    float Y, M, AM, LA, AL, TE, RH, ZM, ZS;
+    // Term for dark sky brightness computation
+    float b_night_term;
+    float K;
 
-    // Adjustements changing the original code.
-    float k_BT, k_BM, k_BN;
-
-    // Precomputed values.
-    float K, XM, XS;
-
+    // Air mass for Moon
+    float airmass_moon;
+    // Air mass for Sun
+    float airmass_sun;
+    float b_moon_term;
+    // Term for moon brightness computation
+    float C3;
+    float b_twilight_term;
+    // Term for sky brightness computation
+    float C4;
 } skybrightness_t;
+
 
 void skybrightness_prepare(skybrightness_t *sb,
         int year, int month, float moon_phase,
         float latitude, float altitude,
         float temperature, float relative_humidity,
-        float dist_moon_zenith, float dist_sun_zenith,
-        float twilight_coef, float moon_brightness_coef,
-        float darknight_brightness_coef);
+        float dist_moon_zenith, float dist_sun_zenith);
 
 float skybrightness_get_luminance(
         const skybrightness_t *sb,
