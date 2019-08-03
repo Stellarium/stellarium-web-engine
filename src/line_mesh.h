@@ -62,12 +62,14 @@ void line_mesh_delete(line_mesh_t *mesh);
  * Parameters:
  *   func   - Parametric line function.  The t argument ranges from 0 to 1.
  *   user   - User data passed to the function.
+ *   split  - Number of segments requested in the output.  If set to 0 use
+ *            an adaptive algorithm.
  *   out    - Allocated out line points.
  *
  * Return:
  *   The number of points in the line.
  */
 int line_tesselate(void (*func)(void *user, double t, double pos[2]),
-                   void *user, double (**out)[2]);
+                   void *user, int split, double (**out)[2]);
 
 #endif // LINE_MESH_H

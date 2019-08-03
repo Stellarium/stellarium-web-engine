@@ -286,23 +286,9 @@ static int paint_line(const painter_t *painter,
             return r;
         }
     }
-
-    if (!split) {
-        size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
-                              &win_line);
-    } else {
-        // XXX: this case could be done in line_tesselate I guess.
-        size = split + 1;
-        win_line = calloc(size, sizeof(*win_line));
-        for (i = 0; i < size; i++) {
-            line_func(USER_PASS(painter, &frame, line, map),
-                      (double)i / split, win_line[i]);
-        }
-    }
-
-    // REND(painter->rend, line, painter, frame, line, split, map);
+    size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
+                          split, &win_line);
     REND(painter->rend, line, painter, win_line, size);
-
     free(win_line);
     return 0;
 }
