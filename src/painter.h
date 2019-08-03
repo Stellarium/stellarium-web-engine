@@ -329,6 +329,8 @@ int paint_tile_contour(const painter_t *painter, int frame,
  *                of the lines are the mapping of the point through this
  *                function.
  *   split      - How much do we want to split the lines for smooth rendering.
+ *                If set to zero, the lines are split using an adaptive
+ *                algorithm.
  *   flags      - Supported flags:
  *                  PAINTER_SKIP_DISCONTINUOUS - if set, any line that
  *                  intersects a discontinuity is ignored.
