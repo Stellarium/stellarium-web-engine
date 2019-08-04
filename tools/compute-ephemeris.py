@@ -39,3 +39,12 @@ compute(ephem.Jupiter())
 compute(ephem.Io())
 compute(ephem.Phobos())
 compute(ephem.Deimos())
+
+# ISS TLE as of 2019-08-04.
+iss = ephem.readtle(
+    'ISS (ZARYA)',
+    '1 25544U 98067A   19216.19673594 -.00000629  00000-0 -27822-5 0  9998',
+    '2 25544  51.6446 123.0769 0006303 213.9941 302.5470 15.51020378182708')
+o = ephem.city('Atlanta')
+o.date = '2019/08/04 17:00'
+compute(iss, o)
