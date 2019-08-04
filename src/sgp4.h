@@ -21,4 +21,4 @@ sgp4_elsetrec_t *sgp4_twoline2rv(
         char typerun, char typeinput, char opsmode,
         double *startmfe, double *stopmfe, double *deltamin);
 
-bool sgp4(sgp4_elsetrec_t *satrec, double tt_mjd, double r[3], double v[3]);
+bool sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3]);

@@ -330,7 +330,7 @@ static int satellite_init(obj_t *obj, json_value *args)
 static int satellite_update(satellite_t *sat, const observer_t *obs)
 {
     double pv[2][3];
-    sgp4(sat->elsetrec, obs->tt, pv[0],  pv[1]); // Orbit computation.
+    sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1]); // Orbit computation.
 
     vec3_mul(1000.0 / DAU, pv[0], pv[0]);
     vec3_mul(1000.0 / DAU, pv[1], pv[1]);
