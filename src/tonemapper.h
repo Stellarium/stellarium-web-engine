@@ -48,6 +48,13 @@ void tonemapper_update(tonemapper_t *t,
  * Function: tonemapper_map
  * Compute the display value for a given world luminance
  *
+ * The function used in the logarithmic mapping discussed at the beginning
+ * of Schlick 1994.
+ *  Fp,q = pow( log(1 + p * lw) / log(1 + p * lwmax) , 1/q)
+ *
+ * The pow(.., 1/q) term is in fact the gamma correction, which we ignore
+ * here because we apply it later, so we assume q == 1.
+ *
  * Parameters:
  *   t      - A tonemapper.
  *   lw     - A luminance (cd/m²).
