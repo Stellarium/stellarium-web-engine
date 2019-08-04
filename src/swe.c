@@ -215,10 +215,71 @@ static void test_events(void)
  * g_ra, g_dec - Apparent Geocentric Position for the epoch-of-date.
  * ra, dec - Apparent Topocentric Position for the epoch-of-date
  */
-static void test_ephemeris(void)
+
+static void test_pos(
+    const char *name, uint64_t oid,
+    const char *klass, const char *json,
+    double date, double lon, double lat,
+    double a_ra, double a_dec,
+    double ra, double dec,
+    double alt, double az)
 {
     obj_t *obj;
-    observer_t *obs;
+    observer_t obs;
+    struct { double apparent_radec[4], apparent_azalt[4]; } got;
+    struct { double apparent_radec[4], apparent_azalt[4]; } expected;
+    const double precision_radec = 15.0 / 3600;
+    const double precision_azalt = 2. / 60;
+    double sep, pvo[2][4];
+
+    obs = *core->observer;
+    obj_set_attr((obj_t*)&obs, "utc", date);
+    obj_set_attr((obj_t*)&obs, "longitude", lon * DD2R);
+    obj_set_attr((obj_t*)&obs, "latitude", lat * DD2R);
+    obs.refraction = false;
+    observer_update(&obs, false);
+
+    if (oid)
+        obj = obj_get_by_oid(NULL, oid, 0);
+    else
+        obj = obj_create_str(klass, NULL, NULL, json);
+    assert(obj);
+
+    obj_get_pvo(obj, &obs, pvo);
+    convert_framev4(&obs, FRAME_ICRF, FRAME_JNOW,
+                    pvo[0], got.apparent_radec);
+    convert_framev4(&obs, FRAME_ICRF, FRAME_OBSERVED,
+                    pvo[0], got.apparent_azalt);
+
+    eraS2c(ra * DD2R, dec * DD2R, expected.apparent_radec);
+    eraS2c(az * DD2R, alt * DD2R, expected.apparent_azalt);
+
+    sep = eraSepp(got.apparent_radec, expected.apparent_radec) * DR2D;
+    if (sep > precision_radec) {
+        LOG_E("Error: %s", name);
+        LOG_E("Apparent radec JNow error: %.5f°", sep);
+        assert(false);
+    }
+    sep = eraSepp(got.apparent_azalt, expected.apparent_azalt) * DR2D;
+    if (sep > precision_azalt) {
+        LOG_E("Error: %s", name);
+        LOG_E("Apparent azalt error: %.5f°", sep);
+        double az, alt, dist;
+        eraP2s(expected.apparent_azalt, &az, &alt, &dist);
+        az = eraAnp(az);
+        LOG_E("Ref az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
+        eraP2s(got.apparent_azalt, &az, &alt, &dist);
+        az = eraAnp(az);
+        LOG_E("Tst az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
+        assert(false);
+    }
+
+    obj_release(obj);
+}
+
+
+static void test_ephemeris(void)
+{
 
     // ISS TLE data from 2019-08-04.
     const char *ISS_JSON =
@@ -232,107 +293,43 @@ static void test_ephemeris(void)
         " 15.51020378182708\"]"
         "}}";
 
-    const struct {
-        const char *name;
-        uint64_t oid;
-        double date;
-        double lon;
-        double lat;
-        double a_ra;
-        double a_dec;
-        double ra;
-        double dec;
-        double alt;
-        double az;
-    } ephs[] = {
-        // Values generated with tools/compute-ephemeris.py.
-        {"Sun", oid_create("HORI", 10),
-         55080.70833333, -84.38798240, 33.74899540,
-         165.35302920, 6.25627931, 165.47771054, 6.20388133,
-         61.24211255, 161.26054774},
-        {"Moon", oid_create("HORI", 301),
-         55080.70833333, -84.38798240, 33.74899540,
-         5.12351325, 7.42234252, 4.88049286, 6.88507510,
-         -41.29087044, 321.13994926},
-        {"Polaris", oid_create("HIP", 11767),
-         55080.70833333, -84.38798240, 33.74899540,
-         37.95550905, 89.26413510, 41.07208870, 89.30364735,
-         33.47052240, 359.24647623},
-        {"Jupiter", oid_create("HORI", 599),
-         55080.70833333, -84.38798240, 33.74899540,
-         321.88811808, -16.13925832, 322.03148431, -16.09494228,
-         -68.04230353, 40.04118488},
-        {"Io", oid_create("HORI", 501),
-         55080.70833333, -84.38798240, 33.74899540,
-         321.88392557, -16.14053347, 322.02730012, -16.09621846,
-         -68.04112874, 40.05201756},
-        {"Phobos", oid_create("HORI", 401),
-         55080.70833333, -84.38798240, 33.74899540,
-         98.02974145, 23.52448038, 98.17828660, 23.51756221,
-         38.46066544, 274.72392344},
-        {"Deimos", oid_create("HORI", 402),
-         55080.70833333, -84.38798240, 33.74899540,
-         98.02751192, 23.52297941, 98.17605313, 23.51606127,
-         38.45817242, 274.72329506},
-        {"ISS (ZARYA)", 0, 58699.70833333, -84.38798240, 33.74899540,
-         285.34165540, 1.27282734, 285.59031403, 1.30191229,
-         -51.07771873, 29.43816313},
-    };
-    int i;
-    struct { double apparent_radec[4], apparent_azalt[4]; } got;
-    struct { double apparent_radec[4], apparent_azalt[4]; } expected;
-    const double precision_radec = 15.0 / 3600;
-    const double precision_azalt = 2. / 60;
-    double sep, pvo[2][4];
+    core_init(100, 100, 1.0); // Shouldn't be needed.
 
-    core_init(100, 100, 1.0);
-    for (i = 0; i < ARRAY_SIZE(ephs); i++) {
-        obs = core->observer;
-        obj_set_attr((obj_t*)obs, "utc", ephs[i].date);
-        obj_set_attr((obj_t*)obs, "longitude", ephs[i].lon * DD2R);
-        obj_set_attr((obj_t*)obs, "latitude", ephs[i].lat * DD2R);
-        obs->refraction = false;
-        observer_update(obs, false);
-
-        if (strcmp(ephs[i].name, "ISS (ZARYA)") != 0) {
-            obj = obj_get_by_oid(NULL, ephs[i].oid, 0);
-        } else {
-            continue; // skip the iss test for the moment since it fails.
-            obj = obj_create_str("tle_satellite", NULL, NULL, ISS_JSON);
-        }
-
-        assert(obj);
-
-        obj_get_pvo(obj, core->observer, pvo);
-        convert_framev4(obs, FRAME_ICRF, FRAME_JNOW,
-                        pvo[0], got.apparent_radec);
-        convert_framev4(obs, FRAME_ICRF, FRAME_OBSERVED,
-                        pvo[0], got.apparent_azalt);
-
-        eraS2c(ephs[i].ra * DD2R, ephs[i].dec * DD2R, expected.apparent_radec);
-        eraS2c(ephs[i].az * DD2R, ephs[i].alt * DD2R, expected.apparent_azalt);
-
-        sep = eraSepp(got.apparent_radec, expected.apparent_radec) * DR2D;
-        if (sep > precision_radec) {
-            LOG_E("Error: %s", ephs[i].name);
-            LOG_E("Apparent radec JNow error: %.5f°", sep);
-            assert(false);
-        }
-        sep = eraSepp(got.apparent_azalt, expected.apparent_azalt) * DR2D;
-        if (sep > precision_azalt) {
-            LOG_E("Error: %s", ephs[i].name);
-            LOG_E("Apparent azalt error: %.5f°", sep);
-            double az, alt, dist;
-            eraP2s(expected.apparent_azalt, &az, &alt, &dist);
-            az = eraAnp(az);
-            LOG_E("Ref az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
-            eraP2s(got.apparent_azalt, &az, &alt, &dist);
-            az = eraAnp(az);
-            LOG_E("Tst az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
-            assert(false);
-        }
-        obj_release(obj);
-    }
+    // Values generated with tools/compute-ephemeris.py.
+    test_pos("Sun", oid_create("HORI", 10), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             165.35302920, 6.25627931, 165.47771054, 6.20388133,
+             61.24211255, 161.26054774);
+    test_pos("Moon", oid_create("HORI", 301), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             5.12351325, 7.42234252, 4.88049286, 6.88507510,
+             -41.29087044, 321.13994926);
+    test_pos("Polaris", oid_create("HIP", 11767), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             37.95550905, 89.26413510, 41.07208870, 89.30364735,
+             33.47052240, 359.24647623);
+    test_pos("Jupiter", oid_create("HORI", 599), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             321.88811808, -16.13925832, 322.03148431, -16.09494228,
+             -68.04230353, 40.04118488);
+    test_pos("Io", oid_create("HORI", 501), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             321.88392557, -16.14053347, 322.02730012, -16.09621846,
+             -68.04112874, 40.05201756);
+    test_pos("Phobos", oid_create("HORI", 401), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             98.02974145, 23.52448038, 98.17828660, 23.51756221,
+             38.46066544, 274.72392344);
+    test_pos("Deimos", oid_create("HORI", 402), NULL, NULL,
+             55080.70833333, -84.38798240, 33.74899540,
+             98.02751192, 23.52297941, 98.17605313, 23.51606127,
+             38.45817242, 274.72329506);
+    // Fails for the moment.
+    if ((0))
+    test_pos("ISS", 0, "tle_satellite", ISS_JSON,
+             58699.70833333, -84.38798240, 33.74899540,
+             285.34165540, 1.27282734, 285.59031403, 1.30191229,
+             -51.07771873, 29.43816313);
 }
 
 
