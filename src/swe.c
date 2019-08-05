@@ -297,15 +297,47 @@ static void test_ephemeris(void)
 
     core_init(100, 100, 1.0); // Shouldn't be needed.
 
-    // Values generated with tools/compute-ephemeris.py.
+    test_pos("Sun", oid_create("HORI", 10), NULL, NULL,
+             58732.70832752, -84.38800000, 33.74900000,
+             165.09513427, 6.36118246, 61.37699255, 161.09464188,
+             30, 120);
+    test_pos("Moon", oid_create("HORI", 301), NULL, NULL,
+             58732.70832752, -84.38800000, 33.74900000,
+             260.84944978, -21.34302336, -23.53493575, 100.74389856,
+             15, 120);
+    test_pos("Jupiter barycenter", oid_create("HORI", 599), NULL, NULL,
+             58732.70832752, -84.38800000, 33.74900000,
+             254.33797540, -22.32798035, -18.73553047, 104.82402989,
+             15, 120);
+    test_pos("ISS", 0, "tle_satellite", ISS_JSON,
+             58699.70832789, -84.38800000, 33.74900000,
+             285.58293108, 1.30203640, -51.07595894, 29.43785229,
+             400, 400);
+    test_pos("Io", oid_create("HORI", 501), NULL, NULL,
+             58732.70832752, -84.38800000, 33.74900000,
+             254.35098014, -22.32791953, -18.74595481, 104.81768703,
+             15, 120);
+    test_pos("Phobos", oid_create("HORI", 401), NULL, NULL,
+             58732.70832752, -84.38800000, 33.74900000,
+             164.19465770, 7.89165903, 63.08947174, 162.07461317,
+             30, 120);
+    test_pos("Deimos", oid_create("HORI", 402), NULL, NULL,
+             58732.70832752, -84.38800000, 33.74900000,
+             164.19667200, 7.89035417, 63.08769574, 162.07109946,
+             30, 120);
+
+    // Values generated with old version of compute-ephemeris.py using
+    // pyephem.  I keep them until I refactor the tests code.
     test_pos("Sun", oid_create("HORI", 10), NULL, NULL,
              55080.70833333, -84.38798240, 33.74899540,
              165.47771054, 6.20388133,
              61.24211255, 161.26054774, 15, 120);
+
     test_pos("Moon", oid_create("HORI", 301), NULL, NULL,
              55080.70833333, -84.38798240, 33.74899540,
              4.88049286, 6.88507510,
              -41.29087044, 321.13994926, 15, 120);
+
     test_pos("Polaris", oid_create("HIP", 11767), NULL, NULL,
              55080.70833333, -84.38798240, 33.74899540,
              41.07208870, 89.30364735,
@@ -326,7 +358,6 @@ static void test_ephemeris(void)
              55080.70833333, -84.38798240, 33.74899540,
              98.17605313, 23.51606127,
              38.45817242, 274.72329506, 15, 120);
-    // XXX: try to improve the precisions here?
     test_pos("ISS", 0, "tle_satellite", ISS_JSON,
              58699.70833333, -84.38798240, 33.74899540,
              285.59031403, 1.30191229,
