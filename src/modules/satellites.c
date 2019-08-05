@@ -394,11 +394,10 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
-    if (vmag < painter.hints_limit_mag) {
-        vec3_copy(label_color, color);
-        color[3] = smoothstep(3, 0, size);
+    if (vmag <= painter.hints_limit_mag - 2.5) {
+        vec4_copy(label_color, color);
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
-                      VEC(12.0, 12.0), color, 0.0);
+                      VEC(24.0, 24.0), color, 0.0);
     }
 
     point = (point_t) {
@@ -411,7 +410,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     size = max(8, size);
-    if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 1.0)) {
+    if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 4.0)) {
         labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size,
                       FONT_SIZE_BASE - 1, selected ? white : label_color, 0,
                       LABEL_AROUND, selected ? TEXT_BOLD : 0, 0, obj->oid);
