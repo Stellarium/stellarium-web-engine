@@ -296,7 +296,7 @@ end:
         con->img_need_rescale = false;
     }
 
-    con->visible.target = cons->show_all ||
+    con->visible.target = (cons && cons->show_all) ||
                           (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
                           ((obj_t*)con == core->selection);
     return 0;
