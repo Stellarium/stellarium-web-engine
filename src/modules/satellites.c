@@ -324,6 +324,12 @@ static int satellite_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+static void satellite_del(obj_t *obj)
+{
+    satellite_t *sat = (satellite_t*)obj;
+    free(sat->elsetrec);
+}
+
 /*
  * Update an individual satellite.
  */
@@ -439,6 +445,7 @@ static obj_klass_t satellite_klass = {
     .flags          = 0,
     .render_order   = 30,
     .init           = satellite_init,
+    .del            = satellite_del,
     .get_info       = satellite_get_info,
     .render         = satellite_render,
     .get_designations = satellite_get_designations,
