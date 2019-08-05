@@ -281,18 +281,20 @@ static void test_pos(
 
 static void test_ephemeris(void)
 {
+    #define JSON(...) #__VA_ARGS__
 
     // ISS TLE data from 2019-08-04.
-    const char *ISS_JSON =
-        "{"
-        "\"model_data\": {"
-        "   \"norad_num\": 25544,"
-        "   \"tle\": ["
-        "       \"1 25544U 98067A   19216.19673594 -.00000629  00000-0"
-        " -27822-5 0  9998\","
-        "       \"2 25544  51.6446 123.0769 0006303 213.9941 302.5470"
-        " 15.51020378182708\"]"
-        "}}";
+    const char *ISS_JSON = JSON({
+        "model_data": {
+            "norad_num": 25544,
+            "tle": [
+    "1 25544U 98067A   19216.19673594 -.00000629  00000-0 -27822-5 0  9998",
+    "2 25544  51.6446 123.0769 0006303 213.9941 302.5470  15.51020378182708"
+            ]
+        }
+    });
+
+    #undef JSON
 
     core_init(100, 100, 1.0); // Shouldn't be needed.
 
