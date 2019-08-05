@@ -1456,10 +1456,16 @@ static void line_glow(renderer_t           *rend_,
     vec4_to_float(painter->color, color);
     mesh = line_to_mesh(line, size, 10);
 
+    if (mesh->indices_count >= 1024) {
+        LOG_W("Too many points in lines! (size: %d)", size);
+        goto end;
+    }
+
     // Get the item.
     item = get_item(rend, ITEM_LINES_GLOW, mesh->verts_count,
                     mesh->indices_count, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
+
 
     if (!item) {
         item = calloc(1, sizeof(*item));
@@ -1484,6 +1490,7 @@ static void line_glow(renderer_t           *rend_,
         gl_buf_next(&item->indices);
     }
 
+end:
     line_mesh_delete(mesh);
 }
 

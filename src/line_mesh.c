@@ -105,12 +105,12 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[2]),
 {
     double p0[2], p1[2], pm[2], tm;
     const double max_dist = 1.0;
-    if (level > 10) return;
+    const int max_level = 4;
     tm = (t0 + t1) / 2;
     func(user, t0, p0);
     func(user, t1, p1);
     func(user, tm, pm);
-    if (line_point_dist(p0, p1, pm) < max_dist) {
+    if (level > max_level || line_point_dist(p0, p1, pm) < max_dist) {
         line_push_point(out, p1, size, allocated);
         return;
     }
