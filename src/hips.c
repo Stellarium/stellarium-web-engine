@@ -339,6 +339,7 @@ texture_t *hips_get_tile_texture(
     if (fade) *fade = 1.0;
 
     if (!hips_is_ready(hips)) return NULL;
+    if (order < hips->order_min) return NULL;
 
     if (order <= hips->order && !(flags & HIPS_FORCE_USE_ALLSKY)) {
         tile = hips_get_tile(hips, order, pix, flags, &code);
