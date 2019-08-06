@@ -331,6 +331,18 @@ static void satellite_del(obj_t *obj)
 }
 
 /*
+ * Transform a position from true equator to J2000 mean equator (ICRF).
+ */
+static void true_equator_to_j2000(const observer_t *obs,
+                                  const double pv[2][3],
+                                  double out[2][3])
+{
+    vec3_copy(pv[0], out[0]);
+    vec3_copy(pv[1], out[1]);
+    mat3_mul_vec3(obs->rnp, out[0], out[0]);
+}
+
+/*
  * Update an individual satellite.
  */
 static int satellite_update(satellite_t *sat, const observer_t *obs)
@@ -340,6 +352,7 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
 
     vec3_mul(1000.0 / DAU, pv[0], pv[0]);
     vec3_mul(1000.0 / DAU, pv[1], pv[1]);
+    true_equator_to_j2000(obs, pv, pv);
 
     vec3_copy(pv[0], sat->pvg);
 

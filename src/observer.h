@@ -98,6 +98,7 @@ struct observer
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRF).
     double re2h[3][3];  // Ecliptic to horizontal.
     double re2v[3][3];  // Ecliptic to view.
+    double rnp[3][3];   // Nutation/Precession rotation.
 };
 
 void observer_update(observer_t *obs, bool fast);

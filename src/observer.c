@@ -122,6 +122,17 @@ static void correct_speed_of_light(double pv[2][3]) {
     vec3_addk(pv[0], pv[1], -ldt, pv[0]);
 }
 
+
+static void update_nutation_precession_mat(observer_t *obs)
+{
+    // XXX: we can maybe optimize this, since eraPn00a is very slow!
+    double dpsi, deps, epsa, rb[3][3], rp[3][3], rbp[3][3], rn[3][3],
+           rbpn[3][3];
+    eraPn00a(obs->tt, DJM0, &dpsi, &deps, &epsa, rb, rp, rbp, rn, rbpn);
+    mat3_mul(rn, rp, obs->rnp);
+
+}
+
 void observer_update(observer_t *obs, bool fast)
 {
     double utc1, utc2, ut11, ut12, tai1, tai2;
@@ -194,6 +205,7 @@ void observer_update(observer_t *obs, bool fast)
     }
 
     update_matrices(obs);
+    if (!fast) update_nutation_precession_mat(obs);
 
     // Compute sun's apparent position in observer reference frame
     eraPvmpv(obs->sun_pvb, obs->obs_pvb, obs->sun_pvo);
