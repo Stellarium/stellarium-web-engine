@@ -11,8 +11,11 @@
 # Generate a list of ephemerides using pyephem.
 # The output of this script is used in the test in src/swe.c
 
+import ephem
 import json
 import skyfield.api as sf
+
+from math import *
 
 # Load all the needed kernels.
 loader = sf.Loader('./tmp')
@@ -61,13 +64,39 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
         ret['klass'] = klass
         ret['json'] = json
     return ret
-    '''
-    print('        {"%s", %.8f, %.8f, %.8f,\n'
-          '          %.8f, %.8f, %.8f, %.8f},' % (
-          name, mjd, topo.longitude.degrees, topo.latitude.degrees,
-          radec[0]._degrees, radec[1].degrees,
-          altaz[0].degrees, altaz[1].degrees))
-    '''
+
+
+def compute_asteroid(name, data, t, precision_radec=15, precision_azalt=120):
+    R2D = 180. / pi;
+    o = ephem.city('Atlanta')
+    o.date = t
+    target = ephem.EllipticalBody()
+    target._inc = data['i']
+    target._Om = data['Node']
+    target._om = data['Peri']
+    target._a = data['a']
+    target._M = data['M']
+    target._epoch_M = data['Epoch'] - 2415020.0
+    target._e = data['e']
+    target._epoch = '2000'
+    target.compute(o)
+    # Pyephem use Dublin JD, ephemeride uses Modified JD!
+    mjd = o.date + 15020 - 0.5
+    return dict(
+        name = name,
+        utc = mjd,
+        longitude = o.lon * R2D,
+        latitude = o.lat * R2D,
+        ra = target.ra * R2D,
+        dec = target.dec * R2D,
+        alt = target.alt * R2D,
+        az = target.az * R2D,
+        precision_radec = precision_radec,
+        precision_azalt = precision_azalt,
+        klass = 'mpc_asteroid',
+        json = dict(model_data=data),
+    )
+
 
 def compute_all():
     yield compute('Sun', precision_radec=30)
@@ -77,25 +106,29 @@ def compute_all():
     yield compute('Phobos', kernel=mar097, precision_radec=30)
     yield compute('Deimos', kernel=mar097, precision_radec=30)
 
-    # TODO.
-    # compute('Polaris')
-
     # ISS, using TLE as of 2019-08-04.
-    iss_tle = [
+    tle = [
         '1 25544U 98067A   19216.19673594 -.00000629  00000-0 -27822-5 0  9998',
         '2 25544  51.6446 123.0769 0006303 213.9941 302.5470 15.51020378182708',
     ]
-    iss = sf.EarthSatellite(*iss_tle, 'ISS (ZARYA)')
+    iss = sf.EarthSatellite(*tle, 'ISS (ZARYA)')
     iss = de421['earth'] + iss
-    iss_json = {
+    json = {
         'model_data': {
             'norad_num': 25544,
-            'tle': iss_tle,
+            'tle': tle,
         }
     }
-    yield compute(iss, name='ISS', t=[2019, 8, 4, 17, 0], json=iss_json,
+    yield compute(iss, name='ISS', t=[2019, 8, 4, 17, 0], json=json,
                   klass='tle_satellite',
                   precision_radec=400, precision_azalt=400)
+
+    # Pallas, using MPC data as of 2019-08-06.
+    data = {"Epoch": 2458600.5, "M": 59.69912, "Peri": 310.04884,
+            "Node": 173.08006, "i": 34.83623, "e": 0.2303369, "n": 0.21350337,
+            "a": 2.772466}
+    yield compute_asteroid('Pallas', data=data, t='2019/08/10 17:00',
+                           precision_radec=200, precision_azalt=400)
 
 
 def c_format(v):
