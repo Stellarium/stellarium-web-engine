@@ -301,11 +301,11 @@ int paint_lines(const painter_t *painter,
 {
     int i, ret = 0;
     assert(nb % 2 == 0);
+    assert(lines);
     // XXX: we should check for discontinutiy before we can paint_line.
     // So that we don't abort in the middle of the rendering.
     for (i = 0; i < nb; i += 2)
-        ret |= paint_line(painter, frame, lines ? (void*)lines[i] : NULL,
-                          map, split, flags);
+        ret |= paint_line(painter, frame, (void*)lines[i], map, split, flags);
     return ret;
 }
 
