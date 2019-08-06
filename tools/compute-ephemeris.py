@@ -41,8 +41,10 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
     if not planet and isinstance(target.target, int):
         planet = target.target
 
-    obs = (de421['earth'] + topo).at(t)
+    earth = de421['earth']
+    obs = (earth + topo).at(t)
     pos = obs.observe(target)
+    geo = earth.at(t).observe(target)
     radec = pos.radec(t)
     altaz = pos.apparent().altaz()
     # skyfield use JD, ephemeride uses Modified JD.
@@ -57,6 +59,7 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
         dec = radec[1].degrees,
         alt = altaz[0].degrees,
         az = altaz[1].degrees,
+        geo = list(geo.position.au),
         precision_radec = precision_radec,
         precision_azalt = precision_azalt,
     )
@@ -119,6 +122,7 @@ def compute_all():
             'tle': tle,
         }
     }
+
     yield compute(iss, name='ISS', t=[2019, 8, 4, 17, 0], json=json,
                   klass='tle_satellite',
                   precision_radec=400, precision_azalt=400)
@@ -134,6 +138,7 @@ def compute_all():
 def c_format(v):
     if isinstance(v, dict): v = json.dumps(v)
     if isinstance(v, str): return '"{}"'.format(v.replace('"', '\\"'))
+    if isinstance(v, list): return '{%s}' % ', '.join(c_format(x) for x in v)
     return repr(v)
 
 if __name__ == '__main__':

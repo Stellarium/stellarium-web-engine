@@ -219,6 +219,7 @@ typedef struct
     double dec;
     double alt;
     double az;
+    double geo[3];
     int planet;
     const char *klass;
     const char *json;
