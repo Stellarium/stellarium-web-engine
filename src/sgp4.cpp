@@ -60,3 +60,13 @@ bool sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3])
     tsince *= 24 * 60; // Put in min.
     return SGP4Funcs::sgp4(*((elsetrec*)satrec), tsince, r, v);
 }
+
+/*
+ * Function: sgp4_get_satepoch
+ * Return the reference epoch of a sat (UTC MJD)
+ */
+double sgp4_get_satepoch(const sgp4_elsetrec_t *satrec)
+{
+    elsetrec *elrec = (elsetrec*)satrec;
+    return (elrec->jdsatepoch + elrec->jdsatepochF) - 2400000.5;
+}

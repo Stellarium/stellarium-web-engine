@@ -22,3 +22,9 @@ sgp4_elsetrec_t *sgp4_twoline2rv(
         double *startmfe, double *stopmfe, double *deltamin);
 
 bool sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3]);
+
+/*
+ * Function: sgp4_get_satepoch
+ * Return the reference epoch of a sat (UTC MJD)
+ */
+double sgp4_get_satepoch(const sgp4_elsetrec_t *satrec);

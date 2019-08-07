@@ -75,7 +75,8 @@ static int satellites_add_data_source(
  * Return:
  *   The number of satellites parsed, or a negative number in case of error.
  */
-static int parse_tle_file(satellites_t *sats, const char *data)
+static int parse_tle_file(satellites_t *sats, const char *data,
+                          double *last_epoch)
 {
     const char *line0, *line1, *line2;
     char id[16];
@@ -84,6 +85,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
     double startmfe, stopmfe, deltamin;
     qsmag_t *qsmag;
 
+    *last_epoch = 0;
     while (*data) {
         line0 = data;
         line1 = strchr(line0, '\n');
@@ -99,6 +101,7 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         sprintf(id, "NORAD %.5s", line1 + 2);
         sat = (satellite_t*)obj_create("tle_satellite", id, (obj_t*)sats, NULL);
         sat_num = atoi(line1 + 2);
+
         sat->obj.oid = oid_create("NORA", sat_num);
         sat->stdmag = NAN;
         strcpy(sat->obj.type, "Asa"); // Otype code.
@@ -123,6 +126,8 @@ static int parse_tle_file(satellites_t *sats, const char *data)
         sat->elsetrec = sgp4_twoline2rv(
                 line1, line2, 'c', 'm', 'i',
                 &startmfe, &stopmfe, &deltamin);
+
+        *last_epoch = max(*last_epoch, sgp4_get_satepoch(sat->elsetrec));
         nb++;
     }
     return nb;
@@ -184,7 +189,9 @@ static bool load_data(satellites_t *sats)
 {
     int size, code, nb;
     const char *data;
+    double last_epoch;
     char url[1024];
+    char buf[128];
     if (sats->loaded) return true;
     if (!sats->source_url) return false;
 
@@ -196,8 +203,9 @@ static bool load_data(satellites_t *sats)
         sats->loaded = true;
     }
     if (!data) return false;
-    nb = parse_tle_file(sats, data);
-    LOG_D("Parsed %d satellites", nb);
+    nb = parse_tle_file(sats, data, &last_epoch);
+    LOG_D("Parsed %d satellites (latest epoch: %s)", nb,
+          format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
     sats->loaded = true;
     return true;
 }
