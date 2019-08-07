@@ -213,6 +213,7 @@ typedef struct
 {
     const char *name;
     double utc;
+    double ut1;
     double longitude;
     double latitude;
     double ra;

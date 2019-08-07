@@ -51,11 +51,14 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
     radec = pos.radec(t)
     altaz = pos.apparent().altaz()
     # skyfield use JD, ephemeride uses Modified JD.
-    mjd = t.ut1 - 2400000.5
+    ut1 = t.ut1 - 2400000.5
+    utc = ut1 - t.dut1 / (60 * 60 * 24)
+
     ret = dict(
         name = name,
         planet = planet,
-        utc = mjd,
+        ut1 = ut1,
+        utc = utc,
         longitude = topo.longitude.degrees,
         latitude = topo.latitude.degrees,
         ra = radec[0]._degrees,
@@ -128,12 +131,12 @@ def compute_all():
 
     yield compute(iss, name='ISS', t=[2019, 8, 4, 17, 0], json=json,
                   klass='tle_satellite',
-                  precision_radec=400, precision_azalt=400)
+                  precision_radec=100, precision_azalt=100)
 
     yield compute(iss, name='ISS', t=[2019, 8, 3, 20, 51, 46], json=json,
                   topo=['43.4822 N', '1.432 E'], # Goyrans
                   klass='tle_satellite',
-                  precision_radec=1000, precision_azalt=1000)
+                  precision_radec=100, precision_azalt=100)
 
     # Pallas, using MPC data as of 2019-08-06.
     data = {"Epoch": 2458600.5, "M": 59.69912, "Peri": 310.04884,
