@@ -67,13 +67,6 @@ typedef struct skyculture_name
     char            name[128];
 } skyculture_name_t;
 
-
-/*
- * Function: skyculture_parse_names
- * Parse a skyculture star names file.
- */
-skyculture_name_t *skyculture_parse_names(const char *data);
-
 /*
  * Function: skyculture_parse_constellations
  * Parse a skyculture constellation file.
