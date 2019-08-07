@@ -75,7 +75,8 @@ static void load_data(comets_t *comets, const char *data)
     char desgn[64];
     obj_t *tmp;
 
-    for (line = data; *line; line = strchr(line, '\n') + 1, line_idx++) {
+    for (line = data; line && *line; line = strchr(line, '\n') + 1,
+         line_idx++) {
         len = strchr(line, '\n') - line;
         r = mpc_parse_comet_line(
                 line, len, &num, &orbit_type, &peri_time, &peri_dist, &e,
