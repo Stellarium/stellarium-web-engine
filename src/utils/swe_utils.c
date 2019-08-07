@@ -139,3 +139,39 @@ void str_to_upper(const char *s, char *out)
     }
     *out = '\0';
 }
+
+/*
+ * Function: iter_lines
+ * Iter all the lines in a string
+ *
+ * Parameters:
+ *   data       - Pointer to a string.
+ *   size       - Size of data.
+ *   line_ptr   - Pointer to the current line, will be set to the next line.
+ *                Should be NULL at the first call.
+ *   len_ptr    - Pointer to the current line length, will be set the next
+ *                line length.
+ */
+bool iter_lines(const char *data, int size,
+                const char **line_ptr, int *len_ptr)
+{
+    const char *line = *line_ptr, *end;
+    int len = *len_ptr;
+
+    if (!line) { // First iteration.
+        line = data;
+        len = 0;
+    }
+    assert(line >= data && line + len <= data + size);
+    line += len;
+    if (*line == '\n') line++;
+    if ((!*line) || (line - data == size)) return false;
+    end = memchr(line, '\n', size - (line - data));
+    if (end)
+        len = (end - line);
+    else
+        len = size - (line - data);
+    *line_ptr = line;
+    *len_ptr = len;
+    return true;
+}

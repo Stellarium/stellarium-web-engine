@@ -27,8 +27,9 @@ static int count_lines(const char *str)
  * when the file doesn't end with a \n.
  *
  * XXX: is there a simpler way to do that??
+ * XXX: should replace with utils iter_lines.
  */
-static bool iter_lines(const char **str, char *line, int size)
+static bool sk_iter_lines(const char **str, char *line, int size)
 {
     const char *end;
     int len;
@@ -54,7 +55,7 @@ skyculture_name_t *skyculture_parse_names(const char *data)
     uint64_t oid;
 
     regcomp(&reg, "(HIP|HD)? *([0-9]+) *\\| *(.+)", REG_EXTENDED);
-    while (iter_lines(&data, line, sizeof(line))) {
+    while (sk_iter_lines(&data, line, sizeof(line))) {
         if (str_startswith(line, "#")) continue;
         r = regexec(&reg, line, 4, m, 0);
         if (r) goto error;

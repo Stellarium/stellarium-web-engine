@@ -352,9 +352,43 @@ static void test_clipping(void)
     }
 }
 
+static void test_iter_lines(void)
+{
+    const char *data, *line;
+    int len;
+
+    // Normal case.
+    data = "AB\nCD\n";
+    line = NULL;
+    assert(iter_lines(data, strlen(data), &line, &len));
+    assert(line[0] == 'A' && len == 2);
+    assert(iter_lines(data, strlen(data), &line, &len));
+    assert(line[0] == 'C' && len == 2);
+    assert(!iter_lines(data, strlen(data), &line, &len));
+
+    // No \n at the end of last line.
+    data = "AB\nCD";
+    line = NULL;
+    assert(iter_lines(data, strlen(data), &line, &len));
+    assert(line[0] == 'A' && len == 2);
+    assert(iter_lines(data, strlen(data), &line, &len));
+    assert(line[0] == 'C' && len == 2);
+    assert(!iter_lines(data, strlen(data), &line, &len));
+
+    // Not null terminated string.
+    data = "AB\nCD\nX";
+    line = NULL;
+    assert(iter_lines(data, strlen(data) - 1, &line, &len));
+    assert(line[0] == 'A' && len == 2);
+    assert(iter_lines(data, strlen(data) - 1, &line, &len));
+    assert(line[0] == 'C' && len == 2);
+    assert(!iter_lines(data, strlen(data) - 1, &line, &len));
+}
+
 TEST_REGISTER(NULL, test_events, 0);
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);
 TEST_REGISTER(NULL, test_clipping, TEST_AUTO);
+TEST_REGISTER(NULL, test_iter_lines, TEST_AUTO);
 
 #endif
 

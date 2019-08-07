@@ -137,3 +137,25 @@ static inline bool str_startswith(const char *str, const char *s)
 
 bool str_endswith(const char *str, const char *s);
 void str_to_upper(const char *str, char *out);
+
+
+/*
+ * Function: iter_lines
+ * Iter all the lines in a string
+ *
+ * This supports all the corner cases, like data not ending with a newline
+ * or not null terminated data.
+ *
+ * Parameters:
+ *   data       - Pointer to a string.
+ *   size       - Size of data.
+ *   line_ptr   - Pointer to the current line, will be set to the next line.
+ *                Should be NULL at the first call.
+ *   len_ptr    - Pointer to the current line length, will be set the next
+ *                line length.
+ *
+ * Return:
+ *   true as long as there are lines in the data.
+ */
+bool iter_lines(const char *data, int size,
+                const char **line_ptr, int *len_ptr);
