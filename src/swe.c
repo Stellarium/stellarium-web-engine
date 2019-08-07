@@ -229,55 +229,60 @@ typedef struct
     double precision_azalt;
 } pos_test_t;
 
-static void test_pos(pos_test_t *t)
+static void test_pos(pos_test_t t)
 {
     obj_t *obj;
     observer_t obs;
-    struct { double apparent_radec[4], apparent_azalt[4]; } got;
-    struct { double apparent_radec[4], apparent_azalt[4]; } expected;
-    double sep, pvo[2][4];
+    double ra, dec, az, alt;
+    double sep, pvo[2][4], p[4];
+
+    // Convert the coordinates angles in the test to radian.
+    t.ra *= DD2R;
+    t.dec *= DD2R;
+    t.alt *= DD2R;
+    t.az *= DD2R;
 
     obs = *core->observer;
-    obj_set_attr((obj_t*)&obs, "utc", t->utc);
-    obj_set_attr((obj_t*)&obs, "longitude", t->longitude * DD2R);
-    obj_set_attr((obj_t*)&obs, "latitude", t->latitude * DD2R);
+    obj_set_attr((obj_t*)&obs, "utc", t.utc);
+    obj_set_attr((obj_t*)&obs, "longitude", t.longitude * DD2R);
+    obj_set_attr((obj_t*)&obs, "latitude", t.latitude * DD2R);
     obs.refraction = false;
     observer_update(&obs, false);
 
-    if (t->planet)
-        obj = obj_get_by_oid(NULL, oid_create("HORI", t->planet), 0);
-    else if (t->klass)
-        obj = obj_create_str(t->klass, NULL, NULL, t->json);
+    if (t.planet)
+        obj = obj_get_by_oid(NULL, oid_create("HORI", t.planet), 0);
+    else if (t.klass)
+        obj = obj_create_str(t.klass, NULL, NULL, t.json);
     else
         assert(false);
     assert(obj);
 
     obj_get_pvo(obj, &obs, pvo);
-    convert_framev4(&obs, FRAME_ICRF, FRAME_JNOW,
-                    pvo[0], got.apparent_radec);
-    convert_framev4(&obs, FRAME_ICRF, FRAME_OBSERVED,
-                    pvo[0], got.apparent_azalt);
+    convert_framev4(&obs, FRAME_ICRF, FRAME_JNOW, pvo[0], p);
+    eraC2s(p, &ra, &dec);
 
-    eraS2c(t->ra * DD2R, t->dec * DD2R, expected.apparent_radec);
-    eraS2c(t->az * DD2R, t->alt * DD2R, expected.apparent_azalt);
+    convert_framev4(&obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], p);
+    eraC2s(p, &az, &alt);
 
-    sep = eraSepp(got.apparent_radec, expected.apparent_radec) * DR2D * 3600;
-    if (sep > t->precision_radec) {
-        LOG_E("Error: %s", t->name);
+    sep = eraSeps(ra, dec, t.ra, t.dec) * DR2D * 3600;
+    if (sep > t.precision_radec) {
+        LOG_E("Error: %s", t.name);
         LOG_E("Apparent radec JNow error: %.5f arcsec", sep);
+        LOG_E("Ref ra: %f°, dec: %f°",
+              eraAnp(t.ra) * DR2D, eraAnpm(t.dec) * DR2D);
+        LOG_E("Tst ra: %f°, dec: %f°",
+              eraAnp(ra) * DR2D, eraAnpm(dec) * DR2D);
         assert(false);
     }
-    sep = eraSepp(got.apparent_azalt, expected.apparent_azalt) * DR2D * 3600;
-    if (sep > t->precision_azalt) {
-        LOG_E("Error: %s", t->name);
+
+    sep = eraSeps(az, alt, t.az, t.alt) * DR2D * 3600;
+    if (sep > t.precision_azalt) {
+        LOG_E("Error: %s", t.name);
         LOG_E("Apparent azalt error: %.5f arcsec", sep);
-        double az, alt, dist;
-        eraP2s(expected.apparent_azalt, &az, &alt, &dist);
-        az = eraAnp(az);
-        LOG_E("Ref az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
-        eraP2s(got.apparent_azalt, &az, &alt, &dist);
-        az = eraAnp(az);
-        LOG_E("Tst az: %f°, alt: %f°, %f AU", az * DR2D, alt * DR2D, dist);
+        LOG_E("Ref az: %f°, alt: %f°",
+              eraAnp(t.az) * DR2D, eraAnpm(t.alt) * DR2D);
+        LOG_E("Tst az: %f°, alt: %f°",
+              eraAnp(az) * DR2D, eraAnpm(alt) * DR2D);
         assert(false);
     }
 
@@ -292,7 +297,7 @@ static void test_ephemeris(void)
     };
     int i;
     for (i = 0; i < ARRAY_SIZE(POS_TESTS); i++) {
-        test_pos(&POS_TESTS[i]);
+        test_pos(POS_TESTS[i]);
     }
 }
 
