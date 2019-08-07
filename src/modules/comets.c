@@ -65,19 +65,18 @@ static const char *orbit_type_to_otype(char o)
     }
 }
 
-static void load_data(comets_t *comets, const char *data)
+static void load_data(comets_t *comets, const char *data, int size)
 {
     comet_t *comet;
     int num, nb_err = 0, len, line_idx = 0, r, nb;
     double peri_time, peri_dist, e, peri, node, i, epoch, h, g;
-    const char *line;
+    const char *line = NULL;
     char orbit_type;
     char desgn[64];
     obj_t *tmp;
 
-    for (line = data; line && *line; line = strchr(line, '\n') + 1,
-         line_idx++) {
-        len = strchr(line, '\n') - line;
+    while (iter_lines(data, size, &line, &len)) {
+        line_idx++;
         r = mpc_parse_comet_line(
                 line, len, &num, &orbit_type, &peri_time, &peri_dist, &e,
                 &peri, &node, &i, &epoch, &h, &g, desgn);
@@ -268,7 +267,7 @@ static int comets_update(obj_t *obj, double dt)
                   comets->source_url, code);
             return 0;
         }
-        load_data(comets, data);
+        load_data(comets, data, size);
         asset_release(comets->source_url);
         // Make sure the search work.
         assert(strcmp(obj_get(NULL, "C/1995 O1", 0)->klass->id,
