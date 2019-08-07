@@ -98,10 +98,10 @@ static const char *ORBIT_TYPES[] = {
 };
 
 
-static void load_data(mplanets_t *mplanets, const char *data)
+static void load_data(mplanets_t *mplanets, const char *data, int size)
 {
-    const char *line;
-    int r, len, line_idx, flags, orbit_type, number, nb_err, nb;
+    const char *line = NULL;
+    int r, len, line_idx = 0, flags, orbit_type, number, nb_err, nb;
     char desig[24], name[24];
     double h, g, m, w, o, i, e, n, a, epoch;
     mplanet_t *mplanet;
@@ -109,8 +109,8 @@ static void load_data(mplanets_t *mplanets, const char *data)
 
     line_idx = 0;
     nb_err = 0;
-    for (line = data; *line; line = strchr(line, '\n') + 1, line_idx++) {
-        len = strchr(line, '\n') - line;
+    while (iter_lines(data, size, &line, &len)) {
+        line_idx++;
         if (len < 160) continue;
         r = mpc_parse_line(line, len, &number, name, desig,
                            &h, &g, &epoch, &m, &w, &o, &i, &e,
@@ -155,14 +155,15 @@ static int mplanets_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
     const char *data;
+    int size, code;
     mplanets_t *mplanets = (void*)obj;
     if (strcmp(type, "mpc_asteroids") != 0) return 1;
-    data = asset_get_data(url, NULL, NULL);
+    data = asset_get_data(url, &size, &code);
     if (!data) {
         LOG_W("Cannot read asteroids data (%s)", url);
         return 0;
     }
-    load_data(mplanets, data);
+    load_data(mplanets, data, size);
     asset_release(url);
     return 0;
 }
