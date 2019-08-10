@@ -124,7 +124,7 @@ def compute_all():
     iss = de421['earth'] + iss
     json = {
         'model_data': {
-            'norad_num': 25544,
+            'norad_number': 25544,
             'tle': tle,
         }
     }

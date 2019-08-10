@@ -381,9 +381,7 @@ static int satellite_init(obj_t *obj, json_value *args)
     if (args) {
         r = jcon_parse(args, "{",
             "!model_data", "{",
-                // XXX: we should only support one of those two.
-                "norad_number", JCON_INT(sat->number),
-                "norad_num",    JCON_INT(sat->number),
+                "!norad_number", JCON_INT(sat->number),
                 "mag", JCON_DOUBLE(sat->stdmag),
                 "!tle", "[", JCON_STR(tle1), JCON_STR(tle2), "]",
             "}",
