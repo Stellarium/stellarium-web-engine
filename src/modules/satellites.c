@@ -48,9 +48,10 @@ typedef struct satellite {
 // Module class.
 typedef struct satellites {
     obj_t   obj;
-    char    *source_url; // Online norad files location.
+    char    *norad_url; // Online norad files location.
     qsmag_t *qsmags; // Hash table id -> qsmag entry.
     int     qsmags_status;
+    char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
 } satellites_t;
 
@@ -64,8 +65,12 @@ static int satellites_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
     satellites_t *sats = (void*)obj;
-    if (strcmp(type, "norad") != 0) return 1;
-    sats->source_url = strdup(url);
+    if (strcmp(type, "norad") == 0)
+        sats->norad_url = strdup(url);
+    else if (strcmp(type, "jsonl/sat") == 0)
+        sats->jsonl_url = strdup(url);
+    else
+        return 1;
     return 0;
 }
 
@@ -155,9 +160,9 @@ static bool load_qsmag(satellites_t *sats)
 
     if (sats->qsmags_status >= 200 && sats->qsmags_status < 400) return true;
     if (sats->qsmags_status) return false;
-    if (!sats->source_url) return false;
+    if (!sats->norad_url) return false;
 
-    snprintf(url, sizeof(url), "%s/%s", sats->source_url, "qs.mag");
+    snprintf(url, sizeof(url), "%s/%s", sats->norad_url, "qs.mag");
     data = asset_get_data2(url, ASSET_USED_ONCE, &size, &sats->qsmags_status);
     if (sats->qsmags_status && !data)
         LOG_E("Error while loading %s: %d", url, sats->qsmags_status);
@@ -185,7 +190,7 @@ static bool load_qsmag(satellites_t *sats)
     return true;
 }
 
-static bool load_data(satellites_t *sats)
+static bool load_norad_data(satellites_t *sats)
 {
     int size, code, nb;
     const char *data;
@@ -193,10 +198,10 @@ static bool load_data(satellites_t *sats)
     char url[1024];
     char buf[128];
     if (sats->loaded) return true;
-    if (!sats->source_url) return false;
+    if (!sats->norad_url) return false;
 
     // Only visual for the moment.
-    snprintf(url, sizeof(url), "%s/%s", sats->source_url, "visual.txt");
+    snprintf(url, sizeof(url), "%s/%s", sats->norad_url, "visual.txt");
     data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
     if (!data && code) {
         LOG_E("Cannot load %s: %d", url, code);
@@ -210,13 +215,73 @@ static bool load_data(satellites_t *sats)
     return true;
 }
 
+static int load_jsonl_data(satellites_t *sats, const char *data, int size,
+                           const char *url, double *last_epoch)
+{
+    const char *line = NULL;
+    int len, line_idx = 0, nb = 0;
+    char *uncompressed_data;
+    json_value *json;
+    satellite_t *sat;
+
+    // XXX: should use a more robust gz uncompression function for external
+    // data.
+    uncompressed_data = z_uncompress_gz(data, size, &size);
+    if (!uncompressed_data) {
+        LOG_E("Cannot uncompress gz file: %s", url);
+        return -1;
+    }
+
+    data = uncompressed_data;
+
+    *last_epoch = 0;
+    while (iter_lines(data, size, &line, &len)) {
+        line_idx++;
+        json = json_parse(line, len);
+        if (!json) goto error;
+        sat = (void*)obj_create("tle_satellite", NULL, (void*)sats, json);
+        json_value_free(json);
+        if (!sat) goto error;
+        *last_epoch = max(*last_epoch, sgp4_get_satepoch(sat->elsetrec));
+        nb++;
+        continue;
+error:
+        LOG_E("Cannot create sat from %s:%d", url, line_idx);
+    }
+
+    free(uncompressed_data);
+    return nb;
+}
+
 static int satellites_update(obj_t *obj, double dt)
 {
     PROFILE(satellites_update, 0);
     satellites_t *sats = (satellites_t*)obj;
-    if (!sats->source_url) return 0;
-    if (!load_qsmag(sats)) return 0;
-    if (!load_data(sats)) return 0;
+    const char *data;
+    double last_epoch;
+    int size, code, nb;
+    char buf[128];
+
+    if (sats->loaded) return 0;
+
+    if (sats->jsonl_url) {
+        data = asset_get_data2(sats->jsonl_url, ASSET_USED_ONCE, &size, &code);
+        if (!code) return 0; // Sill loading.
+        if (data) {
+            nb = load_jsonl_data(sats, data, size, sats->jsonl_url,
+                                 &last_epoch);
+            LOG_D("Parsed %d satellites (latest epoch: %s)", nb,
+                  format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
+        }
+
+        sats->loaded = true;
+    }
+
+    if (sats->norad_url) {
+        if (!load_qsmag(sats)) return 0;
+        if (!load_norad_data(sats)) return 0;
+    }
+
     return 0;
 }
 
