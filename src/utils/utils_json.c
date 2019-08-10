@@ -10,6 +10,7 @@
 #include "utils_json.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <string.h>
 
 json_value *json_get_attr(json_value *val, const char *attr, int type)
@@ -99,4 +100,99 @@ json_value *json_copy(json_value *val)
 
     assert(false);
     return NULL;
+}
+
+
+static int jcon_parse_(json_value *v, va_list ap)
+{
+    const char *token;
+    json_value *child;
+    int i, r;
+    bool required;
+    union {
+        float *f;
+        int *i;
+        double *d;
+        const char **s;
+    } ptr;
+
+    token = va_arg(ap, const char*);
+    if (token[0] == ']') return 1;
+
+    if (token[0] == 'f') {
+        ptr.f = va_arg(ap, float*);
+        if (!v) return 0;
+        if (v->type != json_double && v->type != json_integer) return -1;
+        if (v->type == json_double) *ptr.f = v->u.dbl;
+        if (v->type == json_integer) *ptr.f = v->u.integer;
+        return 0;
+    }
+
+    if (token[0] == 'd') {
+        ptr.d = va_arg(ap, double*);
+        if (!v) return 0;
+        if (v->type != json_double && v->type != json_integer) return -1;
+        if (v->type == json_double) *ptr.d = v->u.dbl;
+        if (v->type == json_integer) *ptr.d = v->u.integer;
+        return 0;
+    }
+
+    if (token[0] == 'i') {
+        ptr.i = va_arg(ap, int*);
+        if (!v) return 0;
+        if (v->type != json_integer) return -1;
+        *ptr.i = v->u.integer;
+        return 0;
+    }
+
+    if (token[0] == 's') {
+        ptr.s = va_arg(ap, const char **);
+        if (!v) return 0;
+        if (v->type != json_string) return -1;
+        *ptr.s = v->u.string.ptr;
+        return 0;
+    }
+
+    if (token[0] == '{') {
+        if (v->type != json_object) return -1;
+        while (true) {
+            token = va_arg(ap, const char *);
+            if (token[0] == '}') break;
+
+            // attribute staring with '!' are compulsory
+            required = false;
+            if (token[0] == '!') {
+                required = true;
+                token++;
+            }
+
+            child = json_get_attr(v, token, 0);
+            if (!child && required) return -1;
+            r = jcon_parse_(child, ap);
+            if (r) return -1;
+        }
+        return 0;
+    }
+
+    if (token[0] == '[') {
+        if (v->type != json_array) return -1;
+        for (i = 0; ; i++) {
+            child = i < v->u.array.length ? v->u.array.values[i] : NULL;
+            r = jcon_parse_(child, ap);
+            if (r == 1) return 0;
+            if (r) return -1;
+        }
+    }
+
+    return -1;
+}
+
+int jcon_parse(json_value *v, ...)
+{
+    int ret;
+    va_list ap;
+    va_start(ap, v);
+    ret = jcon_parse_(v, ap);
+    va_end(ap);
+    return ret ? -1 : 0;
 }
