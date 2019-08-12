@@ -154,6 +154,13 @@ static const gl_buf_info_t INDICES_BUF = {
     },
 };
 
+static const gl_buf_info_t MESH_BUF = {
+    .size = 8,
+    .attrs = {
+        [ATTR_POS] = {GL_FLOAT, 2, false, 0},
+    },
+};
+
 static const gl_buf_info_t LINES_BUF = {
     .size = 28,
     .attrs = {
@@ -960,13 +967,10 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 
     gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES : GL_LINES;
 
-    shader = shader_get("blit_tag", NULL, ATTR_NAMES, init_shader);
+    shader = shader_get("mesh", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glLineWidth(item->mesh.stroke_width));
-
-    GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
 
     GL(glEnable(GL_CULL_FACE));
     GL(glDisable(GL_DEPTH_TEST));
@@ -1561,8 +1565,7 @@ static void mesh(renderer_t          *rend_,
     vec4_to_float(painter->color, item->color);
     item->mesh.mode = mode;
     item->mesh.stroke_width = painter->lines_width;
-    // XXX: should we use a special buffer for mesh?
-    gl_buf_alloc(&item->buf, &LINES_BUF, verts_count);
+    gl_buf_alloc(&item->buf, &MESH_BUF, verts_count);
     gl_buf_alloc(&item->indices, &INDICES_BUF, indices_count);
 
     // Project the vertices.
@@ -1574,9 +1577,7 @@ static void mesh(renderer_t          *rend_,
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         pos[3] = 0.0;
         project(painter->proj, PROJ_ALREADY_NORMALIZED, 4, pos, pos);
-        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5); // To remove.
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
-        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
+        gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(pos));
         gl_buf_next(&item->buf);
     }
 

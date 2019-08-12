@@ -292,6 +292,40 @@ static const unsigned char DATA_shaders_lines_glsl[1221] __attribute__((aligned(
 
 ASSET_REGISTER(shaders_lines_glsl, "shaders/lines.glsl", DATA_shaders_lines_glsl, false)
 
+static const unsigned char DATA_shaders_mesh_glsl[513] __attribute__((aligned(4))) =
+    "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
+    " *\n"
+    " * This program is licensed under the terms of the GNU AGPL v3, or\n"
+    " * alternatively under a commercial licence.\n"
+    " *\n"
+    " * The terms of the AGPL v3 license can be found in the main directory of this\n"
+    " * repository.\n"
+    " */\n"
+    "\n"
+    "uniform   lowp    vec4 u_color;\n"
+    "\n"
+    "#ifdef VERTEX_SHADER\n"
+    "\n"
+    "attribute highp   vec2 a_pos;\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+    "}\n"
+    "\n"
+    "#endif\n"
+    "#ifdef FRAGMENT_SHADER\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    gl_FragColor = u_color;\n"
+    "}\n"
+    "\n"
+    "#endif\n"
+    "";
+
+ASSET_REGISTER(shaders_mesh_glsl, "shaders/mesh.glsl", DATA_shaders_mesh_glsl, false)
+
 static const unsigned char DATA_shaders_planet_glsl[7280] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
