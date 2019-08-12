@@ -96,8 +96,6 @@ struct observer
     double ri2v[3][3];  // Equatorial J2000 (ICRF) to view.
     double ri2e[3][3];  // Equatorial J2000 (ICRF) to ecliptic.
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRF).
-    double re2h[3][3];  // Ecliptic to horizontal.
-    double re2v[3][3];  // Ecliptic to view.
     double rnp[3][3];   // Nutation/Precession rotation.
 };
 
