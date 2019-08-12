@@ -70,11 +70,14 @@ static int layer_render(const obj_t *obj, const painter_t *painter_)
 
 static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
-    obj_t *o;
-    DL_FOREACH(obj->children, o) {
-        if (o->oid == oid) {
-            o->ref++;
-            return o;
+    obj_t *child, *ret;
+    DL_FOREACH(obj->children, child) {
+        if (child->klass->get_by_oid) {
+            ret = child->klass->get_by_oid(child, oid, hint);
+            if (ret) return ret;
+        } else if (child->oid == oid) {
+            child->ref++;
+            return child;
         }
     }
     return NULL;
