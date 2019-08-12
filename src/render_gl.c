@@ -964,6 +964,8 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     GLuint  index_buffer;
     int gl_mode;
+    float fbo_size[2] = {rend->fb_size[0] / rend->scale,
+                         rend->fb_size[1] / rend->scale};
 
     gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES : GL_LINES;
 
@@ -995,6 +997,7 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
                     item->buf.data, GL_DYNAMIC_DRAW));
 
     gl_update_uniform(shader, "u_color", item->color);
+    gl_update_uniform(shader, "u_fbo_size", fbo_size);
 
     gl_buf_enable(&item->buf);
     GL(glDrawElements(gl_mode, item->indices.nb, GL_UNSIGNED_SHORT, 0));
@@ -1576,7 +1579,8 @@ static void mesh(renderer_t          *rend_,
         vec3_normalize(pos, pos);
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         pos[3] = 0.0;
-        project(painter->proj, PROJ_ALREADY_NORMALIZED, 4, pos, pos);
+        project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+                4, pos, pos);
         gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(pos));
         gl_buf_next(&item->buf);
     }
