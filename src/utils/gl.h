@@ -77,7 +77,7 @@ typedef struct gl_buf_info
  */
 typedef struct gl_buf
 {
-    uint8_t *data;
+    void *data;
     const gl_buf_info_t *info;
     int capacity;   // Number of items we can store.
     int nb;         // Current number of items.
