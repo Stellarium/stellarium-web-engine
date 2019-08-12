@@ -30,6 +30,7 @@ struct feature {
     obj_t       obj;
     feature_t   *next;
     mesh_t      *meshes;
+    int         frame;
     float       fill_color[4];
     float       stroke_color[4];
     float       stroke_width;
@@ -226,6 +227,7 @@ static void add_geojson_feature(image_t *image,
     feature_t *feature;
 
     feature = (void*)obj_create("geojson-feature", NULL, NULL, NULL);
+    feature->frame = image->frame;
     feature->obj.oid = oid_create("GEOF", g_id++);
 
     vec3_copy(geo_feature->properties.fill, feature->fill_color);
@@ -257,6 +259,21 @@ static void feature_del(obj_t *obj)
         free(mesh);
     }
     free(feature->title);
+}
+
+static int feature_get_info(const obj_t *obj, const observer_t *obs,
+                            int info, void *out)
+{
+    feature_t *feature = (void*)obj;
+
+    switch (info) {
+    case INFO_PVO:
+        convert_frame(obs, feature->frame, FRAME_ICRF, true,
+                      feature->meshes[0].bounding_cap, out);
+        return 0;
+    default:
+        return 1;
+    }
 }
 
 static void remove_all_features(image_t *image)
@@ -363,6 +380,21 @@ static void image_del(obj_t *obj)
     if (image->geojson) json_builder_free(image->geojson);
 }
 
+static obj_t *image_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
+{
+    image_t *image = (void*)obj;
+    feature_t *feature;
+
+    if (!oid_is_catalog(oid, "GEOF")) return NULL;
+    for (feature = image->features; feature; feature = feature->next) {
+        if (feature->obj.oid == oid) {
+            obj_retain(&feature->obj);
+            return &feature->obj;
+        }
+    }
+    return NULL;
+}
+
 
 /*
  * Meta class declarations.
@@ -371,6 +403,7 @@ static void image_del(obj_t *obj)
 static obj_klass_t geojson_feature_klass = {
     .id = "geojson-feature",
     .del = feature_del,
+    .get_info = feature_get_info,
     .size = sizeof(feature_t),
 };
 OBJ_REGISTER(geojson_feature_klass)
@@ -381,6 +414,7 @@ static obj_klass_t image_klass = {
     .init = image_init,
     .render = image_render,
     .del = image_del,
+    .get_by_oid = image_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
         PROPERTY(filter, TYPE_JSON, .fn = filter_fn),
