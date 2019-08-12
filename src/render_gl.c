@@ -1556,7 +1556,8 @@ static void mesh(renderer_t          *rend_,
                  int                 verts_count,
                  const double        verts[][3],
                  int                 indices_count,
-                 const uint16_t      indices[])
+                 const uint16_t      indices[],
+                 uint64_t            oid)
 {
     int i;
     double pos[4];
@@ -1589,6 +1590,12 @@ static void mesh(renderer_t          *rend_,
     for (i = 0; i < indices_count; i++) {
         gl_buf_1i(&item->indices, -1, 0, indices[i]);
         gl_buf_next(&item->indices);
+    }
+
+    if (oid) {
+        areas_add_triangles_mesh(core->areas, verts_count,
+                item->buf.data, indices_count, item->indices.data,
+                oid, 0);
     }
 
     DL_APPEND(rend->items, item);

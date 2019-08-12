@@ -322,6 +322,8 @@ int paint_lines(const painter_t *painter,
  *   indices_count  - Number of indices.
  *   indices        - Array of indices to the triangles or lines.
  *   bounding_cap   - Bouding cap of the mesh.
+ *   oid            - If set, add the mesh in the render shape areas so that
+ *                    we can select this mesh.
  */
 int paint_mesh(const painter_t *painter_,
                int frame,
@@ -330,7 +332,8 @@ int paint_mesh(const painter_t *painter_,
                const double verts[][3],
                int indices_count,
                const uint16_t indices[],
-               const double bounding_cap[4])
+               const double bounding_cap[4],
+               uint64_t oid)
 {
     painter_t painter = *painter_;
 
@@ -360,7 +363,7 @@ int paint_mesh(const painter_t *painter_,
     */
 
     REND(painter.rend, mesh, &painter, frame, mode,
-         verts_count, verts, indices_count, indices);
+         verts_count, verts, indices_count, indices, oid);
     return 0;
 
 }

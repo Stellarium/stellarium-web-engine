@@ -345,7 +345,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                 paint_mesh(&painter, frame, MODE_TRIANGLES,
                            mesh->vertices_count, mesh->vertices,
                            mesh->triangles_count, mesh->triangles,
-                           mesh->bounding_cap);
+                           mesh->bounding_cap, 0);
             }
 
             if (feature->stroke_color[3]) {
@@ -354,7 +354,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                 paint_mesh(&painter, frame, MODE_LINES,
                            mesh->vertices_count, mesh->vertices,
                            mesh->lines_count, mesh->lines,
-                           mesh->bounding_cap);
+                           mesh->bounding_cap, 0);
             }
             if (feature->title) {
                 painter_project(&painter, frame, mesh->bounding_cap,
