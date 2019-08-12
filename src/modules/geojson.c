@@ -27,6 +27,7 @@ struct mesh {
 };
 
 struct feature {
+    obj_t       obj;
     feature_t   *next;
     mesh_t      *meshes;
     float       fill_color[4];
@@ -221,9 +222,11 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 static void add_geojson_feature(image_t *image,
                                 const geojson_feature_t *geo_feature)
 {
+    static uint32_t g_id = 1;
     feature_t *feature;
 
-    feature = calloc(1, sizeof(*feature));
+    feature = (void*)obj_create("geojson-feature", NULL, NULL, NULL);
+    feature->obj.oid = oid_create("GEOF", g_id++);
 
     vec3_copy(geo_feature->properties.fill, feature->fill_color);
     vec3_copy(geo_feature->properties.stroke, feature->stroke_color);
@@ -240,24 +243,30 @@ static void add_geojson_feature(image_t *image,
     LL_APPEND(image->features, feature);
 }
 
+static void feature_del(obj_t *obj)
+{
+    feature_t *feature = (void*)obj;
+    mesh_t *mesh;
+
+    while (feature->meshes) {
+        mesh = feature->meshes;
+        LL_DELETE(feature->meshes, mesh);
+        free(mesh->vertices);
+        free(mesh->triangles);
+        free(mesh->lines);
+        free(mesh);
+    }
+    free(feature->title);
+}
+
 static void remove_all_features(image_t *image)
 {
     feature_t *feature;
-    mesh_t *mesh;
 
     while(image->features) {
         feature = image->features;
         LL_DELETE(image->features, feature);
-        while (feature->meshes) {
-            mesh = feature->meshes;
-            LL_DELETE(feature->meshes, mesh);
-            free(mesh->vertices);
-            free(mesh->triangles);
-            free(mesh->lines);
-            free(mesh);
-        }
-        free(feature->title);
-        free(feature);
+        obj_release(&feature->obj);
     }
 }
 
@@ -358,6 +367,13 @@ static void image_del(obj_t *obj)
 /*
  * Meta class declarations.
  */
+
+static obj_klass_t geojson_feature_klass = {
+    .id = "geojson-feature",
+    .del = feature_del,
+    .size = sizeof(feature_t),
+};
+OBJ_REGISTER(geojson_feature_klass)
 
 static obj_klass_t image_klass = {
     .id = "geojson",
