@@ -118,7 +118,7 @@ static struct {
         .name       = "Ecliptic",
         .id         = "ecliptic",
         .color      = 0xb33333ff,
-        .frame      = FRAME_OBSERVED, // XXX: probably need to change that.
+        .frame      = FRAME_ICRF, // XXX: probably need to change that.
         .grid       = false,
     },
     {
@@ -499,7 +499,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
 
     // XXX: probably need to use enum id for the different lines/grids.
     if (strcmp(line->obj.id, "ecliptic") == 0) {
-        mat3_to_mat4(core->observer->re2h, transform);
+        mat3_to_mat4(core->observer->re2i, transform);
         mat4_rx(M_PI / 2, transform, transform);
     }
     if (strcmp(line->obj.id, "equator_line") == 0) {
