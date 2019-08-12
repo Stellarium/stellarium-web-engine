@@ -90,6 +90,55 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
     utarray_push_back(areas->items, &item);
 }
 
+// Util function to return the center of a triangle in a mesh.
+// Return the area of the triangle.
+static double triangle_center(const float verts[][2],
+                              const uint16_t indices[],
+                              double out[2])
+{
+    int i;
+    double a = 0;
+    #define I(i) indices[(i) % 3]
+
+    out[0] = out[1] = 0;
+    for (i = 0; i < 3; i++) {
+        out[0] += verts[I(i)][0];
+        out[1] += verts[I(i)][1];
+    }
+    out[0] /= 3;
+    out[1] /= 3;
+
+    for (i = 0; i < 3; i++)
+        a += 0.5 * verts[I(i)][0] * (verts[I(i + 1)][1] - verts[I(i + 2)][1]);
+
+    #undef I
+    return a;
+}
+
+void areas_add_triangles_mesh(areas_t *areas, int verts_count,
+                              const float verts[][2],
+                              int indices_count,
+                              const uint16_t indices[],
+                              uint64_t oid, uint64_t hint)
+{
+    // For the moment we just add the bounding circle!
+    double w, w_tot = 0, tri_pos[2], pos[2] = {}, r2 = 0;
+    int i;
+    for (i = 0; i < indices_count; i += 3) {
+        w = triangle_center(verts, indices + i, tri_pos);
+        pos[0] += w * tri_pos[0];
+        pos[1] += w * tri_pos[1];
+        w_tot += w;
+    }
+    pos[0] /= w_tot;
+    pos[1] /= w_tot;
+    for (i = 0; i < verts_count; i++) {
+        r2 = max(r2, (verts[i][0] - pos[0]) * (verts[i][0] - pos[0]) +
+                     (verts[i][1] - pos[1]) * (verts[i][1] - pos[1]));
+    }
+    areas_add_circle(areas, pos, sqrt(r2), oid, hint);
+}
+
 void areas_clear_all(areas_t *areas)
 {
     utarray_clear(areas->items);
