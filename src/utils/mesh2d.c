@@ -197,7 +197,7 @@ static bool triangle_intersects_aabb(const float verts[][2],
 
 /*
  * Function: mesh2d_intersects_aabb
- * Check if a mesh intersects a bounding bounding box
+ * Check if a mesh intersects a bounding box
  *
  * Parameters:
  *   verts      - Array of vertices of the mesh.

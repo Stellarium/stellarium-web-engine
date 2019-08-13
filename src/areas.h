@@ -65,7 +65,7 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
 
 /*
  * Function: areas_lookup_aabb
- * Get the list of all shapes in the area intersecting a bouding box
+ * Get the list of all shapes in the area intersecting a bounding box
  *
  * For the moment this only considers the mesh shapes.
  *
