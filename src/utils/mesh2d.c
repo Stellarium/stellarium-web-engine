@@ -64,7 +64,7 @@ void mesh2d_get_bounding_circle(
         double pos[2], double *radius)
 {
     int i;
-    double r2 = 0, w, w_tot, tri_pos[2];
+    double r2 = 0, w, w_tot = 0, tri_pos[2];
 
     pos[0] = pos[1] = 0;
     // Compute bounding circle.
