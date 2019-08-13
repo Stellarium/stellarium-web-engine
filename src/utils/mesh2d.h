@@ -54,4 +54,18 @@ bool mesh2d_contains_point(
         const float verts[][2], const uint16_t indices[], int count,
         const double pos[2]);
 
+/*
+ * Function: mesh2d_intersects_aabb
+ * Check if a mesh intersects a bounding bounding box
+ *
+ * Parameters:
+ *   verts      - Array of vertices of the mesh.
+ *   indices    - Array of indices of the triangles.
+ *   count      - Number of indices.
+ *   aabb       - Axis aligned bounding box (as min and max positions).
+ */
+bool mesh2d_intersects_aabb(
+        const float verts[][2], const uint16_t indices[], int count,
+        const double aabb[2][2]);
+
 #endif // MESH2D_H

@@ -137,3 +137,83 @@ bool mesh2d_contains_point(
     }
     return false;
 }
+
+static bool half_plane_intersects_poly(const double a[2], const double u[2],
+                                       const double (*p)[2], int size)
+{
+    int i;
+    double ap[2];
+    for (i = 0; i < size; i++) {
+        ap[0] = p[i][0] - a[0];
+        ap[1] = p[i][1] - a[1];
+        if (u[0] * ap[1] - u[1] * ap[0] > 0) return true;
+    }
+    return false;
+}
+
+static bool triangle_intersects_aabb(const float verts[][2],
+                                     const uint16_t indices[3],
+                                     const double aabb[static 2][2])
+{
+    // XXX: hand made algo based on the separation theoreme.  There are
+    // probably faster algos around.
+    int i;
+    double tri[3][2], faces[3][2];
+    const double center[2] = {(aabb[0][0] + aabb[1][0]) / 2,
+                              (aabb[1][0] + aabb[1][1]) / 2};
+    const double hsize[2] = {(aabb[1][0] - aabb[0][0]) / 2,
+                             (aabb[1][1] - aabb[0][1]) / 2};
+    const double aabb_planes[4][2][2] = {
+        {{1, 0}, {0, 1}},
+        {{0, 1}, {-1, 0}},
+        {{-1, 0}, {0, -1}},
+        {{0, -1}, {1, 0}}
+    };
+    const double aabb_poly[4][2] = { {-1, -1}, {1, -1}, {1, 1}, {-1, 1} };
+
+    // Set the triangle coordinates so that the aabb is centered a zero
+    // with size 1 in both direction.
+    for (i = 0; i < 3; i++) {
+        tri[i][0] = (verts[indices[i]][0] - center[0]) / hsize[0];
+        tri[i][1] = (verts[indices[i]][1] - center[1]) / hsize[1];
+    }
+
+    // Test if any edge from the aabb separates the triangle.
+    for (i = 0; i < 4; i++) {
+        if (!half_plane_intersects_poly(
+                    aabb_planes[i][0], aabb_planes[i][1], tri, 3))
+            return false;
+    }
+
+    // Test if any edge from the triangle separates the aabb.
+    for (i = 0; i < 3; i++) {
+        faces[i][0] = tri[(i + 1) % 3][0] - tri[i][0];
+        faces[i][1] = tri[(i + 1) % 3][1] - tri[i][1];
+        if (!half_plane_intersects_poly(tri[i], faces[i], aabb_poly, 4))
+            return false;
+    }
+    return true;
+}
+
+/*
+ * Function: mesh2d_intersects_aabb
+ * Check if a mesh intersects a bounding bounding box
+ *
+ * Parameters:
+ *   verts      - Array of vertices of the mesh.
+ *   indices    - Array of indices of the triangles.
+ *   count      - Number of indices.
+ *   aabb       - Axis aligned bounding box (as min and max positions).
+ */
+bool mesh2d_intersects_aabb(
+        const float verts[][2], const uint16_t indices[], int count,
+        const double aabb[2][2])
+{
+    int i;
+    for (i = 0; i < count; i += 3) {
+        if (triangle_intersects_aabb(verts, indices + i, aabb)) {
+            return true;
+        }
+    }
+    return false;
+}
