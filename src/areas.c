@@ -25,6 +25,14 @@ struct item
     double angle;
     uint64_t oid;
     uint64_t hint;
+
+    // Optional triangle mesh.
+    struct {
+        int verts_count;
+        float (*verts)[2];
+        int indices_count;
+        uint16_t *indices;
+    } mesh;
 };
 
 struct areas
@@ -121,9 +129,11 @@ void areas_add_triangles_mesh(areas_t *areas, int verts_count,
                               const uint16_t indices[],
                               uint64_t oid, uint64_t hint)
 {
-    // For the moment we just add the bounding circle!
+    item_t item = {};
     double w, w_tot = 0, tri_pos[2], pos[2] = {}, r2 = 0;
     int i;
+
+    // Compute bounding circle.
     for (i = 0; i < indices_count; i += 3) {
         w = triangle_center(verts, indices + i, tri_pos);
         pos[0] += w * tri_pos[0];
@@ -136,12 +146,77 @@ void areas_add_triangles_mesh(areas_t *areas, int verts_count,
         r2 = max(r2, (verts[i][0] - pos[0]) * (verts[i][0] - pos[0]) +
                      (verts[i][1] - pos[1]) * (verts[i][1] - pos[1]));
     }
-    areas_add_circle(areas, pos, sqrt(r2), oid, hint);
+
+    memcpy(item.pos, pos, sizeof(item.pos));
+    item.a = item.b = sqrt(r2);
+    item.oid = oid;
+    item.hint = hint;
+
+    // Copy the mesh data.
+    item.mesh.verts_count = verts_count;
+    item.mesh.verts = calloc(verts_count, sizeof(*item.mesh.verts));
+    memcpy(item.mesh.verts, verts, verts_count * sizeof(*item.mesh.verts));
+    item.mesh.indices_count = indices_count;
+    item.mesh.indices = calloc(indices_count, sizeof(*item.mesh.indices));
+    memcpy(item.mesh.indices, indices,
+           indices_count * sizeof(*item.mesh.indices));
+
+    utarray_push_back(areas->items, &item);
 }
 
 void areas_clear_all(areas_t *areas)
 {
+    item_t *item = NULL;
+    while ((item = (item_t*)utarray_next(areas->items, item))) {
+        free(item->mesh.verts);
+        free(item->mesh.indices);
+    }
     utarray_clear(areas->items);
+}
+
+static bool triangle_contains(const float verts[][2],
+                              const uint16_t indices[],
+                              const double pos[2])
+{
+    // Algo from:
+    // https://stackoverflow.com/questions/2049582/
+    //              how-to-determine-if-a-point-is-in-a-2d-triangle
+    // There is probably a simpler way.
+    float d1, d2, d3, v1[2], v2[2], v3[2];
+    bool has_neg, has_pos;
+
+    memcpy(v1, verts[indices[0]], sizeof(v1));
+    memcpy(v2, verts[indices[1]], sizeof(v2));
+    memcpy(v3, verts[indices[2]], sizeof(v3));
+
+    #define sign(p1, p2, p3) \
+        ((p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]))
+    d1 = sign(pos, v1, v2);
+    d2 = sign(pos, v2, v3);
+    d3 = sign(pos, v3, v1);
+    #undef sign
+
+    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);
+}
+
+// Compute the signed distance of a point to an item.
+static double item_dist(const item_t *item, const double pos[static 2])
+{
+    int i;
+    double ret;
+    ret =  ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
+    if (ret > 0 || !item->mesh.indices_count) return ret;
+
+    // For mesh item, test if we are inside a triangle.
+    for (i = 0; i < item->mesh.indices_count; i += 3) {
+        if (triangle_contains(item->mesh.verts, item->mesh.indices + i, pos)) {
+            return 0;
+        }
+    }
+    return 100000.0;
 }
 
 /*
@@ -162,7 +237,7 @@ static double lookup_score(const item_t *item, const double pos[static 2],
 {
     double dist, area, ret;
 
-    dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
+    dist = item_dist(item, pos);
     area = item->a * item->b;
 
     // XXX: probably need to change this algo.
