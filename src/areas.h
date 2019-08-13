@@ -64,6 +64,25 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
                  uint64_t *oid, uint64_t *hint);
 
 /*
+ * Function: areas_lookup_aabb
+ * Get the list of all shapes in the area intersecting a bouding box
+ *
+ * For the moment this only considers the mesh shapes.
+ *
+ * Parameters:
+ *   area       - An areas instance.
+ *   aabb       - Bounding box (min and max positions).
+ *   user       - Passed to the callback.
+ *   callback   - Function called once per matching shape.
+ *
+ * Return:
+ *   The number of matching shapes.
+ */
+int areas_lookup_aabb(
+        const areas_t *areas, const double aabb[2][2], void *user,
+        void (*callback)(void *user, uint64_t oid, uint64_t hint));
+
+/*
  * Function: areas_clear_all
  * Remove all the shapes in an areas instance.
  */
