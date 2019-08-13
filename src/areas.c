@@ -9,6 +9,7 @@
 
 #include "areas.h"
 #include "utarray.h"
+#include "utils/mesh2d.h"
 #include "utils/vec.h"
 #include "utils/utils.h"
 
@@ -98,31 +99,6 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
     utarray_push_back(areas->items, &item);
 }
 
-// Util function to return the center of a triangle in a mesh.
-// Return the area of the triangle.
-static double triangle_center(const float verts[][2],
-                              const uint16_t indices[],
-                              double out[2])
-{
-    int i;
-    double a = 0;
-    #define I(i) indices[(i) % 3]
-
-    out[0] = out[1] = 0;
-    for (i = 0; i < 3; i++) {
-        out[0] += verts[I(i)][0];
-        out[1] += verts[I(i)][1];
-    }
-    out[0] /= 3;
-    out[1] /= 3;
-
-    for (i = 0; i < 3; i++)
-        a += 0.5 * verts[I(i)][0] * (verts[I(i + 1)][1] - verts[I(i + 2)][1]);
-
-    #undef I
-    return a;
-}
-
 void areas_add_triangles_mesh(areas_t *areas, int verts_count,
                               const float verts[][2],
                               int indices_count,
@@ -130,25 +106,10 @@ void areas_add_triangles_mesh(areas_t *areas, int verts_count,
                               uint64_t oid, uint64_t hint)
 {
     item_t item = {};
-    double w, w_tot = 0, tri_pos[2], pos[2] = {}, r2 = 0;
-    int i;
+    double r;
 
-    // Compute bounding circle.
-    for (i = 0; i < indices_count; i += 3) {
-        w = triangle_center(verts, indices + i, tri_pos);
-        pos[0] += w * tri_pos[0];
-        pos[1] += w * tri_pos[1];
-        w_tot += w;
-    }
-    pos[0] /= w_tot;
-    pos[1] /= w_tot;
-    for (i = 0; i < verts_count; i++) {
-        r2 = max(r2, (verts[i][0] - pos[0]) * (verts[i][0] - pos[0]) +
-                     (verts[i][1] - pos[1]) * (verts[i][1] - pos[1]));
-    }
-
-    memcpy(item.pos, pos, sizeof(item.pos));
-    item.a = item.b = sqrt(r2);
+    mesh2d_get_bounding_circle(verts, indices, indices_count, item.pos, &r);
+    item.a = item.b = r;
     item.oid = oid;
     item.hint = hint;
 
@@ -174,49 +135,18 @@ void areas_clear_all(areas_t *areas)
     utarray_clear(areas->items);
 }
 
-static bool triangle_contains(const float verts[][2],
-                              const uint16_t indices[],
-                              const double pos[2])
-{
-    // Algo from:
-    // https://stackoverflow.com/questions/2049582/
-    //              how-to-determine-if-a-point-is-in-a-2d-triangle
-    // There is probably a simpler way.
-    float d1, d2, d3, v1[2], v2[2], v3[2];
-    bool has_neg, has_pos;
-
-    memcpy(v1, verts[indices[0]], sizeof(v1));
-    memcpy(v2, verts[indices[1]], sizeof(v2));
-    memcpy(v3, verts[indices[2]], sizeof(v3));
-
-    #define sign(p1, p2, p3) \
-        ((p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]))
-    d1 = sign(pos, v1, v2);
-    d2 = sign(pos, v2, v3);
-    d3 = sign(pos, v3, v1);
-    #undef sign
-
-    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-    return !(has_neg && has_pos);
-}
-
 // Compute the signed distance of a point to an item.
 static double item_dist(const item_t *item, const double pos[static 2])
 {
-    int i;
     double ret;
     ret =  ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
     if (ret > 0 || !item->mesh.indices_count) return ret;
 
-    // For mesh item, test if we are inside a triangle.
-    for (i = 0; i < item->mesh.indices_count; i += 3) {
-        if (triangle_contains(item->mesh.verts, item->mesh.indices + i, pos)) {
-            return 0;
-        }
-    }
-    return 100000.0;
+    if (mesh2d_contains_point(item->mesh.verts, item->mesh.indices,
+                              item->mesh.indices_count, pos))
+        return 0;
+
+    return 100000.0; // Default value at quasi infinity.
 }
 
 /*
