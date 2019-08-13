@@ -16,7 +16,7 @@ typedef struct mesh mesh_t;
 typedef struct feature feature_t;
 
 struct mesh {
-    mesh_t      *next;
+    mesh_t      *next, *prev;
     double      bounding_cap[4];
     int         vertices_count;
     double      (*vertices)[3];
@@ -28,7 +28,7 @@ struct mesh {
 
 struct feature {
     obj_t       obj;
-    feature_t   *next;
+    feature_t   *next, *prev;
     mesh_t      *meshes;
     int         frame;
     float       fill_color[4];
@@ -197,7 +197,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
             rings_size[i] = size;
         }
         mesh_add_poly(mesh, geo->polygon.size, rings_ofs, rings_size);
-        LL_APPEND(feature->meshes, mesh);
+        DL_APPEND(feature->meshes, mesh);
         return;
     case GEOJSON_POINT:
         coordinates = &geo->point.coordinates;
@@ -217,7 +217,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     mesh = calloc(1, sizeof(*mesh));
     ofs = mesh_add_vertices(mesh, size, coordinates);
     mesh_add_line(mesh, ofs, size);
-    LL_APPEND(feature->meshes, mesh);
+    DL_APPEND(feature->meshes, mesh);
 }
 
 static void add_geojson_feature(image_t *image,
@@ -242,7 +242,7 @@ static void add_geojson_feature(image_t *image,
     vec2_copy(geo_feature->properties.text_offset, feature->text_offset);
 
     feature_add_geo(feature, &geo_feature->geometry);
-    LL_APPEND(image->features, feature);
+    DL_APPEND(image->features, feature);
 }
 
 static void feature_del(obj_t *obj)
@@ -252,7 +252,7 @@ static void feature_del(obj_t *obj)
 
     while (feature->meshes) {
         mesh = feature->meshes;
-        LL_DELETE(feature->meshes, mesh);
+        DL_DELETE(feature->meshes, mesh);
         free(mesh->vertices);
         free(mesh->triangles);
         free(mesh->lines);
@@ -282,7 +282,7 @@ static void remove_all_features(image_t *image)
 
     while(image->features) {
         feature = image->features;
-        LL_DELETE(image->features, feature);
+        DL_DELETE(image->features, feature);
         obj_release(&feature->obj);
     }
 }
