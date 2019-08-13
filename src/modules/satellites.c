@@ -43,6 +43,7 @@ typedef struct satellite {
     double pvg[3]; // XXX: rename that.
     double pvo[2][4];
     double vmag;
+    json_value *data; // Data passed in the constructor.
 } satellite_t;
 
 // Module class.
@@ -397,6 +398,8 @@ static int satellite_init(obj_t *obj, json_value *args)
                                         &startmfe, &stopmfe, &deltamin);
         if (name)
             snprintf(sat->name, sizeof(sat->name), "%s", name);
+
+        sat->data = json_copy(args);
     }
 
     return 0;
@@ -406,6 +409,7 @@ static void satellite_del(obj_t *obj)
 {
     satellite_t *sat = (satellite_t*)obj;
     free(sat->elsetrec);
+    json_builder_free(sat->data);
 }
 
 /*
@@ -525,6 +529,14 @@ static void satellite_get_designations(
     f(obj, user, "NORAD", buf);
 }
 
+static json_value *satellite_data_fn(obj_t *obj, const attribute_t *attr,
+                                     const json_value *args)
+{
+    satellite_t *sat = (void*)obj;
+    if (!args && sat->data) return json_copy(sat->data);
+    return NULL;
+}
+
 /*
  * Meta class declarations.
  */
@@ -539,6 +551,10 @@ static obj_klass_t satellite_klass = {
     .get_info       = satellite_get_info,
     .render         = satellite_render,
     .get_designations = satellite_get_designations,
+    .attributes = (attribute_t[]) {
+        PROPERTY(data, TYPE_JSON, .fn = satellite_data_fn),
+        {}
+    },
 };
 OBJ_REGISTER(satellite_klass)
 
