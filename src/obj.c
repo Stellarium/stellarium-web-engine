@@ -40,7 +40,14 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, obj_t *parent,
     obj->ref = 1;
     obj->klass = klass;
     if (parent) module_add(parent, obj);
-    if (obj->klass->init) obj->klass->init(obj, args);
+    if (obj->klass->init) {
+        if (obj->klass->init(obj, args) != 0) {
+            // XXX: should be done by obj_release!
+            if (parent) module_remove(parent, obj);
+            obj_release(obj);
+            return NULL;
+        }
+    }
 
     // Set the attributes.
     if (args && args->type == json_object) {
