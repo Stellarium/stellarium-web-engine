@@ -175,9 +175,9 @@ static int jcon_parse_(json_value *v, va_list ap)
     }
 
     if (token[0] == '[') {
-        if (v->type != json_array) return -1;
+        if (v && v->type != json_array) return -1;
         for (i = 0; ; i++) {
-            child = i < v->u.array.length ? v->u.array.values[i] : NULL;
+            child = (v && i < v->u.array.length) ? v->u.array.values[i] : NULL;
             r = jcon_parse_(child, ap);
             if (r == 1) return 0;
             if (r) return -1;
