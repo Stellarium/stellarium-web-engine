@@ -43,6 +43,7 @@ typedef struct satellite {
     double pvg[3]; // XXX: rename that.
     double pvo[2][4];
     double vmag;
+    bool error; // Set if we got an error computing the position.
     json_value *data; // Data passed in the constructor.
 } satellite_t;
 
@@ -432,7 +433,17 @@ static void true_equator_to_j2000(const observer_t *obs,
 static int satellite_update(satellite_t *sat, const observer_t *obs)
 {
     double pv[2][3];
-    sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1]); // Orbit computation.
+
+    if (sat->error) return 0;
+    assert(sat->elsetrec);
+    // Orbit computation.
+    if (!sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1])) {
+        LOG_W("Cannot compute satellite position (%s, %d)",
+              sat->name, sat->number);
+        sat->error = true;
+        return 0;
+    }
+    assert(!isnan(pv[0][0]) && !isnan(pv[0][1]));
 
     vec3_mul(1000.0 / DAU, pv[0], pv[0]);
     vec3_mul(1000.0 / DAU, pv[1], pv[1]);
@@ -483,6 +494,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     satellite_update(sat, painter.obs);
     vmag = sat->vmag;
+    if (sat->error) return 0;
     if (vmag > painter.stars_limit_mag) return 0;
 
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
