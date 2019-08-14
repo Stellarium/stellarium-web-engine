@@ -272,7 +272,7 @@ static int satellites_update(obj_t *obj, double dt)
         if (data) {
             nb = load_jsonl_data(sats, data, size, sats->jsonl_url,
                                  &last_epoch);
-            LOG_D("Parsed %d satellites (latest epoch: %s)", nb,
+            LOG_I("Parsed %d satellites (latest epoch: %s)", nb,
                   format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
         }
 
