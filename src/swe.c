@@ -385,10 +385,40 @@ static void test_iter_lines(void)
     assert(!iter_lines(data, strlen(data) - 1, &line, &len));
 }
 
+static void test_jcon(void)
+{
+    const char *str;
+    json_value *json;
+    int x, d_x, d_y, e_x = -1, l_0, r;
+
+    #define STR(...) #__VA_ARGS__
+    str = STR({"x": 1, "d": {"x": 10, "y": 20}, "l": [3, 4]});
+    #undef STR
+    json = json_parse(str, strlen(str));
+    assert(json);
+
+    r = jcon_parse(json, "{",
+        "x", JCON_INT(x),
+        "l", "[", JCON_INT(l_0), "]",
+        "d", "{",
+            "x", JCON_INT(d_x),
+            "y", JCON_INT(d_y),
+        "}",
+        "e", "{",
+            "x", JCON_INT(e_x),
+        "}",
+    "}");
+    assert(r == 0 && x == 1 && d_x == 10 && d_y == 20 && e_x == -1 &&
+           l_0 == 3);
+
+    json_value_free(json);
+}
+
 TEST_REGISTER(NULL, test_events, 0);
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);
 TEST_REGISTER(NULL, test_clipping, TEST_AUTO);
 TEST_REGISTER(NULL, test_iter_lines, TEST_AUTO);
+TEST_REGISTER(NULL, test_jcon, TEST_AUTO);
 
 #endif
 
