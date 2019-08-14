@@ -117,6 +117,8 @@ static int jcon_parse_(json_value *v, va_list ap)
     } ptr;
 
     token = va_arg(ap, const char*);
+    assert(token[1] == '\0');
+
     if (token[0] == ']') return 1;
 
     if (token[0] == 'f') {
@@ -154,10 +156,13 @@ static int jcon_parse_(json_value *v, va_list ap)
     }
 
     if (token[0] == '{') {
-        if (v->type != json_object) return -1;
+        if (v && v->type != json_object) return -1;
         while (true) {
             token = va_arg(ap, const char *);
-            if (token[0] == '}') break;
+            if (token[0] == '}') {
+                assert(token[1] == '\0');
+                break;
+            }
 
             // attribute staring with '!' are compulsory
             required = false;
@@ -166,7 +171,7 @@ static int jcon_parse_(json_value *v, va_list ap)
                 token++;
             }
 
-            child = json_get_attr(v, token, 0);
+            child = v ? json_get_attr(v, token, 0) : NULL;
             if (!child && required) return -1;
             r = jcon_parse_(child, ap);
             if (r) return -1;
