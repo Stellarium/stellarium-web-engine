@@ -98,17 +98,26 @@ int z_uncompress(void *dest, int dest_size, const void *src, int src_size)
 
 // Uncompress gz file data.
 // Only used for the star source data.
+// XXX: need to get a more robust version!
 void *z_uncompress_gz(const void *src, int src_size, int *out_size)
 {
     int isize;
     const uint8_t *d = src;
     void *ret;
-    uint8_t footer[8];
+    uint8_t footer[8] __attribute__((aligned(8)));
+    uint8_t id1, id2, cm, flg;
     assert(src_size >= 10);
-    assert(*d++ == 0x1f);
-    assert(*d++ == 0x8b);
-    assert(*d++ == 8); // Only support deflate.
-    assert(*d++ == 8); // Only support this flags for the moment!
+
+    id1 = *d++;
+    id2 = *d++;
+    cm = *d++;
+    flg = *d++;
+
+    assert(id1 == 0x1f);
+    assert(id2 == 0x8b);
+    assert(cm == 8); // Only support deflate.
+    assert(flg == 8); // Only support this flags for the moment!
+
     d += 6;
     d += strlen((const char*)d) + 1;
     // XXX: this might break with js!
