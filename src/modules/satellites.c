@@ -373,7 +373,7 @@ static int satellite_init(obj_t *obj, json_value *args)
 {
     // Support creating a satellite using noctuasky model data json values.
     satellite_t *sat = (satellite_t*)obj;
-    const char *tle1, *tle2, *name = NULL;
+    const char *tle1, *tle2, *name = NULL, *type = "Asa";
     double startmfe, stopmfe, deltamin;
     int r;
 
@@ -381,6 +381,7 @@ static int satellite_init(obj_t *obj, json_value *args)
 
     if (args) {
         r = jcon_parse(args, "{",
+            "types", "[", JCON_STR(type), "]",
             "!model_data", "{",
                 "!norad_number", JCON_INT(sat->number),
                 "mag", JCON_DOUBLE(sat->stdmag),
@@ -398,6 +399,7 @@ static int satellite_init(obj_t *obj, json_value *args)
                                         &startmfe, &stopmfe, &deltamin);
         if (name)
             snprintf(sat->name, sizeof(sat->name), "%s", name);
+        strncpy(sat->obj.type, type, 4);
 
         sat->data = json_copy(args);
     }
