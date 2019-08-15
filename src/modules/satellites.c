@@ -55,6 +55,7 @@ typedef struct satellites {
     int     qsmags_status;
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
+    double  hints_mag_offset;
 } satellites_t;
 
 
@@ -491,12 +492,15 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
     satellite_t *sat = (satellite_t*)obj;
+    const satellites_t *sats = (satellites_t*)obj->parent;
     const bool selected = core->selection && obj->oid == core->selection->oid;
+    const double hints_limit_mag = painter.hints_limit_mag +
+                                   sats->hints_mag_offset - 2.5;
 
     satellite_update(sat, painter.obs);
     vmag = sat->vmag;
     if (sat->error) return 0;
-    if (vmag > painter.stars_limit_mag) return 0;
+    if (vmag > painter.stars_limit_mag && vmag > hints_limit_mag) return 0;
 
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return 0;
@@ -504,7 +508,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
-    if (vmag <= painter.hints_limit_mag - 2.5) {
+    if (vmag <= hints_limit_mag) {
         vec4_copy(label_color, color);
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
                       VEC(24.0, 24.0), color, 0.0);
@@ -520,7 +524,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     size = max(8, size);
-    if (*sat->name && (selected || vmag <= painter.hints_limit_mag - 4.0)) {
+    if (*sat->name && (selected || vmag <= hints_limit_mag - 1.5)) {
         labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size,
                       FONT_SIZE_BASE - 1, selected ? white : label_color, 0,
                       LABEL_AROUND, selected ? TEXT_BOLD : 0, 0, obj->oid);
@@ -583,5 +587,10 @@ static obj_klass_t satellites_klass = {
     .update         = satellites_update,
     .render         = satellites_render,
     .get_by_oid     = satellites_get_by_oid,
+    .attributes = (attribute_t[]) {
+        PROPERTY(hints_mag_offset, TYPE_MAG,
+                 MEMBER(satellites_t, hints_mag_offset)),
+        {}
+    }
 };
 OBJ_REGISTER(satellites_klass)
