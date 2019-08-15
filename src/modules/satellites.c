@@ -379,6 +379,7 @@ static int satellite_init(obj_t *obj, json_value *args)
     int r;
 
     sat->vmag = SATELLITE_DEFAULT_MAG;
+    sat->stdmag = SATELLITE_DEFAULT_MAG;
 
     if (args) {
         r = jcon_parse(args, "{",
