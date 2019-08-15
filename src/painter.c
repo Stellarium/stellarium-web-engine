@@ -442,7 +442,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
                              const uv_map_t *map, bool outside)
 {
     double corners[4][4];
-    double quad[4][4], normals[4][4];
+    double quad[4][4], normal[4];
     double p[4][4];
     double bounding_cap[4];
     uv_map_t children[4];
@@ -491,13 +491,13 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
      */
     if (!outside && order > 1) {
         for (i = 0; i < 4; i++) {
-            vec3_copy(corners[i], normals[i]);
-            normals[i][3] = 0.0;
-            mat4_mul_vec4(*painter->transform, normals[i], normals[i]);
-            vec3_normalize(normals[i], normals[i]);
-            convert_framev4(painter->obs, frame, FRAME_VIEW,
-                            normals[i], normals[i]);
-            if (normals[i][2] > 0) return false;
+            vec3_copy(corners[i], normal);
+            normal[3] = 0.0;
+            mat4_mul_vec4(*painter->transform, normal, normal);
+            vec3_normalize(normal, normal);
+            convert_frame(painter->obs, frame, FRAME_VIEW, true,
+                          normal, normal);
+            if (normal[2] > 0) return false;
         }
         return true;
     }
