@@ -218,7 +218,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
         obj_set_attr(ls->shape, "pos", VEC(0, 0, -1, 0));
         obj_set_attr(ls->shape, "frame", FRAME_OBSERVED);
         obj_set_attr(ls->shape, "size", VEC(M_PI, M_PI));
-        obj_set_attr(ls->shape, "color", VEC(0.3, 0.6, 0.2, 1.0));
+        obj_set_attr(ls->shape, "color", VEC(0.1, 0.15, 0.1, 1.0));
         obj_set_attr(ls->shape, "border_color", VEC(0.2, 0.4, 0.1, 1.0));
         name = "Zero Horizon";
     }
