@@ -443,7 +443,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 {
     double corners[4][4];
     double quad[4][4], normal[4];
-    double p[4][4];
+    double p[4][4], direction[3];
     double bounding_cap[4];
     uv_map_t children[4];
     int i;
@@ -488,8 +488,16 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
      * For planet tiles, we also do culling test.  Since the quad is not
      * plane, to prevent error, we only do it at level > 1, and we check the
      * normal of the four corners.
+     *
+     * Because of the projection distortion, we test not by checking
+     * the view z value, but with the dot product of the normal and the
+     * direction vector to the middle of the planet.
      */
     if (!outside && order > 1) {
+        vec3_copy((*painter->transform)[3], direction);
+        vec3_normalize(direction, direction);
+        convert_frame(painter->obs, frame, FRAME_VIEW, true,
+                      direction, direction);
         for (i = 0; i < 4; i++) {
             vec3_copy(corners[i], normal);
             normal[3] = 0.0;
@@ -497,7 +505,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
             vec3_normalize(normal, normal);
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           normal, normal);
-            if (normal[2] > 0) return false;
+            if (vec3_dot(normal, direction) < 0) return false;
         }
         return true;
     }
