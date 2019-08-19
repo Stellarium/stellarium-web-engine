@@ -539,13 +539,28 @@ static void satellite_get_designations(
              const char *cat, const char *str))
 {
     satellite_t *sat = (void*)obj;
+    json_value *names;
+    char *name;
+    int i;
     char buf[32];
-    sprintf(buf, "%05d", (int)oid_get_index(obj->oid));
-    if (*sat->name)
-        f(obj, user, "NAME", sat->name);
-    if (*sat->name2)
-        f(obj, user, "NAME", sat->name2);
-    f(obj, user, "NORAD", buf);
+    if (sat->data) {
+        names = json_get_attr(sat->data, "names", json_array);
+        for (i = 0; i < names->u.array.length; ++i) {
+            name = names->u.array.values[i]->u.string.ptr;
+            if (strstr(name, "NAME "))
+                f(obj, user, "NAME", name + 5);
+            else {
+                f(obj, user, "", name);
+            }
+        }
+    } else {
+        sprintf(buf, "%05d", (int)oid_get_index(obj->oid));
+        if (*sat->name)
+            f(obj, user, "NAME", sat->name);
+        if (*sat->name2)
+            f(obj, user, "NAME", sat->name2);
+        f(obj, user, "NORAD", buf);
+    }
 }
 
 static json_value *satellite_data_fn(obj_t *obj, const attribute_t *attr,
