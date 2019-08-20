@@ -75,7 +75,7 @@ int obj_info_from_str(const char *str);
     X(RADIUS,   radius, ANGLE,  10) \
     X(PVO,      pvo,    V4X2,   11) \
     X(LHA,      lha,    ANGLE,  12) \
-
+    X(PARALLAX, plx,    FLOAT,  13) \
 
 /*
  * Enum of all the info.

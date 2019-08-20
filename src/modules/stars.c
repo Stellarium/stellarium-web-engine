@@ -201,6 +201,9 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_DISTANCE:
         *(double*)out = star->data.distance;
         return 0;
+    case INFO_PARALLAX:
+        *(double*)out = star->data.plx * 1000;
+        return 0;
     default:
         return 1;
     }
