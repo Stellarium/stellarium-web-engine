@@ -313,20 +313,22 @@ static void info_widget(obj_t *obj)
     eraC2s(observed, &az, &alt);
 
     if (obj_get_info(obj, obs, INFO_VMAG, &v) == 0) {
-        sprintf(buf, "%f", v);
+        snprintf(buf, sizeof(buf), "%f", v);
         gui_label("VMAG", buf);
     }
 
-    sprintf(buf, "%s/%s", format_hangle(buf1, ra), format_dangle(buf2, dec));
+    snprintf(buf, sizeof(buf), "%s/%s",
+             format_hangle(buf1, ra), format_dangle(buf2, dec));
     gui_label("RA/DE", buf);
-    sprintf(buf, "%s/%s", format_dangle(buf1, az), format_dangle(buf2, alt));
+    snprintf(buf, sizeof(buf), "%s/%s",
+             format_dangle(buf1, az), format_dangle(buf2, alt));
     gui_label("AZ/AL", buf);
 
     find_constellation_at(icrs, buf);
     gui_label("CST", buf);
 
     if (obj_get_info(obj, obs, INFO_PHASE, &v)) {
-        sprintf(buf, "%.0f%%", v * 100);
+        snprintf(buf, sizeof(buf), "%.0f%%", v * 100);
         gui_label("PHASE", buf);
     }
 }

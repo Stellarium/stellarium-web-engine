@@ -294,7 +294,8 @@ void core_init(double win_w, double win_h, double pixel_scale)
     }
     profile_init();
     texture_set_load_callback(NULL, texture_load_function);
-    sprintf(cache_dir, "%s/%s", sys_get_user_dir(), ".cache");
+    snprintf(cache_dir, sizeof(cache_dir), "%s/%s",
+             sys_get_user_dir(), ".cache");
     request_init(cache_dir);
 
     core = (core_t*)obj_create("core", "core", NULL, NULL);

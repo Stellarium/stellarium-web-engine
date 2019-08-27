@@ -155,9 +155,9 @@ static int vertical_align_format(const event_t *ev, char *out, int len)
     v = fabs(eraAnpm(de2 - de1));
     prec = (v < 2 * DD2R) ? 1 : 0;
     if (de1 < de2)
-        sprintf(buf, "%.*f° south", prec, v * DR2D);
+        snprintf(buf, sizeof(buf), "%.*f° south", prec, v * DR2D);
     else
-        sprintf(buf, "%.*f° north", prec, v * DR2D);
+        snprintf(buf, sizeof(buf), "%.*f° north", prec, v * DR2D);
 
     snprintf(out, len, "%s passes %s of %s",
              obj_get_name(ev->o1->obj, buf1), buf,

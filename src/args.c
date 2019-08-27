@@ -109,7 +109,7 @@ json_value *args_vvalue_new(int type, va_list *ap)
         } else if (isfinite(f)) {
             val = json_double_new(f);
         } else {
-            sprintf(buf, "%f", f);
+            snprintf(buf, sizeof(buf), "%f", f);
             val = json_string_new(buf);
         }
     }

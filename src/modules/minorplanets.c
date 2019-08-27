@@ -289,10 +289,10 @@ void mplanet_get_designations(
         // Workaround so that we don't break stellarium web, that expect
         // to the an id that is simply the MPC object number!
         // Remove when we can.
-        sprintf(buf, "%d", mplanet->mpl_number);
+        snprintf(buf, sizeof(buf), "%d", mplanet->mpl_number);
         f(obj, user, "", buf);
 
-        sprintf(buf, "(%d)", mplanet->mpl_number);
+        snprintf(buf, sizeof(buf), "(%d)", mplanet->mpl_number);
         f(obj, user, "MPC", buf);
     }
     if (*mplanet->name)  f(obj, user, "NAME", mplanet->name);

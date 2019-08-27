@@ -139,7 +139,7 @@ obj_t *city_create(const char *name, const char *country_code,
     city_t *city, *best = NULL;
     if (isnan(elevation)) elevation = 0;
 
-    sprintf(id, "CITY %s %s", country_code, name);
+    snprintf(id, sizeof(id), "CITY %s %s", country_code, name);
     str_to_upper(id, id);
     // First search for a nearby city.
     if (!isnan(nearby)) {

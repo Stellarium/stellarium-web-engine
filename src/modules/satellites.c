@@ -106,7 +106,7 @@ static int parse_tle_file(satellites_t *sats, const char *data,
         if (!data) break;
         data += 1;
 
-        sprintf(id, "NORAD %.5s", line1 + 2);
+        snprintf(id, sizeof(id), "NORAD %.5s", line1 + 2);
         sat = (satellite_t*)obj_create("tle_satellite", id, (obj_t*)sats, NULL);
         sat_num = atoi(line1 + 2);
 
@@ -554,7 +554,7 @@ static void satellite_get_designations(
             }
         }
     } else {
-        sprintf(buf, "%05d", (int)oid_get_index(obj->oid));
+        snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
         if (*sat->name)
             f(obj, user, "NAME", sat->name);
         if (*sat->name2)

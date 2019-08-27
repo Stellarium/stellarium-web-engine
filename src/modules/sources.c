@@ -86,10 +86,10 @@ static const char *get_data(const source_t *source, const char *file,
     if (    source->release_date &&
             (strncmp(source->url, "http://", 7) == 0 ||
              strncmp(source->url, "https://", 8) == 0)) {
-        sprintf(url, "%s/%s?v=%d",
-                source->url, file, (int)source->release_date);
+        snprintf(url, sizeof(url), "%s/%s?v=%d",
+                 source->url, file, (int)source->release_date);
     } else {
-        sprintf(url, "%s/%s", source->url, file);
+        snprintf(url, sizeof(url), "%s/%s", source->url, file);
     }
 
     data = asset_get_data2(url, ASSET_USED_ONCE | extra_flags, NULL, code);
@@ -112,7 +112,7 @@ static int parse_index(const char *base_url, const char *data)
         if (json->u.object.values[i].value->type != json_object) continue;
         key = json->u.object.values[i].name;
         type = json_get_attr_s(json->u.object.values[i].value, "type");
-        sprintf(url, "%s/%s", base_url, key);
+        snprintf(url, sizeof(url), "%s/%s", base_url, key);
         module_add_data_source(NULL, url, type, NULL);
     }
 

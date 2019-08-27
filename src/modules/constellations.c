@@ -77,12 +77,12 @@ static int constellation_update(constellation_t *con, const observer_t *obs);
  * Function: join_path
  * Join two file paths.
  */
-const char *join_path(const char *base, const char *path, char *buf)
+const char *join_path(const char *base, const char *path, char *buf, int len)
 {
     if (!base) {
-        sprintf(buf, "%s", path);
+        snprintf(buf, len, "%s", path);
     } else {
-        sprintf(buf, "%s/%s", base, path);
+        snprintf(buf, len, "%s/%s", base, path);
     }
     return buf;
 }
@@ -222,7 +222,7 @@ int constellation_set_image(obj_t *obj, const json_value *args)
 {
     const char *img, *anchors, *base_path;
     constellation_t *cons = (void*)obj;
-    char buf[1024];
+    char path[1024];
 
     if (cons->img) return 0; // Already set.
     img = json_get_attr_s(args, "img");
@@ -230,7 +230,8 @@ int constellation_set_image(obj_t *obj, const json_value *args)
     base_path = json_get_attr_s(args, "base_path");
 
     if (parse_anchors(anchors, cons->anchors) != 0) goto error;
-    cons->img = texture_from_url(join_path(base_path, img, buf), TF_LAZY_LOAD);
+    join_path(base_path, img, path, sizeof(path));
+    cons->img = texture_from_url(path, TF_LAZY_LOAD);
     if (json_get_attr_b(args, "uv_in_pixel", false))
         cons->img_need_rescale = true;
     assert(cons->img);

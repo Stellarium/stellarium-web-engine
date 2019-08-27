@@ -50,13 +50,15 @@ gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
     assert(i < ARRAY_SIZE(g_shaders));
     strcpy(s->key, key);
 
-    sprintf(path, "asset://shaders/%s.glsl", name);
+    snprintf(path, sizeof(path), "asset://shaders/%s.glsl", name);
     code = asset_get_data2(path, ASSET_USED_ONCE, NULL, NULL);
     assert(code);
 
     for (define = defines; define && define->name; define++) {
-        if (define->set)
-            sprintf(pre + strlen(pre), "#define %s\n", define->name);
+        if (define->set) {
+            snprintf(pre + strlen(pre), sizeof(pre) - strlen(pre),
+                     "#define %s\n", define->name);
+        }
     }
     s->shader = gl_shader_create(code, code, pre, attr_names);
     if (on_created) on_created(s->shader);

@@ -1116,8 +1116,9 @@ static int planets_init(obj_t *obj, json_value *args)
     ASSET_ITER("asset://textures/", path) {
         r = regexec(&reg, path, 2, matches, 0);
         if (r) continue;
-        sprintf(name, "%.*s", (int)(matches[1].rm_eo - matches[1].rm_so),
-                path + matches[1].rm_so);
+        snprintf(name, sizeof(name), "%.*s",
+                 (int)(matches[1].rm_eo - matches[1].rm_so),
+                 path + matches[1].rm_so);
         p = planet_get_by_name(planets, name);
         if (!p) continue;
         p->rings.tex = texture_from_url(path, TF_LAZY_LOAD);

@@ -278,7 +278,7 @@ static void render_label(const double p[2], const double u[2],
                          int dir, line_t *line, int step,
                          const painter_t *painter)
 {
-    char buff[32];
+    char buf[32];
     double pos[2];
     double a, color[4], label_angle;
     char s;
@@ -305,22 +305,22 @@ static void render_label(const double p[2], const double u[2],
     if (dir == 0 || line->format == 'd') {
         eraA2af(1, a, &s, h);
         if (step <= 360)
-            sprintf(buff, "%c%d°", s, h[0]);
+            snprintf(buf, sizeof(buf), "%c%d°", s, h[0]);
         else if (step <= 21600)
-            sprintf(buff, "%c%d°%02d'", s, h[0], h[1]);
+            snprintf(buf, sizeof(buf), "%c%d°%02d'", s, h[0], h[1]);
         else
-            sprintf(buff, "%c%d°%02d'%02d\"", s, h[0], h[1], h[2]);
+            snprintf(buf, sizeof(buf), "%c%d°%02d'%02d\"", s, h[0], h[1], h[2]);
     } else {
         eraA2tf(1, a, &s, h);
         if (step <= 24)
-            sprintf(buff, "%c%dh", s, h[0]);
+            snprintf(buf, sizeof(buf), "%c%dh", s, h[0]);
         else  if (step <= 1440)
-            sprintf(buff, "%c%dh%02d", s, h[0], h[1]);
+            snprintf(buf, sizeof(buf), "%c%dh%02d", s, h[0], h[1]);
         else
-            sprintf(buff, "%c%dh%02dm%02ds", s, h[0], h[1], h[2]);
+            snprintf(buf, sizeof(buf), "%c%dh%02dm%02ds", s, h[0], h[1], h[2]);
     }
 
-    paint_text_bounds(painter, buff, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
+    paint_text_bounds(painter, buf, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                       text_size, bounds);
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
@@ -342,7 +342,7 @@ static void render_label(const double p[2], const double u[2],
     vec4_copy(painter->color, color);
 
     color[3] = 1.0;
-    paint_text(painter, buff, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
+    paint_text(painter, buf, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                text_size, color, label_angle);
 }
 

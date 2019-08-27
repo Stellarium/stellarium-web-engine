@@ -89,7 +89,7 @@ static void skyculture_activate(skyculture_t *cult)
     assert(constellations);
     for (i = 0; i < cult->nb_constellations; i++) {
         cst = &cult->constellations[i];
-        sprintf(id, "CST %s", cst->id);
+        snprintf(id, sizeof(id), "CST %s", cst->id);
         cons = obj_get(constellations, id, 0);
         if (cons) {
             obj_release(cons);
@@ -105,7 +105,7 @@ static void skyculture_activate(skyculture_t *cult)
     if (cult->imgs) {
         for (i = 0; i < cult->imgs->u.array.length; i++) {
             args = cult->imgs->u.array.values[i];
-            sprintf(id, "CST %s", json_get_attr_s(args, "id"));
+            snprintf(id, sizeof(id), "CST %s", json_get_attr_s(args, "id"));
             cons = obj_get(constellations, id, 0);
             if (!cons) continue;
             constellation_set_image(cons, args);
@@ -170,7 +170,7 @@ static json_value *make_imgs_json(
         json_object_push(v, "img", json_string_new(a->img));
         json_object_push(v, "type", json_string_new("constellation"));
         json_object_push(v, "base_path", json_string_new(uri));
-        sprintf(anchors, "%f %f %d %f %f %d %f %f %d",
+        snprintf(anchors, sizeof(anchors), "%f %f %d %f %f %d %f %f %d",
             a->anchors[0].uv[0], a->anchors[0].uv[1], a->anchors[0].hip,
             a->anchors[1].uv[0], a->anchors[1].uv[1], a->anchors[1].hip,
             a->anchors[2].uv[0], a->anchors[2].uv[1], a->anchors[2].hip);
