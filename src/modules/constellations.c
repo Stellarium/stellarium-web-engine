@@ -37,7 +37,8 @@ typedef struct constellation {
     char        *name;
     char        *name_translated;
     int         count;
-    fader_t     visible;
+    bool        show;       // Set whether we show this constellation.
+    fader_t     visible;    // When the constellation is actually visible.
     fader_t     image_loaded_fader;
     obj_t       **stars;
     // Texture and associated anchors and transformation matrix.
@@ -86,12 +87,37 @@ const char *join_path(const char *base, const char *path, char *buf)
     return buf;
 }
 
+// Test if a shape in clipping coordinates is clipped or not.
+static bool is_clipped(int n, double (*pos)[4])
+{
+    // The six planes equations:
+    const int P[6][4] = {
+        {-1, 0, 0, -1}, {1, 0, 0, -1},
+        {0, -1, 0, -1}, {0, 1, 0, -1},
+        {0, 0, -1, -1}, {0, 0, 1, -1}
+    };
+    int i, p;
+    for (p = 0; p < 6; p++) {
+        for (i = 0; i < n; i++) {
+            if (    P[p][0] * pos[i][0] +
+                    P[p][1] * pos[i][1] +
+                    P[p][2] * pos[i][2] +
+                    P[p][3] * pos[i][3] <= 0) {
+                break;
+            }
+        }
+        if (i == n) // All the points are outside a clipping plane.
+            return true;
+    }
+    return false;
+}
+
 static int constellation_init(obj_t *obj, json_value *args)
 {
     constellation_t *cons = (constellation_t *)obj;
     constellation_infos_t *info;
 
-    fader_init(&cons->visible, true);
+    fader_init2(&cons->visible, false, 2);
     fader_init2(&cons->image_loaded_fader, false, 1);
 
     // For the moment, since we create the constellation from within C
@@ -221,7 +247,8 @@ error:
     return -1;
 }
 
-static int render_lines(const constellation_t *con, const painter_t *painter);
+static int render_lines(constellation_t *con, const painter_t *painter);
+
 static int render_img(constellation_t *con, const painter_t *painter);
 
 // Make a line shorter so that we don't hide the star.
@@ -242,6 +269,24 @@ static void line_truncate(double pos[2][4], double a0, double a1)
     eraRxp(rvm, pos[1], pos[1]);
 }
 
+/*
+ * Function: line_animation_effect
+ *
+ * Apply an animation effect to a line.  The effect here is simply to grow
+ * the line from one point to the other
+ *
+ * Parameters:
+ *   pos    - The line two points positions.
+ *   k      - The effect time from 0 (start) to 1 (end).
+ */
+static void line_animation_effect(double pos[2][4], double k)
+{
+    double p[3];
+    k = smoothstep(0.0, 1.0, k); // Smooth transition speed.
+    vec3_mix(pos[0], pos[1], k, p);
+    vec3_normalize(p, pos[1]);
+}
+
 static int constellation_update(constellation_t *con, const observer_t *obs)
 {
     // The position of a constellation is its middle point.
@@ -250,7 +295,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     int i, err;
     if (con->error) return 0;
     // Optimization: don't update invisible constellation.
-    if (con->visible.value == 0 && !con->visible.target) goto end;
+    if (!con->show) goto end;
 
     err = constellation_create_stars(con);
     if (err) {
@@ -296,9 +341,9 @@ end:
         con->img_need_rescale = false;
     }
 
-    con->visible.target = (cons && cons->show_all) ||
-                          (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
-                          ((obj_t*)con == core->selection);
+    con->show = (cons && cons->show_all) ||
+                (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
+                ((obj_t*)con == core->selection);
     return 0;
 }
 
@@ -349,6 +394,40 @@ static int render_bounds(const constellation_t *con,
     return 0;
 }
 
+/*
+ * Function: constellation_is_visible
+ * Check if the constellation is visible.
+ *
+ * We need this test so that the constellation visible fader gets properly
+ * updated as soon as the constellation get in and out of the screen.
+ */
+static bool constellation_is_visible(const constellation_t *con,
+                                     const painter_t *painter)
+{
+    int i;
+    double pvo[2][4];
+    double (*pos)[4];
+    bool ret;
+
+    // Fast tests to avoid the slow clipping test.
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, con->bounding_cap))
+        return false;
+    if (!painter_is_point_clipped_fast(painter, FRAME_ICRF, con->bounding_cap,
+                                       true))
+        return true;
+
+    pos = calloc(con->count, sizeof(*pos));
+    for (i = 0; i < con->count; i++) {
+        obj_get_pvo(con->stars[i], painter->obs, pvo);
+        convert_framev4(painter->obs, FRAME_ICRF, FRAME_VIEW, pvo[0], pos[i]);
+        project(painter->proj, 0, 4, pos[i], pos[i]);
+    }
+    ret = !is_clipped(con->count, pos);
+    free(pos);
+    return ret;
+}
+
+
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
     constellation_t *con = (const constellation_t*)obj;
@@ -360,14 +439,14 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
         return 0;
 
     constellation_update(con, painter.obs);
+    if (!con->show) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->bounding_cap))
+        return 0;
 
+    con->visible.target = constellation_is_visible(con, &painter);
     if (!selected)
         painter.color[3] *= cons->visible.value * con->visible.value;
     if (painter.color[3] == 0.0) return 0;
-
-    // Check that it's intersecting with current viewport
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->bounding_cap))
-        return 0;
 
     painter2 = painter;
     if (!selected) painter2.color[3] *= cons->lines_visible.value;
@@ -443,7 +522,7 @@ static void img_map(const uv_map_t *map, const double v[2], double out[4])
     out[3] = 0;
 }
 
-static int render_lines(const constellation_t *con, const painter_t *_painter)
+static int render_lines(constellation_t *con, const painter_t *_painter)
 {
     painter_t painter = *_painter;
     int i;
@@ -465,9 +544,10 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
         obj_get_pvo(con->stars[i], obs, pvo);
-        vec3_copy(pvo[0], lines[i]);
+        vec3_normalize(pvo[0], lines[i]);
         lines[i][3] = 0; // To infinity.
     }
+
     for (i = 0; i < con->count; i += 2) {
         obj_get_info(con->stars[i + 0], obs, INFO_VMAG, &mag[0]);
         obj_get_info(con->stars[i + 1], obs, INFO_VMAG, &mag[1]);
@@ -478,6 +558,7 @@ static int render_lines(const constellation_t *con, const painter_t *_painter)
         // Add some space, using ad-hoc formula.
         line_truncate(&lines[i], radius[0] * 2 + 0.25 * DD2R,
                                  radius[1] * 2 + 0.25 * DD2R);
+        line_animation_effect(&lines[i], con->visible.value);
     }
 
     paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1,
