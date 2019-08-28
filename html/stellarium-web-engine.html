@@ -12,12 +12,12 @@
 
 <title>Stellarium Web Engine Page</title>
 <meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons"
-      rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css"
-      rel="stylesheet">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
 <style>
   .semi-transparent {opacity: 0.5;}
@@ -40,34 +40,31 @@
 
 <div id="app">
 
-  <v-app dark>
+  <v-app>
 
     <v-navigation-drawer absolute temporary clipped v-model="drawer" app>
       <v-list dense>
-        <v-list-tile @click="">
-          <v-list-tile-action>
+        <v-list-item @click="">
+          <v-list-item-action>
             <v-icon>settings</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>Settings</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Settings</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
-    <v-toolbar app fixed clipped-left class="semi-transparent">
-      <v-toolbar-side-icon @click.stop="drawer = !drawer">
-      </v-toolbar-side-icon>
+    <v-app-bar class="xsemi-transparent">
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>Stellarium<sup>Web</sup></v-toolbar-title>
       <v-spacer></v-spacer>
-
       <div v-if="stel && stel.core.progressbars.length">
         {{getProgress().title}}
         <v-progress-circular :value="getProgress().value">
         </v-progress-circular>
       </div>
-
-    </v-toolbar>
+    </v-app-bar>
 
     <v-footer app fixed class="transparent" style="height:auto;">
       <v-spacer></v-spacer>
@@ -169,6 +166,9 @@
 
 <script>
   new Vue({
+    vuetify: new Vuetify({
+      theme: {dark: true}
+    }),
     el: '#app',
     data: {drawer: false, stel: null},
     mounted: function() {
