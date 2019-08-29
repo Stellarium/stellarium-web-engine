@@ -451,7 +451,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 
     if (outside) {
         uv_map_get_bounding_cap(map, bounding_cap);
-        mat4_mul_vec3(*painter->transform, bounding_cap, bounding_cap);
+        mat4_mul_vec3_dir(*painter->transform, bounding_cap, bounding_cap);
         assert(vec3_is_normalized(bounding_cap));
         if (painter_is_cap_clipped(painter, frame, bounding_cap))
             return true;
