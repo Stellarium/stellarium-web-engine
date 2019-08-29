@@ -427,7 +427,7 @@ static void quad_planet(
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     int n, i, j, k;
-    double p[4], mpos[3], normal[4] = {0}, tangent[4] = {0}, z, mv[4][4];
+    double p[4], mpos[4], normal[4] = {0}, tangent[4] = {0}, z, mv[4][4];
 
     // Positions of the triangles in the quads.
     const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
@@ -494,15 +494,17 @@ static void quad_planet(
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
         uv_map(map, p, p);
+        assert(p[3] == 1.0); // Planet can never be at infinity.
 
         vec3_copy(p, normal);
         mat4_mul_vec4(*painter->transform, normal, normal);
         gl_buf_3f(&item->buf, -1, ATTR_NORMAL, VEC3_SPLIT(normal));
 
         // Model position (without scaling applied).
-        vec3_mul(1.0 / painter->planet.scale, p, mpos);
-        mat4_mul_vec3(*painter->transform, mpos, mpos);
-        gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC3_SPLIT(mpos), 1.0);
+        vec4_copy(p, mpos);
+        vec3_mul(1.0 / painter->planet.scale, mpos, mpos);
+        mat4_mul_vec4(*painter->transform, mpos, mpos);
+        gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC4_SPLIT(mpos));
 
         // Rendering position (with scaling applied).
         mat4_mul_vec4(*painter->transform, p, p);
