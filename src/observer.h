@@ -77,11 +77,8 @@ struct observer
     double obs_pvb[2][3];
     double obs_pvg[2][3];
 
-    // The pointed position and constellation.
-    struct {
-        double icrs[3];
-        char cst[5];
-    } pointer;
+    // The pointed constellation.
+    char cst[5];
 
     // Frame rotation matrices.
     // h: Horizontal (RA/DE, left handed, X->N, Y->E, Z->up).

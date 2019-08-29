@@ -343,7 +343,7 @@ end:
     }
 
     con->show = (cons && cons->show_all) ||
-                (strcasecmp(obs->pointer.cst, con->info.id) == 0) ||
+                (strcasecmp(obs->cst, con->info.id) == 0) ||
                 ((obj_t*)con == core->selection);
     return 0;
 }

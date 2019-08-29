@@ -213,8 +213,8 @@ void observer_update(observer_t *obs, bool fast)
 
     // Compute pointed at constellation.
     eraS2c(obs->azimuth, obs->altitude, p);
-    mat3_mul_vec3(obs->rh2i, p, obs->pointer.icrs);
-    find_constellation_at(obs->pointer.icrs, obs->pointer.cst);
+    mat3_mul_vec3(obs->rh2i, p, p);
+    find_constellation_at(p, obs->cst);
 }
 
 static int observer_init(obj_t *obj, json_value *args)
