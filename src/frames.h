@@ -13,6 +13,31 @@
  *
  */
 
+/*
+ * Some notes about the OBSERVED frame: the referential of the observed
+ * frame is the standard alt/az defined with X pointing north, Y pointing
+ * East, and Z pointing up:
+ *
+ *  z (Zenith)
+ *  ^
+ *  │  ^ x (North)
+ *  │ ╱
+ *  │╱
+ *  └─────> y (East)
+ *
+ * Converting from Cartesian to Polar directly gives the azimuth and altitude
+ * coordinates.  However, this referential is left handed, which can be
+ * confusing when doing matrix operations on it.  To avoid confusion it's
+ * best to remember that a positive matrix rotation among an axis rotates the
+ * following axis into the next one.  So here a Z rotation moves from North
+ * to East, and a Y rotation moves from Zenith to North.  In order to build the
+ * rotation matrix given an alt/az polar coordinates, we have to do:
+ *
+ *   mat3_rz(az, m, m);
+ *   mat3_ry(-alt, m, m);
+ *
+ */
+
 #ifndef FRAMES_H
 #define FRAMES_H
 
