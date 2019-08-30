@@ -120,7 +120,6 @@ static void convert_frame_backward(const observer_t *obs,
         if (obs->refraction){
             if (at_inf) {
                 refraction_inv(p, obs->pressure, 15.0, p);
-                vec3_normalize(p, p);
             } else {
                 // Special case for null's vectors
                 double dist = vec3_norm(p);
@@ -130,7 +129,6 @@ static void convert_frame_backward(const observer_t *obs,
                 }
                 vec3_mul(1.0 / dist, p, p);
                 refraction_inv(p, obs->pressure, 15.0, p);
-                vec3_normalize(p, p);
                 vec3_mul(dist, p, p);
             }
         }
