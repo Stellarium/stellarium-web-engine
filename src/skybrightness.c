@@ -104,15 +104,14 @@ void skybrightness_prepare(skybrightness_t *sb,
 
 float skybrightness_get_luminance(
         const skybrightness_t *sb,
-        float moon_dist, float sun_dist, float zenith_dist)
+        float cos_moon_dist, float cos_sun_dist, float cos_zenith_dist)
 {
     // This avoid issues in the algo
-    moon_dist = max(moon_dist, 1.f * D2R);
-    sun_dist  = max(sun_dist, 1.f * D2R);
+    cos_moon_dist = min(cos_moon_dist, cosf(1.f * D2R));
+    cos_sun_dist  = min(cos_sun_dist, cosf(1.f * D2R));
 
-    const float cos_moon_dist = cosf(moon_dist);
-    const float cos_sun_dist = cosf(sun_dist);
-    const float cos_zenith_dist = cosf(zenith_dist);
+    const float moon_dist = acosf(cos_moon_dist);
+    const float sun_dist = acosf(cos_sun_dist);
 
     // Air mass
     const float bKX = fast_exp10f(-0.4f * sb->K *

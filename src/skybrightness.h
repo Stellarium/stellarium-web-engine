@@ -44,6 +44,6 @@ void skybrightness_prepare(skybrightness_t *sb,
 
 float skybrightness_get_luminance(
         const skybrightness_t *sb,
-        float moon_dist, float sun_dist, float zenith_dist);
+        float cos_moon_dist, float cos_sun_dist, float cos_zenith_dist);
 
 #endif // SKYBRIGHTNESS_H

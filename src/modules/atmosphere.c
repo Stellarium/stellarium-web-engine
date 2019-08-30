@@ -52,10 +52,10 @@ typedef struct {
     double max_lum;
     int    nb_lum;
 
-    // Maximum distance between 2 points of the grid on which the atmosphere
+    // Cos Maximum distance between 2 points of the grid on which the atmosphere
     // is rendered. It is used to avoid aliasing in fast varying regions of the
     // atmosphere, like near moon border.
-    float grid_angular_step;
+    float cos_grid_angular_step;
 } render_data_t;
 
 static double F2(const double *lam, double cos_theta,
@@ -153,9 +153,9 @@ static float compute_lum(void *user, const float pos[3])
     // Our formula does not work below the horizon.
     p[2] = fabs(p[2]);
     lum = skybrightness_get_luminance(&d->skybrightness,
-                max(eraSepp(p, d->moon_pos), d->grid_angular_step),
-                max(eraSepp(p, d->sun_pos), d->grid_angular_step),
-                eraSepp(p, zenith));
+                min(vec3_dot(p, d->moon_pos), d->cos_grid_angular_step),
+                min(vec3_dot(p, d->sun_pos), d->cos_grid_angular_step),
+                vec3_dot(p, zenith));
     lum *= d->eclipse_factor;
 
     // Update luminance sum for eye adaptation.
@@ -223,7 +223,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     data = prepare_render_data(sun_pos, sun_vmag, moon_pos, moon_vmag,
                                atm->turbidity);
     // This is quite ad-hoc as in reality we are using a HIPS grid
-    data.grid_angular_step = 15. * DD2R;
+    data.cos_grid_angular_step = cos(15. * DD2R);
     prepare_skybrightness(&data.skybrightness,
             &painter, sun_pos, moon_pos, moon_vmag);
 
