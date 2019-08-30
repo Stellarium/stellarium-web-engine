@@ -11,56 +11,58 @@
 #include <math.h>
 #include "utils/vec.h"
 
-/* Refraction computation
- *
- * Using A*tan(z)+B*tan^3(z) model, with Newton-Raphson correction.
- *
- * inputs:
- *   v: cartesian horizontal coordinates (Z up).
- *   refa: refraction A argument.
- *   refb: refraction B argument.
- *
- * outputs:
- *   out: corrected cartesian horizontal coordinates.
- */
-void refraction(const double v[3], double refa, double refb,
+// Use more flexible refraction model coming from Stellarium instead of the
+// one from ERFA lib. It has a much better behaviour for low altitudes ~< 5 deg
+// at the expense of speed.
+// If performances becomes a problem, it may be possible to use the fast
+// ERFA model for higher altitudes, and revert to this one for lower ones.
+
+#define DD2Rf ((float)M_PI / 180.f)
+void refraction(const double v[3], double pressure, double temperature,
                 double out[3])
 {
-    const double CELMIN = 1e-6;
-    const double SELMIN = 0.05;
-    double xaet, yaet, zaet, r, z, tz, w, del, cosdel, f;
+    // The following 2 variables are set according to Georg Zotti comment in
+    // original Stellarium code, so that nothing happens below -5 degrees.
 
-    if (refa == 0.0 && refb == 0.0) {
-        out[0] = v[0];
-        out[1] = v[1];
-        out[2] = v[2];
-        return;
+    // This must be -5 or higher.
+    static const float MIN_GEO_ALTITUDE_DEG = -3.54f;
+    // This must be positive. Transition zone goes that far below the values
+    // just specified.
+    static const float TRANSITION_WIDTH_GEO_DEG = 1.46f;
+
+    const float p_saemundson = 1.02f * pressure / 1010.f * 283.f /
+                         (273.f + temperature) / 60.f;
+
+    assert(vec3_is_normalized(v));
+    out[0] = v[0];
+    out[1] = v[1];
+
+    float geom_alt_deg = asinf(v[2]) / DD2Rf;
+
+    if (geom_alt_deg > MIN_GEO_ALTITUDE_DEG)
+    {
+        // refraction from Saemundsson, S&T1986 p70 / in Meeus, Astr.Alg.
+        float r = p_saemundson / tanf((geom_alt_deg + 10.3f /
+                     (geom_alt_deg + 5.11f)) * DD2Rf) + 0.0019279f;
+        geom_alt_deg += r;
+        if (geom_alt_deg > 90.)
+            geom_alt_deg = 90.;
+        out[2] = sinf(geom_alt_deg * DD2Rf);
     }
-
-    xaet = v[0];
-    yaet = v[1];
-    zaet = v[2];
-
-    // Cosine and sine of altitude, with precautions.
-    r = sqrt(xaet * xaet + yaet * yaet);
-    r = r > CELMIN ? r : CELMIN;
-    z = zaet > SELMIN ? zaet : SELMIN;
-
-    // A*tan(z)+B*tan^3(z) model, with Newton-Raphson correction.
-    tz = r / z;
-    w = refb * tz * tz;
-    del = (refa + w) * tz / (1.0 + (refa + 3.0 * w) / (z * z));
-
-    // Apply the change, giving observed vector.
-    cosdel = 1.0 - del * del / 2.0;
-    f = cosdel - del * z / r;
-
-    out[0] = xaet * f;
-    out[1] = yaet * f;
-    out[2] = cosdel * zaet + del * r;
+    else if (geom_alt_deg > MIN_GEO_ALTITUDE_DEG - TRANSITION_WIDTH_GEO_DEG)
+    {
+        // Avoids the jump below -5 by interpolating linearly between
+        // MIN_GEO_ALTITUDE_DEG and bottom of transition zone
+        float r_m5 = p_saemundson / tanf((MIN_GEO_ALTITUDE_DEG + 10.3f /
+                     (MIN_GEO_ALTITUDE_DEG + 5.11f)) * DD2Rf) + 0.0019279f;
+        geom_alt_deg += r_m5 * (geom_alt_deg - (MIN_GEO_ALTITUDE_DEG -
+                        TRANSITION_WIDTH_GEO_DEG)) / TRANSITION_WIDTH_GEO_DEG;
+        out[2] = sinf(geom_alt_deg * DD2Rf);
+    }
+    vec3_normalize(out, out);
 }
 
-void refraction_inv(const double v[3], double refa, double refb,
+void refraction_inv(const double v[3], double pressure, double temperature,
                 double out[3])
 {
     double delta[3];
@@ -68,7 +70,7 @@ void refraction_inv(const double v[3], double refa, double refb,
     int i;
     vec3_copy(v, a);
     for (i = 0; i < 10 ; ++i) {
-        refraction(a, refa, refb, b);
+        refraction(a, pressure, temperature, b);
         vec3_normalize(b, b);
         vec3_sub(b, v, delta);
         vec3_sub(a, delta, a);

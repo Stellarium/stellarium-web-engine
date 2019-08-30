@@ -84,20 +84,20 @@ static void convert_frame_forward(const observer_t *obs,
         // Ignores Diurnal aberration for the moment
         mat3_mul_vec3(obs->ri2h, p, p);
 
-        if (at_inf) {
-            refraction(p, astrom->refa, astrom->refb, p);
-            vec3_normalize(p, p);
-        } else {
-            // Special case for null's vectors
-            double dist = vec3_norm(p);
-            if (dist == 0.0) {
-                vec3_set(p, 0, 0, 0);
-                return;
+        if (obs->refraction) {
+            if (at_inf) {
+                refraction(p, obs->pressure, 15.0, p);
+            } else {
+                // Special case for null's vectors
+                double dist = vec3_norm(p);
+                if (dist == 0.0) {
+                    vec3_set(p, 0, 0, 0);
+                    return;
+                }
+                vec3_mul(1.0 / dist, p, p);
+                refraction(p, obs->pressure, 15.0, p);
+                vec3_mul(dist, p, p);
             }
-            vec3_mul(1.0 / dist, p, p);
-            refraction(p, astrom->refa, astrom->refb, p);
-            vec3_normalize(p, p);
-            vec3_mul(dist, p, p);
         }
     }
 
@@ -117,20 +117,22 @@ static void convert_frame_backward(const observer_t *obs,
 
     // OBSERVED to CIRS
     if (origin >= FRAME_OBSERVED && dest < FRAME_OBSERVED) {
-        if (at_inf) {
-            refraction_inv(p, astrom->refa, astrom->refb, p);
-            vec3_normalize(p, p);
-        } else {
-            // Special case for null's vectors
-            double dist = vec3_norm(p);
-            if (dist == 0.0) {
-                vec3_set(p, 0, 0, 0);
-                return;
+        if (obs->refraction){
+            if (at_inf) {
+                refraction_inv(p, obs->pressure, 15.0, p);
+                vec3_normalize(p, p);
+            } else {
+                // Special case for null's vectors
+                double dist = vec3_norm(p);
+                if (dist == 0.0) {
+                    vec3_set(p, 0, 0, 0);
+                    return;
+                }
+                vec3_mul(1.0 / dist, p, p);
+                refraction_inv(p, obs->pressure, 15.0, p);
+                vec3_normalize(p, p);
+                vec3_mul(dist, p, p);
             }
-            vec3_mul(1.0 / dist, p, p);
-            refraction_inv(p, astrom->refa, astrom->refb, p);
-            vec3_normalize(p, p);
-            vec3_mul(dist, p, p);
         }
         mat3_mul_vec3(obs->rh2i, p, p);
     }
