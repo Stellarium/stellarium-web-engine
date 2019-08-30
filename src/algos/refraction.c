@@ -29,16 +29,19 @@ void refraction(const double v[3], double pressure, double temperature,
     // This must be positive. Transition zone goes that far below the values
     // just specified.
     static const float TRANSITION_WIDTH_GEO_DEG = 1.46f;
-
-    const float p_saemundson = 1.02f * pressure / 1010.f * 283.f /
-                         (273.f + temperature) / 60.f;
+    // Hopefully, the compiler pre-compute this
+    const float min_sinalt = sinf(MIN_GEO_ALTITUDE_DEG * DD2Rf -
+                                         TRANSITION_WIDTH_GEO_DEG * DD2Rf);
 
     assert(vec3_is_normalized(v));
-    out[0] = v[0];
-    out[1] = v[1];
+    vec3_copy(v, out);
+    if (v[2] < min_sinalt)
+        return;
 
     float geom_alt_deg = asinf(v[2]) / DD2Rf;
 
+    const float p_saemundson = 1.02f * pressure / 1010.f * 283.f /
+                         (273.f + temperature) / 60.f;
     if (geom_alt_deg > MIN_GEO_ALTITUDE_DEG)
     {
         // refraction from Saemundsson, S&T1986 p70 / in Meeus, Astr.Alg.
@@ -68,6 +71,8 @@ void refraction_inv(const double v[3], double pressure, double temperature,
     double delta[3];
     double a[3], b[3];
     int i;
+
+    assert(vec3_is_normalized(v));
     vec3_copy(v, a);
     for (i = 0; i < 10 ; ++i) {
         refraction(a, pressure, temperature, b);
@@ -79,4 +84,5 @@ void refraction_inv(const double v[3], double pressure, double temperature,
             break;
     }
     vec3_copy(a, out);
+    assert(vec3_is_normalized(out));
 }
