@@ -139,7 +139,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     landscape_t *ls = (landscape_t*)obj;
     landscapes_t *lss = (landscapes_t*)obj->parent;
     painter_t painter = *painter_;
-    double alpha, alt;
+    double alpha, alt, az, direction[3];
     double brightness;
     const int split_order = 3;
     // Hack matrix to fix the hips survey orientation.
@@ -163,7 +163,9 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
 
     // Adjust the alpha to make the landscape transparent when we look down
     // and when we zoom in.
-    alt = painter.obs->altitude;
+    convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true,
+                  VEC(0, 0, -1), direction);
+    eraC2s(direction, &az, &alt);
     alpha = smoothstep(1, 20, core->fov * DR2D);
     alpha = mix(alpha, alpha / 2, smoothstep(0, -45, alt * DR2D));
     painter.color[3] *= alpha;
