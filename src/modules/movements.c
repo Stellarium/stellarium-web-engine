@@ -23,8 +23,8 @@ typedef struct movements {
 } movements_t;
 
 
-// Convert screen position to observed coordinates.
-static void screen_to_observed(
+// Convert screen position to mount coordinates.
+static void screen_to_mount(
         const observer_t *obs, const projection_t *proj,
         const double screen_pos[2], double p[3])
 {
@@ -35,7 +35,7 @@ static void screen_to_observed(
     pos[0] = pos[0] / proj->window_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / proj->window_size[1] * 2 - 1);
     project(proj, PROJ_BACKWARD, 4, pos, pos);
-    convert_frame(obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
+    convert_frame(obs, FRAME_VIEW, FRAME_MOUNT, true, pos, p);
 }
 
 
@@ -47,7 +47,7 @@ static int on_pan(const gesture_t *gest, void *user)
     projection_t proj;
 
     core_get_proj(&proj);
-    screen_to_observed(core->observer, &proj, gest->pos, pos);
+    screen_to_mount(core->observer, &proj, gest->pos, pos);
     if (gest->state == GESTURE_BEGIN)
         vec3_copy(pos, start_pos);
 
