@@ -485,11 +485,15 @@ static bool is_below_horizon_hidden(void)
 {
     obj_t *ls;
     bool visible;
+    double direction[4];
     ls = core_get_module("landscapes");
     obj_get_attr(ls, "visible", &visible);
+    if (!visible) return false;
     // XXX: we should let the lanscape module notify the core that it hides
     // the stars instead.
-    return (visible && core->observer->altitude >= 0);
+    convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true,
+                  VEC(0, 0, -1), direction);
+    return direction[2] < 0;
 }
 
 /*
