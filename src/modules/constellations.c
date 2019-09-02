@@ -117,7 +117,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     constellation_t *cons = (constellation_t *)obj;
     constellation_infos_t *info;
 
-    fader_init2(&cons->visible, false, 2);
+    fader_init2(&cons->visible, false, 1);
     fader_init2(&cons->image_loaded_fader, false, 1);
 
     // For the moment, since we create the constellation from within C
@@ -248,9 +248,6 @@ error:
     return -1;
 }
 
-static int render_lines(constellation_t *con, const painter_t *painter);
-
-static int render_img(constellation_t *con, const painter_t *painter);
 
 // Make a line shorter so that we don't hide the star.
 static void line_truncate(double pos[2][4], double a0, double a1)
@@ -370,19 +367,27 @@ static void spherical_project(
 }
 
 static int render_bounds(const constellation_t *con,
-                         const painter_t *painter_)
+                         const painter_t *painter_,
+                         bool selected)
 {
     int i;
     const constellation_infos_t *info;
     double line[2][4] = {};
     painter_t painter = *painter_;
+    const constellations_t *cons = (const constellations_t*)con->obj.parent;
     uv_map_t map = {
         .map = spherical_project,
     };
 
+    if (!selected) {
+        painter.color[3] *= cons->visible.value *
+                            cons->bounds_visible.value *
+                            con->visible.value;
+    }
+    if (!painter.color[3]) return 0;
+
     painter.lines_stripes = 10.0; // Why not working anymore?
     vec4_set(painter.color, 0.6, 0.3, 0.3, 0.4 * painter.color[3]);
-    if (!painter.color[3]) return 0;
     info = &con->info;
     if (!info) return 0;
     for (i = 0; i < info->nb_edges; i++) {
@@ -428,12 +433,148 @@ static bool constellation_is_visible(const constellation_t *con,
     return ret;
 }
 
+static int render_lines(constellation_t *con, const painter_t *_painter,
+                        bool selected)
+{
+    painter_t painter = *_painter;
+    int i;
+    double (*lines)[4];
+    double lines_color[4];
+    double pvo[2][4];
+    double mag[2], radius[2], visible;
+    observer_t *obs = painter.obs;
+    const constellations_t *cons = (const constellations_t*)con->obj.parent;
+
+    if (!selected) {
+        visible = cons->visible.value *
+                  cons->lines_visible.value *
+                  con->visible.value;
+    } else {
+        visible = 1;
+        painter.lines_width *= 2;
+    }
+
+    if (painter.color[3] == 0.0 || visible == 0.0) return 0;
+
+    vec4_set(lines_color, 0.2, 0.4, 0.7, 0.5);
+    vec4_emul(lines_color, painter.color, painter.color);
+
+    lines = calloc(con->count, sizeof(*lines));
+    for (i = 0; i < con->count; i++) {
+        obj_get_pvo(con->stars[i], obs, pvo);
+        vec3_normalize(pvo[0], lines[i]);
+        lines[i][3] = 0; // To infinity.
+    }
+
+    for (i = 0; i < con->count; i += 2) {
+        obj_get_info(con->stars[i + 0], obs, INFO_VMAG, &mag[0]);
+        obj_get_info(con->stars[i + 1], obs, INFO_VMAG, &mag[1]);
+        core_get_point_for_mag(mag[0], &radius[0], NULL);
+        core_get_point_for_mag(mag[1], &radius[1], NULL);
+        radius[0] = core_get_apparent_angle_for_point(painter.proj, radius[0]);
+        radius[1] = core_get_apparent_angle_for_point(painter.proj, radius[1]);
+        // Add some space, using ad-hoc formula.
+        line_truncate(&lines[i], radius[0] * 2 + 0.25 * DD2R,
+                                 radius[1] * 2 + 0.25 * DD2R);
+        line_animation_effect(&lines[i], visible);
+    }
+
+    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1,
+                PAINTER_SKIP_DISCONTINUOUS);
+    free(lines);
+    return 0;
+}
+
+// Project from uv to the sphere.
+static void img_map(const uv_map_t *map, const double v[2], double out[4])
+{
+    double uv[3] = {v[0], v[1], 1.0};
+    mat3_mul_vec3(map->mat, uv, out);
+    vec3_normalize(out, out);
+    out[3] = 0;
+}
+
+static int render_img(constellation_t *con, const painter_t *painter_,
+                      bool selected)
+{
+    uv_map_t map = {0};
+    painter_t painter = *painter_;
+    const constellations_t *cons = (const constellations_t*)con->obj.parent;
+
+    if (!selected) {
+        painter.color[3] *= cons->visible.value *
+                            cons->images_visible.value *
+                            con->visible.value;
+    }
+    if (!painter.color[3]) return 0;
+    if (!con->img || !texture_load(con->img, NULL)) return 0;
+    if (!con->mat[2][2]) return 0; // Not computed yet.
+
+    con->image_loaded_fader.target = true;
+
+    painter.flags |= PAINTER_ADD;
+    vec3_set(painter.color, 1, 1, 1);
+    painter.color[3] *= 0.4 * con->image_loaded_fader.value;
+    mat3_copy(con->mat, map.mat);
+    map.map = img_map;
+    painter_set_texture(&painter, PAINTER_TEX_COLOR, con->img, NULL);
+    paint_quad(&painter, FRAME_ICRF, &map, 4);
+    return 0;
+}
+
+
+static int render_label(constellation_t *con, const painter_t *painter_,
+                        bool selected)
+{
+    painter_t painter = *painter_;
+    double label_pixel_length, pixel_angular_resolution;
+    double win_pos[2], p[3], label_cap[4], names_color[4];
+    const char *label;
+    constellations_t *cons = (constellations_t*)con->obj.parent;
+
+    if (!selected) {
+        painter.color[3] *= cons->visible.value *
+                            cons->lines_visible.value *
+                            con->visible.value;
+    }
+    if (painter.color[3] == 0.0) return 0;
+
+    // Render label only if its center is visible
+    if (painter_is_point_clipped_fast(&painter, FRAME_ICRF, con->bounding_cap,
+                                      true))
+        return 0;
+
+    vec4_set(names_color, 0.3, 0.4, 0.7, 0.7);
+    // Estimate the label bouding cap
+    painter_project(&painter, FRAME_ICRF, con->bounding_cap, true, false,
+                    win_pos);
+    win_pos[0] += 1;
+    painter_unproject(&painter, FRAME_ICRF, win_pos, p);
+    pixel_angular_resolution = acos(vec3_dot(con->bounding_cap, p));
+
+    label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
+                con->name : con->name_translated;
+    label_pixel_length = 0.5 * FONT_SIZE_BASE * strlen(label);
+    vec3_copy(con->bounding_cap, label_cap);
+    label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
+
+    if (!cap_contains_cap(con->bounding_cap, label_cap))
+        return 0;
+
+    labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
+                  con->bounding_cap, true, 0, FONT_SIZE_BASE,
+                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
+                  TEXT_SMALL_CAP | TEXT_DEMI_BOLD,
+                  0, con->obj.oid);
+
+    return 0;
+}
+
 
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
     constellation_t *con = (const constellation_t*)obj;
-    const constellations_t *cons = (const constellations_t*)con->obj.parent;
-    painter_t painter = *_painter, painter2;
+    painter_t painter = *_painter;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
     if (con->error)
@@ -445,23 +586,10 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
         return 0;
 
     con->visible.target = constellation_is_visible(con, &painter);
-    if (!selected)
-        painter.color[3] *= cons->visible.value * con->visible.value;
-    if (painter.color[3] == 0.0) return 0;
-
-    painter2 = painter;
-    if (!selected) painter2.color[3] *= cons->lines_visible.value;
-    else painter2.lines_width *= 2;
-    render_lines(con, &painter2);
-
-    painter2 = painter;
-    if (!selected) painter2.color[3] *= cons->images_visible.value;
-    render_img(con, &painter2);
-
-    painter2 = painter;
-    if (!selected) painter2.color[3] *= cons->bounds_visible.value;
-    render_bounds(con, &painter2);
-
+    render_lines(con, &painter, selected);
+    render_label(con, &painter, selected);
+    render_img(con, &painter, selected);
+    render_bounds(con, &painter, selected);
     return 0;
 }
 
@@ -513,109 +641,6 @@ static void constellation_get_designations(
     constellation_t *cst = (void*)obj;
     f(obj, user, "NAME", cst->name);
 }
-
-// Project from uv to the sphere.
-static void img_map(const uv_map_t *map, const double v[2], double out[4])
-{
-    double uv[3] = {v[0], v[1], 1.0};
-    mat3_mul_vec3(map->mat, uv, out);
-    vec3_normalize(out, out);
-    out[3] = 0;
-}
-
-static int render_lines(constellation_t *con, const painter_t *_painter)
-{
-    painter_t painter = *_painter;
-    int i;
-    double (*lines)[4];
-    double lines_color[4], names_color[4];
-    double pvo[2][4], win_pos[2];
-    double mag[2], radius[2];
-    const char *label;
-    double p[3], label_cap[4];
-    double pixel_angular_resolution, label_pixel_length;
-    constellations_t *cons = (constellations_t*)con->obj.parent;
-    observer_t *obs = painter.obs;
-
-    if (painter.color[3] == 0.0) return 0;
-    vec4_set(lines_color, 0.2, 0.4, 0.7, 0.5);
-    vec4_set(names_color, 0.3, 0.4, 0.7, 0.7);
-    vec4_emul(lines_color, painter.color, painter.color);
-
-    lines = calloc(con->count, sizeof(*lines));
-    for (i = 0; i < con->count; i++) {
-        obj_get_pvo(con->stars[i], obs, pvo);
-        vec3_normalize(pvo[0], lines[i]);
-        lines[i][3] = 0; // To infinity.
-    }
-
-    for (i = 0; i < con->count; i += 2) {
-        obj_get_info(con->stars[i + 0], obs, INFO_VMAG, &mag[0]);
-        obj_get_info(con->stars[i + 1], obs, INFO_VMAG, &mag[1]);
-        core_get_point_for_mag(mag[0], &radius[0], NULL);
-        core_get_point_for_mag(mag[1], &radius[1], NULL);
-        radius[0] = core_get_apparent_angle_for_point(painter.proj, radius[0]);
-        radius[1] = core_get_apparent_angle_for_point(painter.proj, radius[1]);
-        // Add some space, using ad-hoc formula.
-        line_truncate(&lines[i], radius[0] * 2 + 0.25 * DD2R,
-                                 radius[1] * 2 + 0.25 * DD2R);
-        line_animation_effect(&lines[i], con->visible.value);
-    }
-
-    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1,
-                PAINTER_SKIP_DISCONTINUOUS);
-    free(lines);
-
-    // Render label only if its center is visible
-    if (painter_is_point_clipped_fast(&painter, FRAME_ICRF, con->bounding_cap,
-                                      true))
-        return 0;
-
-    // Estimate the label bouding cap
-    painter_project(&painter, FRAME_ICRF, con->bounding_cap, true, false,
-                    win_pos);
-    win_pos[0] += 1;
-    painter_unproject(&painter, FRAME_ICRF, win_pos, p);
-    pixel_angular_resolution = acos(vec3_dot(con->bounding_cap, p));
-
-    label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
-                con->name : con->name_translated;
-    label_pixel_length = 0.5 * FONT_SIZE_BASE * strlen(label);
-    vec3_copy(con->bounding_cap, label_cap);
-    label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
-
-    if (!cap_contains_cap(con->bounding_cap, label_cap))
-        return 0;
-
-    labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
-                  con->bounding_cap, true, 0, FONT_SIZE_BASE,
-                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
-                  TEXT_SMALL_CAP | TEXT_DEMI_BOLD,
-                  0, con->obj.oid);
-
-    return 0;
-}
-
-static int render_img(constellation_t *con, const painter_t *painter)
-{
-    uv_map_t map = {0};
-    painter_t painter2 = *painter;
-    if (!painter2.color[3]) return 0;
-    if (!con->img || !texture_load(con->img, NULL)) return 0;
-    if (!con->mat[2][2]) return 0; // Not computed yet.
-
-    con->image_loaded_fader.target = true;
-
-    painter2.flags |= PAINTER_ADD;
-    vec3_set(painter2.color, 1, 1, 1);
-    painter2.color[3] *= 0.4 * con->image_loaded_fader.value;
-    mat3_copy(con->mat, map.mat);
-    map.map = img_map;
-    painter_set_texture(&painter2, PAINTER_TEX_COLOR, con->img, NULL);
-    paint_quad(&painter2, FRAME_ICRF, &map, 4);
-    return 0;
-}
-
 
 static int constellations_init(obj_t *obj, json_value *args)
 {
