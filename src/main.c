@@ -9,6 +9,8 @@
 
 #include "swe.h"
 
+#ifndef __EMSCRIPTEN__ // No need for main in emscripten
+
 #ifndef NDEBUG
 #   include <fenv.h>
 #endif
@@ -129,7 +131,7 @@ int main(int argc, char **argv)
                 "Stellarium Web Engine "
                 SWE_VERSION_STR DEBUG_ONLY(" (debug)");
 
-#if DEBUG && !defined(__EMSCRIPTEN__)
+#if DEBUG
     // Make sure that we don't rely on NAN or INFINITY in our computing
     feenableexcept(FE_DIVBYZERO | FE_INVALID);
 #endif
@@ -196,7 +198,6 @@ static void loop_function(void)
     glfwPollEvents();
 }
 
-#ifndef __EMSCRIPTEN__
 static void run_main_loop(void (*func)(void))
 {
     while (!glfwWindowShouldClose(g_window)) {
@@ -204,9 +205,5 @@ static void run_main_loop(void (*func)(void))
     }
     glfwTerminate();
 }
-#else
-static void run_main_loop(void (*func)(void))
-{
-    emscripten_set_main_loop(func, 0, 1);
-}
+
 #endif
