@@ -28,9 +28,12 @@ struct observer
     double pressure;    // Set to NAN to compute it from the altitude.
     bool   refraction;  // Whether we use refraction or not.
 
-    double altitude;
-    double azimuth;
+    // Rotations relative to the mount referential.  Pitch and yaw
+    // correspond to azimuth and altitude when using an alt/az mount.
+    double pitch;
+    double yaw;
     double roll;
+
     // Extra rotations applied to the view matrix in altitude.
     // Set this to have the centered objet not located at screen center
     // but somewhere else.

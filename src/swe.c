@@ -326,8 +326,8 @@ static void test_clipping(void)
     eraS2c(ra, de, pos);
     convert_frame(&obs, FRAME_ICRF, FRAME_OBSERVED, true, pos, pos);
     eraC2s(pos, &az, &alt);
-    obj_set_attr((obj_t*)&obs, "altitude", alt);
-    obj_set_attr((obj_t*)&obs, "azimuth", az);
+    obj_set_attr((obj_t*)&obs, "pitch", alt);
+    obj_set_attr((obj_t*)&obs, "yaw", az);
     observer_update(&obs, false);
 
     // Setup a projection and a painter.

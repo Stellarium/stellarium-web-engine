@@ -43,8 +43,8 @@ static void update_matrices(observer_t *obs)
                          {1, 0, 0},
                          {0, 1, 0}};
     mat3_rz(obs->roll, ro2v, ro2v);
-    mat3_rx(-obs->altitude, ro2v, ro2v);
-    mat3_ry(obs->azimuth, ro2v, ro2v);
+    mat3_rx(-obs->pitch, ro2v, ro2v);
+    mat3_ry(obs->yaw, ro2v, ro2v);
     mat3_mul(ro2v, r2gl, ro2v);
 
     // Extra rotation for screen center offset.
@@ -100,8 +100,8 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(pressure);
     H(refraction);
     *hash_partial = v;
-    H(altitude);
-    H(azimuth);
+    H(pitch);
+    H(yaw);
     H(roll);
     H(view_offset_alt);
     H(tt);
@@ -213,7 +213,7 @@ void observer_update(observer_t *obs, bool fast)
     }
 
     // Compute pointed at constellation.
-    eraS2c(obs->azimuth, obs->altitude, p);
+    eraS2c(obs->yaw, obs->pitch, p);
     mat3_mul_vec3(obs->rh2i, p, p);
     find_constellation_at(p, obs->cst);
 }
@@ -266,7 +266,7 @@ static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
 {
     observer_t *obs = (observer_t*)obj;
     double v[3];
-    eraS2c(obs->azimuth, obs->altitude, v);
+    eraS2c(obs->yaw, obs->pitch, v);
     return args_value_new(TYPE_V3, v);
 }
 
@@ -288,8 +288,8 @@ static obj_klass_t observer_klass = {
                  .on_changed = observer_on_timeattr_changed),
         PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
                  .on_changed = observer_on_timeattr_changed),
-        PROPERTY(altitude, TYPE_ANGLE, MEMBER(observer_t, altitude)),
-        PROPERTY(azimuth, TYPE_ANGLE, MEMBER(observer_t, azimuth)),
+        PROPERTY(pitch, TYPE_ANGLE, MEMBER(observer_t, pitch)),
+        PROPERTY(yaw, TYPE_ANGLE, MEMBER(observer_t, yaw)),
         PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll)),
         PROPERTY(view_offset_alt, TYPE_ANGLE,
                  MEMBER(observer_t, view_offset_alt)),

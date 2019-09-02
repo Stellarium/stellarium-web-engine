@@ -408,7 +408,7 @@ static int core_update_direction(double dt)
         if (!core->target.lock || core->target.move_to_lock) {
             quat_slerp(core->target.src_q, core->target.dst_q, t, q);
             quat_mul_vec3(q, v, v);
-            eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
+            eraC2s(v, &core->observer->yaw, &core->observer->pitch);
         }
         if (core->target.t >= 1.0) {
             core->target.duration = 0.0;
@@ -416,16 +416,16 @@ static int core_update_direction(double dt)
             core->target.move_to_lock = false;
         }
         // Notify the changes.
-        module_changed(&core->observer->obj, "altitude");
-        module_changed(&core->observer->obj, "azimuth");
+        module_changed(&core->observer->obj, "pitch");
+        module_changed(&core->observer->obj, "yaw");
     }
 
     if (core->target.lock && !core->target.move_to_lock) {
         obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, v);
-        eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
+        eraC2s(v, &core->observer->yaw, &core->observer->pitch);
         // Notify the changes.
-        module_changed(&core->observer->obj, "altitude");
-        module_changed(&core->observer->obj, "azimuth");
+        module_changed(&core->observer->obj, "pitch");
+        module_changed(&core->observer->obj, "yaw");
     }
 
     return 1;
@@ -624,8 +624,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
             module->klass->post_render(module, &painter);
     }
 
-    assert(bck.obs.azimuth == core->observer->azimuth);
-    assert(bck.obs.altitude == core->observer->altitude);
+    assert(bck.obs.yaw == core->observer->yaw);
+    assert(bck.obs.pitch == core->observer->pitch);
     assert(bck.fov == core->fov);
     return 0;
 }
@@ -712,14 +712,13 @@ void core_on_zoom(double k, double x, double y)
     // Adjust lat/az to keep the mouse point at the same position.
     eraC2s(pos_start, &saz, &sal);
     eraC2s(pos_end, &daz, &dal);
-    core->observer->azimuth += (saz - daz);
-    core->observer->altitude += (sal - dal);
-    core->observer->altitude = clamp(core->observer->altitude,
-                                     -M_PI / 2, +M_PI / 2);
+    core->observer->yaw += (saz - daz);
+    core->observer->pitch += (sal - dal);
+    core->observer->pitch = clamp(core->observer->pitch, -M_PI / 2, +M_PI / 2);
 
     // Notify the changes.
-    module_changed(&core->observer->obj, "altitude");
-    module_changed(&core->observer->obj, "azimuth");
+    module_changed(&core->observer->obj, "pitch");
+    module_changed(&core->observer->obj, "yaw");
 }
 
 double core_mag_to_illuminance(double vmag)
@@ -924,13 +923,13 @@ void core_lookat(const double *pos, double duration)
 
     // Direct lookat.
     if (duration == 0.0) {
-        eraC2s(pos, &core->observer->azimuth, &core->observer->altitude);
+        eraC2s(pos, &core->observer->yaw, &core->observer->pitch);
         return;
     }
 
     quat_set_identity(core->target.src_q);
-    quat_rz(core->observer->azimuth, core->target.src_q, core->target.src_q);
-    quat_ry(-core->observer->altitude, core->target.src_q, core->target.src_q);
+    quat_rz(core->observer->yaw, core->target.src_q, core->target.src_q);
+    quat_ry(-core->observer->pitch, core->target.src_q, core->target.src_q);
 
     eraC2s((double*)pos, &az, &al);
     quat_set_identity(core->target.dst_q);

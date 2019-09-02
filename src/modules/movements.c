@@ -53,16 +53,15 @@ static int on_pan(const gesture_t *gest, void *user)
 
     eraC2s(start_pos, &saz, &sal);
     eraC2s(pos, &daz, &dal);
-    core->observer->azimuth += (saz - daz);
-    core->observer->altitude += (sal - dal);
-    core->observer->altitude = clamp(core->observer->altitude,
-                                     -M_PI / 2, +M_PI / 2);
+    core->observer->yaw += (saz - daz);
+    core->observer->pitch += (sal - dal);
+    core->observer->pitch = clamp(core->observer->pitch, -M_PI / 2, +M_PI / 2);
 
     obj_set_attr(&core->obj, "lock", NULL);
     observer_update(core->observer, true);
     // Notify the changes.
-    module_changed(&core->observer->obj, "altitude");
-    module_changed(&core->observer->obj, "azimuth");
+    module_changed(&core->observer->obj, "pitch");
+    module_changed(&core->observer->obj, "yaw");
     return 0;
 }
 
@@ -162,13 +161,13 @@ static int movements_update(obj_t *obj, double dt)
     const double MOVE_SPEED  = 1 * DD2R;
 
     if (core->inputs.keys[KEY_RIGHT])
-        core->observer->azimuth += MOVE_SPEED * core->fov;
+        core->observer->yaw += MOVE_SPEED * core->fov;
     if (core->inputs.keys[KEY_LEFT])
-        core->observer->azimuth -= MOVE_SPEED * core->fov;
+        core->observer->yaw -= MOVE_SPEED * core->fov;
     if (core->inputs.keys[KEY_UP])
-        core->observer->altitude += MOVE_SPEED * core->fov;
+        core->observer->pitch += MOVE_SPEED * core->fov;
     if (core->inputs.keys[KEY_DOWN])
-        core->observer->altitude -= MOVE_SPEED * core->fov;
+        core->observer->pitch -= MOVE_SPEED * core->fov;
     if (core->inputs.keys[KEY_PAGE_UP])
         core->fov /= ZOOM_FACTOR;
     if (core->inputs.keys[KEY_PAGE_DOWN])
