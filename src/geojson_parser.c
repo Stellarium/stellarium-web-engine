@@ -343,8 +343,10 @@ static int parse_circle(const json_value *data, geojson_geometry_t *geo)
     r = json_get_attr_f(data, "radius", -1);
     if (r == -1) return -1;
     if (parse_float_array(
-                json_get_attr(data, "center", json_array), 0, 2, center))
+                json_get_attr(data, "center", json_array), 0, 2, center)) {
+        LOG_W("Cannot parse circle center");
         return -1;
+    }
 
     tesselate_circle(center, r * ERFA_DD2R, size, ring->coordinates);
     return 0;
@@ -413,6 +415,7 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
 {
     const json_value *geometry, *properties;
     const char *type;
+    char *json;
     char error_msg[128] = "";
     geojson_geometry_t *geo;
 
@@ -425,20 +428,26 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
 
     if (strcmp(type, "Polygon") == 0) {
         geo->type = GEOJSON_POLYGON;
-        if (parse_polygon(geometry, &geo->polygon)) goto error;
+        if (parse_polygon(geometry, &geo->polygon))
+            ERROR("Cannot parse polygon");
     } else if (strcmp(type, "MultiPolygon") == 0) {
         geo->type = GEOJSON_MULTIPOLYGON;
-        if (parse_multipolygon(geometry, &geo->multipolygon)) goto error;
+        if (parse_multipolygon(geometry, &geo->multipolygon))
+            ERROR("Cannot parse MultiPolygon");
     } else if (strcmp(type, "LineString") == 0) {
         geo->type = GEOJSON_LINESTRING;
-        if (parse_linestring(geometry, &geo->linestring)) goto error;
+        if (parse_linestring(geometry, &geo->linestring))
+            ERROR("Cannot parse LineString");
     } else if (strcmp(type, "Point") == 0) {
         geo->type = GEOJSON_POINT;
-        if (parse_point(geometry, &geo->point)) goto error;
+        if (parse_point(geometry, &geo->point))
+            ERROR("Cannot parse Point");
     } else if (strcmp(type, "Path") == 0) {
-        if (parse_path(geometry, geo)) goto error;
+        if (parse_path(geometry, geo))
+            ERROR("Cannot parse Path");
     } else if (strcmp(type, "Circle") == 0) {
-        if (parse_circle(geometry, geo)) goto error;
+        if (parse_circle(geometry, geo))
+            ERROR("Cannot parse Circle");
     } else {
         ERROR("Unknown geojson type: %s", type);
     }
@@ -454,6 +463,10 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
     return 0;
 error:
     LOG_W("Error parsing geojson feature: %s", error_msg);
+    json = malloc(json_measure(data));
+    json_serialize(json, data);
+    LOG_W("json:\n%s", json);
+    free(json);
     return -1;
 }
 
