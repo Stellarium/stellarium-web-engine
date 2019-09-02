@@ -121,6 +121,12 @@ static void convert_frame_backward(const observer_t *obs,
     if (origin >= FRAME_VIEW && dest < FRAME_VIEW)
         mat3_mul_vec3(obs->rv2o, p, p);
 
+    // OBSERVED to MOUNT.
+    if (dest == FRAME_MOUNT) {
+        mat3_mul_vec3(obs->ro2m, p, p);
+        return;
+    }
+
     // OBSERVED to CIRS
     if (origin >= FRAME_OBSERVED && dest < FRAME_OBSERVED) {
         if (obs->refraction){
