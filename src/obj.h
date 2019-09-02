@@ -310,7 +310,7 @@ int obj_render(const obj_t *obj, const painter_t *painter);
 
 /*
  * Function: obj_get_pvo
- * Return the position and speed of an object.
+ * Return the ICRF position and speed of an object.
  *
  * Parameters:
  *   obj    - A sky object.
@@ -318,6 +318,20 @@ int obj_render(const obj_t *obj, const painter_t *painter);
  *   pvo    - Output ICRF position with origin on the observer.
  */
 void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
+
+/*
+ * Function: obj_get_pos
+ * Conveniance function to compute the position of an object in a given frame.
+ *
+ * This just calls obj_get_pvo followed by convert_frame.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   obs    - An observer.
+ *   frame  - One of the <FRAME> enum values.
+ *   pos    - Output position in the given frame, using homogenous coordinates.
+ */
+void obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
 
 /*
  * Function: obj_get_info
@@ -350,18 +364,6 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info, void *out);
  * as a json object
  */
 char *obj_get_info_json(const obj_t *obj, observer_t *obs, const char *info);
-
-/*
- * Function: obj_get_pos_observed
- * Conveniance function that updates an object and return its observed
- * position (az/alt frame, but as a cartesian vector).
- *
- * Parameters:
- *   obj - An object.
- *   obs - An observer.
- *   pos - Get the observed position in homogeneous coordinates (xyzw, AU).
- */
-void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[S 4]);
 
 /*
  * Function: obj_get_2d_ellipse

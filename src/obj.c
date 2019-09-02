@@ -173,6 +173,25 @@ void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
     obj->klass->get_info(obj, obs, INFO_PVO, pvo);
 }
 
+/*
+ * Function: obj_get_pos
+ * Conveniance function to compute the position of an object in a given frame.
+ *
+ * This just calls obj_get_pvo followed by convert_frame.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   obs    - An observer.
+ *   frame  - One of the <FRAME> enum values.
+ *   pos    - Output position in the given frame, using homogenous coordinates.
+ */
+void obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[4])
+{
+    double pvo[2][4];
+    obj_get_pvo(obj, obs, pvo);
+    convert_framev4(obs, FRAME_ICRF, frame, pvo[0], pos);
+}
+
 int obj_get_info(obj_t *obj, observer_t *obs, int info,
                  void *out)
 {
@@ -518,13 +537,6 @@ obj_klass_t *obj_get_klass_by_name(const char *name)
         if (klass->id && strcmp(klass->id, name) == 0) return klass;
     }
     return NULL;
-}
-
-void obj_get_pos_observed(obj_t *obj, observer_t *obs, double pos[4])
-{
-    double pvo[2][4];
-    obj_get_pvo(obj, obs, pvo);
-    convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, 0, pvo[0], pos);
 }
 
 void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,

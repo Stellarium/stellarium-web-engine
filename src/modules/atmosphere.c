@@ -212,8 +212,8 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
     assert(sun);
     assert(moon);
-    obj_get_pos_observed(sun, painter.obs, sun_pos);
-    obj_get_pos_observed(moon, painter.obs, moon_pos);
+    obj_get_pos(sun, painter.obs, FRAME_OBSERVED, sun_pos);
+    obj_get_pos(moon, painter.obs, FRAME_OBSERVED, moon_pos);
     vec3_normalize(sun_pos, sun_pos);
     vec3_normalize(moon_pos, moon_pos);
     obj_get_info(sun, obs, INFO_VMAG, &sun_vmag);

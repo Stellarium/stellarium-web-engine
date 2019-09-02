@@ -399,7 +399,7 @@ static int core_update_direction(double dt)
         if (core->target.lock && core->target.move_to_lock) {
             // We are moving toward a potentially moving target, adjust the
             // destination
-            obj_get_pos_observed(core->target.lock, core->observer, vv);
+            obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, vv);
             eraC2s((double*)vv, &az, &al);
             quat_set_identity(core->target.dst_q);
             quat_rz(az, core->target.dst_q, core->target.dst_q);
@@ -421,7 +421,7 @@ static int core_update_direction(double dt)
     }
 
     if (core->target.lock && !core->target.move_to_lock) {
-        obj_get_pos_observed(core->target.lock, core->observer, v);
+        obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, v);
         eraC2s(v, &core->observer->azimuth, &core->observer->altitude);
         // Notify the changes.
         module_changed(&core->observer->obj, "altitude");
@@ -942,7 +942,7 @@ void core_point_and_lock(obj_t *target, double duration)
 {
     double v[4];
     obj_set_attr(&core->obj, "lock", target);
-    obj_get_pos_observed(core->target.lock, core->observer, v);
+    obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, v);
     core_lookat(v, duration);
     core->target.move_to_lock = true;
 }

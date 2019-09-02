@@ -48,7 +48,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
 
     // Compute global brightness to adjust opacity/color of labels
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
-    obj_get_pos_observed(sun, core->observer, pos);
+    obj_get_pos(sun, core->observer, FRAME_OBSERVED, pos);
     vec3_normalize(pos, pos);
     sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
     if (sin_angle > -0.1 / 1.5 )
