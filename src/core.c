@@ -400,7 +400,7 @@ static int core_update_direction(double dt)
         if (core->target.lock && core->target.move_to_lock) {
             // We are moving toward a potentially moving target, adjust the
             // destination
-            obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, vv);
+            obj_get_pos(core->target.lock, core->observer, FRAME_MOUNT, vv);
             eraC2s((double*)vv, &az, &al);
             quat_set_identity(core->target.dst_q);
             quat_rz(az, core->target.dst_q, core->target.dst_q);
@@ -422,7 +422,7 @@ static int core_update_direction(double dt)
     }
 
     if (core->target.lock && !core->target.move_to_lock) {
-        obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, v);
+        obj_get_pos(core->target.lock, core->observer, FRAME_MOUNT, v);
         eraC2s(v, &core->observer->yaw, &core->observer->pitch);
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
