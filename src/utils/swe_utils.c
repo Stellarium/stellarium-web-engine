@@ -113,10 +113,10 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
     cm = *d++;
     flg = *d++;
 
-    assert(id1 == 0x1f);
-    assert(id2 == 0x8b);
-    assert(cm == 8); // Only support deflate.
-    assert(flg == 8); // Only support this flags for the moment!
+    if (id1 != 0x1f) goto error;
+    if (id2 != 0x8b) goto error;
+    if (cm != 8) goto error; // Only support deflate.
+    if (flg != 8) goto error; // Only support this flags for the moment!
 
     d += 6;
     d += strlen((const char*)d) + 1;
@@ -129,6 +129,11 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
             ret, isize, (void*)d, src_size - 8 - ((void*)d - src));
     ((char*)ret)[isize] = '\0';
     return ret;
+
+error:
+    LOG_E("Cannot uncompress gz file!");
+    *out_size = 0;
+    return NULL;
 }
 
 bool str_endswith(const char *str, const char *end)
