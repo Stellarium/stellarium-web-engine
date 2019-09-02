@@ -178,6 +178,7 @@ DEF void quat_mul_vec3(const double q[S 4], const double v[S 3],
 DEF void quat_to_mat3(const double q[S 4], double out[S 3][3]);
 DEF void quat_slerp(const double a[S 4], const double b[S 4], double t,
                     double out[S 4]);
+DEF void quat_normalize(const double q[S 4], double out[S 4]);
 
 DEF bool cap_contains_vec3(const double cap[S 4], const double v[S 3]);
 DEF bool cap_contains_cap(const double cap[S 4], const double c[S 4]);
@@ -925,6 +926,15 @@ DEF void quat_slerp(const double a_[S 4], const double b_[S 4], double t,
     out[1] = a[1] * f1 + b[1] * f2;
     out[2] = a[2] * f1 + b[2] * f2;
     out[3] = a[3] * f1 + b[3] * f2;
+}
+
+DEF void quat_normalize(const double q[S 4], double out[S 4])
+{
+    double n = sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+    out[0] = q[0] / n;
+    out[1] = q[1] / n;
+    out[2] = q[2] / n;
+    out[3] = q[3] / n;
 }
 
 DEF bool cap_contains_vec3(const double cap[S 4], const double v[S 3])
