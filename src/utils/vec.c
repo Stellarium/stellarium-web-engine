@@ -15,6 +15,11 @@
     #include "vec.h"
 #endif
 
+static double min(double x, double y)
+{
+    return x < y ? x : y;
+}
+
 void vec3_get_ortho(const double v_[3], double out[3])
 {
     int axis;
@@ -44,6 +49,57 @@ void vec3_get_ortho(const double v_[3], double out[3])
         out[2] = -v[0] - v[1];
         break;
     }
+}
+
+void mat3_to_quat(const double m[3][3], double quat[4])
+{
+    double t;
+    if (m[2][2] < 0) {
+        if (m[0][0] > m[1][1]) {
+            t = 1 + m[0][0] - m[1][1] - m[2][2];
+            quat[0] = m[1][2] - m[2][1];
+            quat[1] = t;
+            quat[2] = m[0][1] + m[1][0];
+            quat[3] = m[2][0] + m[0][2];
+        } else {
+            t = 1 - m[0][0] + m[1][1] - m[2][2];
+            quat[0] = m[2][0] - m[0][2];
+            quat[1] = m[0][1] + m[1][0];
+            quat[2] = t;
+            quat[3] = m[1][2] + m[2][1];
+        }
+    } else {
+        if (m[0][0] < -m[1][1]) {
+            t = 1 - m[0][0] - m[1][1] + m[2][2];
+            quat[0] = m[0][1] - m[1][0];
+            quat[1] = m[2][0] + m[0][2];
+            quat[2] = m[1][2] + m[2][1];
+            quat[3] = t;
+        } else {
+            t = 1 + m[0][0] + m[1][1] + m[2][2];
+            quat[0] = t;
+            quat[1] = m[1][2] - m[2][1];
+            quat[2] = m[2][0] - m[0][2];
+            quat[3] = m[0][1] - m[1][0];
+        }
+    }
+    vec4_mul(0.5 / sqrt(t), quat, quat);
+}
+
+double quat_sep(const double a[4], const double b[4])
+{
+    double f = vec4_dot(a, b);
+    return acos(min(fabs(f), 1.0)) * 2.0;
+}
+
+void quat_rotate_towards(const double a[4], const double b[4],
+                         double max_angle, double out[4])
+{
+    double t, sep;
+    sep = quat_sep(a, b);
+    if (sep == 0) return;
+    t = min(1.0, max_angle / sep);
+    quat_slerp(a, b, t, out);
 }
 
 /******** TESTS ***********************************************************/
@@ -145,6 +201,7 @@ static void test_caps(void)
     assert(cap_intersects_segment(VEC(1, 0, 0, 0), VEC(0, 1, 0),
                                   VEC(0, 0, 1)));
 }
+
 
 TEST_REGISTER(NULL, test_caps, TEST_AUTO);
 

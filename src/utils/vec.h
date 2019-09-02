@@ -110,6 +110,7 @@ DEF void vec2_normalize(const double v[S 2], double out[S 2]);
 DEF void vec3_normalize(const double v[S 3], double out[S 3]);
 DEF double vec2_dot(const double a[S 2], const double b[S 2]);
 DEF double vec3_dot(const double a[S 3], const double b[S 3]);
+DEF double vec4_dot(const double a[S 4], const double b[S 4]);
 DEF double vec2_dist2(const double a[S 2], const double b[S 2]);
 DEF double vec3_dist2(const double a[S 3], const double b[S 3]);
 DEF double vec2_dist(const double a[S 2], const double b[S 2]);
@@ -144,6 +145,7 @@ DEF void mat3_transpose(const double mat[S 3][3], double out[S 3][3]);
 DEF void mat3_to_mat4(const double mat[S 3][3], double out[S 4][4]);
 DEF void mat3_to_float(const double mat[S 3][3], float out[S 9]);
 DEF void mat3_to_float4(const double mat[S 3][3], float out[S 16]);
+    void mat3_to_quat(const double mat[S 3][3], double quat[S 4]);
 
 DEF void mat4_mul_vec4(const double mat[S 4][4], const double v[S 4],
                        double out[S 4]);
@@ -178,6 +180,10 @@ DEF void quat_mul_vec3(const double q[S 4], const double v[S 3],
 DEF void quat_to_mat3(const double q[S 4], double out[S 3][3]);
 DEF void quat_slerp(const double a[S 4], const double b[S 4], double t,
                     double out[S 4]);
+// Separation angle between two quaternions.
+double quat_sep(const double a[S 4], const double b[S 4]);
+void quat_rotate_towards(const double a[S 4], const double b[S 4],
+                         double max_angle, double out[S 4]);
 DEF void quat_normalize(const double q[S 4], double out[S 4]);
 
 DEF bool cap_contains_vec3(const double cap[S 4], const double v[S 3]);
@@ -337,6 +343,11 @@ DEF double vec2_dot(const double a[S 2], const double b[S 2])
 DEF double vec3_dot(const double a[S 3], const double b[S 3])
 {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+DEF double vec4_dot(const double a[S 4], const double b[S 4])
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
 }
 
 DEF double vec2_dist2(const double a[S 2], const double b[S 2])
