@@ -85,7 +85,9 @@ struct observer
     // o: Observed: horizontal with refraction (RA/DE, left handed).
     // i: ICRF (right handed).
     // e: Ecliptic (right handed).
-    // v: View (observed with view direction).
+    // m: Mount (observed + mount rotation).
+    // v: View (Mount + view direction).
+    double ro2m[3][3];  // Rotate from observed to mount.
     double ro2v[3][3];  // Rotate from observed to view.
     double rv2o[3][3];  // Rotate from view to observed.
     double ri2h[3][3];  // Equatorial J2000 (ICRF) to horizontal.

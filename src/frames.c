@@ -101,6 +101,12 @@ static void convert_frame_forward(const observer_t *obs,
         }
     }
 
+    // OBSERVED to MOUNT.
+    if (origin < FRAME_MOUNT && dest == FRAME_MOUNT) {
+        mat3_mul_vec3(obs->ro2m, p, p);
+        return;
+    }
+
     // OBSERVED to VIEW.
     if (origin < FRAME_VIEW && dest >= FRAME_VIEW)
         mat3_mul_vec3(obs->ro2v, p, p);

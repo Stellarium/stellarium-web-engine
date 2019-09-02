@@ -78,6 +78,10 @@ typedef struct observer observer_t;
  *                  astronomical objects as seen from the Earth.
  * FRAME_OBSERVED - Observed frame (the frame of alt/az). Includes atmospheric
  *                  refraction.
+ * FRAME_MOUNT    - Frame oriented along the mount rest position.  For
+ *                  alt/az mount, this is the same as FRAME_OBSERVED.  For
+ *                  other mounts, we have to apply the rotation of the mount
+ *                  relative to the alt/az frame.
  * FRAME_VIEW     - Observed frame rotated in the observer view direction.
  */
 enum {
@@ -86,7 +90,8 @@ enum {
     FRAME_CIRS                = 2,
     FRAME_JNOW                = 3,
     FRAME_OBSERVED            = 4,
-    FRAME_VIEW                = 5
+    FRAME_MOUNT               = 5,
+    FRAME_VIEW                = 6
 };
 
 #define FRAMES_NB (FRAME_VIEW + 1)

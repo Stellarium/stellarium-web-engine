@@ -78,6 +78,7 @@ static void update_matrices(observer_t *obs)
     mat3_invert(re2i, ri2e);
 
     // Copy all
+    mat3_set_identity(obs->ro2m); // No mount support yet.
     mat3_copy(ro2v, obs->ro2v);
     mat3_invert(obs->ro2v, obs->rv2o);
     mat3_copy(ri2h, obs->ri2h);
