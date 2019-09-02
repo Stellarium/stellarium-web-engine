@@ -28,6 +28,11 @@ struct observer
     double pressure;    // Set to NAN to compute it from the altitude.
     bool   refraction;  // Whether we use refraction or not.
 
+    // Quaternion representing the mount orientation with respect to the
+    // observed (az/alt) referential.  Set to the identity quaternion by
+    // default for an az/alt mount.
+    double mount_quat[4];
+
     // Rotations relative to the mount referential.  Pitch and yaw
     // correspond to azimuth and altitude when using an alt/az mount.
     double pitch;

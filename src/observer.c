@@ -29,6 +29,8 @@ static void update_matrices(observer_t *obs)
 {
     eraASTROM *astrom = &obs->astrom;
     // We work with 3x3 matrices, so that we can use the erfa functions.
+    double rm2v[3][3];  // Rotate from mount to view.
+    double ro2m[3][3];  // Rotate from observed to mount.
     double ro2v[3][3];  // Rotate from observed to view.
     double ri2h[3][3];  // Equatorial J2000 (ICRF) to horizontal.
     double rh2i[3][3];  // Horizontal to Equatorial J2000 (ICRF).
@@ -37,15 +39,17 @@ static void update_matrices(observer_t *obs)
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRF).
     double view_rot[3][3];
 
-    mat3_set_identity(ro2v);
+    quat_to_mat3(obs->mount_quat, ro2m);
+    mat3_set_identity(rm2v);
     // r2gl changes the coordinate from z up to y up orthonomal.
     double r2gl[3][3] = {{0, 0,-1},
                          {1, 0, 0},
                          {0, 1, 0}};
-    mat3_rz(obs->roll, ro2v, ro2v);
-    mat3_rx(-obs->pitch, ro2v, ro2v);
-    mat3_ry(obs->yaw, ro2v, ro2v);
-    mat3_mul(ro2v, r2gl, ro2v);
+    mat3_rz(obs->roll, rm2v, rm2v);
+    mat3_rx(-obs->pitch, rm2v, rm2v);
+    mat3_ry(obs->yaw, rm2v, rm2v);
+    mat3_mul(rm2v, r2gl, rm2v);
+    mat3_mul(rm2v, ro2m, ro2v);
 
     // Extra rotation for screen center offset.
     assert(!isnan(obs->view_offset_alt));
@@ -78,7 +82,7 @@ static void update_matrices(observer_t *obs)
     mat3_invert(re2i, ri2e);
 
     // Copy all
-    mat3_set_identity(obs->ro2m); // No mount support yet.
+    mat3_copy(ro2m, obs->ro2m);
     mat3_copy(ro2v, obs->ro2v);
     mat3_invert(obs->ro2v, obs->rv2o);
     mat3_copy(ri2h, obs->ri2h);
@@ -100,6 +104,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(pressure);
     H(refraction);
     *hash_partial = v;
+    H(mount_quat);
     H(pitch);
     H(yaw);
     H(roll);
@@ -221,6 +226,7 @@ void observer_update(observer_t *obs, bool fast)
 static int observer_init(obj_t *obj, json_value *args)
 {
     observer_t*  obs = (observer_t*)obj;
+    quat_set_identity(obs->mount_quat);
     observer_compute_hash(obs, &obs->hash_partial, &obs->hash_accurate);
     obs->hash = obs->hash_accurate;
     return 0;
