@@ -258,6 +258,7 @@ static void core_set_default(void)
     tonemapper_update(&core->tonemapper, core->tonemapper_p, 1, 1, core->lwmax);
 
     core->telescope_auto = true;
+    core->mount_frame = FRAME_OBSERVED;
     observer_update(core->observer, false);
 }
 
@@ -431,6 +432,30 @@ static int core_update_direction(double dt)
     return 1;
 }
 
+// Update the observer mount quaternion.
+static int core_update_mount(double dt)
+{
+    observer_t *obs = core->observer;
+    int frame = core->mount_frame;
+    double quat[4], mat[3][3];
+    const double speed = 4;
+
+    if (frame == FRAME_OBSERVED) {
+        quat_set_identity(quat);
+    } else {
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(1, 0, 0), mat[0]);
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, -1, 0), mat[1]);
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 0, 1), mat[2]);
+        mat3_to_quat(mat, quat);
+        quat_normalize(quat, quat);
+    }
+
+    if (vec4_equal(quat, core->observer->mount_quat)) return 0;
+    quat_rotate_towards(core->observer->mount_quat, quat, dt * speed,
+                        core->observer->mount_quat);
+    return 0;
+}
+
 EMSCRIPTEN_KEEPALIVE
 int core_update(double dt)
 {
@@ -468,6 +493,7 @@ int core_update(double dt)
     core->star_scale_screen_factor = 0.5 + delta;
 
     core_update_direction(dt);
+    core_update_mount(dt);
 
     DL_SORT(core->obj.children, modules_sort_cmp);
     DL_FOREACH(core->obj.children, module) {
@@ -1038,6 +1064,7 @@ static obj_klass_t core_klass = {
                  MEMBER(core_t, flip_view_vertical)),
         PROPERTY(flip_view_horizontal, TYPE_BOOL,
                  MEMBER(core_t, flip_view_horizontal)),
+        PROPERTY(mount_frame, TYPE_ENUM, MEMBER(core_t, mount_frame)),
         {}
     }
 };

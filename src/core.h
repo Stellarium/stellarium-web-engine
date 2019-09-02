@@ -127,6 +127,9 @@ struct core
     // Maintains a list of clickable/hoverable areas.
     areas_t         *areas;
 
+    // FRAME_OBSERVED for altaz mount.
+    int mount_frame;
+
     // Can be used for debugging.  It's conveniant to have an exposed test
     // attribute.
     bool test;
