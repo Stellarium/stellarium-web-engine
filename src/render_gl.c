@@ -315,9 +315,6 @@ static void points(renderer_t *rend_,
     int i;
     const int MAX_POINTS = 4096;
     point_t p;
-    // Adjust size so that at any smoothness value the points look more or
-    // less at the same intensity.
-    double sm = 1.0 / (1.0 - 0.7 * painter->points_smoothness);
 
     if (n > MAX_POINTS) {
         LOG_E("Try to render more than %d points: %d", MAX_POINTS, n);
@@ -341,7 +338,7 @@ static void points(renderer_t *rend_,
         window_to_ndc(rend, p.pos, p.pos);
 
         gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(p.pos));
-        gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * rend->scale * 2 * sm);
+        gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * rend->scale);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(p.color));
         gl_buf_next(&item->buf);
 

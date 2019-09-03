@@ -544,7 +544,7 @@ static const unsigned char DATA_shaders_planet_glsl[7280] __attribute__((aligned
 
 ASSET_REGISTER(shaders_planet_glsl, "shaders/planet.glsl", DATA_shaders_planet_glsl, false)
 
-static const unsigned char DATA_shaders_points_glsl[1039] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_glsl[1131] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -559,6 +559,7 @@ static const unsigned char DATA_shaders_points_glsl[1039] __attribute__((aligned
     "\n"
     "varying mediump vec2 v_tex_pos;\n"
     "varying lowp    vec4 v_color;\n"
+    "varying mediump float v_halo_dist;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
@@ -569,7 +570,8 @@ static const unsigned char DATA_shaders_points_glsl[1039] __attribute__((aligned
     "void main()\n"
     "{\n"
     "    gl_Position = vec4(a_pos, 0, 1.0);\n"
-    "    gl_PointSize = a_size;\n"
+    "    v_halo_dist = 1.0 / ((1.0 + u_smooth) * 4.0);\n"
+    "    gl_PointSize = a_size / v_halo_dist;\n"
     "    v_color = a_color * u_color;\n"
     "}\n"
     "\n"
@@ -580,14 +582,15 @@ static const unsigned char DATA_shaders_points_glsl[1039] __attribute__((aligned
     "{\n"
     "    mediump float dist;\n"
     "    mediump float k;\n"
-    "\n"
     "    dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));\n"
-    "    k = smoothstep(1.0 - u_smooth, 1.0, dist);\n"
-    "    k = sqrt(k);\n"
+    "\n"
+    "    // Center bright point.\n"
+    "    k = smoothstep(v_halo_dist, v_halo_dist * 0.5, dist);\n"
+    "\n"
+    "    // Halo\n"
+    "    k += smoothstep(1.0, 0.0, dist) * 0.08;\n"
     "    gl_FragColor.rgb = v_color.rgb;\n"
-    "    // Saturation effect at the center.\n"
-    "    gl_FragColor.rgb *= 1.0 + smoothstep(0.2, 0.0, k);\n"
-    "    gl_FragColor.a = v_color.a * (1.0 - k);\n"
+    "    gl_FragColor.a = v_color.a * clamp(k, 0.0, 1.0);\n"
     "}\n"
     "\n"
     "#endif\n"

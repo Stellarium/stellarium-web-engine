@@ -12,6 +12,7 @@ uniform lowp float u_smooth;
 
 varying mediump vec2 v_tex_pos;
 varying lowp    vec4 v_color;
+varying mediump float v_halo_dist;
 
 #ifdef VERTEX_SHADER
 
@@ -22,7 +23,8 @@ attribute mediump float a_size;
 void main()
 {
     gl_Position = vec4(a_pos, 0, 1.0);
-    gl_PointSize = a_size;
+    v_halo_dist = 1.0 / ((1.0 + u_smooth) * 4.0);
+    gl_PointSize = a_size / v_halo_dist;
     v_color = a_color * u_color;
 }
 
@@ -33,14 +35,15 @@ void main()
 {
     mediump float dist;
     mediump float k;
-
     dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));
-    k = smoothstep(1.0 - u_smooth, 1.0, dist);
-    k = sqrt(k);
+
+    // Center bright point.
+    k = smoothstep(v_halo_dist, v_halo_dist * 0.5, dist);
+
+    // Halo
+    k += smoothstep(1.0, 0.0, dist) * 0.08;
     gl_FragColor.rgb = v_color.rgb;
-    // Saturation effect at the center.
-    gl_FragColor.rgb *= 1.0 + smoothstep(0.2, 0.0, k);
-    gl_FragColor.a = v_color.a * (1.0 - k);
+    gl_FragColor.a = v_color.a * clamp(k, 0.0, 1.0);
 }
 
 #endif
