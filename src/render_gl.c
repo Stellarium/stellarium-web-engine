@@ -853,7 +853,12 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
         item->text.align = align;
         item->text.effects = effects;
         item->text.angle = angle;
-        strcpy(item->text.text, text);
+        if (effects & TEXT_SMALL_CAP) {
+            // Emulate Small Cap effect by doing regular capitalize
+            u8_upper(item->text.text, text, sizeof(item->text.text) - 1);
+        } else {
+            strcpy(item->text.text, text);
+        }
         DL_APPEND(rend->items, item);
     }
     if (bounds) {
