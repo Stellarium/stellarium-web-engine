@@ -10,11 +10,13 @@ WORKDIR /emsdk-portable
 # Fetch the latest registry of available tools.
 RUN ./emsdk update
 
+
+
 # Download and install the latest SDK tools.
-RUN ./emsdk install sdk-1.38.11-64bit
+RUN ./emsdk install sdk-tag-1.38.42-64bit
 
 # Set up the compiler configuration to point to the "latest" SDK.
-RUN ./emsdk activate sdk-1.38.11-64bit
+RUN ./emsdk activate sdk-tag-1.38.42-64bit
 
 EXPOSE 8000
 

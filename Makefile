@@ -64,13 +64,13 @@ dev-jsprof:
 
 
 gen-es6:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" -v "$(PWD)/.emscripten_cache:/root/.emscripten_cache" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6"
+	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6"
 
 gen-es6-debug:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" -v "$(PWD)/.emscripten_cache:/root/.emscripten_cache" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6-debug"
+	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6-debug"
 
 gen-es6-prof:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" -v "$(PWD)/.emscripten_cache:/root/.emscripten_cache" swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6-prof"
+	docker run -it -p 8000:8000 -v "$(PWD):/app"  swe-dev /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6-prof"
 
 # Make the doc using natualdocs.  On debian, we only have an old version
 # of naturaldocs available, where it is not possible to exclude files by
