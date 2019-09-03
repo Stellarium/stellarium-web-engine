@@ -73,6 +73,33 @@ typedef struct constellations {
 
 static int constellation_update(constellation_t *con, const observer_t *obs);
 
+
+// Test if a shape in clipping coordinates is clipped or not.
+// Support margins.
+static bool is_clipped(int n, double (*pos)[4], double mx, double my)
+{
+    // The six planes equations:
+    const double P[6][4] = {
+        {-1, 0, 0, -1 + mx}, {1, 0, 0, -1 + mx},
+        {0, -1, 0, -1 + my}, {0, 1, 0, -1 + my},
+        {0, 0, -1, -1}, {0, 0, 1, -1}
+    };
+    int i, p;
+    for (p = 0; p < 6; p++) {
+        for (i = 0; i < n; i++) {
+            if (    P[p][0] * pos[i][0] +
+                    P[p][1] * pos[i][1] +
+                    P[p][2] * pos[i][2] +
+                    P[p][3] * pos[i][3] <= 0) {
+                break;
+            }
+        }
+        if (i == n) // All the points are outside a clipping plane.
+            return true;
+    }
+    return false;
+}
+
 /*
  * Function: join_path
  * Join two file paths.
@@ -375,50 +402,6 @@ static int render_bounds(const constellation_t *con,
 }
 
 /*
- * Function: compute_visibility_cap
- * Compute the cap within which we start to show the constellations.
- *
- * This is a circle a bit smaller than the actual screen.
- *
- * We cache the value so that we don't have to compute it for each
- * constellation.
- */
-static void compute_visibility_cap(const painter_t *painter,
-                                   double cap[4])
-{
-    const double w = painter->proj->window_size[0];
-    const double h = painter->proj->window_size[1];
-    const double margin = 100;
-    int i;
-    double p[3];
-    double min_sep = M_PI;
-    // The four center of the viewport sides.
-    const double points[4][2] = {
-        {margin, h / 2}, {w - margin, h / 2},
-        {w / 2, margin}, {w / 2, h - margin}
-    };
-
-    static struct {
-        uint64_t hash;
-        double cap[4];
-    } cache = {};
-
-    if (cache.hash == painter->obs->hash) {
-        memcpy(cap, cache.cap, sizeof(cache.cap));
-        return;
-    }
-
-    painter_unproject(painter, FRAME_ICRF, VEC(w / 2, h / 2), cap);
-    for (i = 0; i < 4; i++) {
-        if (!painter_unproject(painter, FRAME_ICRF, points[i], p)) continue;
-        min_sep = min(min_sep, eraSepp(cap, p));
-    }
-    cap[3] = cos(min_sep);
-    memcpy(cache.cap, cap, sizeof(cache.cap));
-    cache.hash = painter->obs->hash;
-}
-
-/*
  * Function: constellation_is_visible
  * Check if the constellation is visible.
  *
@@ -428,15 +411,32 @@ static void compute_visibility_cap(const painter_t *painter,
 static bool constellation_is_visible(const constellation_t *con,
                                      const painter_t *painter)
 {
-    double cap[4];
+    int i;
+    double (*pos)[4], mx, my;
+    bool ret;
+    const double m = 100; // Border margins (windows unit).
 
     // First fast tests for the case when the constellation is not in the
     // screen at all.
     if (painter_is_cap_clipped(painter, FRAME_ICRF, con->bounding_cap))
         return false;
 
-    compute_visibility_cap(painter, cap);
-    return cap_intersects_cap(cap, con->bounding_cap);
+    // Clipping test.
+    pos = calloc(con->count, sizeof(*pos));
+    for (i = 0; i < con->count; i++) {
+        obj_get_pos(con->stars[i], painter->obs, FRAME_VIEW, pos[i]);
+        project(painter->proj, 0, 4, pos[i], pos[i]);
+    }
+
+    // Compute margins in NDC.
+    mx = m * painter->pixel_scale / painter->fb_size[0] * 2;
+    my = m * painter->pixel_scale / painter->fb_size[1] * 2;
+    mx = min(mx, 0.5);
+    my = min(my, 0.5);
+
+    ret = !is_clipped(con->count, pos, mx, my);
+    free(pos);
+    return ret;
 }
 
 static int render_lines(constellation_t *con, const painter_t *_painter,
