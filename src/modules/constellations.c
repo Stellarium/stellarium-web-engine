@@ -698,7 +698,6 @@ static int constellations_update(obj_t *obj, double dt)
 
 static int constellations_render(const obj_t *obj, const painter_t *painter)
 {
-    double cap[4];
     constellations_t *cons = (constellations_t*)obj;
     constellation_t *con;
     if (cons->visible.value == 0.0) return 0;
@@ -706,8 +705,6 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
         cons->images_visible.value == 0.0 &&
         cons->bounds_visible.value == 0.0 &&
         (!core->selection || core->selection->parent != obj)) return 0;
-
-    compute_visibility_cap(painter, cap);
 
     MODULE_ITER(obj, con, "constellation") {
         obj_render((obj_t*)con, painter);
