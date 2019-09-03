@@ -482,7 +482,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
         // Add some space, using ad-hoc formula.
         line_truncate(&lines[i], radius[0] * 2 + 0.25 * DD2R,
                                  radius[1] * 2 + 0.25 * DD2R);
-        line_animation_effect(&lines[i], visible);
+        line_animation_effect(&lines[i], visible * 2);
     }
 
     paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1,
