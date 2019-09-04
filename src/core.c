@@ -612,7 +612,7 @@ static double compute_vmag_for_radius(double target_r)
         *(r > target_r ? &m1 : &m2) = m;
     }
     if (i >= max_iter) {
-        LOG_W("Too many iterations! target_r: %f -> mag:%f",
+        LOG_D("Too many iterations! target_r: %f -> mag:%f",
               target_r, m);
     }
     return m;
