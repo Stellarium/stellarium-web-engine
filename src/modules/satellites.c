@@ -261,7 +261,7 @@ static int satellites_update(obj_t *obj, double dt)
     PROFILE(satellites_update, 0);
     satellites_t *sats = (satellites_t*)obj;
     const char *data;
-    double last_epoch;
+    double last_epoch = 0;
     int size, code, nb;
     char buf[128];
 
