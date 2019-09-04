@@ -532,7 +532,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     // Hardcoded increase of the luminosity of the moon for the moment!
     // This should be specified in the survey itsefl I guess.
     if (planet->id == MOON)
-        vec3_mul(1.8, painter.color, painter.color);
+        vec3_mul(3.8, painter.color, painter.color);
 
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
