@@ -245,12 +245,12 @@ static void core_set_default(void)
     // Adjust those values to make the sky look good.
     core->star_linear_scale = 1.0;
     core->star_scale_screen_factor = 0.5;
-    core->star_relative_scale = 1.4;
+    core->star_relative_scale = 1.1;
 
     core->lwmax_min = 0.052;
-    core->max_point_radius = 6.0;
-    core->min_point_radius = 0.5;
-    core->skip_point_radius = 0.2;
+    core->max_point_radius = 50.0;
+    core->min_point_radius = 0.8;
+    core->skip_point_radius = 0.4;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
     core->exposure_scale = 1;
     core->tonemapper_p = 2.2;     // Setup using atmosphere as reference
@@ -305,7 +305,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_pixels_scale = pixel_scale;
     core->show_hints_radius = 3.8;
     core->point_dim_factor = 3;
-    core->dso_hints_mag_offset = 1.7;
+    core->dso_hints_mag_offset = 0.6;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)obj_create("observer", "observer",
