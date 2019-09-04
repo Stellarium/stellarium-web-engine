@@ -859,7 +859,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     }
 
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
-    point_r = core_get_apparent_angle_for_point(painter.proj, point_size);
+    point_r = core_get_apparent_angle_for_point(painter.proj, point_size * 2.0);
 
     // Compute max angular radius of the planet, taking into account the
     // ring and the point size if it is bigger than the planet.
