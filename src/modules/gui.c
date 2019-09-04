@@ -210,7 +210,7 @@ static void menu_main(void *user)
         time_widget(user);
         gui_tab_end();
     }
-    if (DEBUG && gui_tab("Debug")) {
+    if (gui_tab("Debug")) {
         gui_double("s linear", &core->star_linear_scale, 0, 8, 2, NAN);
         gui_double("s relative", &core->star_relative_scale, 0.1, 8, 1, NAN);
         gui_double("min rad", &core->min_point_radius, 0.001, 10, 3, NAN);
@@ -383,6 +383,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_same_line();
     gui_text("lwmax: %f cd/m2", core->lwmax);
     gui_same_line();
+    gui_text("vmag max: %f", painter->stars_limit_mag);
     gui_text("cst: %s", core->observer->cst);
     gui_panel_end();
 
