@@ -10,7 +10,6 @@
 uniform lowp vec4 u_color;
 uniform lowp float u_smooth;
 
-varying mediump vec2 v_tex_pos;
 varying lowp    vec4 v_color;
 varying mediump float v_halo_dist;
 
