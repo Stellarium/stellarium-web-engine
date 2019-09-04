@@ -249,8 +249,8 @@ static void core_set_default(void)
 
     core->lwmax_min = 0.052;
     core->max_point_radius = 50.0;
-    core->min_point_radius = 1.0;
-    core->skip_point_radius = 0.4;
+    core->min_point_radius = 1.0;  // In physical pixels
+    core->skip_point_radius = 0.25;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
     core->exposure_scale = 1;
     core->tonemapper_p = 2.2;     // Setup using atmosphere as reference
@@ -560,7 +560,7 @@ static void core_get_point_for_mag_(
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double ld, r;
-    const double r_min = core->min_point_radius;
+    const double r_min = core->min_point_radius / core->win_pixels_scale;
 
     // Get radius and luminance without any contraint on the radius.
     core_get_point_for_mag_(mag, &r, &ld);
