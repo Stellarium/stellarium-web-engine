@@ -812,6 +812,26 @@ double core_mag_to_lum_apparent(double mag, double surf)
     return core_illuminance_to_lum_apparent(illum, surf);
 }
 
+
+// Get point for mag without any radius lower limit.
+static void core_get_point_for_mag_(
+        double mag, double *radius, double *luminance)
+{
+    double ld;
+    double s_linear = core->star_linear_scale * core->star_scale_screen_factor;
+    double s_relative = core->star_relative_scale;
+    // Compute apparent luminance, i.e. the luminance percieved by the eye
+    // when looking in the telescope eyepiece.
+    double lum_apparent = core_mag_to_lum_apparent(mag, 0);
+    // Apply eye adaptation.
+    ld = tonemapper_map(&core->tonemapper, lum_apparent);
+    if (ld < 0) ld = 0; // Prevent math error.
+    // Compute r, using both manual adjustement factors.
+    *radius = s_linear * pow(ld, s_relative / 2.0);
+    if (luminance) *luminance = clamp(ld, 0, 1);
+}
+
+
 /*
  * Function: core_get_point_for_mag
  * Compute a point radius and luminosity from a observed magnitude.
@@ -830,21 +850,10 @@ double core_mag_to_lum_apparent(double mag, double surf)
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double ld, r;
-    const double s_linear = core->star_linear_scale *
-            core->star_scale_screen_factor;
-    const double s_relative = core->star_relative_scale;
     const double r_min = core->min_point_radius;
 
-    // Compute apparent luminance, i.e. the luminance percieved by the eye
-    // when looking in the telescope eyepiece.
-    double lum_apparent = core_mag_to_lum_apparent(mag, 0);
-
-    // Apply eye adaptation.
-    ld = tonemapper_map(&core->tonemapper, lum_apparent);
-    if (ld < 0) ld = 0; // Prevent math error.
-
-    // Compute r, using both manual adjustement factors.
-    r = s_linear * pow(ld, s_relative / 2.0);
+    // Get radius and luminance without any contraint on the radius.
+    core_get_point_for_mag_(mag, &r, &ld);
 
     // If the radius is really too small, we don't render the star.
     if (r < core->skip_point_radius) {
