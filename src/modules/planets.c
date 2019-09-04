@@ -926,7 +926,13 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Render the Sun halo.
     if (planet->id == SUN) {
-        paint_texture(&painter, planets->halo_tex, NULL, p_win, 200.0, NULL, 0);
+        // Modulate halo opacity according to sun's altitude
+        // This is ad-hoc code to be replaced when proper extinction is
+        // computed.
+        convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, pos);
+        vec4_set(color, 1, 1, 1, fabs(pos[2]));
+        paint_texture(&painter, planets->halo_tex, NULL, p_win, 200.0, color,
+                      0);
     }
 }
 
