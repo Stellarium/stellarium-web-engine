@@ -216,6 +216,7 @@ static void menu_main(void *user)
         gui_double("min rad", &core->min_point_radius, 0.001, 10, 3, NAN);
         gui_double("skip rad", &core->skip_point_radius, 0.001, 10, 3, NAN);
         gui_double("max rad", &core->max_point_radius, 1, 100, 1, NAN);
+        gui_double("hints rad", &core->show_hints_radius, 0.1, 10, 1, NAN);
         gui_double_log("log lmaxmin", &core->lwmax_min, -100, 100, 2, NAN);
         gui_float_log("log p", &core->tonemapper.p, -100, 100, 0, NAN);
 

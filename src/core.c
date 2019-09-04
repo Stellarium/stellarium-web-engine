@@ -303,7 +303,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    core->hints_mag_offset = -1;
+    core->show_hints_radius = 3.8;
     core->dso_hints_mag_offset = 1.7;
     core->display_limit_mag = 99;
 
@@ -647,7 +647,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     obj_t *module;
     projection_t proj;
     double t;
-    double max_vmag;
+    double max_vmag, hints_vmag;
 
     // Used to make sure some values are not touched during render.
     struct {
@@ -666,6 +666,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     observer_update(core->observer, true);
     max_vmag = compute_vmag_for_radius(core->skip_point_radius);
+    hints_vmag = compute_vmag_for_radius(core->show_hints_radius);
+    hints_vmag += 4; // To keep compatibility for the moment!
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
@@ -689,7 +691,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .pixel_scale = pixel_scale,
         .proj = &proj,
         .stars_limit_mag = max_vmag,
-        .hints_limit_mag = max_vmag + core->hints_mag_offset,
+        .hints_limit_mag = hints_vmag,
         .hard_limit_mag = core->display_limit_mag,
         .points_smoothness = 0.75,
         .color = {1.0, 1.0, 1.0, 1.0},
@@ -1060,7 +1062,6 @@ static obj_klass_t core_klass = {
         PROPERTY(selection, TYPE_OBJ, MEMBER(core_t, selection)),
         PROPERTY(lock, TYPE_OBJ, MEMBER(core_t, target.lock)),
         PROPERTY(hovered, TYPE_OBJ, MEMBER(core_t, hovered)),
-        PROPERTY(hints_mag_offset, TYPE_MAG, MEMBER(core_t, hints_mag_offset)),
         PROPERTY(dso_hints_mag_offset, TYPE_FLOAT,
                  MEMBER(core_t, dso_hints_mag_offset)),
         PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),

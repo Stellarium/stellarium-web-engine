@@ -49,8 +49,6 @@ struct core
     double          star_scale_screen_factor;
     double          star_relative_scale;
 
-    // Set the hints magnitude offset.
-    double          hints_mag_offset;
     // Another offset just for DSOs
     double          dso_hints_mag_offset;
     // Objects fainter than this magnitude won't be displayed, independently
@@ -66,6 +64,7 @@ struct core
     double          max_point_radius; // Max radius in pixel.
     double          min_point_radius;
     double          skip_point_radius;
+    double          show_hints_radius; // Min radius to show stars labels.
 
     telescope_t     telescope;
     bool            telescope_auto; // Auto adjust telescope.
