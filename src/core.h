@@ -64,6 +64,8 @@ struct core
     double          max_point_radius; // Max radius in pixel.
     double          min_point_radius;
     double          skip_point_radius;
+    // Exponent used to dim out stars smaller than min_point_radius.
+    double          point_dim_factor;
     double          show_hints_radius; // Min radius to show stars labels.
 
     telescope_t     telescope;

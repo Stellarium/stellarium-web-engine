@@ -304,6 +304,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     core->show_hints_radius = 3.8;
+    core->point_dim_factor = 3;
     core->dso_hints_mag_offset = 1.7;
     core->display_limit_mag = 99;
 
@@ -572,7 +573,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
 
     // If the radius is too small, we adjust the luminance.
     if (r > 0 && r < r_min) {
-        ld *= (r / r_min) * (r / r_min) * (r / r_min);
+        ld *= pow(r / r_min, core->point_dim_factor);
         r = r_min;
     }
 
