@@ -187,12 +187,6 @@ static void menu_main(void *user)
                     .attr = modules[i][1]});
         }
         gui_item(&(gui_item_t){
-                .label = "Hints mag offset",
-                .obj = &core->obj,
-                .attr = "hints_mag_offset",
-                .default_value = 0.0,
-                });
-        gui_item(&(gui_item_t){
                 .label = "Display limit mag",
                 .obj = &core->obj,
                 .attr = "display_limit_mag",
