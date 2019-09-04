@@ -898,6 +898,7 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     GLuint  array_buffer;
+    double core_size;
 
     shader = shader_get("points", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
@@ -912,7 +913,8 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
                     item->buf.data, GL_DYNAMIC_DRAW));
 
     gl_update_uniform(shader, "u_color", item->color);
-    gl_update_uniform(shader, "u_smooth", item->points.smooth);
+    core_size = 1.0 / ((1.0 + item->points.smooth) * 4.0);
+    gl_update_uniform(shader, "u_core_size", core_size);
 
     gl_buf_enable(&item->buf);
     GL(glDrawArrays(GL_POINTS, 0, item->buf.nb));

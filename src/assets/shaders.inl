@@ -544,7 +544,7 @@ static const unsigned char DATA_shaders_planet_glsl[7280] __attribute__((aligned
 
 ASSET_REGISTER(shaders_planet_glsl, "shaders/planet.glsl", DATA_shaders_planet_glsl, false)
 
-static const unsigned char DATA_shaders_points_glsl[1113] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_glsl[1183] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -555,10 +555,13 @@ static const unsigned char DATA_shaders_points_glsl[1113] __attribute__((aligned
     " */\n"
     "\n"
     "uniform lowp vec4 u_color;\n"
-    "uniform lowp float u_smooth;\n"
+    "\n"
+    "// Size of the core point, not including the halo relative to the total\n"
+    "// size of the rendered point.\n"
+    "// 0 -> only halo (not supported), 1 -> no halo\n"
+    "uniform lowp float u_core_size;\n"
     "\n"
     "varying lowp    vec4 v_color;\n"
-    "varying mediump float v_halo_dist;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
@@ -569,8 +572,7 @@ static const unsigned char DATA_shaders_points_glsl[1113] __attribute__((aligned
     "void main()\n"
     "{\n"
     "    gl_Position = vec4(a_pos, 0, 1.0);\n"
-    "    v_halo_dist = 1.0 / ((1.0 + u_smooth) * 4.0);\n"
-    "    gl_PointSize = a_size * 2.0 / v_halo_dist;\n"
+    "    gl_PointSize = a_size * 2.0 / u_core_size;\n"
     "    v_color = a_color * u_color;\n"
     "}\n"
     "\n"
@@ -584,7 +586,7 @@ static const unsigned char DATA_shaders_points_glsl[1113] __attribute__((aligned
     "    dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));\n"
     "\n"
     "    // Center bright point.\n"
-    "    k = smoothstep(v_halo_dist * 1.25, v_halo_dist * 0.75, dist);\n"
+    "    k = smoothstep(u_core_size * 1.25, u_core_size * 0.75, dist);\n"
     "\n"
     "    // Halo\n"
     "    k += smoothstep(1.0, 0.0, dist) * 0.08;\n"
