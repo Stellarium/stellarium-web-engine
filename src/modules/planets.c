@@ -907,7 +907,10 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                   color[3] * 255},
         .oid = planet->obj.oid,
     };
-    paint_2d_points(&painter, 1, &point);
+    if (planet->id != MOON)
+        paint_2d_points(&painter, 1, &point);
+    else
+        hips_alpha = 1.0;
 
     if (hips_alpha > 0) {
         planet_render_hips(planet, hips, planet->radius_m / DAU, r_scale,
