@@ -303,9 +303,9 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    core->show_hints_radius = 3.8;
+    core->show_hints_radius = 2.2;
     core->point_dim_factor = 3;
-    core->dso_hints_mag_offset = 0.6;
+    core->dso_hints_mag_offset = -0.8;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)obj_create("observer", "observer",
