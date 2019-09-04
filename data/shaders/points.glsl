@@ -24,7 +24,7 @@ void main()
 {
     gl_Position = vec4(a_pos, 0, 1.0);
     v_halo_dist = 1.0 / ((1.0 + u_smooth) * 4.0);
-    gl_PointSize = a_size / v_halo_dist;
+    gl_PointSize = a_size * 2.0 / v_halo_dist;
     v_color = a_color * u_color;
 }
 
@@ -38,7 +38,7 @@ void main()
     dist = 2.0 * distance(gl_PointCoord, vec2(0.5, 0.5));
 
     // Center bright point.
-    k = smoothstep(v_halo_dist, v_halo_dist * 0.5, dist);
+    k = smoothstep(v_halo_dist * 1.25, v_halo_dist * 0.75, dist);
 
     // Halo
     k += smoothstep(1.0, 0.0, dist) * 0.08;

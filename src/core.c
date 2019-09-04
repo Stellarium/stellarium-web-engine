@@ -243,7 +243,7 @@ static void core_set_default(void)
     core->lwmax = 5000;
 
     // Adjust those values to make the sky look good.
-    core->star_linear_scale = 2.26;
+    core->star_linear_scale = 1.13;
     core->star_scale_screen_factor = 0.5;
     core->star_relative_scale = 1.1;
 
