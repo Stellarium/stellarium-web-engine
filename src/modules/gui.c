@@ -379,6 +379,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_text("lwmax: %f cd/m2", core->lwmax);
     gui_same_line();
     gui_text("vmag max: %f", painter->stars_limit_mag);
+    gui_same_line();
     gui_text("cst: %s", core->observer->cst);
     gui_panel_end();
 
