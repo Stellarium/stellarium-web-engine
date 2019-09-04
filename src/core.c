@@ -522,28 +522,98 @@ static bool is_below_horizon_hidden(void)
     return direction[2] < 0;
 }
 
+// Get point for mag without any radius lower limit.
+static void core_get_point_for_mag_(
+        double mag, double *radius, double *luminance)
+{
+    double ld;
+    double s_linear = core->star_linear_scale * core->star_scale_screen_factor;
+    double s_relative = core->star_relative_scale;
+    // Compute apparent luminance, i.e. the luminance percieved by the eye
+    // when looking in the telescope eyepiece.
+    double lum_apparent = core_mag_to_lum_apparent(mag, 0);
+    // Apply eye adaptation.
+    ld = tonemapper_map(&core->tonemapper, lum_apparent);
+    if (ld < 0) ld = 0; // Prevent math error.
+    // Compute r, using both manual adjustement factors.
+    *radius = s_linear * pow(ld, s_relative / 2.0);
+    if (luminance) *luminance = clamp(ld, 0, 1);
+}
+
+
 /*
- * Compute the magnitude of the dimmest visible star.
+ * Function: core_get_point_for_mag
+ * Compute a point radius and luminosity from a observed magnitude.
+ *
+ * The function is almost linear, but when the points get too small,
+ * I make the curve go to zero faster, so that the bright stars get a
+ * higher contrast.  Also for very small points, we use a minimum radius
+ * and instead lower the luminance.
+ *
+ * Parameters:
+ *   mag       - The observed magnitude.
+ *   radius    - Output radius in window pixels.
+ *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
+ *               set to NULL.
  */
-static double compute_max_vmag(void)
+void core_get_point_for_mag(double mag, double *radius, double *luminance)
+{
+    double ld, r;
+    const double r_min = core->min_point_radius;
+
+    // Get radius and luminance without any contraint on the radius.
+    core_get_point_for_mag_(mag, &r, &ld);
+
+    // If the radius is really too small, we don't render the star.
+    if (r < core->skip_point_radius) {
+        r = 0;
+        ld = 0;
+    }
+
+    // If the radius is too small, we adjust the luminance.
+    if (r > 0 && r < r_min) {
+        ld *= (r / r_min) * (r / r_min) * (r / r_min);
+        r = r_min;
+    }
+
+    ld = pow(ld, 1 / 2.2); // Gama correction.
+    // Saturate radius after a certain point.
+    // XXX: make it smooth.
+    r = min(r, core->max_point_radius);
+    *radius = r;
+    if (luminance) *luminance = clamp(ld, 0, 1);
+}
+
+/*
+ * Function: compute_vmag_for_radius
+ * Compute the vmag for a given screen radius.
+ *
+ * Parameters:
+ *   target_r   - Radius in windows pixel unit.
+ *
+ * Return:
+ *   A vmag such as core_get_point_for_vmag_ returns the target radius.
+ */
+static double compute_vmag_for_radius(double target_r)
 {
     // Compute by dichotomy.
-    const int max_iter = 16;
-    const double min_l = 0.1;
-    double m = 0, m1 = 0.0, m2 = 128.0;
+    const int max_iter = 32;
+    double m = 0, m1 = -128, m2 = 128.0;
     double r, l;
+    const double delta = 0.001;
     int i;
 
-    core_get_point_for_mag(m1, &r, &l);
-    if (r == 0) return m1;
-
+    core_get_point_for_mag_(m1, &r, &l);
     for (i = 0; i < max_iter; i++) {
         m = (m1 + m2) / 2;
-        core_get_point_for_mag(m, &r, &l);
-        if (r && l < min_l) return m;
-        *(r ? &m1 : &m2) = m;
+        core_get_point_for_mag_(m, &r, &l);
+        if (fabs(r - target_r) < delta) return m;
+        *(r > target_r ? &m1 : &m2) = m;
     }
-    // if (i >= max_iter) LOG_W("Too many iterations! (%f)", m);
+    if (i >= max_iter) {
+        LOG_W("Too many iterations! target_r: %f -> mag:%f",
+              target_r, m);
+    }
     return m;
 }
 
@@ -595,7 +665,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     core_get_proj(&proj);
 
     observer_update(core->observer, true);
-    max_vmag = compute_max_vmag();
+    max_vmag = compute_vmag_for_radius(core->skip_point_radius);
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
@@ -812,68 +882,6 @@ double core_mag_to_lum_apparent(double mag, double surf)
     return core_illuminance_to_lum_apparent(illum, surf);
 }
 
-
-// Get point for mag without any radius lower limit.
-static void core_get_point_for_mag_(
-        double mag, double *radius, double *luminance)
-{
-    double ld;
-    double s_linear = core->star_linear_scale * core->star_scale_screen_factor;
-    double s_relative = core->star_relative_scale;
-    // Compute apparent luminance, i.e. the luminance percieved by the eye
-    // when looking in the telescope eyepiece.
-    double lum_apparent = core_mag_to_lum_apparent(mag, 0);
-    // Apply eye adaptation.
-    ld = tonemapper_map(&core->tonemapper, lum_apparent);
-    if (ld < 0) ld = 0; // Prevent math error.
-    // Compute r, using both manual adjustement factors.
-    *radius = s_linear * pow(ld, s_relative / 2.0);
-    if (luminance) *luminance = clamp(ld, 0, 1);
-}
-
-
-/*
- * Function: core_get_point_for_mag
- * Compute a point radius and luminosity from a observed magnitude.
- *
- * The function is almost linear, but when the points get too small,
- * I make the curve go to zero faster, so that the bright stars get a
- * higher contrast.  Also for very small points, we use a minimum radius
- * and instead lower the luminance.
- *
- * Parameters:
- *   mag       - The observed magnitude.
- *   radius    - Output radius in window pixels.
- *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
- *               set to NULL.
- */
-void core_get_point_for_mag(double mag, double *radius, double *luminance)
-{
-    double ld, r;
-    const double r_min = core->min_point_radius;
-
-    // Get radius and luminance without any contraint on the radius.
-    core_get_point_for_mag_(mag, &r, &ld);
-
-    // If the radius is really too small, we don't render the star.
-    if (r < core->skip_point_radius) {
-        r = 0;
-        ld = 0;
-    }
-
-    // If the radius is too small, we adjust the luminance.
-    if (r > 0 && r < r_min) {
-        ld *= (r / r_min) * (r / r_min) * (r / r_min);
-        r = r_min;
-    }
-
-    ld = pow(ld, 1 / 2.2); // Gama correction.
-    // Saturate radius after a certain point.
-    // XXX: make it smooth.
-    r = min(r, core->max_point_radius);
-    *radius = r;
-    if (luminance) *luminance = clamp(ld, 0, 1);
-}
 
 /*
  * Function: core_get_apparent_angle_for_point
