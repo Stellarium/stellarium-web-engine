@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 
 #if DEBUG
     // Make sure that we don't rely on NAN or INFINITY in our computing
-    feenableexcept(FE_DIVBYZERO | FE_INVALID);
+    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
 #endif
 
     args_t args = {};
