@@ -98,7 +98,7 @@ struct item
         } lines;
 
         struct {
-            float smooth;
+            float halo;
         } points;
 
         struct {
@@ -322,14 +322,14 @@ static void points(renderer_t *rend_,
     }
 
     item = get_item(rend, ITEM_POINTS, n, 0, NULL);
-    if (item && item->points.smooth != painter->points_smoothness)
+    if (item && item->points.halo != painter->points_halo)
         item = NULL;
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
         gl_buf_alloc(&item->buf, &POINTS_BUF, MAX_POINTS);
         vec4_to_float(painter->color, item->color);
-        item->points.smooth = painter->points_smoothness;
+        item->points.halo = painter->points_halo;
         DL_APPEND(rend->items, item);
     }
 
@@ -913,7 +913,7 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
                     item->buf.data, GL_DYNAMIC_DRAW));
 
     gl_update_uniform(shader, "u_color", item->color);
-    core_size = 1.0 / ((1.0 + item->points.smooth) * 4.0);
+    core_size = 1.0 / item->points.halo;
     gl_update_uniform(shader, "u_core_size", core_size);
 
     gl_buf_enable(&item->buf);

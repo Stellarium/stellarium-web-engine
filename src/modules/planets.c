@@ -898,8 +898,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Lower point halo effect for objects with large radius.
     // (Mostly for the Sun, but also affect planets at large fov).
-    painter.points_smoothness *= mix(1.0, 0.25,
-                                     smoothstep(0.5, 3.0, point_r * DR2D));
+    painter.points_halo *= mix(1.0, 0.25,
+                               smoothstep(0.5, 3.0, point_r * DR2D));
     point = (point_t) {
         .pos = {p_win[0], p_win[1]},
         .size = point_size,

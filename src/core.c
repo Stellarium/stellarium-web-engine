@@ -694,7 +694,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .stars_limit_mag = max_vmag,
         .hints_limit_mag = hints_vmag,
         .hard_limit_mag = core->display_limit_mag,
-        .points_smoothness = 0.75,
+        .points_halo = 7.0,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
         .lines_width = 1.0,
