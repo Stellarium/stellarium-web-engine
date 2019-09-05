@@ -892,6 +892,13 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (hips && hips_k * diam * r_scale >= point_r) {
         hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * diam * r_scale ));
     }
+
+    // Special case for the moon, we only render the hips, since the point
+    // is much bigger than the moon.
+    if (planet->id == MOON) {
+        hips_alpha = 1.0;
+    }
+
     vec4_copy(planet->color, color);
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
     color[3] *= point_luminance * (1.0 - hips_alpha);
@@ -907,10 +914,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                   color[3] * 255},
         .oid = planet->obj.oid,
     };
-    if (planet->id != MOON)
-        paint_2d_points(&painter, 1, &point);
-    else
-        hips_alpha = 1.0;
+    paint_2d_points(&painter, 1, &point);
 
     if (hips_alpha > 0) {
         planet_render_hips(planet, hips, planet->radius_m / DAU, r_scale,
