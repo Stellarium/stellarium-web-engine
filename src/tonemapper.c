@@ -25,13 +25,13 @@ void tonemapper_update(tonemapper_t *t,
     assert(t->q == 1.0);
 }
 
-float tonemapper_map(const tonemapper_t *t, float lw)
+double tonemapper_map(const tonemapper_t *t, double lw)
 {
     // Assume q = 1, so that we can skip the pow call.
-    return logf(1.f + t->p * lw) / logf(1.f + t->p * t->lwmax) * t->exposure;
+    return log(1.0 + t->p * lw) / log(1.0 + t->p * t->lwmax) * t->exposure;
 }
 
-float tonemapper_map_log10(const tonemapper_t *t, float log_lw)
+double tonemapper_map_log10(const tonemapper_t *t, double log_lw)
 {
-    return tonemapper_map(t, exp10f(log_lw));
+    return tonemapper_map(t, exp10(log_lw));
 }

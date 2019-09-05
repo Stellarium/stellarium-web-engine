@@ -64,13 +64,13 @@ void tonemapper_update(tonemapper_t *t,
  *   No gamma correction is applied.  The value can be larger than one
  *   for saturated luminance.
  */
-float tonemapper_map(const tonemapper_t *t, float lw);
+double tonemapper_map(const tonemapper_t *t, double lw);
 
 /*
  * Function: tonemapper_map_log10
  * Same as tonemapper_map but take the log10 of the luminance as input.
  */
-float tonemapper_map_log10(const tonemapper_t *t, float log_lw);
+double tonemapper_map_log10(const tonemapper_t *t, double log_lw);
 
 
 #endif // TONEMAPPER_H
