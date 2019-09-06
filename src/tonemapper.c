@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 #ifndef exp10
-#define exp10(x) exp((x) * log(10.f))
+#define exp10(x) exp((x) * log(10.0))
 #endif
 
 void tonemapper_update(tonemapper_t *t,
