@@ -249,7 +249,7 @@ static void core_set_default(void)
 
     core->lwmax_min = 0.052;
     core->max_point_radius = 50.0;
-    core->min_point_radius = 1.0;  // In physical pixels
+    core->min_point_radius = 0.9;  // In physical pixels
     core->skip_point_radius = 0.25;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
     core->exposure_scale = 1;
@@ -303,7 +303,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    core->show_hints_radius = 2.2;
+    core->show_hints_radius = 2.8;
     core->point_dim_factor = 3;
     core->dso_hints_mag_offset = -0.8;
     core->display_limit_mag = 99;
