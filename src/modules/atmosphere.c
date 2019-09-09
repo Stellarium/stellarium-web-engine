@@ -252,9 +252,8 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     for (i = 0; i < 12; i++) {
         render_tile(atm, &painter, 0, i);
     }
-    // The 1 / 4 factor is ad-hoc and is necessary to adjust the amount of
-    // visible stars according to real observations
-    core_report_luminance_in_fov(data.max_lum / 4, true);
+
+    core_report_luminance_in_fov(data.max_lum, true);
     if (data.nb_lum)
         core->lwsky_average = data.sum_lum / data.nb_lum;
     return 0;
