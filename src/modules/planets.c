@@ -875,16 +875,20 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
         return;
 
-    // At least 1 px of the planet is visible, report it for tonemapping
-    // Exclude the sun because it is already taken into account by the
-    // atmosphere luminance feedack
-    if (planet->id != SUN)
-        core_report_vmag_in_fov(vmag, planet->radius, 0);
-
     // Project planet's center
     convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
     project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
             2, pos, p_win);
+
+    // At least 1 px of the planet is visible, report it for tonemapping
+    convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, pos);
+    // Exclude the sun because it is already taken into account by the
+    // atmosphere luminance feedack
+    if (planet->id != SUN) {
+        // Ignore planets below ground
+        if (pos[2] > 0)
+            core_report_vmag_in_fov(vmag, planet->radius, 0);
+    }
 
     // Planet apparent diameter in rad
     diam = 2.0 * planet->radius;
@@ -936,7 +940,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         // Modulate halo opacity according to sun's altitude
         // This is ad-hoc code to be replaced when proper extinction is
         // computed.
-        convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, pos);
         vec4_set(color, 1, 1, 1, fabs(pos[2]));
         paint_texture(&painter, planets->halo_tex, NULL, p_win, 200.0, color,
                       0);
