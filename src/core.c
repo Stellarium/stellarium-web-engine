@@ -948,7 +948,7 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
     // in eyepiece field of view (which is always assumed to be 60 deg FOV).
     lum *= pow(r2 / (60 * DD2R), 1.2);
     lum = pow(lum, 0.33);
-    lum /= 400;
+    lum /= 300;
 
     lum *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
     core_report_luminance_in_fov(lum * 13.0, false);
