@@ -294,6 +294,7 @@ var asFrame = function(f) {
   if (f === 'CIRS') return Module.FRAME_CIRS;
   if (f === 'JNOW') return Module.FRAME_JNOW;
   if (f === 'OBSERVED') return Module.FRAME_OBSERVED;
+  if (f === 'MOUNT') return Module.FRAME_MOUNT;
   if (f === 'VIEW') return Module.FRAME_VIEW;
   assert(typeof(f) === 'number');
   return f;
