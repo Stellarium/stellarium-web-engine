@@ -10,16 +10,20 @@ WORKDIR /emsdk-portable
 # Fetch the latest registry of available tools.
 RUN ./emsdk update
 
-
-
 # Download and install the latest SDK tools.
 RUN ./emsdk install sdk-tag-1.38.42-64bit
 
 # Set up the compiler configuration to point to the "latest" SDK.
 RUN ./emsdk activate sdk-tag-1.38.42-64bit
 
+WORKDIR /app
+
+# Run the build once to cache all emscripten dependencies compilations
+COPY . /app/
+RUN /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js-es6"
+RUN rm -r /app
+
 EXPOSE 8000
 
-WORKDIR /app
 CMD /bin/bash -c "source /emsdk-portable/emsdk_env.sh && make js" && cd html && python -m SimpleHTTPServer
 
