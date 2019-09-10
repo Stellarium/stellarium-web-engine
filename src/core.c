@@ -516,11 +516,14 @@ static bool is_below_horizon_hidden(void)
     ls = core_get_module("landscapes");
     obj_get_attr(ls, "visible", &visible);
     if (!visible) return false;
+
+    // If we look down, it means the landscape is semi transparent, and so
+    // we can't clip.
     // XXX: we should let the lanscape module notify the core that it hides
     // the stars instead.
     convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true,
                   VEC(0, 0, -1), direction);
-    return direction[2] < 0;
+    return direction[2] >= 0;
 }
 
 // Get point for mag without any radius lower limit.
