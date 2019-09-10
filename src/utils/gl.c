@@ -146,7 +146,8 @@ gl_shader_t *gl_shader_create(const char *vert, const char *frag,
         // Special case for array uniforms: remove the '[0]'
         if (uni->size > 1) {
             assert(uni->type == GL_FLOAT);
-            *strchr(uni->name, '[') = '\0';
+            if (strchr(uni->name, '['))
+                *strchr(uni->name, '[') = '\0';
         }
         GL(uni->loc = glGetUniformLocation(shader->prog, uni->name));
     }
