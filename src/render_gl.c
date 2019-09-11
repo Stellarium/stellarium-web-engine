@@ -980,7 +980,10 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 
     GL(glLineWidth(item->mesh.stroke_width));
 
-    GL(glEnable(GL_CULL_FACE));
+    // For the moment we disable culling for mesh.  We should reintroduce it
+    // by making sure we use the proper value depending on the render
+    // culling and frame.
+    GL(glDisable(GL_CULL_FACE));
     GL(glDisable(GL_DEPTH_TEST));
 
     if (item->color[3] == 1) {
