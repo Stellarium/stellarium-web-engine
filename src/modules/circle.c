@@ -40,7 +40,8 @@ static void circle_project(const uv_map_t *map,
 {
     circle_t *circle = map->user;
     double theta, r, mat[3][3], p[4] = {1, 0, 0, 0}, ra, dec;
-    bool right_handed = circle->frame != FRAME_OBSERVED;
+    bool right_handed = circle->frame != FRAME_OBSERVED &&
+                        circle->frame != FRAME_MOUNT;
 
     theta = v[0] * 2 * M_PI;
     r = v[1] * circle->size[0] / 2.0;
