@@ -899,7 +899,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Special case for the moon, we only render the hips, since the point
     // is much bigger than the moon.
-    if (planet->id == MOON) {
+    if (hips && planet->id == MOON) {
         hips_alpha = 1.0;
     }
 
