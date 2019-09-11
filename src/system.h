@@ -64,7 +64,9 @@ int sys_make_dir(const char *path);
  *                       1 meaning fully calibrated.
  *
  * Return:
- *   0 on success.
+ *    0 - Success.
+ *   -1 - No accelerometer.
+ *   -2 - No compass.
  */
 int sys_device_sensors(bool enable_accelero, bool enable_magneto,
                        double acc[3], double mag[3], int *rot,
