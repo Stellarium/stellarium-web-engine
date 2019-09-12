@@ -15,10 +15,10 @@ Make sure docker is installed, then:
 # generate the docker image
 make setup
 
-# and run the development version
+# and run the development version (go to http://localhost:8080 on your machine)
 make dev
 
-# compile a production version of the site with minification
+# Optionally, compile a production version of the site with minification
 make build
 
 # and finally to host it on a test server (http://localhost:8000)
