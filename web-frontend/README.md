@@ -1,12 +1,11 @@
-# stellarium-web client
+# Stellarium Web frontend
 
-A light version of Stellarium running in the browser. It is mostly Graphical
-User Interface for Stellarium Web Engine, a light C sky display engine, compiled into
-Web Assembly.
-
-[stellarium-web.org](https://stellarium-web.org)
+This directory contains the Graphical User Interface for using
+Stellarium Web Engine in a web page.
 
 This is a Vuejs project, which can generate a fully static webpage with webpack.
+
+Official page: [stellarium-web.org](https://stellarium-web.org)
 
 ## Build setup using Docker
 Make sure docker is installed, then:
