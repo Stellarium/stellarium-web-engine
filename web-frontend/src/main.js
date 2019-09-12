@@ -17,29 +17,28 @@ import Router from 'vue-router'
 
 import store from './store'
 
-import * as VueGoogleMaps from 'vue2-google-maps'
-
-import VueObserveVisibility from 'vue-observe-visibility'
 import fullscreen from 'vue-fullscreen'
 import VueJsonp from 'vue-jsonp'
 
 import VueCookie from 'vue-cookie'
 
 import App from './App'
-import Signin from './components/signin.vue'
-import MyProfile from './components/my-profile.vue'
+
+import { L } from 'vue2-leaflet'
+import 'leaflet/dist/leaflet.css'
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css'
+
+// this part resolve an issue where the markers would not appear
+delete L.Icon.Default.prototype._getIconUrl
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png')
+})
 
 Vue.use(VueCookie)
 
-// Used to work-around a gmaps component refresh bug
-Vue.use(VueObserveVisibility)
-
-Vue.use(VueGoogleMaps, {
-  load: {
-    key: 'AIzaSyBOfY-p-V3zecsV_K3pPuYyTPm5Vy-FURo',
-    libraries: 'places' // Required to use the Autocomplete plugin
-  }
-})
 Vue.use(Vuetify)
 
 Vue.use(fullscreen)
@@ -47,53 +46,49 @@ Vue.use(fullscreen)
 Vue.use(VueJsonp)
 // Vue.config.productionTip = false
 
+// Load all plugins JS modules found the in the plugins directory
 var plugins = []
-plugins.push(require('./plugins/calendar').default)
-plugins.push(require('./plugins/news').default)
-// plugins.push(require('./plugins/observing').default)
-
+let ctx = require.context('./plugins/', true, /\.\/\w+\/index\.js$/)
+for (let i in ctx.keys()) {
+  let key = ctx.keys()[i]
+  console.log('Loading plugin: ' + key)
+  let mod = ctx(key)
+  plugins.push(mod.default)
+}
 Vue.SWPlugins = plugins
 
+// Setup routes for the app
 Vue.use(Router)
-
-// Add routes from plugins
+// Base routes
 let routes = [
   {
+    // The main page
     path: '/',
     name: 'App',
     component: App,
-    children: [
-      {
-        path: 'observing/signin',
-        component: Signin
-      },
-      {
-        path: 'observing/profile',
-        component: MyProfile
-      }
-    ]
+    children: []
   },
   {
+    // Main page, but centered on the passed sky source name
     path: '/skysource/:name',
     component: App,
     alias: '/'
   }
 ]
-
+// Routes exposed by plugins
 let defaultObservingRoute = {
-  path: 'observing/signin',
-  meta: {prio: 99}
+  path: '/p/calendar',
+  meta: {prio: 2}
 }
 for (let i in Vue.SWPlugins) {
   let plugin = Vue.SWPlugins[i]
-  console.log('Loading plugin: ' + plugin.name)
   if (plugin.routes) {
     routes = routes.concat(plugin.routes)
   }
-  if (plugin.observingRoutes) {
-    routes[0].children = routes[0].children.concat(plugin.observingRoutes)
-    for (let j in plugin.observingRoutes) {
-      let r = plugin.observingRoutes[j]
+  if (plugin.panelRoutes) {
+    routes[0].children = routes[0].children.concat(plugin.panelRoutes)
+    for (let j in plugin.panelRoutes) {
+      let r = plugin.panelRoutes[j]
       if (r.meta && r.meta.prio && r.meta.prio < defaultObservingRoute.meta.prio) {
         defaultObservingRoute = r
       }
@@ -103,13 +98,13 @@ for (let i in Vue.SWPlugins) {
     Vue.use(plugin.vuePlugin)
   }
 }
-routes[0].children.push({ path: '/observing', redirect: defaultObservingRoute.path })
-
+routes[0].children.push({ path: '/p', redirect: defaultObservingRoute.path })
 var router = new Router({
   mode: 'history',
   routes: routes
 })
 
+// Expose plugins singleton to all Vue instances
 Vue.prototype.$stellariumWebPlugins = function () {
   return Vue.SWPlugins
 }

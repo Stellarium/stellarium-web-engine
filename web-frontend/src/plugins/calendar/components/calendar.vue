@@ -65,11 +65,8 @@ export default {
     },
     eventClicked: function (event) {
       this.$stel.core.observer.utc = event.time.toDate().getMJD()
-      let ss = this.$stel.getObjByNSID(event.o1.nsid)
-      this.$stel.core.selection = ss
-      ss.update()
-      let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', ss.icrs)
-      this.$stel.core.lookat(azalt, 1.0)
+      this.$stel.core.selection = event.o1
+      this.$stel.pointAndLock(event.o1)
     }
   },
   computed: {

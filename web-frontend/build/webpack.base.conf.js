@@ -83,7 +83,7 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        exclude: /node_modules\/(?!(mingo|vue2-google-maps))/
+        exclude: /node_modules\/(?!(mingo))/
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,

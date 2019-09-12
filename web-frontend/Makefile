@@ -1,4 +1,4 @@
-# Stellarium Web - Copyright (c) 2018 - Noctua Software Ltd
+# Stellarium Web - Copyright (c) 2019 - Noctua Software Ltd
 #
 # This program is licensed under the terms of the GNU AGPL v3, or
 # alternatively under a commercial licence.
@@ -6,7 +6,17 @@
 # The terms of the AGPL v3 license can be found in the main directory of this
 # repository.
 
-.PHONY: setup build dev
+.PHONY: setup build dev start update-engine update-engine-debug
+
+update-engine:
+	cd .. && make gen-es6
+	cp ../stellarium-web-engine.js src/assets/js/
+	cp ../stellarium-web-engine.wasm src/assets/js/
+
+update-engine-debug:
+	cd .. && make gen-es6-debug
+	cp ../stellarium-web-engine.js src/assets/js/
+	cp ../stellarium-web-engine.wasm src/assets/js/
 
 setup: Dockerfile
 	docker build -t stellarium-web-dev .

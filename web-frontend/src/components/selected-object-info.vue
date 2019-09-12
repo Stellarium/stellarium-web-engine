@@ -32,30 +32,14 @@
           <v-flex xs8 style="font-weight: 500"><span v-html="item.value"></span></v-flex>
         </template>
       </v-layout>
+      <div style="margin-top: 15px" v-html="wikipediaSummary"></div>
     </v-card-text>
-    <v-card-text>
-      <v-layout row wrap style="width: 100%">
-        <div v-html="wikipediaSummary"></div>
-        <div v-if="wikipediaSummary" class="grey--text caption" style="margin-left:auto; margin-right:0;"><i> read more on <b><a style="color: #62d1df;" target="_blank" :href="wikipediaLink">wikipedia</a></b></i></div>
-      </v-layout>
-    </v-card-text>
-    <div style="position: absolute; right: 20px; bottom: -50px;">
-      <v-btn v-for="btn in extraButtons" :key="btn.id" dark color="transparent" @click.native="extraButtonClicked(btn)">
-        {{ btn.name }}<v-icon right dark>{{ btn.icon }}</v-icon>
-      </v-btn>
-      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @click.native="showShareLinkDialog = !showShareLinkDialog">
-        <v-icon>link</v-icon>
-      </v-btn>
-      <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
-        <img src="/static/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
-      </v-btn>
-      <v-btn v-if="!showPointToButton" fab dark small color="transparent" v-on:click.native="zoomOutButtonClicked()">
-        <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="/static/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
-      </v-btn>
-      <v-btn v-if="!showPointToButton" fab dark small color="transparent" v-on:click.native="zoomInButtonClicked()">
-        <img :class="{bt_disabled: !zoomInButtonEnabled}" src="/static/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
-      </v-btn>
-    </div>
+    <v-card-actions style="margin-top: -25px">
+      <v-spacer/>
+      <template v-for="item in pluginsSelectedInfoExtraGuiComponents">
+        <component :is="item"></component>
+      </template>
+    </v-card-actions>
     <v-dialog v-model="showShareLinkDialog" width="500px" lazy absolute>
       <v-card style="height: 180px" class="secondary white--text">
         <v-card-title primary-title>
@@ -71,6 +55,20 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <div v-if="$store.state.showSelectedInfoButtons" style="position: absolute; right: 0px; bottom: -50px;">
+      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @click.native="showShareLinkDialog = !showShareLinkDialog">
+        <v-icon>link</v-icon>
+      </v-btn>
+      <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
+        <img src="/static/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
+      </v-btn>
+      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomOutButtonClicked()">
+        <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="/static/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
+      </v-btn>
+      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomInButtonClicked()">
+        <img :class="{bt_disabled: !zoomInButtonEnabled}" src="/static/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
+      </v-btn>
+    </div>
     <v-snackbar bottom left :timeout="2000" v-model="copied" color="secondary" >
       Link copied
     </v-snackbar>
@@ -86,7 +84,6 @@ export default {
   data: function () {
     return {
       showMinorNames: false,
-      // Contains the
       wikipediaData: undefined,
       shareLink: undefined,
       showShareLinkDialog: false,
@@ -110,7 +107,7 @@ export default {
       if (!this.wikipediaData) return ''
       let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
       if (!page || !page.extract) return ''
-      return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '')
+      return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; more on <b><a style="color: #62d1df;" target="_blank" href="' + this.wikipediaLink + '">wikipedia</a></b></i></span>'
     },
     wikipediaLink: function () {
       let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
@@ -135,12 +132,10 @@ export default {
       let obj = this.$stel.core.selection
       if (!obj) return []
 
-      obj.update(this.$stel.core.observer)
       let ret = []
 
       let addAttr = (key, attr, format) => {
-        if (!obj[attr]) return
-        let v = obj[attr]
+        let v = obj.getInfo(attr)
         if (v && !isNaN(v)) {
           ret.push({
             key: key,
@@ -189,7 +184,7 @@ export default {
         let raf = that.$stel.a2af(a, 1)
         return '<div class="radecVal">' + raf.sign + formatInt(raf.degrees, 2) + '<span class="radecUnit">°</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
       }
-      let posCIRS = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'CIRS', obj.icrs)
+      let posCIRS = this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'JNOW', obj.getInfo('radec'))
       let radecCIRS = this.$stel.c2s(posCIRS)
       let raCIRS = this.$stel.anp(radecCIRS[0])
       let decCIRS = this.$stel.anpm(radecCIRS[1])
@@ -197,13 +192,27 @@ export default {
         key: 'Ra/Dec',
         value: formatRA(raCIRS) + '&nbsp;&nbsp;&nbsp;' + formatDec(decCIRS)
       })
+      let azalt = this.$stel.c2s(this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'OBSERVED', obj.getInfo('radec')))
+      let az = this.$stel.anp(azalt[0])
+      let alt = this.$stel.anpm(azalt[1])
       ret.push({
         key: 'Az/Alt',
-        value: formatAz(obj.az) + '&nbsp;&nbsp;&nbsp;' + formatDec(obj.alt)
+        value: formatAz(az) + '&nbsp;&nbsp;&nbsp;' + formatDec(alt)
       })
       addAttr('Phase', 'phase', this.formatPhase)
-      addAttr('Rise', 'rise', this.formatTime)
-      addAttr('Set', 'set', this.formatTime)
+      let vis = obj.computeVisibility()
+      let str = ''
+      if (vis.length === 0) {
+        str = 'Not visible tonight'
+      } else if (vis[0].rise === null) {
+        str = 'Always visible tonight'
+      } else {
+        str = 'Rise: ' + this.formatTime(vis[0].rise) + '&nbsp;&nbsp;&nbsp; Set: ' + this.formatTime(vis[0].set)
+      }
+      ret.push({
+        key: 'Visibility',
+        value: str
+      })
       return ret
     },
     showPointToButton: function () {
@@ -213,19 +222,24 @@ export default {
     },
     zoomInButtonEnabled: function () {
       if (!this.$store.state.stel.lock || !this.selectedObject) return false
-      let fovs = swh.fovsForSkySource(this.selectedObject)
-      let currentFov = this.$store.state.stel.fov * 180 / Math.PI
-      return (fovs[fovs.length - 1] < currentFov - 0.0001)
+      return true
     },
     zoomOutButtonEnabled: function () {
       if (!this.$store.state.stel.lock || !this.selectedObject) return false
-      let fovs = swh.fovsForSkySource(this.selectedObject)
-      fovs.unshift(100)
-      let currentFov = this.$store.state.stel.fov * 180 / Math.PI
-      return (fovs[0] > currentFov + 0.0001)
+      return true
     },
     extraButtons: function () {
       return swh.selectedObjectExtraButtons
+    },
+    pluginsSelectedInfoExtraGuiComponents: function () {
+      let res = []
+      for (let i in this.$stellariumWebPlugins()) {
+        let plugin = this.$stellariumWebPlugins()[i]
+        if (plugin.selectedInfoExtraGuiComponents) {
+          res = res.concat(plugin.selectedInfoExtraGuiComponents)
+        }
+      }
+      return res
     }
   },
   watch: {
@@ -240,14 +254,14 @@ export default {
     },
     stelSelectionId: function (s) {
       if (!this.$stel.core.selection) {
-        this.$store.commit('setSelectedObject', undefined)
+        this.$store.commit('setSelectedObject', 0)
         return
       }
       swh.sweObj2SkySource(this.$stel.core.selection).then(res => {
         this.$store.commit('setSelectedObject', res)
       }, err => {
         console.log("Couldn't find info for object " + s + ':' + err)
-        this.$store.commit('setSelectedObject', undefined)
+        this.$store.commit('setSelectedObject', 0)
       })
     },
     showShareLinkDialog: function (b) {
@@ -262,7 +276,7 @@ export default {
       if (!v) {
         return 'Unknown'
       }
-      return v
+      return v.toFixed(2)
     },
     formatDistance: function (d) {
       // d is in AU
@@ -290,38 +304,29 @@ export default {
       return utc.format('HH:mm')
     },
     unselect: function () {
-      this.$stel.core.selection = undefined
+      this.$stel.core.selection = 0
     },
     lockToSelection: function () {
       if (this.$stel.core.selection) {
-        this.$stel.core.lock = this.$stel.core.selection
-        this.$stel.core.lock.update()
-        let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', this.$stel.core.lock.icrs)
-        this.$stel.core.lookat(azalt, 1.0)
+        this.$stel.pointAndLock(this.$stel.core.selection, 0.5)
       }
     },
     zoomInButtonClicked: function () {
-      let fovs = swh.fovsForSkySource(this.selectedObject)
       let currentFov = this.$store.state.stel.fov * 180 / Math.PI
-      for (let i in fovs) {
-        if (fovs[i] < currentFov - 0.0001) {
-          let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', this.$stel.core.lock.icrs)
-          this.$stel.core.lookat(azalt, 1.0, fovs[i] * Math.PI / 180)
-          return
-        }
-      }
+      this.$stel.zoomTo(currentFov * 0.3 * Math.PI / 180, 0.4)
+      let that = this
+      this.zoomTimeout = setTimeout(_ => { that.zoomInButtonClicked() }, 300)
     },
     zoomOutButtonClicked: function () {
-      let fovs = swh.fovsForSkySource(this.selectedObject)
-      fovs.unshift(100)
       let currentFov = this.$store.state.stel.fov * 180 / Math.PI
-      for (let i in fovs) {
-        let f = fovs[fovs.length - i - 1]
-        if (f > currentFov + 0.0001) {
-          let azalt = this.$stel.convertPosition(this.$stel.core.observer, 'ICRS', 'OBSERVED', this.$stel.core.lock.icrs)
-          this.$stel.core.lookat(azalt, 1.0, f * Math.PI / 180)
-          return
-        }
+      this.$stel.zoomTo(currentFov * 3 * Math.PI / 180, 0.6)
+      let that = this
+      this.zoomTimeout = setTimeout(_ => { that.zoomOutButtonClicked() }, 200)
+    },
+    stopZoom: function () {
+      if (this.zoomTimeout) {
+        clearTimeout(this.zoomTimeout)
+        this.zoomTimeout = undefined
       }
     },
     extraButtonClicked: function (btn) {
@@ -335,6 +340,12 @@ export default {
       window.getSelection().removeAllRanges()
       this.showShareLinkDialog = false
     }
+  },
+  mounted: function () {
+    let that = this
+    window.addEventListener('mouseup', function (event) {
+      that.stopZoom()
+    })
   }
 }
 </script>

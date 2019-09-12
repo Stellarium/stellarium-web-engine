@@ -9,7 +9,6 @@
 import Vue from 'vue'
 import _ from 'lodash'
 import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
-import NoctuaSkyClient from '@/assets/noctuasky-client'
 import Moment from 'moment'
 
 var DDDate = Date
@@ -30,12 +29,51 @@ DDDate.prototype.setMJD = function (mjd) {
 }
 
 const swh = {
-  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone) {
+  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone, onBeforeRendering) {
     let lstel = StelWebEngine({
       wasmFile: wasmFile,
       canvas: canvasElem,
-      res: ['http://stelladata.noctua-software.com/surveys/stars/info.json'],
-      onReady: function () {
+      onReady: function (Module) {
+        Module.onBeforeRendering = onBeforeRendering
+        // Add all data sources.
+        var baseUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
+
+        // Bundled stars (just the very bright ones)
+        lstel.addDataSource({url: 'asset://stars', type: 'hips'})
+        // Gaia stars tiles
+        lstel.addDataSource({url: baseUrl + 'surveys/gaia/v1?v=2019-02-11T05:34Z', type: 'hips'})
+
+        lstel.addDataSource({url: baseUrl + 'skycultures/v1/western', type: 'skyculture'})
+        lstel.addDataSource({url: baseUrl + 'surveys/dso/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'landscapes/v1/guereins', type: 'landscape'})
+
+        // MPC data
+        lstel.addDataSource({url: 'asset://mpcorb.dat', type: 'mpc_asteroids'})
+        lstel.addDataSource({url: baseUrl + 'mpc/v1/CometEls.txt', type: 'mpc_comets'})
+        // Artificial Satellites
+        lstel.addDataSource({url: baseUrl + 'skysources/v1/tle_satellite.jsonl.gz', type: 'jsonl/sat'})
+
+        // Background images
+        lstel.addDataSource({url: baseUrl + 'surveys/dss/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/milkyway/v1', type: 'hips'})
+
+        // All planetary images
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/callisto/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/default/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/europa/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/ganymede/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/io/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/jupiter/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/mars/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/mercury/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/moon/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/moon-normal/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/neptune/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/saturn/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/sun/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/uranus/v1', type: 'hips'})
+        lstel.addDataSource({url: baseUrl + 'surveys/sso/venus/v1', type: 'hips'})
+
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
           let tree = store.state.stel
@@ -45,22 +83,11 @@ const swh = {
         Vue.prototype.$stel = lstel
         Vue.prototype.$selectionLayer = lstel.createLayer({id: 'slayer', z: 50, visible: true})
         Vue.prototype.$observingLayer = lstel.createLayer({id: 'obslayer', z: 40, visible: true})
+        Vue.prototype.$skyHintsLayer = lstel.createLayer({id: 'skyhintslayer', z: 38, visible: true})
         callBackOnDone()
       }
     })
   },
-
-  addSelectedObjectExtraButtons: function (bt) {
-    for (let i in this.selectedObjectExtraButtons) {
-      if (this.selectedObjectExtraButtons[i].id === bt.id) {
-        return
-      }
-    }
-    this.selectedObjectExtraButtons.push(bt)
-  },
-
-  selectedObjectExtraButtons: [
-  ],
 
   monthNames: ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -227,276 +254,9 @@ const swh = {
     return this.cleanupOneSkySourceName(skySource.names[0])
   },
 
-  nameForSkySourceType: function (skySourceType) {
-    const nameForType = {
-      '*': 'Star',
-      '**': 'Double or multiple star',
-      '**?': 'Physical Binary Candidate',
-      '*i*': 'Star in double system',
-      '*iA': 'Star in Association',
-      '*iC': 'Star in Cluster',
-      '*iN': 'Star in Nebula',
-      '..?': 'Candidate objects',
-      '?': 'Object of unknown nature',
-      'AB*': 'Asymptotic Giant Branch Star (He-burning)',
-      'AB?': 'Asymptotic Giant Branch Star candidate',
-      'ACo': 'Minor Planet',
-      'AG?': 'Possible Active Galaxy Nucleus',
-      'AGN': 'Active Galaxy Nucleus',
-      'ALS': 'Absorption Line system',
-      'AM*': 'CV of AM Her type (polar)',
-      'Ae*': 'Herbig Ae/Be star',
-      'Ae?': 'Possible Herbig Ae/Be Star',
-      'Al*': 'Eclipsing binary of Algol type (detached)',
-      'Amo': 'Amor Asteroid',
-      'Apo': 'Apollo Asteroid',
-      'As*': 'Association of Stars',
-      'As?': 'Possible Association of Stars',
-      'Asa': 'Artifical Earth Satellite',
-      'Ate': 'Aten Asteroid',
-      'Ati': 'Atira Asteroid',
-      'BAL': 'Broad Absorption Line system',
-      'BD*': 'Brown Dwarf (M<0.08solMass)',
-      'BD?': 'Brown Dwarf Candidate',
-      'BH?': 'Black Hole Candidate',
-      'BL?': 'Possible BL Lac',
-      'BLL': 'BL Lac - type object',
-      'BNe': 'Bright Nebula',
-      'BS*': 'Blue Straggler Star',
-      'BS?': 'Candidate blue Straggler Star',
-      'BY*': 'Variable of BY Dra type',
-      'Be*': 'Be Star',
-      'Be?': 'Possible Be Star',
-      'BiC': 'Brightest galaxy in a Cluster (BCG)',
-      'Bla': 'Blazar',
-      'Bz?': 'Possible Blazar',
-      'C*': 'Carbon Star',
-      'C*?': 'Possible Carbon Star',
-      'C?*': 'Possible (open) star cluster',
-      'C?G': 'Possible Cluster of Galaxies',
-      'CCo': 'Non Periodic Comet',
-      'CGG': 'Compact Group of Galaxies',
-      'CGb': 'Cometary Globule',
-      'CH*': 'Star with envelope of CH type',
-      'CH?': 'Possible Star with envelope of CH type',
-      'CV*': 'Cataclysmic Variable Star',
-      'CV?': 'Cataclysmic Binary Candidate',
-      'Ce*': 'Cepheid variable Star',
-      'Ce?': 'Possible Cepheid',
-      'Cl*': 'Cluster of Stars',
-      'ClG': 'Cluster of Galaxies',
-      'Cld': 'Cloud',
-      'Com': 'Comet',
-      'Con': 'Constellation',
-      'Cul': 'Cultural Sky Representation',
-      'DCo': 'Disappeared Comet',
-      'DLA': 'Damped Ly-alpha Absorption Line system',
-      'DN*': 'Dwarf Nova',
-      'DNe': 'Dark Cloud (nebula)',
-      'DOA': 'Distant Object Asteroid',
-      'DPl': 'Dwarf Planet',
-      'DQ*': 'CV DQ Her type (intermediate polar)',
-      'EB*': 'Eclipsing binary',
-      'EB?': 'Eclipsing Binary Candidate',
-      'EP*': 'Star showing eclipses by its planet',
-      'ERO': 'Extremely Red Object',
-      'El*': 'Ellipsoidal variable Star',
-      'Em*': 'Emission-line Star',
-      'EmG': 'Emission-line galaxy',
-      'EmO': 'Emission Object',
-      'Er*': 'Eruptive variable Star',
-      'FIR': 'Far-IR source (\xce\xbb >= 30 \xc2\xb5m)',
-      'FU*': 'Variable Star of FU Ori type',
-      'Fl*': 'Flare Star',
-      'G': 'Galaxy',
-      'G?': 'Possible Galaxy',
-      'GNe': 'Galactic Nebula',
-      'GWE': 'Gravitational Wave Event',
-      'GiC': 'Galaxy in Cluster of Galaxies',
-      'GiG': 'Galaxy in Group of Galaxies',
-      'GiP': 'Galaxy in Pair of Galaxies',
-      'Gl?': 'Possible Globular Cluster',
-      'GlC': 'Globular Cluster',
-      'Gr?': 'Possible Group of Galaxies',
-      'GrG': 'Group of Galaxies',
-      'H2G': 'HII Galaxy',
-      'HB*': 'Horizontal Branch Star',
-      'HB?': 'Possible Horizontal Branch Star',
-      'HH': 'Herbig-Haro Object',
-      'HI': 'HI (21cm) source',
-      'HII': 'HII region',
-      'HS*': 'Hot subdwarf',
-      'HS?': 'Hot subdwarf candidate',
-      'HV*': 'High-velocity Star',
-      'HVC': 'High-velocity Cloud',
-      'HX?': 'High-Mass X-ray binary Candidate',
-      'HXB': 'High Mass X-ray Binary',
-      'Hil': 'Hilda Asteroid',
-      'Hun': 'Hungaria Asteroid',
-      'HzG': 'Galaxy with high redshift',
-      'IG': 'Interacting Galaxies',
-      'IPS': 'Interplanetary Spacecraft',
-      'IR': 'Infra-Red source',
-      'ISM': 'Interstellar matter',
-      'ISt': 'Interstellar Object',
-      'Ir*': 'Variable Star of irregular type',
-      'JTA': 'Jupiter Trojan Asteroid',
-      'LI?': 'Possible gravitationally lensed image',
-      'LIN': 'LINER-type Active Galaxy Nucleus',
-      'LLS': 'Lyman limit system',
-      'LM*': 'Low-mass star (M<1solMass)',
-      'LM?': 'Low-mass star candidate',
-      'LP*': 'Long-period variable star',
-      'LP?': 'Long Period Variable candidate',
-      'LS?': 'Possible gravitational lens System',
-      'LSB': 'Low Surface Brightness Galaxy',
-      'LX?': 'Low-Mass X-ray binary Candidate',
-      'LXB': 'Low Mass X-ray Binary',
-      'Le?': 'Possible gravitational lens',
-      'LeG': 'Gravitationally Lensed Image of a Galaxy',
-      'LeI': 'Gravitationally Lensed Image',
-      'LeQ': 'Gravitationally Lensed Image of a Quasar',
-      'Lev': '(Micro)Lensing Event',
-      'LyA': 'Ly alpha Absorption Line system',
-      'MBA': 'Main Belt Asteroid',
-      'MGr': 'Moving Group',
-      'MPl': 'Minor Planet',
-      'Mas': 'Maser',
-      'Mi*': 'Variable Star of Mira Cet type',
-      'Mi?': 'Mira candidate',
-      'MoC': 'Molecular Cloud',
-      'Moo': 'Natural Satellite',
-      'N*': 'Confirmed Neutron Star',
-      'N*?': 'Neutron Star Candidate',
-      'NEO': 'Near Earth Object',
-      'NIR': 'Near-IR source (\xce\xbb < 10 \xc2\xb5m)',
-      'NL*': 'Nova-like Star',
-      'No*': 'Nova',
-      'No?': 'Nova Candidate',
-      'OH*': 'OH/IR star',
-      'OH?': 'Possible Star with envelope of OH/IR type',
-      'OVV': 'Optically Violently Variable object',
-      'OpC': 'Open Cluster',
-      'Or*': 'Variable Star of Orion Type',
-      'PCo': 'Periodic Comet',
-      'PM*': 'High proper-motion Star',
-      'PN': 'Planetary Nebula',
-      'PN?': 'Possible Planetary Nebula',
-      'PaG': 'Pair of Galaxies',
-      'Pe*': 'Peculiar Star',
-      'Pec?': 'Possible Peculiar Star',
-      'Pho': 'Phocaea Asteroid',
-      'Pl': 'Extra-solar Confirmed Planet',
-      'Pl?': 'Extra-solar Planet Candidate',
-      'Pla': 'Planet',
-      'PoC': 'Part of Cloud',
-      'PoG': 'Part of a Galaxy',
-      'Psr': 'Pulsar',
-      'Pu*': 'Pulsating variable Star',
-      'Q?': 'Possible Quasar',
-      'QSO': 'Quasar',
-      'RB?': 'Possible Red Giant Branch star',
-      'RC*': 'Variable Star of R CrB type',
-      'RC?': 'Variable Star of R CrB type candiate',
-      'RG*': 'Red Giant Branch star',
-      'RI*': 'Variable Star with rapid variations',
-      'RNe': 'Reflection Nebula',
-      'RR*': 'Variable Star of RR Lyr type',
-      'RR?': 'Possible Star of RR Lyr type',
-      'RS*': 'Variable of RS CVn type',
-      'RV*': 'Variable Star of RV Tau type',
-      'Rad': 'Radio-source',
-      'Ro*': 'Rotationally variable Star',
-      'S*': 'S Star',
-      'S*?': 'Possible S Star',
-      'SB*': 'Spectroscopic binary',
-      'SBG': 'Starburst Galaxy',
-      'SC?': 'Possible Supercluster of Galaxies',
-      'SCG': 'Supercluster of Galaxies',
-      'SFR': 'Star forming region',
-      'SN*': 'SuperNova',
-      'SN?': 'SuperNova Candidate',
-      'SNR': 'SuperNova Remnant',
-      'SR?': 'SuperNova Remnant Candidate',
-      'SSO': 'Solar System Object',
-      'SX*': 'Variable Star of SX Phe type (subdwarf)',
-      'St*': 'Stellar Stream',
-      'Sun': 'Sun',
-      'Sy*': 'Symbiotic Star',
-      'Sy1': 'Seyfert 1 Galaxy',
-      'Sy2': 'Seyfert 2 Galaxy',
-      'Sy?': 'Symbiotic Star Candidate',
-      'SyG': 'Seyfert Galaxy',
-      'TT*': 'T Tau-type Star',
-      'TT?': 'T Tau star Candidate',
-      'ULX': 'Ultra-luminous X-ray source',
-      'UV': 'UV-emission source',
-      'UX?': 'Ultra-luminous X-ray candidate',
-      'V*': 'Variable Star',
-      'V*?': 'Star suspected of Variability',
-      'WD*': 'White Dwarf',
-      'WD?': 'White Dwarf Candidate',
-      'WR*': 'Wolf-Rayet Star',
-      'WR?': 'Possible Wolf-Rayet Star',
-      'WU*': 'Eclipsing binary of W UMa type (contact binary)',
-      'WV*': 'Variable Star of W Vir type',
-      'X': 'X-ray source',
-      'XB*': 'X-ray Binary',
-      'XB?': 'X-ray binary Candidate',
-      'XCo': 'Unreliable (Historical) Comet',
-      'Y*?': 'Young Stellar Object Candidate',
-      'Y*O': 'Young Stellar Object',
-      'ZZ*': 'Pulsating White Dwarf',
-      'a2*': 'Variable Star of alpha2 CVn type',
-      'bC*': 'Variable Star of beta Cep type',
-      'bCG': 'Blue compact Galaxy',
-      'bL*': 'Eclipsing binary of beta Lyr type (semi-detached)',
-      'blu': 'Blue object',
-      'bub': 'Bubble',
-      'cC*': 'Classical Cepheid (delta Cep type)',
-      'cir': 'CircumStellar matter',
-      'cm': 'centimetric Radio-source',
-      'cor': 'Dense core',
-      'dS*': 'Variable Star of delta Sct type',
-      'err': 'Not an object (error, artefact, ...)',
-      'ev': 'transient event',
-      'gB': 'gamma-ray Burst',
-      'gD*': 'Variable Star of gamma Dor type',
-      'gLS': 'Gravitational Lens System (lens+images)',
-      'gLe': 'Gravitational Lens',
-      'gam': 'gamma-ray source',
-      'glb': 'Globule (low-mass dark cloud)',
-      'grv': 'Gravitational Source',
-      'mAL': 'metallic Absorption Line system',
-      'mR': 'metric Radio-source',
-      'mm': 'millimetric Radio-source',
-      'mul': 'Composite object',
-      'of?': 'Outflow candidate',
-      'out': 'Outflow',
-      'pA*': 'Post-AGB Star (proto-PN)',
-      'pA?': 'Post-AGB Star Candidate',
-      'pr*': 'Pre-main sequence Star',
-      'pr?': 'Pre-main sequence Star Candidate',
-      'rB': 'radio Burst',
-      'rG': 'Radio Galaxy',
-      'red': 'Very red source',
-      'reg': 'Region defined in the sky',
-      's*b': 'Blue supergiant star',
-      's*r': 'Red supergiant star',
-      's*y': 'Yellow supergiant star',
-      's?b': 'Possible Blue supergiant star',
-      's?r': 'Possible Red supergiant star',
-      's?y': 'Possible Yellow supergiant star',
-      'sg*': 'Evolved supergiant star',
-      'sg?': 'Possible Supergiant star',
-      'sh': 'HI shell',
-      'smm': 'sub-millimetric source',
-      'sr*': 'Semi-regular pulsating Star',
-      'su*': 'Sub-stellar object',
-      'sv?': 'Semi-regular variable candidate',
-      'vid': 'Underdense region of the Universe'
-    }
-    let res = nameForType[skySourceType]
+  nameForSkySourceType: function (otype) {
+    let $stel = Vue.prototype.$stel
+    let res = $stel.otypeToStr(otype)
     return res || 'Unknown Type'
   },
 
@@ -520,28 +280,6 @@ const swh = {
     return ''
   },
 
-  // Return the list of FOV in degree which are adapted to observe this object
-  fovsForSkySource: function (ss) {
-    switch (ss.model) {
-      case 'star':
-        return [20, 2]
-      case 'dso':
-        let dimx = 'dimx' in ss.model_data ? ss.model_data.dimx : 5
-        let dimy = 'dimy' in ss.model_data ? ss.model_data.dimy : 5
-        return [20, Math.max(dimx, dimy) * 8 / 60]
-      case 'jpl_sso':
-        return [20, 1 / 60]
-      case 'mpc_asteroid':
-      case 'mpc_comet':
-      case 'tle_satellite':
-        return [20, 10 / 60, 1 / 60]
-      case 'constellation':
-        return [50]
-      default:
-        return [20]
-    }
-  },
-
   getShareLink: function (context) {
     let link = 'https://stellarium-web.org/'
     if (context.$store.state.selectedObject) {
@@ -556,8 +294,8 @@ const swh = {
     link += '&lng=' + (context.$stel.core.observer.longitude * 180 / Math.PI).toFixed(2)
     link += '&elev=' + context.$stel.core.observer.elevation
     if (!context.$store.state.selectedObject) {
-      link += '&az=' + (context.$stel.core.observer.azimuth * 180 / Math.PI).toPrecision(5)
-      link += '&alt=' + (context.$stel.core.observer.altitude * 180 / Math.PI).toPrecision(5)
+      link += '&az=' + (context.$stel.core.observer.yaw * 180 / Math.PI).toPrecision(5)
+      link += '&alt=' + (context.$stel.core.observer.pitch * 180 / Math.PI).toPrecision(5)
     }
     return link
   },
@@ -569,30 +307,74 @@ const swh = {
     }
     let $stel = Vue.prototype.$stel
     let obj
-    if (ss.model === 'dso') {
-      obj = $stel.getObjByNSID(ss.nsid)
-    } else if (ss.model === 'tle_satellite') {
+    if (ss.model === 'tle_satellite') {
       let id = 'NORAD ' + ss.model_data.norad_number
       obj = $stel.getObj(id)
     } else if (ss.model === 'constellation' && ss.model_data.iau_abbreviation) {
       let id = 'CST ' + ss.model_data.iau_abbreviation
       obj = $stel.getObj(id)
-    } else {
-      obj = $stel.getObjByNSID(ss.nsid)
+    } else if (ss.model === 'mpc_comet') {
+      let id = ss.short_name
+      obj = $stel.getObj(id)
+    } else if (ss.model === 'jpl_sso') {
+      let id = ss.short_name
+      obj = $stel.getObj(id)
     }
     if (!obj) {
       obj = $stel.getObj(ss.names[0])
+    }
+    if (!obj && ss.names[0].startsWith('Gaia DR2 ')) {
+      let gname = ss.names[0].replace(/^Gaia DR2 /, 'GAIA ')
+      obj = $stel.getObj(gname)
     }
     if (obj === null) return undefined
     return obj
   },
 
+  lookupSkySourceByName: function (name) {
+    return fetch(process.env.NOCTUASKY_API_SERVER + '/api/v1/skysources/name/' + name)
+      .then(function (response) {
+        if (!response.ok) {
+          throw response.body
+        }
+        return response.json()
+      }, err => {
+        throw err.response.body
+      })
+  },
+
+  querySkySources: function (str, limit) {
+    if (!limit) {
+      limit = 10
+    }
+    return fetch(process.env.NOCTUASKY_API_SERVER + '/api/v1/skysources/?q=' + str + '&limit=' + limit)
+      .then(function (response) {
+        if (!response.ok) {
+          throw response.body
+        }
+        return response.json()
+      }, err => {
+        throw err.response.body
+      })
+  },
+
   sweObj2SkySource: function (obj) {
     let $stel = Vue.prototype.$stel
-    let names = obj.names()
+    let names = obj.designations()
+    let that = this
 
     if (!names || !names.length) {
       throw new Error("Can't find object without names")
+    }
+
+    // Several artifical satellites share the same common name, so we use
+    // the unambiguous NORAD number instead
+    for (let j in names) {
+      if (names[j].startsWith('NORAD ')) {
+        let tmpName = names[0]
+        names[0] = names[j]
+        names[j] = tmpName
+      }
     }
 
     let printErr = function (err, n) {
@@ -604,15 +386,15 @@ const swh = {
       }
       if (gaiaName) {
         console.log('Generate Gaia object info from StelWebEngine object')
-        let radecICRS = $stel.c2s(obj.icrs)
+        let radecICRS = $stel.c2s(obj.getInfo('radec'))
         let raICRS = $stel.anp(radecICRS[0])
         let decICRS = $stel.anpm(radecICRS[1])
         let ss = {
           model: 'star',
           types: ['*'],
-          names: [obj.name.replace(/^GAIA /, 'Gaia DR2 ')],
+          names: [obj.designations()[0].replace(/^GAIA /, 'Gaia DR2 ')],
           modelData: {
-            Vmag: obj.vmag.v,
+            Vmag: obj.getInfo('vmag'),
             ra: raICRS * 180 / Math.PI,
             de: decICRS * 180 / Math.PI
           }
@@ -624,15 +406,15 @@ const swh = {
       throw err
     }
 
-    return NoctuaSkyClient.skysources.getByName(names[0]).then(res => {
+    return that.lookupSkySourceByName(names[0]).then(res => {
       return res
     }, err => {
       if (names.length === 1) return printErr(err, names[0])
-      return NoctuaSkyClient.skysources.getByName(names[1]).then(res => {
+      return that.lookupSkySourceByName(names[1]).then(res => {
         return res
       }, err => {
         if (names.length === 2) return printErr(err, names[1])
-        return NoctuaSkyClient.skysources.getByName(names[2]).then(res => {
+        return that.lookupSkySourceByName(names[2]).then(res => {
           return res
         }, err => {
           return printErr(err, names[2])
@@ -643,12 +425,8 @@ const swh = {
 
   setSweObjAsSelection: function (obj) {
     let $stel = Vue.prototype.$stel
-    obj.update()
     $stel.core.selection = obj
-    $stel.core.lock = obj
-    $stel.core.lock.update()
-    let azalt = $stel.convertPosition($stel.core.observer, 'ICRS', 'OBSERVED', $stel.core.lock.icrs)
-    $stel.core.lookat(azalt, 1.0)
+    $stel.pointAndLock(obj)
   },
 
   // Get data for a SkySource from wikipedia
@@ -701,99 +479,78 @@ const swh = {
       })
   },
 
-  getGeolocation: function (vueInstance) {
+  getGeolocation: function () {
     console.log('Getting geolocalization')
-    var that = vueInstance
 
-    if (navigator.geolocation) {
-      return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          var pos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          }
-          resolve(pos)
-        }, function () {
-          reject(new Error('Error getting location from browser'))
-        }, { enableHighAccuracy: true })
-      })
-    }
-
-    // No HTML5 Geolocalization support, try with GEOIP
-    console.log('Browser don\'t support geolocation, try from GeoIP')
-    return that.$jsonp('https://geoip-db.com/jsonp', {callbackName: 'callback'})
+    // First get geoIP location, to use as fallback
+    return Vue.jsonp('https://freegeoip.stellarium.org/json/', {callbackName: 'callback'})
       .then(location => {
         var pos = {
           lat: location.latitude,
           lng: location.longitude,
-          accuracy: 50000
+          accuracy: 20000
         }
+        console.log('GeoIP localization: ' + JSON.stringify(pos))
         return pos
-      }, err => { console.log(err) })
+      }, err => {
+        console.log(err)
+      }).then(geoipPos => {
+        if (navigator.geolocation) {
+          return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(function (position) {
+              var pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+              }
+              resolve(pos)
+            }, function () {
+              console.log('Could not get location from browser, use fallback from GeoIP')
+              // No HTML5 Geolocalization support, return geoip fallback values
+              if (geoipPos) {
+                resolve(geoipPos)
+              } else {
+                reject(new Error('Cannot detect position'))
+              }
+            }, { enableHighAccuracy: true })
+          })
+        }
+      })
+  },
+
+  delay: function (t, v) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve.bind(null, v), t)
+    })
   },
 
   geoCodePosition: function (pos) {
-    console.log('Geocoding Position: ' + JSON.stringify(pos))
-    /* eslint-disable no-undef */
-    var geocoder = new google.maps.Geocoder()
+    console.log('Geocoding position...')
     var loc = {
-      shortName: (pos.accuracy > 500 ? 'Near ' : '') + 'Lat ' + pos.lat.toFixed(3) + '° Lon ' + pos.lng.toFixed(3) + '°',
+      short_name: (pos.accuracy > 500 ? 'Near ' : '') + 'Lat ' + pos.lat.toFixed(3) + '° Lon ' + pos.lng.toFixed(3) + '°',
       country: 'Unknown',
       lng: pos.lng,
       lat: pos.lat,
       alt: pos.alt ? pos.alt : 0,
       accuracy: pos.accuracy,
-      streetAddress: ''
+      street_address: ''
     }
-    return new Promise((resolve, reject) => {
-      window.gm_authFailure = function () {
-        // This happens when the map API is not usable for some reasons
-        console.log('Google maps service failed to geocode, fallback to just position')
-        resolve(loc)
-      }
-      geocoder.geocode({ 'location': {lat: pos.lat, lng: pos.lng} }, function (results, status) {
-        if (status === 'OK') {
-          if (results.length > 0) {
-            let localityFound = false
-            for (let c of results[0].address_components) {
-              if (c.types.includes('locality')) {
-                localityFound = true
-                loc.shortName = (pos.accuracy > 500 ? 'Near ' : '') + c.short_name
-              }
-              if (c.types.includes('postal_town') && !localityFound) {
-                loc.shortName = (pos.accuracy > 500 ? 'Near ' : '') + c.short_name
-              }
-              if (c.types.includes('neighborhood') && !localityFound) {
-                loc.shortName = (pos.accuracy > 500 ? 'Near ' : '') + c.short_name
-              }
-              if (c.types.includes('administrative_area_level_2') && !localityFound) {
-                loc.shortName = (pos.accuracy > 500 ? 'Near ' : '') + c.short_name
-              }
-              if (c.types.includes('country')) {
-                loc.country = c.long_name
-              }
-            }
-            if (pos.accuracy < 50) {
-              for (let c of results[0].address_components) {
-                if (c.types.includes('street_number')) {
-                  loc.streetAddress = c.short_name
-                }
-                if (c.types.includes('route')) {
-                  loc.streetAddress = loc.streetAddress + ' ' + c.short_name
-                }
-              }
-            }
-            resolve(loc)
-          } else {
-            console.log('Geocoder returned nothing')
-            resolve(loc)
+    return fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + pos.lat + '&lon=' + pos.lng,
+      {headers: { 'Content-Type': 'application/json; charset=UTF-8' }}).then(response => {
+      if (response.ok) {
+        return response.json().then(res => {
+          let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
+          loc.short_name = pos.accuracy > 500 ? 'Near ' + city : city
+          loc.country = res.address.country
+          if (pos.accuracy < 50) {
+            loc.street_address = res.address.road ? res.address.road : res.display_name
           }
-        } else {
-          console.log('Geocoder failed due to: ' + status)
-          resolve(loc)
-        }
-      })
+          return loc
+        })
+      } else {
+        console.log('Geocoder failed due to: ' + response.statusText)
+        return loc
+      }
     })
   },
 
@@ -810,6 +567,92 @@ const swh = {
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     var d = R * c // Distance in m
     return d
+  },
+
+  // Look for the next time starting from now on when the night Sky is visible
+  // i.e. when sun is more than 10 degree below horizon.
+  // If no such time was found (e.g. in a northern country in summer),
+  // we default to current time.
+  getTimeAfterSunset: function (stel) {
+    let sun = stel.getObj('Sun')
+    let obs = stel.observer.clone()
+    let utc = Math.floor(obs.utc * 24 * 60 / 5) / (24 * 60 / 5)
+    let i
+    for (i = 0; i < 24 * 60 / 5 + 1; i++) {
+      obs.utc = utc + 1.0 / (24 * 60) * (i * 5)
+      let sunRadec = sun.getInfo('RADEC', obs)
+      let azalt = stel.convertFrame(obs, 'ICRF', 'OBSERVED', sunRadec)
+      let alt = stel.anpm(stel.c2s(azalt)[1])
+      if (alt < -13 * Math.PI / 180) {
+        break
+      }
+    }
+    if (i === 0 || i === 24 * 60 / 5 + 1) {
+      return stel.observer.utc
+    }
+    return obs.utc
+  },
+
+  // Get the list of circumpolar stars in a given magnitude range
+  //
+  // Arguments:
+  //   obs      - An observer.
+  //   maxMag   - The maximum magnitude above which objects are discarded.
+  //   filter   - a function called for each object returning false if the
+  //              object must be filtered out.
+  //
+  // Return:
+  //   An array SweObject. It is the responsibility of the caller to properly
+  //   destroy all the objects of the list when they are not needed, by calling
+  //   obj.destroy() on each of them.
+  //
+  // Example code:
+  //   // Return all cicumpolar stars between mag -2 and 4
+  //   let res = swh.getCircumpolarStars(this.$stel.observer, -2, 4)
+  //   // Do something with the stars
+  //   console.log(res.length)
+  //   // Destroy the objects (don't forget this line!)
+  //   res.map(e => e.destroy())
+  getCircumpolarStars: function (obs, minMag, maxMag) {
+    let $stel = Vue.prototype.$stel
+    let filter = function (obj) {
+      if (obj.getInfo('vmag', obs) <= minMag) {
+        return false
+      }
+      let posJNOW = $stel.convertFrame(obs, 'ICRF', 'JNOW', obj.getInfo('radec'))
+      let radecJNOW = $stel.c2s(posJNOW)
+      let decJNOW = $stel.anpm(radecJNOW[1])
+      if (obs.latitude >= 0) {
+        return decJNOW >= Math.PI / 2 - obs.latitude
+      } else {
+        return decJNOW <= -Math.PI / 2 + obs.latitude
+      }
+    }
+    return $stel.core.stars.listObjs(obs, maxMag, filter)
+  },
+
+  circumpolarMask: undefined,
+  showCircumpolarMask: function (obs, show) {
+    if (show === undefined) {
+      show = true
+    }
+    let layer = Vue.prototype.$skyHintsLayer
+    let $stel = Vue.prototype.$stel
+    if (this.circumpolarMask) {
+      layer.remove(this.circumpolarMask)
+      this.circumpolarMask = undefined
+    }
+    if (show) {
+      let diam = 2.0 * Math.PI - Math.abs(obs.latitude) * 2
+      let shapeParams = {
+        pos: [0, 0, obs.latitude > 0 ? -1 : 1, 0],
+        frame: $stel.FRAME_JNOW,
+        size: [diam, diam],
+        color: [0.1, 0.1, 0.1, 0.8],
+        border_color: [0.1, 0.1, 0.6, 1]
+      }
+      this.circumpolarMask = layer.add('circle', shapeParams)
+    }
   }
 }
 

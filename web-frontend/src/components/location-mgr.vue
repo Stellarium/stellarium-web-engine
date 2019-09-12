@@ -17,7 +17,7 @@
               <v-icon>location_on</v-icon>
             </v-list-tile-avatar>
             <v-list-tile-content>
-              <v-list-tile-title>{{ item.shortName }}</v-list-tile-title>
+              <v-list-tile-title>{{ item.short_name }}</v-list-tile-title>
               <v-list-tile-sub-title>{{ item.country }}</v-list-tile-sub-title>
             </v-list-tile-content>
           </v-list-tile>
@@ -30,9 +30,9 @@
               <v-layout>
                 <v-flex xs12>
                   <div>
-                    <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.shortName + ', ' + locationForDetail.country :  '-' }}</div>
+                    <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
                     <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>keyboard_arrow_right</v-icon> Use this location</v-btn>
-                    <div class="grey--text">{{ locationForDetail ? (locationForDetail.streetAddress ? locationForDetail.streetAddress : 'Unknown Address') : '-' }}</div>
+                    <div class="grey--text" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
                     <span class="grey--text">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</span>
                   </div>
                 </v-flex>
@@ -40,45 +40,35 @@
             </v-container>
           </v-card-title>
           <v-card-media height="375px">
-            <v-toolbar class="white" floating dense style="position: absolute; z-index: 10000; top: 16px;">
-              <div class="gmapsearch">
-                <div class="input-group input-group--prepend-icon input-group--hide-details theme--dark input-group--text-field input-group--single-line">
-                  <div class="input-group__input">
-                    <i class="material-icons icon input-group__prepend-icon black--text">search</i>
-                    <gmap-autocomplete ref="gmapautocplt" @place_changed="setPlace" style="caret-color:#000 !important; color: #000 !important;"></gmap-autocomplete>
-                  </div>
-                  <div class="input-group__details">
-                    <div class="input-group__messages"></div>
-                 </div>
-               </div>
-              </div>
-              <v-spacer></v-spacer>
+            <v-toolbar class="white" floating dense style="position: absolute; z-index: 10000; bottom: 16px; right: 0px;">
               <v-btn icon class="black--text" @click.native.stop="centerOnRealPosition()">
                 <v-icon>my_location</v-icon>
               </v-btn>
             </v-toolbar>
-            <gmap-map ref="gmapmap" :center="mapCenter" :zoom="12" :options="{mapTypeControl: false, streetViewControl: false}" style="width: 100%; height: 100%;" v-observe-visibility="visibilityChanged">
-              <gmap-marker :key="loc.id"
+            <l-map class="black--text" ref="myMap" :center="mapCenter" :zoom="10" style="width: 100%; height: 100%;" :options="{zoomControl: false}">
+              <l-control-zoom position="topright"></l-control-zoom>
+              <l-tile-layer :url="url" attribution='&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors'></l-tile-layer>
+              <l-marker :key="loc.id"
                   v-for="loc in knownLocations"
-                  :position="{ lng: loc.lng, lat: loc.lat }"
+                  :lat-lng="[ loc.lat, loc.lng ]"
                   :clickable="true"
                   :opacity="(!pickLocationMode && selectedKnownLocation && selectedKnownLocation === loc ? 1.0 : 0.25)"
                   @click="selectKnownLocation(loc)"
                   :draggable="!pickLocationMode && selectedKnownLocation && selectedKnownLocation === loc" @dragend="dragEnd"
-                ></gmap-marker>
-              <gmap-circle v-if="startLocation"
-                :center="{ lng: startLocation.lng, lat: startLocation.lat }"
+                ></l-marker>
+              <l-circle v-if="startLocation"
+                :lat-lng="[ startLocation.lat, startLocation.lng ]"
                 :radius="startLocation.accuracy"
                 :options="{
                   strokeColor: '#0000FF',
                   strokeOpacity: 0.5,
                   strokeWeight: 1,
                   fillColor: '#0000FF',
-                  fillOpacity: 0.08}"></gmap-circle>
-              <gmap-marker v-if="pickLocationMode && pickLocation" :position="{ lng: pickLocation.lng, lat: pickLocation.lat }"
-                :draggable="true" @dragend="dragEnd"><gmap-infoWindow><div class="black--text">Drag to adjust</div></gmap-infoWindow></gmap-marker>
+                  fillOpacity: 0.08}"></l-circle>
+              <l-marker v-if="pickLocationMode && pickLocation" :lat-lng="[ pickLocation.lat, pickLocation.lng ]"
+                :draggable="true" @dragend="dragEnd"><l-tooltip><div class="black--text">Drag to adjust</div></l-tooltip></l-marker>
 
-            </gmap-map>
+            </l-map>
           </v-card-media>
         </v-card>
       </v-flex>
@@ -88,6 +78,8 @@
 
 <script>
 import swh from '@/assets/sw_helpers.js'
+import { LMap, LTileLayer, LMarker, LCircle, LTooltip, LControlZoom } from 'vue2-leaflet'
+import { L } from 'leaflet-control-geocoder'
 
 export default {
   data: function () {
@@ -95,7 +87,8 @@ export default {
       mode: 'pick',
       pickLocation: undefined,
       selectedKnownLocation: undefined,
-      mapCenter: {lat: 43.6, lng: 1.4333}
+      mapCenter: [ 43.6, 1.4333 ],
+      url: 'https://{s}.tile.osm.org/{z}/{x}/{y}.png'
     }
   },
   props: ['showMyLocation', 'knownLocations', 'startLocation', 'realLocation'],
@@ -122,18 +115,43 @@ export default {
     }
   },
   mounted: function () {
+    let that = this
     this.setPickLocation(this.startLocation)
+    this.$nextTick(() => {
+      let map = this.$refs.myMap.mapObject
+      var geocoder = new L.Control.Geocoder({
+        defaultMarkGeocode: false, position: 'topleft'
+      }).on('markgeocode', function (e) {
+        var pos = {lat: e.geocode.center.lat, lng: e.geocode.center.lng}
+        that.mapCenter = [ pos.lat, pos.lng ]
+        pos.accuracy = 100
+        var loc = {
+          short_name: (pos.accuracy > 500 ? 'Near ' : '') + 'Lat ' + pos.lat.toFixed(3) + '° Lon ' + pos.lng.toFixed(3) + '°',
+          country: 'Unknown',
+          lng: pos.lng,
+          lat: pos.lat,
+          alt: pos.alt ? pos.alt : 0,
+          accuracy: pos.accuracy,
+          street_address: ''
+        }
+        let res = e.geocode.properties
+        let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
+        loc.short_name = pos.accuracy > 500 ? 'Near ' + city : city
+        loc.country = res.address.country
+        if (pos.accuracy < 50) {
+          loc.street_address = res.address.road ? res.address.road : res.display_name
+        }
+        that.pickLocation = loc
+        that.setPickLocationMode()
+      })
+      geocoder.addTo(map)
+    })
   },
   methods: {
-    // Workaround a map refresh bug..
-    visibilityChanged: function (v) {
-      this.$gmapDefaultResizeBus.$emit('resize')
-      this.$refs.gmapautocplt.$el.focus()
-    },
     selectKnownLocation: function (loc) {
       this.selectedKnownLocation = loc
       this.setKnownLocationMode()
-      this.mapCenter = { 'lat': loc.lat, 'lng': loc.lng }
+      this.mapCenter = [ loc.lat, loc.lng ]
     },
     useLocation: function () {
       this.$emit('locationSelected', this.locationForDetail)
@@ -143,15 +161,6 @@ export default {
     },
     setKnownLocationMode: function () {
       this.mode = 'known'
-    },
-    setPlace: function (place) {
-      console.log(place)
-      var that = this
-      var pos = {lat: place.geometry.location.lat(), lng: place.geometry.location.lng()}
-      this.mapCenter = pos
-      pos.accuracy = 0
-      swh.geoCodePosition(pos).then((p) => { that.pickLocation = p })
-      this.setPickLocationMode()
     },
     setPickLocation: function (loc) {
       if (loc.accuracy < 100) {
@@ -164,7 +173,7 @@ export default {
         }
       }
       var pos = { lat: loc.lat, lng: loc.lng }
-      this.mapCenter = pos
+      this.mapCenter = [ pos.lat, pos.lng ]
       this.pickLocation = loc
       this.setPickLocationMode()
     },
@@ -172,14 +181,19 @@ export default {
     centerOnRealPosition: function () {
       this.setPickLocation(this.realLocation)
     },
-    dragEnd: function (newPos) {
+    dragEnd: function (event) {
       var that = this
-      var pos = {lat: newPos.latLng.lat(), lng: newPos.latLng.lng(), accuracy: 0}
+      var pos = {lat: event.target._latlng.lat, lng: event.target._latlng.lng, accuracy: 0}
       swh.geoCodePosition(pos).then((p) => { that.pickLocation = p; that.setPickLocationMode() })
     }
-  }
+  },
+  components: { LMap, LTileLayer, LMarker, LCircle, LTooltip, LControlZoom }
 }
 </script>
 
 <style>
+.leaflet-control-geocoder-form input {
+  caret-color:#000 !important;
+  color: #000 !important;
+}
 </style>

@@ -9,7 +9,7 @@
 <template>
 
 <div class="click-through" style="position:absolute; width: 100%; height: 100%; display:flex; align-items: flex-end;">
-  <toolbar class="get-click"></toolbar>
+  <toolbar v-if="$store.state.showMainToolBar" class="get-click"></toolbar>
   <observing-panel></observing-panel>
   <template v-for="item in pluginsGuiComponents">
     <component :is="item"></component>
@@ -17,7 +17,7 @@
   <template v-for="item in dialogs">
     <component :is="item"></component>
   </template>
-  <selected-object-info style="position: absolute; top: 48px; left: 0px; width: 430px; max-width: calc(100vw - 12px); margin: 6px" class="get-click"></selected-object-info>
+  <selected-object-info style="position: absolute; top: 48px; left: 0px; width: 380px; max-width: calc(100vw - 12px); margin: 6px" class="get-click"></selected-object-info>
   <progress-bars style="position: absolute; bottom: 54px; right: 12px;"></progress-bars>
   <bottom-bar style="position:absolute; width: 100%; justify-content: center; bottom: 0; display:flex; margin-bottom: 0px" class="get-click"></bottom-bar>
 </div>
@@ -30,9 +30,7 @@ import BottomBar from '@/components/bottom-bar.vue'
 import SelectedObjectInfo from '@/components/selected-object-info.vue'
 import ProgressBars from '@/components/progress-bars'
 
-import AboutDialog from '@/components/about-dialog.vue'
 import DataCreditsDialog from '@/components/data-credits-dialog.vue'
-import PrivacyDialog from '@/components/privacy-dialog.vue'
 import ViewSettingsDialog from '@/components/view-settings-dialog.vue'
 import PlanetsVisibility from '@/components/planets-visibility.vue'
 import LocationDialog from '@/components/location-dialog.vue'
@@ -41,13 +39,6 @@ import ObservingPanel from '@/components/observing-panel.vue'
 export default {
   data: function () {
     return {
-      dialogs: [
-        'about-dialog',
-        'data-credits-dialog',
-        'privacy-dialog',
-        'view-settings-dialog',
-        'planets-visibility',
-        'location-dialog']
     }
   },
   methods: {
@@ -62,9 +53,24 @@ export default {
         }
       }
       return res
+    },
+    dialogs: function () {
+      let res = [
+        'data-credits-dialog',
+        'view-settings-dialog',
+        'planets-visibility',
+        'location-dialog'
+      ]
+      for (let i in this.$stellariumWebPlugins()) {
+        let plugin = this.$stellariumWebPlugins()[i]
+        if (plugin.dialogs) {
+          res = res.concat(plugin.dialogs.map(d => d.name))
+        }
+      }
+      return res
     }
   },
-  components: { Toolbar, BottomBar, AboutDialog, DataCreditsDialog, PrivacyDialog, ViewSettingsDialog, PlanetsVisibility, SelectedObjectInfo, LocationDialog, ProgressBars, ObservingPanel }
+  components: { Toolbar, BottomBar, DataCreditsDialog, ViewSettingsDialog, PlanetsVisibility, SelectedObjectInfo, LocationDialog, ProgressBars, ObservingPanel }
 }
 </script>
 

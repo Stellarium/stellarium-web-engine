@@ -17,42 +17,44 @@ const createStore = () => {
   for (let i in Vue.SWPlugins) {
     let plugin = Vue.SWPlugins[i]
     if (plugin.storeModule) {
+      console.log('Register store module for plugin: ' + plugin.name)
       pluginsModules[plugin.name] = plugin.storeModule
     }
   }
 
   return new Vuex.Store({
-    modules: {
-      plugins: {
-        modules: pluginsModules
-      }
-    },
+    modules: pluginsModules,
+
     state: {
       stel: null,
       initComplete: false,
 
-      noctuaSky: {},
-
       showNavigationDrawer: false,
-      showAboutDialog: false,
       showDataCreditsDialog: false,
-      showPrivacyDialog: false,
       showViewSettingsDialog: false,
       showPlanetsVisibilityDialog: false,
       showLocationDialog: false,
       selectedObject: undefined,
 
       showSidePanel: false,
+
+      showMainToolBar: true,
+      showLocationButton: true,
+      showTimeButtons: true,
+      showObservingPanelTabsButtons: true,
+      showSelectedInfoButtons: true,
+
       fullscreen: false,
       nightmode: false,
       wasmSupport: true,
 
       orange: false,
+      timeSpeed: 1,
 
       autoDetectedLocation: {
-        shortName: 'Unknown',
+        short_name: 'Unknown',
         country: 'Unknown',
-        streetAddress: '',
+        street_address: '',
         lat: 0,
         lng: 0,
         alt: 0,
@@ -60,9 +62,9 @@ const createStore = () => {
       },
 
       currentLocation: {
-        shortName: 'Unknown',
+        short_name: 'Unknown',
         country: 'Unknown',
-        streetAddress: '',
+        street_address: '',
         lat: 0,
         lng: 0,
         alt: 0,
@@ -75,10 +77,6 @@ const createStore = () => {
       replaceStelWebEngine (state, newTree) {
         // mutate StelWebEngine state
         state.stel = newTree
-      },
-      replaceNoctuaSkyState (state, newTree) {
-        // mutate NoctuaSky state
-        state.noctuaSky = newTree
       },
       toggleBool (state, varName) {
         _.set(state, varName, !_.get(state, varName))

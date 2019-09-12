@@ -10,7 +10,7 @@
   <div style="position: relative;">
     <v-text-field prepend-icon="search" label="Search..." v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line dark v-click-outside="resetSearch"></v-text-field>
     <v-list dense v-if="showList" two-line :style="listStyle" class="get-click">
-      <v-list-tile v-for="source in autoCompleteChoices" :key="source.nsid" @click="sourceClicked(source)">
+      <v-list-tile v-for="source in autoCompleteChoices" :key="source.short_name" @click="sourceClicked(source)">
         <v-list-tile-action>
           <img :src="iconForSkySource(source)"/>
         </v-list-tile-action>
@@ -26,7 +26,6 @@
 <script>
 import swh from '@/assets/sw_helpers.js'
 import _ from 'lodash'
-import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data: function () {
@@ -72,7 +71,7 @@ export default {
         return
       }
       this.lastQuery = str
-      NoctuaSkyClient.skysources.query(str, 10).then(results => {
+      swh.querySkySources(str, 10).then(results => {
         if (str !== that.lastQuery) {
           console.log('Cancelled query: ' + str)
           return

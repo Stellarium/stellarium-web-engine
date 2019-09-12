@@ -9,8 +9,8 @@
 <template>
 
 <div id="observing-panel-container" :class="{observingpanelhidden: !$store.state.showSidePanel}" class="get-click">
-  <div class="observing-panel-tabsbtn" >
-    <v-btn v-for="tab in tabs" small :key="tab.tabName" :to="tab.url">{{ tab.tabName }}</v-btn>
+  <div class="observing-panel-tabsbtn" v-if="$store.state.showObservingPanelTabsButtons">
+    <v-btn class='tab-bt' v-for="tab in tabs" small :key="tab.tabName" :to="tab.url" active-class="tab-bt-active">{{ tab.tabName }}</v-btn>
   </div>
   <div id="observing-panel">
     <router-view style="height: 100%"/>
@@ -33,9 +33,9 @@ export default {
       let res = []
       for (let i in this.$stellariumWebPlugins()) {
         let plugin = this.$stellariumWebPlugins()[i]
-        if (plugin.observingRoutes) {
-          for (let j in plugin.observingRoutes) {
-            let r = plugin.observingRoutes[j]
+        if (plugin.panelRoutes) {
+          for (let j in plugin.panelRoutes) {
+            let r = plugin.panelRoutes[j]
             if (r.meta && r.meta.tabName) {
               res.push({ tabName: r.meta.tabName, url: r.path })
             }
@@ -65,12 +65,17 @@ export default {
   right: 400px;
   transform-origin: bottom right;
   transform: rotate(-90deg);
-  opacity: 0.5;
   width: 100vh;
   top: 12px;
   text-align: right;
 }
 .observingpanelhidden {
   display: none;
+}
+.tab-bt {
+  opacity: 0.5;
+}
+.tab-bt-active {
+  opacity: 1;
 }
 </style>
