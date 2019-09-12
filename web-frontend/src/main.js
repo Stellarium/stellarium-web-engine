@@ -9,28 +9,21 @@
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
-
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.css'
-
 import Router from 'vue-router'
-
-import store from './store'
-
 import fullscreen from 'vue-fullscreen'
 import VueJsonp from 'vue-jsonp'
-
 import VueCookie from 'vue-cookie'
-
-import App from './App'
-
 import { L } from 'vue2-leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css'
 
+import App from './App'
+import store from './store'
+
 // this part resolve an issue where the markers would not appear
 delete L.Icon.Default.prototype._getIconUrl
-
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
@@ -38,13 +31,9 @@ L.Icon.Default.mergeOptions({
 })
 
 Vue.use(VueCookie)
-
 Vue.use(Vuetify)
-
 Vue.use(fullscreen)
-
 Vue.use(VueJsonp)
-// Vue.config.productionTip = false
 
 // Load all plugins JS modules found the in the plugins directory
 var plugins = []
