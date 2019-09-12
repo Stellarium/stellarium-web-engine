@@ -22,9 +22,9 @@
             </v-layout>
           </v-flex>
         <template v-for="obj in objs">
-          <v-flex xs2>{{obj.name}}</v-flex>
-          <v-flex xs1>{{formatTime(obj.rise)}}</v-flex>
-          <v-flex xs1>{{formatTime(obj.set)}}</v-flex>
+          <v-flex xs2>{{cleanName(obj)}}</v-flex>
+          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].rise)}}</v-flex>
+          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].set)}}</v-flex>
           <v-flex xs8>
             <div :style='sunBackgroundStr'>&nbsp;
               <div v-html="planetBackgroundStr(obj)"></div>
@@ -44,6 +44,7 @@
 <script>
 
 import Moment from 'moment'
+import swh from '@/assets/sw_helpers.js'
 
 export default {
   data: function () {
@@ -67,12 +68,15 @@ export default {
       utc.local()
       return utc.format('HH:mm')
     },
+    cleanName: function (obj) {
+      return swh.cleanupOneSkySourceName(obj.designations()[0])
+    },
     planetBackgroundStr: function (obj) {
       let d = new Date()
-      d.setMJD(obj.rise)
+      d.setMJD(obj.computeVisibility()[0].rise)
       let rise = Moment.utc(d)
       rise.local()
-      d.setMJD(obj.set)
+      d.setMJD(obj.computeVisibility()[0].set)
       let set = Moment.utc(d)
       set.local()
 
@@ -99,10 +103,10 @@ export default {
 
       let obs = this.$stel.core.observer.clone()
       for (let i = 0; i < 25; i++) {
-        obs.utc = d
+        obs.utc = d.toDate().getMJD()
         d.local()
-        sun.update(obs)
-        let alt = sun.alt
+        let azalt = this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', sun.getInfo('radec', obs))
+        let alt = this.$stel.anpm(this.$stel.c2s(azalt)[1]) * 180.0 / Math.PI
         brightness.push(alt / (Math.PI / 2))
         d.add(1, 'hours')
       }

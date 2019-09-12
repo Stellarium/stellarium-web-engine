@@ -9,11 +9,7 @@
 <template>
 
 <v-app dark>
-  <v-snackbar bottom left multi-line :timeout="0" v-model="snackbar" color="secondary" >
-    <p>This site uses cookies. By continuing to browse the site you are agreeing to our use of cookies. Check our <a v-on:click.stop="$store.state.showPrivacyDialog = true">Privacy Policy</a>.</p>
-    <v-btn class="blue--text darken-1" flat @click.native="acceptCookies">I Agree</v-btn>
-  </v-snackbar>
-  <v-navigation-drawer absolute temporary clipped v-model="nav" dark>
+  <v-navigation-drawer absolute temporary clipped v-model="nav" dark style="display:flex;flex-direction:column;padding-bottom: 0;">
     <v-list dense>
       <template v-for="(item,i) in menuItems">
         <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1"/>
@@ -32,11 +28,24 @@
             <v-list-tile-title v-text="item.title"/>
             <v-icon disabled>open_in_new</v-icon>
           </v-list-tile>
-          <v-list-tile v-else @click.stop="toggleStoreValue(item.store_var_name)">
+          <v-list-tile v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)">
             <v-list-tile-avatar><v-icon>{{ item.icon }}</v-icon></v-list-tile-avatar>
             <v-list-tile-title v-text="item.title"/>
           </v-list-tile>
         </template>
+      </template>
+    </v-list>
+    <template v-for="(item,i) in menuComponents">
+      <component :is="item"></component>
+    </template>
+    <v-spacer></v-spacer>
+    <v-list dense>
+      <v-divider class="divider_menu"/>
+      <template v-for="(item,i) in menuItems">
+        <v-list-tile v-if='item.footer' @click.stop="toggleStoreValue(item.store_var_name)">
+          <v-list-tile-avatar><v-icon>{{ item.icon }}</v-icon></v-list-tile-avatar>
+          <v-list-tile-title v-text="item.title"/>
+        </v-list-tile>
       </template>
     </v-list>
   </v-navigation-drawer>
@@ -59,26 +68,23 @@ import Gui from '@/components/gui.vue'
 import GuiLoader from '@/components/gui-loader.vue'
 import swh from '@/assets/sw_helpers.js'
 import Moment from 'moment'
-import NoctuaSkyClient from '@/assets/noctuasky-client'
 
 export default {
   data (context) {
     return {
-      snackbar: this.$cookie.get('cookieAccepted') !== 'y',
       menuItems: [
-        {header: 'Ephemeris'},
+        {header: 'Main'},
+        {title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog'},
         {title: 'Planets Tonight', icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog'},
-        {divider: true},
-        {header: 'Settings'},
-        {title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog'}
+        {divider: true}
       ].concat(this.getPluginsMenuItems()).concat([
-        {divider: true},
-        {title: 'About', icon: 'info', store_var_name: 'showAboutDialog'},
-        {title: 'Data Credits', icon: 'copyright', store_var_name: 'showDataCreditsDialog'},
-        {title: 'Privacy', icon: 'lock', store_var_name: 'showPrivacyDialog'}
+        {title: 'Data Credits', footer: true, icon: 'copyright', store_var_name: 'showDataCreditsDialog'}
       ]),
+      menuComponents: [].concat(this.getPluginsMenuComponents()),
       guiComponent: 'GuiLoader',
-      startTimeIsSet: false
+      startTimeIsSet: false,
+      initDone: false,
+      timeRef: undefined
     }
   },
   components: { Gui, GuiLoader },
@@ -91,8 +97,15 @@ export default {
           res = res.concat(plugin.menuItems)
         }
       }
-      if (res.length > 0) {
-        res = [{divider: true}].concat(res)
+      return res
+    },
+    getPluginsMenuComponents: function () {
+      let res = []
+      for (let i in this.$stellariumWebPlugins()) {
+        let plugin = this.$stellariumWebPlugins()[i]
+        if (plugin.menuComponents) {
+          res = res.concat(plugin.menuComponents)
+        }
       }
       return res
     },
@@ -103,60 +116,46 @@ export default {
     getStoreValue: function (storeVarName) {
       return _.get(this.$store.state, storeVarName)
     },
-    acceptCookies: function () {
-      this.$cookie.set('cookieAccepted', 'y', { expires: '2Y' })
-      this.snackbar = false
-    },
-    setTimeAfterSunSet: function () {
-      // Look for the next time starting from now on when the night Sky is visible
-      // i.e. when sun is more than 10 degree below horizon.
-      // If no such time was found (e.g. in a northern country in summer),
-      // we default to current time.
-      let sun = this.$stel.getObj('Sun')
-      let obs = this.$stel.observer.clone()
-      let utc = obs.utc
-      let i = 0
-      for (i = 0; i < 24 * 60 / 5 + 1; i++) {
-        obs.utc = utc + 1.0 / (24 * 60) * (i * 5)
-        sun.update(obs)
-        let azalt = this.$stel.convertPosition(obs, 'ICRS', 'OBSERVED', sun.icrs)
-        let alt = this.$stel.anpm(this.$stel.c2s(azalt)[1])
-        if (alt < -10 * Math.PI / 180) {
-          break
-        }
-      }
-      this.$stel.observer.utc = obs.utc
-      this.startTimeIsSet = true
+    onBeforeRendering: function (timestamp) {
+      if (!this.timeRef) this.timeRef = new Date().getMJD()
+      let d = new Date().getMJD()
+      this.$stel.observer.utc += this.$store.state.timeSpeed * (d - this.timeRef)
+      this.timeRef = d
     },
     setStateFromQueryArgs: function () {
       // Check whether the observing panel must be displayed
-      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: this.$route.path.startsWith('/observing')})
+      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: this.$route.path.startsWith('/p/')})
 
       // Set the core's state from URL query arguments such
       // as date, location, view direction & fov
       var that = this
-      let d = new Date()
-      if (this.$route.query.date) {
-        d = new Moment(this.$route.query.date).toDate()
-        this.$stel.core.observer.utc = d.getMJD()
-        this.startTimeIsSet = true
-      }
 
-      if (this.$route.query.lng && this.$route.query.lat) {
-        let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1}
-        swh.geoCodePosition(pos).then((loc) => {
-          that.$store.commit('setCurrentLocation', loc)
-        }, (error) => { console.log(error) })
-      }
+      if (!this.initDone) {
+        let d = new Date()
+        if (this.$route.query.date) {
+          d = new Moment(this.$route.query.date).toDate()
+          this.$stel.core.observer.utc = d.getMJD()
+          this.startTimeIsSet = true
+        }
 
-      this.$stel.core.observer.azimuth = this.$route.query.az ? Number(this.$route.query.az) * Math.PI / 180 : 0
-      this.$stel.core.observer.altitude = this.$route.query.alt ? Number(this.$route.query.alt) * Math.PI / 180 : 30 * Math.PI / 180
-      this.$stel.core.fov = this.$route.query.fov ? Number(this.$route.query.fov) * Math.PI / 180 : 120 * Math.PI / 180
+        if (this.$route.query.lng && this.$route.query.lat) {
+          let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1}
+          swh.geoCodePosition(pos).then((loc) => {
+            that.$store.commit('setCurrentLocation', loc)
+          }, (error) => { console.log(error) })
+        }
+
+        this.$stel.core.observer.yaw = this.$route.query.az ? Number(this.$route.query.az) * Math.PI / 180 : 0
+        this.$stel.core.observer.pitch = this.$route.query.alt ? Number(this.$route.query.alt) * Math.PI / 180 : 30 * Math.PI / 180
+        this.$stel.core.fov = this.$route.query.fov ? Number(this.$route.query.fov) * Math.PI / 180 : 120 * Math.PI / 180
+
+        this.initDone = true
+      }
 
       if (this.$route.path.startsWith('/skysource/')) {
         let name = decodeURIComponent(this.$route.path.substring(11))
         console.log('Will select object: ' + name)
-        return NoctuaSkyClient.skysources.getByName(name).then(ss => {
+        return swh.lookupSkySourceByName(name).then(ss => {
           if (!ss) {
             return
           }
@@ -201,7 +200,8 @@ export default {
       // At startup, we need to wait for the location to be set before deciding which
       // startup time to set so that it's night time.
       if (!this.startTimeIsSet) {
-        this.setTimeAfterSunSet()
+        this.$stel.core.observer.utc = swh.getTimeAfterSunset(this.$stel)
+        this.startTimeIsSet = true
       }
       // Init of time and date is complete
       this.$store.commit('setValue', {varName: 'initComplete', newValue: true})
@@ -214,17 +214,12 @@ export default {
   mounted: function () {
     var that = this
 
-    // Init NoctuaSkyClient
-    let onNoctuaSkyStateChanged = function (path, value) {
-      if (path === '') {
-        that.$store.commit('replaceNoctuaSkyState', value)
-        return
+    for (let i in this.$stellariumWebPlugins()) {
+      let plugin = this.$stellariumWebPlugins()[i]
+      if (plugin.onAppMounted) {
+        plugin.onAppMounted(that)
       }
-      let tree = that.$store.state.noctuaSky
-      _.set(tree, path, value)
-      that.$store.commit('replaceNoctuaSkyState', tree)
     }
-    NoctuaSkyClient.init(process.env.NOCTUASKY_API_SERVER, onNoctuaSkyStateChanged)
 
     import('@/assets/js/stellarium-web-engine.wasm').then(f => {
       // Initialize the StelWebEngine viewer singleton
@@ -234,12 +229,12 @@ export default {
       try {
         swh.initStelWebEngine(that.$store, f, that.$refs.stelCanvas, function () {
           // Start auto location detection (even if we don't use it)
-          swh.getGeolocation(this).then(swh.geoCodePosition).then((loc) => {
+          swh.getGeolocation().then(swh.geoCodePosition).then((loc) => {
             that.$store.commit('setAutoDetectedLocation', loc)
           }, (error) => { console.log(error) })
           that.setStateFromQueryArgs()
           that.guiComponent = 'Gui'
-        })
+        }, that.onBeforeRendering)
       } catch (e) {
         this.$store.commit('setValue', {varName: 'wasmSupport', newValue: false})
       }
@@ -293,13 +288,6 @@ html, body {
 
 .menu__content {
   background-color: transparent!important;
-}
-
-@media only screen and (min-width: 600px) {
-  .snack--left.snack--bottom, .snack--right.snack--bottom {
-      -webkit-transform: translateY(-60px);
-      transform: translateY(-60px);
-  }
 }
 
 #stel {height: 100%; width: 100%; position: fixed;}

@@ -13,3 +13,5 @@ stellarium-web.files
 stellarium-web.creator
 stellarium-web.includes
 stellarium-web.creator.user
+stellarium-web.cflags
+stellarium-web.cxxflags

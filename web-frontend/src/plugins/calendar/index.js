@@ -9,8 +9,8 @@
 import Calendar from './components/calendar.vue'
 
 export default {
-  name: 'ephemeris',
-  observingRoutes: [
-    { path: '/observing/calendar', component: Calendar, meta: { tabName: 'Calendar', prio: 2 } }
+  name: 'calendar',
+  panelRoutes: [
+    { path: '/p/calendar', component: Calendar, meta: { tabName: 'Calendar', prio: 2 } }
   ]
 }

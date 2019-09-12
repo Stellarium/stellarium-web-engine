@@ -8,15 +8,20 @@
 
 <template>
   <div style="position: absolute; display:flex; align-items: flex-end;">
-    <div class="tbtcontainer" style="max-width: 300px; display:flex; align-items: flex-end;">
-      <v-btn class="tmenubt" color="secondary" @click.stop.native="locationClicked()"><v-icon class="hidden-sm-and-up">location_on</v-icon><span class="hidden-xs-only">{{ $store.state.currentLocation.shortName }}</span></v-btn>
+    <div v-if="$store.state.showLocationButton" class="tbtcontainer" style="max-width: 300px; display:flex; align-items: flex-end;">
+      <v-btn class="tmenubt" color="secondary" @click.stop.native="locationClicked()"><v-icon class="hidden-sm-and-up">location_on</v-icon><span class="hidden-xs-only">{{ $store.state.currentLocation.short_name }}</span></v-btn>
     </div>
     <v-spacer></v-spacer>
 
     <bottom-button label="Constellations"
                 :img="require('@/assets/images/btn-cst-lines.svg')"
-                :toggled="$store.state.stel.constellations.lines.visible"
-                @clicked="(b) => { $stel.core.constellations.lines.visible = b }">
+                :toggled="$store.state.stel.constellations.lines_visible"
+                @clicked="(b) => { $stel.core.constellations.lines_visible = b }">
+    </bottom-button>
+    <bottom-button label="Constellations Art"
+                :img="require('@/assets/images/btn-cst-art.svg')"
+                :toggled="$store.state.stel.constellations.images_visible"
+                @clicked="(b) => { $stel.core.constellations.images_visible = b }">
     </bottom-button>
     <bottom-button label="Atmosphere"
                 :img="require('@/assets/images/btn-atmosphere.svg')"
@@ -59,16 +64,15 @@
 
     <v-spacer></v-spacer>
 
-    <v-menu :close-on-content-click="true" transition="v-slide-y-transition" offset-y top left>
-      <v-btn class="tmenubt" color="secondary" slot="activator"><v-icon class="hidden-sm-and-up">today</v-icon><span class="hidden-xs-only">{{ date }}</span></v-btn>
-      <v-date-picker v-model="date" scrollable dark></v-date-picker>
-    </v-menu>
-
-    <v-menu :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left>
-      <v-btn class="tmenubt" color="secondary" slot="activator"><v-icon class="hidden-sm-and-up">access_time</v-icon><span class="hidden-xs-only">{{ time }}</span></v-btn>
-      <v-card width="400">
-        <v-slider min="0" max="1439" style="padding: 20px; margin-top: 18px" v-model="timeMinute" :label="time"></v-slider>
-      </v-card>
+    <v-menu v-if="$store.state.showTimeButtons" :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left>
+      <v-btn large class="tmenubt" color="secondary" slot="activator">
+        <v-icon class="hidden-sm-and-up">access_time</v-icon>
+        <span class="hidden-xs-only">
+          <div class="body-2">{{ time }}</div>
+          <div class="caption">{{ date }}</div>
+        </span>
+      </v-btn>
+      <date-time-picker v-model="pickerDate" :location="$store.state.currentLocation"></date-time-picker>
     </v-menu>
 
 
@@ -78,75 +82,52 @@
 <script>
 
 import BottomButton from '@/components/bottom-button.vue'
+import DateTimePicker from '@/components/date-time-picker.vue'
 import Moment from 'moment'
 
 export default {
-  components: { BottomButton },
+  components: { BottomButton, DateTimePicker },
   data: function () {
     return {
     }
   },
   computed: {
-    // The MomentJS time in local time
-    utc: function () {
-      var d = new Date()
-      d.setMJD(this.$store.state.stel.observer.utc)
-      return Moment(d)
-    },
     time: {
       get: function () {
-        let utc = this.utc.clone()
-        utc.local()
-        return utc.format('HH:mm:ss')
-      },
-      set: function (newValue) {
-        let utc = this.utc.clone()
-        utc.local()
-        let m = Moment('2000-01-01 ' + newValue + ':00')
-        utc.hours(m.hours())
-        utc.minutes(m.minutes())
-        this.$stel.core.observer.utc = utc.toDate().getMJD()
+        return this.getLocalTime().format('HH:mm:ss')
       }
     },
     date: {
       get: function () {
-        let utc = this.utc.clone()
-        utc.local()
-        return utc.format('YYYY-MM-DD')
-      },
-      set: function (newValue) {
-        let utc = this.utc.clone()
-        utc.local()
-        let m = Moment(newValue)
-        utc.year(m.year()).month(m.month()).date(m.date())
-        this.$stel.core.observer.utc = utc.toDate().getMJD()
-      }
-    },
-    timeMinute: {
-      get: function () {
-        // 0 means 12:00, 720 means midnight, 1440 (=24*60) means 12:00 the day after
-        let utc = this.utc.clone()
-        utc.local()
-        return utc.hours() < 12 ? (utc.hours() + 12) * 60 + utc.minutes() : (utc.hours() - 12) * 60 + utc.minutes()
-      },
-      set: function (newValue) {
-        let utc = this.utc.clone()
-        utc.local()
-        if (utc.hours() < 12) {
-          utc.subtract(1, 'days')
-        }
-        utc.hours(12)
-        utc.minutes(0)
-        utc.seconds(0)
-        utc.add(newValue, 'minutes')
-        this.$stel.core.observer.utc = utc.toDate().getMJD()
+        return this.getLocalTime().format('YYYY-MM-DD')
       }
     },
     fullscreenBtnImage: function () {
       return this.$store.state.fullscreen ? require('@/assets/images/svg/ui/fullscreen_exit.svg') : require('@/assets/images/svg/ui/fullscreen.svg')
+    },
+    pickerDate: {
+      get: function () {
+        let t = this.getLocalTime()
+        t.milliseconds(0)
+        return t.format()
+      },
+      set: function (v) {
+        let m = Moment(v)
+        m.local()
+        m.milliseconds(this.getLocalTime().milliseconds())
+        this.$stel.core.observer.utc = m.toDate().getMJD()
+      }
     }
   },
   methods: {
+    // The MomentJS time in local time
+    getLocalTime: function () {
+      var d = new Date()
+      d.setMJD(this.$store.state.stel.observer.utc)
+      let m = Moment(d)
+      m.local()
+      return m
+    },
     locationClicked: function () {
       this.$store.commit('toggleBool', 'showLocationDialog')
     },
@@ -172,7 +153,6 @@ export default {
 </script>
 
 <style>
-
 @media all and (max-width: 600px) {
   .tmenubt {
     min-width: 30px;
