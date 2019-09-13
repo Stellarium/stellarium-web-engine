@@ -33,8 +33,21 @@ static struct {
  */
 typedef struct cardinal {
     obj_t obj;
+    fader_t         visible;
 } cardinal_t;
 
+static int cardinal_init(obj_t *obj, json_value *args)
+{
+    cardinal_t *c = (void*)obj;
+    fader_init(&c->visible, true);
+    return 0;
+}
+
+static int cardinal_update(obj_t *obj, double dt)
+{
+    cardinal_t *c = (void*)obj;
+    return fader_update(&c->visible, dt);
+}
 
 static int cardinal_render(const obj_t *obj, const painter_t *painter)
 {
@@ -45,6 +58,9 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     double sin_angle;
     double brightness = 0.0;
     double color[4];
+    cardinal_t *c = (void*)obj;
+
+    if (c->visible.value <= 0) return 0;
 
     // Compute global brightness to adjust opacity/color of labels
     sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
@@ -59,6 +75,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     color[1] = 0.5 - 0.3 * brightness;
     color[2] = 0.5 - 0.3 * brightness;
     color[3] = 0.6 + 0.4 * brightness;
+    color[3] *= c->visible.value;
 
     for (i = 0; i < ARRAY_SIZE(POINTS); i++) {
         if (painter_is_point_clipped_fast(painter, FRAME_OBSERVED,
@@ -78,9 +95,15 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
 
 static obj_klass_t cardinal_klass = {
     .id = "cardinals",
-    .size = sizeof(obj_t),
+    .size = sizeof(cardinal_t),
     .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .render = cardinal_render,
+    .init   = cardinal_init,
+    .update = cardinal_update,
     .render_order = 50,
+    .attributes = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(cardinal_t, visible.target)),
+        {}
+    },
 };
 OBJ_REGISTER(cardinal_klass)

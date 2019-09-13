@@ -140,6 +140,8 @@ static void menu_main(void *user)
     const char *modules[][3] = {
         {"core.atmosphere", "visible", "Atmosphere"},
         {"core.landscapes", "visible", "Landscape"},
+        {"core.cardinals", "visible", "Cardinals"},
+        {"core.planets", "visible", "Planets"},
         {"core.milkyway", "visible", "Milkyway"},
         {"core.constellations", "lines_visible", "Cst Lines"},
         {"core.constellations", "images_visible", "Cst Art"},

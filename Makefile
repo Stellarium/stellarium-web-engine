@@ -51,7 +51,7 @@ js-es6-prof:
 .PHONY: setup
 
 setup: Dockerfile
-	docker build --no-cache -t swe-dev .
+	docker build -t swe-dev . # --no-cache
 
 dev:
 	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev
