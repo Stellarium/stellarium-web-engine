@@ -84,6 +84,7 @@ struct planet {
 // Planets layer object type;
 typedef struct planets {
     obj_t       obj;
+    fader_t     visible;
     planet_t    *planets; // The map of all the planets.
     planet_t    *sun;
     planet_t    *earth;
@@ -965,8 +966,11 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     }
     DL_SORT(planets->obj.children, sort_cmp);
 
+    if (planets->visible.value <= 0) return 0;
+    painter_t painter_ = *painter;
+    painter_.color[3] = planets->visible.value;
     PLANETS_ITER(planets, p) {
-        planet_render(p, painter);
+        planet_render(p, &painter_);
     }
     return 0;
 }
@@ -1122,6 +1126,8 @@ static int planets_init(obj_t *obj, json_value *args)
     regex_t reg;
     regmatch_t matches[2];
 
+    fader_init(&planets->visible, true);
+
     data = asset_get_data("asset://planets.ini", NULL, NULL);
     ini_parse_string(data, planets_ini_handler, planets);
     assert(planets->sun);
@@ -1147,6 +1153,12 @@ static int planets_init(obj_t *obj, json_value *args)
         texture_from_url("asset://textures/halo.png", TF_LAZY_LOAD);
 
     return 0;
+}
+
+static int planets_update(obj_t *obj, double dt)
+{
+    planets_t *planets = (void*)obj;
+    return fader_update(&planets->visible, dt);
 }
 
 static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
@@ -1220,10 +1232,15 @@ static obj_klass_t planets_klass = {
     .size   = sizeof(planets_t),
     .flags  = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init   = planets_init,
+    .update = planets_update,
     .render = planets_render,
     .get_by_oid = planets_get_by_oid,
     .get     = planets_get,
     .add_data_source = planets_add_data_source,
     .render_order = 30,
+    .attributes = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(planets_t, visible.target)),
+        {}
+    },
 };
 OBJ_REGISTER(planets_klass)
