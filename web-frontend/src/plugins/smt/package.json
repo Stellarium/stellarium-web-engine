@@ -1,0 +1,10 @@
+{
+  "name": "stellarium-web-smt",
+  "version": "0.0.0",
+  "description": "Survey Monitoring Tool plugin for Stellarium Web.",
+  "author": "Fabien Chereau <fabien@stellarium-labs.fr>",
+  "private": true,
+  "dependencies": {
+    "alasql": "^0.4.11"
+  }
+}
