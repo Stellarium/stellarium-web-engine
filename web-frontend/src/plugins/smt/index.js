@@ -4,6 +4,28 @@
 
 import SmtLayerPage from './components/smt-layer-page.vue'
 import storeModule from './store'
+import alasql from 'alasql'
+
+async function loadAllData (jsonData) {
+  let features = jsonData.features
+  console.log('Loading ' + features.length + ' features')
+
+  console.log('Create db')
+  await alasql.promise('CREATE TABLE tiles (id INT PRIMARY KEY, geo JSON, scenario JSON)')
+  await alasql.promise('CREATE INDEX idx_time ON tiles(scenario->contractual_date)')
+
+  let req = alasql.compile('INSERT INTO tiles VALUES (?, ?, ?)')
+  for (let feature of features) {
+    let id = feature.id
+    let geo = feature.geometry
+    let scenario = feature.properties.scenario
+    await req.promise([id, geo, scenario])
+  }
+
+  console.log('Test query by scenario.contractual_date')
+  let res = await alasql.promise('SELECT * FROM tiles WHERE DATE(scenario->contractual_date) > DATE("2022-04-05")')
+  console.log(res)
+}
 
 export default {
   vuePlugin: {
@@ -30,5 +52,8 @@ export default {
     app.$stel.core.observer.yaw = 0
     app.$stel.core.observer.pitch = 0
     app.$stel.core.fov = 270
+
+    let jsonData = require('./euclid-test.json')
+    loadAllData(jsonData)
   }
 }
