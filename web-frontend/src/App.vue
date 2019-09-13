@@ -234,6 +234,12 @@ export default {
           }, (error) => { console.log(error) })
           that.setStateFromQueryArgs()
           that.guiComponent = 'Gui'
+          for (let i in that.$stellariumWebPlugins()) {
+            let plugin = that.$stellariumWebPlugins()[i]
+            if (plugin.onEngineReady) {
+              plugin.onEngineReady(that)
+            }
+          }
         }, that.onBeforeRendering)
       } catch (e) {
         this.$store.commit('setValue', {varName: 'wasmSupport', newValue: false})
