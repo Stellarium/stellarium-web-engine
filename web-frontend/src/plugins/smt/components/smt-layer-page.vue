@@ -7,9 +7,20 @@
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <div class="scroll-container">
       <v-container fluid style="height: 100%">
-        <v-layout row>
-          <v-flex xs12 v-for="obsg in observationGroups" :key="obsg.f1[0].id">
-            <grouped-observations :obsGroupData="obsg" @thumbClicked="thumbClicked"></grouped-observations>
+        <v-card>
+          <v-card-title primary-title>
+            <h3 class="headline mb-0">Layer</h3>
+          </v-card-title>
+          <v-card-text>
+            <v-layout column justify-space-between>
+              <p>Count: {{ results.summary.count }}</p>
+              <p>Nb constraints: {{ query.constraints.length }}</p>
+            </v-layout>
+          </v-card-text>
+        </v-card>
+        <v-layout column>
+          <v-flex xs12 v-for="field in $smt.fieldsList" :key="field.id">
+            {{ field.name }}
           </v-flex>
         </v-layout>
       </v-container>
@@ -23,7 +34,15 @@ import SmtPanelRootToolbar from './smt-panel-root-toolbar.vue'
 export default {
   data: function () {
     return {
-      observationGroups: []
+      query: {
+        constraints: []
+      },
+      results: {
+        summary: {
+          count: 0
+        },
+        fields: []
+      }
     }
   },
   methods: {

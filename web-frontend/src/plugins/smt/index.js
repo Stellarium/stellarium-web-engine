@@ -5,26 +5,34 @@
 import SmtLayerPage from './components/smt-layer-page.vue'
 import storeModule from './store'
 import alasql from 'alasql'
+import Vue from 'vue'
 
-async function loadAllData (jsonData) {
-  let features = jsonData.features
-  console.log('Loading ' + features.length + ' features')
+async function loadAllData (fieldsList, jsonData) {
+  console.log('Loading ' + jsonData.features.length + ' features')
 
-  console.log('Create db')
-  await alasql.promise('CREATE TABLE tiles (id INT PRIMARY KEY, geo JSON, scenario JSON)')
-  await alasql.promise('CREATE INDEX idx_time ON tiles(scenario->contractual_date)')
+  console.log('Create Data Base')
+  await alasql.promise('CREATE TABLE features (id INT PRIMARY KEY, geometry JSON, properties JSON)')
 
-  let req = alasql.compile('INSERT INTO tiles VALUES (?, ?, ?)')
-  for (let feature of features) {
-    let id = feature.id
-    let geo = feature.geometry
-    let scenario = feature.properties.scenario
-    await req.promise([id, geo, scenario])
+  // Create an index on each field
+  for (let i in fieldsList) {
+    let field = fieldsList[i]
+    await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + field.id.replace(/\./g, '->') + ')')
   }
 
-  console.log('Test query by scenario.contractual_date')
-  let res = await alasql.promise('SELECT * FROM tiles WHERE DATE(scenario->contractual_date) > DATE("2022-04-05")')
+  // Insert all data
+  let req = alasql.compile('INSERT INTO features VALUES (?, ?, ?)')
+  for (let feature of jsonData.features) {
+    let id = feature.id
+    let geometry = feature.geometry
+    let properties = feature.properties
+    await req.promise([id, geometry, properties])
+  }
+
+  console.log('Test query by properties.scenario.contractual_date')
+  let res = await alasql.promise('SELECT * FROM features WHERE DATE(properties->scenario->contractual_date) > DATE("2022-04-05")')
   console.log(res)
+
+  Vue.prototype.$smt = {fieldsList: fieldsList}
 }
 
 export default {
@@ -53,7 +61,9 @@ export default {
     app.$stel.core.observer.pitch = 0
     app.$stel.core.fov = 270
 
+    let fieldsList = require('./fieldsList.json')
+
     let jsonData = require('./euclid-test.json')
-    loadAllData(jsonData)
+    loadAllData(fieldsList, jsonData)
   }
 }

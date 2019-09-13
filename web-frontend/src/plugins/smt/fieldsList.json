@@ -1,0 +1,14 @@
+[
+  {
+    "id": "properties.properties.ObservationType",
+    "name": "Type",
+    "type": "string",
+    "widget": "tags"
+  },
+  {
+    "id": "properties.scenario.contractual_date",
+    "name": "Contractual Date",
+    "type": "date",
+    "widget": "date_range"
+  }
+]
