@@ -6,7 +6,7 @@
 # The terms of the AGPL v3 license can be found in the main directory of this
 # repository.
 
-.PHONY: setup build dev start update-engine update-engine-debug
+.PHONY: setup build dev start
 
 update-engine:
 	cd .. && make gen-es6
@@ -22,10 +22,13 @@ setup: Dockerfile
 	docker build -t stellarium-web-dev .
 	docker run -it -v "$(PWD):/app" stellarium-web-dev yarn
 
-dev:
+src/assets/js/stellarium-web-engine.js: update-engine
+src/assets/js/stellarium-web-engine.wasm: update-engine
+
+dev: src/assets/js/stellarium-web-engine.js src/assets/js/stellarium-web-engine.wasm
 	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" stellarium-web-dev yarn run dev
 
-build:
+build: src/assets/js/stellarium-web-engine.js src/assets/js/stellarium-web-engine.wasm
 	docker run -it -v "$(PWD):/app" -e CDN_ENV="$(CDN_ENV)" stellarium-web-dev yarn run build
 
 start:
