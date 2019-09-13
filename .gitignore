@@ -21,3 +21,5 @@
 /.sconsign.dblite
 /.cache
 /doc
+html/static/js/stellarium-web-engine.js
+html/static/js/stellarium-web-engine.wasm
