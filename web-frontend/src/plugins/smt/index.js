@@ -14,7 +14,7 @@ export default {
   name: 'SMT',
   storeModule: storeModule,
   panelRoutes: [
-    { path: '/p/smt', component: SmtLayerPage, meta: { tabName: 'SMT Layer', prio: 2 } }
+    { path: '/p/smt', component: SmtLayerPage, meta: { tabName: 'Survey Tool', prio: 2 } }
   ],
   onEngineReady: function (app) {
     // Init base view settings
