@@ -85,8 +85,6 @@ import swh from '@/assets/sw_helpers.js'
 import { i18n } from '../plugins/i18n.js'
 import langs from '../plugins/langs.js'
 
-var language = langs.language()
-
 export default {
   data: function () {
     return {
@@ -117,6 +115,7 @@ export default {
       return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; more on <b><a style="color: #62d1df;" target="_blank" href="' + this.wikipediaLink + '">wikipedia</a></b></i></span>'
     },
     wikipediaLink: function () {
+      var language = langs.language()
       let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
       if (!page || !page.extract) return ''
       return `https://${language}.wikipedia.org/wiki/${page.title}`
@@ -130,13 +129,14 @@ export default {
           morpho = morpho + ' '
         }
       }
+      var language = langs.language()
       if (language === 'en') {
-        return `${morpho} ${swh.nameForSkySourceType(this.selectedObject.types[0])}`
+        return `${morpho} ${swh.nameForSkySourceType(this.selectedObject.types[0], 'en')}`
       } else if (language === 'pl') {
         if (morpho) {
-          return `${morpho} (${swh.nameForSkySourceType(this.selectedObject.types[0])})`
+          return `${morpho} (${swh.nameForSkySourceType(this.selectedObject.types[0], 'pl')})`
         } else {
-          return `${morpho} ${swh.nameForSkySourceType(this.selectedObject.types[0])}`
+          return `${morpho} ${swh.nameForSkySourceType(this.selectedObject.types[0], 'pl')}`
         }
       }
     },
@@ -159,25 +159,25 @@ export default {
         }
       }
 
-      addAttr('Magnitude', 'vmag', this.formatMagnitude)
-      addAttr('Distance', 'distance', this.formatDistance)
+      addAttr(i18n.t('ui.selected_object_info.magnitude'), 'vmag', this.formatMagnitude)
+      addAttr(i18n.t('ui.selected_object_info.distance'), 'distance', this.formatDistance)
       if (this.selectedObject.model_data) {
         if (this.selectedObject.model_data.radius) {
           ret.push({
-            key: 'Radius',
+            key: i18n.t('ui.selected_object_info.radius'),
             value: this.selectedObject.model_data.radius.toString() + ' Km'
           })
         }
         if (this.selectedObject.model_data.spect_t) {
           ret.push({
-            key: 'Spectral Type',
+            key: i18n.t('ui.selected_object_info.spectral_type'),
             value: this.selectedObject.model_data.spect_t
           })
         }
         if (this.selectedObject.model_data.dimx) {
           let dimy = this.selectedObject.model_data.dimy ? this.selectedObject.model_data.dimy : this.selectedObject.model_data.dimx
           ret.push({
-            key: 'Size',
+            key: i18n.t('ui.selected_object_info.size'),
             value: this.selectedObject.model_data.dimx.toString() + "' x " + dimy.toString() + "'"
           })
         }
@@ -214,18 +214,18 @@ export default {
         key: 'Az/Alt',
         value: formatAz(az) + '&nbsp;&nbsp;&nbsp;' + formatDec(alt)
       })
-      addAttr('Phase', 'phase', this.formatPhase)
+      addAttr(i18n.t('ui.selected_object_info.phase'), 'phase', this.formatPhase)
       let vis = obj.computeVisibility()
       let str = ''
       if (vis.length === 0) {
-        str = 'Not visible tonight'
+        str = i18n.t('ui.selected_object_info.not_visible')
       } else if (vis[0].rise === null) {
-        str = 'Always visible tonight'
+        str = i18n.t('ui.selected_object_info.visible')
       } else {
-        str = 'Rise: ' + this.formatTime(vis[0].rise) + '&nbsp;&nbsp;&nbsp; Set: ' + this.formatTime(vis[0].set)
+        str = i18n.t('ui.selected_object_info.rise') + ': ' + this.formatTime(vis[0].rise) + '&nbsp;&nbsp;&nbsp; ' + i18n.t('ui.selected_object_info.set') + ': ' + this.formatTime(vis[0].set)
       }
       ret.push({
-        key: 'Visibility',
+        key: i18n.t('ui.selected_object_info.visibility'),
         value: str
       })
       return ret

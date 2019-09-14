@@ -26,6 +26,7 @@
 <script>
 import swh from '@/assets/sw_helpers.js'
 import _ from 'lodash'
+import langs from '../plugins/langs.js'
 
 export default {
   data: function () {
@@ -89,7 +90,8 @@ export default {
       }
     },
     typeToName: function (t) {
-      return swh.nameForSkySourceType(t)
+      var language = langs.language()
+      return swh.nameForSkySourceType(t, language)
     },
     iconForSkySource: function (s) {
       return swh.iconForSkySource(s)

@@ -40,14 +40,6 @@ import ObservingPanel from '@/components/observing-panel.vue'
 export default {
   data: function () {
     return {
-      dialogs: [
-        'about-dialog',
-        'data-credits-dialog',
-        'privacy-dialog',
-        'lang-settings-dialog',
-        'view-settings-dialog',
-        'planets-visibility',
-        'location-dialog']
     }
   },
   methods: {
@@ -66,6 +58,7 @@ export default {
     dialogs: function () {
       let res = [
         'data-credits-dialog',
+        'lang-settings-dialog',
         'view-settings-dialog',
         'planets-visibility',
         'location-dialog'

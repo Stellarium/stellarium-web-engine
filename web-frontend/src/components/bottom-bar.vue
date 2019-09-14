@@ -15,8 +15,13 @@
 
     <bottom-button :label="$t('ui.bottom_bar.constellations')"
                 :img="require('@/assets/images/btn-cst-lines.svg')"
-                :toggled="$store.state.stel.constellations.lines.visible"
-                @clicked="(b) => { $stel.core.constellations.lines.visible = b }">
+                :toggled="$store.state.stel.constellations.lines_visible"
+                @clicked="(b) => { $stel.core.constellations.lines_visible = b }">
+    </bottom-button>
+    <bottom-button :label="$t('ui.bottom_bar.constellations_art')"
+                :img="require('@/assets/images/btn-cst-art.svg')"
+                :toggled="$store.state.stel.constellations.images_visible"
+                @clicked="(b) => { $stel.core.constellations.images_visible = b }">
     </bottom-button>
     <bottom-button :label="$t('ui.bottom_bar.atmosphere')"
                 :img="require('@/assets/images/btn-atmosphere.svg')"

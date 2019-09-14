@@ -256,9 +256,9 @@ const swh = {
     return this.cleanupOneSkySourceName(skySource.names[0])
   },
 
-  nameForSkySourceType: function (otype) {
+  nameForSkySourceType: function (otype, lang) {
     let $stel = Vue.prototype.$stel
-    let res = $stel.otypeToStr(otype)
+    let res = $stel.otypeToStr(otype, lang)
     return res || 'Unknown Type'
   },
 
