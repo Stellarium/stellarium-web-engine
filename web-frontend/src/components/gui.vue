@@ -31,6 +31,7 @@ import SelectedObjectInfo from '@/components/selected-object-info.vue'
 import ProgressBars from '@/components/progress-bars'
 
 import DataCreditsDialog from '@/components/data-credits-dialog.vue'
+import LangSettingsDialog from '@/components/lang-settings-dialog.vue'
 import ViewSettingsDialog from '@/components/view-settings-dialog.vue'
 import PlanetsVisibility from '@/components/planets-visibility.vue'
 import LocationDialog from '@/components/location-dialog.vue'
@@ -39,6 +40,14 @@ import ObservingPanel from '@/components/observing-panel.vue'
 export default {
   data: function () {
     return {
+      dialogs: [
+        'about-dialog',
+        'data-credits-dialog',
+        'privacy-dialog',
+        'lang-settings-dialog',
+        'view-settings-dialog',
+        'planets-visibility',
+        'location-dialog']
     }
   },
   methods: {
@@ -70,7 +79,7 @@ export default {
       return res
     }
   },
-  components: { Toolbar, BottomBar, DataCreditsDialog, ViewSettingsDialog, PlanetsVisibility, SelectedObjectInfo, LocationDialog, ProgressBars, ObservingPanel }
+  components: { Toolbar, BottomBar, DataCreditsDialog, LangSettingsDialog, ViewSettingsDialog, PlanetsVisibility, SelectedObjectInfo, LocationDialog, ProgressBars, ObservingPanel }
 }
 </script>
 

@@ -68,18 +68,11 @@ import Gui from '@/components/gui.vue'
 import GuiLoader from '@/components/gui-loader.vue'
 import swh from '@/assets/sw_helpers.js'
 import Moment from 'moment'
+import { i18n } from './plugins/i18n.js'
 
 export default {
   data (context) {
     return {
-      menuItems: [
-        {header: 'Main'},
-        {title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog'},
-        {title: 'Planets Tonight', icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog'},
-        {divider: true}
-      ].concat(this.getPluginsMenuItems()).concat([
-        {title: 'Data Credits', footer: true, icon: 'copyright', store_var_name: 'showDataCreditsDialog'}
-      ]),
       menuComponents: [].concat(this.getPluginsMenuComponents()),
       guiComponent: 'GuiLoader',
       startTimeIsSet: false,
@@ -176,6 +169,21 @@ export default {
     }
   },
   computed: {
+    menuItems: function () {
+      return [
+        {header: i18n.t('ui.app.ephemeris')},
+        {title: i18n.t('ui.app.planets_tonight'), icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog'},
+        {divider: true},
+        {header: i18n.t('ui.app.settings')},
+        {title: i18n.t('ui.app.view_settings'), icon: 'settings', store_var_name: 'showViewSettingsDialog'},
+        {title: i18n.t('ui.app.lang_settings'), icon: 'translate', store_var_name: 'showLangSettingsDialog'}
+      ].concat(this.getPluginsMenuItems()).concat([
+        {divider: true},
+        {title: i18n.t('ui.app.about'), icon: 'info', store_var_name: 'showAboutDialog'},
+        {title: i18n.t('ui.app.data_credits'), icon: 'copyright', store_var_name: 'showDataCreditsDialog'},
+        {title: i18n.t('ui.app.privacy'), icon: 'lock', store_var_name: 'showPrivacyDialog'}
+      ])
+    },
     nav: {
       get: function () {
         return this.$store.state.showNavigationDrawer

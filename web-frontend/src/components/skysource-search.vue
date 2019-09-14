@@ -8,8 +8,8 @@
 
 <template>
   <div style="position: relative;">
-    <v-text-field prepend-icon="search" label="Search..." v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line dark v-click-outside="resetSearch"></v-text-field>
-    <v-list dense v-if="showList" two-line :style="listStyle" class="get-click">
+    <v-text-field prepend-icon="search" :label="$t('ui.skysource_search.search')" v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line dark v-click-outside="resetSearch"></v-text-field>
+    <v-list dense v-if="showList" two-line :style="listStyle" class="get-click" style="min-height: 100%; max-height: calc(100vh - 140px); min-width: 100%; max-width: calc(100vw - 100px); overflow: auto;">
       <v-list-tile v-for="source in autoCompleteChoices" :key="source.short_name" @click="sourceClicked(source)">
         <v-list-tile-action>
           <img :src="iconForSkySource(source)"/>

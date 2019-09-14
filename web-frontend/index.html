@@ -27,12 +27,32 @@
       mix-blend-mode: multiply;
       visibility: hidden;
     }
+    * {
+      user-select: none;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 7px;
+    }
+    @media only screen and (max-width: 768px) {
+      ::-webkit-scrollbar {
+        width: 0px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0);
+      }
+    }
+    body {
+      overflow: hidden;
+    }
     </style>
   </head>
   <body>
     <div id="nightmode"></div>
     <div id="app"></div>
-    <!-- #ff6800 --> 
     <!-- built files will be auto injected -->
   </body>
 </html>

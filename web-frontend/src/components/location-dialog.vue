@@ -10,7 +10,7 @@
 <v-dialog lazy max-width="600" v-model="$store.state.showLocationDialog">
   <v-container v-if="$store.state.showLocationDialog" class="secondary white--text">
     <v-card color="secondary" flat>
-      <v-switch label="Use Autolocation" v-model="useAutoLocation" dark></v-switch>
+      <v-switch :label="$t('ui.location_dialog.use_autolocation')" v-model="useAutoLocation" dark></v-switch>
     </v-card>
     <location-mgr v-on:locationSelected="setLocation" :knownLocations="[]" :startLocation="$store.state.currentLocation" :realLocation="$store.state.autoDetectedLocation"></location-mgr>
   </v-container>

@@ -22,6 +22,8 @@ import 'leaflet-control-geocoder/dist/Control.Geocoder.css'
 import App from './App'
 import store from './store'
 
+import { i18n } from './plugins/i18n.js'
+
 // this part resolve an issue where the markers would not appear
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -102,6 +104,7 @@ Vue.prototype.$stellariumWebPlugins = function () {
 new Vue({
   el: '#app',
   router,
+  i18n,
   store,
   template: '<router-view></router-view>'
 })

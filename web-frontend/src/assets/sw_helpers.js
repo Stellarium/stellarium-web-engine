@@ -10,6 +10,8 @@ import Vue from 'vue'
 import _ from 'lodash'
 import StelWebEngine from '@/assets/js/stellarium-web-engine.js'
 import Moment from 'moment'
+import { i18n } from '../plugins/i18n.js'
+import langs from '../plugins/langs.js'
 
 var DDDate = Date
 DDDate.prototype.getJD = function () {
@@ -36,7 +38,7 @@ const swh = {
       onReady: function (Module) {
         Module.onBeforeRendering = onBeforeRendering
         // Add all data sources.
-        var baseUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
+        var baseUrl = 'https://cors-anywhere.herokuapp.com/https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
 
         // Bundled stars (just the very bright ones)
         lstel.addDataSource({url: 'asset://stars', type: 'hips'})
@@ -262,15 +264,15 @@ const swh = {
 
   nameForGalaxyMorpho: function (morpho) {
     const galTab = {
-      'E': 'Elliptical',
-      'SB': 'Barred Spiral',
-      'SAB': 'Intermediate Spiral',
-      'SA': 'Spiral',
-      'S0': 'Lenticular',
-      'S': 'Spiral',
-      'Im': 'Irregular',
-      'dSph': 'Dwarf Spheroidal',
-      'dE': 'Dwarf Elliptical'
+      'E': i18n.t('galaxy_type.elliptical'),
+      'SB': i18n.t('galaxy_type.bar_spiral'),
+      'SAB': i18n.t('galaxy_type.int_spiral'),
+      'SA': i18n.t('galaxy_type.spiral'),
+      'S0': i18n.t('galaxy_type.lenticular'),
+      'S': i18n.t('galaxy_type.spiral'),
+      'Im': i18n.t('galaxy_type.irregular'),
+      'dSph': i18n.t('galaxy_type.dwf_spheroidal'),
+      'dE': i18n.t('galaxy_type.dwf_elliptical')
     }
     for (let morp in galTab) {
       if (morpho.startsWith(morp)) {
@@ -434,11 +436,15 @@ const swh = {
     let title
     if (ss.model === 'jpl_sso') {
       title = ss.short_name.toLowerCase()
-      if (['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune', 'pluto'].indexOf(title) > -1) {
-        title = title + '_(planet)'
-      }
-      if (ss.types[0] === 'Moo') {
-        title = title + '_(moon)'
+      if (title === 'sun' || title === 'moon') {
+        title = title.replace(title, i18n.t(`planets.${title}`))
+      } else {
+        if (['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune', 'pluto'].indexOf(title) > -1) {
+          title = title + '_(planet)'
+        }
+        if (ss.types[0] === 'Moo') {
+          title = title + '_(moon)'
+        }
       }
     }
     if (ss.model === 'mpc_asteroid') {
@@ -464,15 +470,28 @@ const swh = {
       }
     }
     if (ss.model === 'star') {
-      for (let i in ss.names) {
-        if (ss.names[i].startsWith('* ')) {
-          title = this.cleanupOneSkySourceName(ss.names[i])
+      if (ss.short_name !== undefined) {
+        title = ss.short_name
+      } else {
+        for (let i in ss.names) {
+          if (ss.names[i].startsWith('NAME')) {
+            title = this.cleanupOneSkySourceName(ss.names[i])
+          }
+        }
+      }
+      if (title === undefined) {
+        for (let i in ss.names) {
+          if (ss.names[i].startsWith('* ')) {
+            title = this.cleanupOneSkySourceName(ss.names[i])
+          }
         }
       }
     }
     if (!title) return Promise.reject(new Error("Can't find wikipedia compatible name"))
 
-    return fetch('https://en.wikipedia.org/w/api.php?action=query&redirects&prop=extracts&exintro&exlimit=1&exchars=300&format=json&origin=*&titles=' + title,
+    var language = langs.language()
+
+    return fetch('https://' + language + '.wikipedia.org/w/api.php?action=query&redirects&prop=extracts&exintro&exlimit=1&exchars=300&format=json&origin=*&titles=' + title,
       {headers: { 'Content-Type': 'application/json; charset=UTF-8' }})
       .then(response => {
         return response.json()

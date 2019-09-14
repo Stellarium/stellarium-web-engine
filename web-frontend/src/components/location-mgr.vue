@@ -11,7 +11,7 @@
     <v-layout row justify-space-around>
       <v-flex xs4 v-if="doShowMyLocation">
         <v-list two-line avatar subheader>
-          <v-subheader>My Locations</v-subheader>
+          <v-subheader>{{ $t('ui.location_mgr.my_locations') }}</v-subheader>
           <v-list-tile avatar href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
             <v-list-tile-avatar>
               <v-icon>location_on</v-icon>
@@ -31,8 +31,8 @@
                 <v-flex xs12>
                   <div>
                     <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
-                    <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>keyboard_arrow_right</v-icon> Use this location</v-btn>
-                    <div class="grey--text" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
+                    <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>keyboard_arrow_right</v-icon>{{ $t('ui.location_mgr.use_this_location') }}</v-btn>
+                    <div class="grey--text">{{ locationForDetail ? (locationForDetail.streetAddress ? locationForDetail.streetAddress : $t(ui.location_mgr.unknown_address)) : '-' }}</div>
                     <span class="grey--text">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</span>
                   </div>
                 </v-flex>
@@ -66,7 +66,7 @@
                   fillColor: '#0000FF',
                   fillOpacity: 0.08}"></l-circle>
               <l-marker v-if="pickLocationMode && pickLocation" :lat-lng="[ pickLocation.lat, pickLocation.lng ]"
-                :draggable="true" @dragend="dragEnd"><l-tooltip><div class="black--text">Drag to adjust</div></l-tooltip></l-marker>
+                :draggable="true" @dragend="dragEnd"><l-tooltip><div class="black--text">{{ $t('ui.location_mgr.drag_to_adjust') }}</div></l-tooltip></l-marker>
 
             </l-map>
           </v-card-media>
