@@ -397,12 +397,13 @@ Module['zoomTo'] = function(fov, duration) {
  *
  * Parameters:
  *   otype    - The input 1-4 chars otype code.
+ *   lang     - Short name of language
  *
  * Return:
  *   The english name for an otype.
  */
-Module['otypeToStr'] = function(otype) {
-  var otype_to_str = Module.cwrap('otype_to_str', 'number', ['string']);
-  var cret = otype_to_str(otype);
+Module['otypeToStr'] = function(otype, lang) {
+  var otype_to_str = Module.cwrap('otype_to_str', 'number', ['string', 'string']);
+  var cret = otype_to_str(otype, lang);
   return Module.UTF8ToString(cret);
 }

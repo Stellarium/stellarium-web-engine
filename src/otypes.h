@@ -20,12 +20,13 @@
  * Parameters:
  *   otype  - An otype condensed id string (e.g '**').  Can be shorter than
  *            4 bytes.  Doesn't have to be NULL terminated if exactly 4 bytes.
+ *   lang   - Short name of language (e.g English = en, Polish = pl).
  *
  * Return:
  *   A null terminated string, or NULL if the otype doesn't exists.
  *
  */
-const char *otype_get_str(const char *otype);
+const char *otype_get_str(const char *otype, const char *lang);
 
 /*
  * Function: otype_get_parent

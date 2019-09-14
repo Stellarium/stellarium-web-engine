@@ -1043,9 +1043,9 @@ void core_zoomto(double fov, double duration)
 
 // Return a static string representation of a an object type id.
 EMSCRIPTEN_KEEPALIVE
-const char *otype_to_str(const char *otype)
+const char *otype_to_str(const char *otype, const char *lang)
 {
-    const char *res = otype_get_str(otype);
+    const char *res = otype_get_str(otype, lang);
     return res ? res : "";
 }
 
