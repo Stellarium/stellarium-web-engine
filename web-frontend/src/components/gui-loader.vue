@@ -22,12 +22,12 @@
       </div>
       <v-card v-else style="margin: auto;">
         <v-card-title primary-title>
-          <div class="headline"><v-icon large>error</v-icon>{{ $t('ui.gui_loader.error') }}</div>
+          <div class="headline"><v-icon large>error</v-icon>{{ $t('ui.gui_loader.error_cannot_load_wasm') }}</div>
         </v-card-title>
         <v-card-text>
           <v-layout column align-center style="width: 100%; height: 100%;">
-            <p class="grey--text">{{ $t('ui.gui_loader.error1') }}</p>
-            <p>{{ $t('ui.gui_loader.error2p1') }}<a href="https://stellarium.org">{{ $t('ui.gui_loader.error2p2') }}</a>{{ $t('ui.gui_loader.error2p3') }}<a href="/news">{{ $t('ui.gui_loader.error2p4') }}</a>!</p>
+            <p class="grey--text">{{ $t('ui.gui_loader.error_wasm_is_needed') }}</p>
+            <p>{{ $t('ui.gui_loader.error_in_the_meantime_try') }}<a href="https://stellarium.org">{{ $t('ui.gui_loader.error_desktop_version') }}</a>{{ $t('ui.gui_loader.error_or_read') }}<a href="/news">{{ $t('ui.gui_loader.error_project_news') }}</a>!</p>
           </v-layout>
         </v-card-text>
       </v-card>

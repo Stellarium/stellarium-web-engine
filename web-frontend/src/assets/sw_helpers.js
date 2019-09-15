@@ -440,10 +440,10 @@ const swh = {
         title = title.replace(title, i18n.t(`planets.${title}`))
       } else {
         if (['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune', 'pluto'].indexOf(title) > -1) {
-          title = title + '_(planet)'
+          title = title + `_(${i18n.t('planets.planet')})`
         }
         if (ss.types[0] === 'Moo') {
-          title = title + '_(moon)'
+          title = title + `_(${i18n.t('planets.moon')})`
         }
       }
     }

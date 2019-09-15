@@ -23,13 +23,13 @@
         <div>
         <v-tooltip top>
           <v-btn slot="activator" flat icon @click="resetTime" style="margin-top: 5px"><v-icon>restore</v-icon></v-btn>
-          <span>Back to real time</span>
+          <span>{{ $t('ui.date_time_picker.back_realtime') }}</span>
         </v-tooltip>
         </div>
         <div>
         <v-tooltip top>
           <v-btn slot="activator" flat icon @click="togglePauseTime" style="margin-top: 0px"><v-icon>{{ togglePauseTimeIcon }}</v-icon></v-btn>
-          <span>Pause/unpause time</span>
+          <span>{{ $t('ui.date_time_picker.pause_unpause') }}</span>
         </v-tooltip>
         </div>
         </div>

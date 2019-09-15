@@ -45,9 +45,6 @@ const translations = {
       pluto: 'pluto',
       planet: 'planet'
     },
-    general: {
-      constellation: 'constellation'
-    },
     galaxy_type: {
       elliptical: 'Elliptical',
       bar_spiral: 'Barred Spiral',
@@ -59,19 +56,7 @@ const translations = {
       dwf_elliptical: 'Dwarf Elliptical'
     },
     ui: {
-      about_dialog: {
-        title: 'About',
-        line1: 'Welcome to Stellarium Web, a free open source planetarium running in your web browser.',
-        line2p1: 'This page is sill in beta, please report any bugs or ask questions to ',
-        line2p2: ' or on our ',
-        line2p3: 'Github page',
-        line3p1: 'By using this website, you agree with our ',
-        line3p2: 'Privacy Policy'
-      },
       app: {
-        cookies: 'This site uses cookies. By continuing to browse the site you are agreeing to our use of cookies. Check our ',
-        privacy_policy: 'Privacy Policy',
-        agree: 'I Agree',
         ephemeris: 'Ephemeris',
         planets_tonight: 'Planets Tonight',
         settings: 'Settings',
@@ -95,16 +80,20 @@ const translations = {
       common: {
         close: 'Close'
       },
+      date_time_picker: {
+        back_realtime: 'Back to realtime',
+        pause_unpause: 'Pause/unpause time'
+      },
       gui_loader: {
         titlep1: 'Loading Stellarium ',
         titlep2: 'Web',
         titlep3: ', the online Planetarium',
-        error: ' It seems that your browser cannot load Web Assembly!',
-        error1: 'Web assembly is necessary for Stellarium Web to display the night sky. Please upgrade your web browser and try again!',
-        error2p1: 'In the meantime, you can try the ',
-        error2p2: 'desktop version',
-        error2p3: ', or read the project\'s ',
-        errpr2p4: 'news'
+        error_cannot_load_wasm: ' It seems that your browser cannot load Web Assembly!',
+        error_wasm_is_needed: 'Web assembly is necessary for Stellarium Web to display the night sky. Please upgrade your web browser and try again!',
+        error_in_the_meantime_try: 'In the meantime, you can try the ',
+        error_desktop_version: 'desktop version',
+        error_or_read: ', or read the project\'s ',
+        error_project_news: 'news'
       },
       lang_settings_dialog: {
         lang_settings: 'Change language',
@@ -119,51 +108,12 @@ const translations = {
         unknown_address: 'Unknown Address',
         drag_to_adjust: 'Drag to adjust'
       },
-      my_profile: {
-        my_profile: 'My Profile',
-        first_name: 'First Name',
-        last_name: 'Last Name',
-        email: 'E-Mail',
-        password: 'Password',
-        delete_account: 'Delete Account',
-        delete_my_account: 'Delete my account',
-        delete_warning1: 'Deleting your NoctuaSky account is permanent and cannot be undone. Before deleting your account, please keep in mind that:',
-        delete_warning2: 'Deleting your account will irremediably delete all observations, personal informations and pictures you created from our servers.',
-        delete_warning3: 'Observations you shared with public links won\'t be accessible anymore.',
-        delete_ok: 'Yes, delete all',
-        delete_cancel: 'Cancel!',
-        change_password: 'Change Password',
-        current_pass: 'Current password',
-        new_pass: 'New password',
-        confirm_new_pass: 'Confirm new password',
-        update_user_info: 'Update User Information',
-        send: 'Send'
-      },
-      observing_panel_root_toolbar: {
-        logged_as: 'Logged as',
-        my_profile: 'My Profile',
-        logout: 'Logout',
-        sign_in: 'Sign in'
-      },
       planets_visibility: {
         planets_visibility: 'Planets Visibility',
         night_from: 'Night from',
         to: 'to',
         rise: 'Rise',
         set: 'Set'
-      },
-      signin: {
-        signin_to: 'Sign in to NoctuaSky',
-        new: 'New to NoctuaSky?',
-        create_account: 'Create an account',
-        create_account2: 'Create a NoctuaSky account',
-        create_password: 'Create password',
-        confirm_password: 'Confirm password',
-        sign_up: 'Sign Up',
-        thanks: 'Thanks for signing in to NoctuaSky.com!',
-        msg1: 'Before you can continue, you need to confirm that your email is valid.',
-        msg2: 'We have just sent you a message containing a confirmation link that you need to click.',
-        ok: 'OK, get me to SignIn'
       },
       skysource_search: {
         search: 'Search...'
@@ -217,9 +167,6 @@ const translations = {
       pluto: 'pluton',
       planet: 'planeta'
     },
-    general: {
-      constellation: 'gwiazdozbiór'
-    },
     galaxy_type: {
       elliptical: 'Galaktyka eliptyczna',
       bar_spiral: 'Galaktyka z poprzeczką',
@@ -231,19 +178,7 @@ const translations = {
       dwf_elliptical: 'Karłowata galaktyka eliptyczna'
     },
     ui: {
-      about_dialog: {
-        title: 'O programie',
-        line1: 'Witaj w Stellarium Web, darmowym i otwarto-źródłowym planetarium, działającym w Twojej przeglądarce.',
-        line2p1: 'Ta strona jest nadal w wersji beta, prosimy o zgłoszenie błędów lub o pytania tutaj: ',
-        line2p2: ' lub na naszą ',
-        line2p3: 'stronę na Github\'ie',
-        line3p1: 'Korzystając z tej strony, zgadzasz się z naszą ',
-        line3p2: 'Polityką Prywatności'
-      },
       app: {
-        cookies: 'Ta strona używa plików cookies. Kontynuując przeglądanie witryny, wyrażasz zgodę na używanie przez nas plików cookies. Sprawdź naszą ',
-        privacy_policy: 'Politykę Prywatności',
-        agree: 'Wyrażam Zgodę',
         ephemeris: 'Efemerydy',
         planets_tonight: 'Widoczność planet tej nocy',
         settings: 'Ustawienia',
@@ -267,16 +202,20 @@ const translations = {
       common: {
         close: 'Zamknij'
       },
+      date_time_picker: {
+        back_realtime: 'Powrót do czasu rzeczywistego',
+        pause_unpause: 'Wstrzymaj/wznów czas'
+      },
       gui_loader: {
         titlep1: 'Ładowanie Stellarium ',
         titlep2: 'Web',
         titlep3: ', planetarium online',
-        error: ' Wygląda na to, że Twoja przeglądarka nie obsługuje Web Assembly!',
-        error1: 'Web Assembly jest wymagane dla Stellarium, aby wyświetlać nocne niebo. Prosimy o aktualizację przeglądarki i o ponowną próbę uruchomienia Stellarium Web.',
-        error2p1: 'W międzyczasie, możesz wypróbować ',
-        error2p2: 'wersję na pulpit',
-        error2p3: ', lub przeczytać ',
-        errpr2p4: 'wiadomości o projekcie'
+        error_cannot_load_wasm: ' Wygląda na to, że Twoja przeglądarka nie obsługuje Web Assembly!',
+        error_wasm_is_needed: 'Web Assembly jest wymagane dla Stellarium, aby wyświetlać nocne niebo. Prosimy o aktualizację przeglądarki i o ponowną próbę uruchomienia Stellarium Web.',
+        error_in_the_meantime_try: 'W międzyczasie, możesz wypróbować ',
+        error_desktop_version: 'wersję na pulpit',
+        error_or_read: ', lub przeczytać ',
+        error_project_news: 'wiadomości o projekcie'
       },
       lang_settings_dialog: {
         lang_settings: 'Change language/Zmień język',
@@ -291,51 +230,12 @@ const translations = {
         unknown_address: 'Nieznany adres',
         drag_to_adjust: 'Przeciągnij, aby dostosować'
       },
-      my_profile: {
-        my_profile: 'Mój profil',
-        first_name: 'Imię',
-        last_name: 'Nazwisko',
-        email: 'E-Mail',
-        password: 'Hasło',
-        delete_account: 'Usuń konto',
-        delete_my_account: 'Usuń moje konto',
-        delete_warning1: 'Usuwanie Twojego konta NoctuaSky jest nieodwracalne. Przed usuwaniem konta, pamiętaj o tym, że:',
-        delete_warning2: 'Usuwanie Twojego konta na zawsze usunie z naszych serwerów wszystkie zapisane obserwacje, informacje prywatne, a także wszystkie zdjęcia.',
-        delete_warning3: 'Obserwacje, które udostępniłeś za pomocą linków publicznych nie będą dłużej dostępne.',
-        delete_ok: 'Tak, usuń wszystko',
-        delete_cancel: 'Anuluj!',
-        change_password: 'Zmień hasło',
-        current_pass: 'Aktualne hasło',
-        new_pass: 'Nowe hasło',
-        confirm_new_pass: 'Potwierdź nowe hasło',
-        update_user_info: 'Aktualizuj informacje o użytkowniku',
-        send: 'Wyślij'
-      },
-      observing_panel_root_toolbar: {
-        logged_as: 'Zalogowany jako',
-        my_profile: 'Mój profil',
-        logout: 'Wyloguj się',
-        sign_in: 'Zaloguj się'
-      },
       planets_visibility: {
         planets_visibility: 'Widoczność planet',
         night_from: 'Noc z',
         to: 'na',
         rise: 'Wschód',
         set: 'Zachód'
-      },
-      signin: {
-        signin_to: 'Zaloguj się do NoctuaSky',
-        new: 'Jesteś nowy w NoctuaSky?',
-        create_account: 'Utwórz konto',
-        create_account2: 'Utwórz konto NoctuaSky',
-        create_password: 'Utwórz hasło',
-        confirm_password: 'Potwierdź hasło',
-        sign_up: 'Zarejestruj się',
-        thanks: 'Dziękujemy za rejestrację w NoctuaSky.com!',
-        msg1: 'Zanim będziesz mógł kontynuować, musisz potwierdzić, że Twój e-mail jest ważny.',
-        msg2: 'Właśnie wysłaliśmy Ci wiadomość zawierającą link potwierdzający, który musisz kliknąć.',
-        ok: 'OK, przejdźmy do logowania'
       },
       skysource_search: {
         search: 'Szukaj...'
