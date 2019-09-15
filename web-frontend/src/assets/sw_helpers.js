@@ -38,7 +38,7 @@ const swh = {
       onReady: function (Module) {
         Module.onBeforeRendering = onBeforeRendering
         // Add all data sources.
-        var baseUrl = 'https://cors-anywhere.herokuapp.com/https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
+        var baseUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
 
         // Bundled stars (just the very bright ones)
         lstel.addDataSource({url: 'asset://stars', type: 'hips'})

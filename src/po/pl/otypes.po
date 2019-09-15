@@ -1,0 +1,1083 @@
+# Polish translations for PACKAGE package.
+# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-09-15 21:11+0200\n"
+"PO-Revision-Date: 2019-09-15 21:11+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#: otypes.c:105
+msgid "Object of unknown nature"
+msgstr "Obiekt nieznanej natury"
+
+#: otypes.c:106
+msgid "transient event"
+msgstr "Chwilowe wydarzenie"
+
+#: otypes.c:107
+msgid "Radio-source"
+msgstr "Źródło radiowe"
+
+#: otypes.c:108
+msgid "metric Radio-source"
+msgstr "metrowe źródło radiowe"
+
+#: otypes.c:109
+msgid "centimetric Radio-source"
+msgstr "centymetrowe źródło radiowe"
+
+#: otypes.c:110
+msgid "millimetric Radio-source"
+msgstr "milimetrowe źródło radiowe"
+
+#: otypes.c:111
+msgid "sub-millimetric source"
+msgstr "submilimetrowe źródło radiowe"
+
+#: otypes.c:112
+msgid "HI source"
+msgstr "Źródło wodoru HI"
+
+#: otypes.c:113
+msgid "radio Burst"
+msgstr "Szybki błysk radiowy"
+
+#: otypes.c:114
+msgid "Maser"
+msgstr "Maser"
+
+#: otypes.c:115
+msgid "Infra-Red source"
+msgstr "Źródło podczerwieni"
+
+#: otypes.c:116
+msgid "Far-IR source"
+msgstr "Żródło dalekiej podczerwieni"
+
+#: otypes.c:117
+msgid "Near-IR source"
+msgstr "Źródło bliskiej podczerwieni"
+
+#: otypes.c:118
+msgid "Very red source"
+msgstr "Bardzo czerwone źródło"
+
+#: otypes.c:119
+msgid "Extremely Red Object"
+msgstr "Ekstremalnie czerwony obiekt"
+
+#: otypes.c:120
+msgid "Blue object"
+msgstr "Niebieski obiekt"
+
+#: otypes.c:121
+msgid "UV-emission source"
+msgstr "Źródło promieniowania UV"
+
+#: otypes.c:122
+msgid "X-ray source"
+msgstr "Żródło promieniowania rentgenowskiego"
+
+#: otypes.c:123
+msgid "Possible Ultra-luminous X-ray"
+msgstr "Możliwe ultraintensywne źródło rentgenowskie"
+
+#: otypes.c:124
+msgid "Ultra-luminous X-ray source"
+msgstr "Ultraintensywne źródło rentgenowskie"
+
+#: otypes.c:125
+msgid "gamma-ray source"
+msgstr "Źródło promieniowania gamma"
+
+#: otypes.c:126
+msgid "gamma-ray Burst"
+msgstr "Rozbłysk gamma"
+
+#: otypes.c:127
+msgid "Not an object"
+msgstr "To nie jest obiekt (błąd, artefakt)"
+
+#: otypes.c:128
+msgid "Gravitational Source"
+msgstr "Żródło gravitacyjne"
+
+#: otypes.c:129
+msgid "(Micro)Lensing Event"
+msgstr "(Mikro)soczewkowanie grawitacyjne"
+
+#: otypes.c:130
+msgid "Possible gravitational lens System"
+msgstr "Możliwy system soczewkowany grawitacyjnie"
+
+#: otypes.c:131
+msgid "Possible gravitational lens"
+msgstr "Możliwa soczewka grawitacyjna"
+
+#: otypes.c:132
+msgid "Possible gravitationally lensed image"
+msgstr "Możliwy obraz soczewkowany grawitacyjnie"
+
+#: otypes.c:133
+msgid "Gravitational Lens"
+msgstr "Soczewka grawitacyjna"
+
+#: otypes.c:134
+msgid "Gravitational Lens System"
+msgstr "System soczewkowany grawitacyjnie"
+
+#: otypes.c:135
+msgid "Gravitational Wave Event"
+msgstr "Źródło fal grawitacyjnych"
+
+#: otypes.c:136
+msgid "Candidate objects"
+msgstr "Możliwe obiekty"
+
+#: otypes.c:137
+msgid "Possible Galaxy"
+msgstr "Możliwa galaktyka"
+
+#: otypes.c:138
+msgid "Possible Supercluster of Galaxies"
+msgstr "Możliwa supergromada galaktyk"
+
+#: otypes.c:139
+msgid "Possible Cluster of Galaxies"
+msgstr "Możliwa gromada galaktyk"
+
+#: otypes.c:140
+msgid "Possible Group of Galaxies"
+msgstr "Możliwa grupa galaktyk"
+
+#: otypes.c:141
+msgid "Possible Association of Stars"
+msgstr "Możliwa asocjacja gwiazdowa"
+
+#: otypes.c:142
+msgid "Possible Physical Binary"
+msgstr "Możliwa fizyczna gwiazda podwójna"
+
+#: otypes.c:143
+msgid "Possible Eclipsing Binary"
+msgstr "Możliwa gwiazda podwójna zaćmieniowa"
+
+#: otypes.c:144
+msgid "Possible Symbiotic Star"
+msgstr "Możliwa gwiazda w układzie symbiotycznym"
+
+#: otypes.c:145
+msgid "Possible Cataclysmic Binary"
+msgstr "Możliwa gwiazda w układzie kataklizmicznym"
+
+#: otypes.c:146
+msgid "Possible Nova"
+msgstr "Możliwa nowa"
+
+#: otypes.c:147
+msgid "Possible X-ray binary"
+msgstr "Możliwy rentgenowski układ podwójny"
+
+#: otypes.c:148
+msgid "Possible Low-Mass X-ray binary"
+msgstr "Możliwy rentgenowski układ podwójny o małej masie"
+
+#: otypes.c:149
+msgid "Possible High-Mass X-ray binary"
+msgstr "Możliwy rentgenowski układ podwójny o wysokiej masie"
+
+#: otypes.c:150
+msgid "Possible Peculiar Star"
+msgstr "Możliwa gwiazda typu CP"
+
+#: otypes.c:151
+msgid "Possible Young Stellar Object"
+msgstr "Możliwy młody obiekt gwiezdny"
+
+#: otypes.c:152
+msgid "Possible Pre-main sequence Star"
+msgstr "Gwiazda przed ciągiem głównym"
+
+#: otypes.c:153
+msgid "Possible T Tau star"
+msgstr "Możliwa gwiazda typu T Tau"
+
+#: otypes.c:154
+msgid "Possible Carbon Star"
+msgstr "Możliwa gwiazda węglowa"
+
+#: otypes.c:155
+msgid "Possible S Star"
+msgstr "Możliwa gwiazda typu widmowego S"
+
+#: otypes.c:156
+msgid "Possible Star with envelope of OH/IR type"
+msgstr "Możliwa gwiazda z otoczką typu OH/IR"
+
+#: otypes.c:157
+msgid "Possible Star with envelope of CH type"
+msgstr "Możliwa gwiazda z otoczką typu CH"
+
+#: otypes.c:158
+msgid "Possible Wolf-Rayet Star"
+msgstr "Możliwa gwiazda typu Wolfa-Rayeta"
+
+#: otypes.c:159
+msgid "Possible Be Star"
+msgstr "Możliwa gwiazda Be"
+
+#: otypes.c:160
+msgid "Possible Herbig Ae/Be Star"
+msgstr "Możliwa gwiazda typu Herbiga Ae/Be"
+
+#: otypes.c:161
+msgid "Possible Horizontal Branch Star"
+msgstr "Możliwa gwiazda typu HB"
+
+#: otypes.c:162
+msgid "Possible Star of RR Lyr type"
+msgstr "Możliwa gwiazda typu RR Lyr"
+
+#: otypes.c:163
+msgid "Possible Cepheid"
+msgstr "Możliwa Cefeida"
+
+#: otypes.c:164
+msgid "Possible Red Giant Branch star"
+msgstr "Możliwy czerwony olbrzym"
+
+#: otypes.c:165
+msgid "Possible Supergiant star"
+msgstr "Możliwy supergigant"
+
+#: otypes.c:166
+msgid "Possible Red supergiant star"
+msgstr "Możliwy czerwony supergigant"
+
+#: otypes.c:167
+msgid "Possible Yellow supergiant star"
+msgstr "Możliwy żółty supergigant"
+
+#: otypes.c:168
+msgid "Possible Blue supergiant star"
+msgstr "Możliwy niebieski supergigant"
+
+#: otypes.c:169
+msgid "Possible Asymptotic Giant Branch Star"
+msgstr "Możliwa gwiazda typu AGB"
+
+#: otypes.c:170
+msgid "Possible Long Period Variable"
+msgstr "Możliwa długookresowa gwiazda zmienna"
+
+#: otypes.c:171
+msgid "Possible Mira"
+msgstr "Możliwa gwiazda zmienna typu Mira Cet"
+
+#: otypes.c:172
+msgid "Possible Semi-regular variable"
+msgstr "Możliwa pół-regularna gwiazda zmienna"
+
+#: otypes.c:173
+msgid "Possible Post-AGB Star"
+msgstr "ożliwa gwiazda po stadium AGB"
+
+#: otypes.c:174
+msgid "Possible Blue Straggler Star"
+msgstr "Możliwy błękitny maruder"
+
+#: otypes.c:175
+msgid "Possible Hot subdwarf"
+msgstr "Możliwy gorący podkarzeł"
+
+#: otypes.c:176
+msgid "Possible White Dwarf"
+msgstr "Możliwy biały karzeł"
+
+#: otypes.c:177
+msgid "Possible Neutron Star"
+msgstr "Możliwa gwiazda neutronowa"
+
+#: otypes.c:178
+msgid "Possible Black Hole"
+msgstr "Możliwa czarna dziura"
+
+#: otypes.c:179
+msgid "Possible SuperNova"
+msgstr "Możliwa supernowa"
+
+#: otypes.c:180
+msgid "Possible Low-mass star"
+msgstr "Możliwa gwiazda o małej masie"
+
+#: otypes.c:181
+msgid "Possible Brown Dwarf"
+msgstr "Możliwy brązowy karzeł"
+
+#: otypes.c:182
+msgid "Composite object"
+msgstr "Obiekt kompozytowy"
+
+#: otypes.c:183
+msgid "Region defined in the sky"
+msgstr "Obszar zdefiniowany na niebie"
+
+#: otypes.c:184
+msgid "Underdense region of the Universe"
+msgstr "Mało gęsty obszar wszechświata"
+
+#: otypes.c:185
+msgid "Supercluster of Galaxies"
+msgstr "Supergromada galaktyk"
+
+#: otypes.c:186
+msgid "Cluster of Galaxies"
+msgstr "Gromada galaktyk"
+
+#: otypes.c:187
+msgid "Group of Galaxies"
+msgstr "Grupa galaktyk"
+
+#: otypes.c:188
+msgid "Compact Group of Galaxies"
+msgstr "Kompaktowa grupa galaktyk"
+
+#: otypes.c:189
+msgid "Pair of Galaxies"
+msgstr "Para galaktyk"
+
+#: otypes.c:190
+msgid "Interacting Galaxies"
+msgstr "Zderzenie galaktyk"
+
+#: otypes.c:191
+msgid "Possible Star Cluster"
+msgstr "Możliwa gromada"
+
+#: otypes.c:192
+msgid "Possible Globular Cluster"
+msgstr "Możliwa gromada otwarta"
+
+#: otypes.c:193
+msgid "Cluster of Stars"
+msgstr "Gromada gwiazd"
+
+#: otypes.c:194
+msgid "Globular Cluster"
+msgstr "Gromada kulista"
+
+#: otypes.c:195
+msgid "Open Cluster"
+msgstr "Gromada otwarta"
+
+#: otypes.c:196
+msgid "Association of Stars"
+msgstr "Asocjacja gwiazdowa"
+
+#: otypes.c:197
+msgid "Stellar Stream"
+msgstr "Strumień gwiazd"
+
+#: otypes.c:198
+msgid "Moving Group"
+msgstr "Poruszająca się grupa"
+
+#: otypes.c:199
+msgid "Double or multiple star"
+msgstr "Gwiazda podwójna lub wielokrotna"
+
+#: otypes.c:200
+msgid "Eclipsing binary"
+msgstr "Gwiazda podwójna zaćmieniowa"
+
+#: otypes.c:201
+msgid "Eclipsing binary of Algol type"
+msgstr "Gwiazda podwójna zaćmieniowa typu Algola"
+
+#: otypes.c:202
+msgid "Eclipsing binary of beta Lyr type"
+msgstr "Gwiazda podwójna zaćmieniowa typu beta Lyr"
+
+#: otypes.c:203
+msgid "Eclipsing binary of W UMa type"
+msgstr "Gwiazda podwójna zaćmieniowa typu W UMa"
+
+#: otypes.c:204
+msgid "Star showing eclipses by its planet"
+msgstr "Gwiazda zaćmiewana przez jej planety"
+
+#: otypes.c:205
+msgid "Spectroscopic binary"
+msgstr "Układ spektroskopowo podówjny"
+
+#: otypes.c:206
+msgid "Ellipsoidal variable Star"
+msgstr "Gwiazda zmienna w kształcie elipsoidy"
+
+#: otypes.c:207
+msgid "Symbiotic Star"
+msgstr "Gwiazda w układzie symbiotycznym"
+
+#: otypes.c:208
+msgid "Cataclysmic Variable Star"
+msgstr "Gwiazda w układzie kataklizmicznym"
+
+#: otypes.c:209
+msgid "CV DQ Her type"
+msgstr "Układ kataklizmiczny typu DQ Her"
+
+#: otypes.c:210
+msgid "CV of AM Her type"
+msgstr "Układ kataklizmiczny typu AM Her"
+
+#: otypes.c:211
+msgid "Nova-like Star"
+msgstr "Gwiazda przypominająca nową"
+
+#: otypes.c:212
+msgid "Nova"
+msgstr "Nowa"
+
+#: otypes.c:213
+msgid "Dwarf Nova"
+msgstr "Nowa karłowata"
+
+#: otypes.c:214
+msgid "X-ray Binary"
+msgstr "Rentgenowski układ podwójny"
+
+#: otypes.c:215
+msgid "Low Mass X-ray Binary"
+msgstr "Rentgenowski układ podwójny o niskiej masie"
+
+#: otypes.c:216
+msgid "High Mass X-ray Binary"
+msgstr "Rentgenowski układ podwójny o wysokiej masie"
+
+#: otypes.c:217
+msgid "Interstellar matter"
+msgstr "Materia międzygwiezdna"
+
+#: otypes.c:218
+msgid "Part of Cloud"
+msgstr "Część obłoku"
+
+#: otypes.c:219
+msgid "Possible Planetary Nebula"
+msgstr "Możliwa mgławica planetarna"
+
+#: otypes.c:220
+msgid "Cometary Globule"
+msgstr "Globula kometarna"
+
+#: otypes.c:221
+msgid "Bubble"
+msgstr "Bąbel"
+
+#: otypes.c:222
+msgid "Emission Object"
+msgstr "Obiekt emisyjny"
+
+#: otypes.c:223
+msgid "Interstellar Cloud"
+msgstr "Materia międzygwiezdna"
+
+#: otypes.c:224
+msgid "Galactic Nebula"
+msgstr "Mgławica w galaktyce"
+
+#: otypes.c:225
+msgid "Bright Nebula"
+msgstr "Jasna mgławica"
+
+#: otypes.c:226
+msgid "Dark Cloud"
+msgstr "Ciemna mgławica"
+
+#: otypes.c:227
+msgid "Reflection Nebula"
+msgstr "Mgławica refleksyjna"
+
+#: otypes.c:228
+msgid "Molecular Cloud"
+msgstr "Obłok molekularny"
+
+#: otypes.c:229
+msgid "Globule"
+msgstr "Globula"
+
+#: otypes.c:230
+msgid "Dense core"
+msgstr "Gęsty rdzeń"
+
+#: otypes.c:231
+msgid "Star forming region"
+msgstr "Obszar formowania się gwiazd"
+
+#: otypes.c:232
+msgid "High-velocity Cloud"
+msgstr "Obłok o wysokiej prędkości"
+
+#: otypes.c:233
+msgid "HII region"
+msgstr "Obszar HII"
+
+#: otypes.c:234
+msgid "Planetary Nebula"
+msgstr "Mgławica planetarna"
+
+#: otypes.c:235
+msgid "HI shell"
+msgstr "Powłoka wodoru HI"
+
+#: otypes.c:236
+msgid "Possible SuperNova Remnant"
+msgstr "Możliwa pozostałość po supernowej"
+
+#: otypes.c:237
+msgid "SuperNova Remnant"
+msgstr "Pozostałość po supernowej"
+
+#: otypes.c:238
+msgid "CircumStellar matter"
+msgstr "Materia wokółgwiezdna"
+
+#: otypes.c:239
+msgid "Possible Outflow"
+msgstr "Możliwy wypływ gazu"
+
+#: otypes.c:240
+msgid "Outflow"
+msgstr "Wypływ gazu"
+
+#: otypes.c:241
+msgid "Herbig-Haro Object"
+msgstr "Obiekt Herbiga-Haro"
+
+#: otypes.c:242
+msgid "Star"
+msgstr "Gwiazda"
+
+#: otypes.c:243
+msgid "Star in Cluster"
+msgstr "Gwiazda w gromadzie"
+
+#: otypes.c:244
+msgid "Star in Nebula"
+msgstr "Gwiazda w mgławicy"
+
+#: otypes.c:245
+msgid "Star in Association"
+msgstr "Gwiazda w asocjacji"
+
+#: otypes.c:246
+msgid "Star in double system"
+msgstr "Gwiazda w systemie podwójnym"
+
+#: otypes.c:247
+msgid "Star suspected of Variability"
+msgstr "Gwiazda podejrzana o zmienność"
+
+#: otypes.c:248
+msgid "Peculiar Star"
+msgstr "Gwiazda typu CP"
+
+#: otypes.c:249
+msgid "Horizontal Branch Star"
+msgstr "Gwiazda HB"
+
+#: otypes.c:250
+msgid "Young Stellar Object"
+msgstr "Gwiazda we wczesnym stadium ewolucji"
+
+#: otypes.c:251
+msgid "Herbig Ae/Be star"
+msgstr "Gwiazda typu Herbiga Ae/Be"
+
+#: otypes.c:252
+msgid "Emission-line Star"
+msgstr "Gwiazda z liniami emisyjnymi"
+
+#: otypes.c:253
+msgid "Be Star"
+msgstr "Gwiazda Be"
+
+#: otypes.c:254
+msgid "Blue Straggler Star"
+msgstr "Błękitny maruder"
+
+#: otypes.c:255
+msgid "Red Giant Branch star"
+msgstr "Czerwony olbrzym"
+
+#: otypes.c:256
+msgid "Asymptotic Giant Branch Star"
+msgstr "Gwiazda AGB (spalająca hel)"
+
+#: otypes.c:257
+msgid "Carbon Star"
+msgstr "Gwiazda węglowa"
+
+#: otypes.c:258
+msgid "S Star"
+msgstr "Gwiazda typu widmowego S"
+
+#: otypes.c:259
+msgid "Evolved supergiant star"
+msgstr "Wyewoluowany nadolbrzym"
+
+#: otypes.c:260
+msgid "Red supergiant star"
+msgstr "Czerwony nadolbrzym"
+
+#: otypes.c:261
+msgid "Yellow supergiant star"
+msgstr "Żółty nadolbrzym"
+
+#: otypes.c:262
+msgid "Blue supergiant star"
+msgstr "Niebieski nadolbrzym"
+
+#: otypes.c:263
+msgid "Hot subdwarf"
+msgstr "Gorący podkarzeł"
+
+#: otypes.c:264
+msgid "Post-AGB Star"
+msgstr "Gwiazda po stadium AGB (mgławica protoplanetarna)"
+
+#: otypes.c:265
+msgid "White Dwarf"
+msgstr "Biały karzeł"
+
+#: otypes.c:266
+msgid "Pulsating White Dwarf"
+msgstr "Pulsujący biały karzeł"
+
+#: otypes.c:267
+msgid "Low-mass star"
+msgstr "Gwiazda o małej masie"
+
+#: otypes.c:268
+msgid "Brown Dwarf"
+msgstr "Brązowy karzeł"
+
+#: otypes.c:269
+msgid "Confirmed Neutron Star"
+msgstr "Gwiazda neutronowa"
+
+#: otypes.c:270
+msgid "OH/IR star"
+msgstr "Gwiazda OH/IR"
+
+#: otypes.c:271
+msgid "Star with envelope of CH type"
+msgstr "Gwiazda z otoczką typu CH"
+
+#: otypes.c:272
+msgid "Pre-main sequence Star"
+msgstr "Gwiazda przed ciągiem głównym"
+
+#: otypes.c:273
+msgid "T Tau-type Star"
+msgstr "Gwiazda typu T Tau"
+
+#: otypes.c:274
+msgid "Wolf-Rayet Star"
+msgstr "Gwiazda Wolfa-Rayeta"
+
+#: otypes.c:275
+msgid "High proper-motion Star"
+msgstr "Gwiazda z dużym ruchem własnym"
+
+#: otypes.c:276
+msgid "High-velocity Star"
+msgstr "Gwiazda o wysokiej prędkości"
+
+#: otypes.c:277
+msgid "Variable Star"
+msgstr "Gwiazda zmienna"
+
+#: otypes.c:278
+msgid "Variable Star of irregular type"
+msgstr "Gwiazda zmienna nieregularnego typu"
+
+#: otypes.c:279
+msgid "Variable Star of Orion Type"
+msgstr "Gwiazda zmienna typu Oriona"
+
+#: otypes.c:280
+msgid "Variable Star with rapid variations"
+msgstr "Gwiazda zmienna z szybkimi zmianami"
+
+#: otypes.c:281
+msgid "Eruptive variable Star"
+msgstr "Erupcyjna gwiazda zmienna"
+
+#: otypes.c:282
+msgid "Flare Star"
+msgstr "Gwiazda rozbłyskowa"
+
+#: otypes.c:283
+msgid "Variable Star of FU Ori type"
+msgstr "Gwiazda zmienna typu FU Ori"
+
+#: otypes.c:284
+msgid "Variable Star of R CrB type"
+msgstr "Gwiazda zmienna typu R CrB"
+
+#: otypes.c:285
+msgid "Variable Star of R CrB type candiate"
+msgstr "Możliwa gwiazda zmienna typu R CrB"
+
+#: otypes.c:286
+msgid "Rotationally variable Star"
+msgstr "Gwiazda zmienna rotacyjna"
+
+#: otypes.c:287
+msgid "Variable Star of alpha2 CVn type"
+msgstr "Gwiazda zmienna typu alpha2 CVn"
+
+#: otypes.c:288
+msgid "Pulsar"
+msgstr "Pulsar"
+
+#: otypes.c:289
+msgid "Variable of BY Dra type"
+msgstr "Gwiazda zmienna typu BY Dra"
+
+#: otypes.c:290
+msgid "Variable of RS CVn type"
+msgstr "Gwiazda zmienna typu RS CVn"
+
+#: otypes.c:291
+msgid "Pulsating variable Star"
+msgstr "Pulsująca gwiazda zmienna"
+
+#: otypes.c:292
+msgid "Variable Star of RR Lyr type"
+msgstr "Gwiazda zmienna typu RR Lyr"
+
+#: otypes.c:293
+msgid "Cepheid variable Star"
+msgstr "Cefeida"
+
+#: otypes.c:294
+msgid "Variable Star of delta Sct type"
+msgstr "Gwiazda zmienna typu delta Sct"
+
+#: otypes.c:295
+msgid "Variable Star of RV Tau type"
+msgstr "Gwiazda zmienna typu RV Tau"
+
+#: otypes.c:296
+msgid "Variable Star of W Vir type"
+msgstr "Gwiazda zmienna typu W Vir"
+
+#: otypes.c:297
+msgid "Variable Star of beta Cep type"
+msgstr "Gwiazda zmienna typu beta Cep"
+
+#: otypes.c:298
+msgid "Classical Cepheid"
+msgstr "Klasyczna Cefeida"
+
+#: otypes.c:299
+msgid "Variable Star of gamma Dor type"
+msgstr "Gwiazda zmienna typu gamma Dor"
+
+#: otypes.c:300
+msgid "Variable Star of SX Phe type"
+msgstr "Gwiazda zmienna typu SX Phe"
+
+#: otypes.c:301
+msgid "Long-period variable star"
+msgstr "Długookresowa gwiazda zmienna"
+
+#: otypes.c:302
+msgid "Variable Star of Mira Cet type"
+msgstr "Gwiazda zmienna typu Mira Cet"
+
+#: otypes.c:303
+msgid "Semi-regular pulsating Star"
+msgstr "Pół-regularna gwiazda pulsująca"
+
+#: otypes.c:304
+msgid "SuperNova"
+msgstr "Supernowa"
+
+#: otypes.c:305
+msgid "Sub-stellar object"
+msgstr "Obiekt sub-gwiezdny"
+
+#: otypes.c:306
+msgid "Possible Extra-solar Planet"
+msgstr "Możliwa egzoplaneta"
+
+#: otypes.c:307
+msgid "Extra-solar Confirmed Planet"
+msgstr "Egzoplaneta"
+
+#: otypes.c:308
+msgid "Galaxy"
+msgstr "Galaktyka"
+
+#: otypes.c:309
+msgid "Part of a Galaxy"
+msgstr "Część galaktyki"
+
+#: otypes.c:310
+msgid "Galaxy in Cluster of Galaxies"
+msgstr "Galaktyka w gromadzie galaktyk"
+
+#: otypes.c:311
+msgid "Brightest Galaxy in a Cluster"
+msgstr "Najjaśniejsca galaktyka w gromadzie"
+
+#: otypes.c:312
+msgid "Galaxy in Group of Galaxies"
+msgstr "Galaktyka w grupie galaktyk"
+
+#: otypes.c:313
+msgid "Galaxy in Pair of Galaxies"
+msgstr "Galaktyka w parze galaktyk"
+
+#: otypes.c:314
+msgid "Galaxy with high redshift"
+msgstr "Galaktyka z wysokim przesunięciem ku czerwieni"
+
+#: otypes.c:315
+msgid "Absorption Line system"
+msgstr "Kwazar z systemem linii absorpcyjnych"
+
+#: otypes.c:316
+msgid "Ly alpha Absorption Line system"
+msgstr "System z liniami absorpcyjnymi Ly alpha"
+
+#: otypes.c:317
+msgid "Damped Ly-alpha Absorption Line system"
+msgstr "Kwazar z widocznymi liniami absorpcyjnymi neutralnego wodoru Ly-alpha"
+
+#: otypes.c:318
+msgid "metallic Absorption Line system"
+msgstr "Układ z metalicznymi liniami absorpcyjnymi"
+
+#: otypes.c:319
+msgid "Lyman limit system"
+msgstr "Kwazar z limitem Lymana"
+
+#: otypes.c:320
+msgid "Broad Absorption Line system"
+msgstr "Kwazar z systemem szerokich linii absorpcyjnych"
+
+#: otypes.c:321
+msgid "Radio Galaxy"
+msgstr "Radiogalaktyka"
+
+#: otypes.c:322
+msgid "HII Galaxy"
+msgstr "Galaktyka z obszarami HII"
+
+#: otypes.c:323
+msgid "Low Surface Brightness Galaxy"
+msgstr "Galaktyka o niskiej jasności powierzchniowej"
+
+#: otypes.c:324
+msgid "Possible Active Galaxy Nucleus"
+msgstr "Możliwe aktywne jądro galaktyki"
+
+#: otypes.c:325
+msgid "Possible Quasar"
+msgstr "Możliwy kwazar"
+
+#: otypes.c:326
+msgid "Possible Blazar"
+msgstr "Możliwy blazar"
+
+#: otypes.c:327
+msgid "Possible BL Lac"
+msgstr "Możliwa Lacertyda"
+
+#: otypes.c:328
+msgid "Emission-line Galaxy"
+msgstr "Galaktyka z liniami emisyjnymi"
+
+#: otypes.c:329
+msgid "Starburst Galaxy"
+msgstr "Galaktyka gwiazdotwórcza"
+
+#: otypes.c:330
+msgid "Blue compact Galaxy"
+msgstr "Kompaktowa niebieska galaktyka karłowata"
+
+#: otypes.c:331
+msgid "Gravitationally Lensed Image"
+msgstr "Obraz powstały w wyniku soczewkowania grawitacyjnego"
+
+#: otypes.c:332
+msgid "Gravitationally Lensed Image of a Galaxy"
+msgstr "Soczewkowany grawitacyjnie obraz galaktyki"
+
+#: otypes.c:333
+msgid "Gravitationally Lensed Image of a Quasar"
+msgstr "Soczewkowany grawitacyjnie obraz kwazara"
+
+#: otypes.c:334
+msgid "Active Galaxy Nucleus"
+msgstr "Aktywne jądro galaktyki"
+
+#: otypes.c:335
+msgid "LINER-type Active Galaxy Nucleus"
+msgstr "Aktywne jądro galaktyki typu LINER"
+
+#: otypes.c:336
+msgid "Seyfert Galaxy"
+msgstr "Galaktyka Seyferta"
+
+#: otypes.c:337
+msgid "Seyfert 1 Galaxy"
+msgstr "Galaktyka typu Seyfert 1"
+
+#: otypes.c:338
+msgid "Seyfert 2 Galaxy"
+msgstr "Galaktyka typu Seyfert 2"
+
+#: otypes.c:339
+msgid "Blazar"
+msgstr "Blazar"
+
+#: otypes.c:340
+msgid "BL Lac - type object"
+msgstr "Lacertyda"
+
+#: otypes.c:341
+msgid "Optically Violently Variable object"
+msgstr "Kwazar szybko zmienny optycznie"
+
+#: otypes.c:342
+msgid "Quasar"
+msgstr "Kwazar"
+
+#: otypes.c:343
+msgid "Solar System Object"
+msgstr "Obiekt Układu Słonecznego"
+
+#: otypes.c:344
+msgid "Sun"
+msgstr "Słońce"
+
+#: otypes.c:345
+msgid "Planet"
+msgstr "Planeta"
+
+#: otypes.c:346
+msgid "Moon"
+msgstr "Księżyc"
+
+#: otypes.c:347
+msgid "Artificial Satellite"
+msgstr "Sztuczny satelita"
+
+#: otypes.c:348 otypes.c:355
+msgid "Minor Planet"
+msgstr "Planetoida"
+
+#: otypes.c:349
+msgid "Dwarf Planet"
+msgstr "Planeta karłowata"
+
+#: otypes.c:350
+msgid "Comet"
+msgstr "Kometa"
+
+#: otypes.c:351
+msgid "Periodic Comet"
+msgstr "Kometa okresowa"
+
+#: otypes.c:352
+msgid "Non Periodic Comet"
+msgstr "Kometa nieokresowa"
+
+#: otypes.c:353
+msgid "Unreliable (Historical) Comet"
+msgstr "Niewiarygodna (historyczna) kometa"
+
+#: otypes.c:354
+msgid "Disappeared Comet"
+msgstr "Rozpadnięta kometa"
+
+#: otypes.c:356
+msgid "Interstellar Object"
+msgstr "Obiekt międzygwiezdny"
+
+#: otypes.c:357
+msgid "Near Earth Object"
+msgstr "Obiekt bliski Ziemi (NEO)"
+
+#: otypes.c:358
+msgid "Atira Asteroid"
+msgstr "Planetoida z grupy Atiry"
+
+#: otypes.c:359
+msgid "Aten Asteroid"
+msgstr "Planetoida z grupy Atena"
+
+#: otypes.c:360
+msgid "Apollo Asteroid"
+msgstr "Planetoida z grupy Apolla"
+
+#: otypes.c:361
+msgid "Amor Asteroid"
+msgstr "Planetoida z grupy Amora"
+
+#: otypes.c:362
+msgid "Hungaria Asteroid"
+msgstr "Planetoida z grupy Hungaria"
+
+#: otypes.c:363
+msgid "Phocaea Asteroid"
+msgstr "Planetoida z grupy Phocaea"
+
+#: otypes.c:364
+msgid "Hilda Asteroid"
+msgstr "Planetoida z grupy Hilda"
+
+#: otypes.c:365
+msgid "Jupiter Trojan Asteroid"
+msgstr "Planetoida trojański"
+
+#: otypes.c:366
+msgid "Distant Object Asteroid"
+msgstr "Odległa asteroida"
+
+#: otypes.c:367
+msgid "Main Belt Asteroid"
+msgstr "Planetoida z głównego pasa planetoid"
+
+#: otypes.c:368
+msgid "Interplanetary Spacecraft"
+msgstr "Międzyplanetarny statek kosmiczny"
+
+#: otypes.c:369
+msgid "Cultural Sky Representation"
+msgstr "Kulturowa reprezentacja nieba"
+
+#: otypes.c:370
+msgid "Constellation"
+msgstr "Gwiazdozbiór"
+
+#: otypes.c:371
+msgid "Asterism"
+msgstr "Asteryzm"
