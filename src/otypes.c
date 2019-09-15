@@ -340,6 +340,8 @@ T(15,15, 3, 0, "Bla",     N_("Blazar"))
 T(15,15, 3, 1, "BLL",       N_("BL Lac - type object"))
 T(15,15, 3, 2, "OVV",       N_("Optically Violently Variable object"))
 T(15,15, 4, 0, "QSO",     N_("Quasar"))
+
+// Extra fields for Solar system objects.
 T(16, 0, 0, 0, "SSO", N_("Solar System Object"))
 T(16, 1, 0, 0, "Sun",   N_("Sun"))
 T(16, 2, 0, 0, "Pla",   N_("Planet"))
@@ -366,6 +368,8 @@ T(16, 5, 7, 0, "JTA",   N_("Jupiter Trojan Asteroid"))
 T(16, 5, 8, 0, "DOA",   N_("Distant Object Asteroid"))
 T(16, 5, 9, 0, "MBA",   N_("Main Belt Asteroid"))
 T(16, 6, 0, 0, "IPS",   N_("Interplanetary Spacecraft"))
+
+// Extra fields for Cultural Sky Representation
 T(17, 0, 0, 0, "Cul", N_("Cultural Sky Representation"))
 T(17, 1, 0, 0, "Con",   N_("Constellation"))
 T(17, 2, 0, 0, "Ast",   N_("Asterism"))
