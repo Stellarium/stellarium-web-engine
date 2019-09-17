@@ -28,11 +28,9 @@ async function loadAllData (fieldsList, jsonData) {
     await req.promise([id, geometry, properties])
   }
 
-  console.log('Test query by properties.scenario.contractual_date')
-  let res = await alasql.promise('SELECT * FROM features WHERE DATE(properties->scenario->contractual_date) > DATE("2022-04-05")')
-  console.log(res)
-
-  Vue.prototype.$smt = {fieldsList: fieldsList}
+  // console.log('Test query by properties.scenario.contractual_date')
+  // let res = await alasql.promise('SELECT * FROM features WHERE DATE(properties->scenario->contractual_date) > DATE("2022-04-05")')
+  // console.log(res)
 }
 
 export default {
@@ -47,6 +45,8 @@ export default {
     { path: '/p/smt', component: SmtLayerPage, meta: { tabName: 'Survey Tool', prio: 2 } }
   ],
   onEngineReady: function (app) {
+    app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'initializing'})
+
     // Init base view settings
     app.$stel.core.lines.equatorial.visible = true
     app.$stel.core.atmosphere.visible = false
@@ -62,8 +62,12 @@ export default {
     app.$stel.core.fov = 270
 
     let fieldsList = require('./fieldsList.json')
+    Vue.prototype.$smt = {fieldsList: fieldsList}
 
+    app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'loading'})
     let jsonData = require('./euclid-test.json')
-    loadAllData(fieldsList, jsonData)
+    loadAllData(fieldsList, jsonData).then(_ => {
+      app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'ready'})
+    })
   }
 }
