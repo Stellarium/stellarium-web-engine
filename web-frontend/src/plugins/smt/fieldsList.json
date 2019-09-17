@@ -6,8 +6,20 @@
     "widget": "tags"
   },
   {
+    "id": "properties.properties.SurveyId",
+    "name": "Survey Id",
+    "type": "string",
+    "widget": "tags"
+  },
+  {
     "id": "properties.scenario.contractual_date",
     "name": "Contractual Date",
+    "type": "date",
+    "widget": "date_range"
+  },
+  {
+    "id": "properties.scenario.VIS_NIR_SIR",
+    "name": "VIS_NIR_SIR",
     "type": "date",
     "widget": "date_range"
   }
