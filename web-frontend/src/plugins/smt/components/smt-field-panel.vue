@@ -13,6 +13,7 @@
   </div>
   <div v-if="isDateRange">
     <GChart type="ColumnChart" :data="data" :options="dateRangeChartOptions"/>
+    <v-slider style="margin-top: -50px; padding-left: 7%; padding-right: 7%"></v-slider>
   </div>
 </v-flex>
 
@@ -31,7 +32,7 @@ export default {
         },
         legend: {position: 'none'},
         backgroundColor: '#424242',
-        chartArea: {left: '5%', top: '5%', width: '90%', height: '75%'},
+        chartArea: {left: '5%', top: '5%', width: '90%', height: '65%'},
         hAxis: {
           textStyle: {
             color: 'white'
