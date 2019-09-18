@@ -6,6 +6,9 @@ import SmtLayerPage from './components/smt-layer-page.vue'
 import storeModule from './store'
 import alasql from 'alasql'
 import Vue from 'vue'
+import VueGoogleCharts from 'vue-google-charts'
+
+Vue.use(VueGoogleCharts)
 
 async function loadAllData (fieldsList, jsonData) {
   console.log('Loading ' + jsonData.features.length + ' features')

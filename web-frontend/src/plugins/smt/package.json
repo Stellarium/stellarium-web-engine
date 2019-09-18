@@ -5,6 +5,7 @@
   "author": "Fabien Chereau <fabien@stellarium-labs.fr>",
   "private": true,
   "dependencies": {
-    "alasql": "^0.4.11"
+    "alasql": "^0.4.11",
+    "vue-google-charts": "^0.3.2"
   }
 }

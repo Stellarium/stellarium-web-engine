@@ -91,9 +91,14 @@ export default {
             let start = new Date(res[0].dmin)
             let step = (res[0].dmax - res[0].dmin) / 10 + 0.00000001
             alasql.promise('SELECT COUNT(*) AS c FROM features GROUP BY FLOOR((DATE(' + fid + ') - ?) / ?)', [start, step]).then(res2 => {
-              let h = res2.map(c => c['c'])
+              let data = [['Date', 'Count']]
+              for (let j in res2) {
+                let d = new Date()
+                d.setTime(start.getTime() + step * j)
+                data.push([d, res2[j].c])
+              }
               Vue.set(that.results.fields[i], 'status', 'ok')
-              Vue.set(that.results.fields[i], 'data', { labels: [], values: h })
+              Vue.set(that.results.fields[i], 'data', data)
             })
           })
         }
