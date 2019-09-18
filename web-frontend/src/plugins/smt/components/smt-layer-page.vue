@@ -19,10 +19,8 @@
           </v-card-text>
         </v-card>
         <v-layout column>
-          <v-flex xs12 v-for="(field,i) in $smt.fieldsList" :key="field.id">
-            {{ field.name }}
-            {{ results.fields[i] }}
-          </v-flex>
+          <smt-field-panel v-for="(field,i) in $smt.fieldsList" :key="field.id" :fieldDescription="field" :fieldResults="results.fields[i]">
+          </smt-field-panel>
         </v-layout>
       </v-container>
     </div>
@@ -31,7 +29,9 @@
 
 <script>
 import SmtPanelRootToolbar from './smt-panel-root-toolbar.vue'
+import SmtFieldPanel from './smt-field-panel.vue'
 import alasql from 'alasql'
+import Vue from 'vue'
 
 export default {
   data: function () {
@@ -67,7 +67,6 @@ export default {
           ac[value] = 1
           return ac
         } else if (stage === 2) {
-          console.log(value)
           accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
           return accumulator
         } else if (stage === 3) {
@@ -75,14 +74,29 @@ export default {
         }
       }
 
+      that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': [] } })
       for (let i in that.$smt.fieldsList) {
         let field = that.$smt.fieldsList[i]
         let fid = that.fId2AlaSql(field.id)
-        alasql.promise('SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features').then(res => {
-          console.log(fid + ': ' + i + ' ')
-          console.log(res)
-          that.results.fields[i] = res[0].tags
-        })
+        if (field.widget === 'tags') {
+          alasql.promise('SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features').then(res => {
+            that.results.fields[i] = {
+              status: 'ok',
+              data: res[0].tags
+            }
+          })
+        }
+        if (field.widget === 'date_range') {
+          alasql.promise('SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features').then(res => {
+            let start = new Date(res[0].dmin)
+            let step = (res[0].dmax - res[0].dmin) / 10 + 0.00000001
+            alasql.promise('SELECT COUNT(*) AS c FROM features GROUP BY FLOOR((DATE(' + fid + ') - ?) / ?)', [start, step]).then(res2 => {
+              let h = res2.map(c => c['c'])
+              Vue.set(that.results.fields[i], 'status', 'ok')
+              Vue.set(that.results.fields[i], 'data', { labels: [], values: h })
+            })
+          })
+        }
       }
     }
   },
@@ -96,7 +110,7 @@ export default {
   mounted: function () {
     this.refreshObservationGroups()
   },
-  components: { SmtPanelRootToolbar }
+  components: { SmtPanelRootToolbar, SmtFieldPanel }
 }
 </script>
 
