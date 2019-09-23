@@ -7,7 +7,7 @@
 <v-flex xs12>
   <h3 class="pt-3">{{ fieldDescription.name }}</h3>
   <div v-if="isTags">
-    <v-chip small class="white--text" color="secondary" v-for="(count, name) in data" :key="name">
+    <v-chip small class="white--text" color="secondary" v-for="(count, name) in data" :key="name" @click="chipClicked(name)">
       {{ name }}&nbsp;<span class="primary--text"> ({{ count }})</span>
     </v-chip>
   </div>
@@ -56,6 +56,10 @@ export default {
   },
   props: ['fieldDescription', 'fieldResults'],
   methods: {
+    chipClicked: function (name) {
+      let constraint = {'field': this.fieldDescription, 'operation': 'STRING_EQUAL', 'expression': name, 'negate': false}
+      this.$emit('add-constraint', constraint)
+    }
   },
   computed: {
     isTags: function () {

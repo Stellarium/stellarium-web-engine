@@ -15,11 +15,16 @@
             <v-layout column justify-space-between>
               <p>Count: {{ results.summary.count }}</p>
               <p>Nb constraints: {{ query.constraints.length }}</p>
+              <div>
+                <v-chip small close class="white--text" color="primary" v-for="(constraint, i) in query.constraints" :key="i" @click:close="constraintClosed">
+                  {{ constraint.field.name }} = {{ constraint.expression }}&nbsp;
+                </v-chip>
+              </div>
             </v-layout>
           </v-card-text>
         </v-card>
         <v-layout column>
-          <smt-field-panel v-for="(field,i) in $smt.fieldsList" :key="field.id" :fieldDescription="field" :fieldResults="results.fields[i]">
+          <smt-field-panel v-for="(field,i) in $smt.fieldsList" :key="field.id" :fieldDescription="field" :fieldResults="results.fields[i]" v-on:add-constraint="addConstraint">
           </smt-field-panel>
         </v-layout>
       </v-container>
@@ -57,10 +62,7 @@ export default {
     refreshObservationGroups: function () {
       let that = this
 
-      alasql.promise('SELECT COUNT(*) AS total FROM features').then(res => {
-        that.results.summary.count = res[0].total
-      })
-
+      // Add a custom aggregation operator for the chip tags
       alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
         if (stage === 1) {
           let ac = {}
@@ -74,12 +76,30 @@ export default {
         }
       }
 
+      let whereClause = ''
+      if (this.query.constraints && this.query.constraints.length) {
+        whereClause = ' WHERE '
+        for (let i in that.query.constraints) {
+          let c = that.query.constraints[i]
+          if (c.operation === 'STRING_EQUAL') {
+            whereClause += that.fId2AlaSql(c.field.id) + ' = "' + c.expression + '"'
+          }
+          if (i < that.query.constraints.length - 1) {
+            whereClause += ' AND '
+          }
+        }
+      }
+
+      alasql.promise('SELECT COUNT(*) AS total FROM features' + whereClause).then(res => {
+        that.results.summary.count = res[0].total
+      })
+
       that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': [] } })
       for (let i in that.$smt.fieldsList) {
         let field = that.$smt.fieldsList[i]
         let fid = that.fId2AlaSql(field.id)
         if (field.widget === 'tags') {
-          alasql.promise('SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features').then(res => {
+          alasql.promise('SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + whereClause).then(res => {
             that.results.fields[i] = {
               status: 'ok',
               data: res[0].tags
@@ -87,10 +107,10 @@ export default {
           })
         }
         if (field.widget === 'date_range') {
-          alasql.promise('SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features').then(res => {
+          alasql.promise('SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features' + whereClause).then(res => {
             let start = new Date(res[0].dmin)
             let step = (res[0].dmax - res[0].dmin) / 10 + 0.00000001
-            alasql.promise('SELECT COUNT(*) AS c FROM features GROUP BY FLOOR((DATE(' + fid + ') - ?) / ?)', [start, step]).then(res2 => {
+            alasql.promise('SELECT COUNT(*) AS c FROM features' + whereClause + ' GROUP BY FLOOR((DATE(' + fid + ') - ?) / ?)', [start, step]).then(res2 => {
               let data = [['Date', 'Count']]
               for (let j in res2) {
                 let d = new Date()
@@ -103,6 +123,17 @@ export default {
           })
         }
       }
+    },
+    addConstraint: function (c) {
+      this.query.constraints.push(c)
+      this.refreshObservationGroups()
+    },
+    constraintClicked: function (i) {
+      console.log('constraintClicked: ' + i)
+    },
+    constraintClosed: function (i) {
+      console.log('constraintClosed: ' + i)
+      this.query.constraints.splice(i, 1)
     }
   },
   watch: {
