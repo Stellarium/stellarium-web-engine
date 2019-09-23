@@ -68,7 +68,7 @@ export default {
     Vue.prototype.$smt = {fieldsList: fieldsList}
 
     app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'loading'})
-    let jsonData = require('./euclid-test.json')
+    let jsonData = require('./data/euclid-test.json')
     loadAllData(fieldsList, jsonData).then(_ => {
       app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'ready'})
     })
