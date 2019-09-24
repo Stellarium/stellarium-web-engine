@@ -39,40 +39,40 @@ const swh = {
         var baseUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
 
         // Bundled stars (just the very bright ones)
-        lstel.addDataSource({url: 'asset://stars', type: 'hips'})
+        lstel.addDataSource({ url: 'asset://stars', type: 'hips' })
         // Gaia stars tiles
-        lstel.addDataSource({url: baseUrl + 'surveys/gaia/v1?v=2019-02-11T05:34Z', type: 'hips'})
+        lstel.addDataSource({ url: baseUrl + 'surveys/gaia/v1?v=2019-02-11T05:34Z', type: 'hips' })
 
-        lstel.addDataSource({url: baseUrl + 'skycultures/v1/western', type: 'skyculture'})
-        lstel.addDataSource({url: baseUrl + 'surveys/dso/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'landscapes/v1/guereins', type: 'landscape'})
+        lstel.addDataSource({ url: baseUrl + 'skycultures/v1/western', type: 'skyculture' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/dso/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'landscapes/v1/guereins', type: 'landscape' })
 
         // MPC data
-        lstel.addDataSource({url: 'asset://mpcorb.dat', type: 'mpc_asteroids'})
-        lstel.addDataSource({url: baseUrl + 'mpc/v1/CometEls.txt', type: 'mpc_comets'})
+        lstel.addDataSource({ url: 'asset://mpcorb.dat', type: 'mpc_asteroids' })
+        lstel.addDataSource({ url: baseUrl + 'mpc/v1/CometEls.txt', type: 'mpc_comets' })
         // Artificial Satellites
-        lstel.addDataSource({url: baseUrl + 'skysources/v1/tle_satellite.jsonl.gz', type: 'jsonl/sat'})
+        lstel.addDataSource({ url: baseUrl + 'skysources/v1/tle_satellite.jsonl.gz', type: 'jsonl/sat' })
 
         // Background images
-        lstel.addDataSource({url: baseUrl + 'surveys/dss/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/milkyway/v1', type: 'hips'})
+        lstel.addDataSource({ url: baseUrl + 'surveys/dss/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/milkyway/v1', type: 'hips' })
 
         // All planetary images
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/callisto/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/default/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/europa/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/ganymede/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/io/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/jupiter/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/mars/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/mercury/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/moon/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/moon-normal/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/neptune/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/saturn/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/sun/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/uranus/v1', type: 'hips'})
-        lstel.addDataSource({url: baseUrl + 'surveys/sso/venus/v1', type: 'hips'})
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/callisto/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/default/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/europa/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/ganymede/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/io/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/jupiter/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/mars/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/mercury/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/moon/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/moon-normal/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/neptune/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/saturn/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/sun/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/uranus/v1', type: 'hips' })
+        lstel.addDataSource({ url: baseUrl + 'surveys/sso/venus/v1', type: 'hips' })
 
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
@@ -81,9 +81,9 @@ const swh = {
           store.commit('replaceStelWebEngine', tree)
         })
         Vue.prototype.$stel = lstel
-        Vue.prototype.$selectionLayer = lstel.createLayer({id: 'slayer', z: 50, visible: true})
-        Vue.prototype.$observingLayer = lstel.createLayer({id: 'obslayer', z: 40, visible: true})
-        Vue.prototype.$skyHintsLayer = lstel.createLayer({id: 'skyhintslayer', z: 38, visible: true})
+        Vue.prototype.$selectionLayer = lstel.createLayer({ id: 'slayer', z: 50, visible: true })
+        Vue.prototype.$observingLayer = lstel.createLayer({ id: 'obslayer', z: 40, visible: true })
+        Vue.prototype.$skyHintsLayer = lstel.createLayer({ id: 'skyhintslayer', z: 38, visible: true })
         callBackOnDone()
       }
     })
@@ -473,7 +473,7 @@ const swh = {
     if (!title) return Promise.reject(new Error("Can't find wikipedia compatible name"))
 
     return fetch('https://en.wikipedia.org/w/api.php?action=query&redirects&prop=extracts&exintro&exlimit=1&exchars=300&format=json&origin=*&titles=' + title,
-      {headers: { 'Content-Type': 'application/json; charset=UTF-8' }})
+      { headers: { 'Content-Type': 'application/json; charset=UTF-8' } })
       .then(response => {
         return response.json()
       })
@@ -536,7 +536,7 @@ const swh = {
       street_address: ''
     }
     return fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + pos.lat + '&lon=' + pos.lng,
-      {headers: { 'Content-Type': 'application/json; charset=UTF-8' }}).then(response => {
+      { headers: { 'Content-Type': 'application/json; charset=UTF-8' } }).then(response => {
       if (response.ok) {
         return response.json().then(res => {
           let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
