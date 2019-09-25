@@ -22,10 +22,10 @@
             </v-layout>
           </v-flex>
         <template v-for="obj in objs">
-          <v-flex xs2 :key="obj.v">{{cleanName(obj)}}</v-flex>
-          <v-flex xs1 :key="obj.v">{{formatTime(obj.computeVisibility()[0].rise)}}</v-flex>
-          <v-flex xs1 :key="obj.v">{{formatTime(obj.computeVisibility()[0].set)}}</v-flex>
-          <v-flex xs8 :key="obj.v">
+          <v-flex xs2>{{cleanName(obj)}}</v-flex>
+          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].rise)}}</v-flex>
+          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].set)}}</v-flex>
+          <v-flex xs8>
             <div :style='sunBackgroundStr'>&nbsp;
               <div v-html="planetBackgroundStr(obj)"></div>
             </div>
