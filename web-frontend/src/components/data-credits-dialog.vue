@@ -56,7 +56,7 @@
       <p>All other graphics by <a href="https://noctua-software.com" target="_blank">Noctua Software</a></p>
     </v-card-text>
     <v-card-actions>
-      <v-spacer></v-spacer><v-btn class="blue--text darken-1" @click.native="$store.state.showDataCreditsDialog = false">Close</v-btn>
+      <v-spacer></v-spacer><v-btn text class="blue--text darken-1" @click.native="$store.state.showDataCreditsDialog = false">Close</v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>
