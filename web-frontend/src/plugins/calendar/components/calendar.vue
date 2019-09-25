@@ -17,11 +17,10 @@
             <h3 class="headline mb-0">Calendar of events</h3>
           </v-card-title>
           <v-card-text>
-            <v-layout row justify-space-between>
-              <v-select :items="months" v-model="month"></v-select>
-              &nbsp; &nbsp;
-              <v-text-field :value="year" type="Number"></v-text-field>
-            </v-layout>
+            <v-row justify="space-between">
+              <v-col><v-select :items="months" v-model="month"></v-select></v-col>
+              <v-col><v-text-field :value="year" type="Number"></v-text-field></v-col>
+            </v-row>
           </v-card-text>
         </v-card>
         <v-list two-line subheader style="margin-top: 10px">
