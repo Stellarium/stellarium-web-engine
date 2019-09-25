@@ -43,7 +43,6 @@
   }
 </style>
 
-
 <script>
 export default {
   name: 'bottom-button',

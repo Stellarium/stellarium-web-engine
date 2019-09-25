@@ -7,7 +7,7 @@
 // repository.
 
 <template>
-<v-dialog lazy max-width='600' v-model="$store.state.showPlanetsVisibilityDialog">
+<v-dialog max-width='600' v-model="$store.state.showPlanetsVisibilityDialog">
   <v-card v-if="$store.state.showPlanetsVisibilityDialog" transparent class="secondary white--text">
     <v-card-title><div class="headline">Planets Visibility</div></v-card-title>
     <v-card-text>Night from {{ startDate.format('MMMM Do') }} to {{ endDate.format('MMMM Do') }}</v-card-text>
@@ -22,10 +22,10 @@
             </v-layout>
           </v-flex>
         <template v-for="obj in objs">
-          <v-flex xs2>{{cleanName(obj)}}</v-flex>
-          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].rise)}}</v-flex>
-          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].set)}}</v-flex>
-          <v-flex xs8>
+          <v-flex xs2 :key="obj.v">{{cleanName(obj)}}</v-flex>
+          <v-flex xs1 :key="obj.v">{{formatTime(obj.computeVisibility()[0].rise)}}</v-flex>
+          <v-flex xs1 :key="obj.v">{{formatTime(obj.computeVisibility()[0].set)}}</v-flex>
+          <v-flex xs8 :key="obj.v">
             <div :style='sunBackgroundStr'>&nbsp;
               <div v-html="planetBackgroundStr(obj)"></div>
             </div>
@@ -35,7 +35,7 @@
       </div>
     </v-card-text>
     <v-card-actions>
-      <v-spacer></v-spacer><v-btn class="blue--text darken-1" flat @click.native="$store.state.showPlanetsVisibilityDialog = false">Close</v-btn>
+      <v-spacer></v-spacer><v-btn class="blue--text darken-1" text @click.native="$store.state.showPlanetsVisibilityDialog = false">Close</v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>

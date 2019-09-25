@@ -7,7 +7,7 @@
 // repository.
 
 <template>
-<v-dialog lazy max-width='600' v-model="$store.state.showViewSettingsDialog">
+<v-dialog max-width='600' v-model="$store.state.showViewSettingsDialog">
 <v-card v-if="$store.state.showViewSettingsDialog" class="secondary white--text">
   <v-card-title><div class="headline">View settings</div></v-card-title>
   <v-card-text>
@@ -19,7 +19,7 @@
     <v-checkbox label='Orange night mode (default is red)' v-model="orangeOn"></v-checkbox>
   </v-card-text>
   <v-card-actions>
-    <v-spacer></v-spacer><v-btn class="blue--text darken-1" flat @click.native="$store.state.showViewSettingsDialog = false">Close</v-btn>
+    <v-spacer></v-spacer><v-btn class="blue--text darken-1" text @click.native="$store.state.showViewSettingsDialog = false">Close</v-btn>
   </v-card-actions>
 </v-card>
 </v-dialog>

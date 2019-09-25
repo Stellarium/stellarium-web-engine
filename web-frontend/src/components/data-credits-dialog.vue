@@ -7,7 +7,7 @@
 // repository.
 
 <template>
-<v-dialog lazy scrollable max-width='600' v-model="$store.state.showDataCreditsDialog">
+<v-dialog scrollable max-width='600' v-model="$store.state.showDataCreditsDialog">
   <v-card v-if="$store.state.showDataCreditsDialog">
     <v-card-title><div class="headline">Data Credits</div></v-card-title>
     <v-card-text style="height: 600px;">
@@ -56,7 +56,7 @@
       <p>All other graphics by <a href="https://noctua-software.com" target="_blank">Noctua Software</a></p>
     </v-card-text>
     <v-card-actions>
-      <v-spacer></v-spacer><v-btn class="blue--text darken-1" flat @click.native="$store.state.showDataCreditsDialog = false">Close</v-btn>
+      <v-spacer></v-spacer><v-btn class="blue--text darken-1" @click.native="$store.state.showDataCreditsDialog = false">Close</v-btn>
     </v-card-actions>
   </v-card>
 </v-dialog>

@@ -165,10 +165,10 @@ const swh = {
     }
     for (let i in skySourceTypes) {
       if (skySourceTypes[i] in iconForType) {
-        return '/static/images/svg/target_types/' + iconForType[skySourceTypes[i]] + '.svg'
+        return '/images/svg/target_types/' + iconForType[skySourceTypes[i]] + '.svg'
       }
     }
-    return '/static/images/svg/target_types/unknown.svg'
+    return '/images/svg/target_types/unknown.svg'
   },
 
   iconForSkySource: function (skySource) {
@@ -332,7 +332,7 @@ const swh = {
   },
 
   lookupSkySourceByName: function (name) {
-    return fetch(process.env.NOCTUASKY_API_SERVER + '/api/v1/skysources/name/' + name)
+    return fetch(process.env.VUE_APP_NOCTUASKY_API_SERVER + '/api/v1/skysources/name/' + name)
       .then(function (response) {
         if (!response.ok) {
           throw response.body
@@ -347,7 +347,7 @@ const swh = {
     if (!limit) {
       limit = 10
     }
-    return fetch(process.env.NOCTUASKY_API_SERVER + '/api/v1/skysources/?q=' + str + '&limit=' + limit)
+    return fetch(process.env.VUE_APP_NOCTUASKY_API_SERVER + '/api/v1/skysources/?q=' + str + '&limit=' + limit)
       .then(function (response) {
         if (!response.ok) {
           throw response.body
@@ -483,7 +483,7 @@ const swh = {
     console.log('Getting geolocalization')
 
     // First get geoIP location, to use as fallback
-    return Vue.jsonp('https://freegeoip.stellarium.org/json/', {callbackName: 'callback'})
+    return Vue.jsonp('https://freegeoip.stellarium.org/json/')
       .then(location => {
         var pos = {
           lat: location.latitude,

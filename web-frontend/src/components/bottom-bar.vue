@@ -65,16 +65,17 @@
     <v-spacer></v-spacer>
 
     <v-menu v-if="$store.state.showTimeButtons" :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left>
-      <v-btn large class="tmenubt" color="secondary" slot="activator">
-        <v-icon class="hidden-sm-and-up">access_time</v-icon>
-        <span class="hidden-xs-only">
-          <div class="body-2">{{ time }}</div>
-          <div class="caption">{{ date }}</div>
-        </span>
-      </v-btn>
+      <template v-slot:activator="{ on }">
+        <v-btn large class="tmenubt" color="secondary" v-on="on">
+          <v-icon class="hidden-sm-and-up">access_time</v-icon>
+          <span class="hidden-xs-only">
+            <div class="body-2">{{ time }}</div>
+            <div class="caption">{{ date }}</div>
+          </span>
+        </v-btn>
+      </template>
       <date-time-picker v-model="pickerDate" :location="$store.state.currentLocation"></date-time-picker>
     </v-menu>
-
 
   </div>
 </template>

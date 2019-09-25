@@ -10,17 +10,17 @@
   <div style="background-color: #424242">
     <v-layout row justify-space-around>
       <v-flex xs4 v-if="doShowMyLocation">
-        <v-list two-line avatar subheader>
+        <v-list two-line subheader>
           <v-subheader>My Locations</v-subheader>
-          <v-list-tile avatar href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
-            <v-list-tile-avatar>
+          <v-list-item href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
+            <v-list-item-avatar>
               <v-icon>location_on</v-icon>
-            </v-list-tile-avatar>
-            <v-list-tile-content>
-              <v-list-tile-title>{{ item.short_name }}</v-list-tile-title>
-              <v-list-tile-sub-title>{{ item.country }}</v-list-tile-sub-title>
-            </v-list-tile-content>
-          </v-list-tile>
+            </v-list-item-avatar>
+            <v-list-item-content>
+              <v-list-item-title>{{ item.short_name }}</v-list-item-title>
+              <v-list-item-subtitle>{{ item.country }}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-flex>
       <v-flex :xs8="doShowMyLocation" :xs12="!doShowMyLocation" >
@@ -39,7 +39,7 @@
               </v-layout>
             </v-container>
           </v-card-title>
-          <v-card-media height="375px">
+          <div style="height: 375px">
             <v-toolbar class="white" floating dense style="position: absolute; z-index: 10000; bottom: 16px; right: 0px;">
               <v-btn icon class="black--text" @click.native.stop="centerOnRealPosition()">
                 <v-icon>my_location</v-icon>
@@ -67,9 +67,8 @@
                   fillOpacity: 0.08}"></l-circle>
               <l-marker v-if="pickLocationMode && pickLocation" :lat-lng="[ pickLocation.lat, pickLocation.lng ]"
                 :draggable="true" @dragend="dragEnd"><l-tooltip><div class="black--text">Drag to adjust</div></l-tooltip></l-marker>
-
             </l-map>
-          </v-card-media>
+          </div>
         </v-card>
       </v-flex>
     </v-layout>
@@ -79,7 +78,7 @@
 <script>
 import swh from '@/assets/sw_helpers.js'
 import { LMap, LTileLayer, LMarker, LCircle, LTooltip, LControlZoom } from 'vue2-leaflet'
-import { L } from 'leaflet-control-geocoder'
+import { L } from 'leaflet-control-geocoder/dist/Control.Geocoder.js'
 
 export default {
   data: function () {
@@ -122,7 +121,7 @@ export default {
       var geocoder = new L.Control.Geocoder({
         defaultMarkGeocode: false, position: 'topleft'
       }).on('markgeocode', function (e) {
-        var pos = {lat: e.geocode.center.lat, lng: e.geocode.center.lng}
+        var pos = { lat: e.geocode.center.lat, lng: e.geocode.center.lng }
         that.mapCenter = [ pos.lat, pos.lng ]
         pos.accuracy = 100
         var loc = {
@@ -183,7 +182,7 @@ export default {
     },
     dragEnd: function (event) {
       var that = this
-      var pos = {lat: event.target._latlng.lat, lng: event.target._latlng.lng, accuracy: 0}
+      var pos = { lat: event.target._latlng.lat, lng: event.target._latlng.lng, accuracy: 0 }
       swh.geoCodePosition(pos).then((p) => { that.pickLocation = p; that.setPickLocationMode() })
     }
   },

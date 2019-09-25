@@ -9,7 +9,7 @@
 <template>
   <div id="toolbar-image">
     <v-toolbar class="transparent" dense dark>
-      <v-toolbar-side-icon @click.native.stop="toggleNavigationDrawer" />
+      <v-app-bar-nav-icon @click.native.stop="toggleNavigationDrawer"></v-app-bar-nav-icon>
       <img class="tbtitle hidden-xs-only" id="stellarium-web-toolbar-logo" src="@/assets/images/logo.svg" width="30" height="30" alt="Stellarium Web Logo"/>
       <span class="tbtitle hidden-sm-and-down">Stellarium<sup>Web</sup></span>
       <v-spacer></v-spacer>

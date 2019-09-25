@@ -9,29 +9,32 @@
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
-import Vuetify from 'vuetify'
-import 'vuetify/dist/vuetify.css'
+import App from './App.vue'
+import vuetify from './plugins/vuetify'
+import 'roboto-fontface/css/roboto/roboto-fontface.css'
+import '@mdi/font/css/materialdesignicons.css'
+import store from './store'
 import Router from 'vue-router'
 import fullscreen from 'vue-fullscreen'
 import VueJsonp from 'vue-jsonp'
 import VueCookie from 'vue-cookie'
-import { L } from 'vue2-leaflet'
+
+import { Icon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css'
 
-import App from './App'
-import store from './store'
+Vue.config.productionTip = false
 
 // this part resolve an issue where the markers would not appear
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
+delete Icon.Default.prototype._getIconUrl
+
+Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png')
 })
 
 Vue.use(VueCookie)
-Vue.use(Vuetify)
 Vue.use(fullscreen)
 Vue.use(VueJsonp)
 
@@ -67,7 +70,7 @@ let routes = [
 // Routes exposed by plugins
 let defaultObservingRoute = {
   path: '/p/calendar',
-  meta: {prio: 2}
+  meta: { prio: 2 }
 }
 for (let i in Vue.SWPlugins) {
   let plugin = Vue.SWPlugins[i]
@@ -90,6 +93,7 @@ for (let i in Vue.SWPlugins) {
 routes[0].children.push({ path: '/p', redirect: defaultObservingRoute.path })
 var router = new Router({
   mode: 'history',
+  base: process.env.BASE_URL,
   routes: routes
 })
 
@@ -100,8 +104,7 @@ Vue.prototype.$stellariumWebPlugins = function () {
 
 /* eslint-disable no-new */
 new Vue({
-  el: '#app',
   router,
   store,
-  template: '<router-view></router-view>'
-})
+  vuetify
+}).$mount('#app')
