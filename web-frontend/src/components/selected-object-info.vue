@@ -14,25 +14,27 @@
         <img :src="icon" height="48" width="48" align="left" style="margin-top: 3px; margin-right: 10px"/>
         <div style="overflow: hidden; text-overflow: ellipsis;">
           <div class="headline">{{ title }}</div>
-          <span class="grey--text">{{ type }}</span>
+          <div class="grey--text body-2">{{ type }}</div>
         </div>
       </div>
     </v-card-title>
     <v-card-text style="padding-bottom: 5px;">
-      <v-layout v-if="otherNames.length > 1" row wrap style="width: 100%;">
-        <v-flex xs4 style="margin-top: -2px; color: #dddddd">Also known as</v-flex> <span class="caption" text-color="white" v-for="(mname, index) in otherNames" v-if="index > 0 && index < 8" :key="mname" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
-        <v-btn small icon class="grey--text" v-if="otherNames.length > 8" v-on:click.native="showMinorNames = !showMinorNames" style="margin-top: -5px; margin-bottom: -5px;"><v-icon>mdi-dots-horizontal</v-icon></v-btn>
-        <span class="caption" text-color="white" v-for="(mname, index) in otherNames" :key="mname" v-if="showMinorNames && index >= 8" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
-      </v-layout>
+      <v-row v-if="otherNames.length > 1" style="width: 100%;">
+        <v-col cols="12">
+          <span style="position: absolute;">Also known as</span><span style="padding-left: 33.3333%">&nbsp;</span><span class="caption white--text" v-for="(mname, index) in otherNames" v-if="index > 0 && index < 8" :key="mname" style="margin-right: 15px; font-weight: 500;">{{ mname }}</span>
+          <v-btn small icon class="grey--text" v-if="otherNames.length > 8" v-on:click.native="showMinorNames = !showMinorNames" style="margin-top: -5px; margin-bottom: -5px;"><v-icon>mdi-dots-horizontal</v-icon></v-btn>
+          <span class="caption white--text" v-for="(mname, index) in otherNames" :key="mname" v-if="showMinorNames && index >= 8" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
+        </v-col>
+      </v-row>
     </v-card-text>
     <v-card-text>
-      <v-layout row wrap style="width: 100%">
-        <template v-for="item in items">
-          <v-flex xs4 style="color: #dddddd">{{ item.key }}</v-flex>
-          <v-flex xs8 style="font-weight: 500"><span v-html="item.value"></span></v-flex>
-        </template>
-      </v-layout>
-      <div style="margin-top: 15px" v-html="wikipediaSummary"></div>
+      <template v-for="item in items">
+        <v-row style="width: 100%" :key="item.key" no-gutters>
+          <v-col cols="4" style="color: #dddddd">{{ item.key }}</v-col>
+          <v-col cols="8" style="font-weight: 500" class="white--text"><span v-html="item.value"></span></v-col>
+        </v-row>
+      </template>
+      <div style="margin-top: 15px" class="white--text" v-html="wikipediaSummary"></div>
     </v-card-text>
     <v-card-actions style="margin-top: -25px">
       <v-spacer/>
@@ -48,10 +50,10 @@
           </div>
         </v-card-title>
         <v-card-text style="width:100%;">
-          <v-layout row wrap style="width: 100%">
+          <v-row style="width: 100%">
             <v-text-field id="link_inputid" v-model="shareLink" label="Link" solo readonly></v-text-field>
             <v-btn @click.native.stop="copyLink">Copy</v-btn>
-          </v-layout>
+          </v-row>
         </v-card-text>
       </v-card>
     </v-dialog>
