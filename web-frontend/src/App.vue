@@ -308,4 +308,11 @@ html, body, #app {
   padding-right: 400px;
 }
 
+.v-btn {
+  margin-left: 8px;
+  margin-right: 8px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
 </style>
