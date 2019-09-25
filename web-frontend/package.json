@@ -34,6 +34,7 @@
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
+    "eslint-plugin-vuetify": "^1.0.0-beta.3",
     "sass": "^1.17.4",
     "sass-loader": "^7.1.0",
     "vue-cli-plugin-vuetify": "^0.6.3",
@@ -49,8 +50,17 @@
       "plugin:vue/essential",
       "@vue/standard"
     ],
+    "plugins": [
+      "vuetify"
+    ],
     "rules": {
-      "vue/no-parsing-error": [2, { "x-invalid-end-tag": false }]
+      "vuetify/no-deprecated-classes": "error",
+      "vue/no-parsing-error": [
+        2,
+        {
+          "x-invalid-end-tag": false
+        }
+      ]
     },
     "parserOptions": {
       "parser": "babel-eslint"
