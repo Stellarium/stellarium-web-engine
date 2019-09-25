@@ -56,16 +56,16 @@
       </v-card>
     </v-dialog>
     <div v-if="$store.state.showSelectedInfoButtons" style="position: absolute; right: 0px; bottom: -50px;">
-      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @click.native="showShareLinkDialog = !showShareLinkDialog">
+      <v-btn v-if="!showPointToButton" fab small color="transparent" @click.native="showShareLinkDialog = !showShareLinkDialog">
         <v-icon>mdi-link</v-icon>
       </v-btn>
-      <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
+      <v-btn v-if="showPointToButton" fab small color="transparent" v-on:click.native="lockToSelection()">
         <img src="@/assets/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
-      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomOutButtonClicked()">
+      <v-btn v-if="!showPointToButton" fab small color="transparent" @mousedown="zoomOutButtonClicked()">
         <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="@/assets/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
-      <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomInButtonClicked()">
+      <v-btn v-if="!showPointToButton" fab small color="transparent" @mousedown="zoomInButtonClicked()">
         <img :class="{bt_disabled: !zoomInButtonEnabled}" src="@/assets/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
     </div>
