@@ -13,25 +13,27 @@
     <v-card-text>Night from {{ startDate.format('MMMM Do') }} to {{ endDate.format('MMMM Do') }}</v-card-text>
     <v-card-text>
       <div>
-        <v-layout row wrap>
-          <v-flex xs1 offset-xs2><span>Rise</span></v-flex>
-          <v-flex xs1><span>Set</span></v-flex>
-          <v-flex xs8>
-            <v-layout row justify-space-between>
+        <v-row no-gutters>
+          <v-col cols="1" offset="2"><span>Rise</span></v-col>
+          <v-col cols="1"><span>Set</span></v-col>
+          <v-col cols="8">
+            <v-row justify="space-between">
               <span>12:00</span><span>18:00</span><span>00:00</span><span>06:00</span><span>12:00</span>
-            </v-layout>
-          </v-flex>
+            </v-row>
+          </v-col>
+        </v-row>
         <template v-for="obj in objs">
-          <v-flex xs2>{{cleanName(obj)}}</v-flex>
-          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].rise)}}</v-flex>
-          <v-flex xs1>{{formatTime(obj.computeVisibility()[0].set)}}</v-flex>
-          <v-flex xs8>
+        <v-row no-gutters :key="obj.v">
+          <v-col cols="2">{{cleanName(obj)}}</v-col>
+          <v-col cols="1">{{formatTime(obj.computeVisibility()[0].rise)}}</v-col>
+          <v-col cols="1">{{formatTime(obj.computeVisibility()[0].set)}}</v-col>
+          <v-col cols="8">
             <div :style='sunBackgroundStr'>&nbsp;
               <div v-html="planetBackgroundStr(obj)"></div>
             </div>
-          </v-flex>
+          </v-col>
+        </v-row>
         </template>
-        </v-layout>
       </div>
     </v-card-text>
     <v-card-actions>
