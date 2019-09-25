@@ -60,13 +60,13 @@
         <v-icon>link</v-icon>
       </v-btn>
       <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
-        <img src="/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
+        <img src="@/assets/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
       <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomOutButtonClicked()">
-        <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
+        <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="@/assets/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
       <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomInButtonClicked()">
-        <img :class="{bt_disabled: !zoomInButtonEnabled}" src="/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
+        <img :class="{bt_disabled: !zoomInButtonEnabled}" src="@/assets/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
     </div>
     <v-snackbar bottom left :timeout="2000" v-model="copied" color="secondary" >
