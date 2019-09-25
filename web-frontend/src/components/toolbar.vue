@@ -17,7 +17,7 @@
       <v-spacer></v-spacer>
       <div v-if="$store.state.showFPS" class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FPS {{ $store.state.stel ? $store.state.stel.fps.toFixed(1) : '?' }}</div>
       <div class="subheader grey--text hidden-sm-and-down" style="user-select: none;">FOV {{ fov }}</div>
-      <v-btn class="transparent" v-if="!$store.state.showSidePanel" to="/p">Observe<v-icon>expand_more</v-icon></v-btn>
+      <v-btn class="transparent" v-if="!$store.state.showSidePanel" to="/p">Observe<v-icon>mdi-chevron-down</v-icon></v-btn>
     </v-toolbar>
   </div>
 </template>
