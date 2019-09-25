@@ -602,7 +602,7 @@ static double compute_vmag_for_radius(double target_r)
 {
     // Compute by dichotomy.
     const int max_iter = 32;
-    double m = 0, m1 = -128, m2 = 128.0;
+    double m = 0.0, m1 = -192.0, m2 = 64.0;
     double r, l;
     const double delta = 0.001;
     int i;

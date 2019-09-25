@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 #include "webp/decode.h"
+#include <zlib.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -101,11 +102,12 @@ int z_uncompress(void *dest, int dest_size, const void *src, int src_size)
 // XXX: need to get a more robust version!
 void *z_uncompress_gz(const void *src, int src_size, int *out_size)
 {
-    int isize;
+    int isize, err;
     const uint8_t *d = src;
-    void *ret;
+    void *ret = NULL;
     uint8_t footer[8] __attribute__((aligned(8)));
     uint8_t id1, id2, cm, flg;
+    z_stream stream = {};
     assert(src_size >= 10);
 
     id1 = *d++;
@@ -125,13 +127,24 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
     isize = *((uint32_t*)(footer + 4));
     *out_size = isize;
     ret = malloc(isize + 1);
-    stbi_zlib_decode_noheader_buffer(
-            ret, isize, (void*)d, src_size - 8 - ((void*)d - src));
+
+    stream.next_in = (void*)d;
+    stream.avail_in = src_size - 8 - ((void*)d - src);
+    stream.next_out = ret;
+    stream.avail_out = isize;
+    err = inflateInit2(&stream, -15);
+    if (err != Z_OK) goto error;
+    err = inflate(&stream, Z_FINISH);
+    if (err != Z_STREAM_END) goto error;
+    inflateEnd(&stream);
+
     ((char*)ret)[isize] = '\0';
     return ret;
 
 error:
     LOG_E("Cannot uncompress gz file!");
+    if (stream.msg) LOG_E("%s", stream.msg);
+    free(ret);
     *out_size = 0;
     return NULL;
 }

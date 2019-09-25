@@ -424,6 +424,7 @@ static bool constellation_is_visible(const constellation_t *con,
     // Clipping test.
     pos = calloc(con->count, sizeof(*pos));
     for (i = 0; i < con->count; i++) {
+        assert(con->stars[i]);
         obj_get_pos(con->stars[i], painter->obs, FRAME_VIEW, pos[i]);
         project(painter->proj, 0, 4, pos[i], pos[i]);
     }
@@ -583,10 +584,10 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
     painter_t painter = *_painter;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
+    constellation_update(con, painter.obs);
     if (con->error)
         return 0;
 
-    constellation_update(con, painter.obs);
     if (!con->show) return 0;
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->bounding_cap))
         return 0;

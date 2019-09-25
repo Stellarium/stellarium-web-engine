@@ -49,6 +49,7 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     c = tonemapper_map(&core->tonemapper, lum);
     c = max(0, c);
     c *= visibility;
+    c = min(c, 1.2);
     vec4_mul(c, painter2.color, painter2.color);
 
     // Don't even try to display if the brightness is too low

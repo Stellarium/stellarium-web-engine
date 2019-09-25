@@ -484,7 +484,7 @@ static const void *stars_create_tile(
         void *user, int order, int pix, void *data, int size,
         int *cost, int *transparency)
 {
-    tile_t *tile;
+    tile_t *tile = NULL;
     typeof(((stars_t*)0)->surveys[0]) *survey = user;
     eph_load(data, size, USER_PASS(survey, &tile), on_file_tile_loaded);
     if (tile) *cost = tile->nb * sizeof(*tile->sources);
