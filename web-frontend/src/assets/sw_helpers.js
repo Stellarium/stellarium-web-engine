@@ -165,10 +165,10 @@ const swh = {
     }
     for (let i in skySourceTypes) {
       if (skySourceTypes[i] in iconForType) {
-        return '/images/svg/target_types/' + iconForType[skySourceTypes[i]] + '.svg'
+        return process.env.BASE_URL + 'images/svg/target_types/' + iconForType[skySourceTypes[i]] + '.svg'
       }
     }
-    return '/images/svg/target_types/unknown.svg'
+    return process.env.BASE_URL + 'images/svg/target_types/unknown.svg'
   },
 
   iconForSkySource: function (skySource) {
