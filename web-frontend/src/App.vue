@@ -264,8 +264,13 @@ a:link {
   margin-bottom: 20px;
 }
 
-html, body {
-  overflow-y: auto;
+html {
+  overflow-y: visible;
+}
+
+html, body, #app {
+  overflow-y: visible!important;
+  overflow-x: visible;
   position: fixed!important;
   width: 100%;
   height: 100%;
