@@ -8,8 +8,8 @@
 
 <template>
 
-<v-app dark>
-  <v-navigation-drawer absolute temporary clipped v-model="nav" dark style="display:flex;flex-direction:column;padding-bottom: 0;">
+<v-app>
+  <v-navigation-drawer absolute temporary clipped v-model="nav" style="display:flex;flex-direction:column;padding-bottom: 0;">
     <v-list dense>
       <template v-for="(item,i) in menuItems">
         <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1" :key="i"/>

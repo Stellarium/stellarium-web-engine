@@ -8,7 +8,7 @@
 
 <template>
   <div style="position: relative;">
-    <v-text-field prepend-icon="mdi-magnify" label="Search..." v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line dark v-click-outside="resetSearch"></v-text-field>
+    <v-text-field prepend-icon="mdi-magnify" label="Search..." v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line v-click-outside="resetSearch"></v-text-field>
     <v-list dense v-if="showList" two-line :style="listStyle" class="get-click">
       <v-list-item v-for="source in autoCompleteChoices" :key="source.short_name" @click="sourceClicked(source)">
         <v-list-item-action>
