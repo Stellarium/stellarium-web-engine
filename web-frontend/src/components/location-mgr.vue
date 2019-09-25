@@ -8,35 +8,35 @@
 
 <template>
   <div style="background-color: #424242">
-    <v-layout row justify-space-around>
-      <v-flex xs4 v-if="doShowMyLocation">
+    <v-row justify="space-around">
+      <v-col cols="4" v-if="doShowMyLocation">
         <v-list two-line subheader>
           <v-subheader>My Locations</v-subheader>
           <v-list-item href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
-            <v-list-item-avatar>
+            <v-list-item-icon>
               <v-icon>mdi-map-marker</v-icon>
-            </v-list-item-avatar>
+            </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>{{ item.short_name }}</v-list-item-title>
               <v-list-item-subtitle>{{ item.country }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list>
-      </v-flex>
-      <v-flex :xs8="doShowMyLocation" :xs12="!doShowMyLocation" >
+      </v-col>
+      <v-col cols="doShowMyLocation ? 8 : 12" >
         <v-card class="blue-grey darken-2 white--text">
           <v-card-title primary-title>
             <v-container fluid>
-              <v-layout>
-                <v-flex xs12>
+              <v-row>
+                <v-col>
                   <div>
                     <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
                     <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> Use this location</v-btn>
                     <div class="grey--text" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
                     <span class="grey--text">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</span>
                   </div>
-                </v-flex>
-              </v-layout>
+                </v-col>
+              </v-row>
             </v-container>
           </v-card-title>
           <div style="height: 375px">
@@ -70,8 +70,8 @@
             </l-map>
           </div>
         </v-card>
-      </v-flex>
-    </v-layout>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
