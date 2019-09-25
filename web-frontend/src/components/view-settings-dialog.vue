@@ -11,12 +11,12 @@
 <v-card v-if="$store.state.showViewSettingsDialog" class="secondary white--text">
   <v-card-title><div class="headline">View settings</div></v-card-title>
   <v-card-text>
-    <v-checkbox label='Milky Way' v-model="milkyWayOn"></v-checkbox>
-    <v-checkbox label='DSS' v-model="dssOn"></v-checkbox>
-    <v-checkbox label='Simulate refraction' v-model="refractionOn"></v-checkbox>
-    <v-checkbox label='Meridian Line' v-model="meridianOn"></v-checkbox>
-    <v-checkbox label='Ecliptic Line' v-model="eclipticOn"></v-checkbox>
-    <v-checkbox label='Orange night mode (default is red)' v-model="orangeOn"></v-checkbox>
+    <v-checkbox hide-details label='Milky Way' v-model="milkyWayOn"></v-checkbox>
+    <v-checkbox hide-details label='DSS' v-model="dssOn"></v-checkbox>
+    <v-checkbox hide-details label='Simulate refraction' v-model="refractionOn"></v-checkbox>
+    <v-checkbox hide-details label='Meridian Line' v-model="meridianOn"></v-checkbox>
+    <v-checkbox hide-details label='Ecliptic Line' v-model="eclipticOn"></v-checkbox>
+    <v-checkbox hide-details label='Orange night mode (default is red)' v-model="orangeOn"></v-checkbox>
   </v-card-text>
   <v-card-actions>
     <v-spacer></v-spacer><v-btn class="blue--text darken-1" text @click.native="$store.state.showViewSettingsDialog = false">Close</v-btn>

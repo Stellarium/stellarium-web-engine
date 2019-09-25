@@ -8,7 +8,7 @@
 
 <template>
 
-<v-toolbar dense>
+<v-toolbar dark dense class="obspanel-toolbar">
   <v-btn icon to="/"><v-icon>mdi-close</v-icon></v-btn>
   <v-spacer></v-spacer>
 </v-toolbar>
@@ -19,4 +19,7 @@
 </script>
 
 <style>
+.obspanel-toolbar {
+  background-color: #212121!important;
+}
 </style>

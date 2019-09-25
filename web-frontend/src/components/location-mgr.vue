@@ -7,7 +7,7 @@
 // repository.
 
 <template>
-  <div style="background-color: #424242">
+  <div>
     <v-row justify="space-around">
       <v-col cols="4" v-if="doShowMyLocation">
         <v-list two-line subheader>
@@ -31,20 +31,18 @@
                 <v-col>
                   <div>
                     <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
-                    <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> Use this location</v-btn>
-                    <div class="grey--text" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
-                    <span class="grey--text">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</span>
+                    <v-btn @click.native.stop="useLocation()" style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> Use this location</v-btn>
+                    <div class="grey--text subtitle-2" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
+                    <div class="grey--text subtitle-2">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</div>
                   </div>
                 </v-col>
               </v-row>
             </v-container>
           </v-card-title>
           <div style="height: 375px">
-            <v-toolbar class="white" floating dense style="position: absolute; z-index: 10000; bottom: 16px; right: 0px;">
-              <v-btn icon class="black--text" @click.native.stop="centerOnRealPosition()">
+              <v-btn light fab class="mx-0 pa-0" @click.native.stop="centerOnRealPosition()" style="position: absolute; z-index: 10000; bottom: 16px; right: 12px;">
                 <v-icon>mdi-crosshairs-gps</v-icon>
               </v-btn>
-            </v-toolbar>
             <l-map class="black--text" ref="myMap" :center="mapCenter" :zoom="10" style="width: 100%; height: 100%;" :options="{zoomControl: false}">
               <l-control-zoom position="topright"></l-control-zoom>
               <l-tile-layer :url="url" attribution='&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors'></l-tile-layer>

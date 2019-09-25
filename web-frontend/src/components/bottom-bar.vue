@@ -69,7 +69,7 @@
         <v-btn large class="tmenubt" color="secondary" v-on="on">
           <v-icon class="hidden-sm-and-up">access_time</v-icon>
           <span class="hidden-xs-only">
-            <div class="body-2">{{ time }}</div>
+            <div class="subtitle-2">{{ time }}</div>
             <div class="caption">{{ date }}</div>
           </span>
         </v-btn>
