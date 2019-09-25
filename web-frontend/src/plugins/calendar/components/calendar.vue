@@ -61,7 +61,7 @@ export default {
   },
   methods: {
     getIcon: function (type) {
-      return '/plugins/calendar/events/' + type + '.svg'
+      return process.env.BASE_URL + 'plugins/calendar/events/' + type + '.svg'
     },
     eventClicked: function (event) {
       this.$stel.core.observer.utc = event.time.toDate().getMJD()
