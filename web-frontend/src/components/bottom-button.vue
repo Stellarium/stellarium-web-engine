@@ -17,8 +17,8 @@
 
 <style>
   .bottom-button {
-    width: 3rem;
-    height: 3rem;
+    width: 42px;
+    height: 42px;
     position: relative;
     display: inline-block;
     user-select: none;
