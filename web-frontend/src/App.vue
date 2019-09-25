@@ -73,12 +73,12 @@ export default {
   data (context) {
     return {
       menuItems: [
-        {header: 'Main'},
-        {title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog'},
-        {title: 'Planets Tonight', icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog'},
-        {divider: true}
+        { header: 'Main' },
+        { title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog' },
+        { title: 'Planets Tonight', icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog' },
+        { divider: true }
       ].concat(this.getPluginsMenuItems()).concat([
-        {title: 'Data Credits', footer: true, icon: 'copyright', store_var_name: 'showDataCreditsDialog'}
+        { title: 'Data Credits', footer: true, icon: 'copyright', store_var_name: 'showDataCreditsDialog' }
       ]),
       menuComponents: [].concat(this.getPluginsMenuComponents()),
       guiComponent: 'GuiLoader',
@@ -124,7 +124,7 @@ export default {
     },
     setStateFromQueryArgs: function () {
       // Check whether the observing panel must be displayed
-      this.$store.commit('setValue', {varName: 'showSidePanel', newValue: this.$route.path.startsWith('/p/')})
+      this.$store.commit('setValue', { varName: 'showSidePanel', newValue: this.$route.path.startsWith('/p/') })
 
       // Set the core's state from URL query arguments such
       // as date, location, view direction & fov
@@ -139,7 +139,7 @@ export default {
         }
 
         if (this.$route.query.lng && this.$route.query.lat) {
-          let pos = {lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1}
+          let pos = { lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1 }
           swh.geoCodePosition(pos).then((loc) => {
             that.$store.commit('setCurrentLocation', loc)
           }, (error) => { console.log(error) })
@@ -204,7 +204,7 @@ export default {
         this.startTimeIsSet = true
       }
       // Init of time and date is complete
-      this.$store.commit('setValue', {varName: 'initComplete', newValue: true})
+      this.$store.commit('setValue', { varName: 'initComplete', newValue: true })
     },
     '$route': function () {
       // react to route changes...
@@ -242,7 +242,7 @@ export default {
           }
         }, that.onBeforeRendering)
       } catch (e) {
-        this.$store.commit('setValue', {varName: 'wasmSupport', newValue: false})
+        this.$store.commit('setValue', { varName: 'wasmSupport', newValue: false })
       }
     })
   }
