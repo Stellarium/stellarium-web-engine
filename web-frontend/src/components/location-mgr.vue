@@ -14,7 +14,7 @@
           <v-subheader>My Locations</v-subheader>
           <v-list-item href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
             <v-list-item-avatar>
-              <v-icon>location_on</v-icon>
+              <v-icon>mdi-map-marker</v-icon>
             </v-list-item-avatar>
             <v-list-item-content>
               <v-list-item-title>{{ item.short_name }}</v-list-item-title>
@@ -31,7 +31,7 @@
                 <v-flex xs12>
                   <div>
                     <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
-                    <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>keyboard_arrow_right</v-icon> Use this location</v-btn>
+                    <v-btn @click.native.stop="useLocation()"  style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> Use this location</v-btn>
                     <div class="grey--text" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
                     <span class="grey--text">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</span>
                   </div>
@@ -42,7 +42,7 @@
           <div style="height: 375px">
             <v-toolbar class="white" floating dense style="position: absolute; z-index: 10000; bottom: 16px; right: 0px;">
               <v-btn icon class="black--text" @click.native.stop="centerOnRealPosition()">
-                <v-icon>my_location</v-icon>
+                <v-icon>mdi-crosshairs-gps</v-icon>
               </v-btn>
             </v-toolbar>
             <l-map class="black--text" ref="myMap" :center="mapCenter" :zoom="10" style="width: 100%; height: 100%;" :options="{zoomControl: false}">

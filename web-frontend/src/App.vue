@@ -74,11 +74,11 @@ export default {
     return {
       menuItems: [
         { header: 'Main' },
-        { title: 'View Settings', icon: 'settings', store_var_name: 'showViewSettingsDialog' },
-        { title: 'Planets Tonight', icon: 'panorama_fish_eye', store_var_name: 'showPlanetsVisibilityDialog' },
+        { title: 'View Settings', icon: 'mdi-settings', store_var_name: 'showViewSettingsDialog' },
+        { title: 'Planets Tonight', icon: 'mdi-panorama-fisheye', store_var_name: 'showPlanetsVisibilityDialog' },
         { divider: true }
       ].concat(this.getPluginsMenuItems()).concat([
-        { title: 'Data Credits', footer: true, icon: 'copyright', store_var_name: 'showDataCreditsDialog' }
+        { title: 'Data Credits', footer: true, icon: 'mdi-copyright', store_var_name: 'showDataCreditsDialog' }
       ]),
       menuComponents: [].concat(this.getPluginsMenuComponents()),
       guiComponent: 'GuiLoader',

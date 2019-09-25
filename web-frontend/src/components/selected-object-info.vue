@@ -8,7 +8,7 @@
 
 <template>
   <v-card v-if="selectedObject" transparent style="background: rgba(66, 66, 66, 0.3);">
-    <v-btn icon style="position: absolute; right: 0" v-on:click.native="unselect()"><v-icon>close</v-icon></v-btn>
+    <v-btn icon style="position: absolute; right: 0" v-on:click.native="unselect()"><v-icon>mdi-close</v-icon></v-btn>
     <v-card-title primary-title>
       <div style="width: 100%">
         <img :src="icon" height="48" width="48" align="left" style="margin-top: 3px; margin-right: 10px"/>
@@ -21,7 +21,7 @@
     <v-card-text style="padding-bottom: 5px;">
       <v-layout v-if="otherNames.length > 1" row wrap style="width: 100%;">
         <v-flex xs4 style="margin-top: -2px; color: #dddddd">Also known as</v-flex> <span class="caption" text-color="white" v-for="(mname, index) in otherNames" v-if="index > 0 && index < 8" :key="mname" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
-        <v-btn small icon class="grey--text" v-if="otherNames.length > 8" v-on:click.native="showMinorNames = !showMinorNames" style="margin-top: -5px; margin-bottom: -5px;"><v-icon>more_horiz</v-icon></v-btn>
+        <v-btn small icon class="grey--text" v-if="otherNames.length > 8" v-on:click.native="showMinorNames = !showMinorNames" style="margin-top: -5px; margin-bottom: -5px;"><v-icon>mdi-dots-horizontal</v-icon></v-btn>
         <span class="caption" text-color="white" v-for="(mname, index) in otherNames" :key="mname" v-if="showMinorNames && index >= 8" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
       </v-layout>
     </v-card-text>
@@ -57,7 +57,7 @@
     </v-dialog>
     <div v-if="$store.state.showSelectedInfoButtons" style="position: absolute; right: 0px; bottom: -50px;">
       <v-btn v-if="!showPointToButton" fab dark small color="transparent" @click.native="showShareLinkDialog = !showShareLinkDialog">
-        <v-icon>link</v-icon>
+        <v-icon>mdi-link</v-icon>
       </v-btn>
       <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
         <img src="@/assets/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>

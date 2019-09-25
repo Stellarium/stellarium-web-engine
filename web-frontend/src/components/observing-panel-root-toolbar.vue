@@ -9,7 +9,7 @@
 <template>
 
 <v-toolbar dark dense>
-  <v-btn icon to="/"><v-icon>close</v-icon></v-btn>
+  <v-btn icon to="/"><v-icon>mdi-close</v-icon></v-btn>
   <v-spacer></v-spacer>
 </v-toolbar>
 

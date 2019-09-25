@@ -11,18 +11,18 @@
     <v-container>
       <v-layout row justify-space-around>
         <div>
-          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="incTime('years')"><v-icon>arrow_drop_up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 19px" @mousedown="incTime('months')"><v-icon>arrow_drop_up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 4px"  @mousedown="incTime('days')"><v-icon>arrow_drop_up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="incTime('years')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 19px" @mousedown="incTime('months')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 4px"  @mousedown="incTime('days')"><v-icon>mdi-menu-up</v-icon></v-btn>
           <h1>{{ date }}</h1>
-          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="decTime('years')"><v-icon>arrow_drop_down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 19px" @mousedown="decTime('months')"><v-icon>arrow_drop_down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 4px"  @mousedown="decTime('days')"><v-icon>arrow_drop_down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="decTime('years')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 19px" @mousedown="decTime('months')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 4px"  @mousedown="decTime('days')"><v-icon>mdi-menu-down</v-icon></v-btn>
         </div>
         <div>
         <div>
         <v-tooltip top>
-          <v-btn slot="activator" text icon @click="resetTime" style="margin-top: 5px"><v-icon>restore</v-icon></v-btn>
+          <v-btn slot="activator" text icon @click="resetTime" style="margin-top: 5px"><v-icon>mdi-history</v-icon></v-btn>
           <span>Back to real time</span>
         </v-tooltip>
         </div>
@@ -34,13 +34,13 @@
         </div>
         </div>
         <div>
-          <v-btn text icon class="up_down_bt" @mousedown="incTime('hours')"><v-icon>arrow_drop_up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" @mousedown="incTime('minutes')"><v-icon>arrow_drop_up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" @mousedown="incTime('seconds')"><v-icon>arrow_drop_up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="incTime('hours')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="incTime('minutes')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="incTime('seconds')"><v-icon>mdi-menu-up</v-icon></v-btn>
           <h1>{{ time }}</h1>
-          <v-btn text icon class="up_down_bt" @mousedown="decTime('hours')"><v-icon>arrow_drop_down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" @mousedown="decTime('minutes')"><v-icon>arrow_drop_down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" @mousedown="decTime('seconds')"><v-icon>arrow_drop_down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="decTime('hours')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="decTime('minutes')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="decTime('seconds')"><v-icon>mdi-menu-down</v-icon></v-btn>
         </div>
       </v-layout>
     </v-container>
@@ -138,7 +138,7 @@ export default {
       return this.$store.state.timeSpeed === 0
     },
     togglePauseTimeIcon: function () {
-      return this.isTimePaused ? 'play_arrow' : 'pause'
+      return this.isTimePaused ? 'mdi-play' : 'mdi-pause'
     }
   },
   methods: {
