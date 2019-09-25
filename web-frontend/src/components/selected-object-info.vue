@@ -22,7 +22,7 @@
       <v-layout v-if="otherNames.length > 1" row wrap style="width: 100%;">
         <v-flex xs4 style="margin-top: -2px; color: #dddddd">Also known as</v-flex> <span class="caption" text-color="white" v-for="(mname, index) in otherNames" v-if="index > 0 && index < 8" :key="mname" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
         <v-btn small icon class="grey--text" v-if="otherNames.length > 8" v-on:click.native="showMinorNames = !showMinorNames" style="margin-top: -5px; margin-bottom: -5px;"><v-icon>more_horiz</v-icon></v-btn>
-        <span class="caption" text-color="white" v-for="(mname, index) in otherNames" :key="mname"  v-if="showMinorNames && index >= 8" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
+        <span class="caption" text-color="white" v-for="(mname, index) in otherNames" :key="mname" v-if="showMinorNames && index >= 8" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
       </v-layout>
     </v-card-text>
     <v-card-text>
@@ -37,10 +37,10 @@
     <v-card-actions style="margin-top: -25px">
       <v-spacer/>
       <template v-for="item in pluginsSelectedInfoExtraGuiComponents">
-        <component :is="item"></component>
+        <component :is="item" :key="item"></component>
       </template>
     </v-card-actions>
-    <v-dialog v-model="showShareLinkDialog" width="500px" lazy absolute>
+    <v-dialog v-model="showShareLinkDialog" width="500px" absolute>
       <v-card style="height: 180px" class="secondary white--text">
         <v-card-title primary-title>
           <div>
@@ -60,13 +60,13 @@
         <v-icon>link</v-icon>
       </v-btn>
       <v-btn v-if="showPointToButton" fab dark small color="transparent" v-on:click.native="lockToSelection()">
-        <img src="/static/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
+        <img src="/images/svg/ui/point_to.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
       <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomOutButtonClicked()">
-        <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="/static/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
+        <img :class="{bt_disabled: !zoomOutButtonEnabled}" src="/images/svg/ui/remove_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
       <v-btn v-if="!showPointToButton" fab dark small color="transparent" @mousedown="zoomInButtonClicked()">
-        <img :class="{bt_disabled: !zoomInButtonEnabled}" src="/static/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
+        <img :class="{bt_disabled: !zoomInButtonEnabled}" src="/images/svg/ui/add_circle_outline.svg" height="40px" style="min-height: 40px"></img>
       </v-btn>
     </div>
     <v-snackbar bottom left :timeout="2000" v-model="copied" color="secondary" >

@@ -10,21 +10,22 @@
   <div style="position: relative;">
     <v-text-field prepend-icon="search" label="Search..." v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line dark v-click-outside="resetSearch"></v-text-field>
     <v-list dense v-if="showList" two-line :style="listStyle" class="get-click">
-      <v-list-tile v-for="source in autoCompleteChoices" :key="source.short_name" @click="sourceClicked(source)">
-        <v-list-tile-action>
+      <v-list-item v-for="source in autoCompleteChoices" :key="source.short_name" @click="sourceClicked(source)">
+        <v-list-item-action>
           <img :src="iconForSkySource(source)"/>
-        </v-list-tile-action>
-        <v-list-tile-content>
-          <v-list-tile-title>{{ nameForSkySource(source) }}</v-list-tile-title>
-          <v-list-tile-sub-title>{{ typeToName(source.types[0]) }}</v-list-tile-sub-title>
-        </v-list-tile-content>
-      </v-list-tile>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title>{{ nameForSkySource(source) }}</v-list-item-title>
+          <v-list-item-subtitle>{{ typeToName(source.types[0]) }}</v-list-item-subtitle>
+        </v-list-item-content>
+      </v-list-item>
     </v-list>
   </div>
 </template>
 
 <script>
 import swh from '@/assets/sw_helpers.js'
+import ClickOutside from 'vue-click-outside'
 import _ from 'lodash'
 
 export default {
@@ -104,6 +105,9 @@ export default {
     }
     const guiParent = document.querySelector('stel') || document.body
     guiParent.addEventListener('click', onClick, false)
+  },
+  directives: {
+    ClickOutside
   }
 }
 </script>

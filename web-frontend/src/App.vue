@@ -12,40 +12,40 @@
   <v-navigation-drawer absolute temporary clipped v-model="nav" dark style="display:flex;flex-direction:column;padding-bottom: 0;">
     <v-list dense>
       <template v-for="(item,i) in menuItems">
-        <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1"/>
-        <v-divider class="divider_menu" v-else-if="item.divider" />
-        <v-list-tile avatar v-else-if="item.switch" @click.stop="toggleStoreValue(item.store_var_name)">
-          <v-list-tile-action>
+        <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1" :key="i"/>
+        <v-divider class="divider_menu" v-else-if="item.divider" :key="i"/>
+        <v-list-item v-else-if="item.switch" @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
+          <v-list-item-action>
             <v-switch value :input-value="getStoreValue(item.store_var_name)" label=""></v-switch>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <template v-else>
-          <v-list-tile v-if='item.link' target="_blank" :href='item.link' >
-            <v-list-tile-avatar><v-icon>{{ item.icon }}</v-icon></v-list-tile-avatar>
-            <v-list-tile-title v-text="item.title"/>
+          <v-list-item v-if='item.link' target="_blank" :href='item.link' :key="i">
+            <v-list-item-avatar><v-icon>{{ item.icon }}</v-icon></v-list-item-avatar>
+            <v-list-item-title v-text="item.title"/>
             <v-icon disabled>open_in_new</v-icon>
-          </v-list-tile>
-          <v-list-tile v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)">
-            <v-list-tile-avatar><v-icon>{{ item.icon }}</v-icon></v-list-tile-avatar>
-            <v-list-tile-title v-text="item.title"/>
-          </v-list-tile>
+          </v-list-item>
+          <v-list-item v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
+            <v-list-item-avatar><v-icon>{{ item.icon }}</v-icon></v-list-item-avatar>
+            <v-list-item-title v-text="item.title"/>
+          </v-list-item>
         </template>
       </template>
     </v-list>
     <template v-for="(item,i) in menuComponents">
-      <component :is="item"></component>
+      <component :is="item" :key="i"></component>
     </template>
     <v-spacer></v-spacer>
     <v-list dense>
       <v-divider class="divider_menu"/>
       <template v-for="(item,i) in menuItems">
-        <v-list-tile v-if='item.footer' @click.stop="toggleStoreValue(item.store_var_name)">
-          <v-list-tile-avatar><v-icon>{{ item.icon }}</v-icon></v-list-tile-avatar>
-          <v-list-tile-title v-text="item.title"/>
-        </v-list-tile>
+        <v-list-item v-if='item.footer' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
+          <v-list-item-avatar><v-icon>{{ item.icon }}</v-icon></v-list-item-avatar>
+          <v-list-item-title v-text="item.title"/>
+        </v-list-item>
       </template>
     </v-list>
   </v-navigation-drawer>
@@ -227,7 +227,7 @@ export default {
       // in the $store.stel object in a reactive way (useful for vue components).
       // To modify the state of the StelWebEngine, it's enough to call/set values directly on the $stel object
       try {
-        swh.initStelWebEngine(that.$store, f, that.$refs.stelCanvas, function () {
+        swh.initStelWebEngine(that.$store, f.default, that.$refs.stelCanvas, function () {
           // Start auto location detection (even if we don't use it)
           swh.getGeolocation().then(swh.geoCodePosition).then((loc) => {
             that.$store.commit('setAutoDetectedLocation', loc)

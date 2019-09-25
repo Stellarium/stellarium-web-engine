@@ -28,7 +28,7 @@
         <v-card-text>
           <v-layout column align-center style="width: 100%; height: 100%;">
             <p class="grey--text">Web assembly is necessary for Stellarium Web to display the star map. Please upgrade your web browser and try again!</p>
-            <p>In the meantime, you can try the <a href="https://stellarium.org">desktop version</a>, or read the project's <a href="/news">news</a>!</p>
+            <p>In the meantime, you can try the <a href="https://stellarium.org">desktop version</a>!</p>
           </v-layout>
         </v-card-text>
       </v-card>

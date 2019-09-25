@@ -25,18 +25,18 @@
           </v-card-text>
         </v-card>
         <v-list two-line subheader style="margin-top: 10px">
-          <v-list-tile v-if="showProgress" style="position: relative">
+          <v-list-item v-if="showProgress" style="position: relative">
             <v-progress-circular indeterminate v-bind:size="50" style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto;"></v-progress-circular>
-          </v-list-tile>
-          <v-list-tile avatar v-for="event in events" v-bind:key="event.id"  @click="eventClicked(event)">
-            <v-list-tile-avatar>
+          </v-list-item>
+          <v-list-item v-for="event in events" v-bind:key="event.id"  @click="eventClicked(event)">
+            <v-list-item-avatar>
               <img v-bind:src="getIcon(event.type)"/>
-            </v-list-tile-avatar>
-            <v-list-tile-content>
-              <v-list-tile-title>{{ event.desc }}</v-list-tile-title>
-              <v-list-tile-sub-title class="grey--text">{{ event.time.format('MMMM DD, HH:mm') }}</v-list-tile-sub-title>
-            </v-list-tile-content>
-          </v-list-tile>
+            </v-list-item-avatar>
+            <v-list-item-content>
+              <v-list-item-title>{{ event.desc }}</v-list-item-title>
+              <v-list-item-subtitle class="grey--text">{{ event.time.format('MMMM DD, HH:mm') }}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-container>
     </div>
@@ -61,7 +61,7 @@ export default {
   },
   methods: {
     getIcon: function (type) {
-      return '/static/images/events/' + type + '.svg'
+      return '/images/events/' + type + '.svg'
     },
     eventClicked: function (event) {
       this.$stel.core.observer.utc = event.time.toDate().getMJD()
@@ -87,7 +87,7 @@ export default {
           ev.id = ev.time + ev.type + ev.desc
           ev.time = new Moment(ev.time)
           ret.push(ev)
-        }})
+        } })
       return ret
     },
     showProgress: function () {
