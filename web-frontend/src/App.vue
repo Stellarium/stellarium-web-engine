@@ -24,12 +24,12 @@
         </v-list-item>
         <template v-else>
           <v-list-item v-if='item.link' target="_blank" :href='item.link' :key="i">
-            <v-list-item-avatar><v-icon>{{ item.icon }}</v-icon></v-list-item-avatar>
+            <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
             <v-list-item-title v-text="item.title"/>
             <v-icon disabled>open_in_new</v-icon>
           </v-list-item>
           <v-list-item v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
-            <v-list-item-avatar><v-icon>{{ item.icon }}</v-icon></v-list-item-avatar>
+            <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
             <v-list-item-title v-text="item.title"/>
           </v-list-item>
         </template>
@@ -43,7 +43,7 @@
       <v-divider class="divider_menu"/>
       <template v-for="(item,i) in menuItems">
         <v-list-item v-if='item.footer' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
-          <v-list-item-avatar><v-icon>{{ item.icon }}</v-icon></v-list-item-avatar>
+          <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
           <v-list-item-title v-text="item.title"/>
         </v-list-item>
       </template>
