@@ -48,7 +48,7 @@ export default {
     { path: '/p/smt', component: SmtLayerPage, meta: { tabName: 'Survey Tool', prio: 2 } }
   ],
   onEngineReady: function (app) {
-    app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'initializing'})
+    app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'initializing' })
 
     // Init base view settings
     app.$stel.core.lines.equatorial.visible = true
@@ -65,12 +65,12 @@ export default {
     app.$stel.core.fov = 270
 
     let fieldsList = require('./fieldsList.json')
-    Vue.prototype.$smt = {fieldsList: fieldsList}
+    Vue.prototype.$smt = { fieldsList: fieldsList }
 
-    app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'loading'})
+    app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
     let jsonData = require('./data/euclid-test.json')
     loadAllData(fieldsList, jsonData).then(_ => {
-      app.$store.commit('setValue', {varName: 'SMT.status', newValue: 'ready'})
+      app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
     })
   }
 }

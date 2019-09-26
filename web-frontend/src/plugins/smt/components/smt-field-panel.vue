@@ -7,12 +7,12 @@
 <v-flex xs12>
   <h3 class="pt-3">{{ fieldDescription.name }}</h3>
   <div v-if="isTags">
-    <v-chip small class="white--text" color="secondary" v-for="(count, name) in data" :key="name" @click="chipClicked(name)">
+    <v-chip small class="white--text" color="secondary" v-for="(count, name) in fieldResultsData" :key="name" @click="chipClicked(name)">
       {{ name }}&nbsp;<span class="primary--text"> ({{ count }})</span>
     </v-chip>
   </div>
   <div v-if="isDateRange">
-    <GChart type="ColumnChart" :data="data" :options="dateRangeChartOptions"/>
+    <GChart type="ColumnChart" :data="fieldResultsData" :options="dateRangeChartOptions"/>
     <v-slider style="margin-top: -50px; padding-left: 7%; padding-right: 7%"></v-slider>
   </div>
 </v-flex>
@@ -30,9 +30,9 @@ export default {
         chart: {
           title: 'Date Range'
         },
-        legend: {position: 'none'},
+        legend: { position: 'none' },
         backgroundColor: '#424242',
-        chartArea: {left: '5%', top: '5%', width: '90%', height: '65%'},
+        chartArea: { left: '5%', top: '5%', width: '90%', height: '65%' },
         hAxis: {
           textStyle: {
             color: 'white'
@@ -40,8 +40,8 @@ export default {
           gridlines: {
             color: '#424242',
             units: {
-              days: {format: ['DD HH:MM']},
-              hours: {format: ['HH:MM']}
+              days: { format: ['DD HH:MM'] },
+              hours: { format: ['HH:MM'] }
             }
           }
         },
@@ -57,7 +57,7 @@ export default {
   props: ['fieldDescription', 'fieldResults'],
   methods: {
     chipClicked: function (name) {
-      let constraint = {'field': this.fieldDescription, 'operation': 'STRING_EQUAL', 'expression': name, 'negate': false}
+      let constraint = { 'field': this.fieldDescription, 'operation': 'STRING_EQUAL', 'expression': name, 'negate': false }
       this.$emit('add-constraint', constraint)
     }
   },
@@ -68,7 +68,7 @@ export default {
     isDateRange: function () {
       return this.fieldDescription && this.fieldDescription.widget === 'date_range' && this.fieldResults
     },
-    data: function () {
+    fieldResultsData: function () {
       if (this.isTags) {
         return this.fieldResults.data
       }
@@ -80,6 +80,7 @@ export default {
         }
         return newData
       }
+      return {}
     }
   },
   components: { GChart }
