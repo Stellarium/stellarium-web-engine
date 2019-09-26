@@ -11,11 +11,11 @@
 <div class="click-through" style="position:absolute; width: 100%; height: 100%; display:flex; align-items: flex-end;">
   <toolbar v-if="$store.state.showMainToolBar" class="get-click"></toolbar>
   <observing-panel></observing-panel>
-  <template v-for="item in pluginsGuiComponents">
-    <component :is="item"></component>
+  <template v-for="(item, i) in pluginsGuiComponents">
+    <component :is="item" :key="i"></component>
   </template>
-  <template v-for="item in dialogs">
-    <component :is="item"></component>
+  <template v-for="(item, i) in dialogs">
+    <component :is="item" :key="i"></component>
   </template>
   <selected-object-info style="position: absolute; top: 48px; left: 0px; width: 380px; max-width: calc(100vw - 12px); margin: 6px" class="get-click"></selected-object-info>
   <progress-bars style="position: absolute; bottom: 54px; right: 12px;"></progress-bars>
