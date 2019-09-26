@@ -16,7 +16,7 @@
               <p>Count: {{ results.summary.count }}</p>
               <p>Nb constraints: {{ query.constraints.length }}</p>
               <div>
-                <v-chip small class="white--text ma-1" :close="constraint.closable" :disabled="!constraint.closable" color="primary" v-for="(constraint, i) in constraintsToDisplay" :key="i" @click:close="constraintClosed">
+                <v-chip small class="white--text ma-1" :close="constraint.closable" :disabled="!constraint.closable" color="primary" v-for="(constraint, i) in constraintsToDisplay" :key="i" @click:close="constraintClosed(i)">
                   {{ constraint.field.name }} = {{ constraint.expression }}&nbsp;
                 </v-chip>
               </div>
