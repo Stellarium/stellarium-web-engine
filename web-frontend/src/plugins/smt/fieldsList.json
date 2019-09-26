@@ -1,26 +1,44 @@
 [
   {
-    "id": "properties.properties.ObservationType",
+    "id": "properties.Observation.ObservationType",
     "name": "Type",
     "type": "string",
     "widget": "tags"
   },
   {
-    "id": "properties.properties.SurveyId",
+    "id": "properties.Observation.SurveyId",
     "name": "Survey Id",
     "type": "string",
     "widget": "tags"
   },
   {
-    "id": "properties.scenario.contractual_date",
-    "name": "Contractual Date",
+    "id": "properties.Observation.MissionPhase",
+    "name": "Mission Phase",
+    "type": "string",
+    "widget": "tags"
+  },
+  {
+    "id": "properties.PlanningStatus",
+    "name": "Planning Status",
+    "type": "string",
+    "widget": "tags"
+  },
+  {
+    "id": "properties.Planning.Ingestion.Estimated_Date",
+    "name": "Ingestion Estimated Date",
     "type": "date",
     "widget": "date_range"
   },
   {
-    "id": "properties.scenario.VIS_NIR_SIR",
-    "name": "VIS_NIR_SIR",
+    "id": "properties.Planning.Ingestion.Real_Date",
+    "name": "Ingestion Real Date",
     "type": "date",
     "widget": "date_range"
+  },
+  {
+    "id": "properties.PointingActivity",
+    "name": "Pointing Activity",
+    "type": "string",
+    "widget": "tags"
   }
 ]

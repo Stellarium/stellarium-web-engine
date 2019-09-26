@@ -25,7 +25,7 @@ async function loadAllData (fieldsList, jsonData) {
   // Insert all data
   let req = alasql.compile('INSERT INTO features VALUES (?, ?, ?)')
   for (let feature of jsonData.features) {
-    let id = feature.id
+    let id = feature.properties.Pointing_id
     let geometry = feature.geometry
     let properties = feature.properties
     await req.promise([id, geometry, properties])
@@ -68,9 +68,17 @@ export default {
     Vue.prototype.$smt = { fieldsList: fieldsList }
 
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
-    let jsonData = require('./data/euclid-test.json')
-    loadAllData(fieldsList, jsonData).then(_ => {
-      app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
+    fetch('/plugins/smt/Surveys/euclid-test1000.json').then(function (response) {
+      if (!response.ok) {
+        throw response.body
+      }
+      response.json().then(jsonData => {
+        loadAllData(fieldsList, jsonData).then(_ => {
+          app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
+        })
+      }, err => { console.log(err) })
+    }, err => {
+      throw err.response.body
     })
   }
 }
