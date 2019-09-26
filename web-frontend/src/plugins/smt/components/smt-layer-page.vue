@@ -49,7 +49,8 @@ export default {
           count: 0
         },
         fields: [],
-        implicitConstraints: []
+        implicitConstraints: [],
+        geojsonObj: undefined
       }
     }
   },
@@ -98,13 +99,36 @@ export default {
         }
       }
 
+      // Reset all fields values
+      that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': [] } })
+      that.results.implicitConstraints = []
+
       alasql.promise('SELECT COUNT(*) AS total FROM features' + whereClause).then(res => {
         that.results.summary.count = res[0].total
       })
 
-      // Reset all fields values
-      that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': [] } })
-      that.results.implicitConstraints = []
+      // Create the geojson results of the query
+      alasql.promise('SELECT geometry FROM features' + whereClause).then(res => {
+        let geojson = {
+          type: 'FeatureCollection',
+          features: []
+        }
+        for (let i in res) {
+          geojson.features.push({
+            geometry: res[i].geometry,
+            type: 'Feature',
+            properties: {}
+          })
+        }
+
+        if (this.geojsonObj) {
+          that.$observingLayer.remove(this.geojsonObj)
+          this.geojsonObj.destroy()
+        }
+
+        this.geojsonObj = that.$stel.createObj('geojson', { data: geojson })
+        that.$observingLayer.add(this.geojsonObj)
+      })
 
       // And recompute them
       for (let i in that.$smt.fieldsList) {
