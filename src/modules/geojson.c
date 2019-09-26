@@ -338,6 +338,12 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     if (image->dirty)
         image_update((image_t*) image);
 
+    /*
+     * For the moment, we render all the filled shapes first, then
+     * all the lines, and then all the titles.  This allows the renderer
+     * to merge the rendering calls together.
+     * We should probably instead allow the renderer to reorder the calls.
+     */
     for (feature = image->features; feature; feature = feature->next) {
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->fill_color[3]) {
@@ -347,7 +353,11 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                            mesh->triangles_count, mesh->triangles,
                            mesh->bounding_cap, 0);
             }
+        }
+    }
 
+    for (feature = image->features; feature; feature = feature->next) {
+        for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->stroke_color[3]) {
                 vec4_copy(feature->stroke_color, painter.color);
                 painter.lines_width = feature->stroke_width;
@@ -356,6 +366,11 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                            mesh->lines_count, mesh->lines,
                            mesh->bounding_cap, 0);
             }
+        }
+    }
+
+    for (feature = image->features; feature; feature = feature->next) {
+        for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->title) {
                 painter_project(&painter, frame, mesh->bounding_cap,
                                 true, false, pos);
