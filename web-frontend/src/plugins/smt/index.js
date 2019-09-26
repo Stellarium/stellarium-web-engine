@@ -58,7 +58,7 @@ export default {
     app.$stel.core.cardinals.visible = false
     app.$stel.core.planets.visible = false
     app.$stel.core.mount_frame = app.$stel.FRAME_ICRF
-    app.$stel.core.projection = 4 // Hammer
+    app.$stel.core.projection = 5 // PROJ_MOLLWEIDE
     app.$stel.core.observer.refraction = false
     app.$stel.core.observer.yaw = 0
     app.$stel.core.observer.pitch = 0
