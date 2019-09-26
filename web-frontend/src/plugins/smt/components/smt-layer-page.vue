@@ -16,7 +16,7 @@
               <p>Count: {{ results.summary.count }}</p>
               <p>Nb constraints: {{ query.constraints.length }}</p>
               <div>
-                <v-chip small close class="white--text" color="primary" v-for="(constraint, i) in query.constraints" :key="i" @click:close="constraintClosed">
+                <v-chip small class="white--text ma-1" :close="constraint.closable" :disabled="!constraint.closable" color="primary" v-for="(constraint, i) in constraintsToDisplay" :key="i" @click:close="constraintClosed">
                   {{ constraint.field.name }} = {{ constraint.expression }}&nbsp;
                 </v-chip>
               </div>
@@ -24,7 +24,7 @@
           </v-card-text>
         </v-card>
         <v-layout column>
-          <smt-field-panel v-for="(field,i) in $smt.fieldsList" :key="field.id" :fieldDescription="field" :fieldResults="results.fields[i]" v-on:add-constraint="addConstraint">
+          <smt-field-panel v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint">
           </smt-field-panel>
         </v-layout>
       </v-container>
@@ -48,7 +48,8 @@ export default {
         summary: {
           count: 0
         },
-        fields: []
+        fields: [],
+        implicitConstraints: []
       }
     }
   },
@@ -61,6 +62,10 @@ export default {
     },
     refreshObservationGroups: function () {
       let that = this
+
+      if (this.$store.state.SMT.status !== 'ready') {
+        return
+      }
 
       // Add a custom aggregation operator for the chip tags
       alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
@@ -76,7 +81,9 @@ export default {
         }
       }
 
+      // Compute the WHERE clause to be used in following queries
       let whereClause = ''
+      let constraintsIds = []
       if (this.query.constraints && this.query.constraints.length) {
         whereClause = ' WHERE '
         for (let i in that.query.constraints) {
@@ -87,6 +94,7 @@ export default {
           if (i < that.query.constraints.length - 1) {
             whereClause += ' AND '
           }
+          constraintsIds.push(c.field.id)
         }
       }
 
@@ -94,15 +102,24 @@ export default {
         that.results.summary.count = res[0].total
       })
 
+      // Reset all fields values
       that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': [] } })
+      that.results.implicitConstraints = []
+
+      // And recompute them
       for (let i in that.$smt.fieldsList) {
         let field = that.$smt.fieldsList[i]
         let fid = that.fId2AlaSql(field.id)
         if (field.widget === 'tags') {
           alasql.promise('SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + whereClause).then(res => {
             that.results.fields[i] = {
+              field: field,
               status: 'ok',
               data: res[0].tags
+            }
+            // Fill the implicit constraints list, i.e. the tags where only one value remains
+            if (!constraintsIds.includes(field.id) && Object.keys(res[0].tags).length === 1) {
+              that.results.implicitConstraints.push({ field: field, expression: Object.keys(res[0].tags)[0], closable: false })
             }
           })
         }
@@ -117,6 +134,7 @@ export default {
                 d.setTime(start.getTime() + step * j)
                 data.push([d, res2[j].c])
               }
+              Vue.set(that.results.fields[i], 'field', field)
               Vue.set(that.results.fields[i], 'status', 'ok')
               Vue.set(that.results.fields[i], 'data', data)
             })
@@ -132,8 +150,8 @@ export default {
       console.log('constraintClicked: ' + i)
     },
     constraintClosed: function (i) {
-      console.log('constraintClosed: ' + i)
       this.query.constraints.splice(i, 1)
+      this.refreshObservationGroups()
     }
   },
   watch: {
@@ -142,6 +160,35 @@ export default {
     }
   },
   computed: {
+    // Return real and implicit constraints to display in GUI
+    constraintsToDisplay: function () {
+      if (this.$store.state.SMT.status !== 'ready') {
+        return []
+      }
+
+      let res = this.query.constraints.slice()
+      for (let i in res) {
+        res[i]['closable'] = true
+      }
+      // Add implicit constraints (when only a unique tag value match the query)
+      res = res.concat(this.results.implicitConstraints)
+      return res
+    },
+    // Return fields with relevant information to display in GUI
+    // Tags field with only one value are suppressed (already displayed as implicit constraints)
+    resultsFieldsToDisplay: function () {
+      if (this.$store.state.SMT.status !== 'ready') {
+        return []
+      }
+      let res = []
+      for (let i in this.results.fields) {
+        let rf = this.results.fields[i]
+        if (!rf.field) continue
+        if (rf.field.widget === 'tags' && Object.keys(rf.data).length === 1) continue
+        res.push(rf)
+      }
+      return res
+    }
   },
   mounted: function () {
     this.refreshObservationGroups()

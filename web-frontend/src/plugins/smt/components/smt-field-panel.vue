@@ -7,7 +7,7 @@
 <v-flex xs12>
   <h3 class="pt-3">{{ fieldDescription.name }}</h3>
   <div v-if="isTags">
-    <v-chip small class="white--text" color="secondary" v-for="(count, name) in fieldResultsData" :key="name" @click="chipClicked(name)">
+    <v-chip small class="white--text ma-1" color="secondary" v-for="(count, name) in fieldResultsData" :key="name" @click="chipClicked(name)">
       {{ name }}&nbsp;<span class="primary--text"> ({{ count }})</span>
     </v-chip>
   </div>
