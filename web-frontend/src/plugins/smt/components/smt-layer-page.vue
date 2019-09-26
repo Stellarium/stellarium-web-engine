@@ -114,6 +114,7 @@ export default {
           features: []
         }
         for (let i in res) {
+          if (i > 15000) break
           geojson.features.push({
             geometry: res[i].geometry,
             type: 'Feature',
@@ -121,13 +122,13 @@ export default {
           })
         }
 
-        if (this.geojsonObj) {
-          that.$observingLayer.remove(this.geojsonObj)
-          this.geojsonObj.destroy()
+        if (that.geojsonObj) {
+          that.$observingLayer.remove(that.geojsonObj)
+          that.geojsonObj.destroy()
         }
 
-        this.geojsonObj = that.$stel.createObj('geojson', { data: geojson })
-        that.$observingLayer.add(this.geojsonObj)
+        that.geojsonObj = that.$stel.createObj('geojson', { data: geojson })
+        that.$observingLayer.add(that.geojsonObj)
       })
 
       // And recompute them
