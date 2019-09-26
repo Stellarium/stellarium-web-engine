@@ -1568,19 +1568,31 @@ static void mesh(renderer_t          *rend_,
                  const uint16_t      indices[],
                  uint64_t            oid)
 {
-    int i;
+    int i, ofs;
     double pos[4];
+    float color[4];
     item_t *item;
     renderer_gl_t *rend = (void*)rend_;
 
-    item = calloc(1, sizeof(*item));
-    item->type = ITEM_MESH;
-    vec4_to_float(painter->color, item->color);
-    item->mesh.mode = mode;
-    item->mesh.stroke_width = painter->lines_width;
-    gl_buf_alloc(&item->buf, &MESH_BUF, verts_count);
-    gl_buf_alloc(&item->indices, &INDICES_BUF, indices_count);
+    vec4_to_float(painter->color, color);
 
+    item = get_item(rend, ITEM_MESH, verts_count, indices_count, NULL);
+    if (item && item->mesh.mode != mode) item = NULL;
+    if (item && item->mesh.stroke_width != painter->lines_width) item = NULL;
+    if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
+
+    if (!item) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_MESH;
+        memcpy(item->color, color, sizeof(color));
+        item->mesh.mode = mode;
+        item->mesh.stroke_width = painter->lines_width;
+        gl_buf_alloc(&item->buf, &MESH_BUF, max(verts_count, 1024));
+        gl_buf_alloc(&item->indices, &INDICES_BUF, max(indices_count, 1024));
+        DL_APPEND(rend->items, item);
+    }
+
+    ofs = item->buf.nb;
     // Project the vertices.
     for (i = 0; i < verts_count; i++) {
         vec3_copy(verts[i], pos);
@@ -1597,7 +1609,7 @@ static void mesh(renderer_t          *rend_,
 
     // Fill the indice buffer.
     for (i = 0; i < indices_count; i++) {
-        gl_buf_1i(&item->indices, -1, 0, indices[i]);
+        gl_buf_1i(&item->indices, -1, 0, indices[i] + ofs);
         gl_buf_next(&item->indices);
     }
 
@@ -1606,8 +1618,6 @@ static void mesh(renderer_t          *rend_,
                 item->buf.data, indices_count, item->indices.data,
                 oid, 0);
     }
-
-    DL_APPEND(rend->items, item);
 }
 
 static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
