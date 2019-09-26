@@ -30,10 +30,6 @@ async function loadAllData (fieldsList, jsonData) {
     let properties = feature.properties
     await req.promise([id, geometry, properties])
   }
-
-  // console.log('Test query by properties.scenario.contractual_date')
-  // let res = await alasql.promise('SELECT * FROM features WHERE DATE(properties->scenario->contractual_date) > DATE("2022-04-05")')
-  // console.log(res)
 }
 
 export default {
