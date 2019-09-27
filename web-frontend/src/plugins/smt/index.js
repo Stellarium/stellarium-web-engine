@@ -53,12 +53,14 @@ export default {
     app.$stel.core.landscapes.fog_visible = false
     app.$stel.core.cardinals.visible = false
     app.$stel.core.planets.visible = false
+    app.$stel.core.dsos.visible = false
     app.$stel.core.mount_frame = app.$stel.FRAME_ICRF
     app.$stel.core.projection = 5 // PROJ_MOLLWEIDE
     app.$stel.core.observer.refraction = false
     app.$stel.core.observer.yaw = 0
     app.$stel.core.observer.pitch = 0
     app.$stel.core.fov = 270
+    app.$store.commit('setValue', { varName: 'timeSpeed', newValue: 0 })
 
     let fieldsList = require('./fieldsList.json')
     Vue.prototype.$smt = { fieldsList: fieldsList }
