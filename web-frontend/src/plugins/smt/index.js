@@ -64,7 +64,7 @@ export default {
     Vue.prototype.$smt = { fieldsList: fieldsList }
 
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
-    fetch('/plugins/smt/Surveys/euclid-test1000.json').then(function (response) {
+    fetch('/plugins/smt/Surveys/euclid-test1000.geojson').then(function (response) {
       if (!response.ok) {
         throw response.body
       }
