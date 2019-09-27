@@ -31,14 +31,14 @@ export default {
           title: 'Date Range'
         },
         legend: { position: 'none' },
-        backgroundColor: '#424242',
+        backgroundColor: 'transparent',
         chartArea: { left: '5%', top: '5%', width: '90%', height: '65%' },
         hAxis: {
           textStyle: {
             color: 'white'
           },
           gridlines: {
-            color: '#424242',
+            color: 'transparent',
             units: {
               days: { format: ['DD HH:MM'] },
               hours: { format: ['HH:MM'] }
