@@ -148,12 +148,26 @@ export default {
         if (field.widget === 'date_range') {
           alasql.promise('SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features' + whereClause).then(res => {
             let start = new Date(res[0].dmin)
-            let step = (res[0].dmax - res[0].dmin) / 10 + 0.00000001
-            alasql.promise('SELECT COUNT(*) AS c FROM features' + whereClause + ' GROUP BY FLOOR((DATE(' + fid + ') - ?) / ?)', [start, step]).then(res2 => {
+            start.setHours(0, 0, 0, 0)
+            // Switch to next day and truncate
+            let stop = new Date(res[0].dmax + 1000 * 60 * 60 * 24)
+            stop.setHours(0, 0, 0, 0)
+            // Range in days
+            let range = (stop - start) / (1000 * 60 * 60 * 24)
+            let step = 'DAY'
+            if (range > 3 * 365) {
+              step = 'YEAR'
+            } else if (range > 3 * 30) {
+              step = 'MONTH'
+            }
+
+            alasql.promise('SELECT COUNT(*) AS c, DATE(FIRST(' + fid + ')) AS d FROM features' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
               let data = [['Date', 'Count']]
               for (let j in res2) {
-                let d = new Date()
-                d.setTime(start.getTime() + step * j)
+                let d = res2[j].d
+                d.setHours(0, 0, 0, 0)
+                if (step === 'MONTH') d.setDate(0)
+                if (step === 'YEAR') d.setMonth(0)
                 data.push([d, res2[j].c])
               }
               Vue.set(that.results.fields[i], 'field', field)

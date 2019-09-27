@@ -12,8 +12,18 @@
     </v-chip>
   </div>
   <div v-if="isDateRange">
-    <GChart type="ColumnChart" :data="fieldResultsData" :options="dateRangeChartOptions"/>
-    <v-slider style="margin-top: -50px; padding-left: 7%; padding-right: 7%"></v-slider>
+    <v-row no-gutters>
+      <v-col cols="10">
+        <GChart type="ColumnChart" :data="fieldResultsData" :options="dateRangeChartOptions"  style="margin-bottom: -20px"/>
+      </v-col>
+      <v-col cols="2"></v-col>
+      <v-col cols="10">
+        <v-range-slider></v-range-slider>
+      </v-col>
+      <v-col cols="2" style="margin-top: -10px">
+        <v-btn small fab>OK</v-btn>
+      </v-col>
+    </v-row>
   </div>
 </v-flex>
 
@@ -38,14 +48,13 @@ export default {
             color: 'white'
           },
           gridlines: {
-            color: 'transparent',
-            units: {
-              days: { format: ['DD HH:MM'] },
-              hours: { format: ['HH:MM'] }
-            }
+            color: 'transparent'
           }
         },
         vAxis: {
+          textStyle: {
+            color: 'transparent'
+          },
           gridlines: {
             count: 0
           }
