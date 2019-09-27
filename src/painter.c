@@ -256,6 +256,28 @@ static void line_func(void *user, double t, double out[2])
             pos, out);
 }
 
+/*
+ * Function: intersect_discontinuity_line
+ * Check if a segment intersect the azimuth = 180° line
+ *
+ * We assume the segment is smaller than 180°.
+ */
+static bool segment_intersects_discontinuity_line(
+    const double a[3], const double b[3])
+{
+    double x0, x1;
+    if (a[2] < 0 && b[2] < 0) return false; // Both in front of us.
+    if (a[0] * b[0] > 0) return false; // Both on same side of the line.
+    if (a[2] > 0 && b[2] > 0) return true;
+    x0 = atan2(a[0], -a[2]);
+    x1 = atan2(b[0], -b[2]);
+    if (fabs(x0) + fabs(x1) >= M_PI) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 static int paint_line(const painter_t *painter,
                       int frame,
                       double line[2][4], const uv_map_t *map,
@@ -267,7 +289,7 @@ static int paint_line(const painter_t *painter,
 
     assert((flags & PAINTER_SKIP_DISCONTINUOUS) == flags);
     if (    (flags & PAINTER_SKIP_DISCONTINUOUS) &&
-            painter->proj->intersect_discontinuity)
+            painter->proj->flags & PROJ_HAS_DISCONTINUITY)
     {
         // Test if the line intersect a discontinuity, and for the moment
         // just don't render it in that case.
@@ -281,8 +303,7 @@ static int paint_line(const painter_t *painter,
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           view_pos[i], view_pos[i]);
         }
-        if (painter->proj->intersect_discontinuity(
-                            painter->proj, view_pos[0], view_pos[1]))
+        if (segment_intersects_discontinuity_line(view_pos[0], view_pos[1]))
             return 0;
     }
     size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
