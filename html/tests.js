@@ -22,8 +22,8 @@ var testBasic = function(stel) {
 
   stel.observer.longitude = -84.388 * stel.D2R;
   stel.observer.latitude = 33.749 * stel.D2R;
-  stel.observer.azimuth = 90 * stel.D2R;
-  stel.observer.altitude = 0;
+  stel.observer.yaw = 90 * stel.D2R;
+  stel.observer.pitch = 0;
   stel.observer.refraction = false;
   assert(JSON.stringify(stel.observer.azalt) === JSON.stringify([0, 1, 0]));
 
