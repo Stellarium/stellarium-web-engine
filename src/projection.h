@@ -40,12 +40,10 @@ enum {
     // Set in the projection flags to flip the rendering.
     PROJ_FLIP_VERTICAL      = 1 << 5,
     PROJ_FLIP_HORIZONTAL    = 1 << 6,
-};
 
-// Returns from intersect_discontinuity.
-enum {
-    PROJ_INTERSECT_DISCONTINUITY = 1 << 0,
-    PROJ_CANNOT_SPLIT            = 1 << 1,
+    // Set for the projections that have a discontinuity at the z = 0, z < 1
+    // semi circle.
+    PROJ_HAS_DISCONTINUITY  = 1 << 7,
 };
 
 /* Type: projection_t
@@ -68,15 +66,11 @@ struct projection
 
     // Maximum FOV at which we can display
     double max_fov;
-    int shift;              // Only used by the mercator projection.
 
     void (*project)(const projection_t *proj, int flags,
                     const double *v, double *out);
     bool (*backward)(const projection_t *proj, int flags,
                      const double *v, double *out);
-    int (*intersect_discontinuity)(const projection_t *proj,
-                                   const double a[3], const double b[3]);
-    void (*split)(const projection_t *proj, projection_t *out);
 };
 
 /*
@@ -127,9 +121,5 @@ void projection_init(projection_t *proj, int type, double fovx,
  */
 bool project(const projection_t *proj, int flags,
              int out_dim, const double *v, double *out);
-
-// n can be 2 (for a line) or 4 (for a quad).
-int projection_intersect_discontinuity(const projection_t *proj,
-                                       double (*p)[4], int n);
 
 #endif // PROJECTION_H

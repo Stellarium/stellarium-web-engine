@@ -172,6 +172,11 @@ if target_os == 'js':
         'getValue',
         'removeFunction',
         'setValue',
+        'intArrayFromString',
+        'allocate',
+        '_free',
+        '_malloc',
+        'ALLOC_NORMAL',
     ]
     extra_exported = ','.join("'%s'" % x for x in extra_exported)
 

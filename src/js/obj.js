@@ -312,11 +312,25 @@ Module.afterInit(function() {
     return Module.core.add('layer', data);
   }
 
+  // Conveniance function to convert a js string into an allocated C string.
+  function stringToC(str) {
+    return Module.allocate(Module.intArrayFromString(str), 'i8',
+                           Module.ALLOC_NORMAL)
+  }
+
   // Create a new unparented object.
   Module['createObj'] = function(type, args) {
-    var id = args ? args.id : undefined;
+    // Don't use the emscripten wrapped version of obj_create_str, since
+    // it seems to crash with large strings!
+    var id = args ? args.id : 0;
     args = JSON.stringify(args)
-    var ret = obj_create_str(type, id, 0, args);
+    if (id) id = stringToC(id);
+    type = stringToC(type);
+    args = stringToC(args);
+    var ret = Module._obj_create_str(type, id, 0, args);
+    Module._free(type);
+    Module._free(args);
+    if (id) Module._free(id);
     return ret ? new SweObj(ret) : null;
   }
 
