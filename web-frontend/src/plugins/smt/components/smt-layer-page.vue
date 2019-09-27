@@ -8,19 +8,17 @@
     <div class="scroll-container">
       <v-container fluid style="height: 100%">
         <v-card>
-          <v-card-title primary-title>
-            <h3 class="headline mb-0">Layer</h3>
-          </v-card-title>
           <v-card-text>
-            <v-layout column justify-space-between>
-              <p>Count: {{ results.summary.count }}</p>
-              <p>Nb constraints: {{ query.constraints.length }}</p>
-              <div>
-                <v-chip small class="white--text ma-1" :close="constraint.closable" :disabled="!constraint.closable" color="primary" v-for="(constraint, i) in constraintsToDisplay" :key="i" @click:close="constraintClosed(i)">
-                  {{ constraint.field.name }} = {{ constraint.expression }}&nbsp;
+            <div class="display-1 text--primary">{{ results.summary.count }} items</div>
+            <div class="mt-2">Constraints:</div>
+            <v-row no-gutters>
+              <div v-for="(constraint, i) in constraintsToDisplay" :key="i" style="text-align: center;" class="pa-1">
+                <div class="caption white--text">{{ constraint.field.name }}</div>
+                <v-chip small class="white--text" :close="constraint.closable" :disabled="!constraint.closable" color="primary" @click:close="constraintClosed(i)">
+                <div :style="{ minWidth: constraint.closable ? 60 : 82 + 'px' }">{{ constraint.expression }}</div>
                 </v-chip>
               </div>
-            </v-layout>
+            </v-row>
           </v-card-text>
         </v-card>
         <v-layout column>
