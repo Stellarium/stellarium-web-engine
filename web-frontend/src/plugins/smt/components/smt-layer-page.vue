@@ -114,7 +114,6 @@ export default {
           features: []
         }
         for (let i in res) {
-          if (i > 15000) break
           geojson.features.push({
             geometry: res[i].geometry,
             type: 'Feature',
