@@ -128,8 +128,4 @@ void projection_init(projection_t *proj, int type, double fovx,
 bool project(const projection_t *proj, int flags,
              int out_dim, const double *v, double *out);
 
-// n can be 2 (for a line) or 4 (for a quad).
-int projection_intersect_discontinuity(const projection_t *proj,
-                                       double (*p)[4], int n);
-
 #endif // PROJECTION_H

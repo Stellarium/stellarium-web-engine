@@ -127,25 +127,6 @@ bool project(const projection_t *proj, int flags, int out_dim,
     return visible;
 }
 
-// n can be 2 (for a line) or 4 (for a quad).
-int projection_intersect_discontinuity(const projection_t *proj,
-                                        double (*pos)[4], int n)
-{
-    int i, r, ret = 0;
-    const int NEXT[4] = {1, 3, 0, 2};
-    if (!proj->intersect_discontinuity) return 0;
-    assert(n == 2 || n == 4);
-    if (n == 2)
-        return proj->intersect_discontinuity(proj, pos[0], pos[1]);
-    for (i = 0; i < 4; i++) {
-        r = proj->intersect_discontinuity(proj, pos[i], pos[NEXT[i]]);
-        ret |= r;
-        if (ret == (PROJ_INTERSECT_DISCONTINUITY | PROJ_CANNOT_SPLIT))
-            break;
-    }
-    return ret;
-}
-
 /******* TESTS **********************************************************/
 #ifdef COMPILE_TESTS
 
