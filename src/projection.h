@@ -42,12 +42,6 @@ enum {
     PROJ_FLIP_HORIZONTAL    = 1 << 6,
 };
 
-// Returns from intersect_discontinuity.
-enum {
-    PROJ_INTERSECT_DISCONTINUITY = 1 << 0,
-    PROJ_CANNOT_SPLIT            = 1 << 1,
-};
-
 /* Type: projection_t
  * Represents a projection from the sphere into a 2d map.
  *
@@ -74,8 +68,8 @@ struct projection
                     const double *v, double *out);
     bool (*backward)(const projection_t *proj, int flags,
                      const double *v, double *out);
-    int (*intersect_discontinuity)(const projection_t *proj,
-                                   const double a[3], const double b[3]);
+    bool (*intersect_discontinuity)(const projection_t *proj,
+                                    const double a[3], const double b[3]);
     void (*split)(const projection_t *proj, projection_t *out);
 };
 

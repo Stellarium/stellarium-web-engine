@@ -261,7 +261,7 @@ static int paint_line(const painter_t *painter,
                       double line[2][4], const uv_map_t *map,
                       int split, int flags)
 {
-    int r, i, size;
+    int i, size;
     double view_pos[2][4];
     double (*win_line)[2];
 
@@ -269,7 +269,8 @@ static int paint_line(const painter_t *painter,
     if (    (flags & PAINTER_SKIP_DISCONTINUOUS) &&
             painter->proj->intersect_discontinuity)
     {
-        // Test if the line intersect a discontinuity.
+        // Test if the line intersect a discontinuity, and for the moment
+        // just don't render it in that case.
         for (i = 0; i < 2; i++) {
             if (map)
                 uv_map(map, line[i], view_pos[i]);
@@ -280,11 +281,9 @@ static int paint_line(const painter_t *painter,
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           view_pos[i], view_pos[i]);
         }
-        r = painter->proj->intersect_discontinuity(
-                            painter->proj, view_pos[0], view_pos[1]);
-        if (r & PROJ_INTERSECT_DISCONTINUITY) {
-            return r;
-        }
+        if (painter->proj->intersect_discontinuity(
+                            painter->proj, view_pos[0], view_pos[1]))
+            return 0;
     }
     size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
                           split, &win_line);

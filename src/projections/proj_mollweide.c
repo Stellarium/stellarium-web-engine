@@ -77,23 +77,23 @@ void proj_mollweide_compute_fov(double fov, double aspect,
     }
 }
 
-static int proj_mollweide_intersect_discontinuity(const projection_t *p,
+static bool proj_mollweide_intersect_discontinuity(const projection_t *p,
         const double a[3], const double b[3])
 {
     // XXX: probably over complicated!
     double x0, x1;
     if (a[0] * b[0] > 0)
-        return PROJ_CANNOT_SPLIT;
+        return false;
     if (a[2] < 0 && b[2] < 0)
-        return PROJ_CANNOT_SPLIT;
+        return false;
     if (a[2] > 0 && b[2] > 0)
-        return PROJ_INTERSECT_DISCONTINUITY;
+        return true;
     x0 = atan2(a[0], -a[2]);
     x1 = atan2(b[0], -b[2]);
     if (fabs(x0) + fabs(x1) >= M_PI) {
-        return PROJ_INTERSECT_DISCONTINUITY;
+        return true;
     } else {
-        return PROJ_CANNOT_SPLIT;
+        return false;
     }
 }
 
