@@ -41,7 +41,13 @@ export default {
           title: 'Date Range'
         },
         legend: { position: 'none' },
-        backgroundColor: 'transparent',
+        backgroundColor: '#212121',
+        annotations: {
+          highContrast: false,
+          textStyle: {
+            color: '#ffffff'
+          }
+        },
         chartArea: { left: '5%', top: '5%', width: '90%', height: '65%' },
         hAxis: {
           textStyle: {
