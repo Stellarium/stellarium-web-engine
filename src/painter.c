@@ -188,6 +188,7 @@ int paint_quad(const painter_t *painter,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
+    assert(mat4_is_identity(*painter->transform)); // Not supported yet.
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;

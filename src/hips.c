@@ -413,6 +413,10 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     painter.color[3] *= fade;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     uv_map_init_healpix(&map, order, pix, false, true);
+
+    map.transf = painter.transform;
+    painter.transform = &mat4_identity;
+
     paint_quad(&painter, hips->frame, &map, split);
     return 0;
 }

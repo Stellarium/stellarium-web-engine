@@ -538,6 +538,10 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
     uv_map_init_healpix(&map, order, pix, true, false);
+
+    map.transf = painter.transform;
+    painter.transform = &mat4_identity;
+
     paint_quad(&painter, FRAME_ICRF, &map, split);
     return 0;
 }
@@ -582,6 +586,10 @@ static void render_rings(const planet_t *planet,
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_RING_SHADER;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
+
+    map.transf = painter.transform;
+    painter.transform = &mat4_identity;
+
     paint_quad(&painter, FRAME_ICRF, &map, 64);
 }
 
