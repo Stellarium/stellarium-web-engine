@@ -9,45 +9,47 @@
 <template>
 
 <v-app>
-  <v-navigation-drawer absolute temporary clipped v-model="nav" style="display:flex;flex-direction:column;padding-bottom: 0;">
-    <v-list dense>
-      <template v-for="(item,i) in menuItems">
-        <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1" :key="i"/>
-        <v-divider class="divider_menu" v-else-if="item.divider" :key="i"/>
-        <v-list-item v-else-if="item.switch" @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
-          <v-list-item-action>
-            <v-switch value :input-value="getStoreValue(item.store_var_name)" label=""></v-switch>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <template v-else>
-          <v-list-item v-if='item.link' target="_blank" :href='item.link' :key="i">
-            <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
-            <v-list-item-title v-text="item.title"/>
-            <v-icon disabled>mdi-open-in-new</v-icon>
+  <v-navigation-drawer absolute temporary clipped v-model="nav" width="300" class="py-0">
+    <v-layout column fill-height>
+      <v-list dense>
+        <template v-for="(item,i) in menuItems">
+          <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1" :key="i"/>
+          <v-divider class="divider_menu" v-else-if="item.divider" :key="i"/>
+          <v-list-item v-else-if="item.switch" @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
+            <v-list-item-action>
+              <v-switch value :input-value="getStoreValue(item.store_var_name)" label=""></v-switch>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            </v-list-item-content>
           </v-list-item>
-          <v-list-item v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
+          <template v-else>
+            <v-list-item v-if='item.link' target="_blank" :href='item.link' :key="i">
+              <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
+              <v-list-item-title v-text="item.title"/>
+              <v-icon disabled>mdi-open-in-new</v-icon>
+            </v-list-item>
+            <v-list-item v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
+              <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
+              <v-list-item-title v-text="item.title"/>
+            </v-list-item>
+          </template>
+        </template>
+      </v-list>
+      <template v-for="(item,i) in menuComponents">
+        <component :is="item" :key="i"></component>
+      </template>
+      <v-spacer></v-spacer>
+      <v-list dense>
+        <v-divider class="divider_menu"/>
+        <template v-for="(item,i) in menuItems">
+          <v-list-item v-if='item.footer' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
             <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
             <v-list-item-title v-text="item.title"/>
           </v-list-item>
         </template>
-      </template>
-    </v-list>
-    <template v-for="(item,i) in menuComponents">
-      <component :is="item" :key="i"></component>
-    </template>
-    <v-spacer></v-spacer>
-    <v-list dense>
-      <v-divider class="divider_menu"/>
-      <template v-for="(item,i) in menuItems">
-        <v-list-item v-if='item.footer' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
-          <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
-          <v-list-item-title v-text="item.title"/>
-        </v-list-item>
-      </template>
-    </v-list>
+      </v-list>
+    </v-layout>
   </v-navigation-drawer>
 
   <div id="stel" v-bind:class="{ right_panel: $store.state.showSidePanel }">
