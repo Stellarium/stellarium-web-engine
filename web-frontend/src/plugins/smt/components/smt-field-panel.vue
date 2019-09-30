@@ -14,22 +14,22 @@
   <div v-if="isDateRange">
     <v-row no-gutters>
       <v-col cols="10">
-        <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px"/>
+        <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
       </v-col>
       <v-col cols="2"></v-col>
       <v-col cols="10">
-        <v-range-slider class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]"></v-range-slider>
+        <v-range-slider hide-details class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]"></v-range-slider>
       </v-col>
       <v-col cols="2" style="margin-top: -10px">
         <v-btn small fab @click="rangeButtonClicked">OK</v-btn>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line v-mask="dateMask" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
+        <v-text-field dense solo single-line hide-details v-mask="dateMask" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line v-mask="dateMask" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
+        <v-text-field dense solo single-line hide-details  v-mask="dateMask" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
@@ -159,4 +159,7 @@ export default {
 </script>
 
 <style>
+.v-input__slot {
+  min-height: 10px;
+}
 </style>
