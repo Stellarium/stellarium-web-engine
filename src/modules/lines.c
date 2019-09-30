@@ -251,10 +251,12 @@ static int line_update(obj_t *obj, double dt)
 static void spherical_project(
         const uv_map_t *map, const double v[2], double out[4])
 {
+    const double (*rot)[3][3] = map->user;
     double az, al;
     az = v[0] * 360 * DD2R;
     al = (v[1] - 0.5) * 180 * DD2R;
     eraS2c(az, al, out);
+    mat3_mul_vec3(*rot, out, out);
     out[3] = 0; // Project to infinity.
 }
 
@@ -352,6 +354,7 @@ static void render_label(const double p[2], const double u[2],
  */
 static void render_recursion(
         const line_t *line, const painter_t *painter,
+        const double rot[3][3],
         int level,
         const int splits[2],
         const double mat[3][3],
@@ -365,6 +368,7 @@ static void render_recursion(
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
     uv_map_t map = {
         .map   = spherical_project,
+        .user  = rot,
     };
 
     if (done_mask == 3) return; // Already done.
@@ -373,7 +377,6 @@ static void render_recursion(
     for (i = 0; i < 4; i++) {
         mat3_mul_vec2(mat, uv[i], p);
         spherical_project(&map, p, p);
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, line->frame, FRAME_VIEW, p, p);
         vec4_copy(p, pos[i]);
         project(painter->proj, 0, 4, p, p);
@@ -427,7 +430,7 @@ keep_going:
         mat3_copy(mat, new_mat);
         mat3_iscale(new_mat, 1. / split_az, 1. / split_al, 1.0);
         mat3_itranslate(new_mat, j, i);
-        render_recursion(line, painter, level + 1, new_splits, new_mat,
+        render_recursion(line, painter, rot, level + 1, new_splits, new_mat,
                          steps, done_mask);
     }
 }
@@ -490,27 +493,24 @@ static void get_steps(double fov, char type, int frame,
 static int line_render(const obj_t *obj, const painter_t *painter_)
 {
     line_t *line = (line_t*)obj;
-    double transform[4][4] = MAT4_IDENTITY;
+    double rot[3][3] = MAT3_IDENTITY;
     const step_t *steps[2];
     int splits[2] = {1, 1};
     double mat[3][3];
     painter_t painter = *painter_;
-    mat4_set_identity(transform);
 
     // XXX: probably need to use enum id for the different lines/grids.
     if (strcmp(line->obj.id, "ecliptic") == 0) {
-        mat3_to_mat4(core->observer->re2i, transform);
-        mat4_rx(M_PI / 2, transform, transform);
+        mat3_rx(M_PI / 2, core->observer->re2i, rot);
     }
     if (strcmp(line->obj.id, "equator_line") == 0) {
-        mat4_rx(M_PI / 2, transform, transform);
+        mat3_rx(M_PI / 2, rot, rot);
     }
 
     if (line->visible.value == 0.0) return 0;
 
     vec4_copy(line->color, painter.color);
     painter.color[3] *= line->visible.value;
-    painter.transform = &transform;
     // Compute the number of divisions of the grid.
     if (line->grid) {
         get_steps(core->fov, line->format, line->frame, &painter, steps);
@@ -520,7 +520,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
         steps[1] = &STEPS_DEG[4]; //  20°: enough to avoid clipping errors.
     }
     mat3_set_identity(mat);
-    render_recursion(line, &painter, 0, splits, mat, steps, 0);
+    render_recursion(line, &painter, rot, 0, splits, mat, steps, 0);
     return 0;
 }
 
