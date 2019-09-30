@@ -6,8 +6,8 @@
   <div style="height: 100%;">
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <div class="scroll-container">
-      <v-container fluid style="height: 100%">
-        <v-card>
+      <v-container class="pa-0" fluid style="height: 100%">
+        <v-card tile>
           <v-card-text>
             <div class="display-1 text--primary">{{ results.summary.count }} items</div>
             <div class="mt-2">Constraints:</div>
