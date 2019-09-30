@@ -36,7 +36,7 @@ struct uv_map
     int type;
     void (*map)(const uv_map_t *t, const double v[2], double out[4]);
     // If set, will be applied after the map function.
-    double (*transf)[4][4];
+    const double (*transf)[4][4];
     void *user;
 
     // Healpix specific attributes.
