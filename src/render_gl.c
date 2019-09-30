@@ -188,11 +188,11 @@ static const gl_buf_info_t POINTS_BUF = {
 };
 
 static const gl_buf_info_t TEXTURE_BUF = {
-    .size = 20,
+    .size = 28,
     .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 2, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 8},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 16},
+        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 24},
     },
 };
 
@@ -209,19 +209,19 @@ static const gl_buf_info_t PLANET_BUF = {
 };
 
 static const gl_buf_info_t ATMOSPHERE_BUF = {
-    .size = 24,
+    .size = 32,
     .attrs = {
-        [ATTR_POS]       = {GL_FLOAT, 2, false, 0},
-        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 8},
-        [ATTR_LUMINANCE] = {GL_FLOAT, 1, false, 20},
+        [ATTR_POS]       = {GL_FLOAT, 4, false, 0},
+        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 16},
+        [ATTR_LUMINANCE] = {GL_FLOAT, 1, false, 28},
     },
 };
 
 static const gl_buf_info_t FOG_BUF = {
-    .size = 20,
+    .size = 28,
     .attrs = {
-        [ATTR_POS]       = {GL_FLOAT, 2, false, 0},
-        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 8},
+        [ATTR_POS]       = {GL_FLOAT, 4, false, 0},
+        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 16},
     },
 };
 
@@ -600,8 +600,8 @@ static void quad(renderer_t          *rend_,
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
-        gl_buf_2f(&item->buf, -1, ATTR_POS, ndc_p[0], ndc_p[1]);
+        project(painter->proj, 0, 4, ndc_p, ndc_p);
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         // For atmosphere shader, in the first pass we do not compute the
         // luminance yet, only if the point is visible.
@@ -658,8 +658,8 @@ static void quad_wireframe(renderer_t          *rend_,
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project(painter->proj, PROJ_TO_NDC_SPACE, 4, ndc_p, ndc_p);
-        gl_buf_2f(&item->buf, -1, ATTR_POS, ndc_p[0], ndc_p[1]);
+        project(painter->proj, 0, 4, ndc_p, ndc_p);
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
     }
@@ -710,7 +710,7 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     ofs = item->buf.nb;
 
     for (i = 0; i < 4; i++) {
-        gl_buf_2f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1]);
+        gl_buf_4f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1], 0.0, 1.0);
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, uv[i][0], uv[i][1]);
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
