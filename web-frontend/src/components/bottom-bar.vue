@@ -9,7 +9,7 @@
 <template>
   <div style="position: absolute; display:flex; align-items: flex-end;">
     <div v-if="$store.state.showLocationButton" class="tbtcontainer" style="max-width: 300px; display:flex; align-items: flex-end;">
-      <v-btn class="tmenubt" color="secondary" @click.stop.native="locationClicked()"><v-icon class="hidden-sm-and-up">location_on</v-icon><span class="hidden-xs-only">{{ $store.state.currentLocation.short_name }}</span></v-btn>
+      <v-btn class="tmenubt" color="secondary" @click.stop.native="locationClicked()"><v-icon class="hidden-sm-and-up">mdi-map-marker</v-icon><span class="hidden-xs-only">{{ $store.state.currentLocation.short_name }}</span></v-btn>
     </div>
     <v-spacer></v-spacer>
 
@@ -67,7 +67,7 @@
     <v-menu v-if="$store.state.showTimeButtons" :close-on-content-click="false" transition="v-slide-y-transition" offset-y top left>
       <template v-slot:activator="{ on }">
         <v-btn large class="tmenubt" color="secondary" v-on="on">
-          <v-icon class="hidden-sm-and-up">access_time</v-icon>
+          <v-icon class="hidden-sm-and-up">mdi-clock-outline</v-icon>
           <span class="hidden-xs-only">
             <div class="subtitle-2">{{ time }}</div>
             <div class="caption">{{ date }}</div>
