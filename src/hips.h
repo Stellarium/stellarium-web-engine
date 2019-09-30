@@ -198,13 +198,16 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter,
  * Parameters:
  *   hips    - A hips survey.
  *   painter - The painter used to render.
+ *   transf  - Transformation applied to the unit sphere to set the position
+ *             in the sky.  Can be set to NULL for identity.
  *   angle   - Visible angle the survey has in the sky.
  *             (2 * PI for full sky surveys).
  *   split_order - The requested order of the final quad divisions.
  *                 The actual split order could be higher if the rendering
  *                 order is too high for this value.
  */
-int hips_render(hips_t *hips, const painter_t *painter, double angle,
+int hips_render(hips_t *hips, const painter_t *painter,
+                const double transf[4][4], double angle,
                 int split_order);
 
 /*

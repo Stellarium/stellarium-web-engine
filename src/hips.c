@@ -421,17 +421,16 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
 }
 
 
-int hips_render(hips_t *hips, const painter_t *painter_, double angle,
-                int split_order)
+int hips_render(hips_t *hips, const painter_t *painter_,
+                const double transf[4][4], double angle, int split_order)
 {
     PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;
-    const double (*transf)[4][4] = painter.transform;
     painter.transform = &mat4_identity;
     if (painter.color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
-    hips_render_traverse(hips, &painter, *transf, angle, split_order,
+    hips_render_traverse(hips, &painter, transf, angle, split_order,
                          USER_PASS(&nb_tot, &nb_loaded),
                          render_visitor);
     progressbar_report(hips->url, hips->label, nb_loaded, nb_tot, -1);
