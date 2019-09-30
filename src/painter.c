@@ -619,6 +619,7 @@ static void orbit_map(const uv_map_t *map, const double v[2], double out[4])
  *   k_ma       - Mean Anomaly (rad).
  */
 int paint_orbit(const painter_t *painter, int frame,
+                const double transf[4][4],
                 double k_jd,      // date (MJD).
                 double k_in,      // inclination (rad).
                 double k_om,      // Longitude of the Ascending Node (rad).
@@ -631,6 +632,7 @@ int paint_orbit(const painter_t *painter, int frame,
     const double orbit[8] = {k_jd, k_in, k_om, k_w, k_a, k_n, k_ec, k_ma};
     uv_map_t map = {
         .map        = orbit_map,
+        .transf     = (void*)transf,
         .user       = (void*)orbit,
     };
     double line[2][4] = {{0}, {1}};

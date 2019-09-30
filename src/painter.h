@@ -533,6 +533,7 @@ void painter_update_clip_info(painter_t *painter);
  * Parameters:
  *   painter    - The painter.
  *   frame      - Need to be FRAME_ICRF.
+ *   transf     - Parent body position transformation.
  *   k_jd       - Orbit epoch date (MJD).
  *   k_in       - Inclination (rad).
  *   k_om       - Longitude of the Ascending Node (rad).
@@ -543,6 +544,7 @@ void painter_update_clip_info(painter_t *painter);
  *   k_ma       - Mean Anomaly (rad).
  */
 int paint_orbit(const painter_t *painter, int frame,
+                const double transf[4][4],
                 double k_jd, double k_in, double k_om, double k_w,
                 double k_a, double k_n, double k_ec, double k_ma);
 

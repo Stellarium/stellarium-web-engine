@@ -782,7 +782,6 @@ static void planet_render_orbit(const planet_t *planet,
     vec4_copy(planet->parent->pvo[0], pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
-    painter.transform = &mat;
 
     // Set the depth range same as the parent!!!!
     dist = vec3_norm(planet->parent->pvo[0]);
@@ -791,7 +790,7 @@ static void planet_render_orbit(const planet_t *planet,
     painter.depth_range = &depth_range;
 
     painter.lines_width = 1.5;
-    paint_orbit(&painter, FRAME_ICRF, painter.obs->tt,
+    paint_orbit(&painter, FRAME_ICRF, mat, painter.obs->tt,
                 in, om, w, a, n, ec, ma);
 }
 
