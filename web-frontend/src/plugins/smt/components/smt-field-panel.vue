@@ -25,11 +25,11 @@
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line :value="formatDate(dateRangeSliderValues[0])"></v-text-field>
+        <v-text-field dense solo single-line v-mask="dateMask" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line :value="formatDate(dateRangeSliderValues[1])"></v-text-field>
+        <v-text-field dense solo single-line v-mask="dateMask" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
@@ -42,10 +42,12 @@
 import _ from 'lodash'
 import { GChart } from 'vue-google-charts'
 import Moment from 'moment'
+import { mask } from 'vue-the-mask'
 
 export default {
   data: function () {
     return {
+      dateMask: '####-##-##',
       dateRangeSliderValues: [0, 1],
       dateRangeChartOptions: {
         chart: {
@@ -79,6 +81,7 @@ export default {
       }
     }
   },
+  directives: { mask },
   props: ['fieldDescription', 'fieldResults'],
   methods: {
     chipClicked: function (name) {
@@ -99,6 +102,20 @@ export default {
         'negate': false
       }
       this.$emit('add-constraint', constraint)
+    },
+    rangeMinTextuallyChanged: function (v) {
+      try {
+        let t = new Date(v).getTime()
+        this.dateRangeSliderValues = [t, this.dateRangeSliderValues[1]]
+      } catch (e) {
+      }
+    },
+    rangeMaxTextuallyChanged: function (v) {
+      try {
+        let t = new Date(v).getTime()
+        this.dateRangeSliderValues = [this.dateRangeSliderValues[0], t]
+      } catch (e) {
+      }
     }
   },
   computed: {
