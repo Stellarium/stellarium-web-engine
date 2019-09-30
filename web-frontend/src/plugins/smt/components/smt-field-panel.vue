@@ -14,15 +14,24 @@
   <div v-if="isDateRange">
     <v-row no-gutters>
       <v-col cols="10">
-        <GChart type="ColumnChart" :data="fieldResultsData" :options="dateRangeChartOptions"  style="margin-bottom: -20px"/>
+        <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px"/>
       </v-col>
       <v-col cols="2"></v-col>
       <v-col cols="10">
-        <v-range-slider></v-range-slider>
+        <v-range-slider class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]"></v-range-slider>
       </v-col>
       <v-col cols="2" style="margin-top: -10px">
-        <v-btn small fab>OK</v-btn>
+        <v-btn small fab @click="rangeButtonClicked">OK</v-btn>
       </v-col>
+      <v-col cols="1"></v-col>
+      <v-col cols="4">
+        <v-text-field dense solo single-line :value="formatDate(dateRangeSliderValues[0])"></v-text-field>
+      </v-col>
+      <v-col cols="1"></v-col>
+      <v-col cols="4">
+        <v-text-field dense solo single-line :value="formatDate(dateRangeSliderValues[1])"></v-text-field>
+      </v-col>
+      <v-col cols="2"></v-col>
     </v-row>
   </div>
 </v-flex>
@@ -32,10 +41,12 @@
 <script>
 import _ from 'lodash'
 import { GChart } from 'vue-google-charts'
+import Moment from 'moment'
 
 export default {
   data: function () {
     return {
+      dateRangeSliderValues: [0, 1],
       dateRangeChartOptions: {
         chart: {
           title: 'Date Range'
@@ -65,14 +76,28 @@ export default {
             count: 0
           }
         }
-      },
-      date_range: [20, 60]
+      }
     }
   },
   props: ['fieldDescription', 'fieldResults'],
   methods: {
     chipClicked: function (name) {
       let constraint = { 'field': this.fieldDescription, 'operation': 'STRING_EQUAL', 'expression': name, 'negate': false }
+      this.$emit('add-constraint', constraint)
+    },
+    formatDate: function (d) {
+      return new Moment(d).format('YYYY-MM-DD')
+    },
+    rangeButtonClicked: function () {
+      let constraint = {
+        'field': this.fieldDescription,
+        'operation': 'DATE_RANGE',
+        'expression': [
+          new Date(this.dateRangeSliderValues[0]).toISOString(),
+          new Date(this.dateRangeSliderValues[1]).toISOString()
+        ],
+        'negate': false
+      }
       this.$emit('add-constraint', constraint)
     }
   },
@@ -89,13 +114,27 @@ export default {
       }
       if (this.isDateRange) {
         let newData = _.cloneDeep(this.fieldResults.data)
-        if (newData.length) newData[0].push({ role: 'annotation' })
-        for (let i = 1; i < newData.length; ++i) {
-          newData[i].push('' + newData[i][1])
+        if (newData.table.length) newData.table[0].push({ role: 'annotation' })
+        for (let i = 1; i < newData.table.length; ++i) {
+          newData.table[i].push('' + newData.table[i][1])
         }
         return newData
       }
       return {}
+    },
+    dateRange: function () {
+      if (this.isDateRange && this.fieldResults && this.fieldResults.data && this.fieldResults.data.min) {
+        return [this.fieldResults.data.min.getTime(), this.fieldResults.data.max.getTime()]
+      }
+      return [0, 1]
+    }
+  },
+  mounted: function () {
+    this.dateRangeSliderValues = this.dateRange
+  },
+  watch: {
+    dateRange: function (s) {
+      console.log('dateRange changed')
     }
   },
   components: { GChart }

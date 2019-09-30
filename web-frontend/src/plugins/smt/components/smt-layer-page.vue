@@ -15,7 +15,7 @@
               <div v-for="(constraint, i) in constraintsToDisplay" :key="i" style="text-align: center;" class="pa-1">
                 <div class="caption white--text">{{ constraint.field.name }}</div>
                 <v-chip small class="white--text" :close="constraint.closable" :disabled="!constraint.closable" color="primary" @click:close="constraintClosed(i)">
-                <div :style="{ minWidth: constraint.closable ? 60 : 82 + 'px' }">{{ constraint.expression }}</div>
+                <div :style="{ minWidth: constraint.closable ? 60 : 82 + 'px' }">{{ printConstraint(constraint) }}</div>
                 </v-chip>
               </div>
             </v-row>
@@ -35,6 +35,7 @@ import SmtPanelRootToolbar from './smt-panel-root-toolbar.vue'
 import SmtFieldPanel from './smt-field-panel.vue'
 import alasql from 'alasql'
 import Vue from 'vue'
+import Moment from 'moment'
 
 export default {
   data: function () {
@@ -58,6 +59,13 @@ export default {
     },
     thumbClicked: function (obs) {
       this.$router.push('/p/observations/' + obs.id)
+    },
+    formatDate: function (d) {
+      return new Moment(d).format('YYYY-MM-DD')
+    },
+    printConstraint: function (c) {
+      if (c.field.widget === 'date_range') return this.formatDate(c.expression[0]) + ' - ' + this.formatDate(c.expression[1])
+      return c.expression
     },
     refreshObservationGroups: function () {
       let that = this
@@ -89,6 +97,10 @@ export default {
           let c = that.query.constraints[i]
           if (c.operation === 'STRING_EQUAL') {
             whereClause += that.fId2AlaSql(c.field.id) + ' = "' + c.expression + '"'
+          } else if (c.operation === 'DATE_RANGE') {
+            let fid = that.fId2AlaSql(c.field.id)
+            whereClause += ' DATE(' + fid + ') >= DATE("' + c.expression[0] + '")'
+            whereClause += ' AND DATE(' + fid + ') <= DATE("' + c.expression[1] + '")'
           }
           if (i < that.query.constraints.length - 1) {
             whereClause += ' AND '
@@ -133,7 +145,8 @@ export default {
         let field = that.$smt.fieldsList[i]
         let fid = that.fId2AlaSql(field.id)
         if (field.widget === 'tags') {
-          alasql.promise('SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + whereClause).then(res => {
+          let req = 'SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + whereClause
+          alasql.promise(req).then(res => {
             that.results.fields[i] = {
               field: field,
               status: 'ok',
@@ -143,10 +156,13 @@ export default {
             if (!constraintsIds.includes(field.id) && Object.keys(res[0].tags).length === 1) {
               that.results.implicitConstraints.push({ field: field, expression: Object.keys(res[0].tags)[0], closable: false })
             }
+          }, err => {
+            console.log(err)
           })
         }
         if (field.widget === 'date_range') {
-          alasql.promise('SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features' + whereClause).then(res => {
+          let req = 'SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features' + whereClause
+          alasql.promise(req).then(res => {
             let start = new Date(res[0].dmin)
             start.setHours(0, 0, 0, 0)
             // Switch to next day and truncate
@@ -162,13 +178,18 @@ export default {
             }
 
             alasql.promise('SELECT COUNT(*) AS c, DATE(FIRST(' + fid + ')) AS d FROM features' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
-              let data = [['Date', 'Count']]
+              let data = {
+                min: start,
+                max: stop,
+                step: step,
+                table: [['Date', 'Count']]
+              }
               for (let j in res2) {
                 let d = res2[j].d
                 d.setHours(0, 0, 0, 0)
                 if (step === 'MONTH') d.setDate(0)
                 if (step === 'YEAR') d.setMonth(0)
-                data.push([d, res2[j].c])
+                data.table.push([d, res2[j].c])
               }
               Vue.set(that.results.fields[i], 'field', field)
               Vue.set(that.results.fields[i], 'status', 'ok')
