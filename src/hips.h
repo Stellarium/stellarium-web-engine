@@ -98,7 +98,7 @@ bool hips_is_ready(hips_t *hips);
 
 /*
  * Function: hips_traverse
- * Depth first traversal of healpix grid.
+ * Breadth first traversal of healpix grid.
  *
  * The callback should return:
  *   1 to keep going deeper into the tile.
