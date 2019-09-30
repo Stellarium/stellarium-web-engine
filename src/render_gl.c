@@ -409,9 +409,9 @@ static void compute_tangent(const double uv[2], const uv_map_t *map,
     vec3_normalize(tangent, out);
     */
 
-    double p[4] = {0};
-    uv_map(map, uv, p);
-    vec3_cross(VEC(0, 0, 1), p, out);
+    double p[4] = {0}, n[3];
+    uv_map(map, uv, p, n);
+    vec3_cross(VEC(0, 0, 1), n, out);
 }
 
 static void quad_planet(
@@ -490,10 +490,9 @@ static void quad_planet(
         }
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        uv_map(map, p, p);
+        uv_map(map, p, p, normal);
         assert(p[3] == 1.0); // Planet can never be at infinity.
 
-        vec3_copy(p, normal);
         mat4_mul_vec4(*painter->transform, normal, normal);
         gl_buf_3f(&item->buf, -1, ATTR_NORMAL, VEC3_SPLIT(normal));
 

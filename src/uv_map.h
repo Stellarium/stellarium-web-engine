@@ -58,8 +58,10 @@ struct uv_map
  *   map    - The mapping function used.
  *   uv     - Input UV coordinates.
  *   out    - Output 3d homogeneous coordinates.
+ *   normal - If set, returns the normal at the mapped position.
  */
-void uv_map(const uv_map_t *map, const double v[2], double out[4]);
+void uv_map(const uv_map_t *map, const double v[2], double out[4],
+            double normal[3]);
 
 /*
  * Function: uv_map_subdivide

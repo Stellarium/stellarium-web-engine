@@ -247,7 +247,7 @@ static void line_func(void *user, double t, double out[2])
     const uv_map_t *map = USER_GET(user, 3);
 
     vec4_mix(line[0], line[1], t, pos);
-    if (map) uv_map(map, pos, pos);
+    if (map) uv_map(map, pos, pos, NULL);
     mat4_mul_vec4(*painter->transform, pos, pos);
     vec3_normalize(pos, pos);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
@@ -313,7 +313,7 @@ static int paint_line(const painter_t *painter,
         // just don't render it in that case.
         for (i = 0; i < 2; i++) {
             if (map)
-                uv_map(map, line[i], view_pos[i]);
+                uv_map(map, line[i], view_pos[i], NULL);
             else
                 memcpy(view_pos[i], line[i], sizeof(view_pos[i]));
             mat4_mul_vec4(*painter->transform, view_pos[i], view_pos[i]);

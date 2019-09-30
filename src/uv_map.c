@@ -15,11 +15,16 @@
 
 #include <assert.h>
 
-void uv_map(const uv_map_t *map, const double v[2], double out[4])
+void uv_map(const uv_map_t *map, const double v[2], double out[4],
+            double normal[3])
 {
     map->map(map, v, out);
-    if (map->transf)
+    if (normal) vec3_copy(out, normal);
+    if (map->transf) {
         mat4_mul_vec4(*map->transf, out, out);
+        if (normal) mat4_mul_vec3(*map->transf, normal, true, normal);
+    }
+    if (normal) vec3_normalize(normal, normal);
 }
 
 /*
@@ -41,7 +46,7 @@ void uv_map_grid(const uv_map_t *map, int size, double (*out)[4])
     for (j = 0; j < size + 1; j++) {
         uv[0] = (double)j / size;
         uv[1] = (double)i / size;
-        uv_map(map, uv, out[i * (size + 1) + j]);
+        uv_map(map, uv, out[i * (size + 1) + j], NULL);
     }
 }
 
