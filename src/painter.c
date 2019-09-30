@@ -188,7 +188,6 @@ int paint_quad(const painter_t *painter,
                int grid_size)
 {
     PROFILE(paint_quad, PROFILE_AGGREGATE);
-    assert(mat4_is_identity(*painter->transform)); // Not supported yet.
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;
@@ -249,7 +248,6 @@ static void line_func(void *user, double t, double out[2])
 
     vec4_mix(line[0], line[1], t, pos);
     if (map) uv_map(map, pos, pos, NULL);
-    mat4_mul_vec4(*painter->transform, pos, pos);
     vec3_normalize(pos, pos);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
     pos[3] = 0.0;
@@ -317,7 +315,6 @@ static int paint_line(const painter_t *painter,
                 uv_map(map, line[i], view_pos[i], NULL);
             else
                 memcpy(view_pos[i], line[i], sizeof(view_pos[i]));
-            mat4_mul_vec4(*painter->transform, view_pos[i], view_pos[i]);
             vec3_normalize(view_pos[i], view_pos[i]);
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           view_pos[i], view_pos[i]);
@@ -476,7 +473,6 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 
     if (outside) {
         uv_map_get_bounding_cap(map, bounding_cap);
-        mat4_mul_vec3_dir(*painter->transform, bounding_cap, bounding_cap);
         assert(vec3_is_normalized(bounding_cap));
         if (painter_is_cap_clipped(painter, frame, bounding_cap))
             return true;
@@ -502,7 +498,6 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
     for (i = 0; i < 4; i++) {
         vec3_copy(corners[i], quad[i]);
         quad[i][3] = 1.0;
-        mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
         project(painter->proj, 0, 4, quad[i], p[i]);
         assert(!isnan(p[i][0]));
@@ -843,7 +838,6 @@ bool painter_project(const painter_t *painter, int frame,
                      const double pos[3], bool at_inf, bool clip_first,
                      double win_pos[2]) {
     double v[3];
-    assert(mat4_is_identity(*painter->transform)); // Not supported yet.
     if (clip_first) {
         if (painter_is_point_clipped_fast(painter, frame, pos, at_inf))
             return false;

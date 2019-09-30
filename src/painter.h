@@ -172,10 +172,6 @@ struct painter
     renderer_t      *rend;          // The render used.
     const observer_t *obs;
 
-    // Optional tranf matrix applied to the coordinates.
-    // For example to set the planet position in the hips rendering.
-    double          (*transform)[4][4];
-
     projection_t    *proj;          // Project from view to NDC.
 
     double          color[4];       // Global color.

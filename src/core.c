@@ -690,7 +690,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     painter_t painter = {
         .rend = core->rend,
         .obs = core->observer,
-        .transform = &mat4_identity,
         .fb_size = {win_w * pixel_scale, win_h * pixel_scale},
         .pixel_scale = pixel_scale,
         .proj = &proj,

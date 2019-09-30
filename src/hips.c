@@ -427,7 +427,6 @@ int hips_render(hips_t *hips, const painter_t *painter_,
     PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;
-    painter.transform = &mat4_identity;
     if (painter.color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
     hips_render_traverse(hips, &painter, transf, angle, split_order,

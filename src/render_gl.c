@@ -454,7 +454,6 @@ static void quad_planet(
         mat3_to_mat4(painter->obs->ro2v, mv);
     if (frame == FRAME_ICRF)
         mat3_to_mat4(painter->obs->ri2v, mv);
-    mat4_mul(mv, *painter->transform, mv);
     mat4_to_float(mv, item->planet.mv);
 
     // Set material
@@ -485,7 +484,6 @@ static void quad_planet(
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0], p[1]);
         if (item->planet.normalmap) {
             compute_tangent(p, map, tangent);
-            mat4_mul_vec4(*painter->transform, tangent, tangent);
             gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
@@ -493,17 +491,14 @@ static void quad_planet(
         uv_map(map, p, p, normal);
         assert(p[3] == 1.0); // Planet can never be at infinity.
 
-        mat4_mul_vec4(*painter->transform, normal, normal);
         gl_buf_3f(&item->buf, -1, ATTR_NORMAL, VEC3_SPLIT(normal));
 
         // Model position (without scaling applied).
         vec4_copy(p, mpos);
         vec3_mul(1.0 / painter->planet.scale, mpos, mpos);
-        mat4_mul_vec4(*painter->transform, mpos, mpos);
         gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC4_SPLIT(mpos));
 
         // Rendering position (with scaling applied).
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
         z = p[2];
         project(painter->proj, 0, 4, p, p);
@@ -597,7 +592,6 @@ static void quad(renderer_t          *rend_,
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, 0, 4, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
@@ -655,7 +649,6 @@ static void quad_wireframe(renderer_t          *rend_,
     for (j = 0; j < n; j++) {
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, 0, 4, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
@@ -1596,7 +1589,6 @@ static void mesh(renderer_t          *rend_,
     for (i = 0; i < verts_count; i++) {
         vec3_copy(verts[i], pos);
         pos[3] = 0.0;
-        mat4_mul_vec4(*painter->transform, pos, pos);
         vec3_normalize(pos, pos);
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         pos[3] = 0.0;
