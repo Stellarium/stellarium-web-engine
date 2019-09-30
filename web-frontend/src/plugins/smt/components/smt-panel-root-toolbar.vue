@@ -5,7 +5,6 @@
 <template>
 
 <v-toolbar dense class="obspanel-toolbar">
-  <v-btn icon to="/"><v-icon>mdi-close</v-icon></v-btn>
   <v-spacer></v-spacer>
   <span>{{ $store.state.SMT.status }}</span>
 </v-toolbar>
