@@ -200,6 +200,10 @@ export default {
       }
     },
     addConstraint: function (c) {
+      this.query.constraints = this.query.constraints.filter(cons => {
+        if (cons.field.widget === 'date_range' && cons.field.id === c.field.id) return false
+        return true
+      })
       this.query.constraints.push(c)
       this.refreshObservationGroups()
     },
