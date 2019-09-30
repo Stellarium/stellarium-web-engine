@@ -500,6 +500,7 @@ static void planet_get_designations(
 }
 
 static int on_render_tile(hips_t *hips, const painter_t *painter_,
+                          const double transf[4][4],
                           int order, int pix, int split, int flags, void *user)
 {
     planet_t *planet = USER_GET(user, 0);
@@ -538,10 +539,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
     uv_map_init_healpix(&map, order, pix, true, false);
-
-    map.transf = painter.transform;
-    painter.transform = &mat4_identity;
-
+    map.transf = (void*)transf;
     paint_quad(&painter, FRAME_ICRF, &map, split);
     return 0;
 }
@@ -560,13 +558,15 @@ static void ring_project(const uv_map_t *map, const double v[2], double out[4])
 }
 
 static void render_rings(const planet_t *planet,
-                         const painter_t *painter_)
+                         const painter_t *painter_,
+                         const double transf[4][4])
 {
     texture_t *tex = planet->rings.tex;
     double inner_radius = planet->rings.inner_radius / planet->radius_m;
     double outer_radius = planet->rings.outer_radius / planet->radius_m;
     uv_map_t map = {
         .map = ring_project,
+        .transf = (void*)transf,
     };
     painter_t painter = *painter_;
     const double radii[2] = {inner_radius, outer_radius};
@@ -586,10 +586,6 @@ static void render_rings(const planet_t *planet,
     painter.flags &= ~PAINTER_PLANET_SHADER;
     painter.flags |= PAINTER_RING_SHADER;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, NULL);
-
-    map.transf = painter.transform;
-    painter.transform = &mat4_identity;
-
     paint_quad(&painter, FRAME_ICRF, &map, 64);
 }
 
@@ -731,7 +727,6 @@ static void planet_render_hips(const planet_t *planet,
     mat4_mul(mat, tmp_mat, mat);
     mat4_rx(-planet->rot.obliquity, mat, mat);
     mat4_rz(planet_get_rotation(planet, painter.obs->tt), mat, mat);
-    painter.transform = &mat;
 
     if (planet->id == SUN)
         painter.planet.light_emit = &full_emit;
@@ -755,11 +750,11 @@ static void planet_render_hips(const planet_t *planet,
                  painter.proj->scaling[0] / 2;
     split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
 
-    hips_render_traverse(hips, &painter, angle, split_order,
+    hips_render_traverse(hips, &painter, mat, angle, split_order,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)
-        render_rings(planet, &painter);
+        render_rings(planet, &painter, mat);
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 

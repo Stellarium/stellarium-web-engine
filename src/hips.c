@@ -390,6 +390,7 @@ texture_t *hips_get_tile_texture(
 
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
+                          const double transf[4][4],
                           int order, int pix, int split, int flags,
                           void *user)
 {
@@ -413,23 +414,24 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     painter.color[3] *= fade;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     uv_map_init_healpix(&map, order, pix, false, true);
-
-    map.transf = painter.transform;
-    painter.transform = &mat4_identity;
-
+    if (transf)
+        map.transf = (void*)transf;
     paint_quad(&painter, hips->frame, &map, split);
     return 0;
 }
 
 
-int hips_render(hips_t *hips, const painter_t *painter, double angle,
+int hips_render(hips_t *hips, const painter_t *painter_, double angle,
                 int split_order)
 {
     PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
-    if (painter->color[3] == 0.0) return 0;
+    painter_t painter = *painter_;
+    const double (*transf)[4][4] = painter.transform;
+    painter.transform = &mat4_identity;
+    if (painter.color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
-    hips_render_traverse(hips, painter, angle, split_order,
+    hips_render_traverse(hips, &painter, *transf, angle, split_order,
                          USER_PASS(&nb_tot, &nb_loaded),
                          render_visitor);
     progressbar_report(hips->url, hips->label, nb_loaded, nb_tot, -1);
@@ -441,23 +443,29 @@ static int render_traverse_visitor(int order, int pix, void *user)
     PROFILE(render_traverse_visitor, PROFILE_AGGREGATE);
     hips_t *hips = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
-    int render_order = *(int*)USER_GET(user, 2);
-    int split_order = *(int*)USER_GET(user, 3);
-    int flags = *(int*)USER_GET(user, 4);
+    const double (*transf)[4][4] = USER_GET(user, 2);
+    int render_order = *(int*)USER_GET(user, 3);
+    int split_order = *(int*)USER_GET(user, 4);
+    int flags = *(int*)USER_GET(user, 5);
     int (*callback)(hips_t *hips, const painter_t *painter,
+                    const double transf[4][4],
                     int order, int pix, int split, int flags,
-                    void *user) = USER_GET(user, 5);
+                    void *user) = USER_GET(user, 6);
     const bool outside = !(flags & HIPS_PLANET);
     int split;
-    user = USER_GET(user, 6);
+    uv_map_t map;
+
+    user = USER_GET(user, 7);
     // Early exit if the tile is clipped.
-    if (painter_is_healpix_clipped(painter, hips->frame, order, pix, outside))
+    uv_map_init_healpix(&map, order, pix, false, false);
+    map.transf = transf;
+    if (painter_is_quad_clipped(painter, hips->frame, &map, outside))
         return 0;
 
     if (order < render_order) return 1; // Keep going.
 
     split = 1 << (split_order - render_order);
-    callback(hips, painter, order, pix, split, flags, user);
+    callback(hips, painter, *transf, order, pix, split, flags, user);
     return 0;
 }
 
@@ -558,8 +566,10 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter,
 // control on the rendering.
 int hips_render_traverse(
         hips_t *hips, const painter_t *painter,
+        const double transf[4][4],
         double angle, int split_order, void *user,
         int (*callback)(hips_t *hips, const painter_t *painter,
+                        const double transf[4][4],
                         int order, int pix, int split, int flags, void *user))
 {
     int render_order;
@@ -583,8 +593,8 @@ int hips_render_traverse(
     split_order = max(split_order, render_order);
 
     // XXX: would be nice to have a non callback API for hips_traverse!
-    hips_traverse(USER_PASS(hips, painter, &render_order, &split_order, &flags,
-                            callback, user), render_traverse_visitor);
+    hips_traverse(USER_PASS(hips, painter, transf, &render_order, &split_order,
+                            &flags, callback, user), render_traverse_visitor);
     return 0;
 }
 

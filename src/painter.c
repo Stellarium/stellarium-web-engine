@@ -519,14 +519,14 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
      * direction vector to the middle of the planet.
      */
     if (!outside && order > 1) {
-        vec3_copy((*painter->transform)[3], direction);
+        vec3_copy((*map->transf)[3], direction);
         vec3_normalize(direction, direction);
         convert_frame(painter->obs, frame, FRAME_VIEW, true,
                       direction, direction);
         for (i = 0; i < 4; i++) {
             vec3_copy(corners[i], normal);
             normal[3] = 0.0;
-            mat4_mul_vec4(*painter->transform, normal, normal);
+            mat4_mul_vec4(*map->transf, normal, normal);
             vec3_normalize(normal, normal);
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           normal, normal);

@@ -214,8 +214,10 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle,
  *  control on the rendering.
  */
 int hips_render_traverse(hips_t *hips, const painter_t *painter,
+                         const double transf[4][4],
                          double angle, int split_order, void *user,
                          int callback(hips_t *hips, const painter_t *painter,
+                                      const double transf[4][4],
                                       int order, int pix, int split,
                                       int flags, void *user));
 
