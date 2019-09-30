@@ -278,6 +278,24 @@ static bool segment_intersects_discontinuity_line(
     }
 }
 
+/*
+ * Function: cap_intersects_discontinuity_line
+ * Check if a cap intersects the azimuth = 180° line
+ */
+static bool cap_intersects_discontinuity_line(
+        const double cap_[4], const observer_t *obs, int frame)
+{
+    // Not totally sure about the algo.
+    double cap[4];
+    convert_frame(obs, frame, FRAME_VIEW, true, cap_, cap);
+    cap[3] = cap_[3];
+    if (cap_contains_cap(VEC(0, 0, -1, 0), cap)) return false;
+    if (cap_contains_cap(VEC(+1, 0, 0, 0), cap)) return false;
+    if (cap_contains_cap(VEC(-1, 0, 0, 0), cap)) return false;
+    return true;
+}
+
+
 static int paint_line(const painter_t *painter,
                       int frame,
                       double line[2][4], const uv_map_t *map,
@@ -360,27 +378,13 @@ int paint_mesh(const painter_t *painter_,
     if (indices_count == 0) return 0;
     if (painter_is_cap_clipped(&painter, frame, bounding_cap)) return 0;
 
-    // XXX: Not implemented yet: we will need some way to tell if the
-    // cap intersects the discontinuity.
-    /*
-    int i;
-    projection_t projs[2];
-    double cap[4];
-    vec4_copy(bounding_cap, cap);
-    convert_frame(painter.obs, frame, FRAME_VIEW, true, cap, cap);
-    cap[3] -= 0.0001; // Security margin. XXX do it better.
-    if (projection_cap_intersect_discontinuity(painter.proj, cap)) {
-        // At a discontinuity we render the polygon one on the right and once
-        // on the left.
-        painter.proj->split(painter.proj, projs);
-        for (i = 0; i < 2; i++) {
-            painter.proj = &projs[i];
-            REND(painter.rend, mesh, &painter, frame, mode,
-                 verts_count, verts, indices_count, indices);
+    // Skip meshes that intersect a discontinuty.
+    if (painter.proj->flags & PROJ_HAS_DISCONTINUITY) {
+        if (cap_intersects_discontinuity_line(
+                    bounding_cap, painter.obs, frame)) {
+            return 0;
         }
-        return 0;
-    })
-    */
+    }
 
     REND(painter.rend, mesh, &painter, frame, mode,
          verts_count, verts, indices_count, indices, oid);

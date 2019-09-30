@@ -64,19 +64,6 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
     return ret;
 }
 
-void proj_mollweide_compute_fov(double fov, double aspect,
-                              double *fovx, double *fovy)
-{
-    // Is that correct?
-    if (aspect < 1) {
-        *fovx = fov;
-        *fovy = fov / aspect;
-    } else {
-        *fovy = fov;
-        *fovx = fov * aspect;
-    }
-}
-
 void proj_mollweide_init(projection_t *p, double fov, double aspect)
 {
     p->name                      = "mollweide";
