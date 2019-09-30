@@ -26,7 +26,7 @@
           <v-list-item v-if='item.link' target="_blank" :href='item.link' :key="i">
             <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
             <v-list-item-title v-text="item.title"/>
-            <v-icon disabled>open_in_new</v-icon>
+            <v-icon disabled>mdi-open-in-new</v-icon>
           </v-list-item>
           <v-list-item v-else-if='item.footer===undefined' @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
             <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
