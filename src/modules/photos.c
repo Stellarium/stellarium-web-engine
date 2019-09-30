@@ -81,9 +81,8 @@ static json_value *photo_fn_calibration(obj_t *obj, const attribute_t *attr,
 static void photo_map(const uv_map_t *map, const double v[2], double out[4])
 {
     double p[4] = {v[0], v[1], 1.0, 1.0};
-    mat4_mul_vec4(map->mat4, p, p);
     vec3_normalize(p, p);
-    vec3_copy(p, out);
+    vec4_copy(p, out);
 }
 
 static int photo_render(const obj_t *obj, const painter_t *painter)
@@ -111,7 +110,7 @@ static int photo_render(const obj_t *obj, const painter_t *painter)
         mat4_itranslate(photo->mat, -0.5, -0.5, 0.0);
     }
 
-    mat4_copy(photo->mat, map.mat4);
+    map.transf = &photo->mat;
     map.map = photo_map;
 
     if (!photo->render_shape) {

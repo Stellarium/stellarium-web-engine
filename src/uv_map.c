@@ -18,6 +18,8 @@
 void uv_map(const uv_map_t *map, const double v[2], double out[4])
 {
     map->map(map, v, out);
+    if (map->transf)
+        mat4_mul_vec4(*map->transf, out, out);
 }
 
 /*
@@ -107,5 +109,6 @@ void uv_map_subdivide(const uv_map_t *map, uv_map_t children[4])
     for (i = 0; i < 4; i++) {
         uv_map_init_healpix(&children[i], map->order + 1, map->pix * 4 + i,
                             map->swapped, map->at_infinity);
+        children[i].transf = map->transf;
     }
 }

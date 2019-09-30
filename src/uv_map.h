@@ -34,16 +34,17 @@ typedef struct uv_map uv_map_t;
 struct uv_map
 {
     int type;
+    void (*map)(const uv_map_t *t, const double v[2], double out[4]);
+    // If set, will be applied after the map function.
+    double (*transf)[4][4];
+    void *user;
+
+    // Healpix specific attributes.
     int order;
     int pix;
-    union {
-        double mat[3][3];
-        double mat4[4][4];
-    };
-    void *user;
+    double mat[3][3];
     bool swapped;
     bool at_infinity;
-    void (*map)(const uv_map_t *t, const double v[2], double out[4]);
 };
 
 /*
