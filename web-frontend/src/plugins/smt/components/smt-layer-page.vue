@@ -21,10 +21,10 @@
             </v-row>
           </v-card-text>
         </v-card>
-        <v-layout column>
-          <smt-field-panel v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint">
+        <v-container>
+          <smt-field-panel class="mb-2"  v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint">
           </smt-field-panel>
-        </v-layout>
+        </v-container>
       </v-container>
     </div>
   </div>

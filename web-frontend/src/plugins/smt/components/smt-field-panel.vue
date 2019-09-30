@@ -4,14 +4,16 @@
 
 <template>
 
-<v-flex xs12>
-  <h3 class="pt-3">{{ fieldDescription.name }}</h3>
-  <div v-if="isTags">
+<v-row no-gutters>
+  <v-col cols="12">
+    <h3 class="pt-3 line_right">{{ fieldDescription.name }}</h3>
+  </v-col>
+  <v-col cols="12" v-if="isTags">
     <v-chip small class="white--text ma-1" color="secondary" v-for="(count, name) in fieldResultsData" :key="name" @click="chipClicked(name)">
       {{ name }}&nbsp;<span class="primary--text"> ({{ count }})</span>
     </v-chip>
-  </div>
-  <div v-if="isDateRange">
+  </v-col>
+  <v-col cols="12" v-if="isDateRange">
     <v-row no-gutters>
       <v-col cols="10">
         <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
@@ -33,8 +35,8 @@
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
-  </div>
-</v-flex>
+  </v-col>
+</v-row>
 
 </template>
 
@@ -161,5 +163,25 @@ export default {
 <style>
 .v-input__slot {
   min-height: 10px;
+}
+
+.line_right {
+  overflow: hidden;
+}
+
+.line_right:after {
+  background-color: #444;
+  content: "";
+  display: inline-block;
+  height: 1px;
+  position: relative;
+  vertical-align: middle;
+  width: 100%;
+}
+
+
+.line_right:after {
+  left: 20px;
+  margin-right: -100%;
 }
 </style>
