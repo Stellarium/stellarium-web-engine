@@ -100,6 +100,9 @@ bool hips_is_ready(hips_t *hips);
  * Function: hips_traverse
  * Breadth first traversal of healpix grid.
  *
+ * Deprecated, better to use the non callback version with the hips_iter_
+ * functions instead.
+ *
  * The callback should return:
  *   1 to keep going deeper into the tile.
  *   0 to stop iterating inside this tile.
@@ -111,6 +114,58 @@ bool hips_is_ready(hips_t *hips);
  *   -v if the callback returned a negative value -v.
  */
 int hips_traverse(void *user, int callback(int order, int pix, void *user));
+
+
+/*
+ * Struct: hips_iterator_t
+ * Used for breadth first traversal of hips.
+ *
+ * To iter a hips index we can use the <hips_iter_init>, <hips_iter_next>
+ * and <hips_iter_push_children> functions.  e.g:
+ *
+ *  hips_iterator_t iter;
+ *  int order, pix;
+ *  hips_iter_init(&iter);
+ *  while (hips_iter_next(&iter, &order, &pix)) {
+ *      // Process healpix pixel at order, pix.
+ *      if (go_deeper) {
+ *         hips_iter_push_children(iter, order, pix);
+ *      }
+ *  }
+ *
+ */
+typedef struct hips_iterator
+{
+    struct {
+        int order;
+        int pix;
+    } queue[1024]; // Todo: make it dynamic?
+    int size;
+    int start;
+} hips_iterator_t;
+
+/*
+ * Function: hips_iter_init
+ * Initialize the iterator with the initial twelve order zero healpix pixels.
+ */
+void hips_iter_init(hips_iterator_t *iter);
+
+/*
+ * Function: hips_iter_next
+ * Pop the next healpix pixel from the iterator.
+ *
+ * Return false if there are no more pixel enqueued.
+ */
+bool hips_iter_next(hips_iterator_t *iter, int *order, int *pix);
+
+/*
+ * Function: hips_iter_push_children
+ * Add the four children of the giver pixel to the iterator.
+ *
+ * The children will be retrieved after all the currently queued values
+ * from the iterator have been processed.
+ */
+void hips_iter_push_children(hips_iterator_t *iter, int order, int pix);
 
 /*
  * Function: hips_get_tile_texture

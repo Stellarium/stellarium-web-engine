@@ -296,6 +296,65 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
     return 0;
 }
 
+/*
+ * Function: hips_iter_init
+ * Initialize the iterator with the initial twelve order zero healpix pixels.
+ */
+void hips_iter_init(hips_iterator_t *iter)
+{
+    int i;
+    typedef __typeof__(iter->queue[0]) node_t;
+    memset(iter, 0, sizeof(*iter));
+    // Enqueue the first 12 pix at order 0.
+    iter->size = 12;
+    for (i = 0; i < 12; i++) {
+        iter->queue[i] = (node_t){0, i};
+    }
+}
+
+/*
+ * Function: hips_iter_next
+ * Pop the next healpix pixel from the iterator.
+ *
+ * Return false if there are no more pixel enqueued.
+ */
+bool hips_iter_next(hips_iterator_t *iter, int *order, int *pix)
+{
+    const int n = ARRAY_SIZE(iter->queue);
+    if (!iter->size) return false;
+    // Get the first tile from the queue.
+    *order = iter->queue[iter->start % n].order;
+    *pix = iter->queue[iter->start % n].pix;
+    iter->start++;
+    iter->size--;
+    return true;
+}
+
+/*
+ * Function: hips_iter_push_children
+ * Add the four children of the giver pixel to the iterator.
+ *
+ * The children will be retrieved after all the currently queued values
+ * from the iterator have been processed.
+ */
+void hips_iter_push_children(hips_iterator_t *iter, int order, int pix)
+{
+    typedef __typeof__(iter->queue[0]) node_t;
+    const int n = ARRAY_SIZE(iter->queue);
+    int i;
+    // Enqueue the next four tiles.
+    if (iter->size + 4 >= n) {
+        // Todo: we should probably use a dynamic array instead.
+        LOG_E("No more space!");
+        return;
+    }
+    for (i = 0; i < 4; i++) {
+        iter->queue[(iter->start + iter->size) % n] = (node_t) {
+            order + 1, pix * 4 + i
+        };
+        iter->size++;
+    }
+}
 
 
 /*
