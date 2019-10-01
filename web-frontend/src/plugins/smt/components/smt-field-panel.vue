@@ -179,7 +179,6 @@ export default {
   width: 100%;
 }
 
-
 .line_right:after {
   left: 20px;
   margin-right: -100%;
