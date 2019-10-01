@@ -32,12 +32,14 @@ void uv_map(const uv_map_t *map, const double v[2], double out[4],
  * Compute the mapped position of a 2d grid covering the mapping.
  *
  * Parameters:
- *   map    - The mapping function used.
- *   size   - Size of the side of the grid.  The number of vertices computed
- *            is (size + 1)^2.
- *   out    - Output of all the mapped vertices.
+ *   map        - The mapping function used.
+ *   size       - Size of the side of the grid.  The number of vertices
+ *                computed is (size + 1)^2.
+ *   out        - Output of all the mapped vertices.
+ *   normals    - If set, output of all the mapped vertices normals.
  */
-void uv_map_grid(const uv_map_t *map, int size, double (*out)[4])
+void uv_map_grid(const uv_map_t *map, int size,
+                 double (*out)[4], double (*normals)[3])
 {
     int i, j;
     double uv[2];
@@ -46,7 +48,8 @@ void uv_map_grid(const uv_map_t *map, int size, double (*out)[4])
     for (j = 0; j < size + 1; j++) {
         uv[0] = (double)j / size;
         uv[1] = (double)i / size;
-        uv_map(map, uv, out[i * (size + 1) + j], NULL);
+        uv_map(map, uv, out[i * (size + 1) + j],
+               normals ? normals[i * (size + 1) + j] : NULL);
     }
 }
 
@@ -55,7 +58,7 @@ void uv_map_get_bounding_cap(const uv_map_t *map, double out[4])
     double corners[4][4], d;
     int i;
 
-    uv_map_grid(map, 1, corners);
+    uv_map_grid(map, 1, corners, NULL);
     vec4_set(out, 0, 0, 0, 1);
     for (i = 0; i < 4; i++) {
         vec3_add(out, corners[i], out);

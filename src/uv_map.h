@@ -76,12 +76,14 @@ void uv_map_subdivide(const uv_map_t *map, uv_map_t children[4]);
  * Compute the mapped position of a 2d grid covering the mapping.
  *
  * Parameters:
- *   map    - The mapping function used.
- *   size   - Size of the side of the grid.  The number of vertices computed
- *            is (size + 1)^2.
- *   out    - Output of all the mapped vertices.
+ *   map        - The mapping function used.
+ *   size       - Size of the side of the grid.  The number of vertices
+ *                computed is (size + 1)^2.
+ *   out        - Output of all the mapped vertices.
+ *   normals    - If set, output of all the mapped vertices normals.
  */
-void uv_map_grid(const uv_map_t *map, int size, double (*out)[4]);
+void uv_map_grid(const uv_map_t *map, int size,
+                 double (*out)[4], double (*normals)[3]);
 
 void uv_map_get_bounding_cap(const uv_map_t *map, double cap[4]);
 

@@ -382,7 +382,7 @@ static const double (*get_grid(renderer_gl_t *rend,
     }
 
     grid = calloc(n * n, sizeof(*grid));
-    uv_map_grid(map, split, grid);
+    uv_map_grid(map, split, grid, NULL);
 
     if (can_cache) {
         cache_add(rend->grid_cache, &key, sizeof(key),

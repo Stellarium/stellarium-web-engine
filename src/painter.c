@@ -494,7 +494,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
         return true;
     }
 
-    uv_map_grid(map, 1, corners);
+    uv_map_grid(map, 1, corners, NULL);
     for (i = 0; i < 4; i++) {
         vec3_copy(corners[i], quad[i]);
         quad[i][3] = 1.0;
