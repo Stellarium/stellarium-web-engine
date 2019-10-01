@@ -495,37 +495,6 @@ int hips_render(hips_t *hips, const painter_t *painter_,
     return 0;
 }
 
-static int render_traverse_visitor(int order, int pix, void *user)
-{
-    PROFILE(render_traverse_visitor, PROFILE_AGGREGATE);
-    hips_t *hips = USER_GET(user, 0);
-    const painter_t *painter = USER_GET(user, 1);
-    const double (*transf)[4][4] = USER_GET(user, 2);
-    int render_order = *(int*)USER_GET(user, 3);
-    int split_order = *(int*)USER_GET(user, 4);
-    int flags = *(int*)USER_GET(user, 5);
-    int (*callback)(hips_t *hips, const painter_t *painter,
-                    const double transf[4][4],
-                    int order, int pix, int split, int flags,
-                    void *user) = USER_GET(user, 6);
-    const bool outside = !(flags & HIPS_PLANET);
-    int split;
-    uv_map_t map;
-
-    user = USER_GET(user, 7);
-    // Early exit if the tile is clipped.
-    uv_map_init_healpix(&map, order, pix, false, false);
-    map.transf = transf;
-    if (painter_is_quad_clipped(painter, hips->frame, &map, outside))
-        return 0;
-
-    if (order < render_order) return 1; // Keep going.
-
-    split = 1 << (split_order - render_order);
-    callback(hips, painter, *transf, order, pix, split, flags, user);
-    return 0;
-}
-
 static void init_label(hips_t *hips)
 {
     const char *collection;
@@ -629,12 +598,18 @@ int hips_render_traverse(
                         const double transf[4][4],
                         int order, int pix, int split, int flags, void *user))
 {
-    int render_order;
+    int render_order, order, pix, split;
     int flags = 0;
+    hips_iterator_t iter;
+    bool outside = true;
+    uv_map_t map;
+
     hips_update(hips);
     render_order = hips_get_render_order(hips, painter, angle);
-    if (angle < 2.0 * M_PI)
+    if (angle < 2.0 * M_PI) {
         flags |= HIPS_PLANET;
+        outside = false;
+    }
     assert(split_order >= 0);
 
     // For extrem low resolution force using the allsky if available so that
@@ -649,9 +624,21 @@ int hips_render_traverse(
     // Can't split less than the rendering order.
     split_order = max(split_order, render_order);
 
-    // XXX: would be nice to have a non callback API for hips_traverse!
-    hips_traverse(USER_PASS(hips, painter, transf, &render_order, &split_order,
-                            &flags, callback, user), render_traverse_visitor);
+    // Breath first traversal of all the tiles.
+    hips_iter_init(&iter);
+    while (hips_iter_next(&iter, &order, &pix)) {
+        // Early exit if the tile is clipped.
+        uv_map_init_healpix(&map, order, pix, false, false);
+        map.transf = (void*)transf;
+        if (painter_is_quad_clipped(painter, hips->frame, &map, outside))
+            continue;
+        if (order < render_order) { // Keep going.
+            hips_iter_push_children(&iter, order, pix);
+            continue;
+        }
+        split = 1 << (split_order - render_order);
+        callback(hips, painter, transf, order, pix, split, flags, user);
+    }
     return 0;
 }
 
