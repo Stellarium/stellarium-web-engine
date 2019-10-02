@@ -76,8 +76,9 @@ void projection_init(projection_t *p, int type, double fov,
     }
 }
 
-bool project(const projection_t *proj, int flags, int out_dim,
-             const double *v, double *out)
+bool project(const projection_t *proj, int flags,
+             const double v[static 4],
+             double out[static 4])
 {
     PROFILE(project, PROFILE_AGGREGATE);
     double p[4] = {0, 0, 0, 1};
@@ -88,7 +89,6 @@ bool project(const projection_t *proj, int flags, int out_dim,
         if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
         if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
         assert(proj->backward);
-        assert(out_dim == 4);
         return proj->backward(proj, flags, p, out);
     }
     assert(proj->project);
@@ -100,7 +100,7 @@ bool project(const projection_t *proj, int flags, int out_dim,
     if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
 
     if (!(flags & (PROJ_TO_NDC_SPACE | PROJ_TO_WINDOW_SPACE))) {
-        memcpy(out, p, out_dim * sizeof(double));
+        memcpy(out, p, 4 * sizeof(double));
         return true;
     }
     assert(!(proj->flags & PROJ_NO_CLIP));
@@ -114,7 +114,7 @@ bool project(const projection_t *proj, int flags, int out_dim,
         p[0] = (+p[0] + 1) / 2 * proj->window_size[0];
         p[1] = (-p[1] + 1) / 2 * proj->window_size[1];
     }
-    memcpy(out, p, out_dim * sizeof(double));
+    memcpy(out, p, 4 * sizeof(double));
     return visible;
 }
 
@@ -123,13 +123,13 @@ bool project(const projection_t *proj, int flags, int out_dim,
 
 static void test_projs(void)
 {
-    double a[3] = {1, 0, -1};
-    double b[3], c[4];
+    double a[4] = {1, 0, -1, 0};
+    double b[4], c[4];
     projection_t proj;
     projection_init(&proj, PROJ_PERSPECTIVE, 90 * DD2R, 1, 1);
-    project(&proj, 0, 3, a, b);
+    project(&proj, 0, a, b);
     assert(vec3_dist(b, VEC(1, 0, 1)) < 0.0001);
-    project(&proj, PROJ_BACKWARD, 4, b, c);
+    project(&proj, PROJ_BACKWARD, b, c);
     vec3_normalize(a, b);
     assert(vec2_dist(c, b) < 0.0001);
 }

@@ -881,7 +881,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // Project planet's center
     convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
     project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-            2, pos, p_win);
+            pos, p_win);
 
     // At least 1 px of the planet is visible, report it for tonemapping
     convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, pos);

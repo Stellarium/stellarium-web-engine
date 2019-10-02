@@ -12,6 +12,13 @@
 
 #include <stdbool.h>
 
+// S macro for C99 static argument array size.
+#ifndef __cplusplus
+#define S static
+#else
+#define S
+#endif
+
 typedef struct projection projection_t;
 
 /******** Section: Projection *******************************************/
@@ -107,19 +114,21 @@ void projection_init(projection_t *proj, int type, double fovx,
  * Apply a projection to coordinates
  *
  * If we project forward (without the PROJ_BACKWARD) flag, the projection
- * expects a 3d input, and return the coordinates in the plane clipping space.
+ * expects a 4d input, and return the coordinates in the plane clipping space.
  * To get normalized device space coordinates, we can use the
- * PROJ_TO_NDC_SPACE flag.
+ * PROJ_TO_NDC_SPACE flag.  To get windows coordinates, we can use the
+ * PROJ_TO_WINDOWS_SPACE flag.
  *
  * Parameters:
  *  proj    - A projection.
  *  flags   - Union of <PROJ_FLAGS> values, to modify the behavior of the
  *            function.
- *  out_dim - Dimensions of the output argument (2 or 4).
- *  v       - Input coordinates.
+ *  v       - Input coordinates as homogenous coordinates.
  *  out     - Output coordinates.
  */
 bool project(const projection_t *proj, int flags,
-             int out_dim, const double *v, double *out);
+             const double v[S 4], double out[S 4]);
+
+#undef S
 
 #endif // PROJECTION_H

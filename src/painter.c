@@ -251,8 +251,9 @@ static void line_func(void *user, double t, double out[2])
     vec3_normalize(pos, pos);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
     pos[3] = 0.0;
-    project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2,
-            pos, out);
+    project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+            pos, pos);
+    vec2_copy(pos, out);
 }
 
 /*
@@ -499,7 +500,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
         vec3_copy(corners[i], quad[i]);
         quad[i][3] = 1.0;
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
-        project(painter->proj, 0, 4, quad[i], p[i]);
+        project(painter->proj, 0, quad[i], p[i]);
         assert(!isnan(p[i][0]));
     }
     if (is_clipped(4, p)) return true;
@@ -768,7 +769,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
         float ra, float de, float angle, float size_x, float size_y,
         double win_pos[2], double win_size[2], double *win_angle)
 {
-    double p[4], c[2], a[2], b[2], mat[3][3];
+    double p[4], c[4], a[4], b[4], mat[3][3];
 
     assert(!isnan(ra));
     assert(!isnan(de));
@@ -788,7 +789,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_ry(-de, mat, mat);
     mat3_mul_vec3(mat, p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, c);
 
     // Point ellipse.
     if (size_x == 0) {
@@ -809,7 +810,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, a);
 
     // 3. Semi minor.
     vec4_set(p, 1, 0, 0, 0);
@@ -823,7 +824,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, b);
 
     vec2_copy(c, win_pos);
     vec2_sub(a, c, a);
@@ -836,14 +837,17 @@ void painter_project_ellipse(const painter_t *painter, int frame,
 bool painter_project(const painter_t *painter, int frame,
                      const double pos[3], bool at_inf, bool clip_first,
                      double win_pos[2]) {
-    double v[3];
+    double v[4];
+    bool ret;
     if (clip_first) {
         if (painter_is_point_clipped_fast(painter, frame, pos, at_inf))
             return false;
     }
     convert_frame(painter->obs, frame, FRAME_VIEW, at_inf, pos, v);
-    return project(painter->proj, (at_inf ? PROJ_ALREADY_NORMALIZED : 0) |
-                   PROJ_TO_WINDOW_SPACE, 2, v, win_pos);
+    ret = project(painter->proj, (at_inf ? PROJ_ALREADY_NORMALIZED : 0) |
+                  PROJ_TO_WINDOW_SPACE, v, v);
+    vec2_copy(v, win_pos);
+    return ret;
 }
 
 bool painter_unproject(const painter_t *painter, int frame,
@@ -854,7 +858,7 @@ bool painter_unproject(const painter_t *painter, int frame,
     p[0] = win_pos[0] / painter->proj->window_size[0] * 2 - 1;
     p[1] = 1 - win_pos[1] / painter->proj->window_size[1] * 2;
     // NDC to view.
-    ret = project(painter->proj, PROJ_BACKWARD, 4, p, p);
+    ret = project(painter->proj, PROJ_BACKWARD, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
     return ret;
 }

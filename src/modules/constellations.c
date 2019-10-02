@@ -426,7 +426,7 @@ static bool constellation_is_visible(const constellation_t *con,
     for (i = 0; i < con->count; i++) {
         assert(con->stars[i]);
         obj_get_pos(con->stars[i], painter->obs, FRAME_VIEW, pos[i]);
-        project(painter->proj, 0, 4, pos[i], pos[i]);
+        project(painter->proj, 0, pos[i], pos[i]);
     }
 
     // Compute margins in NDC.

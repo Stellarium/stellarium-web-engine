@@ -379,7 +379,7 @@ static void render_recursion(
         spherical_project(&map, p, p);
         convert_framev4(painter->obs, line->frame, FRAME_VIEW, p, p);
         vec4_copy(p, pos[i]);
-        project(painter->proj, 0, 4, p, p);
+        project(painter->proj, 0, p, p);
         vec4_copy(p, pos_clip[i]);
     }
     // If the quad is clipped we stop the recursion.
@@ -452,7 +452,7 @@ static double get_theta_range(const painter_t *painter, int frame)
     for (i = 0; i < 4; i++) {
         p[0] = 2 * ((i % 2) - 0.5);
         p[1] = 2 * ((i / 2) - 0.5);
-        project(painter->proj, PROJ_BACKWARD, 4, p, p);
+        project(painter->proj, PROJ_BACKWARD, p, p);
         convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
         eraC2s(p, &theta, &phi);
         theta_max = max(theta_max, theta);
@@ -585,8 +585,8 @@ static bool check_borders(const double a[3], const double b[3],
     bool visible[2];
     int border;
     const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
-    visible[0] = project(proj, PROJ_TO_NDC_SPACE, 3, a, pos[0]);
-    visible[1] = project(proj, PROJ_TO_NDC_SPACE, 3, b, pos[1]);
+    visible[0] = project(proj, PROJ_TO_NDC_SPACE, a, pos[0]);
+    visible[1] = project(proj, PROJ_TO_NDC_SPACE, b, pos[1]);
     if (visible[0] != visible[1]) {
         q = seg_intersect(pos[0], pos[1], &border);
         if (q == DBL_MAX) return false;
