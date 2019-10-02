@@ -10,25 +10,26 @@ import VueGoogleCharts from 'vue-google-charts'
 
 Vue.use(VueGoogleCharts)
 
-async function loadAllData (fieldsList, jsonData) {
-  console.log('Loading ' + jsonData.features.length + ' features')
-
+async function initDB (fieldsList) {
   console.log('Create Data Base')
-  await alasql.promise('CREATE TABLE features (id INT PRIMARY KEY, geometry JSON, properties JSON)')
+  await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON)')
 
   // Create an index on each field
   for (let i in fieldsList) {
     let field = fieldsList[i]
     await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + field.id.replace(/\./g, '->') + ')')
   }
+}
+
+async function loadAllData (fieldsList, jsonData) {
+  console.log('Loading ' + jsonData.features.length + ' features')
 
   // Insert all data
-  let req = alasql.compile('INSERT INTO features VALUES (?, ?, ?)')
+  let req = alasql.compile('INSERT INTO features VALUES (?, ?)')
   for (let feature of jsonData.features) {
-    let id = feature.properties.Pointing_id
     let geometry = feature.geometry
     let properties = feature.properties
-    await req.promise([id, geometry, properties])
+    await req.promise([geometry, properties])
   }
 }
 
@@ -68,17 +69,39 @@ export default {
     Vue.prototype.$smt = { fieldsList: fieldsList }
 
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
-    fetch('/plugins/smt/Surveys/euclid-test1000.geojson').then(function (response) {
-      if (!response.ok) {
-        throw response.body
-      }
-      response.json().then(jsonData => {
-        loadAllData(fieldsList, jsonData).then(_ => {
-          app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
-        })
-      }, err => { console.log(err) })
-    }, err => {
-      throw err.response.body
+
+    let fetchAndIngest = function (url) {
+      return fetch(url).then(function (response) {
+        if (!response.ok) {
+          throw response.body
+        }
+        return response.json().then(jsonData => {
+          return loadAllData(fieldsList, jsonData).then(_ => {
+            return jsonData.length
+          })
+        }, err => { throw err })
+      }, err => {
+        throw err.response.body
+      })
+    }
+
+    let urls = [
+      '/plugins/smt/Surveys/CFIS_cap.geojson',
+      '/plugins/smt/Surveys/CFIS_crescent.geojson',
+      '/plugins/smt/Surveys/CFIS_JEDIS_PAN_north.geojson',
+      '/plugins/smt/Surveys/CFIS_JEDIS_PAN_south.geojson',
+      '/plugins/smt/Surveys/DES.geojson',
+      '/plugins/smt/Surveys/euclid-test1000.geojson',
+      '/plugins/smt/Surveys/lsst_main.geojson',
+      '/plugins/smt/Surveys/lsst_north_cap.geojson',
+      '/plugins/smt/Surveys/lsst_north_crescent.geojson'
+    ]
+    let allPromise = urls.map(url => fetchAndIngest(url))
+
+    initDB(fieldsList).then(_ => {
+      Promise.all(allPromise).then(_ => {
+        app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
+      })
     })
   }
 }
