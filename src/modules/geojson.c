@@ -42,10 +42,6 @@ struct feature {
 
 typedef struct image {
     obj_t       obj;
-
-    json_value  *geojson;
-    bool        dirty;
-
     feature_t   *features;
     int         frame;
 } image_t;
@@ -290,28 +286,21 @@ static json_value *data_fn(obj_t *obj, const attribute_t *attr,
                            const json_value *args)
 {
     image_t *image = (void*)obj;
-    if (!args) return json_copy(image->geojson);
-    if (image->geojson) json_builder_free(image->geojson);
-    image->geojson = json_copy(args);
-    image->dirty = true;
-    return NULL;
-}
-
-static int image_update(image_t *image)
-{
     geojson_t *geojson;
     int i;
 
-    if (!image->dirty) return 0;
-    image->dirty = false;
+    if (!args) return NULL;
     remove_all_features(image);
-    geojson = geojson_parse(image->geojson);
-    assert(geojson);
+    geojson = geojson_parse(args);
+    if (!geojson) {
+        LOG_E("Cannot parse geojson");
+        return NULL;
+    }
     for (i = 0; i < geojson->nb_features; i++) {
         add_geojson_feature(image, &geojson->features[i]);
     }
     geojson_delete(geojson);
-    return 0;
+    return NULL;
 }
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
@@ -322,9 +311,6 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     double pos[2], ofs[2];
     int frame = image->frame;
     const mesh_t *mesh;
-
-    if (image->dirty)
-        image_update((image_t*) image);
 
     /*
      * For the moment, we render all the filled shapes first, then
@@ -379,7 +365,6 @@ static void image_del(obj_t *obj)
 {
     image_t *image = (void*)obj;
     remove_all_features(image);
-    if (image->geojson) json_builder_free(image->geojson);
 }
 
 static obj_t *image_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
