@@ -12,6 +12,12 @@
     "widget": "tags"
   },
   {
+    "id": "properties.Observation.SurveyID",
+    "name": "Survey ID",
+    "type": "string",
+    "widget": "tags"
+  },
+  {
     "id": "properties.Observation.MissionPhase",
     "name": "Mission Phase",
     "type": "string",
