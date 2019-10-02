@@ -23,18 +23,11 @@ static void proj_perspective_project(
 static bool proj_perspective_backward(const projection_t *proj, int flags,
         const double v[2], double out[4])
 {
-    double p[4] = {0}, r;
-    vec2_copy(v, p);
-
-    p[0] *= proj->scaling[0];
-    p[1] *= proj->scaling[1];
-
-    r = sqrt(1.0 + p[0] * p[0] + p[1] * p[1]);
-    p[0] /= r;
-    p[1] /= r;
-    p[2] = -1.0 / r;
-
-    vec4_copy(p, out);
+    double p[4] = {v[0], v[1], 0, 1};
+    double inv[4][4];
+    mat4_invert(proj->mat, inv);
+    mat4_mul_vec4(inv, p, out);
+    vec3_normalize(out, out);
     return true;
 }
 
