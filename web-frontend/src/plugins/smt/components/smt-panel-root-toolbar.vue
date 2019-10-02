@@ -6,7 +6,8 @@
 
 <v-toolbar dense class="obspanel-toolbar">
   <v-spacer></v-spacer>
-  <span>{{ $store.state.SMT.status }}</span>
+  <v-progress-circular v-if="$store.state.SMT.status === 'loading'" size=18 indeterminate></v-progress-circular>
+  <span class="px-2">{{ $store.state.SMT.status }}</span>
 </v-toolbar>
 
 </template>
