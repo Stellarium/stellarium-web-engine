@@ -61,6 +61,8 @@ export default {
     app.$stel.core.observer.pitch = 0
     app.$stel.core.fov = 270
     app.$store.commit('setValue', { varName: 'timeSpeed', newValue: 0 })
+    app.$store.commit('setValue', { varName: 'showLocationButton', newValue: false })
+    app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
 
     let fieldsList = require('./fieldsList.json')
     Vue.prototype.$smt = { fieldsList: fieldsList }
