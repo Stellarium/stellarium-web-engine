@@ -14,7 +14,7 @@
 #define DD2R (1.745329251994329576923691e-2)
 
 static void proj_mercator_project(
-        const projection_t *proj, int flags, const double *v, double *out)
+        const projection_t *proj, int flags, const double v[4], double out[4])
 {
     double s;
     double p[3];
@@ -31,6 +31,7 @@ static void proj_mercator_project(
     p[0] /= proj->scaling[0];
     p[1] /= proj->scaling[1];
     vec3_copy(p, out);
+    out[3] = 1.0;
 }
 
 static bool proj_mercator_backward(const projection_t *proj, int flags,

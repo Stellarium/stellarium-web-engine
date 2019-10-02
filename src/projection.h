@@ -75,7 +75,7 @@ struct projection
     double max_fov;
 
     void (*project)(const projection_t *proj, int flags,
-                    const double *v, double *out);
+                    const double v[S 4], double out[S 4]);
     bool (*backward)(const projection_t *proj, int flags,
                      const double *v, double *out);
 };

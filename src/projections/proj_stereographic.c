@@ -39,7 +39,7 @@
  */
 
 static void proj_stereographic_project(
-        const projection_t *proj, int flags, const double *v, double *out)
+        const projection_t *proj, int flags, const double v[4], double out[4])
 {
     double one_over_h;
     vec3_copy(v, out);

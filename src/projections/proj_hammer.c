@@ -14,7 +14,7 @@
 #define DD2R (1.745329251994329576923691e-2)
 
 static void proj_hammer_project(
-        const projection_t *proj, int flags, const double *v, double *out)
+        const projection_t *proj, int flags, const double v[4], double out[4])
 {
     double r = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     double alpha = atan2(v[0], -v[2]);
