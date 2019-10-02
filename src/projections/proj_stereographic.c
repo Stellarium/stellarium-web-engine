@@ -57,16 +57,17 @@ static void proj_stereographic_project(
 }
 
 static bool proj_stereographic_backward(const projection_t *proj, int flags,
-                                        const double *v, double *out)
+                                        const double v[2], double out[4])
 {
     double lqq;
-    double p[3];
-    vec3_copy(v, p);
+    double p[3] = {0};
+    vec2_copy(v, p);
     p[0] *= proj->scaling[0];
     p[1] *= proj->scaling[1];
     lqq = 0.25 * (p[0] * p[0] + p[1] * p[1]);
     p[2] = lqq - 1.0;
     vec3_mul(1.0 / (lqq + 1.0), p, out);
+    out[3] = 0.0;
     return true;
 }
 

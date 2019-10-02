@@ -43,13 +43,13 @@ static void proj_mollweide_project(
 }
 
 static bool proj_mollweide_backward(const projection_t *proj, int flags,
-            const double *v, double *out)
+            const double v[2], double out[4])
 {
     // XXX: this is the code from the hammer projection!
     // We need to use the proper function.
-    double p[3], zsq, z, alpha, delta, cd;
+    double p[3] = {0}, zsq, z, alpha, delta, cd;
     bool ret;
-    vec3_copy(v, p);
+    vec2_copy(v, p);
     p[0] *= proj->scaling[0];
     p[1] *= proj->scaling[1];
     zsq = 1 - 0.25 * 0.25 * p[0] * p[0] - 0.5 * 0.5 * p[1] * p[1];
@@ -61,6 +61,7 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
     out[0] = cd * sin(alpha);
     out[1] = p[1] * z;
     out[2] = -cd * cos(alpha);
+    out[3] = 0;
     return ret;
 }
 

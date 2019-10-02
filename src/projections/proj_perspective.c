@@ -21,10 +21,10 @@ static void proj_perspective_project(
 }
 
 static bool proj_perspective_backward(const projection_t *proj, int flags,
-        const double *v, double *out)
+        const double v[2], double out[4])
 {
-    double p[3], r;
-    vec3_copy(v, p);
+    double p[4] = {0}, r;
+    vec2_copy(v, p);
 
     p[0] *= proj->scaling[0];
     p[1] *= proj->scaling[1];
@@ -34,7 +34,7 @@ static bool proj_perspective_backward(const projection_t *proj, int flags,
     p[1] /= r;
     p[2] = -1.0 / r;
 
-    vec3_copy(p, out);
+    vec4_copy(p, out);
     return true;
 }
 
