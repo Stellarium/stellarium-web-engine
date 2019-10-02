@@ -22,7 +22,7 @@ export default {
   props: ['fieldResults'],
   methods: {
     chipClicked: function (name) {
-      let constraint = { 'field': this.fieldResults.field, 'operation': 'STRING_EQUAL', 'expression': name, 'negate': false }
+      let constraint = { 'field': this.fieldResults.field, 'operation': (name === 'undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), 'expression': name, 'negate': false }
       this.$emit('add-constraint', constraint)
     }
   },

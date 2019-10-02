@@ -96,10 +96,12 @@ export default {
         whereClause = ' WHERE '
         for (let i in that.query.constraints) {
           let c = that.query.constraints[i]
+          let fid = that.fId2AlaSql(c.field.id)
           if (c.operation === 'STRING_EQUAL') {
-            whereClause += that.fId2AlaSql(c.field.id) + ' = "' + c.expression + '"'
+            whereClause += fid + ' = "' + c.expression + '"'
+          } else if (c.operation === 'IS_UNDEFINED') {
+            whereClause += fid + ' IS NULL'
           } else if (c.operation === 'DATE_RANGE') {
-            let fid = that.fId2AlaSql(c.field.id)
             whereClause += fid + ' IS NOT NULL AND DATE(' + fid + ') >= DATE("' + c.expression[0] + '")'
             whereClause += ' AND DATE(' + fid + ') <= DATE("' + c.expression[1] + '")'
           }
