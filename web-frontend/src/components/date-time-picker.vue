@@ -22,13 +22,17 @@
         <div>
         <div>
         <v-tooltip top>
-          <v-btn slot="activator" text icon @click="resetTime" style="margin-top: 5px"><v-icon>mdi-history</v-icon></v-btn>
+          <template v-slot:activator="{ on }">
+            <v-btn text icon @click="resetTime" style="margin-top: 5px" v-on="on"><v-icon>mdi-history</v-icon></v-btn>
+          </template>
           <span>Back to real time</span>
         </v-tooltip>
         </div>
         <div>
         <v-tooltip top>
-          <v-btn slot="activator" text icon @click="togglePauseTime" style="margin-top: 0px"><v-icon>{{ togglePauseTimeIcon }}</v-icon></v-btn>
+          <template v-slot:activator="{ on }">
+            <v-btn text icon @click="togglePauseTime" style="margin-top: 0px" v-on="on"><v-icon>{{ togglePauseTimeIcon }}</v-icon></v-btn>
+          </template>
           <span>Pause/unpause time</span>
         </v-tooltip>
         </div>
