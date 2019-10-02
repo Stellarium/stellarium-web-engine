@@ -9,8 +9,9 @@
       <v-container class="pa-0" fluid style="height: 100%">
         <v-card tile>
           <v-card-text>
-            <div class="display-1 text--primary">{{ results.summary.count }} items</div>
-            <div class="mt-2">Constraints:</div>
+            <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary">{{ results.summary.count }} items</div>
+            <div v-if="$store.state.SMT.status === 'loading'" class="display-1 text--primary">Loading data..</div>
+            <div v-if="$store.state.SMT.status === 'ready'" class="mt-2">Constraints:</div>
             <v-row no-gutters>
               <div v-for="(constraint, i) in constraintsToDisplay" :key="i" style="text-align: center;" class="pa-1">
                 <div class="caption white--text">{{ constraint.field.name }}</div>
