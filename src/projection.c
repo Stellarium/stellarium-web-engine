@@ -117,23 +117,3 @@ bool project(const projection_t *proj, int flags,
     memcpy(out, p, 4 * sizeof(double));
     return visible;
 }
-
-/******* TESTS **********************************************************/
-#ifdef COMPILE_TESTS
-
-static void test_projs(void)
-{
-    double a[4] = {1, 0, -1, 0};
-    double b[4], c[4];
-    projection_t proj;
-    projection_init(&proj, PROJ_PERSPECTIVE, 90 * DD2R, 1, 1);
-    project(&proj, 0, a, b);
-    assert(vec3_dist(b, VEC(1, 0, 1)) < 0.0001);
-    project(&proj, PROJ_BACKWARD, b, c);
-    vec3_normalize(a, b);
-    assert(vec2_dist(c, b) < 0.0001);
-}
-
-TEST_REGISTER(NULL, test_projs, TEST_AUTO);
-
-#endif

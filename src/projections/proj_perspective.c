@@ -40,9 +40,9 @@ static bool proj_perspective_backward(const projection_t *proj, int flags,
 
 void proj_perspective_init(projection_t *p, double fov, double aspect)
 {
-    double fovy;
+    double fovy, clip_near = 0.1, clip_far = 256;
     fovy = atan(tan(fov / 2) / aspect) * 2;
-    mat4_perspective(p->mat, fovy / DD2R, aspect, 0, 256);
+    mat4_perspective(p->mat, fovy / DD2R, aspect, clip_near, clip_far);
     p->name = "perspective";
     p->type = PROJ_PERSPECTIVE;
     p->max_fov = 120. * DD2R;
