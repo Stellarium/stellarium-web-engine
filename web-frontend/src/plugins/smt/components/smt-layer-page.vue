@@ -113,7 +113,7 @@ export default {
       }
 
       // Reset all fields values
-      that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': [] } })
+      that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': {} } })
       that.results.implicitConstraints = []
 
       alasql.promise('SELECT COUNT(*) AS total FROM features' + whereClause).then(res => {
@@ -139,6 +139,9 @@ export default {
           that.geojsonObj.destroy()
         }
 
+        if (geojson.features.length === 0) {
+          return
+        }
         that.geojsonObj = that.$stel.createObj('geojson', { data: geojson })
         that.$observingLayer.add(that.geojsonObj)
       })
@@ -153,10 +156,10 @@ export default {
             that.results.fields[i] = {
               field: field,
               status: 'ok',
-              data: res[0].tags
+              data: res[0].tags ? res[0].tags : {}
             }
             // Fill the implicit constraints list, i.e. the tags where only one value remains
-            if (!constraintsIds.includes(field.id) && Object.keys(res[0].tags).length === 1) {
+            if (!constraintsIds.includes(field.id) && res[0].tags && Object.keys(res[0].tags).length === 1) {
               that.results.implicitConstraints.push({ field: field, expression: Object.keys(res[0].tags)[0], closable: false })
             }
           }, err => {
@@ -166,6 +169,19 @@ export default {
         if (field.widget === 'date_range') {
           let req = 'SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features' + whereClause
           alasql.promise(req).then(res => {
+            if (res[0].dmin === undefined || res[0].dmax === undefined) {
+              // No results
+              let data = {
+                min: 0,
+                max: 1,
+                step: 'DAY',
+                table: [['Date', 'Count']]
+              }
+              Vue.set(that.results.fields[i], 'field', field)
+              Vue.set(that.results.fields[i], 'status', 'ok')
+              Vue.set(that.results.fields[i], 'data', data)
+              return
+            }
             let start = new Date(res[0].dmin)
             start.setHours(0, 0, 0, 0)
             // Switch to next day and truncate
@@ -248,7 +264,7 @@ export default {
       for (let i in this.results.fields) {
         let rf = this.results.fields[i]
         if (!rf.field) continue
-        if (rf.field.widget === 'tags' && Object.keys(rf.data).length === 1) continue
+        if (rf.field.widget === 'tags' && rf.data && Object.keys(rf.data).length === 1) continue
         res.push(rf)
       }
       return res
