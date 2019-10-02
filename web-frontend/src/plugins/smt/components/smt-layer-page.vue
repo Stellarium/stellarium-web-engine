@@ -100,7 +100,7 @@ export default {
             whereClause += that.fId2AlaSql(c.field.id) + ' = "' + c.expression + '"'
           } else if (c.operation === 'DATE_RANGE') {
             let fid = that.fId2AlaSql(c.field.id)
-            whereClause += ' DATE(' + fid + ') >= DATE("' + c.expression[0] + '")'
+            whereClause += fid + ' IS NOT NULL AND DATE(' + fid + ') >= DATE("' + c.expression[0] + '")'
             whereClause += ' AND DATE(' + fid + ') <= DATE("' + c.expression[1] + '")'
           }
           if (i < that.query.constraints.length - 1) {
