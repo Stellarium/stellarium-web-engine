@@ -56,6 +56,41 @@ Module.afterInit(function() {
     Module._obj_foreach_attr(this.v, 0, callback);
     Module.removeFunction(callback);
 
+
+    /*
+     * Experimental support for the 'filter' attribute of geojson objects.
+     *
+     * The special filter attribute can be set to a function that takes as
+     * input the index of a feature and can return either:
+     *
+     *  - false, to hide the feature.
+     *  - true, to show the feature unchanged.
+     *  - A dict of values to change colors:
+     *      fill    - Array of 4 float values.
+     *      stroke  - Array of 4 float values.
+     */
+    let filterFn = null;
+    let setValue = Module.setValue;
+    function fillColorPtr(color, ptr) {
+      for (var i = 0; i < 4; i++) {
+        setValue(ptr + i * 4, color[i], 'float');
+      }
+    }
+    Object.defineProperty(that, 'filter', {
+      set: function(filter) {
+        if (filterFn) Module.removeFunction(filterFn);
+        filterFn = Module.addFunction(function(id, fillPtr, strokePtr) {
+          var r = filter(id);
+          if (r === false) return 0;
+          if (r === true) return 1;
+          if (r.fill) fillColorPtr(r.fill, fillPtr);
+          if (r.stroke) fillColorPtr(r.stroke, strokePtr);
+          return 1;
+        }, 'iiii');
+        that._call('filter', filterFn);
+      }
+    });
+
     // Also add the children as properties
     var callback = Module.addFunction(function(id) {
       id = Module.UTF8ToString(id);

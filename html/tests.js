@@ -312,6 +312,14 @@ var testGeojson = function(stel) {
   var obj = stel.createObj('geojson', {
     data: data
   });
+  obj.filter = function(idx) {
+    if (idx > 100) return false; // Hide.
+    if (idx < 10) return true; // Unchanged.
+    return {
+      fill: [1, 0, 0, 1],
+      stroke: [0, 1, 0, 1]
+    };
+  }
 }
 
 require('./static/js/stellarium-web-engine.js')({
