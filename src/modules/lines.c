@@ -627,6 +627,6 @@ static obj_klass_t lines_klass = {
     .update = lines_update,
     .render = lines_render,
     .gui = lines_gui,
-    .render_order = 40,
+    .render_order = 35, // just before landscape.
 };
 OBJ_REGISTER(lines_klass)
