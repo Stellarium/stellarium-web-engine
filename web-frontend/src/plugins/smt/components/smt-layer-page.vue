@@ -23,8 +23,8 @@
           </v-card-text>
         </v-card>
         <v-container>
-          <smt-field-panel class="mb-2"  v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint">
-          </smt-field-panel>
+          <smt-field class="mb-2"  v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint">
+          </smt-field>
         </v-container>
       </v-container>
     </div>
@@ -33,7 +33,7 @@
 
 <script>
 import SmtPanelRootToolbar from './smt-panel-root-toolbar.vue'
-import SmtFieldPanel from './smt-field-panel.vue'
+import SmtField from './smt-field.vue'
 import alasql from 'alasql'
 import Vue from 'vue'
 import Moment from 'moment'
@@ -255,7 +255,7 @@ export default {
   mounted: function () {
     this.refreshObservationGroups()
   },
-  components: { SmtPanelRootToolbar, SmtFieldPanel }
+  components: { SmtPanelRootToolbar, SmtField }
 }
 </script>
 

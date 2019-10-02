@@ -3,17 +3,7 @@
 // All rights reserved
 
 <template>
-
-<v-row no-gutters>
   <v-col cols="12">
-    <h3 class="pt-3 line_right">{{ fieldDescription.name }}</h3>
-  </v-col>
-  <v-col cols="12" v-if="isTags">
-    <v-chip small class="white--text ma-1" color="secondary" v-for="(count, name) in fieldResultsData" :key="name" @click="chipClicked(name)">
-      {{ name }}&nbsp;<span class="primary--text"> ({{ count }})</span>
-    </v-chip>
-  </v-col>
-  <v-col cols="12" v-if="isDateRange">
     <v-row no-gutters>
       <v-col cols="10">
         <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
@@ -36,8 +26,6 @@
       <v-col cols="2"></v-col>
     </v-row>
   </v-col>
-</v-row>
-
 </template>
 
 <script>
@@ -84,18 +72,14 @@ export default {
     }
   },
   directives: { mask },
-  props: ['fieldDescription', 'fieldResults'],
+  props: ['fieldResults'],
   methods: {
-    chipClicked: function (name) {
-      let constraint = { 'field': this.fieldDescription, 'operation': 'STRING_EQUAL', 'expression': name, 'negate': false }
-      this.$emit('add-constraint', constraint)
-    },
     formatDate: function (d) {
       return new Moment(d).format('YYYY-MM-DD')
     },
     rangeButtonClicked: function () {
       let constraint = {
-        'field': this.fieldDescription,
+        'field': this.fieldResults.field,
         'operation': 'DATE_RANGE',
         'expression': [
           new Date(this.dateRangeSliderValues[0]).toISOString(),
@@ -121,17 +105,8 @@ export default {
     }
   },
   computed: {
-    isTags: function () {
-      return this.fieldDescription && this.fieldDescription.widget === 'tags' && this.fieldResults
-    },
-    isDateRange: function () {
-      return this.fieldDescription && this.fieldDescription.widget === 'date_range' && this.fieldResults
-    },
     fieldResultsData: function () {
-      if (this.isTags) {
-        return this.fieldResults.data
-      }
-      if (this.isDateRange) {
+      if (this.fieldResults) {
         let newData = _.cloneDeep(this.fieldResults.data)
         if (newData.table.length) newData.table[0].push({ role: 'annotation' })
         for (let i = 1; i < newData.table.length; ++i) {
@@ -142,7 +117,7 @@ export default {
       return {}
     },
     dateRange: function () {
-      if (this.isDateRange && this.fieldResults && this.fieldResults.data && this.fieldResults.data.min) {
+      if (this.fieldResults && this.fieldResults.data && this.fieldResults.data.min) {
         return [this.fieldResults.data.min.getTime(), this.fieldResults.data.max.getTime()]
       }
       return [0, 1]
@@ -163,24 +138,5 @@ export default {
 <style>
 .v-input__slot {
   min-height: 10px;
-}
-
-.line_right {
-  overflow: hidden;
-}
-
-.line_right:after {
-  background-color: #444;
-  content: "";
-  display: inline-block;
-  height: 1px;
-  position: relative;
-  vertical-align: middle;
-  width: 100%;
-}
-
-.line_right:after {
-  left: 20px;
-  margin-right: -100%;
 }
 </style>
