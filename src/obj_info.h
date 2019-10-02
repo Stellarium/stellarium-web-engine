@@ -41,6 +41,7 @@
     X(COLOR,      color,    TYPE(7, V4)) \
     X(DIST,       dist,     TYPE(8, FLOAT)) \
     X(MJD,        mjd,      TYPE(9, FLOAT)) \
+    X(FUNC,       func,     TYPE(10,PTR)) \
 
 /*
  * Enum of all the types.

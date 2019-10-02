@@ -14,7 +14,7 @@
 #define DD2R (1.745329251994329576923691e-2)
 
 static void proj_hammer_project(
-        const projection_t *proj, int flags, const double *v, double *out)
+        const projection_t *proj, int flags, const double v[4], double out[4])
 {
     double r = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     double alpha = atan2(v[0], -v[2]);
@@ -27,11 +27,11 @@ static void proj_hammer_project(
 }
 
 static bool proj_hammer_backward(const projection_t *proj, int flags,
-            const double *v, double *out)
+            const double v[2], double out[4])
 {
-    double p[3], zsq, z, alpha, delta, cd;
+    double p[3] = {0}, zsq, z, alpha, delta, cd;
     bool ret;
-    vec3_copy(v, p);
+    vec2_copy(v, p);
     p[0] *= proj->scaling[0];
     p[1] *= proj->scaling[1];
     zsq = 1 - 0.25 * 0.25 * p[0] * p[0] - 0.5 * 0.5 * p[1] * p[1];
@@ -43,6 +43,7 @@ static bool proj_hammer_backward(const projection_t *proj, int flags,
     out[0] = cd * sin(alpha);
     out[1] = p[1] * z;
     out[2] = -cd * cos(alpha);
+    out[3] = 0;
     return ret;
 }
 

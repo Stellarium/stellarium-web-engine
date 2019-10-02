@@ -296,6 +296,65 @@ int hips_traverse(void *user, int callback(int order, int pix, void *user))
     return 0;
 }
 
+/*
+ * Function: hips_iter_init
+ * Initialize the iterator with the initial twelve order zero healpix pixels.
+ */
+void hips_iter_init(hips_iterator_t *iter)
+{
+    int i;
+    typedef __typeof__(iter->queue[0]) node_t;
+    memset(iter, 0, sizeof(*iter));
+    // Enqueue the first 12 pix at order 0.
+    iter->size = 12;
+    for (i = 0; i < 12; i++) {
+        iter->queue[i] = (node_t){0, i};
+    }
+}
+
+/*
+ * Function: hips_iter_next
+ * Pop the next healpix pixel from the iterator.
+ *
+ * Return false if there are no more pixel enqueued.
+ */
+bool hips_iter_next(hips_iterator_t *iter, int *order, int *pix)
+{
+    const int n = ARRAY_SIZE(iter->queue);
+    if (!iter->size) return false;
+    // Get the first tile from the queue.
+    *order = iter->queue[iter->start % n].order;
+    *pix = iter->queue[iter->start % n].pix;
+    iter->start++;
+    iter->size--;
+    return true;
+}
+
+/*
+ * Function: hips_iter_push_children
+ * Add the four children of the giver pixel to the iterator.
+ *
+ * The children will be retrieved after all the currently queued values
+ * from the iterator have been processed.
+ */
+void hips_iter_push_children(hips_iterator_t *iter, int order, int pix)
+{
+    typedef __typeof__(iter->queue[0]) node_t;
+    const int n = ARRAY_SIZE(iter->queue);
+    int i;
+    // Enqueue the next four tiles.
+    if (iter->size + 4 >= n) {
+        // Todo: we should probably use a dynamic array instead.
+        LOG_E("No more space!");
+        return;
+    }
+    for (i = 0; i < 4; i++) {
+        iter->queue[(iter->start + iter->size) % n] = (node_t) {
+            order + 1, pix * 4 + i
+        };
+        iter->size++;
+    }
+}
 
 
 /*
@@ -390,6 +449,7 @@ texture_t *hips_get_tile_texture(
 
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
+                          const double transf[4][4],
                           int order, int pix, int split, int flags,
                           void *user)
 {
@@ -413,47 +473,25 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     painter.color[3] *= fade;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     uv_map_init_healpix(&map, order, pix, false, true);
+    if (transf)
+        map.transf = (void*)transf;
     paint_quad(&painter, hips->frame, &map, split);
     return 0;
 }
 
 
-int hips_render(hips_t *hips, const painter_t *painter, double angle,
-                int split_order)
+int hips_render(hips_t *hips, const painter_t *painter_,
+                const double transf[4][4], double angle, int split_order)
 {
     PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
-    if (painter->color[3] == 0.0) return 0;
+    painter_t painter = *painter_;
+    if (painter.color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
-    hips_render_traverse(hips, painter, angle, split_order,
+    hips_render_traverse(hips, &painter, transf, angle, split_order,
                          USER_PASS(&nb_tot, &nb_loaded),
                          render_visitor);
     progressbar_report(hips->url, hips->label, nb_loaded, nb_tot, -1);
-    return 0;
-}
-
-static int render_traverse_visitor(int order, int pix, void *user)
-{
-    PROFILE(render_traverse_visitor, PROFILE_AGGREGATE);
-    hips_t *hips = USER_GET(user, 0);
-    const painter_t *painter = USER_GET(user, 1);
-    int render_order = *(int*)USER_GET(user, 2);
-    int split_order = *(int*)USER_GET(user, 3);
-    int flags = *(int*)USER_GET(user, 4);
-    int (*callback)(hips_t *hips, const painter_t *painter,
-                    int order, int pix, int split, int flags,
-                    void *user) = USER_GET(user, 5);
-    const bool outside = !(flags & HIPS_PLANET);
-    int split;
-    user = USER_GET(user, 6);
-    // Early exit if the tile is clipped.
-    if (painter_is_healpix_clipped(painter, hips->frame, order, pix, outside))
-        return 0;
-
-    if (order < render_order) return 1; // Keep going.
-
-    split = 1 << (split_order - render_order);
-    callback(hips, painter, order, pix, split, flags, user);
     return 0;
 }
 
@@ -554,16 +592,24 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter,
 // control on the rendering.
 int hips_render_traverse(
         hips_t *hips, const painter_t *painter,
+        const double transf[4][4],
         double angle, int split_order, void *user,
         int (*callback)(hips_t *hips, const painter_t *painter,
+                        const double transf[4][4],
                         int order, int pix, int split, int flags, void *user))
 {
-    int render_order;
+    int render_order, order, pix, split;
     int flags = 0;
+    hips_iterator_t iter;
+    bool outside = true;
+    uv_map_t map;
+
     hips_update(hips);
     render_order = hips_get_render_order(hips, painter, angle);
-    if (angle < 2.0 * M_PI)
+    if (angle < 2.0 * M_PI) {
         flags |= HIPS_PLANET;
+        outside = false;
+    }
     assert(split_order >= 0);
 
     // For extrem low resolution force using the allsky if available so that
@@ -578,9 +624,21 @@ int hips_render_traverse(
     // Can't split less than the rendering order.
     split_order = max(split_order, render_order);
 
-    // XXX: would be nice to have a non callback API for hips_traverse!
-    hips_traverse(USER_PASS(hips, painter, &render_order, &split_order, &flags,
-                            callback, user), render_traverse_visitor);
+    // Breath first traversal of all the tiles.
+    hips_iter_init(&iter);
+    while (hips_iter_next(&iter, &order, &pix)) {
+        // Early exit if the tile is clipped.
+        uv_map_init_healpix(&map, order, pix, false, false);
+        map.transf = (void*)transf;
+        if (painter_is_quad_clipped(painter, hips->frame, &map, outside))
+            continue;
+        if (order < render_order) { // Keep going.
+            hips_iter_push_children(&iter, order, pix);
+            continue;
+        }
+        split = 1 << (split_order - render_order);
+        callback(hips, painter, transf, order, pix, split, flags, user);
+    }
     return 0;
 }
 

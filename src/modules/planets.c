@@ -500,6 +500,7 @@ static void planet_get_designations(
 }
 
 static int on_render_tile(hips_t *hips, const painter_t *painter_,
+                          const double transf[4][4],
                           int order, int pix, int split, int flags, void *user)
 {
     planet_t *planet = USER_GET(user, 0);
@@ -538,6 +539,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
     uv_map_init_healpix(&map, order, pix, true, false);
+    map.transf = (void*)transf;
     paint_quad(&painter, FRAME_ICRF, &map, split);
     return 0;
 }
@@ -556,13 +558,15 @@ static void ring_project(const uv_map_t *map, const double v[2], double out[4])
 }
 
 static void render_rings(const planet_t *planet,
-                         const painter_t *painter_)
+                         const painter_t *painter_,
+                         const double transf[4][4])
 {
     texture_t *tex = planet->rings.tex;
     double inner_radius = planet->rings.inner_radius / planet->radius_m;
     double outer_radius = planet->rings.outer_radius / planet->radius_m;
     uv_map_t map = {
         .map = ring_project,
+        .transf = (void*)transf,
     };
     painter_t painter = *painter_;
     const double radii[2] = {inner_radius, outer_radius};
@@ -723,7 +727,6 @@ static void planet_render_hips(const planet_t *planet,
     mat4_mul(mat, tmp_mat, mat);
     mat4_rx(-planet->rot.obliquity, mat, mat);
     mat4_rz(planet_get_rotation(planet, painter.obs->tt), mat, mat);
-    painter.transform = &mat;
 
     if (planet->id == SUN)
         painter.planet.light_emit = &full_emit;
@@ -747,11 +750,11 @@ static void planet_render_hips(const planet_t *planet,
                  painter.proj->scaling[0] / 2;
     split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
 
-    hips_render_traverse(hips, &painter, angle, split_order,
+    hips_render_traverse(hips, &painter, mat, angle, split_order,
                          USER_PASS(planet, &nb_tot, &nb_loaded),
                          on_render_tile);
     if (planet->rings.tex)
-        render_rings(planet, &painter);
+        render_rings(planet, &painter, mat);
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 
@@ -779,7 +782,6 @@ static void planet_render_orbit(const planet_t *planet,
     vec4_copy(planet->parent->pvo[0], pos);
     mat4_set_identity(mat);
     mat4_itranslate(mat, pos[0], pos[1], pos[2]);
-    painter.transform = &mat;
 
     // Set the depth range same as the parent!!!!
     dist = vec3_norm(planet->parent->pvo[0]);
@@ -788,7 +790,7 @@ static void planet_render_orbit(const planet_t *planet,
     painter.depth_range = &depth_range;
 
     painter.lines_width = 1.5;
-    paint_orbit(&painter, FRAME_ICRF, painter.obs->tt,
+    paint_orbit(&painter, FRAME_ICRF, mat, painter.obs->tt,
                 in, om, w, a, n, ec, ma);
 }
 
@@ -879,7 +881,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // Project planet's center
     convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
     project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-            2, pos, p_win);
+            pos, p_win);
 
     // At least 1 px of the planet is visible, report it for tonemapping
     convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, pos);

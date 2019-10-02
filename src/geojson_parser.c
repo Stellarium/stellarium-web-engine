@@ -9,7 +9,6 @@
 
 #include "geojson_parser.h"
 
-#include "utils/json_expression.h"
 #include "utils/utils_json.h"
 #include "utils/vec.h"
 #include "utlist.h"
@@ -476,13 +475,11 @@ error:
  *
  * Parameters:
  *   data   - The json data to parse.
- *   filter - An optional json expression that will be tested agains each
- *            feature to filter out part of the data.  (See
- *            src/utils/json_expression.h)
+ *
  * Return:
  *   A new geojson_t instance, or NULL in case of error.
  */
-geojson_t *geojson_parse(const json_value *data, const json_value *filter)
+geojson_t *geojson_parse(const json_value *data)
 {
     char error_msg[128] = "";
     const char *type;
@@ -499,9 +496,6 @@ geojson_t *geojson_parse(const json_value *data, const json_value *filter)
         geojson->features = calloc(geojson->nb_features,
                                    sizeof(*geojson->features));
         for (i = 0; i < features->u.array.length; i++) {
-            if (        filter && !json_expression_eval_bool(
-                        features->u.array.values[i], filter))
-                continue;
             if (parse_feature(features->u.array.values[i],
                               &geojson->features[i]))
                 ERROR("Cannot parse feature");

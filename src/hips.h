@@ -98,7 +98,10 @@ bool hips_is_ready(hips_t *hips);
 
 /*
  * Function: hips_traverse
- * Depth first traversal of healpix grid.
+ * Breadth first traversal of healpix grid.
+ *
+ * Deprecated, better to use the non callback version with the hips_iter_
+ * functions instead.
  *
  * The callback should return:
  *   1 to keep going deeper into the tile.
@@ -111,6 +114,58 @@ bool hips_is_ready(hips_t *hips);
  *   -v if the callback returned a negative value -v.
  */
 int hips_traverse(void *user, int callback(int order, int pix, void *user));
+
+
+/*
+ * Struct: hips_iterator_t
+ * Used for breadth first traversal of hips.
+ *
+ * To iter a hips index we can use the <hips_iter_init>, <hips_iter_next>
+ * and <hips_iter_push_children> functions.  e.g:
+ *
+ *  hips_iterator_t iter;
+ *  int order, pix;
+ *  hips_iter_init(&iter);
+ *  while (hips_iter_next(&iter, &order, &pix)) {
+ *      // Process healpix pixel at order, pix.
+ *      if (go_deeper) {
+ *         hips_iter_push_children(iter, order, pix);
+ *      }
+ *  }
+ *
+ */
+typedef struct hips_iterator
+{
+    struct {
+        int order;
+        int pix;
+    } queue[1024]; // Todo: make it dynamic?
+    int size;
+    int start;
+} hips_iterator_t;
+
+/*
+ * Function: hips_iter_init
+ * Initialize the iterator with the initial twelve order zero healpix pixels.
+ */
+void hips_iter_init(hips_iterator_t *iter);
+
+/*
+ * Function: hips_iter_next
+ * Pop the next healpix pixel from the iterator.
+ *
+ * Return false if there are no more pixel enqueued.
+ */
+bool hips_iter_next(hips_iterator_t *iter, int *order, int *pix);
+
+/*
+ * Function: hips_iter_push_children
+ * Add the four children of the giver pixel to the iterator.
+ *
+ * The children will be retrieved after all the currently queued values
+ * from the iterator have been processed.
+ */
+void hips_iter_push_children(hips_iterator_t *iter, int order, int pix);
 
 /*
  * Function: hips_get_tile_texture
@@ -198,13 +253,16 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter,
  * Parameters:
  *   hips    - A hips survey.
  *   painter - The painter used to render.
+ *   transf  - Transformation applied to the unit sphere to set the position
+ *             in the sky.  Can be set to NULL for identity.
  *   angle   - Visible angle the survey has in the sky.
  *             (2 * PI for full sky surveys).
  *   split_order - The requested order of the final quad divisions.
  *                 The actual split order could be higher if the rendering
  *                 order is too high for this value.
  */
-int hips_render(hips_t *hips, const painter_t *painter, double angle,
+int hips_render(hips_t *hips, const painter_t *painter,
+                const double transf[4][4], double angle,
                 int split_order);
 
 /*
@@ -214,8 +272,10 @@ int hips_render(hips_t *hips, const painter_t *painter, double angle,
  *  control on the rendering.
  */
 int hips_render_traverse(hips_t *hips, const painter_t *painter,
+                         const double transf[4][4],
                          double angle, int split_order, void *user,
                          int callback(hips_t *hips, const painter_t *painter,
+                                      const double transf[4][4],
                                       int order, int pix, int split,
                                       int flags, void *user));
 

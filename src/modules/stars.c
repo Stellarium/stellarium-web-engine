@@ -738,33 +738,6 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     return NULL;
 }
 
-// XXX: we can probably merge this with stars_get_visitor!
-static int stars_list_visitor(int order, int pix, void *user)
-{
-    int i, r, code;
-    star_t *star = NULL;
-    struct {
-        stars_t *stars;
-        double max_mag;
-        int nb;
-        int (*f)(void *user, obj_t *obj);
-        void *user;
-    } *d = user;
-    tile_t *tile;
-    tile = get_tile(d->stars, 0, order, pix, false, &code);
-    if (!tile || tile->mag_min >= d->max_mag) return 0;
-    for (i = 0; i < tile->nb; i++) {
-        if (tile->sources[i].vmag > d->max_mag) continue;
-        d->nb++;
-        if (!d->f) continue;
-        star = star_create(&tile->sources[i]);
-        r = d->f(d->user, (obj_t*)star);
-        obj_release((obj_t*)star);
-        if (r) break;
-    }
-    return 1;
-}
-
 static int stars_list(const obj_t *obj, observer_t *obs,
                       double max_mag, uint64_t hint, void *user,
                       int (*f)(void *user, obj_t *obj))
@@ -773,17 +746,25 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     tile_t *tile;
     stars_t *stars = (void*)obj;
     star_t *star;
+    hips_iterator_t iter;
 
-    struct {
-        stars_t *stars;
-        double max_mag;
-        int nb;
-        int (*f)(void *user, obj_t *obj);
-        void *user;
-    } d = {.stars=(void*)obj, .max_mag=max_mag, .f=f, .user=user};
-
+    // Without hint, we have to iter all the tiles.
     if (!hint) {
-        hips_traverse(&d, stars_list_visitor);
+        hips_iter_init(&iter);
+        while (hips_iter_next(&iter, &order, &pix)) {
+            tile = get_tile(stars, 0, order, pix, false, &code);
+            if (!tile || tile->mag_min >= max_mag) continue;
+            for (i = 0; i < tile->nb; i++) {
+                if (tile->sources[i].vmag > max_mag) continue;
+                if (!f) continue;
+                star = star_create(&tile->sources[i]);
+                r = f(user, (obj_t*)star);
+                obj_release((obj_t*)star);
+                if (r) break;
+            }
+            if (i < tile->nb) break;
+            hips_iter_push_children(&iter, order, pix);
+        }
         return 0;
     }
 

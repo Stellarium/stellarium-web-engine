@@ -34,16 +34,17 @@ typedef struct uv_map uv_map_t;
 struct uv_map
 {
     int type;
+    void (*map)(const uv_map_t *t, const double v[2], double out[4]);
+    // If set, will be applied after the map function.
+    const double (*transf)[4][4];
+    void *user;
+
+    // Healpix specific attributes.
     int order;
     int pix;
-    union {
-        double mat[3][3];
-        double mat4[4][4];
-    };
-    void *user;
+    double mat[3][3];
     bool swapped;
     bool at_infinity;
-    void (*map)(const uv_map_t *t, const double v[2], double out[4]);
 };
 
 /*
@@ -57,8 +58,10 @@ struct uv_map
  *   map    - The mapping function used.
  *   uv     - Input UV coordinates.
  *   out    - Output 3d homogeneous coordinates.
+ *   normal - If set, returns the normal at the mapped position.
  */
-void uv_map(const uv_map_t *map, const double v[2], double out[4]);
+void uv_map(const uv_map_t *map, const double v[2], double out[4],
+            double normal[3]);
 
 /*
  * Function: uv_map_subdivide
@@ -73,12 +76,14 @@ void uv_map_subdivide(const uv_map_t *map, uv_map_t children[4]);
  * Compute the mapped position of a 2d grid covering the mapping.
  *
  * Parameters:
- *   map    - The mapping function used.
- *   size   - Size of the side of the grid.  The number of vertices computed
- *            is (size + 1)^2.
- *   out    - Output of all the mapped vertices.
+ *   map        - The mapping function used.
+ *   size       - Size of the side of the grid.  The number of vertices
+ *                computed is (size + 1)^2.
+ *   out        - Output of all the mapped vertices.
+ *   normals    - If set, output of all the mapped vertices normals.
  */
-void uv_map_grid(const uv_map_t *map, int size, double (*out)[4]);
+void uv_map_grid(const uv_map_t *map, int size,
+                 double (*out)[4], double (*normals)[3]);
 
 void uv_map_get_bounding_cap(const uv_map_t *map, double cap[4]);
 

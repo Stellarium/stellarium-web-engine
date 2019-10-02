@@ -304,6 +304,24 @@ var testPositions = function(stel) {
   var dec = stel.anpm(stel.c2s(cirs)[1]);
 }
 
+var testGeojson = function(stel) {
+  var data = {
+    "type": "FeatureCollection",
+    "features": []
+  };
+  var obj = stel.createObj('geojson', {
+    data: data
+  });
+  obj.filter = function(idx) {
+    if (idx > 100) return false; // Hide.
+    if (idx < 10) return true; // Unchanged.
+    return {
+      fill: [1, 0, 0, 1],
+      stroke: [0, 1, 0, 1]
+    };
+  }
+}
+
 require('./static/js/stellarium-web-engine.js')({
   wasmFile: './static/js/stellarium-web-engine.wasm',
   onReady: function(stel) {
@@ -323,6 +341,7 @@ require('./static/js/stellarium-web-engine.js')({
     testTree(stel);
     testCreate(stel);
     testPositions(stel);
+    testGeojson(stel);
     console.log('All tests passed');
   }
 });

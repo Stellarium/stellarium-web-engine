@@ -38,17 +38,22 @@ struct feature {
     int         text_anchor;
     float       text_rotate;
     float       text_offset[2];
+    bool        hidden;
 };
 
+/*
+ * Struct: image_t
+ * Represents a geojson document
+ *
+ * Attributes:
+ *   filter - Function called for each feature.  Can set the fill and stroke
+ *            color.  If it returns zero, then the feature is hidden.
+ */
 typedef struct image {
     obj_t       obj;
-
-    json_value  *geojson;
-    json_value  *filter;
-    bool        dirty;
-
     feature_t   *features;
     int         frame;
+    int         (*filter)(int idx, float fill_color[4], float stroke_color[4]);
 } image_t;
 
 
@@ -287,14 +292,36 @@ static void remove_all_features(image_t *image)
     }
 }
 
+static void apply_filter(image_t *image)
+{
+    feature_t *feature;
+    int i = 0, r;
+    if (!image->filter) return;
+    for (feature = image->features; feature; feature = feature->next, i++) {
+        r = image->filter(i, feature->fill_color, feature->stroke_color);
+        feature->hidden = (r == 0);
+    }
+}
+
 static json_value *data_fn(obj_t *obj, const attribute_t *attr,
                            const json_value *args)
 {
     image_t *image = (void*)obj;
-    if (!args) return json_copy(image->geojson);
-    if (image->geojson) json_builder_free(image->geojson);
-    image->geojson = json_copy(args);
-    image->dirty = true;
+    geojson_t *geojson;
+    int i;
+
+    if (!args) return NULL;
+    remove_all_features(image);
+    geojson = geojson_parse(args);
+    if (!geojson) {
+        LOG_E("Cannot parse geojson");
+        return NULL;
+    }
+    for (i = 0; i < geojson->nb_features; i++) {
+        add_geojson_feature(image, &geojson->features[i]);
+    }
+    geojson_delete(geojson);
+    apply_filter(image);
     return NULL;
 }
 
@@ -302,28 +329,14 @@ static json_value *filter_fn(obj_t *obj, const attribute_t *attr,
                              const json_value *args)
 {
     image_t *image = (void*)obj;
-    if (!args) return json_copy(image->filter);
-    if (image->filter) json_builder_free(image->filter);
-    image->filter = json_copy(args);
-    image->dirty = true;
-    return NULL;
-}
-
-static int image_update(image_t *image)
-{
-    geojson_t *geojson;
-    int i;
-
-    if (!image->dirty) return 0;
-    image->dirty = false;
-    remove_all_features(image);
-    geojson = geojson_parse(image->geojson, image->filter);
-    assert(geojson);
-    for (i = 0; i < geojson->nb_features; i++) {
-        add_geojson_feature(image, &geojson->features[i]);
+    if (!args) return NULL;
+    if (args->type != json_integer) {
+        LOG_E("Wrong type for filter attribute");
+        return NULL;
     }
-    geojson_delete(geojson);
-    return 0;
+    image->filter = (void*)(intptr_t)(args->u.integer);
+    apply_filter(image);
+    return NULL;
 }
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
@@ -335,9 +348,6 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     int frame = image->frame;
     const mesh_t *mesh;
 
-    if (image->dirty)
-        image_update((image_t*) image);
-
     /*
      * For the moment, we render all the filled shapes first, then
      * all the lines, and then all the titles.  This allows the renderer
@@ -345,6 +355,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
      * We should probably instead allow the renderer to reorder the calls.
      */
     for (feature = image->features; feature; feature = feature->next) {
+        if (feature->hidden) continue;
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->fill_color[3]) {
                 vec4_copy(feature->fill_color, painter.color);
@@ -357,6 +368,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     }
 
     for (feature = image->features; feature; feature = feature->next) {
+        if (feature->hidden) continue;
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->stroke_color[3]) {
                 vec4_copy(feature->stroke_color, painter.color);
@@ -370,6 +382,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     }
 
     for (feature = image->features; feature; feature = feature->next) {
+        if (feature->hidden) continue;
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->title) {
                 painter_project(&painter, frame, mesh->bounding_cap,
@@ -391,8 +404,6 @@ static void image_del(obj_t *obj)
 {
     image_t *image = (void*)obj;
     remove_all_features(image);
-    if (image->filter) json_builder_free(image->filter);
-    if (image->geojson) json_builder_free(image->geojson);
 }
 
 static obj_t *image_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
@@ -432,8 +443,8 @@ static obj_klass_t image_klass = {
     .get_by_oid = image_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
-        PROPERTY(filter, TYPE_JSON, .fn = filter_fn),
         PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),
+        PROPERTY(filter, TYPE_FUNC, .fn = filter_fn),
         {}
     },
 };

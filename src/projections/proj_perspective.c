@@ -21,28 +21,21 @@ static void proj_perspective_project(
 }
 
 static bool proj_perspective_backward(const projection_t *proj, int flags,
-        const double *v, double *out)
+        const double v[2], double out[4])
 {
-    double p[3], r;
-    vec3_copy(v, p);
-
-    p[0] *= proj->scaling[0];
-    p[1] *= proj->scaling[1];
-
-    r = sqrt(1.0 + p[0] * p[0] + p[1] * p[1]);
-    p[0] /= r;
-    p[1] /= r;
-    p[2] = -1.0 / r;
-
-    vec3_copy(p, out);
+    double p[4] = {v[0], v[1], 0, 1};
+    double inv[4][4];
+    mat4_invert(proj->mat, inv);
+    mat4_mul_vec4(inv, p, out);
+    vec3_normalize(out, out);
     return true;
 }
 
 void proj_perspective_init(projection_t *p, double fov, double aspect)
 {
-    double fovy;
+    double fovy, clip_near = 0.1, clip_far = 256;
     fovy = atan(tan(fov / 2) / aspect) * 2;
-    mat4_perspective(p->mat, fovy / DD2R, aspect, 0, 256);
+    mat4_perspective(p->mat, fovy / DD2R, aspect, clip_near, clip_far);
     p->name = "perspective";
     p->type = PROJ_PERSPECTIVE;
     p->max_fov = 120. * DD2R;

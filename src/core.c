@@ -639,7 +639,7 @@ static void win_to_observed(double x, double y, double p[3])
     // Convert to NDC coordinates.
     pos[0] = pos[0] / core->win_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
-    project(&proj, PROJ_BACKWARD, 4, pos, pos);
+    project(&proj, PROJ_BACKWARD, pos, pos);
     convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
 }
 
@@ -690,7 +690,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     painter_t painter = {
         .rend = core->rend,
         .obs = core->observer,
-        .transform = &mat4_identity,
         .fb_size = {win_w * pixel_scale, win_h * pixel_scale},
         .pixel_scale = pixel_scale,
         .proj = &proj,

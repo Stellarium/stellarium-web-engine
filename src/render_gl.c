@@ -382,7 +382,7 @@ static const double (*get_grid(renderer_gl_t *rend,
     }
 
     grid = calloc(n * n, sizeof(*grid));
-    uv_map_grid(map, split, grid);
+    uv_map_grid(map, split, grid, NULL);
 
     if (can_cache) {
         cache_add(rend->grid_cache, &key, sizeof(key),
@@ -409,9 +409,9 @@ static void compute_tangent(const double uv[2], const uv_map_t *map,
     vec3_normalize(tangent, out);
     */
 
-    double p[4] = {0};
-    uv_map(map, uv, p);
-    vec3_cross(VEC(0, 0, 1), p, out);
+    double p[4] = {0}, n[3];
+    uv_map(map, uv, p, n);
+    vec3_cross(VEC(0, 0, 1), n, out);
 }
 
 static void quad_planet(
@@ -454,7 +454,6 @@ static void quad_planet(
         mat3_to_mat4(painter->obs->ro2v, mv);
     if (frame == FRAME_ICRF)
         mat3_to_mat4(painter->obs->ri2v, mv);
-    mat4_mul(mv, *painter->transform, mv);
     mat4_to_float(mv, item->planet.mv);
 
     // Set material
@@ -485,29 +484,24 @@ static void quad_planet(
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, p[0], p[1]);
         if (item->planet.normalmap) {
             compute_tangent(p, map, tangent);
-            mat4_mul_vec4(*painter->transform, tangent, tangent);
             gl_buf_3f(&item->buf, -1, ATTR_TANGENT, VEC3_SPLIT(tangent));
         }
 
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
-        uv_map(map, p, p);
+        uv_map(map, p, p, normal);
         assert(p[3] == 1.0); // Planet can never be at infinity.
 
-        vec3_copy(p, normal);
-        mat4_mul_vec4(*painter->transform, normal, normal);
         gl_buf_3f(&item->buf, -1, ATTR_NORMAL, VEC3_SPLIT(normal));
 
         // Model position (without scaling applied).
         vec4_copy(p, mpos);
         vec3_mul(1.0 / painter->planet.scale, mpos, mpos);
-        mat4_mul_vec4(*painter->transform, mpos, mpos);
         gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC4_SPLIT(mpos));
 
         // Rendering position (with scaling applied).
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
         z = p[2];
-        project(painter->proj, 0, 4, p, p);
+        project(painter->proj, 0, p, p);
         if (painter->depth_range) {
             vec2_to_float(*painter->depth_range, item->depth_range);
             p[2] = -z;
@@ -598,9 +592,8 @@ static void quad(renderer_t          *rend_,
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, tex_pos[0], tex_pos[1]);
 
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project(painter->proj, 0, 4, ndc_p, ndc_p);
+        project(painter->proj, 0, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         // For atmosphere shader, in the first pass we do not compute the
@@ -656,9 +649,8 @@ static void quad_wireframe(renderer_t          *rend_,
     for (j = 0; j < n; j++) {
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
-        mat4_mul_vec4(*painter->transform, p, p);
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project(painter->proj, 0, 4, ndc_p, ndc_p);
+        project(painter->proj, 0, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
@@ -1597,12 +1589,11 @@ static void mesh(renderer_t          *rend_,
     for (i = 0; i < verts_count; i++) {
         vec3_copy(verts[i], pos);
         pos[3] = 0.0;
-        mat4_mul_vec4(*painter->transform, pos, pos);
         vec3_normalize(pos, pos);
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         pos[3] = 0.0;
         project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                4, pos, pos);
+                pos, pos);
         gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(pos));
         gl_buf_next(&item->buf);
     }

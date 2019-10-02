@@ -335,7 +335,6 @@ static void test_clipping(void)
     projection_init(&proj, PROJ_STEREOGRAPHIC, fov, 800, 600);
     painter = (painter_t) {
         .obs = &obs,
-        .transform = &mat4_identity,
         .proj = &proj,
     };
 

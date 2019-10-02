@@ -247,13 +247,13 @@ static void line_func(void *user, double t, double out[2])
     const uv_map_t *map = USER_GET(user, 3);
 
     vec4_mix(line[0], line[1], t, pos);
-    if (map) uv_map(map, pos, pos);
-    mat4_mul_vec4(*painter->transform, pos, pos);
+    if (map) uv_map(map, pos, pos, NULL);
     vec3_normalize(pos, pos);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
     pos[3] = 0.0;
-    project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE, 2,
-            pos, out);
+    project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+            pos, pos);
+    vec2_copy(pos, out);
 }
 
 /*
@@ -313,10 +313,9 @@ static int paint_line(const painter_t *painter,
         // just don't render it in that case.
         for (i = 0; i < 2; i++) {
             if (map)
-                uv_map(map, line[i], view_pos[i]);
+                uv_map(map, line[i], view_pos[i], NULL);
             else
                 memcpy(view_pos[i], line[i], sizeof(view_pos[i]));
-            mat4_mul_vec4(*painter->transform, view_pos[i], view_pos[i]);
             vec3_normalize(view_pos[i], view_pos[i]);
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           view_pos[i], view_pos[i]);
@@ -466,7 +465,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
                              const uv_map_t *map, bool outside)
 {
     double corners[4][4];
-    double quad[4][4], normal[4];
+    double quad[4][4], normals[4][3], normal[4];
     double p[4][4], direction[3];
     double bounding_cap[4];
     uv_map_t children[4];
@@ -475,7 +474,6 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 
     if (outside) {
         uv_map_get_bounding_cap(map, bounding_cap);
-        mat4_mul_vec3_dir(*painter->transform, bounding_cap, bounding_cap);
         assert(vec3_is_normalized(bounding_cap));
         if (painter_is_cap_clipped(painter, frame, bounding_cap))
             return true;
@@ -497,13 +495,12 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
         return true;
     }
 
-    uv_map_grid(map, 1, corners);
+    uv_map_grid(map, 1, corners, normals);
     for (i = 0; i < 4; i++) {
         vec3_copy(corners[i], quad[i]);
         quad[i][3] = 1.0;
-        mat4_mul_vec4(*painter->transform, quad[i], quad[i]);
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
-        project(painter->proj, 0, 4, quad[i], p[i]);
+        project(painter->proj, 0, quad[i], p[i]);
         assert(!isnan(p[i][0]));
     }
     if (is_clipped(4, p)) return true;
@@ -518,14 +515,13 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
      * direction vector to the middle of the planet.
      */
     if (!outside && order > 1) {
-        vec3_copy((*painter->transform)[3], direction);
+        vec3_copy((*map->transf)[3], direction);
         vec3_normalize(direction, direction);
         convert_frame(painter->obs, frame, FRAME_VIEW, true,
                       direction, direction);
         for (i = 0; i < 4; i++) {
-            vec3_copy(corners[i], normal);
+            vec3_copy(normals[i], normal);
             normal[3] = 0.0;
-            mat4_mul_vec4(*painter->transform, normal, normal);
             vec3_normalize(normal, normal);
             convert_frame(painter->obs, frame, FRAME_VIEW, true,
                           normal, normal);
@@ -618,6 +614,7 @@ static void orbit_map(const uv_map_t *map, const double v[2], double out[4])
  *   k_ma       - Mean Anomaly (rad).
  */
 int paint_orbit(const painter_t *painter, int frame,
+                const double transf[4][4],
                 double k_jd,      // date (MJD).
                 double k_in,      // inclination (rad).
                 double k_om,      // Longitude of the Ascending Node (rad).
@@ -630,6 +627,7 @@ int paint_orbit(const painter_t *painter, int frame,
     const double orbit[8] = {k_jd, k_in, k_om, k_w, k_a, k_n, k_ec, k_ma};
     uv_map_t map = {
         .map        = orbit_map,
+        .transf     = (void*)transf,
         .user       = (void*)orbit,
     };
     double line[2][4] = {{0}, {1}};
@@ -771,7 +769,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
         float ra, float de, float angle, float size_x, float size_y,
         double win_pos[2], double win_size[2], double *win_angle)
 {
-    double p[4], c[2], a[2], b[2], mat[3][3];
+    double p[4], c[4], a[4], b[4], mat[3][3];
 
     assert(!isnan(ra));
     assert(!isnan(de));
@@ -791,7 +789,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_ry(-de, mat, mat);
     mat3_mul_vec3(mat, p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, c);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, c);
 
     // Point ellipse.
     if (size_x == 0) {
@@ -812,7 +810,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, a);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, a);
 
     // 3. Semi minor.
     vec4_set(p, 1, 0, 0, 0);
@@ -826,7 +824,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, 2, p, b);
+    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, b);
 
     vec2_copy(c, win_pos);
     vec2_sub(a, c, a);
@@ -839,15 +837,17 @@ void painter_project_ellipse(const painter_t *painter, int frame,
 bool painter_project(const painter_t *painter, int frame,
                      const double pos[3], bool at_inf, bool clip_first,
                      double win_pos[2]) {
-    double v[3];
-    assert(mat4_is_identity(*painter->transform)); // Not supported yet.
+    double v[4];
+    bool ret;
     if (clip_first) {
         if (painter_is_point_clipped_fast(painter, frame, pos, at_inf))
             return false;
     }
     convert_frame(painter->obs, frame, FRAME_VIEW, at_inf, pos, v);
-    return project(painter->proj, (at_inf ? PROJ_ALREADY_NORMALIZED : 0) |
-                   PROJ_TO_WINDOW_SPACE, 2, v, win_pos);
+    ret = project(painter->proj, (at_inf ? PROJ_ALREADY_NORMALIZED : 0) |
+                  PROJ_TO_WINDOW_SPACE, v, v);
+    vec2_copy(v, win_pos);
+    return ret;
 }
 
 bool painter_unproject(const painter_t *painter, int frame,
@@ -858,7 +858,7 @@ bool painter_unproject(const painter_t *painter, int frame,
     p[0] = win_pos[0] / painter->proj->window_size[0] * 2 - 1;
     p[1] = 1 - win_pos[1] / painter->proj->window_size[1] * 2;
     // NDC to view.
-    ret = project(painter->proj, PROJ_BACKWARD, 4, p, p);
+    ret = project(painter->proj, PROJ_BACKWARD, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
     return ret;
 }

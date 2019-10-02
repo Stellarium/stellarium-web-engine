@@ -165,18 +165,20 @@ if target_os == 'js':
     # All the emscripten runtime functions we use.
     # Needed since emscripten 1.37.
     extra_exported = [
+        'ALLOC_NORMAL',
         'GL',
         'UTF8ToString',
-        'addFunction',
-        'cwrap',
-        'getValue',
-        'removeFunction',
-        'setValue',
-        'intArrayFromString',
-        'allocate',
         '_free',
         '_malloc',
-        'ALLOC_NORMAL',
+        'addFunction',
+        'allocate',
+        'cwrap',
+        'getValue',
+        'intArrayFromString',
+        'lengthBytesUTF8',
+        'removeFunction',
+        'setValue',
+        'writeAsciiToMemory',
     ]
     extra_exported = ','.join("'%s'" % x for x in extra_exported)
 
