@@ -68,6 +68,7 @@ Module.afterInit(function() {
      *  - A dict of values to change colors:
      *      fill    - Array of 4 float values.
      *      stroke  - Array of 4 float values.
+     *      visible - Boolean (default to true).
      */
     let filterFn = null;
     let setValue = Module.setValue;
@@ -85,7 +86,7 @@ Module.afterInit(function() {
           if (r === true) return 1;
           if (r.fill) fillColorPtr(r.fill, fillPtr);
           if (r.stroke) fillColorPtr(r.stroke, strokePtr);
-          return 1;
+          return r.visible ? 1 : 0;
         }, 'iiii');
         that._call('filter', filterFn);
       }
