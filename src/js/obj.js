@@ -56,42 +56,6 @@ Module.afterInit(function() {
     Module._obj_foreach_attr(this.v, 0, callback);
     Module.removeFunction(callback);
 
-
-    /*
-     * Experimental support for the 'filter' attribute of geojson objects.
-     *
-     * The special filter attribute can be set to a function that takes as
-     * input the index of a feature and can return either:
-     *
-     *  - false, to hide the feature.
-     *  - true, to show the feature unchanged.
-     *  - A dict of values to change colors:
-     *      fill    - Array of 4 float values.
-     *      stroke  - Array of 4 float values.
-     *      visible - Boolean (default to true).
-     */
-    let filterFn = null;
-    let setValue = Module.setValue;
-    function fillColorPtr(color, ptr) {
-      for (var i = 0; i < 4; i++) {
-        setValue(ptr + i * 4, color[i], 'float');
-      }
-    }
-    Object.defineProperty(that, 'filter', {
-      set: function(filter) {
-        if (filterFn) Module.removeFunction(filterFn);
-        filterFn = Module.addFunction(function(id, fillPtr, strokePtr) {
-          var r = filter(id);
-          if (r === false) return 0;
-          if (r === true) return 1;
-          if (r.fill) fillColorPtr(r.fill, fillPtr);
-          if (r.stroke) fillColorPtr(r.stroke, strokePtr);
-          return r.visible ? 1 : 0;
-        }, 'iiii');
-        that._call('filter', filterFn);
-      }
-    });
-
     // Also add the children as properties
     var callback = Module.addFunction(function(id) {
       id = Module.UTF8ToString(id);
@@ -361,15 +325,18 @@ Module.afterInit(function() {
   Module['createObj'] = function(type, args) {
     // Don't use the emscripten wrapped version of obj_create_str, since
     // it seems to crash with large strings!
-    var id = args ? args.id : 0;
+    let id = args ? args.id : 0;
     args = args ? stringToC(JSON.stringify(args)) : 0;
     if (id) id = stringToC(id);
-    type = stringToC(type);
-    var ret = Module._obj_create_str(type, id, 0, args);
+    const ctype = stringToC(type);
+    let ret = Module._obj_create_str(ctype, id, 0, args);
     Module._free(type);
     Module._free(args);
     if (id) Module._free(id);
-    return ret ? new SweObj(ret) : null;
+    ret = ret ? new SweObj(ret) : null;
+    // Add special geojson object methods.
+    if (type === 'geojson') Module.onGeojsonObj(ret);
+    return ret;
   }
 
   var onObjChanged = Module.addFunction(function(objPtr, attr) {
@@ -406,6 +373,7 @@ Module.afterInit(function() {
     return value;
   }
 
+  Module['_setValue'] = Module.setValue; // So that we can still use it!
   Module['setValue'] = function(path, value) {
     path = "core." + path;
     var elems = path.split('.');
