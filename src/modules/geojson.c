@@ -281,11 +281,12 @@ static int feature_get_info(const obj_t *obj, const observer_t *obs,
     }
 }
 
-static void remove_all_features(image_t *image)
+EMSCRIPTEN_KEEPALIVE
+void geojson_remove_all_features(image_t *image)
 {
     feature_t *feature;
 
-    while(image->features) {
+    while (image->features) {
         feature = image->features;
         DL_DELETE(image->features, feature);
         obj_release(&feature->obj);
@@ -311,7 +312,7 @@ static json_value *data_fn(obj_t *obj, const attribute_t *attr,
     int i;
 
     if (!args) return NULL;
-    remove_all_features(image);
+    geojson_remove_all_features(image);
     geojson = geojson_parse(args);
     if (!geojson) {
         LOG_E("Cannot parse geojson");
@@ -403,7 +404,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
 static void image_del(obj_t *obj)
 {
     image_t *image = (void*)obj;
-    remove_all_features(image);
+    geojson_remove_all_features(image);
 }
 
 static obj_t *image_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
@@ -419,6 +420,33 @@ static obj_t *image_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         }
     }
     return NULL;
+}
+
+// Special function for fast geojson parsing directly from js!
+// Still experimental.
+EMSCRIPTEN_KEEPALIVE
+void geojson_add_poly_feature(image_t *image, int size, const double *data)
+{
+    geojson_linestring_t ring;
+    geojson_feature_t feature = {
+        .properties = {
+            .fill = {1, 1, 1},
+            .fill_opacity = 0.5,
+            .stroke = {1, 1, 1},
+            .stroke_opacity = 1,
+            .stroke_width = 1,
+        },
+        .geometry = {
+            .type = GEOJSON_POLYGON,
+            .polygon = {
+                .size = 1,
+                .rings = &ring,
+            },
+        },
+    };
+    ring.size = size;
+    ring.coordinates = (void*)data;
+    add_geojson_feature(image, &feature);
 }
 
 

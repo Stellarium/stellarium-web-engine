@@ -10,6 +10,41 @@
 
 // Some special methods for geojson objects.
 
+/*
+ * Method: setData
+ * Set the geojson data of a geojson object.
+ *
+ * This method is to be used for very fast geojson creation, by skipping
+ * passing the geojson to the core as a string, and also skipping parsing
+ * the geojson.
+ *
+ * For the moment we assume a simple geojson with only single ring polygons!
+ */
+function setData(obj, data) {
+
+  Module._geojson_remove_all_features(obj.v);
+  for (const feature of data.features) {
+    const geo = feature.geometry;
+    if (geo.type !== 'Polygon') {
+      console.error('Only support polygon geometry');
+      continue;
+    }
+    if (geo.coordinates.length != 1) {
+      console.error('Only support single ring polygons');
+      continue;
+    }
+    const coordinates = geo.coordinates[0];
+    const size = coordinates.length;
+    const ptr = Module._malloc(size * 16);
+    for (let i = 0; i < size; i++) {
+      Module._setValue(ptr + i * 16 + 0, coordinates[i][0], 'double');
+      Module._setValue(ptr + i * 16 + 8, coordinates[i][1], 'double');
+    }
+    Module._geojson_add_poly_feature(obj.v, size, ptr);
+    Module._free(ptr);
+  }
+}
+
 Module['onGeojsonObj'] = function(obj) {
 
   /*
@@ -46,4 +81,7 @@ Module['onGeojsonObj'] = function(obj) {
     }
   });
 
+  obj.setData = function(data) {
+    setData(obj, data);
+  }
 };
