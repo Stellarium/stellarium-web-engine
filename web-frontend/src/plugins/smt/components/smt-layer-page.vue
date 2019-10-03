@@ -142,7 +142,8 @@ export default {
         if (geojson.features.length === 0) {
           return
         }
-        that.geojsonObj = that.$stel.createObj('geojson', { data: geojson })
+        that.geojsonObj = that.$stel.createObj('geojson')
+        that.geojsonObj.setData(geojson)
         that.$observingLayer.add(that.geojsonObj)
       })
 
