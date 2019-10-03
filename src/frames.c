@@ -86,7 +86,7 @@ static void convert_frame_forward(const observer_t *obs,
 
         if (obs->refraction) {
             if (at_inf) {
-                refraction(p, obs->pressure, 15.0, p);
+                refraction(p, obs->refa, obs->refb, p);
             } else {
                 // Special case for null's vectors
                 double dist = vec3_norm(p);
@@ -95,7 +95,7 @@ static void convert_frame_forward(const observer_t *obs,
                     return;
                 }
                 vec3_mul(1.0 / dist, p, p);
-                refraction(p, obs->pressure, 15.0, p);
+                refraction(p, obs->refa, obs->refb, p);
                 vec3_mul(dist, p, p);
             }
         }
@@ -131,7 +131,7 @@ static void convert_frame_backward(const observer_t *obs,
     if (origin >= FRAME_OBSERVED && dest < FRAME_OBSERVED) {
         if (obs->refraction){
             if (at_inf) {
-                refraction_inv(p, obs->pressure, 15.0, p);
+                refraction_inv(p, obs->refa, obs->refb, p);
             } else {
                 // Special case for null's vectors
                 double dist = vec3_norm(p);
@@ -140,7 +140,7 @@ static void convert_frame_backward(const observer_t *obs,
                     return;
                 }
                 vec3_mul(1.0 / dist, p, p);
-                refraction_inv(p, obs->pressure, 15.0, p);
+                refraction_inv(p, obs->refa, obs->refb, p);
                 vec3_mul(dist, p, p);
             }
         }

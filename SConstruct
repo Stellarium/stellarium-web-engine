@@ -187,6 +187,7 @@ if target_os == 'js':
              '-s', 'ALLOW_MEMORY_GROWTH=1',
              '--pre-js', 'src/js/pre.js',
              '--pre-js', 'src/js/obj.js',
+             '--pre-js', 'src/js/geojson.js',
              '--pre-js', 'src/js/canvas.js',
              '-s', 'STRICT=1',
              '-s', 'RESERVED_FUNCTION_POINTERS=5',

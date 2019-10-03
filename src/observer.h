@@ -68,6 +68,11 @@ struct observer
 
     double eo;  // Equation of origin.
     eraASTROM astrom;
+
+    // Refraction precomputed value, for fast refraction computation.
+    double refa;
+    double refb;
+
     // Heliocentric position/speed of the earth in ICRF reference frame and in
     // BCRS reference system. AU, AU/day.
     double earth_pvh[2][3];
