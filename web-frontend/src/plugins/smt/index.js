@@ -7,17 +7,29 @@ import storeModule from './store'
 import alasql from 'alasql'
 import Vue from 'vue'
 import VueGoogleCharts from 'vue-google-charts'
+import _ from 'lodash'
 
 Vue.use(VueGoogleCharts)
 
+function fId2AlaSql (fieldId) {
+  return fieldId.replace(/properties\./g, '').replace(/\./g, '_')
+}
+
+function fType2AlaSql (fieldType) {
+  if (fieldType === 'string') return 'STRING'
+  if (fieldType === 'date') return 'INT' // Dates are converted to unix time stamp
+  return 'JSON'
+}
+
 async function initDB (fieldsList) {
   console.log('Create Data Base')
-  await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON)')
+  let sqlFields = fieldsList.map(f => fId2AlaSql(f.id) + ' ' + fType2AlaSql(f.type)).join(', ')
+  await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON, ' + sqlFields + ')')
 
   // Create an index on each field
   for (let i in fieldsList) {
     let field = fieldsList[i]
-    await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + field.id.replace(/\./g, '->') + ')')
+    await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + fId2AlaSql(field.id) + ')')
   }
 }
 
@@ -25,11 +37,17 @@ async function loadAllData (fieldsList, jsonData) {
   console.log('Loading ' + jsonData.features.length + ' features')
 
   // Insert all data
-  let req = alasql.compile('INSERT INTO features VALUES (?, ?)')
+  let req = alasql.compile('INSERT INTO features VALUES (?, ?, ' + fieldsList.map(f => '?').join(', ') + ')')
   for (let feature of jsonData.features) {
-    let geometry = feature.geometry
-    let properties = feature.properties
-    await req.promise([geometry, properties])
+    let arr = [feature.geometry, feature.properties]
+    for (let i in fieldsList) {
+      let d = _.get(feature, fieldsList[i].id, undefined)
+      if (d !== undefined && fieldsList[i].type === 'date') {
+        d = new Date(d).getTime()
+      }
+      arr.push(d)
+    }
+    await req.promise(arr)
   }
 }
 

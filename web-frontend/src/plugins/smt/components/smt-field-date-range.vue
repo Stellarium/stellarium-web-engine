@@ -81,10 +81,7 @@ export default {
       let constraint = {
         'field': this.fieldResults.field,
         'operation': 'DATE_RANGE',
-        'expression': [
-          new Date(this.dateRangeSliderValues[0]).toISOString(),
-          new Date(this.dateRangeSliderValues[1]).toISOString()
-        ],
+        'expression': [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
         'negate': false
       }
       this.$emit('add-constraint', constraint)

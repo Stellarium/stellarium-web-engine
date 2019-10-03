@@ -56,7 +56,7 @@ export default {
   },
   methods: {
     fId2AlaSql: function (fieldId) {
-      return fieldId.replace(/\./g, '->')
+      return fieldId.replace(/properties\./g, '').replace(/\./g, '_')
     },
     thumbClicked: function (obs) {
       this.$router.push('/p/observations/' + obs.id)
@@ -102,8 +102,8 @@ export default {
           } else if (c.operation === 'IS_UNDEFINED') {
             whereClause += fid + ' IS NULL'
           } else if (c.operation === 'DATE_RANGE') {
-            whereClause += fid + ' IS NOT NULL AND DATE(' + fid + ') >= DATE("' + c.expression[0] + '")'
-            whereClause += ' AND DATE(' + fid + ') <= DATE("' + c.expression[1] + '")'
+            whereClause += '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0]
+            whereClause += ' AND ' + fid + ' <= ' + c.expression[1] + ')'
           }
           if (i < that.query.constraints.length - 1) {
             whereClause += ' AND '
@@ -167,7 +167,7 @@ export default {
           })
         }
         if (field.widget === 'date_range') {
-          let req = 'SELECT MIN(DATE(' + fid + ')) AS dmin, MAX(DATE(' + fid + ')) AS dmax FROM features' + whereClause
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + whereClause
           alasql.promise(req).then(res => {
             if (res[0].dmin === undefined || res[0].dmax === undefined) {
               // No results
@@ -196,7 +196,7 @@ export default {
               step = 'MONTH'
             }
 
-            alasql.promise('SELECT COUNT(*) AS c, DATE(FIRST(' + fid + ')) AS d FROM features' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
+            alasql.promise('SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
               let data = {
                 min: start,
                 max: stop,
@@ -204,7 +204,7 @@ export default {
                 table: [['Date', 'Count']]
               }
               for (let j in res2) {
-                let d = res2[j].d
+                let d = new Date(res2[j].d)
                 d.setHours(0, 0, 0, 0)
                 if (step === 'MONTH') d.setDate(0)
                 if (step === 'YEAR') d.setMonth(0)
