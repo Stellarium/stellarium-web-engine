@@ -293,6 +293,7 @@ void geojson_remove_all_features(image_t *image)
     }
 }
 
+// XXX: deprecated: we use filter_all instead now!
 static void apply_filter(image_t *image)
 {
     feature_t *feature;
@@ -338,6 +339,18 @@ static json_value *filter_fn(obj_t *obj, const attribute_t *attr,
     image->filter = (void*)(intptr_t)(args->u.integer);
     apply_filter(image);
     return NULL;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void geojson_filter_all(image_t *image,
+                        int (*f)(int idx, float fill[4], float stroke[4]))
+{
+    feature_t *feature;
+    int i = 0, r;
+    for (feature = image->features; feature; feature = feature->next, i++) {
+        r = f(i, feature->fill_color, feature->stroke_color);
+        feature->hidden = (r == 0);
+    }
 }
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
