@@ -64,6 +64,7 @@ export default {
     app.$store.commit('setValue', { varName: 'timeSpeed', newValue: 0 })
     app.$store.commit('setValue', { varName: 'showLocationButton', newValue: false })
     app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
+    app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
     let fieldsList = require('./fieldsList.json')
     Vue.prototype.$smt = { fieldsList: fieldsList }
