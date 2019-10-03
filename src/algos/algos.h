@@ -144,9 +144,12 @@ const char *format_hangle(char *buf, double a);
 const char *format_dist(char *buf, double d); // d in AU.
 
 
-/* Refraction computation
+/*
+ * Function: refraction
+ * Refraction computation
  *
- * Using A*tan(z)+B*tan^3(z) model, with Newton-Raphson correction.
+ * The refa and refb parameters should be pre-computed with the
+ * <refraction_prepare> function.
  *
  * inputs:
  *   v: cartesian coordinates (Z up).
@@ -157,10 +160,25 @@ const char *format_dist(char *buf, double d); // d in AU.
  *   out: corrected cartesian coordinates.
  *
  */
-void refraction(const double v[3], double pressure, double temperature,
+void refraction(const double v[3], double refa, double refb,
                 double out[3]);
-void refraction_inv(const double v[3], double pressure, double temperature,
+void refraction_inv(const double v[3], double refa, double refb,
                     double out[3]);
+
+/*
+ * Function: refraction_prepare
+ * Compute the constants A and B used in the refraction computation.
+ *
+ * Parameters:
+ *   phpa   - Pressure at the observer (millibar).
+ *   tc     - Temperature at the observer (deg C).
+ *   rh     - Relative humidity at the observer (range 0-1).
+ *   refa   - Output of the A coefficient.
+ *   refb   - Output of the B coefficient.
+ */
+void refraction_prepare(double phpa, double tc, double rh,
+                        double *refa, double *refb);
+
 
 /* Galilean satellites positions using l1.2 semi-analytic theory by
  * L.Duriez.

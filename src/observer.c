@@ -180,6 +180,8 @@ void observer_update(observer_t *obs, bool fast)
         eraCp(obs->astrom.eb, obs->obs_pvb[0]);
         vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
         eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
+        // Update refraction constants.
+        refraction_prepare(obs->pressure, 15, 0.5, &obs->refa, &obs->refb);
     }
     eraPvmpv(obs->earth_pvb, obs->earth_pvh, obs->sun_pvb);
 

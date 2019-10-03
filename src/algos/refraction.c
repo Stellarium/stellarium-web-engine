@@ -18,6 +18,26 @@
 // ERFA model for higher altitudes, and revert to this one for lower ones.
 
 #define DD2Rf ((float)M_PI / 180.f)
+
+/*
+ * Function: refraction_prepare
+ * Compute the constants A and B used in the refraction computation.
+ *
+ * Parameters:
+ *   phpa   - Pressure at the observer (millibar).
+ *   tc     - Temperature at the observer (deg C).
+ *   rh     - Relative humidity at the observer (range 0-1).
+ *   refa   - Output of the A coefficient.
+ *   refb   - Output of the B coefficient.
+ */
+void refraction_prepare(double phpa, double tc, double rh,
+                        double *refa, double *refb)
+{
+    // Directly pass the pressure and temperature to the refraction function.
+    *refa = phpa;
+    *refb = tc;
+}
+
 void refraction(const double v[3], double pressure, double temperature,
                 double out[3])
 {
