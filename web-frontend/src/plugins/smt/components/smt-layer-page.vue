@@ -145,6 +145,15 @@ export default {
         that.geojsonObj = that.$stel.createObj('geojson')
         that.geojsonObj.setData(geojson)
         that.$observingLayer.add(that.geojsonObj)
+        that.geojsonObj.filterAll(idx => {
+          // if (do_not_show) return false
+          // if (do_not_modify) return true
+          return {
+            fill: [1, 0.3, 0.3, 0.30],
+            stroke: [0, 1, 0, 0],
+            visible: true
+          }
+        })
       })
 
       // And recompute them
