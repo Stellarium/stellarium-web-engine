@@ -43,6 +43,7 @@ const createStore = () => {
       showTimeButtons: true,
       showObservingPanelTabsButtons: true,
       showSelectedInfoButtons: true,
+      showFPS: false,
 
       fullscreen: false,
       nightmode: false,
