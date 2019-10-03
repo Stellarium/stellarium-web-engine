@@ -362,10 +362,9 @@ Module.afterInit(function() {
     // Don't use the emscripten wrapped version of obj_create_str, since
     // it seems to crash with large strings!
     var id = args ? args.id : 0;
-    args = JSON.stringify(args)
+    args = args ? stringToC(JSON.stringify(args)) : 0;
     if (id) id = stringToC(id);
     type = stringToC(type);
-    args = stringToC(args);
     var ret = Module._obj_create_str(type, id, 0, args);
     Module._free(type);
     Module._free(args);
