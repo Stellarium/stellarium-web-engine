@@ -468,6 +468,7 @@ char *obj_call_json_str(obj_t *obj, const char *attr, const char *args)
 
     jargs = args ? json_parse(args, strlen(args)) : NULL;
     jret = obj_call_json(obj, attr, jargs);
+    if (!jret) return NULL;
     size = json_measure(jret);
     ret = calloc(1, size);
     json_serialize(ret, jret);
