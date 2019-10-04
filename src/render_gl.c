@@ -141,6 +141,9 @@ struct item
         struct {
             int mode;
             float stroke_width;
+            // Projection setttings.  Should be set globally probably.
+            int proj;
+            float proj_scaling[2];
         } mesh;
     };
 
@@ -155,9 +158,9 @@ static const gl_buf_info_t INDICES_BUF = {
 };
 
 static const gl_buf_info_t MESH_BUF = {
-    .size = 8,
+    .size = 12,
     .attrs = {
-        [ATTR_POS] = {GL_FLOAT, 2, false, 0},
+        [ATTR_POS] = {GL_FLOAT, 3, false, 0},
     },
 };
 
@@ -967,7 +970,11 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 
     gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES : GL_LINES;
 
-    shader = shader_get("mesh", NULL, ATTR_NAMES, init_shader);
+    shader_define_t defines[] = {
+        {"PROJ_MOLLWEIDE", item->mesh.proj == PROJ_MOLLWEIDE},
+        {}
+    };
+    shader = shader_get("mesh", defines, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glLineWidth(item->mesh.stroke_width));
@@ -999,6 +1006,7 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_fbo_size", fbo_size);
+    gl_update_uniform(shader, "u_proj_scaling", item->mesh.proj_scaling);
 
     gl_buf_enable(&item->buf);
     GL(glDrawElements(gl_mode, item->indices.nb, GL_UNSIGNED_SHORT, 0));
@@ -1592,9 +1600,16 @@ static void mesh(renderer_t          *rend_,
         vec3_normalize(pos, pos);
         convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
         pos[3] = 0.0;
-        project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                pos, pos);
-        gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(pos));
+        // Special support for shader side Mollweide projection.
+        if (painter->proj->type != PROJ_MOLLWEIDE) {
+            project(painter->proj,
+                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+                    pos, pos);
+        } else {
+            item->mesh.proj = PROJ_MOLLWEIDE;
+            vec2_to_float(painter->proj->scaling, item->mesh.proj_scaling);
+        }
+        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(pos));
         gl_buf_next(&item->buf);
     }
 
