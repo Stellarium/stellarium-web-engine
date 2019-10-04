@@ -3,15 +3,14 @@
 // All rights reserved
 
 <template>
-
-<v-row no-gutters>
-  <v-col cols="12">
-    <h3 class="pt-3 line_right">{{ fieldDescription.name }}</h3>
-  </v-col>
-  <smt-field-chips v-if="isTags" :fieldResults="fieldResults" v-on:add-constraint="addConstraint"></smt-field-chips>
-  <smt-field-date-range v-if="isDateRange" :fieldResults="fieldResults" v-on:add-constraint="addConstraint"></smt-field-date-range>
-</v-row>
-
+  <v-row no-gutters style="position: relative">
+    <div :class="{rowedited: fieldResults.edited}"></div>
+    <v-col cols="12">
+      <h3 class="pt-3 line_right">{{ fieldDescription.name }}</h3>
+    </v-col>
+    <smt-field-chips v-if="isTags" :fieldResults="fieldResults" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint"></smt-field-chips>
+    <smt-field-date-range v-if="isDateRange" :fieldResults="fieldResults" v-on:add-constraint="addConstraint"></smt-field-date-range>
+  </v-row>
 </template>
 
 <script>
@@ -27,6 +26,9 @@ export default {
   methods: {
     addConstraint: function (c) {
       this.$emit('add-constraint', c)
+    },
+    removeConstraint: function (c) {
+      this.$emit('remove-constraint', c)
     }
   },
   computed: {
@@ -59,5 +61,18 @@ export default {
 .line_right:after {
   left: 20px;
   margin-right: -100%;
+}
+
+.rowedited {
+  border-width: 3px;
+  border-style: solid;
+  border-radius: 12px;
+  border-color: #2196f3 !important;
+  width: calc(100% + 16px);
+  height:  calc(100% + 12px);
+  position: absolute;
+  z-index: 1;
+  margin-left: -8px;
+  pointer-events: none;
 }
 </style>

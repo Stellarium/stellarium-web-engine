@@ -15,7 +15,7 @@
             <v-row no-gutters>
               <div v-for="(constraint, i) in constraintsToDisplay" :key="i" style="text-align: center;" class="pa-1">
                 <div class="caption white--text">{{ constraint.field.name }}</div>
-                <v-chip small class="white--text" :close="constraint.closable" :disabled="!constraint.closable" color="primary" @click:close="constraintClosed(i)">
+                <v-chip small class="white--text" :close="constraint.closable" :disabled="!constraint.closable" color="primary" @click="constraintClicked(i)" @click:close="constraintClosed(i)">
                 <div :style="{ minWidth: constraint.closable ? 60 : 82 + 'px' }">{{ printConstraint(constraint) }}</div>
                 </v-chip>
               </div>
@@ -23,7 +23,7 @@
           </v-card-text>
         </v-card>
         <v-container>
-          <smt-field class="mb-2"  v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint">
+          <smt-field class="mb-2" v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint">
           </smt-field>
         </v-container>
       </v-container>
@@ -44,6 +44,7 @@ export default {
       query: {
         constraints: []
       },
+      editedConstraint: undefined,
       results: {
         summary: {
           count: 0
@@ -69,23 +70,46 @@ export default {
       return c.expression
     },
     constraints2SQLWhereClause: function (constraints) {
+      let that = this
       // Construct the SQL WHERE clause matching the given constraints
-      if (!this.query.constraints || this.query.constraints.length === 0) {
+      if (!constraints || constraints.length === 0) {
         return ''
       }
-      let whereClause = ' WHERE '
+      // Group constraints by field. We do a OR between constraints for the same field, AND otherwise.
+      let groupedConstraints = {}
       for (let i in constraints) {
         let c = constraints[i]
-        let fid = this.fId2AlaSql(c.field.id)
-        if (c.operation === 'STRING_EQUAL') {
-          whereClause += fid + ' = "' + c.expression + '"'
-        } else if (c.operation === 'IS_UNDEFINED') {
-          whereClause += fid + ' IS NULL'
-        } else if (c.operation === 'DATE_RANGE') {
-          whereClause += '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0]
-          whereClause += ' AND ' + fid + ' <= ' + c.expression[1] + ')'
+        if (c.field.id in groupedConstraints) {
+          groupedConstraints[c.field.id].push(c)
+        } else {
+          groupedConstraints[c.field.id] = [c]
         }
-        if (i < constraints.length - 1) {
+      }
+      groupedConstraints = Object.values(groupedConstraints)
+
+      // Convert one contraint to a SQL string
+      let c2sql = function (c) {
+        let fid = that.fId2AlaSql(c.field.id)
+        if (c.operation === 'STRING_EQUAL') {
+          return fid + ' = "' + c.expression + '"'
+        } else if (c.operation === 'IS_UNDEFINED') {
+          return fid + ' IS NULL'
+        } else if (c.operation === 'DATE_RANGE') {
+          return '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0] +
+            ' AND ' + fid + ' <= ' + c.expression[1] + ')'
+        }
+      }
+
+      let whereClause = ' WHERE '
+      for (let i in groupedConstraints) {
+        let gCons = groupedConstraints[i]
+        for (let j in gCons) {
+          whereClause += c2sql(gCons[j])
+          if (j < gCons.length - 1) {
+            whereClause += ' OR '
+          }
+        }
+        if (i < groupedConstraints.length - 1) {
           whereClause += ' AND '
         }
       }
@@ -114,6 +138,7 @@ export default {
 
       // Compute the WHERE clause to be used in following queries
       let whereClause = that.constraints2SQLWhereClause(this.query.constraints)
+      let whereClauseEdited = that.constraints2SQLWhereClause(this.query.constraints.filter(c => !this.isEdited(c)))
       let constraintsIds = that.query.constraints.map(c => c.field.id)
 
       // Reset all fields values
@@ -164,13 +189,21 @@ export default {
       for (let i in that.$smt.fieldsList) {
         let field = that.$smt.fieldsList[i]
         let fid = that.fId2AlaSql(field.id)
+        let edited = that.editedConstraint && that.editedConstraint.field.id === field.id
+        let wc = edited ? whereClauseEdited : whereClause
         if (field.widget === 'tags') {
-          let req = 'SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + whereClause
+          let req = 'SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + wc
           alasql.promise(req).then(res => {
+            let tags = res[0].tags ? res[0].tags : {}
+            tags = Object.keys(tags).map(function (key) {
+              let closable = that.query.constraints.filter(c => c.field.id === field.id && c.expression === key).length !== 0
+              return { name: key, count: tags[key], closable: closable }
+            })
             that.results.fields[i] = {
               field: field,
               status: 'ok',
-              data: res[0].tags ? res[0].tags : {}
+              edited: edited,
+              data: tags
             }
             // Fill the implicit constraints list, i.e. the tags where only one value remains
             if (!constraintsIds.includes(field.id) && res[0].tags && Object.keys(res[0].tags).length === 1) {
@@ -181,7 +214,7 @@ export default {
           })
         }
         if (field.widget === 'date_range') {
-          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + whereClause
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
           alasql.promise(req).then(res => {
             if (res[0].dmin === undefined || res[0].dmax === undefined) {
               // No results
@@ -193,6 +226,7 @@ export default {
               }
               Vue.set(that.results.fields[i], 'field', field)
               Vue.set(that.results.fields[i], 'status', 'ok')
+              Vue.set(that.results.fields[i], 'edited', edited)
               Vue.set(that.results.fields[i], 'data', data)
               return
             }
@@ -210,7 +244,7 @@ export default {
               step = 'MONTH'
             }
 
-            alasql.promise('SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
+            alasql.promise('SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features' + wc + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
               let data = {
                 min: start,
                 max: stop,
@@ -226,6 +260,7 @@ export default {
               }
               Vue.set(that.results.fields[i], 'field', field)
               Vue.set(that.results.fields[i], 'status', 'ok')
+              Vue.set(that.results.fields[i], 'edited', edited)
               Vue.set(that.results.fields[i], 'data', data)
             })
           })
@@ -238,14 +273,26 @@ export default {
         return true
       })
       this.query.constraints.push(c)
+      this.editedConstraint = c
+      this.refreshObservationGroups()
+    },
+    removeConstraint: function (c) {
+      this.query.constraints = this.query.constraints.filter(cons => {
+        if (cons.field.id === c.field.id && cons.expression === c.expression && cons.operation === c.operation) return false
+        return true
+      })
       this.refreshObservationGroups()
     },
     constraintClicked: function (i) {
-      console.log('constraintClicked: ' + i)
+      this.editedConstraint = this.query.constraints[i]
+      this.refreshObservationGroups()
     },
     constraintClosed: function (i) {
       this.query.constraints.splice(i, 1)
       this.refreshObservationGroups()
+    },
+    isEdited: function (c) {
+      return this.editedConstraint && c.field.id === this.editedConstraint.field.id
     }
   },
   watch: {
@@ -278,7 +325,11 @@ export default {
       for (let i in this.results.fields) {
         let rf = this.results.fields[i]
         if (!rf.field) continue
-        if (rf.field.widget === 'tags' && rf.data && Object.keys(rf.data).length === 1) continue
+        if (this.isEdited(rf)) {
+          res.push(rf)
+          continue
+        }
+        if (rf.field.widget === 'tags' && rf.data && rf.data.filter(tag => tag.closable === false).length <= 1) continue
         res.push(rf)
       }
       return res
