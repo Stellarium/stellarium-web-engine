@@ -95,15 +95,6 @@ void areas_clear_all(areas_t *areas)
     utarray_clear(areas->items);
 }
 
-// Compute the signed distance of a point to an item.
-static double item_dist(const item_t *item, const double pos[static 2])
-{
-    double ret;
-    ret =  ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
-    if (ret > 0) return ret;
-    return 100000.0; // Default value at quasi infinity.
-}
-
 /*
  * Function: lookup_score.
  * Weight function to decide what item to return during a lookup.
@@ -122,7 +113,7 @@ static double lookup_score(const item_t *item, const double pos[static 2],
 {
     double dist, area, ret;
 
-    dist = item_dist(item, pos);
+    dist = ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
     area = item->a * item->b;
 
     // XXX: probably need to change this algo.
