@@ -70,9 +70,11 @@ static void load_data(comets_t *comets, const char *data, int size)
     comet_t *comet;
     int num, nb_err = 0, len, line_idx = 0, r, nb;
     double peri_time, peri_dist, e, peri, node, i, epoch, h, g;
+    double last_epoch = 0;
     const char *line = NULL;
     char orbit_type;
     char desgn[64];
+    char buf[128];
     obj_t *tmp;
 
     while (iter_lines(data, size, &line, &len)) {
@@ -99,13 +101,15 @@ static void load_data(comets_t *comets, const char *data, int size)
         strcpy(comet->name, desgn);
         comet->obj.oid = oid_create("Com", line_idx);
         comet->pvo[0][0] = NAN;
+        last_epoch = max(epoch, last_epoch);
     }
 
     if (nb_err) {
         LOG_W("Comet planet data got %d error lines.", nb_err);
     }
     DL_COUNT(comets->obj.children, tmp, nb);
-    LOG_I("Parsed %d comets", nb);
+    LOG_I("Parsed %d comets (latest epoch: %s)", nb,
+          format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
 }
 
 static int comet_update(comet_t *comet, const observer_t *obs)
