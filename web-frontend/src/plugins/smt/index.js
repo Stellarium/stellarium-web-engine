@@ -60,7 +60,7 @@ export default {
   name: 'SMT',
   storeModule: storeModule,
   panelRoutes: [
-    { path: '/p/smt', component: SmtLayerPage, meta: { tabName: 'Survey Tool', prio: 2 } }
+    { path: '/p/smt', component: SmtLayerPage, meta: { tabName: 'Survey Tool', prio: 1 } }
   ],
   onEngineReady: function (app) {
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'initializing' })
