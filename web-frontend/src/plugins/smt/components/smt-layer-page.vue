@@ -316,7 +316,6 @@ export default {
       return res
     },
     // Return fields with relevant information to display in GUI
-    // Tags field with only one value are suppressed (already displayed as implicit constraints)
     resultsFieldsToDisplay: function () {
       if (this.$store.state.SMT.status !== 'ready') {
         return []
@@ -329,7 +328,13 @@ export default {
           res.push(rf)
           continue
         }
+        // Don't display tags widget when only one value remains (already displayed as implicit constraints)
         if (rf.field.widget === 'tags' && rf.data && rf.data.filter(tag => tag.closable === false).length <= 1) continue
+        // Don't display date range if the range is <= 24h
+        if (rf.field.widget === 'date_range' && rf.data) {
+          let dt = rf.data.max - rf.data.min
+          if (dt <= 1000 * 60 * 60 * 24) continue
+        }
         res.push(rf)
       }
       return res
