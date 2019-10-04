@@ -369,29 +369,25 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
      * We should probably instead allow the renderer to reorder the calls.
      */
     for (feature = image->features; feature; feature = feature->next) {
-        if (feature->hidden) continue;
+        if (feature->hidden || feature->fill_color[3] == 0) continue;
+        vec4_copy(feature->fill_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            if (feature->fill_color[3]) {
-                vec4_copy(feature->fill_color, painter.color);
-                paint_mesh(&painter, frame, MODE_TRIANGLES,
-                           mesh->vertices_count, mesh->vertices,
-                           mesh->triangles_count, mesh->triangles,
-                           mesh->bounding_cap, 0);
-            }
+            paint_mesh(&painter, frame, MODE_TRIANGLES,
+                       mesh->vertices_count, mesh->vertices,
+                       mesh->triangles_count, mesh->triangles,
+                       mesh->bounding_cap, 0);
         }
     }
 
     for (feature = image->features; feature; feature = feature->next) {
-        if (feature->hidden) continue;
+        if (feature->hidden || feature->stroke_color[3] == 0) continue;
+        vec4_copy(feature->stroke_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            if (feature->stroke_color[3]) {
-                vec4_copy(feature->stroke_color, painter.color);
-                painter.lines_width = feature->stroke_width;
-                paint_mesh(&painter, frame, MODE_LINES,
-                           mesh->vertices_count, mesh->vertices,
-                           mesh->lines_count, mesh->lines,
-                           mesh->bounding_cap, 0);
-            }
+            painter.lines_width = feature->stroke_width;
+            paint_mesh(&painter, frame, MODE_LINES,
+                       mesh->vertices_count, mesh->vertices,
+                       mesh->lines_count, mesh->lines,
+                       mesh->bounding_cap, 0);
         }
     }
 
