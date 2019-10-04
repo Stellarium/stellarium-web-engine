@@ -4,7 +4,9 @@
 
 <template>
   <div style="height: 100%;">
+    <img src="../assets/focse.png" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
+    <img v-if="$store.state.SMT.status === 'loading'" src="../assets/euclid-logo.png" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
     <div class="scroll-container">
       <v-container class="pa-0" fluid style="height: 100%">
         <v-card tile>
