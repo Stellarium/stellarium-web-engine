@@ -68,6 +68,29 @@ export default {
       if (c.field.widget === 'date_range') return this.formatDate(c.expression[0]) + ' - ' + this.formatDate(c.expression[1])
       return c.expression
     },
+    constraints2SQLWhereClause: function (constraints) {
+      // Construct the SQL WHERE clause matching the given constraints
+      if (!this.query.constraints || this.query.constraints.length === 0) {
+        return ''
+      }
+      let whereClause = ' WHERE '
+      for (let i in constraints) {
+        let c = constraints[i]
+        let fid = this.fId2AlaSql(c.field.id)
+        if (c.operation === 'STRING_EQUAL') {
+          whereClause += fid + ' = "' + c.expression + '"'
+        } else if (c.operation === 'IS_UNDEFINED') {
+          whereClause += fid + ' IS NULL'
+        } else if (c.operation === 'DATE_RANGE') {
+          whereClause += '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0]
+          whereClause += ' AND ' + fid + ' <= ' + c.expression[1] + ')'
+        }
+        if (i < constraints.length - 1) {
+          whereClause += ' AND '
+        }
+      }
+      return whereClause
+    },
     refreshObservationGroups: function () {
       let that = this
 
@@ -90,27 +113,8 @@ export default {
       }
 
       // Compute the WHERE clause to be used in following queries
-      let whereClause = ''
-      let constraintsIds = []
-      if (this.query.constraints && this.query.constraints.length) {
-        whereClause = ' WHERE '
-        for (let i in that.query.constraints) {
-          let c = that.query.constraints[i]
-          let fid = that.fId2AlaSql(c.field.id)
-          if (c.operation === 'STRING_EQUAL') {
-            whereClause += fid + ' = "' + c.expression + '"'
-          } else if (c.operation === 'IS_UNDEFINED') {
-            whereClause += fid + ' IS NULL'
-          } else if (c.operation === 'DATE_RANGE') {
-            whereClause += '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0]
-            whereClause += ' AND ' + fid + ' <= ' + c.expression[1] + ')'
-          }
-          if (i < that.query.constraints.length - 1) {
-            whereClause += ' AND '
-          }
-          constraintsIds.push(c.field.id)
-        }
-      }
+      let whereClause = that.constraints2SQLWhereClause(this.query.constraints)
+      let constraintsIds = that.query.constraints.map(c => c.field.id)
 
       // Reset all fields values
       that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': {} } })
