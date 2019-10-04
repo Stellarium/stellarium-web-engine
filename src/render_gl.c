@@ -1619,11 +1619,15 @@ static void mesh(renderer_t          *rend_,
         gl_buf_next(&item->indices);
     }
 
+    // XXX: disabled for the moment, since it only works if we do the
+    // projection in the CPU...  We probably need to use a different way.
+    /*
     if (oid) {
         areas_add_triangles_mesh(core->areas, verts_count,
                 item->buf.data, indices_count, item->indices.data,
                 oid, 0);
     }
+    */
 }
 
 static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
