@@ -114,8 +114,7 @@ struct renderer
                  int                 verts_count,
                  const double        verts[][3],
                  int                 indices_count,
-                 const uint16_t      indices[],
-                 uint64_t            oid);
+                 const uint16_t      indices[]);
 
     void (*ellipse_2d)(renderer_t       *rend,
                        const painter_t  *painter,
@@ -352,8 +351,6 @@ int paint_lines(const painter_t *painter,
  *   indices_count  - Number of indices.
  *   indices        - Array of indices to the triangles or lines.
  *   bounding_cap   - Bouding cap of the mesh.
- *   oid            - If set, add the mesh in the render shape areas so that
- *                    we can select this mesh.
  */
 int paint_mesh(const painter_t *painter,
                int frame,
@@ -362,8 +359,7 @@ int paint_mesh(const painter_t *painter,
                const double verts[][3],
                int indices_count,
                const uint16_t indices[],
-               const double bounding_cap[4],
-               uint64_t oid);
+               const double bounding_cap[4]);
 
 
 int paint_text_bounds(const painter_t *painter, const char *text,

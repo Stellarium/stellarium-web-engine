@@ -9,7 +9,6 @@
 
 #include "areas.h"
 #include "utarray.h"
-#include "utils/mesh2d.h"
 #include "utils/vec.h"
 #include "utils/utils.h"
 
@@ -26,14 +25,6 @@ struct item
     double angle;
     uint64_t oid;
     uint64_t hint;
-
-    // Optional triangle mesh.
-    struct {
-        int verts_count;
-        float (*verts)[2];
-        int indices_count;
-        uint16_t *indices;
-    } mesh;
 };
 
 struct areas
@@ -99,39 +90,8 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
     utarray_push_back(areas->items, &item);
 }
 
-void areas_add_triangles_mesh(areas_t *areas, int verts_count,
-                              const float verts[][2],
-                              int indices_count,
-                              const uint16_t indices[],
-                              uint64_t oid, uint64_t hint)
-{
-    item_t item = {};
-    double r;
-
-    mesh2d_get_bounding_circle(verts, indices, indices_count, item.pos, &r);
-    item.a = item.b = r;
-    item.oid = oid;
-    item.hint = hint;
-
-    // Copy the mesh data.
-    item.mesh.verts_count = verts_count;
-    item.mesh.verts = calloc(verts_count, sizeof(*item.mesh.verts));
-    memcpy(item.mesh.verts, verts, verts_count * sizeof(*item.mesh.verts));
-    item.mesh.indices_count = indices_count;
-    item.mesh.indices = calloc(indices_count, sizeof(*item.mesh.indices));
-    memcpy(item.mesh.indices, indices,
-           indices_count * sizeof(*item.mesh.indices));
-
-    utarray_push_back(areas->items, &item);
-}
-
 void areas_clear_all(areas_t *areas)
 {
-    item_t *item = NULL;
-    while ((item = (item_t*)utarray_next(areas->items, item))) {
-        free(item->mesh.verts);
-        free(item->mesh.indices);
-    }
     utarray_clear(areas->items);
 }
 
@@ -140,12 +100,7 @@ static double item_dist(const item_t *item, const double pos[static 2])
 {
     double ret;
     ret =  ellipse_dist(item->pos, item->angle, item->a, item->b, pos);
-    if (ret > 0 || !item->mesh.indices_count) return ret;
-
-    if (mesh2d_contains_point(item->mesh.verts, item->mesh.indices,
-                              item->mesh.indices_count, pos))
-        return 0;
-
+    if (ret > 0) return ret;
     return 100000.0; // Default value at quasi infinity.
 }
 
@@ -198,36 +153,4 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
     *oid = best->oid;
     *hint = best->hint;
     return 1;
-}
-
-/*
- * Function: areas_lookup_aabb
- * Get the list of all shapes in the area intersecting a bouding box
- *
- * For the moment this only considers the mesh shapes.
- *
- * Parameters:
- *   area       - An areas instance.
- *   aabb       - Bounding box (min and max positions).
- *   user       - Passed to the callback.
- *   callback   - Function called once per matching shape.
- *
- * Return:
- *   The number of matching shapes.
- */
-int areas_lookup_aabb(
-        const areas_t *areas, const double aabb[2][2], void *user,
-        void (*callback)(void *user, uint64_t oid, uint64_t hint))
-{
-    item_t *item = NULL;
-    int ret = 0;
-    while ( (item = (item_t*)utarray_next(areas->items, item)) ) {
-        if (!item->mesh.indices_count) continue;
-        if (!mesh2d_intersects_aabb(item->mesh.verts, item->mesh.indices,
-                                    item->mesh.indices_count, aabb))
-            continue;
-        ret++;
-        callback(user, item->oid, item->hint);
-    }
-    return ret;
 }

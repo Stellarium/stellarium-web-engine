@@ -375,7 +375,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
             paint_mesh(&painter, frame, MODE_TRIANGLES,
                        mesh->vertices_count, mesh->vertices,
                        mesh->triangles_count, mesh->triangles,
-                       mesh->bounding_cap, 0);
+                       mesh->bounding_cap);
         }
     }
 
@@ -387,7 +387,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
             paint_mesh(&painter, frame, MODE_LINES,
                        mesh->vertices_count, mesh->vertices,
                        mesh->lines_count, mesh->lines,
-                       mesh->bounding_cap, 0);
+                       mesh->bounding_cap);
         }
     }
 
@@ -414,21 +414,6 @@ static void image_del(obj_t *obj)
 {
     image_t *image = (void*)obj;
     geojson_remove_all_features(image);
-}
-
-static obj_t *image_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    image_t *image = (void*)obj;
-    feature_t *feature;
-
-    if (!oid_is_catalog(oid, "GEOF")) return NULL;
-    for (feature = image->features; feature; feature = feature->next) {
-        if (feature->obj.oid == oid) {
-            obj_retain(&feature->obj);
-            return &feature->obj;
-        }
-    }
-    return NULL;
 }
 
 // Special function for fast geojson parsing directly from js!
@@ -477,7 +462,6 @@ static obj_klass_t image_klass = {
     .init = image_init,
     .render = image_render,
     .del = image_del,
-    .get_by_oid = image_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
         PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),

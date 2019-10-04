@@ -41,11 +41,6 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
                        double a, double b,
                        uint64_t oid, uint64_t hint);
 
-void areas_add_triangles_mesh(areas_t *areas, int verts_count,
-                              const float verts[][2],
-                              int indices_count,
-                              const uint16_t indices[],
-                              uint64_t oid, uint64_t hint);
 /*
  * Function: areas_lookup
  * Return the closest shape at a given position in an areas.
@@ -62,25 +57,6 @@ void areas_add_triangles_mesh(areas_t *areas, int verts_count,
  */
 int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
                  uint64_t *oid, uint64_t *hint);
-
-/*
- * Function: areas_lookup_aabb
- * Get the list of all shapes in the area intersecting a bounding box
- *
- * For the moment this only considers the mesh shapes.
- *
- * Parameters:
- *   area       - An areas instance.
- *   aabb       - Bounding box (min and max positions).
- *   user       - Passed to the callback.
- *   callback   - Function called once per matching shape.
- *
- * Return:
- *   The number of matching shapes.
- */
-int areas_lookup_aabb(
-        const areas_t *areas, const double aabb[2][2], void *user,
-        void (*callback)(void *user, uint64_t oid, uint64_t hint));
 
 /*
  * Function: areas_clear_all
