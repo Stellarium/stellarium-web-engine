@@ -86,6 +86,24 @@ function filterAll(obj, callback) {
   Module.removeFunction(fn);
 }
 
+function queryRenderedFeatureIds(obj, point) {
+  if (typeof(point) === 'object') {
+    point = [point.x, point.y];
+  }
+  const pointPtr = Module._malloc(16);
+  Module._setValue(pointPtr + 0, point[0], 'double');
+  Module._setValue(pointPtr + 8, point[1], 'double');
+  const retPtr = Module._malloc(4);
+  const nb = Module._geojson_query_rendered_features(obj.v, pointPtr, 1, retPtr);
+  let ret = []
+  for (let i = 0; i < nb; i++) {
+    ret.push(Module._getValue(retPtr + i * 4, 'i32'));
+  }
+  Module._free(pointPtr);
+  Module._free(retPtr);
+  return ret;
+}
+
 Module['onGeojsonObj'] = function(obj) {
 
   /*
@@ -119,4 +137,7 @@ Module['onGeojsonObj'] = function(obj) {
 
   obj.setData = function(data) { setData(obj, data); }
   obj.filterAll = function(callback) { filterAll(obj, callback); }
+  obj.queryRenderedFeatureIds = function(point) {
+    return queryRenderedFeatureIds(obj, point);
+  };
 };
