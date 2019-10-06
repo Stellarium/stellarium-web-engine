@@ -69,6 +69,7 @@ function setData(obj, data) {
  *      fill    - Array of 4 float values.
  *      stroke  - Array of 4 float values.
  *      visible - Boolean (default to true).
+ *      blink   - Boolean
  */
 function filterAll(obj, callback) {
   const features = obj._features;
@@ -79,7 +80,9 @@ function filterAll(obj, callback) {
     if (r === true) return 1;
     if (r.fill) fillColorPtr(r.fill, fillPtr);
     if (r.stroke) fillColorPtr(r.stroke, strokePtr);
-    return r.visible === false ? 0 : 1;
+    let ret = r.visible === false ? 0 : 1;
+    if (r.blink === true) ret |= 2;
+    return ret;
   }, 'iiii');
 
   Module._geojson_filter_all(obj.v, fn);

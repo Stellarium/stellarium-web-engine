@@ -39,6 +39,7 @@ struct feature {
     float       text_rotate;
     float       text_offset[2];
     bool        hidden;
+    bool        blink;
 };
 
 /*
@@ -332,6 +333,7 @@ static void apply_filter(image_t *image)
     for (feature = image->features; feature; feature = feature->next, i++) {
         r = image->filter(i, feature->fill_color, feature->stroke_color);
         feature->hidden = (r == 0);
+        feature->blink = r & 0x2;
     }
 }
 
@@ -380,7 +382,17 @@ void geojson_filter_all(image_t *image,
     for (feature = image->features; feature; feature = feature->next, i++) {
         r = f(i, feature->fill_color, feature->stroke_color);
         feature->hidden = (r == 0);
+        feature->blink = r & 0x2;
     }
+}
+
+// Compute the blink alpha coef.  Probably need to be changed.
+static float blink(void)
+{
+    const float period = 1;
+    float t; // Range from 0 to 1.
+    t = (sin(sys_get_unix_time() * 2 * M_PI / period) + 1) / 2;
+    return mix(0.5f, 1.0f, t);
 }
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
@@ -401,6 +413,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->hidden || feature->fill_color[3] == 0) continue;
         vec4_copy(feature->fill_color, painter.color);
+        if (feature->blink)
+            painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             paint_mesh(&painter, frame, MODE_TRIANGLES,
                        mesh->vertices_count, mesh->vertices,
