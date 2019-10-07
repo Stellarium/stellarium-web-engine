@@ -144,7 +144,7 @@ export default {
       let constraintsIds = that.query.constraints.map(c => c.field.id)
 
       // Reset all fields values
-      that.results.fields = that.$smt.fieldsList.map(function (e) { return { 'status': 'loading', 'data': {} } })
+      that.results.fields = that.$smt.fields.map(function (e) { return { 'status': 'loading', 'data': {} } })
       that.results.implicitConstraints = []
 
       alasql.promise('SELECT COUNT(*) AS total FROM features' + whereClause).then(res => {
@@ -188,8 +188,8 @@ export default {
       })
 
       // And recompute them
-      for (let i in that.$smt.fieldsList) {
-        let field = that.$smt.fieldsList[i]
+      for (let i in that.$smt.fields) {
+        let field = that.$smt.fields[i]
         let fid = that.fId2AlaSql(field.id)
         let edited = that.editedConstraint && that.editedConstraint.field.id === field.id
         let wc = edited ? whereClauseEdited : whereClause

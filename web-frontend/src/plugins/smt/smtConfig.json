@@ -1,0 +1,57 @@
+{
+  "sources": [
+    "/plugins/smt/Surveys/CFIS_cap.geojson",
+    "/plugins/smt/Surveys/CFIS_crescent.geojson",
+    "/plugins/smt/Surveys/CFIS_JEDIS_PAN_north.geojson",
+    "/plugins/smt/Surveys/CFIS_JEDIS_PAN_south.geojson",
+    "/plugins/smt/Surveys/DES.geojson",
+    "/plugins/smt/Surveys/euclid.geojson",
+    "/plugins/smt/Surveys/lsst_main.geojson",
+    "/plugins/smt/Surveys/lsst_north_cap.geojson",
+    "/plugins/smt/Surveys/lsst_north_crescent.geojson"
+  ],
+  "fields": [
+    {
+      "id": "properties.Observation.ObservationType",
+      "name": "Type",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "properties.Observation.SurveyId",
+      "name": "Survey Id",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "properties.Observation.MissionPhase",
+      "name": "Mission Phase",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "properties.PlanningStatus",
+      "name": "Planning Status",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "properties.Planning.Ingestion.Estimated_Date",
+      "name": "Ingestion Estimated Date",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "properties.Planning.Ingestion.Real_Date",
+      "name": "Ingestion Real Date",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "properties.PointingActivity",
+      "name": "Pointing Activity",
+      "type": "string",
+      "widget": "tags"
+    }
+  ]
+}

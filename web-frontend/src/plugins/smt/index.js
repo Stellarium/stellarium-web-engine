@@ -84,8 +84,8 @@ export default {
     app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
-    let fieldsList = require('./fieldsList.json')
-    Vue.prototype.$smt = { fieldsList: fieldsList }
+    let smtConfig = require('./smtConfig.json')
+    Vue.prototype.$smt = smtConfig
 
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
 
@@ -95,7 +95,7 @@ export default {
           throw response.body
         }
         return response.json().then(jsonData => {
-          return loadAllData(fieldsList, jsonData).then(_ => {
+          return loadAllData(smtConfig.fields, jsonData).then(_ => {
             return jsonData.length
           })
         }, err => { throw err })
@@ -104,20 +104,9 @@ export default {
       })
     }
 
-    let urls = [
-      '/plugins/smt/Surveys/CFIS_cap.geojson',
-      '/plugins/smt/Surveys/CFIS_crescent.geojson',
-      '/plugins/smt/Surveys/CFIS_JEDIS_PAN_north.geojson',
-      '/plugins/smt/Surveys/CFIS_JEDIS_PAN_south.geojson',
-      '/plugins/smt/Surveys/DES.geojson',
-      '/plugins/smt/Surveys/euclid-test1000.geojson',
-      '/plugins/smt/Surveys/lsst_main.geojson',
-      '/plugins/smt/Surveys/lsst_north_cap.geojson',
-      '/plugins/smt/Surveys/lsst_north_crescent.geojson'
-    ]
-    let allPromise = urls.map(url => fetchAndIngest(url))
+    let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
 
-    initDB(fieldsList).then(_ => {
+    initDB(smtConfig.fields).then(_ => {
       Promise.all(allPromise).then(_ => {
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
       })
