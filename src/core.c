@@ -211,7 +211,8 @@ void core_add_default_sources(void)
     add_source(BASE_URL "mpc/v1/CometEls.txt", "mpc_comets");
 
     // Artificial satellites files.
-    add_source(BASE_URL "norad/v1", "norad");
+    add_source(BASE_URL "/skysources/v1/tle_satellite.jsonl.gz?v=2019-09-16",
+               "jsonl/sat");
 
     #undef ADD_SOURCE
     #undef BASE_URL
