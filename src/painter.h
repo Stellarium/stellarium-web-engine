@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "frames.h"
+#include "utils/mesh.h"
 #include "projection.h"
 #include "uv_map.h"
 
@@ -346,20 +347,10 @@ int paint_lines(const painter_t *painter,
  *   painter        - A painter instance.
  *   frame          - Frame of the vertex coordinates.
  *   mode           - MODE_TRIANGLES or MODE_LINES.
- *   vert_count     - Number of vertices in the mesh.
- *   verts          - Array of 3d vertices positions.
- *   indices_count  - Number of indices.
- *   indices        - Array of indices to the triangles or lines.
- *   bounding_cap   - Bouding cap of the mesh.
+ *   mesh           - A 3d triangle mesh.
  */
-int paint_mesh(const painter_t *painter,
-               int frame,
-               int mode,
-               int vert_count,
-               const double verts[][3],
-               int indices_count,
-               const uint16_t indices[],
-               const double bounding_cap[4]);
+int paint_mesh(const painter_t *painter, int frame, int mode,
+               const mesh_t *mesh);
 
 
 int paint_text_bounds(const painter_t *painter, const char *text,

@@ -258,10 +258,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->blink)
             painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            paint_mesh(&painter, frame, MODE_TRIANGLES,
-                       mesh->vertices_count, mesh->vertices,
-                       mesh->triangles_count, mesh->triangles,
-                       mesh->bounding_cap);
+            paint_mesh(&painter, frame, MODE_TRIANGLES, mesh);
         }
     }
 
@@ -270,10 +267,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         vec4_copy(feature->stroke_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             painter.lines_width = feature->stroke_width;
-            paint_mesh(&painter, frame, MODE_LINES,
-                       mesh->vertices_count, mesh->vertices,
-                       mesh->lines_count, mesh->lines,
-                       mesh->bounding_cap);
+            paint_mesh(&painter, frame, MODE_LINES, mesh);
         }
     }
 

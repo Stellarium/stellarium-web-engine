@@ -354,36 +354,34 @@ int paint_lines(const painter_t *painter,
  *   painter        - A painter instance.
  *   frame          - Frame of the vertex coordinates.
  *   mode           - MODE_TRIANGLES or MODE_LINES.
- *   vert_count     - Number of vertices in the mesh.
- *   verts          - Array of 3d vertices positions.
- *   indices_count  - Number of indices.
- *   indices        - Array of indices to the triangles or lines.
- *   bounding_cap   - Bouding cap of the mesh.
+ *   mesh           - A 3d triangle mesh.
  */
-int paint_mesh(const painter_t *painter_,
-               int frame,
-               int mode,
-               int verts_count,
-               const double verts[][3],
-               int indices_count,
-               const uint16_t indices[],
-               const double bounding_cap[4])
+int paint_mesh(const painter_t *painter_, int frame, int mode,
+               const mesh_t *mesh)
 {
     painter_t painter = *painter_;
 
-    if (indices_count == 0) return 0;
-    if (painter_is_cap_clipped(&painter, frame, bounding_cap)) return 0;
+    if (mesh->triangles_count == 0) return 0;
+    if (painter_is_cap_clipped(&painter, frame, mesh->bounding_cap))
+        return 0;
 
     // Skip meshes that intersect a discontinuty.
     if (painter.proj->flags & PROJ_HAS_DISCONTINUITY) {
         if (cap_intersects_discontinuity_line(
-                    bounding_cap, painter.obs, frame)) {
+                    mesh->bounding_cap, painter.obs, frame)) {
             return 0;
         }
     }
 
-    REND(painter.rend, mesh, &painter, frame, mode,
-         verts_count, verts, indices_count, indices);
+    if (mode == MODE_TRIANGLES) {
+        REND(painter.rend, mesh, &painter, frame, mode,
+             mesh->vertices_count, mesh->vertices,
+             mesh->triangles_count, mesh->triangles);
+    } else {
+        REND(painter.rend, mesh, &painter, frame, mode,
+             mesh->vertices_count, mesh->vertices,
+             mesh->lines_count, mesh->lines);
+    }
     return 0;
 
 }
