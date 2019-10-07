@@ -25,7 +25,7 @@
           </v-card-text>
         </v-card>
         <v-container>
-          <smt-field class="mb-2" v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint">
+          <smt-field class="mb-2" v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint" v-on:constraint-live-changed="constraintLiveChanged">
           </smt-field>
         </v-container>
       </v-container>
@@ -51,7 +51,8 @@ export default {
   data: function () {
     return {
       query: {
-        constraints: []
+        constraints: [],
+        liveConstraint: undefined
       },
       editedConstraint: undefined,
       results: {
@@ -59,10 +60,13 @@ export default {
           count: 0
         },
         fields: [],
-        implicitConstraints: [],
-        geojsonObj: undefined
+        implicitConstraints: []
       }
     }
+  },
+  created: function () {
+    this.geojsonObj = undefined
+    this.livefilterData = []
   },
   methods: {
     fId2AlaSql: function (fieldId) {
@@ -161,19 +165,22 @@ export default {
       })
 
       // Create the geojson results of the query
-      alasql.promise('SELECT geometry, properties FROM features' + whereClause).then(res => {
+      alasql.promise('SELECT geometry, ' + that.$smt.fields.map(f => that.fId2AlaSql(f.id)).join(', ') + ' FROM features' + whereClause).then(res => {
         let geojson = {
           type: 'FeatureCollection',
           features: []
         }
-        let filterData = []
+        that.livefilterData = []
         for (let i in res) {
-          filterData.push(res[i].properties)
           geojson.features.push({
             geometry: res[i].geometry,
             type: 'Feature',
             properties: {}
           })
+          // This property should normally not be reactive
+          let d = _.cloneDeep(res[i])
+          delete d.geometry
+          that.livefilterData.push(d)
         }
 
         if (that.geojsonObj) {
@@ -187,26 +194,10 @@ export default {
         that.geojsonObj = that.$stel.createObj('geojson')
         that.geojsonObj.setData(geojson)
         that.$observingLayer.add(that.geojsonObj)
-        that.geojsonObj.filterAll(idx => {
-          // if (do_not_show) return false
-          // if (do_not_modify) return true
-          let c = [1, 0.3, 0.3, 0.3]
-          if (that.$smt.colorAssignedField) {
-            let cstring = _.get(filterData[idx], that.$smt.colorAssignedField, '')
-            c = mapColor(stringHash(cstring) / 4294967295)
-            c = [c[0] / 255, c[1] / 255, c[2] / 255]
-            let fa = 1.0 / Math.max(Math.max(c[0], c[1]), c[2])
-            c = [c[0] * fa, c[1] * fa, c[2] * fa, 0.3]
-          }
-          return {
-            fill: c,
-            stroke: [1, 0, 0, 0],
-            visible: true
-          }
-        })
+        that.refreshGeojsonLiveFilter()
       })
 
-      // And recompute them
+      // And recompute all fields
       for (let i in that.$smt.fields) {
         let field = that.$smt.fields[i]
         let fid = that.fId2AlaSql(field.id)
@@ -289,6 +280,52 @@ export default {
         }
       }
     },
+    refreshGeojsonLiveFilter: function () {
+      console.log("refreshGeojsonLiveFilter")
+      let that = this
+      if (!that.geojsonObj) return
+      let colorAssignedSqlField
+      if (that.$smt.colorAssignedField) {
+        colorAssignedSqlField = that.fId2AlaSql(that.$smt.colorAssignedField)
+      }
+      let liveConstraintSql
+      let lc = that.liveConstraint
+      if (lc && lc.field.widget === 'date_range' && lc.operation === 'DATE_RANGE') {
+        liveConstraintSql = that.fId2AlaSql(lc.field.id)
+        console.log(liveConstraintSql + ' ' + lc.expression[0] + ' ' + lc.expression[1])
+      }
+      that.geojsonObj.filterAll(idx => {
+        // if (do_not_show) return false
+        // if (do_not_modify) return true
+        if (liveConstraintSql) {
+          let v = that.livefilterData[idx][liveConstraintSql]
+          if (v !== undefined) {
+            if (v < lc.expression[0] || v > lc.expression[1]) {
+              return false
+            }
+          }
+        }
+
+        // Color was already computed, return true meaning no change
+        if (that.livefilterData[idx].color) return true
+        let c = [1, 0.3, 0.3, 0.3]
+        if (colorAssignedSqlField) {
+          let cstring = that.livefilterData[idx][colorAssignedSqlField]
+          if (!cstring) cstring = ''
+          c = mapColor(stringHash(cstring) / 4294967295)
+          c = [c[0] / 255, c[1] / 255, c[2] / 255]
+          let fa = 1.0 / Math.max(Math.max(c[0], c[1]), c[2])
+          c = [c[0] * fa, c[1] * fa, c[2] * fa, 0.3]
+        }
+        that.livefilterData[idx].color = c
+        return {
+          fill: c,
+          stroke: [1, 0, 0, 0],
+          visible: true
+        }
+      })
+      console.log("done refreshGeojsonLiveFilter")
+    },
     addConstraint: function (c) {
       this.query.constraints = this.query.constraints.filter(cons => {
         if (cons.field.widget === 'date_range' && cons.field.id === c.field.id) return false
@@ -304,6 +341,11 @@ export default {
         return true
       })
       this.refreshObservationGroups()
+    },
+    constraintLiveChanged: function (c) {
+      console.log('constraintLiveChanged: ' + JSON.stringify(c))
+      this.liveConstraint = c
+      this.refreshGeojsonLiveFilter()
     },
     constraintClicked: function (i) {
       this.editedConstraint = this.query.constraints[i]
