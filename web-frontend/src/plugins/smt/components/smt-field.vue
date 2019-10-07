@@ -9,7 +9,7 @@
       <h3 class="pt-3 line_right">{{ fieldDescription.name }}</h3>
     </v-col>
     <smt-field-chips v-if="isTags" :fieldResults="fieldResults" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint"></smt-field-chips>
-    <smt-field-date-range v-if="isDateRange" :fieldResults="fieldResults" v-on:add-constraint="addConstraint"></smt-field-date-range>
+    <smt-field-date-range v-if="isDateRange" :fieldResults="fieldResults" v-on:add-constraint="addConstraint" v-on:constraint-live-changed="constraintLiveChanged"></smt-field-date-range>
   </v-row>
 </template>
 
@@ -29,6 +29,9 @@ export default {
     },
     removeConstraint: function (c) {
       this.$emit('remove-constraint', c)
+    },
+    constraintLiveChanged: function (c) {
+      this.$emit('constraint-live-changed', c)
     }
   },
   computed: {

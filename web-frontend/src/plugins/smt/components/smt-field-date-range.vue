@@ -10,7 +10,7 @@
       </v-col>
       <v-col cols="2"></v-col>
       <v-col cols="10">
-        <v-range-slider hide-details class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]"></v-range-slider>
+        <v-range-slider hide-details class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]" v-on:start="isUserDragging = true" v-on:end="isUserDragging = false"></v-range-slider>
       </v-col>
       <v-col cols="2" style="margin-top: -10px">
         <v-btn small fab @click="rangeButtonClicked">OK</v-btn>
@@ -37,6 +37,7 @@ import { mask } from 'vue-the-mask'
 export default {
   data: function () {
     return {
+      isUserDragging: false,
       dateMask: '####-##-##',
       dateRangeSliderValues: [0, 1],
       dateRangeChartOptions: {
@@ -124,8 +125,16 @@ export default {
     this.dateRangeSliderValues = this.dateRange
   },
   watch: {
-    dateRange: function (s) {
-      console.log('dateRange changed')
+    dateRangeSliderValues: function (s) {
+      let constraint = {
+        'field': this.fieldResults.field,
+        'operation': 'DATE_RANGE',
+        'expression': [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
+        'negate': false
+      }
+      if (this.isUserDragging) {
+        this.$emit('constraint-live-changed', constraint)
+      }
     }
   },
   components: { GChart }
