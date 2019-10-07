@@ -211,8 +211,8 @@ export default {
         let field = that.$smt.fields[i]
         let fid = that.fId2AlaSql(field.id)
         let edited = that.editedConstraint && that.editedConstraint.field.id === field.id
-        let wc = edited ? whereClauseEdited : whereClause
         if (field.widget === 'tags') {
+          let wc = edited ? whereClauseEdited : whereClause
           let req = 'SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + wc
           alasql.promise(req).then(res => {
             let tags = res[0].tags ? res[0].tags : {}
@@ -235,6 +235,7 @@ export default {
           })
         }
         if (field.widget === 'date_range') {
+          let wc = whereClause
           let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
           alasql.promise(req).then(res => {
             if (res[0].dmin === undefined || res[0].dmax === undefined) {
