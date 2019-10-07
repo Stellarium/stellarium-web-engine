@@ -112,12 +112,14 @@ export default {
       let whereClause = ' WHERE '
       for (let i in groupedConstraints) {
         let gCons = groupedConstraints[i]
+        if (gCons.length > 1) whereClause += ' ('
         for (let j in gCons) {
           whereClause += c2sql(gCons[j])
           if (j < gCons.length - 1) {
             whereClause += ' OR '
           }
         }
+        if (gCons.length > 1) whereClause += ') '
         if (i < groupedConstraints.length - 1) {
           whereClause += ' AND '
         }
