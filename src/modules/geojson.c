@@ -39,6 +39,7 @@ struct feature {
     float       text_rotate;
     float       text_offset[2];
     bool        hidden;
+    bool        blink;
 };
 
 /*
@@ -56,6 +57,36 @@ typedef struct image {
     int         (*filter)(int idx, float fill_color[4], float stroke_color[4]);
 } image_t;
 
+
+// Spherical triangle / point intersection.
+static bool triangle_contains_vec3(const double verts[][3],
+                                   const uint16_t indices[],
+                                   const double pos[3])
+{
+    int i;
+    double u[3];
+    for (i = 0; i < 3; i++) {
+        vec3_cross(verts[indices[i]], verts[indices[(i + 1) % 3]], u);
+        if (vec3_dot(u, pos) > 0) return false;
+    }
+    return true;
+}
+
+/*
+ * Function: mesh_contains_vec3
+ * Test if a 3d direction vector intersects a 3d mesh.
+ */
+static bool mesh_contains_vec3(const mesh_t *mesh, const double pos[3])
+{
+    int i;
+    if (!cap_contains_vec3(mesh->bounding_cap, pos))
+        return false;
+    for (i = 0; i < mesh->triangles_count; i += 3) {
+        if (triangle_contains_vec3(mesh->vertices, mesh->triangles + i, pos))
+            return true;
+    }
+    return false;
+}
 
 static void lonlat2c(const double lonlat[2], double c[3])
 {
@@ -302,6 +333,7 @@ static void apply_filter(image_t *image)
     for (feature = image->features; feature; feature = feature->next, i++) {
         r = image->filter(i, feature->fill_color, feature->stroke_color);
         feature->hidden = (r == 0);
+        feature->blink = r & 0x2;
     }
 }
 
@@ -350,7 +382,17 @@ void geojson_filter_all(image_t *image,
     for (feature = image->features; feature; feature = feature->next, i++) {
         r = f(i, feature->fill_color, feature->stroke_color);
         feature->hidden = (r == 0);
+        feature->blink = r & 0x2;
     }
+}
+
+// Compute the blink alpha coef.  Probably need to be changed.
+static float blink(void)
+{
+    const float period = 1;
+    float t; // Range from 0 to 1.
+    t = (sin(sys_get_unix_time() * 2 * M_PI / period) + 1) / 2;
+    return mix(0.5f, 1.0f, t);
 }
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
@@ -371,6 +413,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->hidden || feature->fill_color[3] == 0) continue;
         vec4_copy(feature->fill_color, painter.color);
+        if (feature->blink)
+            painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             paint_mesh(&painter, frame, MODE_TRIANGLES,
                        mesh->vertices_count, mesh->vertices,
@@ -441,6 +485,44 @@ void geojson_add_poly_feature(image_t *image, int size, const double *data)
     ring.size = size;
     ring.coordinates = (void*)data;
     add_geojson_feature(image, &feature);
+}
+
+/*
+ * Experimental function to get the list of rendered features index.
+ * Return the number of features returned.
+ *
+ * Assume the current core observer and projection!
+ */
+EMSCRIPTEN_KEEPALIVE
+int geojson_query_rendered_features(
+        const obj_t *obj, double win_pos[2], int max_ret, int *index)
+{
+    const image_t *image = (void*)obj;
+    int i = 0, nb = 0;
+    const feature_t *feature;
+    const mesh_t *mesh;
+    painter_t painter;
+    int frame = image->frame;
+    projection_t proj;
+    double pos[3];
+
+    core_get_proj(&proj);
+    painter = (painter_t) {
+        .obs = core->observer,
+        .proj = &proj,
+    };
+    painter_update_clip_info(&painter);
+    painter_unproject(&painter, frame, win_pos, pos);
+
+    for (feature = image->features; feature; feature = feature->next, i++) {
+        if (nb >= max_ret) break;
+        if (feature->hidden) continue;
+        for (mesh = feature->meshes; mesh; mesh = mesh->next) {
+            if (mesh_contains_vec3(mesh, pos))
+                index[nb++] = i;
+        }
+    }
+    return nb;
 }
 
 
