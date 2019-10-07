@@ -50,6 +50,7 @@ typedef struct {
 typedef struct mplanets {
     obj_t   obj;
     int     update_pos; // Index of the position for iterative update.
+    bool    visible;
 } mplanets_t;
 
 
@@ -299,6 +300,13 @@ void mplanet_get_designations(
     if (*mplanet->desig) f(obj, user, "NAME", mplanet->desig);
 }
 
+static int mplanets_init(obj_t *obj, json_value *args)
+{
+    mplanets_t *mps = (void*)obj;
+    mps->visible = true;
+    return 0;
+}
+
 static bool range_contains(int range_start, int range_size, int nb, int i)
 {
     if (i < range_start) i += nb;
@@ -316,6 +324,7 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
     obj_t *tmp;
     uint64_t selection_oid = core->selection ? core->selection->oid : 0;
 
+    if (!mps->visible) return 0;
     DL_COUNT(obj->children, tmp, nb);
 
     /* To prevent spending too much time computing position of asteroids that
@@ -369,9 +378,14 @@ static obj_klass_t mplanets_klass = {
     .id             = "minor_planets",
     .size           = sizeof(mplanets_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
+    .init           = mplanets_init,
     .add_data_source    = mplanets_add_data_source,
     .render         = mplanets_render,
     .get_by_oid     = mplanets_get_by_oid,
     .render_order   = 20,
+    .attributes = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(mplanets_t, visible)),
+        {},
+    },
 };
 OBJ_REGISTER(mplanets_klass)

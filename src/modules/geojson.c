@@ -9,22 +9,11 @@
 
 #include "swe.h"
 
-#include "earcut.h"
 #include "geojson_parser.h"
 
-typedef struct mesh mesh_t;
-typedef struct feature feature_t;
+#include "utils/mesh.h"
 
-struct mesh {
-    mesh_t      *next, *prev;
-    double      bounding_cap[4];
-    int         vertices_count;
-    double      (*vertices)[3];
-    int         triangles_count; // Number of triangles * 3.
-    uint16_t    *triangles;
-    int         lines_count; // Number of lines * 2.
-    uint16_t    *lines;
-};
+typedef struct feature feature_t;
 
 struct feature {
     obj_t       obj;
@@ -58,155 +47,11 @@ typedef struct image {
 } image_t;
 
 
-// Spherical triangle / point intersection.
-static bool triangle_contains_vec3(const double verts[][3],
-                                   const uint16_t indices[],
-                                   const double pos[3])
-{
-    int i;
-    double u[3];
-    for (i = 0; i < 3; i++) {
-        vec3_cross(verts[indices[i]], verts[indices[(i + 1) % 3]], u);
-        if (vec3_dot(u, pos) > 0) return false;
-    }
-    return true;
-}
-
-/*
- * Function: mesh_contains_vec3
- * Test if a 3d direction vector intersects a 3d mesh.
- */
-static bool mesh_contains_vec3(const mesh_t *mesh, const double pos[3])
-{
-    int i;
-    if (!cap_contains_vec3(mesh->bounding_cap, pos))
-        return false;
-    for (i = 0; i < mesh->triangles_count; i += 3) {
-        if (triangle_contains_vec3(mesh->vertices, mesh->triangles + i, pos))
-            return true;
-    }
-    return false;
-}
-
-static void lonlat2c(const double lonlat[2], double c[3])
-{
-    eraS2c(lonlat[0] * DD2R, lonlat[1] * DD2R, c);
-}
-
-static void c2lonlat(const double c[3], double lonlat[2])
-{
-    double lon, lat;
-    eraC2s(c, &lon, &lat);
-    lonlat[0] = -lon * DR2D;
-    lonlat[1] = lat * DR2D;
-}
-
-// Should be in vec.h I guess, but we use eraSepp, so it's not conveniant.
-static void create_rotation_between_vecs(
-        double rot[3][3], const double a[3], const double b[3])
-{
-    double angle = eraSepp(a, b);
-    double axis[3];
-    double quat[4];
-    if (angle < FLT_EPSILON) {
-        mat3_set_identity(rot);
-        return;
-    }
-    if (fabs(angle - M_PI) > FLT_EPSILON) {
-        vec3_cross(a, b, axis);
-    } else {
-        vec3_get_ortho(a, axis);
-    }
-    quat_from_axis(quat, angle, axis[0], axis[1], axis[2]);
-    quat_to_mat3(quat, rot);
-}
-
-// XXX: naive algo.
-static void compute_bounding_cap(int size, const double (*verts)[3],
-                                 double cap[4])
-{
-    int i;
-    vec4_set(cap, 0, 0, 0, 1);
-    for (i = 0; i < size; i++) {
-        vec3_add(cap, verts[i], cap);
-    }
-    vec3_normalize(cap, cap);
-
-    for (i = 0; i < size; i++) {
-        cap[3] = min(cap[3], vec3_dot(cap, verts[i]));
-    }
-}
-
 static int image_init(obj_t *obj, json_value *args)
 {
     image_t *image = (void*)obj;
     image->frame = FRAME_ICRF;
     return 0;
-}
-
-static int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[2])
-{
-    int i, ofs;
-    ofs = mesh->vertices_count;
-    mesh->vertices = realloc(mesh->vertices,
-            (mesh->vertices_count + count) * sizeof(*mesh->vertices));
-    for (i = 0; i < count; i++) {
-        assert(!isnan(verts[i][0]));
-        lonlat2c(verts[i], mesh->vertices[mesh->vertices_count + i]);
-        assert(!isnan(mesh->vertices[mesh->vertices_count + i][0]));
-    }
-    mesh->vertices_count += count;
-    compute_bounding_cap(mesh->vertices_count, mesh->vertices,
-                         mesh->bounding_cap);
-    return ofs;
-}
-
-static void mesh_add_line(mesh_t *mesh, int ofs, int size)
-{
-    int i;
-    mesh->lines = realloc(mesh->lines, (mesh->lines_count + (size - 1) * 2) *
-                          sizeof(*mesh->lines));
-    for (i = 0; i < size - 1; i++) {
-        mesh->lines[mesh->lines_count + i * 2 + 0] = ofs + i;
-        mesh->lines[mesh->lines_count + i * 2 + 1] = ofs + i + 1;
-    }
-    mesh->lines_count += (size - 1) * 2;
-}
-
-static void mesh_add_poly(mesh_t *mesh, int nb_rings,
-                          const int ofs, const int *size)
-{
-    int r, i, j = 0, triangles_size;
-    double rot[3][3], p[3];
-    double (*centered_lonlat)[2];
-    const uint16_t *triangles;
-    earcut_t *earcut;
-
-    earcut = earcut_new();
-    // Triangulate the shape.
-    // First we rotate the points so that they are centered around the
-    // origin.
-    create_rotation_between_vecs(rot, mesh->bounding_cap, VEC(1, 0, 0));
-
-    for (r = 0; r < nb_rings; r++) {
-        centered_lonlat = calloc(size[r], sizeof(*centered_lonlat));
-        for (i = 0; i < size[r]; i++) {
-            mat3_mul_vec3(rot, mesh->vertices[j++], p);
-            c2lonlat(p, centered_lonlat[i]);
-        }
-        earcut_add_poly(earcut, size[r], centered_lonlat);
-        free(centered_lonlat);
-    }
-
-    triangles = earcut_triangulate(earcut, &triangles_size);
-    mesh->triangles = realloc(mesh->triangles,
-            (mesh->triangles_count + triangles_size) *
-            sizeof(*mesh->triangles));
-    for (i = 0; i < triangles_size; i++) {
-        mesh->triangles[mesh->triangles_count + i] = ofs + triangles[i];
-    }
-    mesh->triangles_count += triangles_size;
-    earcut_delete(earcut);
 }
 
 static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
@@ -289,10 +134,7 @@ static void feature_del(obj_t *obj)
     while (feature->meshes) {
         mesh = feature->meshes;
         DL_DELETE(feature->meshes, mesh);
-        free(mesh->vertices);
-        free(mesh->triangles);
-        free(mesh->lines);
-        free(mesh);
+        mesh_delete(mesh);
     }
     free(feature->title);
 }
@@ -416,10 +258,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->blink)
             painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            paint_mesh(&painter, frame, MODE_TRIANGLES,
-                       mesh->vertices_count, mesh->vertices,
-                       mesh->triangles_count, mesh->triangles,
-                       mesh->bounding_cap);
+            paint_mesh(&painter, frame, MODE_TRIANGLES, mesh);
         }
     }
 
@@ -428,10 +267,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         vec4_copy(feature->stroke_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             painter.lines_width = feature->stroke_width;
-            paint_mesh(&painter, frame, MODE_LINES,
-                       mesh->vertices_count, mesh->vertices,
-                       mesh->lines_count, mesh->lines,
-                       mesh->bounding_cap);
+            paint_mesh(&painter, frame, MODE_LINES, mesh);
         }
     }
 

@@ -56,11 +56,14 @@ typedef struct satellites {
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
     double  hints_mag_offset;
+    bool    visible;
 } satellites_t;
 
 
 static int satellites_init(obj_t *obj, json_value *args)
 {
+    satellites_t *sats = (void*)obj;
+    sats->visible = true;
     return 0;
 }
 
@@ -291,7 +294,9 @@ static int satellites_update(obj_t *obj, double dt)
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(satellites_render, 0);
+    satellites_t *sats = (void*)obj;
     obj_t *child;
+    if (!sats->visible) return false;
     MODULE_ITER(obj, child, "tle_satellite")
         obj_render(child, painter);
     return 0;
@@ -603,6 +608,7 @@ static obj_klass_t satellites_klass = {
     .render         = satellites_render,
     .get_by_oid     = satellites_get_by_oid,
     .attributes = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(satellites_t, visible)),
         PROPERTY(hints_mag_offset, TYPE_MAG,
                  MEMBER(satellites_t, hints_mag_offset)),
         {}
