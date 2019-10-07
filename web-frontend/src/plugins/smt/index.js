@@ -12,7 +12,7 @@ import _ from 'lodash'
 Vue.use(VueGoogleCharts)
 
 function fId2AlaSql (fieldId) {
-  return fieldId.replace(/properties\./g, '').replace(/\./g, '_')
+  return fieldId.replace(/\./g, '_')
 }
 
 function fType2AlaSql (fieldType) {
@@ -41,7 +41,7 @@ async function loadAllData (fieldsList, jsonData) {
   for (let feature of jsonData.features) {
     let arr = [feature.geometry, feature.properties]
     for (let i in fieldsList) {
-      let d = _.get(feature, fieldsList[i].id, undefined)
+      let d = _.get(feature.properties, fieldsList[i].id, undefined)
       if (d !== undefined && fieldsList[i].type === 'date') {
         d = new Date(d).getTime()
       }

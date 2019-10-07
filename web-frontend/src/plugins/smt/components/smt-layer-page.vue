@@ -59,7 +59,7 @@ export default {
   },
   methods: {
     fId2AlaSql: function (fieldId) {
-      return fieldId.replace(/properties\./g, '').replace(/\./g, '_')
+      return fieldId.replace(/\./g, '_')
     },
     thumbClicked: function (obs) {
       this.$router.push('/p/observations/' + obs.id)

@@ -12,43 +12,43 @@
   ],
   "fields": [
     {
-      "id": "properties.Observation.ObservationType",
+      "id": "Observation.ObservationType",
       "name": "Type",
       "type": "string",
       "widget": "tags"
     },
     {
-      "id": "properties.Observation.SurveyId",
+      "id": "Observation.SurveyId",
       "name": "Survey Id",
       "type": "string",
       "widget": "tags"
     },
     {
-      "id": "properties.Observation.MissionPhase",
+      "id": "Observation.MissionPhase",
       "name": "Mission Phase",
       "type": "string",
       "widget": "tags"
     },
     {
-      "id": "properties.PlanningStatus",
+      "id": "PlanningStatus",
       "name": "Planning Status",
       "type": "string",
       "widget": "tags"
     },
     {
-      "id": "properties.Planning.Ingestion.Estimated_Date",
+      "id": "Planning.Ingestion.Estimated_Date",
       "name": "Ingestion Estimated Date",
       "type": "date",
       "widget": "date_range"
     },
     {
-      "id": "properties.Planning.Ingestion.Real_Date",
+      "id": "Planning.Ingestion.Real_Date",
       "name": "Ingestion Real Date",
       "type": "date",
       "widget": "date_range"
     },
     {
-      "id": "properties.PointingActivity",
+      "id": "PointingActivity",
       "name": "Pointing Activity",
       "type": "string",
       "widget": "tags"
