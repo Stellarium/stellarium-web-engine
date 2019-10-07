@@ -22,6 +22,21 @@ function fType2AlaSql (fieldType) {
 }
 
 async function initDB (fieldsList) {
+
+  // Add a custom aggregation operator for the chip tags
+  alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
+    if (stage === 1) {
+      let ac = {}
+      ac[value] = 1
+      return ac
+    } else if (stage === 2) {
+      accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
+      return accumulator
+    } else if (stage === 3) {
+      return accumulator
+    }
+  }
+
   console.log('Create Data Base')
   let sqlFields = fieldsList.map(f => fId2AlaSql(f.id) + ' ' + fType2AlaSql(f.type)).join(', ')
   await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON, ' + sqlFields + ')')

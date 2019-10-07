@@ -141,19 +141,15 @@ export default {
         return
       }
 
-      // Add a custom aggregation operator for the chip tags
-      alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
-        if (stage === 1) {
-          let ac = {}
-          ac[value] = 1
-          return ac
-        } else if (stage === 2) {
-          accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
-          return accumulator
-        } else if (stage === 3) {
-          return accumulator
-        }
+      // Cleanup previous query and states
+      this.liveConstraint = undefined
+      // Suppress previous geojson results
+      if (that.geojsonObj) {
+        that.$observingLayer.remove(that.geojsonObj)
+        that.geojsonObj.destroy()
+        that.geojsonObj = undefined
       }
+      that.livefilterData = []
 
       // Compute the WHERE clause to be used in following queries
       let whereClause = that.constraints2SQLWhereClause(this.query.constraints)
@@ -168,12 +164,7 @@ export default {
         that.results.summary.count = res[0].total
       })
 
-      // Create the geojson results of the query
-      if (that.geojsonObj) {
-        that.$observingLayer.remove(that.geojsonObj)
-        that.geojsonObj.destroy()
-      }
-      that.livefilterData = []
+
       let sqlFields = that.$smt.fields.map(f => that.fId2AlaSql(f.id))
       alasql.promise('SELECT geometry, ' + sqlFields.join(', ') + ' FROM features' + whereClause).then(res => {
         let geojson = {
