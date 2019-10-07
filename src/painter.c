@@ -360,6 +360,8 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
                const mesh_t *mesh)
 {
     painter_t painter = *painter_;
+    int i;
+    mesh_t *mesh2;
 
     if (mesh->triangles_count == 0) return 0;
     if (painter_is_cap_clipped(&painter, frame, mesh->bounding_cap))
@@ -369,7 +371,7 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
     if (painter.proj->flags & PROJ_HAS_DISCONTINUITY) {
         if (cap_intersects_discontinuity_line(
                     mesh->bounding_cap, painter.obs, frame)) {
-            return 0;
+            goto subdivide;
         }
     }
 
@@ -384,6 +386,25 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
     }
     return 0;
 
+subdivide:
+    // Case where we need to split the mesh into smaller parts.
+    // For the moment only do it for triangles, not lines.
+    if (mode != MODE_TRIANGLES) return 0;
+
+    mesh2 = mesh_copy(mesh);
+    // Convert the positions to view frame.
+    for (i = 0; i < mesh->vertices_count; i++) {
+        vec3_normalize(mesh->vertices[i], mesh2->vertices[i]);
+        convert_frame(painter.obs, frame, FRAME_VIEW, true,
+                      mesh2->vertices[i], mesh2->vertices[i]);
+    }
+    mesh_cut_yz_plan(mesh2);
+    REND(painter.rend, mesh, &painter, FRAME_VIEW, MODE_TRIANGLES,
+             mesh2->vertices_count, mesh2->vertices,
+             mesh2->triangles_count, mesh2->triangles);
+
+    free(mesh2);
+    return 0;
 }
 
 void paint_debug(bool value)

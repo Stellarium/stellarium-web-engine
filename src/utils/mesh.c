@@ -38,6 +38,24 @@ void mesh_delete(mesh_t *mesh)
     free(mesh);
 }
 
+mesh_t *mesh_copy(const mesh_t *mesh)
+{
+    mesh_t *ret = calloc(1, sizeof(*ret));
+    memcpy(ret->bounding_cap, mesh->bounding_cap, sizeof(mesh->bounding_cap));
+    ret->vertices_count = mesh->vertices_count;
+    ret->triangles_count = mesh->triangles_count;
+    ret->lines_count = mesh->lines_count;
+    ret->vertices = malloc(ret->vertices_count * sizeof(*ret->vertices));
+    memcpy(ret->vertices, mesh->vertices,
+           ret->vertices_count * sizeof(*ret->vertices));
+    ret->triangles = malloc(ret->triangles_count * sizeof(*ret->triangles));
+    memcpy(ret->triangles, mesh->triangles,
+           ret->triangles_count * sizeof(*ret->triangles));
+    ret->lines = malloc(ret->lines_count * sizeof(*ret->lines));
+    memcpy(ret->lines, mesh->lines, ret->lines_count * sizeof(*ret->lines));
+    return ret;
+}
+
 // XXX: naive algo.
 static void compute_bounding_cap(int size, const double (*verts)[3],
                                  double cap[4])
@@ -68,7 +86,7 @@ static void lonlat2c(const double lonlat[2], double c[3])
 }
 
 
-int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[2])
+int mesh_add_vertices_lonlat(mesh_t *mesh, int count, double (*verts)[2])
 {
     int i, ofs;
     ofs = mesh->vertices_count;
@@ -80,6 +98,22 @@ int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[2])
         assert(!isnan(mesh->vertices[mesh->vertices_count + i][0]));
     }
     mesh->vertices_count += count;
+    // XXX: shouldn't be done here!
+    compute_bounding_cap(mesh->vertices_count, mesh->vertices,
+                         mesh->bounding_cap);
+    return ofs;
+}
+
+int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3])
+{
+    int ofs;
+    ofs = mesh->vertices_count;
+    mesh->vertices = realloc(mesh->vertices,
+            (mesh->vertices_count + count) * sizeof(*mesh->vertices));
+    memcpy(mesh->vertices + mesh->vertices_count, verts,
+           count * sizeof(*mesh->vertices));
+    mesh->vertices_count += count;
+    // XXX: shouldn't be done here!
     compute_bounding_cap(mesh->vertices_count, mesh->vertices,
                          mesh->bounding_cap);
     return ofs;
@@ -184,3 +218,70 @@ bool mesh_contains_vec3(const mesh_t *mesh, const double pos[3])
     return false;
 }
 
+static void mesh_add_triangle(mesh_t *mesh, int a, int b, int c)
+{
+    mesh->triangles = realloc(mesh->triangles,
+                                (mesh->triangles_count + 3) *
+                                sizeof(*mesh->triangles));
+    mesh->triangles[mesh->triangles_count + 0] = a;
+    mesh->triangles[mesh->triangles_count + 1] = b;
+    mesh->triangles[mesh->triangles_count + 2] = c;
+    mesh->triangles_count += 3;
+}
+
+static bool segment_intersects_yz_plan(
+        const double a[3], const double b[3], double o[3])
+{
+    if (a[0] * b[0] >= 0) return false;
+    vec3_mix(a, b, a[0] / (a[0] - b[0]), o);
+    vec3_normalize(o, o);
+    return true;
+}
+
+static void mesh_cut_triangle_yz(mesh_t *mesh, int idx)
+{
+    int i, a, b, c, ofs, ab1, ab2, ac1, ac2;
+    const double (*vs)[3] = mesh->vertices;
+    double ab[3], ac[3], new_points[4][3];
+    for (i = 0; i < 3; i++) {
+        a = mesh->triangles[idx + i];
+        b = mesh->triangles[idx + (i + 1) % 3];
+        c = mesh->triangles[idx + (i + 2) % 3];
+        if (    segment_intersects_yz_plan(vs[a], vs[b], ab) &&
+                segment_intersects_yz_plan(vs[a], vs[c], ac))
+            break;
+    }
+    if (i == 3) return;
+
+    vec3_mix(vs[a], ab, 0.9, new_points[0]); // AB1
+    vec3_mix(vs[b], ab, 0.9, new_points[1]); // AB2
+    vec3_mix(vs[a], ac, 0.9, new_points[2]); // AC1
+    vec3_mix(vs[c], ac, 0.9, new_points[3]); // AC2
+
+    ofs = mesh_add_vertices(mesh, 4, new_points);
+    ab1 = ofs + 0;
+    ab2 = ofs + 1;
+    ac1 = ofs + 2;
+    ac2 = ofs + 3;
+
+    // A,B,C -> A, AB1, AC1
+    mesh->triangles[idx + (i + 1) % 3] = ab1;
+    mesh->triangles[idx + (i + 2) % 3] = ac1;
+    mesh_add_triangle(mesh, ab2, b, ac2);
+    mesh_add_triangle(mesh, b, c, ac2);
+}
+
+/*
+ * Function: mesh_cut_yz_plan
+ * Split the mesh so that no triangle intersects the YZ plan
+ *
+ * Experimental.  Probably going to change to something more generic.
+ */
+void mesh_cut_yz_plan(mesh_t *mesh)
+{
+    int i, count;
+    count = mesh->triangles_count;
+    for (i = 0; i < count; i += 3) {
+        mesh_cut_triangle_yz(mesh, i);
+    }
+}

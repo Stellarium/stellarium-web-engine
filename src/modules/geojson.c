@@ -71,8 +71,8 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         mesh = calloc(1, sizeof(*mesh));
         for (i = 0; i < geo->polygon.size; i++) {
             size = geo->polygon.rings[i].size;
-            ofs = mesh_add_vertices(mesh, size,
-                                    geo->polygon.rings[i].coordinates);
+            ofs = mesh_add_vertices_lonlat(
+                    mesh, size, geo->polygon.rings[i].coordinates);
             if (i == 0) rings_ofs = ofs;
             mesh_add_line(mesh, ofs, size);
             rings_size[i] = size;
@@ -96,7 +96,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         return;
     }
     mesh = calloc(1, sizeof(*mesh));
-    ofs = mesh_add_vertices(mesh, size, coordinates);
+    ofs = mesh_add_vertices_lonlat(mesh, size, coordinates);
     mesh_add_line(mesh, ofs, size);
     DL_APPEND(feature->meshes, mesh);
 }
