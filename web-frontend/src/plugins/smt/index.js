@@ -4,66 +4,11 @@
 
 import SmtLayerPage from './components/smt-layer-page.vue'
 import storeModule from './store'
-import alasql from 'alasql'
 import Vue from 'vue'
 import VueGoogleCharts from 'vue-google-charts'
-import _ from 'lodash'
+import qe from './queryEngine'
 
 Vue.use(VueGoogleCharts)
-
-function fId2AlaSql (fieldId) {
-  return fieldId.replace(/\./g, '_')
-}
-
-function fType2AlaSql (fieldType) {
-  if (fieldType === 'string') return 'STRING'
-  if (fieldType === 'date') return 'INT' // Dates are converted to unix time stamp
-  return 'JSON'
-}
-
-async function initDB (fieldsList) {
-  // Add a custom aggregation operator for the chip tags
-  alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
-    if (stage === 1) {
-      let ac = {}
-      ac[value] = 1
-      return ac
-    } else if (stage === 2) {
-      accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
-      return accumulator
-    } else if (stage === 3) {
-      return accumulator
-    }
-  }
-
-  console.log('Create Data Base')
-  let sqlFields = fieldsList.map(f => fId2AlaSql(f.id) + ' ' + fType2AlaSql(f.type)).join(', ')
-  await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON, ' + sqlFields + ')')
-
-  // Create an index on each field
-  for (let i in fieldsList) {
-    let field = fieldsList[i]
-    await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + fId2AlaSql(field.id) + ')')
-  }
-}
-
-async function loadAllData (fieldsList, jsonData) {
-  console.log('Loading ' + jsonData.features.length + ' features')
-
-  // Insert all data
-  let req = alasql.compile('INSERT INTO features VALUES (?, ?, ' + fieldsList.map(f => '?').join(', ') + ')')
-  for (let feature of jsonData.features) {
-    let arr = [feature.geometry, feature.properties]
-    for (let i in fieldsList) {
-      let d = _.get(feature.properties, fieldsList[i].id, undefined)
-      if (d !== undefined && fieldsList[i].type === 'date') {
-        d = new Date(d).getTime()
-      }
-      arr.push(d)
-    }
-    await req.promise(arr)
-  }
-}
 
 export default {
   vuePlugin: {
@@ -111,7 +56,7 @@ export default {
           throw response.body
         }
         return response.json().then(jsonData => {
-          return loadAllData(smtConfig.fields, jsonData).then(_ => {
+          return qe.loadAllData(jsonData).then(_ => {
             return jsonData.length
           })
         }, err => { throw err })
@@ -122,7 +67,7 @@ export default {
 
     let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
 
-    initDB(smtConfig.fields).then(_ => {
+    qe.initDB(smtConfig.fields).then(_ => {
       Promise.all(allPromise).then(_ => {
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
       })
