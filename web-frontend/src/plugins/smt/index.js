@@ -52,6 +52,9 @@ export default {
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
 
     let fetchAndIngest = function (url) {
+      if (url.startsWith('/')) {
+        url = process.env.BASE_URL + url.substr(1)
+      }
       return fetch(url).then(function (response) {
         if (!response.ok) {
           throw response.body
