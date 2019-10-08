@@ -254,10 +254,11 @@ static void mesh_cut_triangle_antimeridian(mesh_t *mesh, int idx)
     }
     if (i == 3) return;
 
-    vec3_mix(vs[a], ab, 0.9, new_points[0]); // AB1
-    vec3_mix(vs[b], ab, 0.9, new_points[1]); // AB2
-    vec3_mix(vs[a], ac, 0.9, new_points[2]); // AC1
-    vec3_mix(vs[c], ac, 0.9, new_points[3]); // AC2
+    // We add a small gap around the cut, to avoid rendering problems.
+    vec3_mix(vs[a], ab, 0.99, new_points[0]); // AB1
+    vec3_mix(vs[b], ab, 0.99, new_points[1]); // AB2
+    vec3_mix(vs[a], ac, 0.99, new_points[2]); // AC1
+    vec3_mix(vs[c], ac, 0.99, new_points[3]); // AC2
 
     ofs = mesh_add_vertices(mesh, 4, new_points);
     ab1 = ofs + 0;
