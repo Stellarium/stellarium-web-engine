@@ -292,7 +292,7 @@ static const unsigned char DATA_shaders_lines_glsl[1221] __attribute__((aligned(
 
 ASSET_REGISTER(shaders_lines_glsl, "shaders/lines.glsl", DATA_shaders_lines_glsl, false)
 
-static const unsigned char DATA_shaders_mesh_glsl[1434] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_mesh_glsl[1349] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -307,7 +307,7 @@ static const unsigned char DATA_shaders_mesh_glsl[1434] __attribute__((aligned(4
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
-    "attribute highp   vec3 a_pos;\n"
+    "attribute highp   vec4 a_pos;\n"
     "\n"
     "\n"
     "// Mollweide projection implementation.\n"
@@ -345,10 +345,9 @@ static const unsigned char DATA_shaders_mesh_glsl[1434] __attribute__((aligned(4
     "void main()\n"
     "{\n"
     "#ifdef PROJ_MOLLWEIDE\n"
-    "    gl_Position = vec4(project(a_pos), 0.0, 1.0);\n"
+    "    gl_Position = vec4(project(a_pos.xyz), 0.0, 1.0);\n"
     "#else\n"
-    "    gl_Position = vec4(((a_pos.xy / u_fbo_size) * 2.0 - 1.0) * vec2(1.0, -1.0),\n"
-    "                       0.0, 1.0);\n"
+    "    gl_Position = a_pos;\n"
     "#endif\n"
     "}\n"
     "\n"
