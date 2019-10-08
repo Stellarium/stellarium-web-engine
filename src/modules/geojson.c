@@ -78,6 +78,11 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
             rings_size[i] = size;
         }
         mesh_add_poly(mesh, geo->polygon.size, rings_ofs, rings_size);
+
+        // For testing.  We want to avoid meshes with too long edges
+        // for the distortion.
+        mesh_subdivide(mesh, M_PI / 8);
+
         DL_APPEND(feature->meshes, mesh);
         return;
     case GEOJSON_POINT:
@@ -98,6 +103,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     mesh = calloc(1, sizeof(*mesh));
     ofs = mesh_add_vertices_lonlat(mesh, size, coordinates);
     mesh_add_line(mesh, ofs, size);
+
     DL_APPEND(feature->meshes, mesh);
 }
 
