@@ -66,9 +66,8 @@ export default {
       })
     }
 
-    let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-
     qe.initDB(smtConfig.fields).then(_ => {
+      let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
       Promise.all(allPromise).then(_ => {
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
       })
