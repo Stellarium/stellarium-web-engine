@@ -229,16 +229,17 @@ static void mesh_add_triangle(mesh_t *mesh, int a, int b, int c)
     mesh->triangles_count += 3;
 }
 
-static bool segment_intersects_yz_plan(
+static bool segment_intersects_antimeridian(
         const double a[3], const double b[3], double o[3])
 {
+    if (a[2] < 0 && b[2] < 0) return false; // Both in front of us.
     if (a[0] * b[0] >= 0) return false;
     vec3_mix(a, b, a[0] / (a[0] - b[0]), o);
     vec3_normalize(o, o);
     return true;
 }
 
-static void mesh_cut_triangle_yz(mesh_t *mesh, int idx)
+static void mesh_cut_triangle_antimeridian(mesh_t *mesh, int idx)
 {
     int i, a, b, c, ofs, ab1, ab2, ac1, ac2;
     const double (*vs)[3] = mesh->vertices;
@@ -247,8 +248,8 @@ static void mesh_cut_triangle_yz(mesh_t *mesh, int idx)
         a = mesh->triangles[idx + i];
         b = mesh->triangles[idx + (i + 1) % 3];
         c = mesh->triangles[idx + (i + 2) % 3];
-        if (    segment_intersects_yz_plan(vs[a], vs[b], ab) &&
-                segment_intersects_yz_plan(vs[a], vs[c], ac))
+        if (    segment_intersects_antimeridian(vs[a], vs[b], ab) &&
+                segment_intersects_antimeridian(vs[a], vs[c], ac))
             break;
     }
     if (i == 3) return;
@@ -272,17 +273,17 @@ static void mesh_cut_triangle_yz(mesh_t *mesh, int idx)
 }
 
 /*
- * Function: mesh_cut_yz_plan
+ * Function: mesh_cut_antimeridian
  * Split the mesh so that no triangle intersects the YZ plan
  *
  * Experimental.  Probably going to change to something more generic.
  */
-void mesh_cut_yz_plan(mesh_t *mesh)
+void mesh_cut_antimeridian(mesh_t *mesh)
 {
     int i, count;
     count = mesh->triangles_count;
     for (i = 0; i < count; i += 3) {
-        mesh_cut_triangle_yz(mesh, i);
+        mesh_cut_triangle_antimeridian(mesh, i);
     }
 }
 
