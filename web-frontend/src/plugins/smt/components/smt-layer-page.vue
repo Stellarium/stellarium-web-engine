@@ -36,7 +36,6 @@
 <script>
 import SmtPanelRootToolbar from './smt-panel-root-toolbar.vue'
 import SmtField from './smt-field.vue'
-import alasql from 'alasql'
 import Vue from 'vue'
 import Moment from 'moment'
 import stringHash from 'string-hash'
@@ -101,20 +100,32 @@ export default {
       that.livefilterData = []
 
       // Compute the WHERE clause to be used in following queries
-      let whereClause = qe.constraints2SQLWhereClause(this.query.constraints)
-      let whereClauseEdited = qe.constraints2SQLWhereClause(this.query.constraints.filter(c => !this.isEdited(c)))
+      let queryConstraintsEdited = this.query.constraints.filter(c => !this.isEdited(c))
       let constraintsIds = that.query.constraints.map(c => c.field.id)
 
       // Reset all fields values
       that.results.fields = that.$smt.fields.map(function (e) { return { 'status': 'loading', 'data': {} } })
       that.results.implicitConstraints = []
 
-      alasql.promise('SELECT COUNT(*) AS total FROM features' + whereClause).then(res => {
+      let q1 = {
+        constraints: this.query.constraints,
+        groupingOptions: [{ operation: 'GROUP_ALL' }],
+        aggregationOptions: [{ operation: 'COUNT', out: 'total' }]
+      }
+      qe.query(q1).then(res => {
         that.results.summary.count = res[0].total
       })
 
-      let sqlFields = that.$smt.fields.map(f => that.fId2AlaSql(f.id))
-      alasql.promise('SELECT geometry, ' + sqlFields.join(', ') + ' FROM features' + whereClause).then(res => {
+      let q2 = {
+        constraints: this.query.constraints,
+        projectOptions: {
+          geometry: 1
+        }
+      }
+      for (let i in qe.fieldsList) {
+        q2.projectOptions[qe.fieldsList[i].id] = 1
+      }
+      qe.query(q2).then(res => {
         let geojson = {
           type: 'FeatureCollection',
           features: []
@@ -144,12 +155,14 @@ export default {
       // And recompute all fields
       for (let i in that.$smt.fields) {
         let field = that.$smt.fields[i]
-        let fid = qe.fId2AlaSql(field.id)
         let edited = that.editedConstraint && that.editedConstraint.field.id === field.id
         if (field.widget === 'tags') {
-          let wc = edited ? whereClauseEdited : whereClause
-          let req = 'SELECT VALUES_AND_COUNT(' + fid + ') AS tags FROM features' + wc
-          alasql.promise(req).then(res => {
+          let q = {
+            constraints: edited ? queryConstraintsEdited : this.query.constraints,
+            groupingOptions: [{ operation: 'GROUP_ALL' }],
+            aggregationOptions: [{ operation: 'VALUES_AND_COUNT', fieldId: field.id, out: 'tags' }]
+          }
+          qe.query(q).then(res => {
             let tags = res[0].tags ? res[0].tags : {}
             tags = Object.keys(tags).map(function (key) {
               let closable = that.query.constraints.filter(c => c.field.id === field.id && c.expression === key).length !== 0
@@ -170,56 +183,16 @@ export default {
           })
         }
         if (field.widget === 'date_range') {
-          let wc = whereClause
-          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
-          alasql.promise(req).then(res => {
-            if (res[0].dmin === undefined || res[0].dmax === undefined) {
-              // No results
-              let data = {
-                min: 0,
-                max: 1,
-                step: 'DAY',
-                table: [['Date', 'Count']]
-              }
-              Vue.set(that.results.fields[i], 'field', field)
-              Vue.set(that.results.fields[i], 'status', 'ok')
-              Vue.set(that.results.fields[i], 'edited', edited)
-              Vue.set(that.results.fields[i], 'data', data)
-              return
-            }
-            let start = new Date(res[0].dmin)
-            start.setHours(0, 0, 0, 0)
-            // Switch to next day and truncate
-            let stop = new Date(res[0].dmax + 1000 * 60 * 60 * 24)
-            stop.setHours(0, 0, 0, 0)
-            // Range in days
-            let range = (stop - start) / (1000 * 60 * 60 * 24)
-            let step = 'DAY'
-            if (range > 3 * 365) {
-              step = 'YEAR'
-            } else if (range > 3 * 30) {
-              step = 'MONTH'
-            }
-
-            alasql.promise('SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features' + wc + ' GROUP BY ' + step + ' (' + fid + ')').then(res2 => {
-              let data = {
-                min: start,
-                max: stop,
-                step: step,
-                table: [['Date', 'Count']]
-              }
-              for (let j in res2) {
-                let d = new Date(res2[j].d)
-                d.setHours(0, 0, 0, 0)
-                if (step === 'MONTH') d.setDate(0)
-                if (step === 'YEAR') d.setMonth(0)
-                data.table.push([d, res2[j].c])
-              }
-              Vue.set(that.results.fields[i], 'field', field)
-              Vue.set(that.results.fields[i], 'status', 'ok')
-              Vue.set(that.results.fields[i], 'edited', edited)
-              Vue.set(that.results.fields[i], 'data', data)
-            })
+          let q = {
+            constraints: this.query.constraints,
+            groupingOptions: [{ operation: 'GROUP_ALL' }],
+            aggregationOptions: [{ operation: 'DATE_HISTOGRAM', fieldId: field.id, out: 'dh' }]
+          }
+          qe.query(q).then(res => {
+            Vue.set(that.results.fields[i], 'field', field)
+            Vue.set(that.results.fields[i], 'status', 'ok')
+            Vue.set(that.results.fields[i], 'edited', edited)
+            Vue.set(that.results.fields[i], 'data', res[0].dh)
           })
         }
       }

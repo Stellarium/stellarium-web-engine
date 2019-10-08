@@ -69,6 +69,7 @@ export default {
 
   // Construct the SQL WHERE clause matching the given constraints
   constraints2SQLWhereClause: function (constraints) {
+    let that = this
     if (!constraints || constraints.length === 0) {
       return ''
     }
@@ -86,7 +87,7 @@ export default {
 
     // Convert one contraint to a SQL string
     let c2sql = function (c) {
-      let fid = this.fId2AlaSql(c.field.id)
+      let fid = that.fId2AlaSql(c.field.id)
       if (c.operation === 'STRING_EQUAL') {
         return fid + ' = "' + c.expression + '"'
       } else if (c.operation === 'IS_UNDEFINED') {
@@ -116,16 +117,84 @@ export default {
   },
 
   // Query the engine
-  query: function (query) {
+  query: function (q) {
     let that = this
-    let whereClause = this.constraints2SQLWhereClause(query.constraints)
+    let whereClause = this.constraints2SQLWhereClause(q.constraints)
 
     // Construct the SQL SELECT clause matching the given aggregate options
     let selectClause = 'SELECT '
-    if (query.projectOptions) {
-      selectClause += Object.keys(query.projectOptions).map(k => that.fId2AlaSql(k)).join(', ')
+    if (q.projectOptions) {
+      selectClause += Object.keys(q.projectOptions).map(k => that.fId2AlaSql(k)).join(', ')
     }
-    selectClause += 'FROM features'
-    return alasql.promise(selectClause + whereClause)
+    if (q.aggregationOptions) {
+      // We can't do much more than group all using SQL language
+      console.assert(q.groupingOptions.length === 1 && q.groupingOptions[0].operation === 'GROUP_ALL')
+      for (let i in q.aggregationOptions) {
+        let agOpt = q.aggregationOptions[i]
+        console.assert(agOpt.out)
+        if (agOpt.operation === 'COUNT') {
+          selectClause += 'COUNT(*) as ' + agOpt.out
+        }
+        if (agOpt.operation === 'VALUES_AND_COUNT') {
+          selectClause += 'VALUES_AND_COUNT(' + that.fId2AlaSql(agOpt.fieldId) + ') as ' + agOpt.out
+        }
+        if (agOpt.operation === 'DATE_HISTOGRAM') {
+          // Special case, do custom queries and return
+          console.assert(q.aggregationOptions.length === 1)
+          let fid = that.fId2AlaSql(agOpt.fieldId)
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + whereClause
+          return alasql.promise(req).then(res => {
+            if (res[0].dmin === undefined || res[0].dmax === undefined) {
+              // No results
+              let data = {
+                min: undefined,
+                max: undefined,
+                step: 'DAY',
+                table: [['Date', 'Count']]
+              }
+              let retd = {}
+              retd[agOpt.out] = data
+              return [retd]
+            }
+            let start = new Date(res[0].dmin)
+            start.setHours(0, 0, 0, 0)
+            // Switch to next day and truncate
+            let stop = new Date(res[0].dmax + 1000 * 60 * 60 * 24)
+            stop.setHours(0, 0, 0, 0)
+            // Range in days
+            let range = (stop - start) / (1000 * 60 * 60 * 24)
+            let step = 'DAY'
+            if (range > 3 * 365) {
+              step = 'YEAR'
+            } else if (range > 3 * 30) {
+              step = 'MONTH'
+            }
+
+            let sqlQ = 'SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features ' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')'
+            return alasql.promise(sqlQ).then(res2 => {
+              let data = {
+                min: start,
+                max: stop,
+                step: step,
+                table: [['Date', 'Count']]
+              }
+              for (let j in res2) {
+                let d = new Date(res2[j].d)
+                d.setHours(0, 0, 0, 0)
+                if (step === 'MONTH') d.setDate(0)
+                if (step === 'YEAR') d.setMonth(0)
+                data.table.push([d, res2[j].c])
+              }
+              let retd = {}
+              retd[agOpt.out] = data
+              return [retd]
+            })
+          })
+        }
+      }
+    }
+    selectClause += ' FROM features'
+    let sqlStatement = selectClause + whereClause
+    return alasql.promise(sqlStatement)
   }
 }
