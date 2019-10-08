@@ -52,4 +52,10 @@ bool mesh_contains_vec3(const mesh_t *mesh, const double pos[3]);
  */
 void mesh_cut_yz_plan(mesh_t *mesh);
 
+/*
+ * Function: mesh_subdivide
+ * Subdivide edges that are larger than a given length.
+ */
+void mesh_subdivide(mesh_t *mesh, double max_length);
+
 #endif // MESH_H

@@ -285,3 +285,70 @@ void mesh_cut_yz_plan(mesh_t *mesh)
         mesh_cut_triangle_yz(mesh, i);
     }
 }
+
+static void mesh_subdivide_edge(mesh_t *mesh, int e1, int e2)
+{
+    const double (*vs)[3];
+    double new_point[3];
+    int count, i, j, a, b, c, o;
+
+    vs = mesh->vertices;
+    vec3_mix(vs[e1], vs[e2], 0.5, new_point);
+    // vec3_normalize(new_point, new_point);
+    o = mesh_add_vertices(mesh, 1, &new_point);
+    vs = mesh->vertices;
+
+    count = mesh->triangles_count;
+    for (i = 0; i < count; i += 3) {
+        for (j = 0; j < 3; j++) {
+            a = mesh->triangles[i + (j + 0) % 3];
+            b = mesh->triangles[i + (j + 1) % 3];
+            c = mesh->triangles[i + (j + 2) % 3];
+            if ((b == e1 && c == e2) || (b == e2 && c == e1)) {
+                mesh->triangles[i + (j + 2) % 3] = o;
+                assert(!(a == e2 && c == e1));
+                vs = mesh->vertices;
+                mesh_add_triangle(mesh, a, o, c);
+                break;
+            }
+        }
+    }
+}
+
+static void mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
+{
+    double sides[3];
+    const double (*vs)[3];
+    int i;
+
+    while (true) {
+        // Compute all sides lengths (squared).
+        vs = mesh->vertices;
+        for (i = 0; i < 3; i++) {
+            sides[i] = vec3_dist2(vs[mesh->triangles[idx + (i + 1) % 3]],
+                                  vs[mesh->triangles[idx + (i + 2) % 3]]);
+        }
+        for (i = 0; i < 3; i++) {
+            if (    sides[i] >= sides[(i + 1) % 3] &&
+                    sides[i] >= sides[(i + 2) % 3])
+                break;
+        }
+        if (sides[i] < max_length * max_length)
+            return;
+
+        mesh_subdivide_edge(mesh, mesh->triangles[idx + (i + 1) % 3],
+                                  mesh->triangles[idx + (i + 2) % 3]);
+    }
+}
+
+/*
+ * Function: mesh_subdivide
+ * Subdivide edges that are larger than a given length.
+ */
+void mesh_subdivide(mesh_t *mesh, double max_length)
+{
+    int i;
+    for (i = 0; i < mesh->triangles_count; i += 3) {
+        mesh_subdivide_triangle(mesh, i, max_length);
+    }
+}
