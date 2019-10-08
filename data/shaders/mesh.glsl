@@ -12,7 +12,7 @@ uniform   lowp    vec2 u_fbo_size;
 
 #ifdef VERTEX_SHADER
 
-attribute highp   vec3 a_pos;
+attribute highp   vec4 a_pos;
 
 
 // Mollweide projection implementation.
@@ -50,10 +50,9 @@ vec2 project(vec3 v)
 void main()
 {
 #ifdef PROJ_MOLLWEIDE
-    gl_Position = vec4(project(a_pos), 0.0, 1.0);
+    gl_Position = vec4(project(a_pos.xyz), 0.0, 1.0);
 #else
-    gl_Position = vec4(((a_pos.xy / u_fbo_size) * 2.0 - 1.0) * vec2(1.0, -1.0),
-                       0.0, 1.0);
+    gl_Position = a_pos;
 #endif
 }
 

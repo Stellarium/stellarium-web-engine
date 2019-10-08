@@ -31,8 +31,10 @@ struct mesh {
 
 mesh_t *mesh_create(void);
 void mesh_delete(mesh_t *mesh);
+mesh_t *mesh_copy(const mesh_t *mesh);
 
-int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[2]);
+int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3]);
+int mesh_add_vertices_lonlat(mesh_t *mesh, int count, double (*verts)[2]);
 void mesh_add_line(mesh_t *mesh, int ofs, int size);
 void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size);
 
@@ -41,5 +43,13 @@ void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size);
  * Test if a 3d direction vector intersects a 3d mesh.
  */
 bool mesh_contains_vec3(const mesh_t *mesh, const double pos[3]);
+
+/*
+ * Function: mesh_cut_yz_plan
+ * Split the mesh so that no triangle intersects the YZ plan
+ *
+ * Experimental.  Probably going to change to something more generic.
+ */
+void mesh_cut_yz_plan(mesh_t *mesh);
 
 #endif // MESH_H

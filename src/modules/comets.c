@@ -49,6 +49,7 @@ typedef struct {
     bool    parsed; // Set to true once the data has been parsed.
     int     update_pos; // Index of the position for iterative update.
     regex_t search_reg;
+    bool    visible;
 } comets_t;
 
 
@@ -234,6 +235,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
 static int comets_init(obj_t *obj, json_value *args)
 {
     comets_t *comets = (comets_t*)obj;
+    comets->visible = true;
     regcomp(&comets->search_reg,
             "(([PCXDAI])/([0-9]+) [A-Z].+)|([0-9]+[PCXDAI]/.+)",
             REG_EXTENDED);
@@ -292,6 +294,7 @@ static int comets_render(const obj_t *obj, const painter_t *painter)
     const int update_nb = 32;
     int nb, i;
 
+    if (!comets->visible) return 0;
     /* To prevent spending too much time computing position of comets that
      * are not visible, we only render a small number of them at each
      * frame, using a moving range.  The comets who have been flagged as
@@ -364,5 +367,9 @@ static obj_klass_t comets_klass = {
     .get            = comets_get,
     .get_by_oid     = comets_get_by_oid,
     .render_order   = 20,
+    .attributes     = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(comets_t, visible)),
+        {},
+    },
 };
 OBJ_REGISTER(comets_klass)

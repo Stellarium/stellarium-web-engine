@@ -158,9 +158,9 @@ static const gl_buf_info_t INDICES_BUF = {
 };
 
 static const gl_buf_info_t MESH_BUF = {
-    .size = 12,
+    .size = 16,
     .attrs = {
-        [ATTR_POS] = {GL_FLOAT, 3, false, 0},
+        [ATTR_POS] = {GL_FLOAT, 4, false, 0},
     },
 };
 
@@ -1601,14 +1601,12 @@ static void mesh(renderer_t          *rend_,
         pos[3] = 0.0;
         // Special support for shader side Mollweide projection.
         if (painter->proj->type != PROJ_MOLLWEIDE) {
-            project(painter->proj,
-                    PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                    pos, pos);
+            project(painter->proj, PROJ_ALREADY_NORMALIZED, pos, pos);
         } else {
             item->mesh.proj = PROJ_MOLLWEIDE;
             vec2_to_float(painter->proj->scaling, item->mesh.proj_scaling);
         }
-        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(pos));
+        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
         gl_buf_next(&item->buf);
     }
 
