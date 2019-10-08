@@ -32,6 +32,7 @@ export default {
     app.$stel.core.cardinals.visible = false
     app.$stel.core.planets.visible = false
     app.$stel.core.dsos.visible = false
+    app.$stel.core.comets.visible = false
     app.$stel.core.satellites.visible = false
     app.$stel.core.minor_planets.visible = false
     app.$stel.core.mount_frame = app.$stel.FRAME_ICRF
