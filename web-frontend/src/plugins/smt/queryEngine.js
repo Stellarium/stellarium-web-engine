@@ -140,7 +140,8 @@ export default {
           // Special case, do custom queries and return
           console.assert(q.aggregationOptions.length === 1)
           let fid = that.fId2AlaSql(agOpt.fieldId)
-          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + whereClause
+          let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
           return alasql.promise(req).then(res => {
             if (res[0].dmin === undefined || res[0].dmax === undefined) {
               // No results

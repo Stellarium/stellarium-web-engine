@@ -214,10 +214,8 @@ export default {
         // if (do_not_modify) return true
         if (liveConstraintSql) {
           let v = that.livefilterData[idx][liveConstraintSql]
-          if (v !== undefined) {
-            if (v < lc.expression[0] || v > lc.expression[1]) {
-              return false
-            }
+          if (v === undefined || v < lc.expression[0] || v > lc.expression[1]) {
+            return false
           }
         }
 
@@ -307,6 +305,7 @@ export default {
         if (rf.field.widget === 'tags' && rf.data && rf.data.filter(tag => tag.closable === false).length <= 1) continue
         // Don't display date range if the range is <= 24h
         if (rf.field.widget === 'date_range' && rf.data) {
+          if (rf.data.max === undefined || rf.data.min === undefined) continue
           let dt = rf.data.max - rf.data.min
           if (dt <= 1000 * 60 * 60 * 24) continue
         }
