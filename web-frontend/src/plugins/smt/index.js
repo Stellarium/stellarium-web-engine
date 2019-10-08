@@ -22,7 +22,6 @@ function fType2AlaSql (fieldType) {
 }
 
 async function initDB (fieldsList) {
-
   // Add a custom aggregation operator for the chip tags
   alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
     if (stage === 1) {
