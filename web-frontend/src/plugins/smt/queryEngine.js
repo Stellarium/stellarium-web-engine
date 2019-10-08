@@ -53,18 +53,16 @@ export default {
     let that = this
 
     // Insert all data
-    let req = alasql.compile('INSERT INTO features VALUES (?, ?, ' + that.fieldsList.map(f => '?').join(', ') + ')')
-    for (let feature of jsonData.features) {
-      let arr = [feature.geometry, feature.properties]
+    for (let f in jsonData.features) {
       for (let i in that.fieldsList) {
-        let d = _.get(feature.properties, that.fieldsList[i].id, undefined)
+        let d = _.get(jsonData.features[f].properties, that.fieldsList[i].id, undefined)
         if (d !== undefined && that.fieldsList[i].type === 'date') {
           d = new Date(d).getTime()
         }
-        arr.push(d)
+        jsonData.features[f][that.sqlFields[i]] = d
       }
-      await req.promise(arr)
     }
+    await alasql.promise('SELECT * INTO features FROM ?', [jsonData.features])
   },
 
   // Construct the SQL WHERE clause matching the given constraints
