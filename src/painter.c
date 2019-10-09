@@ -403,7 +403,7 @@ subdivide:
              mesh2->vertices_count, mesh2->vertices,
              mesh2->triangles_count, mesh2->triangles);
 
-    free(mesh2);
+    mesh_delete(mesh2);
     return 0;
 }
 
