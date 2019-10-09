@@ -225,7 +225,7 @@ export default {
             })
           })
         } else {
-          throw 'Unsupported query operation: ' + agOpt.operation
+          throw new Error('Unsupported query operation: ' + agOpt.operation)
         }
       }
     }

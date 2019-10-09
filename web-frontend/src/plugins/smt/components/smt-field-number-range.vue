@@ -31,7 +31,6 @@
 <script>
 import _ from 'lodash'
 import { GChart } from 'vue-google-charts'
-import Moment from 'moment'
 
 export default {
   data: function () {
