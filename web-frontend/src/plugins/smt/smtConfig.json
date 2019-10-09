@@ -84,6 +84,12 @@
       "widget": "tags"
     },
     {
+      "id": "Planning.MER.Delay_Acquisition",
+      "name": "MER Delay Acquisition",
+      "type": "number",
+      "widget": "number_range"
+    },
+    {
       "id": "PointingActivity",
       "name": "Pointing Activity",
       "type": "string",

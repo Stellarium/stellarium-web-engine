@@ -10,12 +10,14 @@
     </v-col>
     <smt-field-chips v-if="isTags" :fieldResults="fieldResults" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint"></smt-field-chips>
     <smt-field-date-range v-if="isDateRange" :fieldResults="fieldResults" v-on:add-constraint="addConstraint" v-on:constraint-live-changed="constraintLiveChanged"></smt-field-date-range>
+    <smt-field-number-range v-if="isNumberRange" :fieldResults="fieldResults" v-on:add-constraint="addConstraint" v-on:constraint-live-changed="constraintLiveChanged"></smt-field-number-range>
   </v-row>
 </template>
 
 <script>
 import SmtFieldChips from './smt-field-chips.vue'
 import SmtFieldDateRange from './smt-field-date-range.vue'
+import SmtFieldNumberRange from './smt-field-number-range.vue'
 
 export default {
   data: function () {
@@ -40,9 +42,12 @@ export default {
     },
     isDateRange: function () {
       return this.fieldDescription && this.fieldDescription.widget === 'date_range' && this.fieldResults
+    },
+    isNumberRange: function () {
+      return this.fieldDescription && this.fieldDescription.widget === 'number_range' && this.fieldResults
     }
   },
-  components: { SmtFieldChips, SmtFieldDateRange }
+  components: { SmtFieldChips, SmtFieldDateRange, SmtFieldNumberRange }
 }
 </script>
 

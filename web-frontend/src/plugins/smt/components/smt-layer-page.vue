@@ -80,6 +80,7 @@ export default {
     },
     printConstraint: function (c) {
       if (c.field.widget === 'date_range') return this.formatDate(c.expression[0]) + ' - ' + this.formatDate(c.expression[1])
+      if (c.field.widget === 'number_range') return '' + c.expression[0] + ' - ' + c.expression[1]
       return c.expression
     },
     refreshObservationGroups: function () {
@@ -195,6 +196,19 @@ export default {
             Vue.set(that.results.fields[i], 'data', res[0].dh)
           })
         }
+        if (field.widget === 'number_range') {
+          let q = {
+            constraints: this.query.constraints,
+            groupingOptions: [{ operation: 'GROUP_ALL' }],
+            aggregationOptions: [{ operation: 'NUMBER_HISTOGRAM', fieldId: field.id, out: 'nh' }]
+          }
+          qe.query(q).then(res => {
+            Vue.set(that.results.fields[i], 'field', field)
+            Vue.set(that.results.fields[i], 'status', 'ok')
+            Vue.set(that.results.fields[i], 'edited', edited)
+            Vue.set(that.results.fields[i], 'data', res[0].nh)
+          })
+        }
       }
     },
     refreshGeojsonLiveFilter: function () {
@@ -207,6 +221,9 @@ export default {
       let liveConstraintSql
       let lc = that.liveConstraint
       if (lc && lc.field.widget === 'date_range' && lc.operation === 'DATE_RANGE') {
+        liveConstraintSql = qe.fId2AlaSql(lc.field.id)
+      }
+      if (lc && lc.field.widget === 'number_range' && lc.operation === 'NUMBER_RANGE') {
         liveConstraintSql = qe.fId2AlaSql(lc.field.id)
       }
       that.geojsonObj.filterAll(idx => {
@@ -239,6 +256,7 @@ export default {
     addConstraint: function (c) {
       this.query.constraints = this.query.constraints.filter(cons => {
         if (cons.field.widget === 'date_range' && cons.field.id === c.field.id) return false
+        if (cons.field.widget === 'number_range' && cons.field.id === c.field.id) return false
         return true
       })
       this.query.constraints.push(c)
@@ -308,6 +326,9 @@ export default {
           if (rf.data.max === undefined || rf.data.min === undefined) continue
           let dt = rf.data.max - rf.data.min
           if (dt <= 1000 * 60 * 60 * 24) continue
+        }
+        if (rf.field.widget === 'number_range' && rf.data) {
+          if (rf.data.max === rf.data.min) continue
         }
         res.push(rf)
       }

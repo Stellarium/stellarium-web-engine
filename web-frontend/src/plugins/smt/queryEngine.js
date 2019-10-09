@@ -132,11 +132,9 @@ export default {
         console.assert(agOpt.out)
         if (agOpt.operation === 'COUNT') {
           selectClause += 'COUNT(*) as ' + agOpt.out
-        }
-        if (agOpt.operation === 'VALUES_AND_COUNT') {
+        } else if (agOpt.operation === 'VALUES_AND_COUNT') {
           selectClause += 'VALUES_AND_COUNT(' + that.fId2AlaSql(agOpt.fieldId) + ') as ' + agOpt.out
-        }
-        if (agOpt.operation === 'DATE_HISTOGRAM') {
+        } else if (agOpt.operation === 'DATE_HISTOGRAM') {
           // Special case, do custom queries and return
           console.assert(q.aggregationOptions.length === 1)
           let fid = that.fId2AlaSql(agOpt.fieldId)
@@ -169,7 +167,7 @@ export default {
               step = 'MONTH'
             }
 
-            let sqlQ = 'SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features ' + whereClause + ' GROUP BY ' + step + ' (' + fid + ')'
+            let sqlQ = 'SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features ' + wc + ' GROUP BY ' + step + ' (' + fid + ')'
             return alasql.promise(sqlQ).then(res2 => {
               let data = {
                 min: start,
@@ -189,6 +187,45 @@ export default {
               return [retd]
             })
           })
+        } else if (agOpt.operation === 'NUMBER_HISTOGRAM') {
+          // Special case, do custom queries and return
+          console.assert(q.aggregationOptions.length === 1)
+          let fid = that.fId2AlaSql(agOpt.fieldId)
+          let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
+          return alasql.promise(req).then(res => {
+            if (res[0].dmin === res[0].dmax) {
+              // No results
+              let data = {
+                min: res[0].dmin,
+                max: res[0].dmax,
+                step: undefined,
+                table: [['Value', 'Count']]
+              }
+              let retd = {}
+              retd[agOpt.out] = data
+              return [retd]
+            }
+            let step = (res[0].dmax - res[0].dmin) / 10
+
+            let sqlQ = 'SELECT COUNT(*) AS c, ROUND((FIRST(' + fid + ') - ' + res[0].dmin + ') / ' + step + ') * ' + step + ' AS d FROM features ' + wc + ' GROUP BY ROUND((' + fid + ' - ' + res[0].dmin + ') / ' + step + ')'
+            return alasql.promise(sqlQ).then(res2 => {
+              let data = {
+                min: res[0].dmin,
+                max: res[0].dmax,
+                step: step,
+                table: [['Value', 'Count']]
+              }
+              for (let j in res2) {
+                data.table.push([res2[j].d, res2[j].c])
+              }
+              let retd = {}
+              retd[agOpt.out] = data
+              return [retd]
+            })
+          })
+        } else {
+          throw 'Unsupported query operation: ' + agOpt.operation
         }
       }
     }

@@ -6,22 +6,22 @@
   <v-col cols="12">
     <v-row no-gutters>
       <v-col cols="10">
-        <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
+        <GChart type="ColumnChart" :data="fieldResultsData.table" :options="rangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
       </v-col>
       <v-col cols="2"></v-col>
       <v-col cols="10">
-        <v-range-slider hide-details class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]" v-on:start="isUserDragging = true" v-on:end="isUserDragging = false"></v-range-slider>
+        <v-range-slider hide-details class="px-3 my-0" v-model="rangeSliderValues" :min="range[0]" :max="range[1]" v-on:start="isUserDragging = true" v-on:end="isUserDragging = false"></v-range-slider>
       </v-col>
       <v-col cols="2" style="margin-top: -10px">
         <v-btn small fab @click="rangeButtonClicked">OK</v-btn>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line hide-details v-mask="dateMask" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
+        <v-text-field dense solo single-line hide-details :value="formatValue(rangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line hide-details  v-mask="dateMask" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
+        <v-text-field dense solo single-line hide-details :value="formatValue(rangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
@@ -32,17 +32,15 @@
 import _ from 'lodash'
 import { GChart } from 'vue-google-charts'
 import Moment from 'moment'
-import { mask } from 'vue-the-mask'
 
 export default {
   data: function () {
     return {
       isUserDragging: false,
-      dateMask: '####-##-##',
-      dateRangeSliderValues: [0, 1],
-      dateRangeChartOptions: {
+      rangeSliderValues: [0, 1],
+      rangeChartOptions: {
         chart: {
-          title: 'Date Range'
+          title: 'Range'
         },
         legend: { position: 'none' },
         backgroundColor: '#212121',
@@ -72,32 +70,34 @@ export default {
       }
     }
   },
-  directives: { mask },
   props: ['fieldResults'],
   methods: {
-    formatDate: function (d) {
-      return new Moment(d).format('YYYY-MM-DD')
+    formatValue: function (d) {
+      return '' + d
+    },
+    parseValue: function (d) {
+      return 0 + d
     },
     rangeButtonClicked: function () {
       let constraint = {
         'field': this.fieldResults.field,
-        'operation': 'DATE_RANGE',
-        'expression': [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
+        'operation': 'NUMBER_RANGE',
+        'expression': [this.rangeSliderValues[0], this.rangeSliderValues[1]],
         'negate': false
       }
       this.$emit('add-constraint', constraint)
     },
     rangeMinTextuallyChanged: function (v) {
       try {
-        let t = new Date(v).getTime()
-        this.dateRangeSliderValues = [t, this.dateRangeSliderValues[1]]
+        let t = this.parseValue(v)
+        this.rangeSliderValues = [t, this.rangeSliderValues[1]]
       } catch (e) {
       }
     },
     rangeMaxTextuallyChanged: function (v) {
       try {
-        let t = new Date(v).getTime()
-        this.dateRangeSliderValues = [this.dateRangeSliderValues[0], t]
+        let t = this.parseValue(v)
+        this.rangeSliderValues = [this.rangeSliderValues[0], t]
       } catch (e) {
       }
     }
@@ -114,22 +114,22 @@ export default {
       }
       return {}
     },
-    dateRange: function () {
+    range: function () {
       if (this.fieldResults && this.fieldResults.data && this.fieldResults.data.min !== undefined) {
-        return [this.fieldResults.data.min.getTime(), this.fieldResults.data.max.getTime()]
+        return [this.fieldResults.data.min, this.fieldResults.data.max]
       }
       return [0, 1]
     }
   },
   mounted: function () {
-    this.dateRangeSliderValues = this.dateRange
+    this.rangeSliderValues = this.range
   },
   watch: {
-    dateRangeSliderValues: function (s) {
+    rangeSliderValues: function (s) {
       let constraint = {
         'field': this.fieldResults.field,
-        'operation': 'DATE_RANGE',
-        'expression': [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
+        'operation': 'NUMBER_RANGE',
+        'expression': [this.rangeSliderValues[0], this.rangeSliderValues[1]],
         'negate': false
       }
       if (this.isUserDragging) {
