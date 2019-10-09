@@ -93,6 +93,11 @@ export default {
       } else if (c.operation === 'DATE_RANGE') {
         return '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0] +
           ' AND ' + fid + ' <= ' + c.expression[1] + ')'
+      } else if (c.operation === 'NUMBER_RANGE') {
+        return '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0] +
+          ' AND ' + fid + ' <= ' + c.expression[1] + ')'
+      } else {
+        throw new Error('Unsupported query operation: ' + c.operation)
       }
     }
 
@@ -225,7 +230,7 @@ export default {
             })
           })
         } else {
-          throw new Error('Unsupported query operation: ' + agOpt.operation)
+          throw new Error('Unsupported aggregation operation: ' + agOpt.operation)
         }
       }
     }
