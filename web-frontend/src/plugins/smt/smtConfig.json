@@ -48,6 +48,42 @@
       "widget": "date_range"
     },
     {
+      "id": "Planning.LE1.Estimated_Date_Start",
+      "name": "LE1 Estimated Date Start",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "Planning.LE1.Real_Date_Start",
+      "name": "LE1 Real Date Start",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "Planning.LE1.State",
+      "name": "LE1 State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.MER.Estimated_Date_Start",
+      "name": "MER Estimated Date Start",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "Planning.MER.Real_Date_Start",
+      "name": "MER Real Date Start",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "Planning.MER.State",
+      "name": "MER State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
       "id": "PointingActivity",
       "name": "Pointing Activity",
       "type": "string",
