@@ -398,12 +398,12 @@ subdivide:
         convert_frame(painter.obs, frame, FRAME_VIEW, true,
                       mesh2->vertices[i], mesh2->vertices[i]);
     }
-    mesh_cut_yz_plan(mesh2);
+    mesh_cut_antimeridian(mesh2);
     REND(painter.rend, mesh, &painter, FRAME_VIEW, MODE_TRIANGLES,
              mesh2->vertices_count, mesh2->vertices,
              mesh2->triangles_count, mesh2->triangles);
 
-    free(mesh2);
+    mesh_delete(mesh2);
     return 0;
 }
 

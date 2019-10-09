@@ -45,11 +45,17 @@ void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size);
 bool mesh_contains_vec3(const mesh_t *mesh, const double pos[3]);
 
 /*
- * Function: mesh_cut_yz_plan
+ * Function: mesh_cut_antimeridian
  * Split the mesh so that no triangle intersects the YZ plan
  *
  * Experimental.  Probably going to change to something more generic.
  */
-void mesh_cut_yz_plan(mesh_t *mesh);
+void mesh_cut_antimeridian(mesh_t *mesh);
+
+/*
+ * Function: mesh_subdivide
+ * Subdivide edges that are larger than a given length.
+ */
+void mesh_subdivide(mesh_t *mesh, double max_length);
 
 #endif // MESH_H
