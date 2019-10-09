@@ -169,7 +169,7 @@ void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size)
     for (r = 0; r < nb_rings; r++) {
         centered_lonlat = calloc(size[r], sizeof(*centered_lonlat));
         for (i = 0; i < size[r]; i++) {
-            mat3_mul_vec3(rot, mesh->vertices[j++], p);
+            mat3_mul_vec3(rot, mesh->vertices[ofs + j++], p);
             c2lonlat(p, centered_lonlat[i]);
         }
         earcut_add_poly(earcut, size[r], centered_lonlat);
