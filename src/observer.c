@@ -37,6 +37,7 @@ static void update_matrices(observer_t *obs)
     double ri2v[3][3];  // Equatorial J2000 (ICRF) to view.
     double ri2e[3][3];  // Equatorial J2000 (ICRF) to ecliptic.
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRF).
+    double rc2v[3][3];
     double view_rot[3][3];
 
     quat_to_mat3(obs->mount_quat, ro2m);
@@ -81,6 +82,11 @@ static void update_matrices(observer_t *obs)
     mat3_rx(eraObl80(DJM0, obs->ut1), re2i, re2i);
     mat3_invert(re2i, ri2e);
 
+    // ICRF to view (ignoring refraction).
+    mat3_transpose(astrom->bpn, rc2v);
+    mat3_mul(ri2h, rc2v, rc2v);
+    mat3_mul(ro2v, rc2v, rc2v);
+
     // Copy all
     mat3_copy(ro2m, obs->ro2m);
     mat3_copy(ro2v, obs->ro2v);
@@ -90,6 +96,7 @@ static void update_matrices(observer_t *obs)
     mat3_copy(ri2v, obs->ri2v);
     mat3_copy(ri2e, obs->ri2e);
     mat3_copy(re2i, obs->re2i);
+    mat3_copy(rc2v, obs->rc2v);
 }
 
 static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,

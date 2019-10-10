@@ -96,19 +96,21 @@ struct observer
     // Frame rotation matrices.
     // h: Horizontal (RA/DE, left handed, X->N, Y->E, Z->up).
     // o: Observed: horizontal with refraction (RA/DE, left handed).
-    // i: ICRF (right handed).
+    // i: CIRF (~Equatorial JNow)
+    // c: ICRF (~Equatorial J2000)
     // e: Ecliptic (right handed).
     // m: Mount (observed + mount rotation).
     // v: View (Mount + view direction).
     double ro2m[3][3];  // Rotate from observed to mount.
     double ro2v[3][3];  // Rotate from observed to view.
     double rv2o[3][3];  // Rotate from view to observed.
-    double ri2h[3][3];  // Equatorial J2000 (ICRF) to horizontal.
+    double ri2h[3][3];  // Equatorial JNow (CIRF) to horizontal.
     double rh2i[3][3];  // Horizontal to Equatorial J2000 (ICRF).
-    double ri2v[3][3];  // Equatorial J2000 (ICRF) to view.
-    double ri2e[3][3];  // Equatorial J2000 (ICRF) to ecliptic.
+    double ri2v[3][3];  // Equatorial JNow (CIRF) to view.
+    double ri2e[3][3];  // Equatorial JNow (CIRF) to ecliptic.
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRF).
     double rnp[3][3];   // Nutation/Precession rotation.
+    double rc2v[3][3];  // Equatorial J2000 (ICRS) to view (no refraction).
 };
 
 void observer_update(observer_t *obs, bool fast);
