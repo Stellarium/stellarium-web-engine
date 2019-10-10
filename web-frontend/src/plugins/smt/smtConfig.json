@@ -86,6 +86,7 @@
     {
       "id": "Planning.MER.Delay_Acquisition",
       "name": "MER Delay Acquisition",
+      "computed": "(date2unix(Planning.MER.Real_Date_Start) - date2unix(Planning.MER.Estimated_Date_Start)) / 1000",
       "type": "number",
       "widget": "number_range"
     },

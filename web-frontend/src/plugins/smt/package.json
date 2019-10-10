@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "alasql": "^0.4.11",
+    "filtrex": "^2.0.0",
     "string-hash": "^1.1.3",
     "vue-google-charts": "^0.3.2",
     "vue-the-mask": "^0.11.1"

@@ -4,6 +4,7 @@
 
 import alasql from 'alasql'
 import _ from 'lodash'
+import filtrex from 'filtrex'
 
 export default {
   fieldsList: undefined,
@@ -37,6 +38,15 @@ export default {
     let that = this
     console.log('Create Data Base')
     that.fieldsList = fieldsList
+    for (let i in fieldsList) {
+      if (fieldsList[i].computed) {
+        let options = {
+          extraFunctions: { date2unix: function (dstr) { return new Date(dstr).getTime() } },
+          customProp: (path, unused, obj) => _.get(obj, path, undefined)
+        }
+        fieldsList[i].computed_compiled = filtrex.compileExpression(fieldsList[i].computed, options)
+      }
+    }
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = that.sqlFields.map(f => f + ' ' + that.fType2AlaSql(f.type)).join(', ')
     await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON, ' + sqlFieldsAndTypes + ')')
@@ -55,9 +65,16 @@ export default {
     // Insert all data
     for (let f in jsonData.features) {
       for (let i in that.fieldsList) {
-        let d = _.get(jsonData.features[f].properties, that.fieldsList[i].id, undefined)
-        if (d !== undefined && that.fieldsList[i].type === 'date') {
-          d = new Date(d).getTime()
+        const field = that.fieldsList[i]
+        let d
+        if (field.computed_compiled) {
+          d = field.computed_compiled(jsonData.features[f].properties)
+          if (isNaN(d)) d = undefined
+        } else {
+          d = _.get(jsonData.features[f].properties, field.id, undefined)
+          if (d !== undefined && field.type === 'date') {
+            d = new Date(d).getTime()
+          }
         }
         jsonData.features[f][that.sqlFields[i]] = d
       }
