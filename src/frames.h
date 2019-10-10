@@ -267,6 +267,25 @@ void astrometric_to_apparent(const observer_t *obs, const double in[S 3],
 void apparent_to_astrometric(const observer_t *obs, const double in[S 3],
                              bool at_inf, double out[S 3]);
 
+/*
+ * Function: frame_get_rotation
+ * Compute the rotation equivalent to calling convert_frame if it exists
+ *
+ * This returns true if the current frame convertion can be expressed as
+ * a rotation, otherwise false.
+ *
+ * Parameters:
+ *   obs        - The observer.
+ *   origin     - Origin coordinates.  One of the <FRAME> enum values.
+ *   dest       - Destination coordinates.  One of the <FRAME> enum values.
+ *   rot        - Output rotation matrix.
+ *
+ * Return:
+ *   true if the rotation exists, false otherwise.
+ */
+bool frame_get_rotation(const observer_t *obs, int origin, int dest,
+                        double rot[3][3]);
+
 #undef S
 
 #endif // FRAMES_H
