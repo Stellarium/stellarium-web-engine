@@ -1568,7 +1568,8 @@ static void mesh(renderer_t          *rend_,
                  const uint16_t      indices[])
 {
     int i, ofs;
-    double pos[4];
+    double pos[4] = {};
+    double rot[3][3];
     float color[4];
     item_t *item;
     renderer_gl_t *rend = (void*)rend_;
@@ -1593,21 +1594,29 @@ static void mesh(renderer_t          *rend_,
 
     ofs = item->buf.nb;
     // Project the vertices.
-    for (i = 0; i < verts_count; i++) {
-        vec3_copy(verts[i], pos);
-        pos[3] = 0.0;
-        vec3_normalize(pos, pos);
-        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
-        pos[3] = 0.0;
-        // Special support for shader side Mollweide projection.
-        if (painter->proj->type != PROJ_MOLLWEIDE) {
-            project(painter->proj, PROJ_ALREADY_NORMALIZED, pos, pos);
-        } else {
-            item->mesh.proj = PROJ_MOLLWEIDE;
-            vec2_to_float(painter->proj->scaling, item->mesh.proj_scaling);
+
+    // Special cas for Mollweide projection when the frame convertion can
+    // be expressed as a single matrix rotation.
+    if (painter->proj->type == PROJ_MOLLWEIDE &&
+            frame_get_rotation(painter->obs, frame, FRAME_VIEW, rot)) {
+        item->mesh.proj = PROJ_MOLLWEIDE;
+        vec2_to_float(painter->proj->scaling, item->mesh.proj_scaling);
+        for (i = 0; i < verts_count; i++) {
+            mat3_mul_vec3(rot, verts[i], pos);
+            gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+            gl_buf_next(&item->buf);
         }
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
-        gl_buf_next(&item->buf);
+    } else {
+        for (i = 0; i < verts_count; i++) {
+            vec3_copy(verts[i], pos);
+            pos[3] = 0.0;
+            vec3_normalize(pos, pos);
+            convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
+            pos[3] = 0.0;
+            project(painter->proj, PROJ_ALREADY_NORMALIZED, pos, pos);
+            gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+            gl_buf_next(&item->buf);
+        }
     }
 
     // Fill the indice buffer.

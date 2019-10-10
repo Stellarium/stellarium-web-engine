@@ -287,6 +287,32 @@ void apparent_to_astrometric(const observer_t *obs, const double in[3],
     vec3_copy(a, out);
 }
 
+/*
+ * Function: frame_get_rotation
+ * Compute the rotation equivalent to calling convert_frame if it exists
+ *
+ * This returns true if the current frame convertion can be expressed as
+ * a rotation, otherwise false.
+ *
+ * Parameters:
+ *   obs        - The observer.
+ *   origin     - Origin coordinates.  One of the <FRAME> enum values.
+ *   dest       - Destination coordinates.  One of the <FRAME> enum values.
+ *   rot        - Output rotation matrix.
+ *
+ * Return:
+ *   true if the rotation exists, false otherwise.
+ */
+bool frame_get_rotation(const observer_t *obs, int origin, int dest,
+                        double rot[3][3])
+{
+    // For the moment we only support ICRF to VIEW, without refraction.
+    if (origin != FRAME_ICRF || dest != FRAME_VIEW || obs->refraction)
+        return false;
+    mat3_copy(obs->rc2v, rot);
+    return true;
+}
+
 /******** TESTS ***********************************************************/
 
 #if COMPILE_TESTS
