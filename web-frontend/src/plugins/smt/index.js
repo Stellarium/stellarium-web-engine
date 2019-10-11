@@ -7,6 +7,8 @@ import storeModule from './store'
 import Vue from 'vue'
 import VueGoogleCharts from 'vue-google-charts'
 import qe from './queryEngine'
+import filtrex from 'filtrex'
+import sprintfjs from 'sprintf-js'
 
 Vue.use(VueGoogleCharts)
 
@@ -47,6 +49,16 @@ export default {
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
     let smtConfig = require('./smtConfig.json')
+
+    let filtrexOptions = {
+      extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
+    }
+    for (let field of smtConfig.fields) {
+      if (field.formatFunc) {
+        field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
+      }
+    }
+
     Vue.prototype.$smt = smtConfig
 
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })

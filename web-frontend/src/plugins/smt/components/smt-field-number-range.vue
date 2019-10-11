@@ -72,6 +72,9 @@ export default {
   props: ['fieldResults'],
   methods: {
     formatValue: function (d) {
+      if (this.fieldResults.field.formatFuncCompiled) {
+        return this.fieldResults.field.formatFuncCompiled({ x: d })
+      }
       return '' + d
     },
     parseValue: function (d) {
