@@ -236,7 +236,6 @@ export default {
           }
         }
 
-        // Color was already computed, return true meaning no change
         if (that.livefilterData[idx].colorDone) return true
         let c = [1, 0.3, 0.3, 0.3]
         if (colorAssignedSqlField) {
@@ -249,7 +248,8 @@ export default {
         return {
           fill: c,
           stroke: [1, 0, 0, 0],
-          visible: true
+          visible: true,
+          blink: that.livefilterData[idx].selected
         }
       })
     },
@@ -337,6 +337,20 @@ export default {
   },
   mounted: function () {
     this.refreshObservationGroups()
+    let that = this
+    // Manage geojson features selection
+    that.$stel.on('click', e => {
+      if (!that.geojsonObj) return
+      let res = that.geojsonObj.queryRenderedFeatureIds(e.point)
+      for (let i = 0; i < that.livefilterData.length; ++i) {
+        let selected = (res[0] === i)
+        if (that.livefilterData[i].selected !== selected) {
+          that.livefilterData[i].selected = selected
+          that.livefilterData[i].colorDone = undefined
+        }
+      }
+      that.refreshGeojsonLiveFilter()
+    })
   },
   components: { SmtPanelRootToolbar, SmtField }
 }
