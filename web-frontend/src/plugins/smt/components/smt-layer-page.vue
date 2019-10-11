@@ -343,7 +343,7 @@ export default {
     let that = this
     // Manage geojson features selection
     that.$stel.on('click', e => {
-      if (!that.geojsonObj) return
+      if (!that.geojsonObj) return false
       let res = that.geojsonObj.queryRenderedFeatureIds(e.point)
       if (!res.length) {
         that.selectedFootprintData = undefined
@@ -359,6 +359,7 @@ export default {
         }
       }
       that.refreshGeojsonLiveFilter()
+      return res.length !== 0
     })
   },
   components: { SmtPanelRootToolbar, SmtField, SmtSelectionInfo }
