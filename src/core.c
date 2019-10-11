@@ -1087,6 +1087,7 @@ static obj_klass_t core_klass = {
         PROPERTY(flip_view_horizontal, TYPE_BOOL,
                  MEMBER(core_t, flip_view_horizontal)),
         PROPERTY(mount_frame, TYPE_ENUM, MEMBER(core_t, mount_frame)),
+        PROPERTY(on_click, TYPE_FUNC, MEMBER(core_t, on_click)),
         {}
     }
 };
