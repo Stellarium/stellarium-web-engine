@@ -17,11 +17,11 @@
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line hide-details v-mask="dateMask" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
+        <v-text-field dense solo  v-mask="dateMask" :rules="[rules.required, rules.date]" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line hide-details  v-mask="dateMask" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
+        <v-text-field dense solo  v-mask="dateMask" :rules="[rules.required, rules.date]" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
@@ -69,6 +69,13 @@ export default {
             count: 0
           }
         }
+      },
+      rules: {
+        required: value => !!value || 'Required.',
+        date: value => {
+          if (isNaN(new Date(value))) return 'Invalid date'
+          return true
+        }
       }
     }
   },
@@ -88,17 +95,15 @@ export default {
       this.$emit('add-constraint', constraint)
     },
     rangeMinTextuallyChanged: function (v) {
-      try {
+      if (this.rules.date(v) === true) {
         let t = new Date(v).getTime()
         this.dateRangeSliderValues = [t, this.dateRangeSliderValues[1]]
-      } catch (e) {
       }
     },
     rangeMaxTextuallyChanged: function (v) {
-      try {
+      if (this.rules.date(v) === true) {
         let t = new Date(v).getTime()
         this.dateRangeSliderValues = [this.dateRangeSliderValues[0], t]
-      } catch (e) {
       }
     }
   },
