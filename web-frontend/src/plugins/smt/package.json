@@ -10,6 +10,7 @@
     "sprintf-js": "^1.1.2",
     "string-hash": "^1.1.3",
     "vue-google-charts": "^0.3.2",
+    "vue-json-tree-view": "^2.1.4",
     "vue-the-mask": "^0.11.1"
   }
 }

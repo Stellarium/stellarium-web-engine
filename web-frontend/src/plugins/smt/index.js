@@ -9,8 +9,10 @@ import VueGoogleCharts from 'vue-google-charts'
 import qe from './queryEngine'
 import filtrex from 'filtrex'
 import sprintfjs from 'sprintf-js'
+import TreeView from 'vue-json-tree-view'
 
 Vue.use(VueGoogleCharts)
+Vue.use(TreeView)
 
 export default {
   vuePlugin: {

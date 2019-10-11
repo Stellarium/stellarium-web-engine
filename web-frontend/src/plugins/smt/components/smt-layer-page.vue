@@ -5,6 +5,7 @@
 <template>
   <div style="height: 100%;">
     <img src="../assets/focse.png" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
+    <smt-selection-info v-if="selectedFootprintData !== undefined" :selectionData="selectedFootprintData"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <img v-if="$store.state.SMT.status === 'loading'" src="../assets/euclid-logo.png" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
     <div class="scroll-container">
@@ -36,6 +37,7 @@
 <script>
 import SmtPanelRootToolbar from './smt-panel-root-toolbar.vue'
 import SmtField from './smt-field.vue'
+import SmtSelectionInfo from './smt-selection-info.vue'
 import Vue from 'vue'
 import Moment from 'moment'
 import stringHash from 'string-hash'
@@ -64,7 +66,8 @@ export default {
         },
         fields: [],
         implicitConstraints: []
-      }
+      },
+      selectedFootprintData: undefined
     }
   },
   created: function () {
@@ -342,8 +345,14 @@ export default {
     that.$stel.on('click', e => {
       if (!that.geojsonObj) return
       let res = that.geojsonObj.queryRenderedFeatureIds(e.point)
+      if (!res.length) {
+        that.selectedFootprintData = undefined
+      }
       for (let i = 0; i < that.livefilterData.length; ++i) {
         let selected = (res[0] === i)
+        if (selected) {
+          that.selectedFootprintData = that.livefilterData[i]
+        }
         if (that.livefilterData[i].selected !== selected) {
           that.livefilterData[i].selected = selected
           that.livefilterData[i].colorDone = undefined
@@ -352,7 +361,7 @@ export default {
       that.refreshGeojsonLiveFilter()
     })
   },
-  components: { SmtPanelRootToolbar, SmtField }
+  components: { SmtPanelRootToolbar, SmtField, SmtSelectionInfo }
 }
 </script>
 
