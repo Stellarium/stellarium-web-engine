@@ -407,6 +407,8 @@ Module['otypeToStr'] = function(otype) {
   return Module.UTF8ToString(cret);
 }
 
+let onClickFn = null;
+
 /*
  * Function: on
  * Allow to listen to events on the sky map
@@ -414,16 +416,11 @@ Module['otypeToStr'] = function(otype) {
  * For the moment we only support the 'click' event.
  */
 Module['on'] = function(eventName, callback) {
-  if (eventName === 'click') {
-    const canvas = Module.canvas;
-    canvas.addEventListener('click', function(e) {
-      const rect = canvas.getBoundingClientRect();
-      callback({
-        point: {
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top
-        }
-      });
-    });
+  if (onClickFn) {
+    Module.removeFunction(onClickFn);
   }
+  onClickFn = Module.addFunction(function(x, y) {
+    return callback({ point: { x: x, y: y } });
+  }, 'idd');
+  Module.core.on_click = onClickFn;
 }

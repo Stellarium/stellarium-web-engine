@@ -131,6 +131,10 @@ struct core
     // FRAME_OBSERVED for altaz mount.
     int mount_frame;
 
+    // Click callback that can be set by the client.  If it returns true,
+    // the event is canceled (no selection is made).
+    bool (*on_click)(double x, double y);
+
     // Can be used for debugging.  It's conveniant to have an exposed test
     // attribute.
     bool test;
