@@ -8,20 +8,20 @@
       <v-col cols="10">
         <GChart type="ColumnChart" :data="fieldResultsData.table" :options="dateRangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
       </v-col>
-      <v-col cols="2"></v-col>
+      <v-col cols="2"><v-btn v-if="wasChanged" small fab @click="cancelButtonClicked"><v-icon>mdi-close</v-icon></v-btn></v-col>
       <v-col cols="10">
         <v-range-slider hide-details class="px-3 my-0" v-model="dateRangeSliderValues" :min="dateRange[0]" :max="dateRange[1]" v-on:start="isUserDragging = true" v-on:end="isUserDragging = false"></v-range-slider>
       </v-col>
       <v-col cols="2" style="margin-top: -10px">
-        <v-btn small fab @click="rangeButtonClicked">OK</v-btn>
+        <v-btn small fab :disabled="!wasChanged" @click="rangeButtonClicked">Add</v-btn>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo  v-mask="dateMask" :rules="[rules.required, rules.date]" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
+        <v-text-field dense solo v-mask="dateMask" :rules="[rules.required, rules.date]" :value="formatDate(dateRangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo  v-mask="dateMask" :rules="[rules.required, rules.date]" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
+        <v-text-field dense solo v-mask="dateMask" :rules="[rules.required, rules.date]" :value="formatDate(dateRangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
@@ -38,6 +38,7 @@ export default {
   data: function () {
     return {
       isUserDragging: false,
+      wasChanged: false,
       dateMask: '####-##-##',
       dateRangeSliderValues: [0, 1],
       dateRangeChartOptions: {
@@ -93,17 +94,25 @@ export default {
         'negate': false
       }
       this.$emit('add-constraint', constraint)
+      this.wasChanged = false
+    },
+    cancelButtonClicked: function () {
+      this.$emit('constraint-live-changed', undefined)
+      this.dateRangeSliderValues = this.dateRange
+      this.wasChanged = false
     },
     rangeMinTextuallyChanged: function (v) {
       if (this.rules.date(v) === true) {
         let t = new Date(v).getTime()
         this.dateRangeSliderValues = [t, this.dateRangeSliderValues[1]]
+        this.wasChanged = true
       }
     },
     rangeMaxTextuallyChanged: function (v) {
       if (this.rules.date(v) === true) {
         let t = new Date(v).getTime()
         this.dateRangeSliderValues = [this.dateRangeSliderValues[0], t]
+        this.wasChanged = true
       }
     }
   },
@@ -128,6 +137,7 @@ export default {
   },
   mounted: function () {
     this.dateRangeSliderValues = this.dateRange
+    this.wasChanged = false
   },
   watch: {
     dateRangeSliderValues: function (s) {
@@ -139,6 +149,7 @@ export default {
       }
       if (this.isUserDragging) {
         this.$emit('constraint-live-changed', constraint)
+        this.wasChanged = true
       }
     }
   },

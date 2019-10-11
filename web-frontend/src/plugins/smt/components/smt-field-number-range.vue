@@ -8,20 +8,20 @@
       <v-col cols="10">
         <GChart type="ColumnChart" :data="fieldResultsData.table" :options="rangeChartOptions"  style="margin-bottom: -10px; height: 120px"/>
       </v-col>
-      <v-col cols="2"></v-col>
+      <v-col cols="2"><v-btn v-if="wasChanged" small fab @click="cancelButtonClicked"><v-icon>mdi-close</v-icon></v-btn></v-col>
       <v-col cols="10">
         <v-range-slider hide-details class="px-3 my-0" v-model="rangeSliderValues" :min="range[0]" :max="range[1]" v-on:start="isUserDragging = true" v-on:end="isUserDragging = false"></v-range-slider>
       </v-col>
       <v-col cols="2" style="margin-top: -10px">
-        <v-btn small fab @click="rangeButtonClicked">OK</v-btn>
+        <v-btn small fab :disabled="!wasChanged" @click="rangeButtonClicked">Add</v-btn>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line hide-details :value="formatValue(rangeSliderValues[0])" @change="rangeMinTextuallyChanged"></v-text-field>
+        <v-text-field dense solo single-line hide-details readonly :value="formatValue(rangeSliderValues[0])"></v-text-field>
       </v-col>
       <v-col cols="1"></v-col>
       <v-col cols="4">
-        <v-text-field dense solo single-line hide-details :value="formatValue(rangeSliderValues[1])" @change="rangeMaxTextuallyChanged"></v-text-field>
+        <v-text-field dense solo single-line hide-details readonly :value="formatValue(rangeSliderValues[1])"></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
     </v-row>
@@ -36,6 +36,7 @@ export default {
   data: function () {
     return {
       isUserDragging: false,
+      wasChanged: false,
       rangeSliderValues: [0, 1],
       rangeChartOptions: {
         chart: {
@@ -77,9 +78,6 @@ export default {
       }
       return '' + d
     },
-    parseValue: function (d) {
-      return 0 + d
-    },
     rangeButtonClicked: function () {
       let constraint = {
         'field': this.fieldResults.field,
@@ -88,20 +86,12 @@ export default {
         'negate': false
       }
       this.$emit('add-constraint', constraint)
+      this.wasChanged = false
     },
-    rangeMinTextuallyChanged: function (v) {
-      try {
-        let t = this.parseValue(v)
-        this.rangeSliderValues = [t, this.rangeSliderValues[1]]
-      } catch (e) {
-      }
-    },
-    rangeMaxTextuallyChanged: function (v) {
-      try {
-        let t = this.parseValue(v)
-        this.rangeSliderValues = [this.rangeSliderValues[0], t]
-      } catch (e) {
-      }
+    cancelButtonClicked: function () {
+      this.$emit('constraint-live-changed', undefined)
+      this.rangeSliderValues = this.range
+      this.wasChanged = false
     }
   },
   computed: {
@@ -125,6 +115,7 @@ export default {
   },
   mounted: function () {
     this.rangeSliderValues = this.range
+    this.wasChanged = false
   },
   watch: {
     rangeSliderValues: function (s) {
@@ -136,6 +127,7 @@ export default {
       }
       if (this.isUserDragging) {
         this.$emit('constraint-live-changed', constraint)
+        this.wasChanged = true
       }
     }
   },
