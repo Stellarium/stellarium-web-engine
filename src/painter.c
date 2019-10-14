@@ -758,18 +758,20 @@ int paint_2d_rect(const painter_t *painter, const double transf[3][3],
  *
  * Parameters:
  *   painter    - The painter.
- *   transf     - Transformation from unit into window space that defines
- *                the shape position, orientation and scale.
- *   p1         - First pos, in unit coordinates (-1 to 1).
- *   p2         - Second pos, in unit coordinates (-1 to 1).
+ *   transf     - Transformation applied to the coordinates.
+ *                Can be NULL for the identity.
+ *   p1         - First pos, in window coordinates.
+ *   p2         - Second pos, in window coordinates.
  */
 int paint_2d_line(const painter_t *painter, const double transf[3][3],
                   const double p1[2], const double p2[2])
 {
     double p1_win[3] = {p1[0], p1[1], 1};
     double p2_win[3] = {p2[0], p2[1], 1};
-    mat3_mul_vec3(transf, p1_win, p1_win);
-    mat3_mul_vec3(transf, p2_win, p2_win);
+    if (transf) {
+        mat3_mul_vec3(transf, p1_win, p1_win);
+        mat3_mul_vec3(transf, p2_win, p2_win);
+    }
     REND(painter->rend, line_2d, painter, p1_win, p2_win);
     return 0;
 }
