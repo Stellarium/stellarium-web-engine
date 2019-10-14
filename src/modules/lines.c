@@ -128,6 +128,13 @@ static struct {
         .frame      = FRAME_ICRF,
         .grid       = false,
     },
+    {
+        .name       = "Boundary",
+        .id         = "boundary",
+        .color      = 0xffffffff,
+        .frame      = FRAME_VIEW,
+        .grid       = false,
+    },
 };
 
 typedef struct lines lines_t;
@@ -489,6 +496,42 @@ static void get_steps(double fov, char type, int frame,
         steps[0]--;
 }
 
+/* Mapping function that render the antimeridian line twice.
+ * We add a small offset on the left and right to show it on both sides of
+ * the antimeridian
+ */
+static void antimeridian_map(const uv_map_t *uv,
+                             const double v[2], double out[4])
+{
+    double t = v[0];
+    double r[4][4] = MAT4_IDENTITY;
+    double lon = 0, lat;
+    const double epsilon = 0.0001;
+    lon += v[1] ? epsilon : -epsilon;
+    lat = mix(-90, 90, t) * DD2R;
+    eraS2c(lon, lat, out);
+    out[3] = 0;
+    mat4_rx(M_PI / 2, r, r);
+    mat4_rz(M_PI / 2, r, r);
+    mat4_mul_vec4(r, out, out);
+}
+
+
+// Render the projection boundary.
+static int render_boundary(const painter_t *painter)
+{
+    const uv_map_t map = { .map = antimeridian_map };
+    double lines[4][4] = {
+        {0, 0}, {1, 0},
+        {0, 1}, {1, 1},
+    };
+    if (!(painter->proj->flags & PROJ_HAS_DISCONTINUITY))
+        return 0;
+    paint_lines(painter, FRAME_VIEW, 4, lines, &map, 64, 0);
+    return 0;
+}
+
+
 static int line_render(const obj_t *obj, const painter_t *painter_)
 {
     line_t *line = (line_t*)obj;
@@ -510,6 +553,12 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
 
     vec4_copy(line->color, painter.color);
     painter.color[3] *= line->visible.value;
+
+    // The boundary line has its own code.
+    if (strcmp(line->obj.id, "boundary") == 0) {
+        return render_boundary(&painter);
+    }
+
     // Compute the number of divisions of the grid.
     if (line->grid) {
         get_steps(core->fov, line->format, line->frame, &painter, steps);
