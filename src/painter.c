@@ -304,13 +304,12 @@ static int paint_line(const painter_t *painter,
     int i, size;
     double view_pos[2][4];
     double (*win_line)[2];
+    bool discontinuous = false;
+    double splits[2][2][4];
 
-    assert((flags & PAINTER_SKIP_DISCONTINUOUS) == flags);
-    if (    (flags & PAINTER_SKIP_DISCONTINUOUS) &&
-            painter->proj->flags & PROJ_HAS_DISCONTINUITY)
-    {
-        // Test if the line intersect a discontinuity, and for the moment
-        // just don't render it in that case.
+    if (!map) assert(flags & PAINTER_SKIP_DISCONTINUOUS); // For the moment.
+
+    if (painter->proj->flags & PROJ_HAS_DISCONTINUITY) {
         for (i = 0; i < 2; i++) {
             if (map)
                 uv_map(map, line[i], view_pos[i], NULL);
@@ -321,8 +320,22 @@ static int paint_line(const painter_t *painter,
                           view_pos[i], view_pos[i]);
         }
         if (segment_intersects_discontinuity_line(view_pos[0], view_pos[1]))
-            return 0;
+            discontinuous = true;
     }
+
+    if (discontinuous) {
+        if (flags & PAINTER_SKIP_DISCONTINUOUS || split <= 3)
+            return 0;
+        assert(map);
+        vec4_copy(line[0], splits[0][0]);
+        vec4_mix(line[0], line[1], 0.5, splits[0][1]);
+        vec4_copy(splits[0][1], splits[1][0]);
+        vec4_copy(line[1], splits[1][1]);
+        paint_line(painter, frame, splits[0], map, split / 2, flags);
+        paint_line(painter, frame, splits[1], map, split / 2, flags);
+        return 0;
+    }
+
     size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
                           split, &win_line);
     REND(painter->rend, line, painter, win_line, size);
