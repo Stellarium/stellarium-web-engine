@@ -121,17 +121,25 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[2]),
 
 
 int line_tesselate(void (*func)(void *user, double t, double pos[2]),
-                   void *user, int split, double (**out)[2])
+                   void *user, int split, double max_dist, double (**out)[2])
 {
     int i, allocated = 0, size = 0;
     *out = NULL;
     double p0[2];
+    double max_dist2 = max_dist * max_dist;
 
     if (split) {
         size = split + 1;
         *out = calloc(size, sizeof(**out));
-        for (i = 0; i < size; i++)
+        for (i = 0; i < size; i++) {
             func(user, (double)i / split, (*out)[i]);
+
+            if (i && max_dist &&
+                    vec2_dist2((*out)[i - 1], (*out)[i]) > max_dist2)
+            {
+                return -1;
+            }
+        }
     } else {
         func(user, 0, p0);
         line_push_point(out, p0, &size, &allocated);

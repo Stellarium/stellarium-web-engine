@@ -303,9 +303,10 @@ static int paint_line(const painter_t *painter,
 {
     int i, size;
     double view_pos[2][4];
-    double (*win_line)[2];
+    double (*win_line)[2] = NULL;
     bool discontinuous = false;
     double splits[2][2][4];
+    double max_size = min(painter->fb_size[0], painter->fb_size[1]) / 2;
 
     if (!map) assert(flags & PAINTER_SKIP_DISCONTINUOUS); // For the moment.
 
@@ -323,23 +324,26 @@ static int paint_line(const painter_t *painter,
             discontinuous = true;
     }
 
-    if (discontinuous) {
-        if (flags & PAINTER_SKIP_DISCONTINUOUS || split <= 3)
-            return 0;
-        assert(map);
-        vec4_copy(line[0], splits[0][0]);
-        vec4_mix(line[0], line[1], 0.5, splits[0][1]);
-        vec4_copy(splits[0][1], splits[1][0]);
-        vec4_copy(line[1], splits[1][1]);
-        paint_line(painter, frame, splits[0], map, split / 2, flags);
-        paint_line(painter, frame, splits[1], map, split / 2, flags);
-        return 0;
-    }
+    if (discontinuous)
+        goto split;
 
     size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
-                          split, &win_line);
+                          split, max_size, &win_line);
+    if (size < 0) goto split;
     REND(painter->rend, line, painter, win_line, size);
     free(win_line);
+    return 0;
+
+split:
+    if (flags & PAINTER_SKIP_DISCONTINUOUS || split <= 3)
+        return 0;
+    assert(map);
+    vec4_copy(line[0], splits[0][0]);
+    vec4_mix(line[0], line[1], 0.5, splits[0][1]);
+    vec4_copy(splits[0][1], splits[1][0]);
+    vec4_copy(line[1], splits[1][1]);
+    paint_line(painter, frame, splits[0], map, split / 2, flags);
+    paint_line(painter, frame, splits[1], map, split / 2, flags);
     return 0;
 }
 
