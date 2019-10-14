@@ -96,8 +96,9 @@ function queryRenderedFeatureIds(obj, point) {
   const pointPtr = Module._malloc(16);
   Module._setValue(pointPtr + 0, point[0], 'double');
   Module._setValue(pointPtr + 8, point[1], 'double');
-  const retPtr = Module._malloc(4);
-  const nb = Module._geojson_query_rendered_features(obj.v, pointPtr, 1, retPtr);
+  const size = 128; // Max number of results.
+  const retPtr = Module._malloc(4 * size);
+  const nb = Module._geojson_query_rendered_features(obj.v, pointPtr, size, retPtr);
   let ret = []
   for (let i = 0; i < nb; i++) {
     ret.push(Module._getValue(retPtr + i * 4, 'i32'));
