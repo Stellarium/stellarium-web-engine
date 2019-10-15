@@ -72,14 +72,21 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
     return ret;
 }
 
-void proj_mollweide_init(projection_t *p, double fov, double aspect)
+void proj_mollweide_compute_fov(double fov, double aspect,
+                                double *fovx, double *fovy)
+{
+    *fovx = fov;
+    *fovy = fov / aspect;
+}
+
+void proj_mollweide_init(projection_t *p, double fovx, double aspect)
 {
     p->name                      = "mollweide";
     p->type                      = PROJ_MOLLWEIDE;
     p->max_fov                   = 360 * DD2R;
     p->project                   = proj_mollweide_project;
     p->backward                  = proj_mollweide_backward;
-    p->scaling[0]                = aspect < 1 ? fov / 2 : fov / aspect / 2;
+    p->scaling[0]                = fovx / M_PI * sqrt(2);
     p->scaling[1]                = p->scaling[0] / aspect;
     p->flags                     = PROJ_HAS_DISCONTINUITY;
 }
