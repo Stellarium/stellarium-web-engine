@@ -644,6 +644,32 @@ static void win_to_observed(double x, double y, double p[3])
     convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
 }
 
+// Debug function to check for errors in the projections.
+static void render_proj_markers(const painter_t *painter_)
+{
+    painter_t painter = *painter_;
+    double lon, lat;
+    double p[4], p_win[4];
+    double r[4][4] = MAT4_IDENTITY;
+    painter.color[1] = 0;
+    mat4_rx(M_PI / 2, r, r);
+    mat4_rz(M_PI / 2, r, r);
+    for (lon = 0; lon < 360; lon += 10)
+    for (lat = -90; lat < 90; lat += 10) {
+        painter.color[0] = lon / 360.;
+        eraS2c(lon * DD2R, lat * DD2R, p);
+        p[3] = 0;
+        mat4_mul_vec4(r, p, p);
+        project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
+        paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(2, 2), NULL);
+
+        project(painter.proj, PROJ_BACKWARD | PROJ_FROM_WINDOW_SPACE,
+                p_win, p);
+        project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
+        paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(4, 4), NULL);
+    }
+}
+
 
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
@@ -715,6 +741,10 @@ int core_render(double win_w, double win_h, double pixel_scale)
     if ((0)) {
         paint_cap(&painter, FRAME_ICRF,
                   painter.clip_info[FRAME_ICRF].bounding_cap);
+    }
+
+    if ((0)) {
+        render_proj_markers(&painter);
     }
 
     // Flush all rendering pipeline
