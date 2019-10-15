@@ -41,7 +41,10 @@ enum {
     PROJ_NO_CLIP            = 1 << 0,
     PROJ_BACKWARD           = 1 << 1,
     PROJ_TO_NDC_SPACE       = 1 << 2,
+
     PROJ_TO_WINDOW_SPACE    = 1 << 3,
+    PROJ_FROM_WINDOW_SPACE  = 1 << 3,
+
     PROJ_ALREADY_NORMALIZED = 1 << 4,
 
     // Set in the projection flags to flip the rendering.

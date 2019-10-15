@@ -29,6 +29,8 @@ void proj_mollweide_init(projection_t *p, double fov, double aspect);
 
 void proj_stereographic_compute_fov(double fov, double aspect,
                                     double *fovx, double *fovy);
+void proj_mollweide_compute_fov(double fov, double aspect,
+                                double *fovx, double *fovy);
 
 void projection_compute_fovs(int type, double fov, double aspect,
                              double *fovx, double *fovy)
@@ -36,6 +38,9 @@ void projection_compute_fovs(int type, double fov, double aspect,
     switch (type) {
     case PROJ_STEREOGRAPHIC:
         proj_stereographic_compute_fov(fov, aspect, fovx, fovy);
+        break;
+    case PROJ_MOLLWEIDE:
+        proj_mollweide_compute_fov(fov, aspect, fovx, fovy);
         break;
     default:
         if (aspect < 1) {
@@ -86,6 +91,10 @@ bool project(const projection_t *proj, int flags,
 
     if (flags & PROJ_BACKWARD) {
         vec2_copy(v, p);
+        if (flags & PROJ_FROM_WINDOW_SPACE) {
+            p[0] = p[0] / proj->window_size[0] * 2 - 1;
+            p[1] = 1 - p[1] / proj->window_size[1] * 2;
+        }
         if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
         if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
         assert(proj->backward);
