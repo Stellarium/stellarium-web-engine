@@ -30,6 +30,7 @@ export default {
 
     // Init base view settings
     app.$stel.core.lines.equatorial.visible = true
+    app.$stel.core.lines.boundary.visible = true
     app.$stel.core.atmosphere.visible = false
     app.$stel.core.landscapes.visible = false
     app.$stel.core.landscapes.fog_visible = false
