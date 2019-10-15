@@ -37,8 +37,12 @@ static void proj_mollweide_project(
         if (fabs(d) < PRECISION) break;
     }
 
-    out[0] = lambda * cos(theta) / proj->scaling[0];
-    out[1] = sqrt(2) * sin(theta) / proj->scaling[1];
+    out[0] = 2 * sqrt(2) / M_PI * lambda * cos(theta);
+    out[1] = sqrt(2) * sin(theta);
+
+    out[0] /= proj->scaling[0];
+    out[1] /= proj->scaling[1];
+
     out[2] = 0;
     out[3] = 1;
 }
@@ -58,12 +62,12 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
 
     theta = asin(y / sqrt(2));
     phi = asin((2 * theta + sin(2 * theta)) / M_PI);
-    lambda = x / cos(theta);
+    lambda = M_PI * x / (2 * sqrt(2) * cos(theta));
 
-    cp = cos(lambda);
-    out[1] = cp * sin(phi);
-    out[0] = sin(lambda);
-    out[2] = -cp * cos(phi);
+    cp = cos(phi);
+    out[0] = cp * sin(lambda);
+    out[1] = sin(phi);
+    out[2] = -cp * cos(lambda);
     out[3] = 0;
     return ret;
 }
