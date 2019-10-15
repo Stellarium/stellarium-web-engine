@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "vue-cli-service serve",
-    "build": "CDN_ENV=${CDN_ENV} vue-cli-service build",
+    "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
