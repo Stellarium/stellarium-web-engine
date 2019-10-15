@@ -292,7 +292,7 @@ static const unsigned char DATA_shaders_lines_glsl[1221] __attribute__((aligned(
 
 ASSET_REGISTER(shaders_lines_glsl, "shaders/lines.glsl", DATA_shaders_lines_glsl, false)
 
-static const unsigned char DATA_shaders_mesh_glsl[1445] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_mesh_glsl[1447] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -338,7 +338,7 @@ static const unsigned char DATA_shaders_mesh_glsl[1445] __attribute__((aligned(4
     "        if (abs(d) < PRECISION) break;\n"
     "    }\n"
     "\n"
-    "    return vec2(2 * SQRT2 / PI * lambda * cos(theta),\n"
+    "    return vec2(2.0 * SQRT2 / PI * lambda * cos(theta),\n"
     "                SQRT2 * sin(theta)) / u_proj_scaling;\n"
     "}\n"
     "\n"
