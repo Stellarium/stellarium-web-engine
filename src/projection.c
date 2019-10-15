@@ -86,6 +86,10 @@ bool project(const projection_t *proj, int flags,
 
     if (flags & PROJ_BACKWARD) {
         vec2_copy(v, p);
+        if (flags & PROJ_FROM_WINDOW_SPACE) {
+            p[0] = p[0] / proj->window_size[0] * 2 - 1;
+            p[1] = 1 - p[1] / proj->window_size[1] * 2;
+        }
         if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
         if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
         assert(proj->backward);
