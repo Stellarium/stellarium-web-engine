@@ -292,7 +292,7 @@ static const unsigned char DATA_shaders_lines_glsl[1221] __attribute__((aligned(
 
 ASSET_REGISTER(shaders_lines_glsl, "shaders/lines.glsl", DATA_shaders_lines_glsl, false)
 
-static const unsigned char DATA_shaders_mesh_glsl[1349] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_mesh_glsl[1445] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -319,15 +319,17 @@ static const unsigned char DATA_shaders_mesh_glsl[1349] __attribute__((aligned(4
     "#define PI 3.14159265\n"
     "#define MAX_ITER 10\n"
     "#define PRECISION 1e-7\n"
+    "#define SQRT2 1.4142135623730951\n"
     "\n"
     "vec2 project(vec3 v)\n"
     "{\n"
-    "    float phi, lambda, d, k;\n"
+    "    highp float phi, lambda, theta, d, k;\n"
     "\n"
     "    lambda = atan(v[0], -v[2]);\n"
     "    phi = atan(v[1], sqrt(v[0] * v[0] + v[2] * v[2]));\n"
     "\n"
     "    k = PI * sin(phi);\n"
+    "    theta = phi;\n"
     "    for (int i = 0; i < MAX_ITER; i++) {\n"
     "        d = 2.0 + 2.0 * cos(2.0 * phi);\n"
     "        if (abs(d) < PRECISION) break;\n"
@@ -336,7 +338,8 @@ static const unsigned char DATA_shaders_mesh_glsl[1349] __attribute__((aligned(4
     "        if (abs(d) < PRECISION) break;\n"
     "    }\n"
     "\n"
-    "    return vec2(lambda * cos(phi), sqrt(2.0) * sin(phi)) / u_proj_scaling;\n"
+    "    return vec2(2 * SQRT2 / PI * lambda * cos(theta),\n"
+    "                SQRT2 * sin(theta)) / u_proj_scaling;\n"
     "}\n"
     "\n"
     "#endif\n"
