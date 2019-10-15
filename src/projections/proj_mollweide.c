@@ -47,6 +47,11 @@ static void proj_mollweide_project(
     out[3] = 1;
 }
 
+static double clamp(double x, double a, double b)
+{
+    return x < a ? a : x > b ? b : x;
+}
+
 static bool proj_mollweide_backward(const projection_t *proj, int flags,
             const double v[2], double out[4])
 {
@@ -57,12 +62,18 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
 
     if (fabs(y) > sqrt(2)) {
         ret = false;
-        y = 0;
+        y = clamp(y, -sqrt(2), sqrt(2));
     }
 
     theta = asin(y / sqrt(2));
+
     phi = asin((2 * theta + sin(2 * theta)) / M_PI);
     lambda = M_PI * x / (2 * sqrt(2) * cos(theta));
+
+    if (fabs(lambda) > M_PI) {
+        ret = false;
+        lambda = clamp(lambda, -M_PI, M_PI);
+    }
 
     cp = cos(phi);
     out[0] = cp * sin(lambda);
