@@ -43,7 +43,7 @@ vec2 project(vec3 v)
         if (abs(d) < PRECISION) break;
     }
 
-    return vec2(2 * SQRT2 / PI * lambda * cos(theta),
+    return vec2(2.0 * SQRT2 / PI * lambda * cos(theta),
                 SQRT2 * sin(theta)) / u_proj_scaling;
 }
 
