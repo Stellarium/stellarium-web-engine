@@ -24,15 +24,17 @@ uniform highp vec2 u_proj_scaling;
 #define PI 3.14159265
 #define MAX_ITER 10
 #define PRECISION 1e-7
+#define SQRT2 1.4142135623730951
 
 vec2 project(vec3 v)
 {
-    float phi, lambda, d, k;
+    highp float phi, lambda, theta, d, k;
 
     lambda = atan(v[0], -v[2]);
     phi = atan(v[1], sqrt(v[0] * v[0] + v[2] * v[2]));
 
     k = PI * sin(phi);
+    theta = phi;
     for (int i = 0; i < MAX_ITER; i++) {
         d = 2.0 + 2.0 * cos(2.0 * phi);
         if (abs(d) < PRECISION) break;
@@ -41,7 +43,8 @@ vec2 project(vec3 v)
         if (abs(d) < PRECISION) break;
     }
 
-    return vec2(lambda * cos(phi), sqrt(2.0) * sin(phi)) / u_proj_scaling;
+    return vec2(2 * SQRT2 / PI * lambda * cos(theta),
+                SQRT2 * sin(theta)) / u_proj_scaling;
 }
 
 #endif
