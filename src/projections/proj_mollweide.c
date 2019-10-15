@@ -16,7 +16,7 @@
 static void proj_mollweide_project(
         const projection_t *proj, int flags, const double v[4], double out[4])
 {
-    double phi, lambda, d, k;
+    double phi, lambda, theta, d, k;
     int i;
     const int MAX_ITER = 10;
     const double PRECISION = 1e-7;
@@ -28,16 +28,17 @@ static void proj_mollweide_project(
 
     // We could optimize the iteration by computing 2 * theta instead.
     k = M_PI * sin(phi);
+    theta = phi;
     for (i = 0; i < MAX_ITER; i++) {
-        d = 2 + 2 * cos(2 * phi);
+        d = 2 + 2 * cos(2 * theta);
         if (fabs(d) < PRECISION) break;
-        d = (2 * phi + sin(2 * phi) - k) / d;
-        phi -= d;
+        d = (2 * theta + sin(2 * theta) - k) / d;
+        theta -= d;
         if (fabs(d) < PRECISION) break;
     }
 
-    out[0] = lambda * cos(phi) / proj->scaling[0];
-    out[1] = sqrt(2) * sin(phi) / proj->scaling[1];
+    out[0] = lambda * cos(theta) / proj->scaling[0];
+    out[1] = sqrt(2) * sin(theta) / proj->scaling[1];
     out[2] = 0;
     out[3] = 1;
 }
