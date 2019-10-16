@@ -86,40 +86,8 @@ export default {
       if (c.field.widget === 'number_range') return '' + c.expression[0] + ' - ' + c.expression[1]
       return c.expression
     },
-    refreshObservationGroups: function () {
+    refreshObservationsInSky: function () {
       let that = this
-
-      if (this.$store.state.SMT.status !== 'ready') {
-        return
-      }
-
-      // Cleanup previous query and states
-      this.liveConstraint = undefined
-      // Suppress previous geojson results
-      if (that.geojsonObj) {
-        that.$observingLayer.remove(that.geojsonObj)
-        that.geojsonObj.destroy()
-        that.geojsonObj = undefined
-      }
-      that.livefilterData = []
-
-      // Compute the WHERE clause to be used in following queries
-      let queryConstraintsEdited = this.query.constraints.filter(c => !this.isEdited(c))
-      let constraintsIds = that.query.constraints.map(c => c.field.id)
-
-      // Reset all fields values
-      that.results.fields = that.$smt.fields.map(function (e) { return { 'status': 'loading', 'data': {} } })
-      that.results.implicitConstraints = []
-
-      let q1 = {
-        constraints: this.query.constraints,
-        groupingOptions: [{ operation: 'GROUP_ALL' }],
-        aggregationOptions: [{ operation: 'COUNT', out: 'total' }]
-      }
-      qe.query(q1).then(res => {
-        that.results.summary.count = res[0].total
-      })
-
       let q2 = {
         constraints: this.query.constraints,
         projectOptions: {
@@ -154,6 +122,13 @@ export default {
         that.$observingLayer.add(that.geojsonObj)
         that.refreshGeojsonLiveFilter()
       })
+    },
+    refreshAllFields: function () {
+      let that = this
+
+      // Compute the WHERE clause to be used in following queries
+      let queryConstraintsEdited = this.query.constraints.filter(c => !this.isEdited(c))
+      let constraintsIds = that.query.constraints.map(c => c.field.id)
 
       // And recompute all fields
       for (let i in that.$smt.fields) {
@@ -212,6 +187,42 @@ export default {
           })
         }
       }
+    },
+    refreshObservationGroups: function () {
+      let that = this
+
+      if (this.$store.state.SMT.status !== 'ready') {
+        return
+      }
+
+      // Cleanup previous query and states
+      this.liveConstraint = undefined
+      // Suppress previous geojson results
+      if (that.geojsonObj) {
+        that.$observingLayer.remove(that.geojsonObj)
+        that.geojsonObj.destroy()
+        that.geojsonObj = undefined
+      }
+      that.livefilterData = []
+
+      // Reset all fields values
+      that.results.fields = that.$smt.fields.map(function (e) { return { 'status': 'loading', 'data': {} } })
+      that.results.implicitConstraints = []
+
+      let q1 = {
+        constraints: this.query.constraints,
+        groupingOptions: [{ operation: 'GROUP_ALL' }],
+        aggregationOptions: [{ operation: 'COUNT', out: 'total' }]
+      }
+      that.results.summary.count = 0
+      qe.query(q1).then(res => {
+        that.results.summary.count = res[0].total
+        return res[0].total
+      }).then(_ => {
+        return that.refreshAllFields()
+      }).then(_ => {
+        return that.refreshObservationsInSky()
+      })
     },
     refreshGeojsonLiveFilter: function () {
       let that = this
