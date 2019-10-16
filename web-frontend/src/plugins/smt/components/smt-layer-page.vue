@@ -8,23 +8,23 @@
     <smt-selection-info v-if="selectedFootprintData !== undefined" :selectionData="selectedFootprintData" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <img v-if="$store.state.SMT.status === 'loading'" src="../assets/euclid-logo.png" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
+    <v-card tile>
+      <v-card-text>
+        <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary">{{ results.summary.count }} items</div>
+        <div v-if="$store.state.SMT.status === 'loading'" class="display-1 text--primary">Loading data..</div>
+        <div v-if="$store.state.SMT.status === 'ready' && constraintsToDisplay.length" class="mt-2">Constraints:</div>
+        <v-row no-gutters>
+          <div v-for="(constraint, i) in constraintsToDisplay" :key="i" style="text-align: center;" class="pa-1">
+            <div class="caption white--text">{{ constraint.field.name }}</div>
+            <v-chip small class="white--text" :close="constraint.closable" :disabled="!constraint.closable" color="primary" @click="constraintClicked(i)" @click:close="constraintClosed(i)">
+            <div :style="{ minWidth: constraint.closable ? 60 : 82 + 'px' }">{{ printConstraint(constraint) }}</div>
+            </v-chip>
+          </div>
+        </v-row>
+      </v-card-text>
+    </v-card>
     <div class="scroll-container">
       <v-container class="pa-0" fluid style="height: 100%">
-        <v-card tile>
-          <v-card-text>
-            <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary">{{ results.summary.count }} items</div>
-            <div v-if="$store.state.SMT.status === 'loading'" class="display-1 text--primary">Loading data..</div>
-            <div v-if="$store.state.SMT.status === 'ready'" class="mt-2">Constraints:</div>
-            <v-row no-gutters>
-              <div v-for="(constraint, i) in constraintsToDisplay" :key="i" style="text-align: center;" class="pa-1">
-                <div class="caption white--text">{{ constraint.field.name }}</div>
-                <v-chip small class="white--text" :close="constraint.closable" :disabled="!constraint.closable" color="primary" @click="constraintClicked(i)" @click:close="constraintClosed(i)">
-                <div :style="{ minWidth: constraint.closable ? 60 : 82 + 'px' }">{{ printConstraint(constraint) }}</div>
-                </v-chip>
-              </div>
-            </v-row>
-          </v-card-text>
-        </v-card>
         <v-container>
           <smt-field class="mb-2" v-for="fr in resultsFieldsToDisplay" :key="fr.field.id" :fieldDescription="fr.field" :fieldResults="fr" v-on:add-constraint="addConstraint" v-on:remove-constraint="removeConstraint" v-on:constraint-live-changed="constraintLiveChanged">
           </smt-field>
