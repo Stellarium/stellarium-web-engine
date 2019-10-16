@@ -12,5 +12,9 @@
     "vue-google-charts": "^0.3.2",
     "vue-json-pretty": "^1.6.2",
     "vue-the-mask": "^0.11.1"
+  },
+  "devDependencies": {
+    "promise-worker": "^2.0.1",
+    "worker-loader": "^2.0.0"
   }
 }
