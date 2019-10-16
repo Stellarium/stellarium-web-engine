@@ -4,7 +4,7 @@
 
 import PromiseWorker from 'promise-worker'
 // eslint-disable-next-line
-import Worker from 'worker-loader!./worker?{"inline": "true"}'
+import Worker from 'worker-loader?{"inline":true,"fallback":false}!./worker'
 
 const promiseWorker = new PromiseWorker(new Worker())
 
