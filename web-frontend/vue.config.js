@@ -2,6 +2,9 @@ module.exports = {
   runtimeCompiler: true,
   publicPath: process.env.CDN_ENV ? process.env.CDN_ENV : '/',
   chainWebpack: config => {
+    // workaround taken from webpack/webpack#6642
+    config.output
+      .globalObject('this')
     // Tell that our main wasm file needs to be laoded by file loader
     config.module
       .rule('mainwasm')
