@@ -3,7 +3,7 @@
 // All rights reserved
 
 <template>
-  <div style="height: 100%;">
+  <div style="height: 100%; display: flex; flex-flow: column;">
     <img src="../assets/focse.png" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
     <smt-selection-info v-if="selectedFootprintData !== undefined" :selectionData="selectedFootprintData" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
@@ -399,7 +399,7 @@ export default {
 
 <style>
 .scroll-container {
-  height: calc(100% - 48px);
+  flex: 1 1 auto;
   overflow-y: auto;
   backface-visibility: hidden;
 }
