@@ -146,12 +146,12 @@ export default {
               let closable = that.query.constraints.filter(c => c.field.id === field.id && c.expression === key).length !== 0
               return { name: key, count: tags[key], closable: closable }
             })
-            that.results.fields[i] = {
+            Vue.set(that.results.fields, i, {
               field: field,
               status: 'ok',
               edited: edited,
               data: tags
-            }
+            })
             // Fill the implicit constraints list, i.e. the tags where only one value remains
             if (!constraintsIds.includes(field.id) && res[0].tags && Object.keys(res[0].tags).length === 1) {
               that.results.implicitConstraints.push({ field: field, expression: Object.keys(res[0].tags)[0], closable: false })
