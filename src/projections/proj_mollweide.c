@@ -119,7 +119,7 @@ void proj_mollweide_adaptive_init(projection_t *p, double fovx, double aspect)
     // μ ellipse ratio such that the scale at the equator equals one.
     // http://master.grad.hr/hdgg/kog_stranica/kog15/2Lapaine-KoG15.pdf
     double mu = M_PI * M_PI / 4;
-    double scale = smoothstep(10, 120, fovx * DR2D);
+    double scale = smoothstep(180, 360, fovx * DR2D);
     proj_mollweide_init(p, fovx, aspect);
     p->scaling[1] *= mix(mu / 2, 1, scale);
 }
