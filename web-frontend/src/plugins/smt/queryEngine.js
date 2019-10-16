@@ -63,20 +63,20 @@ export default {
     let that = this
 
     // Insert all data
-    for (let f in jsonData.features) {
-      for (let i in that.fieldsList) {
+    for (let feature of jsonData.features) {
+      for (let i = 0; i < that.fieldsList.length; ++i) {
         const field = that.fieldsList[i]
         let d
         if (field.computed_compiled) {
-          d = field.computed_compiled(jsonData.features[f].properties)
+          d = field.computed_compiled(feature.properties)
           if (isNaN(d)) d = undefined
         } else {
-          d = _.get(jsonData.features[f].properties, field.id, undefined)
+          d = _.get(feature.properties, field.id, undefined)
           if (d !== undefined && field.type === 'date') {
             d = new Date(d).getTime()
           }
         }
-        jsonData.features[f][that.sqlFields[i]] = d
+        feature[that.sqlFields[i]] = d
       }
     }
     await alasql.promise('SELECT * INTO features FROM ?', [jsonData.features])
