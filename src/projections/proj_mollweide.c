@@ -12,6 +12,7 @@
 
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
+#define DR2D (57.29577951308232087679815)
 
 static void proj_mollweide_project(
         const projection_t *proj, int flags, const double v[4], double out[4])
@@ -90,6 +91,17 @@ void proj_mollweide_compute_fov(double fov, double aspect,
     *fovy = fov / aspect;
 }
 
+static inline double smoothstep(double edge0, double edge1, double x)
+{
+    x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return x * x * (3.0 - 2.0 * x);
+}
+
+static inline double mix(double x, double y, double t)
+{
+    return x * (1.0 - t) + y * t;
+}
+
 void proj_mollweide_init(projection_t *p, double fovx, double aspect)
 {
     p->name                      = "mollweide";
@@ -102,3 +114,12 @@ void proj_mollweide_init(projection_t *p, double fovx, double aspect)
     p->flags                     = PROJ_HAS_DISCONTINUITY;
 }
 
+void proj_mollweide_adaptive_init(projection_t *p, double fovx, double aspect)
+{
+    // μ ellipse ratio such that the scale at the equator equals one.
+    // http://master.grad.hr/hdgg/kog_stranica/kog15/2Lapaine-KoG15.pdf
+    double mu = M_PI * M_PI / 4;
+    double scale = smoothstep(10, 120, fovx * DR2D);
+    proj_mollweide_init(p, fovx, aspect);
+    p->scaling[1] *= mix(mu / 2, 1, scale);
+}
