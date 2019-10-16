@@ -136,16 +136,14 @@ export default {
           features: []
         }
 
-        for (let i in res) {
+        for (let feature of res) {
           geojson.features.push({
-            geometry: res[i].geometry,
+            geometry: feature.geometry,
             type: 'Feature',
             properties: {}
           })
-          // This property should normally not be reactive
-          let d = res[i]
-          delete d.geometry
-          that.livefilterData.push(d)
+          delete feature.geometry
+          that.livefilterData.push(feature)
         }
 
         if (geojson.features.length === 0) {
