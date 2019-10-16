@@ -137,6 +137,8 @@ int line_tesselate(void (*func)(void *user, double t, double pos[2]),
             if (i && max_dist &&
                     vec2_dist2((*out)[i - 1], (*out)[i]) > max_dist2)
             {
+                free(*out);
+                *out = NULL;
                 return -1;
             }
         }
