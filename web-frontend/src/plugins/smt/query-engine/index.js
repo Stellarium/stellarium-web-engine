@@ -23,10 +23,10 @@ export default {
     })
   },
 
-  loadAllData: function (jsonData) {
+  loadGeojson: function (url) {
     return promiseWorker.postMessage({
-      type: 'loadAllData',
-      jsonData: jsonData
+      type: 'loadGeojson',
+      url: url
     })
   },
 

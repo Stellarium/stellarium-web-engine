@@ -8,8 +8,8 @@ import registerPromiseWorker from 'promise-worker/register'
 registerPromiseWorker((message) => {
   if (message.type === 'initDB') {
     return qe.initDB(message.fieldsList)
-  } else if (message.type === 'loadAllData') {
-    return qe.loadAllData(message.jsonData)
+  } else if (message.type === 'loadGeojson') {
+    return qe.loadGeojson(message.url)
   } else if (message.type === 'query') {
     return qe.query(message.q)
   }

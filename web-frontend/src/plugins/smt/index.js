@@ -58,18 +58,7 @@ export default {
       if (url.startsWith('/')) {
         url = process.env.BASE_URL + url.substr(1)
       }
-      return fetch(url).then(function (response) {
-        if (!response.ok) {
-          throw response.body
-        }
-        return response.json().then(jsonData => {
-          return qe.loadAllData(jsonData).then(_ => {
-            return jsonData.length
-          })
-        }, err => { throw err })
-      }, err => {
-        throw err.response.body
-      })
+      return qe.loadGeojson(url)
     }
 
     qe.initDB(smtConfig.fields).then(_ => {

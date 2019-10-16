@@ -85,6 +85,22 @@ export default {
     await alasql.promise('SELECT * INTO features FROM ?', [jsonData.features])
   },
 
+  loadGeojson: function (url) {
+    let that = this
+    return fetch(url).then(function (response) {
+      if (!response.ok) {
+        throw response.body
+      }
+      return response.json().then(jsonData => {
+        return that.loadAllData(jsonData).then(_ => {
+          return jsonData.length
+        })
+      }, err => { throw err })
+    }, err => {
+      throw err.response.body
+    })
+  },
+
   // Construct the SQL WHERE clause matching the given constraints
   constraints2SQLWhereClause: function (constraints) {
     let that = this
