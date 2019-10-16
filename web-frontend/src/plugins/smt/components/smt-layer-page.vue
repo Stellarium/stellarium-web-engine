@@ -57,7 +57,8 @@ export default {
     return {
       query: {
         constraints: [],
-        liveConstraint: undefined
+        liveConstraint: undefined,
+        count: 0
       },
       editedConstraint: undefined,
       results: {
@@ -93,18 +94,32 @@ export default {
         projectOptions: {
           id: 1,
           geometry: 1
-        }
+        },
+        qid: this.query.count
       }
       for (let i in qe.fieldsList) {
         q2.projectOptions[qe.fieldsList[i].id] = 1
       }
       qe.query(q2).then(res => {
+        if (res.q.qid !== that.query.count) {
+          // This query is finished by another one was already triggered before
+          // it completes: just ignore these results
+          return
+        }
+        that.livefilterData = []
+        // Suppress previous geojson results
+        if (that.geojsonObj) {
+          that.$observingLayer.remove(that.geojsonObj)
+          that.geojsonObj.destroy()
+          that.geojsonObj = undefined
+        }
+
         let geojson = {
           type: 'FeatureCollection',
           features: []
         }
 
-        for (let feature of res) {
+        for (let feature of res.res) {
           geojson.features.push({
             geometry: feature.geometry,
             type: 'Feature',
@@ -141,7 +156,7 @@ export default {
             aggregationOptions: [{ operation: 'VALUES_AND_COUNT', fieldId: field.id, out: 'tags' }]
           }
           qe.query(q).then(res => {
-            let tags = res[0].tags ? res[0].tags : {}
+            let tags = res.res[0].tags ? res.res[0].tags : {}
             tags = Object.keys(tags).map(function (key) {
               let closable = that.query.constraints.filter(c => c.field.id === field.id && c.expression === key).length !== 0
               return { name: key, count: tags[key], closable: closable }
@@ -153,8 +168,8 @@ export default {
               data: tags
             })
             // Fill the implicit constraints list, i.e. the tags where only one value remains
-            if (!constraintsIds.includes(field.id) && res[0].tags && Object.keys(res[0].tags).length === 1) {
-              that.results.implicitConstraints.push({ field: field, expression: Object.keys(res[0].tags)[0], closable: false })
+            if (!constraintsIds.includes(field.id) && res.res[0].tags && Object.keys(res.res[0].tags).length === 1) {
+              that.results.implicitConstraints.push({ field: field, expression: Object.keys(res.res[0].tags)[0], closable: false })
             }
           }, err => {
             console.log(err)
@@ -170,7 +185,7 @@ export default {
             Vue.set(that.results.fields[i], 'field', field)
             Vue.set(that.results.fields[i], 'status', 'ok')
             Vue.set(that.results.fields[i], 'edited', edited)
-            Vue.set(that.results.fields[i], 'data', res[0].dh)
+            Vue.set(that.results.fields[i], 'data', res.res[0].dh)
           })
         }
         if (field.widget === 'number_range') {
@@ -183,7 +198,7 @@ export default {
             Vue.set(that.results.fields[i], 'field', field)
             Vue.set(that.results.fields[i], 'status', 'ok')
             Vue.set(that.results.fields[i], 'edited', edited)
-            Vue.set(that.results.fields[i], 'data', res[0].nh)
+            Vue.set(that.results.fields[i], 'data', res.res[0].nh)
           })
         }
       }
@@ -197,18 +212,12 @@ export default {
 
       // Cleanup previous query and states
       this.liveConstraint = undefined
-      // Suppress previous geojson results
-      if (that.geojsonObj) {
-        that.$observingLayer.remove(that.geojsonObj)
-        that.geojsonObj.destroy()
-        that.geojsonObj = undefined
-      }
-      that.livefilterData = []
 
       // Reset all fields values
       that.results.fields = that.$smt.fields.map(function (e) { return { 'status': 'loading', 'data': {} } })
       that.results.implicitConstraints = []
 
+      this.query.count++
       let q1 = {
         constraints: this.query.constraints,
         groupingOptions: [{ operation: 'GROUP_ALL' }],
@@ -216,7 +225,7 @@ export default {
       }
       that.results.summary.count = undefined
       qe.query(q1).then(res => {
-        that.results.summary.count = res[0].total
+        that.results.summary.count = res.res[0].total
       })
       that.refreshAllFields()
       that.refreshObservationsInSky()
@@ -381,11 +390,11 @@ export default {
         }
       }
       qe.query(q).then(qres => {
-        if (!qres.length) {
+        if (!qres.res.length) {
           that.selectedFootprintData = undefined
           return
         }
-        that.selectedFootprintData = qres
+        that.selectedFootprintData = qres.res
       })
       return true
     })

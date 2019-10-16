@@ -194,7 +194,7 @@ export default {
               }
               let retd = {}
               retd[agOpt.out] = data
-              return [retd]
+              return { q: q, res: [retd] }
             }
             let start = new Date(res[0].dmin)
             start.setHours(0, 0, 0, 0)
@@ -227,7 +227,7 @@ export default {
               }
               let retd = {}
               retd[agOpt.out] = data
-              return [retd]
+              return { q: q, res: [retd] }
             })
           })
         } else if (agOpt.operation === 'NUMBER_HISTOGRAM') {
@@ -264,7 +264,7 @@ export default {
               }
               let retd = {}
               retd[agOpt.out] = data
-              return [retd]
+              return { q: q, res: [retd] }
             })
           })
         } else {
@@ -274,6 +274,6 @@ export default {
     }
     selectClause += ' FROM features'
     let sqlStatement = selectClause + whereClause
-    return alasql.promise(sqlStatement)
+    return alasql.promise(sqlStatement).then(res => { return { q: q, res: res } })
   }
 }
