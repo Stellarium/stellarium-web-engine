@@ -97,7 +97,7 @@ export default {
         })
       }, err => { throw err })
     }, err => {
-      throw err.response.body
+      throw err
     })
   },
 
