@@ -62,5 +62,8 @@ export default {
   left: 5px;
   top: 53px;
   width: 450px;
+  max-height: calc(100% - 150px);
+  overflow-y: auto;
+  backface-visibility: hidden;
 }
 </style>
