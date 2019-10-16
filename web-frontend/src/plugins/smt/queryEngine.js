@@ -9,6 +9,7 @@ import filtrex from 'filtrex'
 export default {
   fieldsList: undefined,
   sqlFields: undefined,
+  fcounter: 0,
 
   fId2AlaSql: function (fieldId) {
     return fieldId.replace(/\./g, '_')
@@ -49,8 +50,9 @@ export default {
     }
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = that.sqlFields.map(f => f + ' ' + that.fType2AlaSql(f.type)).join(', ')
-    await alasql.promise('CREATE TABLE features (geometry JSON, properties JSON, ' + sqlFieldsAndTypes + ')')
+    await alasql.promise('CREATE TABLE features (id INT, geometry JSON, properties JSON, ' + sqlFieldsAndTypes + ')')
 
+    await alasql.promise('CREATE INDEX idx_id ON features(id)')
     // Create an index on each field
     for (let i in that.sqlFields) {
       let field = that.sqlFields[i]
@@ -78,6 +80,7 @@ export default {
         }
         feature[that.sqlFields[i]] = d
       }
+      feature.id = that.fcounter++
     }
     await alasql.promise('SELECT * INTO features FROM ?', [jsonData.features])
   },
