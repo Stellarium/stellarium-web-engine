@@ -217,12 +217,9 @@ export default {
       that.results.summary.count = 0
       qe.query(q1).then(res => {
         that.results.summary.count = res[0].total
-        return res[0].total
-      }).then(_ => {
-        return that.refreshAllFields()
-      }).then(_ => {
-        return that.refreshObservationsInSky()
       })
+      that.refreshAllFields()
+      that.refreshObservationsInSky()
     },
     refreshGeojsonLiveFilter: function () {
       let that = this
