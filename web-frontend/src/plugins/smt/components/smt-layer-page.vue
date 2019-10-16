@@ -10,7 +10,7 @@
     <img v-if="$store.state.SMT.status === 'loading'" src="../assets/euclid-logo.png" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
     <v-card tile>
       <v-card-text>
-        <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary">{{ results.summary.count }} items</div>
+        <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary"><v-progress-circular v-if="results.summary.count === undefined" size=18 indeterminate></v-progress-circular>{{ results.summary.count }} items</div>
         <div v-if="$store.state.SMT.status === 'loading'" class="display-1 text--primary">Loading data..</div>
         <div v-if="$store.state.SMT.status === 'ready' && constraintsToDisplay.length" class="mt-2">Constraints:</div>
         <v-row no-gutters>
@@ -214,7 +214,7 @@ export default {
         groupingOptions: [{ operation: 'GROUP_ALL' }],
         aggregationOptions: [{ operation: 'COUNT', out: 'total' }]
       }
-      that.results.summary.count = 0
+      that.results.summary.count = undefined
       qe.query(q1).then(res => {
         that.results.summary.count = res[0].total
       })
