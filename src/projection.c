@@ -26,6 +26,7 @@ void proj_stereographic_init(projection_t *p, double fov, double aspect);
 void proj_mercator_init(projection_t *p, double fov, double aspect);
 void proj_hammer_init(projection_t *p, double fov, double aspect);
 void proj_mollweide_init(projection_t *p, double fov, double aspect);
+void proj_mollweide_adaptive_init(projection_t *p, double fovx, double aspect);
 
 void proj_stereographic_compute_fov(double fov, double aspect,
                                     double *fovx, double *fovy);
@@ -40,6 +41,7 @@ void projection_compute_fovs(int type, double fov, double aspect,
         proj_stereographic_compute_fov(fov, aspect, fovx, fovy);
         break;
     case PROJ_MOLLWEIDE:
+    case PROJ_MOLLWEIDE_ADAPTIVE:
         proj_mollweide_compute_fov(fov, aspect, fovx, fovy);
         break;
     default:
@@ -75,6 +77,9 @@ void projection_init(projection_t *p, int type, double fov,
             break;
         case PROJ_MOLLWEIDE:
             proj_mollweide_init(p, fov, aspect);
+            break;
+        case PROJ_MOLLWEIDE_ADAPTIVE:
+            proj_mollweide_adaptive_init(p, fov, aspect);
             break;
         default:
             assert(false);
