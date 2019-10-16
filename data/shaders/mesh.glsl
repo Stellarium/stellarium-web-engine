@@ -36,10 +36,10 @@ vec2 project(vec3 v)
     k = PI * sin(phi);
     theta = phi;
     for (int i = 0; i < MAX_ITER; i++) {
-        d = 2.0 + 2.0 * cos(2.0 * phi);
+        d = 2.0 + 2.0 * cos(2.0 * theta);
         if (abs(d) < PRECISION) break;
-        d = (2.0 * phi + sin(2.0 * phi) - k) / d;
-        phi -= d;
+        d = (2.0 * theta + sin(2.0 * theta) - k) / d;
+        theta -= d;
         if (abs(d) < PRECISION) break;
     }
 
