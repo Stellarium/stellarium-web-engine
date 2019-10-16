@@ -116,6 +116,8 @@ export default {
       } else if (c.operation === 'NUMBER_RANGE') {
         return '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0] +
           ' AND ' + fid + ' <= ' + c.expression[1] + ')'
+      } else if (c.operation === 'IN') {
+        return '( ' + fid + ' IN (' + c.expression.map(e => '' + e).join(', ') + ') )'
       } else {
         throw new Error('Unsupported query operation: ' + c.operation)
       }
