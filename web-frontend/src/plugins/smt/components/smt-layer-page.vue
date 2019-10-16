@@ -8,6 +8,7 @@
     <smt-selection-info v-if="selectedFootprintData !== undefined" :selectionData="selectedFootprintData" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <img v-if="$store.state.SMT.status === 'loading'" src="../assets/euclid-logo.png" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
+    <v-progress-circular v-if="query.refreshObservationsInSkyInProgress" size=160 width=10 indeterminate style="position: absolute; top: calc(50vh - 80px); right: calc(50vw + 200px - 80px); opacity: 0.2"></v-progress-circular>
     <v-card tile>
       <v-card-text>
         <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary"><v-progress-circular v-if="results.summary.count === undefined" size=18 indeterminate></v-progress-circular>{{ results.summary.count }} items</div>
@@ -58,7 +59,8 @@ export default {
       query: {
         constraints: [],
         liveConstraint: undefined,
-        count: 0
+        count: 0,
+        refreshObservationsInSkyInProgress: false
       },
       editedConstraint: undefined,
       results: {
@@ -89,6 +91,7 @@ export default {
     },
     refreshObservationsInSky: function () {
       let that = this
+      that.query.refreshObservationsInSkyInProgress = true
       let q2 = {
         constraints: this.query.constraints,
         projectOptions: {
@@ -105,13 +108,6 @@ export default {
           // This query is finished by another one was already triggered before
           // it completes: just ignore these results
           return
-        }
-        that.livefilterData = []
-        // Suppress previous geojson results
-        if (that.geojsonObj) {
-          that.$observingLayer.remove(that.geojsonObj)
-          that.geojsonObj.destroy()
-          that.geojsonObj = undefined
         }
 
         let geojson = {
@@ -136,6 +132,7 @@ export default {
         that.geojsonObj.setData(geojson)
         that.$observingLayer.add(that.geojsonObj)
         that.refreshGeojsonLiveFilter()
+        that.query.refreshObservationsInSkyInProgress = false
       })
     },
     refreshAllFields: function () {
@@ -212,6 +209,13 @@ export default {
 
       // Cleanup previous query and states
       this.liveConstraint = undefined
+      that.livefilterData = []
+      // Suppress previous geojson results
+      if (that.geojsonObj) {
+        that.$observingLayer.remove(that.geojsonObj)
+        that.geojsonObj.destroy()
+        that.geojsonObj = undefined
+      }
 
       // Reset all fields values
       that.results.fields = that.$smt.fields.map(function (e) { return { 'status': 'loading', 'data': {} } })
