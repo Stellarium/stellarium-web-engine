@@ -19,7 +19,7 @@ export default {
     this.fieldsList = fieldsList
     return promiseWorker.postMessage({
       type: 'initDB',
-      fieldsList: fieldsList
+      fieldsList: JSON.parse(JSON.stringify(fieldsList))
     })
   },
 
@@ -33,7 +33,7 @@ export default {
   query: function (q) {
     return promiseWorker.postMessage({
       type: 'query',
-      q: q
+      q: JSON.parse(JSON.stringify(q))
     })
   }
 }

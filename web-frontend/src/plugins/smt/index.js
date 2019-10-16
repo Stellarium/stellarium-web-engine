@@ -50,6 +50,16 @@ export default {
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
     let smtConfig = require('./smtConfig.json')
+
+    let filtrexOptions = {
+      extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
+    }
+    for (let field of smtConfig.fields) {
+      if (field.formatFunc) {
+        field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
+      }
+    }
+
     Vue.prototype.$smt = smtConfig
 
     app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
@@ -67,14 +77,5 @@ export default {
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
       })
     })
-
-    let filtrexOptions = {
-      extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
-    }
-    for (let field of smtConfig.fields) {
-      if (field.formatFunc) {
-        field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
-      }
-    }
   }
 }
