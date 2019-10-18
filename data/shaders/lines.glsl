@@ -11,6 +11,7 @@ uniform   lowp      vec2    u_win_size;
 uniform   lowp      float   u_line_width;
 uniform   lowp      float   u_line_glow;
 uniform   lowp      vec4    u_color;
+uniform   lowp      float   u_dashes; // Dash effect size (in uv units).
 
 varying   mediump   vec2    v_uv;
 
@@ -37,6 +38,11 @@ void main()
     mediump float glow = (1.0 - dist / 5.0) * u_line_glow;
     // Only use the most visible of both to avoid changing brightness
     gl_FragColor = vec4(u_color.rgb, u_color.a * max(glow, base));
+
+    if (u_dashes != 0.0) {
+        gl_FragColor.a *=
+            smoothstep(0.24, 0.26, abs(mod(v_uv.x / u_dashes, 1.0) - 0.5));
+    }
 }
 
 #endif

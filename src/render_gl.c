@@ -93,7 +93,7 @@ struct item
     union {
         struct {
             float width;
-            float stripes;
+            float dashes;
             float glow;
         } lines;
 
@@ -1048,6 +1048,7 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_line_glow", item->lines.glow);
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_win_size", win_size);
+    gl_update_uniform(shader, "u_dashes", item->lines.dashes);
 
     gl_buf_enable(&item->buf);
     GL(glDrawElements(GL_TRIANGLES, item->indices.nb, GL_UNSIGNED_SHORT, 0));
@@ -1481,6 +1482,7 @@ static void line_glow(renderer_t           *rend_,
     item = get_item(rend, ITEM_LINES_GLOW, mesh->verts_count,
                     mesh->indices_count, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
+    if (item && item->lines.dashes != painter->lines_dashes) item = NULL;
 
 
     if (!item) {
@@ -1490,6 +1492,7 @@ static void line_glow(renderer_t           *rend_,
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
         item->lines.width = painter->lines_width;
         item->lines.glow = painter->lines_glow;
+        item->lines.dashes = painter->lines_dashes;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
