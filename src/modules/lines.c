@@ -108,6 +108,14 @@ static struct {
         .grid       = true,
     },
     {
+        .name       = "Equatorial (of date)",
+        .id         = "equatorial_jnow",
+        .color      = 0x2a81ad80,
+        .frame      = FRAME_CIRS,
+        .format     = 'h',
+        .grid       = true,
+    },
+    {
         .name       = "Meridian",
         .id         = "meridian",
         .color      = 0x339933ff,
