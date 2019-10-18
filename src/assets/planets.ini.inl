@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[25613] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[25633] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -40,6 +40,7 @@ static const unsigned char DATA_planets_ini[25613] __attribute__((aligned(4))) =
     "color = 0.898, 0.94, 1.\n"
     "shadow_brightness = 0.3\n"
     "horizons_id = 399\n"
+    "mass = 5.972e+24 kg\n"
     "\n"
     "[mars]\n"
     "type = Pla\n"
