@@ -784,6 +784,7 @@ void paint_cap(const painter_t *painter, int frame, double cap[4])
     double r;
     double p[4];
 
+    if (cap[3] >= 1.0) return;
     if (!cap_intersects_cap(painter->clip_info[frame].bounding_cap, cap))
         return;
 
