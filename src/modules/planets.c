@@ -226,34 +226,44 @@ static int sun_update(planet_t *planet, const observer_t *obs)
     return 0;
 }
 
-static int moon_update(planet_t *planet, const observer_t *obs)
+/*
+ * Function: moon_icrf_geocentric
+ * Compute moon position at a given time
+ *
+ * Parameters:
+ *   tt     - TT time in MJD.
+ *   pos    - Output position in ICRF frame, geocentric.
+ */
+static void moon_icrf_geocentric_pos(double tt, double pos[3])
 {
-    double i;   // Phase angle.
-    double lambda, beta, dist;
     double rmatecl[3][3], rmatp[3][3];
-    double obl;
-    double pos[3], el;
-    double pv[2][3];
+    double lambda, beta, dist, obl;
     // Get ecliptic position of date.
-    moon_pos(DJM0 + obs->tt, &lambda, &beta, &dist);
+    moon_pos(DJM0 + tt, &lambda, &beta, &dist);
     dist *= 1000.0 / DAU; // km to AU.
     // Convert to equatorial.
-    obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
+    obl = eraObl06(DJM0, tt); // Mean oblicity of ecliptic at J2000.
     eraIr(rmatecl);
     eraRx(-obl, rmatecl);
     eraS2p(lambda, beta, dist, pos);
     eraRxp(rmatecl, pos, pos);
-
     // Precess back to J2000.
-    eraPmat76(DJM0, obs->tt, rmatp);
+    eraPmat76(DJM0, tt, rmatp);
     eraTrxp(rmatp, pos, pos);
+}
 
-    eraCp(pos, pv[0]);
-    // We don't know the speed, set to zero as moon (geocentric) speed is too
-    // small for most effects anyway
-    pv[1][0] = 0;
-    pv[1][1] = 0;
-    pv[1][2] = 0;
+static int moon_update(planet_t *planet, const observer_t *obs)
+{
+    double i;   // Phase angle.
+    double el, dist;
+    double pv[2][3];
+
+    moon_icrf_geocentric_pos(obs->tt, pv[0]);
+    dist = vec3_norm(pv[0]);
+
+    // Compute the speed using the position in one day.
+    moon_icrf_geocentric_pos(obs->tt + 1, pv[1]);
+    vec3_sub(pv[1], pv[0], pv[1]);
 
     // Compute heliocentric position.
     eraPvppv(pv, obs->earth_pvh, planet->pvh);
