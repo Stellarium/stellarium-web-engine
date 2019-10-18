@@ -287,11 +287,19 @@ static void line_animation_effect(double pos[2][4], double k)
     vec3_normalize(p, pos[1]);
 }
 
+// Extends a cap to include a given point, without changing the cap direction.
+static void cap_extends(double cap[4], double p[static 3])
+{
+    double n[3];
+    vec3_normalize(p, n);
+    cap[3] = min(cap[3], vec3_dot(cap, n));
+}
+
 static int constellation_update(constellation_t *con, const observer_t *obs)
 {
     // The position of a constellation is its middle point.
     constellations_t *cons = (constellations_t*)con->obj.parent;
-    double pvo[2][4], pos[4] = {0, 0, 0, 0}, max_cosdist, d;
+    double pvo[2][4], pos[4] = {0, 0, 0, 0};
     int i, err;
     if (con->error) return 0;
     // Optimization: don't update invisible constellation.
@@ -322,14 +330,12 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
 
     // Compute bounding cap
     vec3_copy(pos, con->bounding_cap);
-    max_cosdist = 1.0;
+    con->bounding_cap[3] = 1.0;
 
     for (i = 0; i < con->count; i++) {
         obj_get_pvo(con->stars[i], obs, pvo);
-        d = vec3_dot(con->bounding_cap, pvo[0]);
-        max_cosdist = min(max_cosdist, d);
+        cap_extends(con->bounding_cap, pvo[0]);
     }
-    con->bounding_cap[3] = max_cosdist;
 
 end:
     // Rescale the image matrix once we got the texture if the anchors
