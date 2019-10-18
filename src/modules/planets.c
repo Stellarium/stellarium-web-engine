@@ -946,7 +946,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // so that it works with any body, not just planets.  But this is
     // hard to know in advance what depth range to use.  I leave this
     // disabled until I implement a deferred renderer.
-    if ((0)) planet_render_orbit(planet, 1.0, &painter);
+    if (0 && planet->parent) {
+        planet_render_orbit(planet, 1.0, &painter);
+    }
 
     // Render the Sun halo.
     if (planet->id == SUN) {

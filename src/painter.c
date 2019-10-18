@@ -666,7 +666,7 @@ int paint_orbit(const painter_t *painter, int frame,
     double line[2][4] = {{0}, {1}};
     // We only support ICRF for the moment to make things simpler.
     assert(frame == FRAME_ICRF);
-    paint_line(painter, frame, line, &map, 128, 1);
+    paint_line(painter, frame, line, &map, 128, 0);
     return 0;
 }
 
