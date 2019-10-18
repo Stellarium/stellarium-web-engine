@@ -41,7 +41,7 @@ static void line_get_normal(const double (*line)[2], int size, int i,
 line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width)
 {
     int i, k;
-    double n[2], v[2];
+    double n[2], v[2], length = 0;
     line_mesh_t *mesh = calloc(1, sizeof(*mesh));
 
     assert(size >= 2);
@@ -53,13 +53,14 @@ line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width)
 
     // Compute all vertices.
     for (i = 0; i < size; i++) {
+        if (i > 0) length += vec2_dist(line[i - 1], line[i]);
         line_get_normal(line, size, i, n);
         vec2_addk(line[i], n, -width / 2, v);
         vec2_to_float(v, mesh->verts[i * 2 + 0].pos);
         vec2_addk(line[i], n, width / 2, v);
         vec2_to_float(v, mesh->verts[i * 2 + 1].pos);
-        vec2_set(mesh->verts[i * 2 + 0].uv, 0, -width / 2);
-        vec2_set(mesh->verts[i * 2 + 1].uv, 0, +width / 2);
+        vec2_set(mesh->verts[i * 2 + 0].uv, length, -width / 2);
+        vec2_set(mesh->verts[i * 2 + 1].uv, length, +width / 2);
     }
     // Compute all indices.
     for (i = 0; i < size - 1; i++) {
