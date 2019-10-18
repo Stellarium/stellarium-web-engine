@@ -1629,7 +1629,7 @@ static void mesh(renderer_t          *rend_,
 
 static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
                        const double pos[2], const double size[2],
-                       double angle)
+                       double angle, double dashes)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
@@ -1639,7 +1639,7 @@ static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
     vec2_to_float(size, item->vg.size);
     vec4_to_float(painter->color, item->color);
     item->vg.angle = angle;
-    item->vg.dashes = painter->lines_stripes;
+    item->vg.dashes = dashes;
     item->vg.stroke_width = painter->lines_width;
     DL_APPEND(rend->items, item);
 }

@@ -121,7 +121,8 @@ struct renderer
                        const painter_t  *painter,
                        const double     pos[2],
                        const double     size[2],
-                       double           angle);
+                       double           angle,
+                       double           nb_dashes);
 
     void (*rect_2d)(renderer_t          *rend,
                     const painter_t     *painter,
@@ -189,7 +190,6 @@ struct painter
     double          hard_limit_mag;
 
     double          lines_width;
-    double          lines_stripes;
     double          lines_glow;
     // Point halo / core ratio (zero for no halo).
     double          points_halo;

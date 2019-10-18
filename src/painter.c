@@ -690,7 +690,7 @@ int paint_2d_ellipse(const painter_t *painter_,
                      const double size[2],
                      double label_pos[2])
 {
-    double a2, b2, perimeter, p[3], s[2], a, m[3][3], angle;
+    double a2, b2, perimeter, p[3], s[2], a, m[3][3], angle, nb_dashes = 0;
     painter_t painter = *painter_;
 
     // Apply the pos, size and angle.
@@ -703,17 +703,16 @@ int paint_2d_ellipse(const painter_t *painter_,
     b2 = vec2_norm2(m[1]);
 
     // Estimate the number of dashes.
-    painter.lines_stripes = 0;
     if (dashes) {
         perimeter = 2 * M_PI * sqrt((a2 + b2) / 2);
-        painter.lines_stripes = perimeter / dashes;
+        nb_dashes = perimeter / dashes;
     }
 
     vec2_copy(m[2], p);
     s[0] = sqrt(a2);
     s[1] = sqrt(b2);
     angle = atan2(m[0][1], m[0][0]);
-    REND(painter.rend, ellipse_2d, &painter, p, s, angle);
+    REND(painter.rend, ellipse_2d, &painter, p, s, angle, nb_dashes);
 
     if (label_pos) {
         label_pos[1] = DBL_MAX;

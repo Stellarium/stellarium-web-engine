@@ -387,7 +387,6 @@ static int render_bounds(const constellation_t *con,
     }
     if (!painter.color[3]) return 0;
 
-    painter.lines_stripes = 10.0; // Why not working anymore?
     vec4_set(painter.color, 0.6, 0.3, 0.3, 0.4 * painter.color[3]);
     info = &con->info;
     if (!info) return 0;
