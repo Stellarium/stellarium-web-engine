@@ -39,6 +39,7 @@ typedef struct constellation {
     int         count;
     bool        show;       // Set whether we show this constellation.
     fader_t     lines_in_view;  // When the constellation is actually visible.
+    fader_t     image_in_view;  // When the image is actually visible.
     fader_t     image_loaded_fader;
     obj_t       **stars;
     // Texture and associated anchors and transformation matrix.
@@ -52,7 +53,9 @@ typedef struct constellation {
 
     int         error; // Set if we couldn't parse the stars.
     double last_update; // Last update time in TT
-    double lines_cap[4]; // Bounding cap in ICRS
+
+    double lines_cap[4]; // Bounding cap of the lines (ICRF)
+    double image_cap[4]; // Bounding cap of the image (ICRF)
 
     double pvo[2][4];
 } constellation_t;
@@ -120,6 +123,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     constellation_infos_t *info;
 
     fader_init2(&cons->lines_in_view, false, 1);
+    fader_init2(&cons->image_in_view, false, 1);
     fader_init2(&cons->image_loaded_fader, false, 1);
 
     // For the moment, since we create the constellation from within C
@@ -295,6 +299,24 @@ static void cap_extends(double cap[4], double p[static 3])
     cap[3] = min(cap[3], vec3_dot(cap, n));
 }
 
+// Compute the cap of an image from its 3d mat.
+static void compute_image_cap(const double mat[3][3], double cap[4])
+{
+    int i;
+    double p[4];
+
+    // Center point (UV = [0.5, 0.5])
+    mat3_mul_vec3(mat, VEC(0.5, 0.5, 1.0), p);
+    vec3_normalize(p, cap);
+
+    cap[3] = 1.0;
+    for (i = 0; i < 4; i++) {
+        mat3_mul_vec3(mat, VEC(i / 2, i % 2, 1.0), p);
+        vec3_normalize(p, p);
+        cap_extends(cap, p);
+    }
+}
+
 static int constellation_update(constellation_t *con, const observer_t *obs)
 {
     // The position of a constellation is its middle point.
@@ -344,6 +366,8 @@ end:
         assert(con->mat[2][2]);
         mat3_iscale(con->mat, con->img->w, con->img->h, 1.0);
         con->img_need_rescale = false;
+        // XXX: should be done for non rescaled mat as well!
+        compute_image_cap(con->mat, con->image_cap);
     }
 
     con->show = (cons && cons->show_all) ||
@@ -385,6 +409,9 @@ static int render_bounds(const constellation_t *con,
     uv_map_t map = {
         .map = spherical_project,
     };
+
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
 
     if (!selected) {
         painter.color[3] *= cons->visible.value *
@@ -449,6 +476,50 @@ static bool constellation_lines_in_view(const constellation_t *con,
     return ret;
 }
 
+/*
+ * Function: constellation_image_in_view
+ * Check if the constellation image is visible.
+ *
+ * We add a small margin on the side so that we don't render the
+ * constellations when they are too close to the side of the screen.
+ */
+static bool constellation_image_in_view(const constellation_t *con,
+                                        const painter_t *painter)
+{
+    int i;
+    double pos[4][4], mx, my;
+    bool ret;
+    const double m = 100; // Border margins (windows unit).
+    const observer_t *obs = painter->obs;
+
+    // Check that the image is loaded and the mat computed.
+    if (!con->img || !texture_load(con->img, NULL)) return false;
+    if (!con->mat[2][2] || con->img_need_rescale) return false;
+
+    // First fast tests for the case when the constellation is not in the
+    // screen at all.
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, con->image_cap))
+        return false;
+
+    // Clipping test.
+    for (i = 0; i < 4; i++) {
+        vec4_set(pos[i], i / 2, i % 2, 1, 0);
+        mat3_mul_vec3(con->mat, pos[i], pos[i]);
+        vec3_normalize(pos[i], pos[i]);
+        convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, pos[i], pos[i]);
+        project(painter->proj, 0, pos[i], pos[i]);
+    }
+
+    // Compute margins in NDC.
+    mx = m * painter->pixel_scale / painter->fb_size[0] * 2;
+    my = m * painter->pixel_scale / painter->fb_size[1] * 2;
+    mx = min(mx, 0.5);
+    my = min(my, 0.5);
+
+    ret = !is_clipped(4, pos, mx, my);
+    return ret;
+}
+
 static int render_lines(constellation_t *con, const painter_t *_painter,
                         bool selected)
 {
@@ -460,6 +531,9 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     double mag[2], radius[2], visible;
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
+
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
 
     if (!selected) {
         visible = cons->visible.value *
@@ -517,14 +591,19 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     painter_t painter = *painter_;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
+    // Skip if not ready yet.
+    if (!con->img || !texture_load(con->img, NULL)) return 0;
+    if (!con->mat[2][2] || con->img_need_rescale) return 0;
+
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->image_cap))
+        return 0;
+
     if (!selected) {
         painter.color[3] *= cons->visible.value *
                             cons->images_visible.value *
-                            con->lines_in_view.value;
+                            con->image_in_view.value;
     }
     if (!painter.color[3]) return 0;
-    if (!con->img || !texture_load(con->img, NULL)) return 0;
-    if (!con->mat[2][2]) return 0; // Not computed yet.
 
     con->image_loaded_fader.target = true;
 
@@ -547,6 +626,9 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     double win_pos[2], p[3], label_cap[4], names_color[4];
     const char *label;
     constellations_t *cons = (constellations_t*)con->obj.parent;
+
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
 
     if (!selected) {
         painter.color[3] *= cons->visible.value *
@@ -598,10 +680,10 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
         return 0;
 
     if (!con->show) return 0;
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
-        return 0;
 
     con->lines_in_view.target = constellation_lines_in_view(con, &painter);
+    con->image_in_view.target = constellation_image_in_view(con, &painter);
+
     render_lines(con, &painter, selected);
     render_label(con, &painter, selected);
     render_img(con, &painter, selected);
@@ -702,6 +784,7 @@ static int constellations_update(obj_t *obj, double dt)
     MODULE_ITER(obj, con, "constellation") {
         fader_update(&con->image_loaded_fader, dt);
         fader_update(&con->lines_in_view, dt);
+        fader_update(&con->image_in_view, dt);
     }
     return 0;
 }
