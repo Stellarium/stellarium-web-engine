@@ -42,9 +42,8 @@ typedef struct constellation {
     fader_t     image_in_view;  // When the image is actually visible.
     fader_t     image_loaded_fader;
     obj_t       **stars;
-    // Texture and associated anchors and transformation matrix.
+    // Texture and associated transformation matrix.
     texture_t   *img;
-    anchor_t    anchors[3];
     double      mat[3][3];
     // Set to true if the img matrix need to be rescaled to the image size.
     // This happens if we get image anchors in pixel size before we know
@@ -226,23 +225,25 @@ static int parse_anchors(const char *str, anchor_t anchors[static 3])
 // Called by skyculture after we enable a new culture.
 int constellation_set_image(obj_t *obj, const json_value *args)
 {
-    const char *img, *anchors, *base_path;
+    const char *img, *anchors_str, *base_path;
     constellation_t *cons = (void*)obj;
     char path[1024];
+    anchor_t anchors[3];
+    int err;
 
     if (cons->img) return 0; // Already set.
     img = json_get_attr_s(args, "img");
-    anchors = json_get_attr_s(args, "anchors");
+    anchors_str = json_get_attr_s(args, "anchors");
     base_path = json_get_attr_s(args, "base_path");
 
-    if (parse_anchors(anchors, cons->anchors) != 0) goto error;
+    if (parse_anchors(anchors_str, anchors) != 0) goto error;
     join_path(base_path, img, path, sizeof(path));
     cons->img = texture_from_url(path, TF_LAZY_LOAD);
     if (json_get_attr_b(args, "uv_in_pixel", false))
         cons->img_need_rescale = true;
     assert(cons->img);
     // Compute the image transformation matrix
-    int err = compute_img_mat(cons->anchors, cons->mat);
+    err = compute_img_mat(anchors, cons->mat);
     if (err)
         cons->error = -1;
     cons->image_loaded_fader.target = false;
