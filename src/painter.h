@@ -364,10 +364,13 @@ int paint_text_bounds(const painter_t *painter, const char *text,
  * Render text
  *
  * Parameters:
- *   text   - the text to render.
- *   pos    - text position in window coordinates.
- *   align  - union of <ALIGN_FLAGS>.
- *   size   - text size in window unit.
+ *   text       - The text to render.
+ *   pos        - Text position in window coordinates.
+ *   align      - Union of <ALIGN_FLAGS>.
+ *   effects    - Union of <TEXT_EFFECT_FLAGS>.
+ *   size       - Text size in window unit.
+ *   color      - RGBA color.
+ *   angle      - Angle in radian.
  */
 int paint_text(const painter_t *painter,
                const char *text, const double pos[2], int align,
