@@ -1110,19 +1110,7 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
 static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
-
-    switch (item->type) {
-    case ITEM_FOG:
-        shader = shader_get("fog", NULL, ATTR_NAMES, init_shader);
-        break;
-    case ITEM_ALPHA_TEXTURE:
-        shader = shader_get("blit_tag", NULL, ATTR_NAMES, init_shader);
-        break;
-    default:
-        assert(false);
-        return;
-    }
-
+    shader = shader_get("blit_tag", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -1138,6 +1126,21 @@ static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
 
+    GL(glCullFace(GL_BACK));
+}
+
+static void item_fog_render(renderer_gl_t *rend, const item_t *item)
+{
+    gl_shader_t *shader;
+    shader = shader_get("fog", NULL, ATTR_NAMES, init_shader);
+    GL(glUseProgram(shader->prog));
+    GL(glEnable(GL_CULL_FACE));
+    GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                           GL_ZERO, GL_ONE));
+    GL(glDisable(GL_DEPTH_TEST));
+    draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
 }
 
@@ -1336,12 +1339,14 @@ static void rend_flush(renderer_gl_t *rend)
             item_points_render(rend, item);
             break;
         case ITEM_ALPHA_TEXTURE:
-        case ITEM_FOG:
             item_alpha_texture_render(rend, item);
             break;
         case ITEM_TEXTURE:
         case ITEM_ATMOSPHERE:
             item_texture_render(rend, item);
+            break;
+        case ITEM_FOG:
+            item_fog_render(rend, item);
             break;
         case ITEM_PLANET:
             item_planet_render(rend, item);
