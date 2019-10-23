@@ -31,7 +31,13 @@ void main()
 
 void main()
 {
+#ifndef TEXTURE_LUMINANCE
     gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;
+#else
+    // Luminance mode: the texture only applies to the alpha channel.
+    gl_FragColor = v_color;
+    gl_FragColor.a *= texture2D(u_tex, v_tex_pos).r;
+#endif
 }
 
 #endif

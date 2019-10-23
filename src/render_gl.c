@@ -1110,7 +1110,11 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
 static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
-    shader = shader_get("blit_tag", NULL, ATTR_NAMES, init_shader);
+    shader_define_t defines[] = {
+        {"TEXTURE_LUMINANCE", true},
+        {}
+    };
+    shader = shader_get("blit", defines, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
