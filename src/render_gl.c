@@ -679,7 +679,7 @@ static void quad_wireframe(renderer_t          *rend_,
 
 static void texture2(renderer_gl_t *rend, texture_t *tex,
                      double uv[4][2], double pos[4][2],
-                     const double color_[4], bool swap_indices)
+                     const double color_[4], int flags, bool swap_indices)
 {
     int i, ofs;
     item_t *item;
@@ -693,6 +693,7 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXTURE;
+        item->flags = flags;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
         item->tex = tex;
@@ -739,7 +740,7 @@ static void texture(renderer_t *rend_,
         verts[i][1] = pos[1] + verts[i][1];
         window_to_ndc(rend, verts[i], verts[i]);
     }
-    texture2(rend, tex, uv, verts, color, false);
+    texture2(rend, tex, uv, verts, color, 0, false);
 }
 
 // Render text using a system bakend generated texture.
@@ -817,7 +818,9 @@ static void text_using_texture(renderer_gl_t *rend,
         window_to_ndc(rend, verts[i], verts[i]);
     }
 
-    texture2(rend, tex, uv, verts, color, rend->cull_flipped);
+    texture2(rend, tex, uv, verts, color,
+             (effects & TEXT_BLEND_ADD) ? PAINTER_ADD : 0,
+             rend->cull_flipped);
 }
 
 // Render text using nanovg.
@@ -1073,6 +1076,8 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
+    if (item->text.effects & TEXT_BLEND_ADD)
+        nvgGlobalCompositeBlendFunc(rend->vg, NVG_ONE, NVG_ONE);
     nvgTranslate(rend->vg, item->text.pos[0], item->text.pos[1]);
     nvgRotate(rend->vg, item->text.angle);
     if (item->text.effects & TEXT_BOLD) {
@@ -1162,7 +1167,8 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     gl_shader_t *shader;
 
     shader_define_t defines[] = {
-        {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE},
+        {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE &&
+                              !item->flags & PAINTER_ADD},
         {}
     };
     shader = shader_get("blit", defines, ATTR_NAMES, init_shader);

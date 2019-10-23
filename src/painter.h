@@ -53,6 +53,7 @@ enum {
     TEXT_BOLD      = 1 << 1,
     TEXT_SMALL_CAP = 1 << 2,
     TEXT_DEMI_BOLD = 1 << 3,
+    TEXT_BLEND_ADD = 1 << 4, // Use ADD blending.
 };
 
 enum {
