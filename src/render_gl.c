@@ -1148,22 +1148,47 @@ static void item_fog_render(renderer_gl_t *rend, const item_t *item)
     GL(glCullFace(GL_BACK));
 }
 
-static void item_texture_render(renderer_gl_t *rend, const item_t *item)
+static void item_atmosphere_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     float tm[3];
 
-    switch (item->type) {
-    case ITEM_ATMOSPHERE:
-        shader = shader_get("atmosphere", NULL, ATTR_NAMES, init_shader);
-        break;
-    case ITEM_TEXTURE:
-        shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
-        break;
-    default:
-        assert(false);
-        return;
+    shader = shader_get("atmosphere", NULL, ATTR_NAMES, init_shader);
+    GL(glUseProgram(shader->prog));
+
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
+    GL(glEnable(GL_CULL_FACE));
+    GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
+
+    GL(glEnable(GL_BLEND));
+    if (color_is_white(item->color)) {
+        GL(glBlendFunc(GL_ONE, GL_ONE));
+    } else {
+        GL(glBlendFunc(GL_CONSTANT_COLOR, GL_ONE));
+        GL(glBlendColor(item->color[0] * item->color[3],
+                        item->color[1] * item->color[3],
+                        item->color[2] * item->color[3],
+                        item->color[3]));
     }
+
+    gl_update_uniform(shader, "u_color", item->color);
+    gl_update_uniform(shader, "u_atm_p", item->atm.p);
+    gl_update_uniform(shader, "u_sun", item->atm.sun);
+    // XXX: the tonemapping args should be copied before rendering!
+    tm[0] = core->tonemapper.p;
+    tm[1] = core->tonemapper.lwmax;
+    tm[2] = core->tonemapper.exposure;
+    gl_update_uniform(shader, "u_tm", tm);
+    draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
+    GL(glCullFace(GL_BACK));
+}
+
+static void item_texture_render(renderer_gl_t *rend, const item_t *item)
+{
+    gl_shader_t *shader;
+
+    shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
 
     GL(glUseProgram(shader->prog));
 
@@ -1195,15 +1220,6 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     }
 
     gl_update_uniform(shader, "u_color", item->color);
-    if (item->type == ITEM_ATMOSPHERE) {
-        gl_update_uniform(shader, "u_atm_p", item->atm.p);
-        gl_update_uniform(shader, "u_sun", item->atm.sun);
-        // XXX: the tonemapping args should be copied before rendering!
-        tm[0] = core->tonemapper.p;
-        tm[1] = core->tonemapper.lwmax;
-        tm[2] = core->tonemapper.exposure;
-        gl_update_uniform(shader, "u_tm", tm);
-    }
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
 }
@@ -1346,8 +1362,10 @@ static void rend_flush(renderer_gl_t *rend)
             item_alpha_texture_render(rend, item);
             break;
         case ITEM_TEXTURE:
-        case ITEM_ATMOSPHERE:
             item_texture_render(rend, item);
+            break;
+        case ITEM_ATMOSPHERE:
+            item_atmosphere_render(rend, item);
             break;
         case ITEM_FOG:
             item_fog_render(rend, item);
