@@ -1428,21 +1428,45 @@ static void rend_flush(renderer_gl_t *rend)
 #endif
 
     DL_FOREACH_SAFE(rend->items, item, tmp) {
-        if (item->type == ITEM_LINES) item_lines_render(rend, item);
-        if (item->type == ITEM_LINES_GLOW) item_lines_glow_render(rend, item);
-        if (item->type == ITEM_MESH) item_mesh_render(rend, item);
-        if (item->type == ITEM_POINTS) item_points_render(rend, item);
-        if (item->type == ITEM_ALPHA_TEXTURE || item->type == ITEM_FOG)
+        switch (item->type) {
+        case ITEM_LINES:
+            item_lines_render(rend, item);
+            break;
+        case ITEM_LINES_GLOW:
+            item_lines_glow_render(rend, item);
+            break;
+        case ITEM_MESH:
+            item_mesh_render(rend, item);
+            break;
+        case ITEM_POINTS:
+            item_points_render(rend, item);
+            break;
+        case ITEM_ALPHA_TEXTURE:
+        case ITEM_FOG:
             item_alpha_texture_render(rend, item);
-        if (item->type == ITEM_TEXTURE || item->type == ITEM_ATMOSPHERE)
+            break;
+        case ITEM_TEXTURE:
+        case ITEM_ATMOSPHERE:
             item_texture_render(rend, item);
-        if (item->type == ITEM_PLANET) item_planet_render(rend, item);
-        if (item->type == ITEM_VG_ELLIPSE) item_vg_render(rend, item);
-        if (item->type == ITEM_VG_RECT) item_vg_render(rend, item);
-        if (item->type == ITEM_VG_LINE) item_vg_render(rend, item);
-        if (item->type == ITEM_TEXT) item_text_render(rend, item);
-        if (item->type == ITEM_QUAD_WIREFRAME)
+            break;
+        case ITEM_PLANET:
+            item_planet_render(rend, item);
+            break;
+        case ITEM_VG_ELLIPSE:
+        case ITEM_VG_RECT:
+        case ITEM_VG_LINE:
+            item_vg_render(rend, item);
+            break;
+        case ITEM_TEXT:
+            item_text_render(rend, item);
+            break;
+        case ITEM_QUAD_WIREFRAME:
             item_quad_wireframe_render(rend, item);
+            break;
+        default:
+            assert(false);
+        }
+
         DL_DELETE(rend->items, item);
         texture_release(item->tex);
         if (item->type == ITEM_PLANET)
