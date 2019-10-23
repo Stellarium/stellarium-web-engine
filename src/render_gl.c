@@ -65,7 +65,6 @@ enum {
     ITEM_LINES = 1,
     ITEM_MESH,
     ITEM_POINTS,
-    ITEM_ALPHA_TEXTURE,
     ITEM_TEXTURE,
     ITEM_ATMOSPHERE,
     ITEM_FOG,
@@ -688,12 +687,12 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     float color[4];
 
     vec4_to_float(color_, color);
-    item = get_item(rend, ITEM_ALPHA_TEXTURE, 4, 6, tex);
+    item = get_item(rend, ITEM_TEXTURE, 4, 6, tex);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_ALPHA_TEXTURE;
+        item->type = ITEM_TEXTURE;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
         item->tex = tex;
@@ -1107,32 +1106,6 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     nvgEndFrame(rend->vg);
 }
 
-static void item_alpha_texture_render(renderer_gl_t *rend, const item_t *item)
-{
-    gl_shader_t *shader;
-    shader_define_t defines[] = {
-        {"TEXTURE_LUMINANCE", true},
-        {}
-    };
-    shader = shader_get("blit", defines, ATTR_NAMES, init_shader);
-    GL(glUseProgram(shader->prog));
-
-    GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
-    GL(glEnable(GL_CULL_FACE));
-    GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
-
-    GL(glEnable(GL_BLEND));
-    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                           GL_ZERO, GL_ONE));
-    GL(glDisable(GL_DEPTH_TEST));
-    gl_update_uniform(shader, "u_color", item->color);
-
-    draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
-
-    GL(glCullFace(GL_BACK));
-}
-
 static void item_fog_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
@@ -1188,7 +1161,11 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
 
-    shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
+    shader_define_t defines[] = {
+        {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE},
+        {}
+    };
+    shader = shader_get("blit", defines, ATTR_NAMES, init_shader);
 
     GL(glUseProgram(shader->prog));
 
@@ -1357,9 +1334,6 @@ static void rend_flush(renderer_gl_t *rend)
             break;
         case ITEM_POINTS:
             item_points_render(rend, item);
-            break;
-        case ITEM_ALPHA_TEXTURE:
-            item_alpha_texture_render(rend, item);
             break;
         case ITEM_TEXTURE:
             item_texture_render(rend, item);
