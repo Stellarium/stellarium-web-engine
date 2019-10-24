@@ -430,7 +430,16 @@ static void render_recursion(
     for (dir = 0; dir < 2; dir++) {
         if (!line->grid && dir == 1) break;
         if (done_mask & (1 << dir)) continue; // Marked as done already.
+
+        // Skip if are not aligned with the target steps.
         if (splits[dir] != steps[dir]->n / (dir ? 2 : 1)) continue;
+
+        // Limit to 4 meridian lines around the poles.
+        if (    line->grid && dir == 0 &&
+                (pos[0] % (splits[0] / 4) != 0) &&
+                (pos[1] == 0 || pos[1] == splits[1] - 1))
+            continue;
+
         done_mask |= (1 << dir);
         paint_lines(painter, line->frame, 2, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
