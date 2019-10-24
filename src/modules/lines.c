@@ -366,21 +366,28 @@ static void render_label(const double p[2], const double u[2],
 /*
  * Render a grid/line, by splitting the sphere into parts until we reach
  * the resolution of the grid.
+ *
+ * Parameters:
+ *   splits     - Represents the size of the quad in U and V as number of
+ *                splits from the full 360° circle.
+ *   pos        - Position of the quad as split index in U and V.
+ *   steps      - The target steps for the line rendering.
  */
 static void render_recursion(
         const line_t *line, const painter_t *painter,
         const double rot[3][3],
         int level,
         const int splits[2],
-        const double mat[3][3],
+        const int pos[2],
         const step_t *steps[2],
         int done_mask)
 {
     int i, j, dir;
-    int split_az, split_al, new_splits[2];
-    double new_mat[3][3], p[4], lines[4][4] = {}, u[2], v[2];
-    double pos[4][4], pos_clip[4][4];
+    int split_az, split_al, new_splits[2], new_pos[2];
+    double p[4], lines[4][4] = {}, u[2], v[2];
+    double pos_view[4][4], pos_clip[4][4];
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
+    double mat[3][3] = MAT3_IDENTITY;
     uv_map_t map = {
         .map   = spherical_project,
         .user  = rot,
@@ -388,19 +395,23 @@ static void render_recursion(
 
     if (done_mask == 3) return; // Already done.
 
+    // Compute transformation matrix from full sphere uv to the quad uv.
+    mat3_iscale(mat, 1. / splits[0], 1. / splits[1], 0);
+    mat3_itranslate(mat, pos[0], pos[1]);
+
     // Compute quad corners in clipping space.
     for (i = 0; i < 4; i++) {
         mat3_mul_vec2(mat, uv[i], p);
         spherical_project(&map, p, p);
         convert_framev4(painter->obs, line->frame, FRAME_VIEW, p, p);
-        vec4_copy(p, pos[i]);
+        vec4_copy(p, pos_view[i]);
         project(painter->proj, 0, p, p);
         vec4_copy(p, pos_clip[i]);
     }
     // If the quad is clipped we stop the recursion.
     // We only start to test after a certain level to prevent distortion
     // error with big quads at low levels.
-    if (level > 2 && is_clipped(pos, pos_clip))
+    if (level > 2 && is_clipped(pos_view, pos_clip))
         return;
 
     // Nothing to render yet.
@@ -423,7 +434,8 @@ static void render_recursion(
         done_mask |= (1 << dir);
         paint_lines(painter, line->frame, 2, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
-        if (check_borders(pos[0], pos[2 - dir], painter->proj, p, u, v)) {
+        if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
+                          p, u, v)) {
             render_label(p, u, v, uv[0], 1 - dir, line,
                          splits[dir] * (dir + 1), painter);
         }
@@ -441,10 +453,9 @@ keep_going:
 
     for (i = 0; i < split_al; i++)
     for (j = 0; j < split_az; j++) {
-        mat3_copy(mat, new_mat);
-        mat3_iscale(new_mat, 1. / split_az, 1. / split_al, 1.0);
-        mat3_itranslate(new_mat, j, i);
-        render_recursion(line, painter, rot, level + 1, new_splits, new_mat,
+        new_pos[0] = pos[0] * split_az + j;
+        new_pos[1] = pos[1] * split_al + i;
+        render_recursion(line, painter, rot, level + 1, new_splits, new_pos,
                          steps, done_mask);
     }
 }
@@ -546,7 +557,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
     double rot[3][3] = MAT3_IDENTITY;
     const step_t *steps[2];
     int splits[2] = {1, 1};
-    double mat[3][3];
+    int pos[2] = {0, 0};
     painter_t painter = *painter_;
 
     // XXX: probably need to use enum id for the different lines/grids.
@@ -575,8 +586,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
         steps[0] = &STEPS_DEG[1]; // 180°
         steps[1] = &STEPS_DEG[4]; //  20°: enough to avoid clipping errors.
     }
-    mat3_set_identity(mat);
-    render_recursion(line, &painter, rot, 0, splits, mat, steps, 0);
+    render_recursion(line, &painter, rot, 0, splits, pos, steps, 0);
     return 0;
 }
 
