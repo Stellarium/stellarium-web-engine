@@ -495,33 +495,44 @@ static double get_theta_range(const painter_t *painter, int frame)
     return theta_max - theta_min;
 }
 
+// Get the step with the closest value to a given angle.
+static const step_t *steps_lookup(const step_t *steps, int size, double a)
+{
+    int i;
 
-// XXX: make it better.
-static void get_steps(double fov, char type, int frame,
+    a = 2 * M_PI / a; // Put angle in splits.
+    for (i = 0; i < size - 1; i++) {
+        if (steps[i].n >= a)
+            break;
+    }
+
+    if ((i > 0) && fabs(a - steps[i - 1].n) < fabs(a - steps[i].n))
+        return &steps[i - 1];
+
+    return &steps[i];
+}
+
+
+static void get_steps(char type, int frame,
                       const painter_t *painter,
                       const step_t *steps[2])
 {
-    double a = fov / 8;
-    int i;
-    double theta_range = get_theta_range(painter, frame);
-    if (type == 'd') {
-        i = (int)round(1.5 * log(2 * M_PI / a));
-        i = min(i, ARRAY_SIZE(STEPS_DEG) - 1);
-        if (STEPS_DEG[i].n % 4) i++;
-        steps[0] = &STEPS_DEG[i];
-        steps[1] = &STEPS_DEG[i];
-    } else {
-        i = (int)round(1.5 * log(2 * M_PI / a));
-        i = min(i, ARRAY_SIZE(STEPS_DEG) - 1);
-        if (STEPS_DEG[i].n % 4) i++;
-        steps[1] = &STEPS_DEG[i];
-        i = (int)round(1.5 * log(2 * M_PI / a));
-        i = min(i, ARRAY_SIZE(STEPS_HOUR) - 1);
-        steps[0] = &STEPS_HOUR[i];
-    }
-    // Make sure that we don't render more than 15 azimuthal lines.
-    while (steps[0]->n > 24 && theta_range / (M_PI * 2 / steps[0]->n) > 15)
-        steps[0]--;
+    double a;   // Target angle.
+    double theta;
+
+    theta = get_theta_range(painter, frame);
+
+    // Try to get abount 8 lines in each directions.
+    a = theta / 8;
+
+    // Max size between lines of 15°.
+    a = min(a, 15 * DD2R);
+
+    if (type == 'd')
+        steps[0] = steps_lookup(STEPS_DEG, ARRAY_SIZE(STEPS_DEG), a);
+    else
+        steps[0] = steps_lookup(STEPS_HOUR, ARRAY_SIZE(STEPS_HOUR), a);
+    steps[1] = steps_lookup(STEPS_DEG, ARRAY_SIZE(STEPS_DEG), a);
 }
 
 /* Mapping function that render the antimeridian line twice.
@@ -589,7 +600,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
 
     // Compute the number of divisions of the grid.
     if (line->grid) {
-        get_steps(core->fov, line->format, line->frame, &painter, steps);
+        get_steps(line->format, line->frame, &painter, steps);
     } else {
         // Lines are the same as a grid with a split of 180° in one direction.
         steps[0] = &STEPS_DEG[1]; // 180°
