@@ -430,16 +430,7 @@ static void render_recursion(
     for (dir = 0; dir < 2; dir++) {
         if (!line->grid && dir == 1) break;
         if (done_mask & (1 << dir)) continue; // Marked as done already.
-
-        // Skip if are not aligned with the target steps.
         if (splits[dir] != steps[dir]->n / (dir ? 2 : 1)) continue;
-
-        // Limit to 4 meridian lines around the poles.
-        if (    line->grid && dir == 0 &&
-                (pos[0] % (splits[0] / 4) != 0) &&
-                (pos[1] == 0 || pos[1] == splits[1] - 1))
-            continue;
-
         done_mask |= (1 << dir);
         paint_lines(painter, line->frame, 2, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
@@ -469,6 +460,33 @@ keep_going:
     }
 }
 
+// Compute an estimation of the visible range of azimuthal angle.  If we look
+// at the pole it can go up to 360°.
+static double get_theta_range(const painter_t *painter, int frame)
+{
+    double p[4] = {0, 0, 0, 0};
+    double theta, phi;
+    double theta_max = -DBL_MAX, theta_min = DBL_MAX;
+    int i;
+
+    /*
+     * This works by unprojection the four screen corners into the grid
+     * frame and testing the maximum and minimum distance to the meridian
+     * for each of them.
+     */
+    for (i = 0; i < 4; i++) {
+        p[0] = 2 * ((i % 2) - 0.5);
+        p[1] = 2 * ((i / 2) - 0.5);
+        project(painter->proj, PROJ_BACKWARD, p, p);
+        convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
+        eraC2s(p, &theta, &phi);
+        theta_max = max(theta_max, theta);
+        theta_min = min(theta_min, theta);
+    }
+    return theta_max - theta_min;
+}
+
+
 // XXX: make it better.
 static void get_steps(double fov, char type, int frame,
                       const painter_t *painter,
@@ -476,6 +494,7 @@ static void get_steps(double fov, char type, int frame,
 {
     double a = fov / 8;
     int i;
+    double theta_range = get_theta_range(painter, frame);
     if (type == 'd') {
         i = (int)round(1.5 * log(2 * M_PI / a));
         i = min(i, ARRAY_SIZE(STEPS_DEG) - 1);
@@ -491,6 +510,9 @@ static void get_steps(double fov, char type, int frame,
         i = min(i, ARRAY_SIZE(STEPS_HOUR) - 1);
         steps[0] = &STEPS_HOUR[i];
     }
+    // Make sure that we don't render more than 15 azimuthal lines.
+    while (steps[0]->n > 24 && theta_range / (M_PI * 2 / steps[0]->n) > 15)
+        steps[0]--;
 }
 
 /* Mapping function that render the antimeridian line twice.
