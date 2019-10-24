@@ -125,9 +125,13 @@ float skybrightness_get_luminance(
         (FS * sb->C4 + 440000.f * (1.f - sb->C4));
 
     // Twilight brightness
-    float b_twilight = fast_exp10f(sb->b_twilight_term + 0.063661977f *
-        fast_acosf(cos_zenith_dist) / (sb->K > 0.05f ? sb->K : 0.05f)) *
-        (1.7453293f / sun_dist) * (1.f - bKX);
+    float b_twilight_k = sb->b_twilight_term + 0.063661977f *
+        fast_acosf(cos_zenith_dist) / (sb->K > 0.05f ? sb->K : 0.05f);
+    float b_twilight = 0;
+    if (b_twilight_k > -32) { // Prevent underflow.
+        b_twilight = fast_exp10f(b_twilight_k) *
+            (1.7453293f / sun_dist) * (1.f - bKX);
+    }
 
     // Total sky brightness
     float b_total = ((b_twilight < b_daylight) ? b_twilight : b_daylight);
@@ -142,8 +146,7 @@ float skybrightness_get_luminance(
     b_total += b_moon;
 
     // Dark night sky brightness, don't compute if less than 1% daylight
-    if ((sb->b_night_term * bKX) / b_total > 0.01f)
-    {
+    if (b_total && (sb->b_night_term * bKX) / b_total > 0.01f) {
         b_total += (0.4f + 0.6f / sqrtf(0.04f + 0.96f *
                    cos_zenith_dist * cos_zenith_dist)) * sb->b_night_term * bKX;
     }
