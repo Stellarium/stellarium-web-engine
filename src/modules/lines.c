@@ -526,6 +526,9 @@ static void render_recursion(
     for (dir = 0; dir < 2; dir++) {
         if (!line->grid && dir == 1) break;
 
+        // Don't render last latitude, zero diameter circle at the north pole.
+        if (dir == 1 && pos[1] == splits[1] - 1) continue;
+
         // Limit to 4 meridian lines around the poles.
         if (    line->grid && dir == 0 &&
                 (pos[0] % (splits[0] / 4) != 0) &&
