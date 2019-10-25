@@ -469,30 +469,52 @@ keep_going:
     }
 }
 
-// Compute an estimation of the visible range of azimuthal angle.  If we look
-// at the pole it can go up to 360°.
-static double get_theta_range(const painter_t *painter, int frame)
+/*
+ * Compute an estimation of the visible range of azimuthal and altitude angles.
+ *
+ * Note: this is not really azimuth and altitude, but the phi and theta range
+ * in the given frame.  I call it azalt here to make it easier to think about
+ * it in this frame.
+ *
+ * This returns an estimation of the max angular separation of two points on
+ * the screen in both direction.  So for example at the pole the azfov should
+ * go up to 260°.
+ */
+static void get_azalt_fov(const painter_t *painter, int frame,
+                          double *azfov, double *altfov)
 {
     double p[4] = {0, 0, 0, 0};
-    double theta, phi;
-    double theta_max = -DBL_MAX, theta_min = DBL_MAX;
+    double theta0, phi0, theta, phi;
+    double theta_max = 0, theta_min = 0;
+    double phi_max = 0, phi_min = 0;
     int i;
 
     /*
      * This works by unprojection the four screen corners into the grid
-     * frame and testing the maximum and minimum distance to the meridian
-     * for each of them.
+     * frame and testing the maximum and minimum distance to the central
+     * point for each of them.
      */
+    project(painter->proj, PROJ_BACKWARD, p, p);
+    convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
+    eraC2s(p, &theta0, &phi0);
+
     for (i = 0; i < 4; i++) {
         p[0] = 2 * ((i % 2) - 0.5);
         p[1] = 2 * ((i / 2) - 0.5);
         project(painter->proj, PROJ_BACKWARD, p, p);
         convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
         eraC2s(p, &theta, &phi);
+
+        theta = eraAnpm(theta - theta0);
         theta_max = max(theta_max, theta);
         theta_min = min(theta_min, theta);
+
+        phi = eraAnpm(phi - phi0);
+        phi_max = max(phi_max, phi);
+        phi_min = min(phi_min, phi);
     }
-    return theta_max - theta_min;
+    *azfov = theta_max - theta_min;
+    *altfov = phi_max - phi_min;
 }
 
 // Get the step with the closest value to a given angle.
@@ -518,12 +540,12 @@ static void get_steps(char type, int frame,
                       const step_t *steps[2])
 {
     double a;   // Target angle.
-    double theta;
+    double azfov, altfov;
 
-    theta = get_theta_range(painter, frame);
+    get_azalt_fov(painter, frame, &azfov, &altfov);
 
     // Try to get abount 8 lines in each directions.
-    a = theta / 8;
+    a = azfov / 8;
 
     // Max size between lines of 15°.
     a = min(a, 15 * DD2R);
