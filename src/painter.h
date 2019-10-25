@@ -324,6 +324,10 @@ int paint_tile_contour(const painter_t *painter, int frame,
  * Function: paint_lines
  * Render 3d lines.
  *
+ * Warning: using the mapping function, it is in theory possible to render
+ * a very large line with any shape in a single call.  However the current
+ * implementation doesn't work well in that case.
+ *
  * Parameters:
  *   painter    - A painter instance.
  *   frame      - Frame of the inputs.
