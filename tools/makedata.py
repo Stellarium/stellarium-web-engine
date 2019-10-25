@@ -103,16 +103,16 @@ def make_symbols():
     dst = 'data/symbols.png'
     if check_uptodate(['symbols/{}'.format(x) for x in files], dst):
         return
-    ret_img = PIL.Image.new('L', (1024, 1024))
+    ret_img = PIL.Image.new('L', (128, 128))
     for i, src in enumerate(files):
         path = 'symbols/{}'.format(src)
         subprocess.check_output([
             'inkscape', path, '--export-area-page',
-            '--export-width=128', '--export-height=128',
+            '--export-width=32', '--export-height=32',
             '--export-png=/tmp/symbols.png'])
         img = PIL.Image.open('/tmp/symbols.png')
         img = img.split()[3]
-        ret_img.paste(img, (128 * (i % 8), 128 * (i / 8)))
+        ret_img.paste(img, (32 * (i % 4), 32 * (i / 4)))
     ret_img.save(dst)
 
 

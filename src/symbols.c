@@ -150,8 +150,8 @@ int symbols_paint(const painter_t *painter_, int symbol,
 
     // Png symbol.
     for (i = 0; i < 4; i++) {
-        uv[i][0] = (((symbol - 1) % 8) + ((3 - i) % 2)) / 8.0;
-        uv[i][1] = (((symbol - 1) / 8) + (i / 2)) / 8.0;
+        uv[i][0] = (((symbol - 1) % 4) + ((3 - i) % 2)) / 4.0;
+        uv[i][1] = (((symbol - 1) / 4) + (i / 2)) / 4.0;
     }
     return paint_texture(&painter, get_texture(), uv, pos, size[0],
                          color, angle);
