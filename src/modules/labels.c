@@ -76,7 +76,13 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
     double pos[2];
     vec2_copy(label->win_pos, pos);
     border = label->radius;
-    if (label->align & LABEL_AROUND) border /= sqrt(2.0);
+
+    // Adjust the border if we are on a diagonal.
+    if (    (align & (ALIGN_LEFT | ALIGN_RIGHT)) &&
+            (align & (ALIGN_TOP | ALIGN_BOTTOM))) {
+        border /= sqrt(2.0);
+    }
+
     if (align & ALIGN_LEFT)    pos[0] += border;
     if (align & ALIGN_RIGHT)   pos[0] -= border;
     if (align & ALIGN_BOTTOM)  pos[1] -= border;
@@ -100,7 +106,7 @@ static bool label_get_possible_bounds(const painter_t *painter,
         return true;
     }
     if (label->align & LABEL_AROUND) {
-        if (i >= 4) return false;
+        if (i >= ARRAY_SIZE(anchors_around)) return false;
         label_get_bounds(painter, label, anchors_around[i], label->effects,
                          bounds);
     }
