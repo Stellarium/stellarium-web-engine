@@ -192,7 +192,8 @@ struct painter
 
     double          lines_width;
     double          lines_glow;
-    double          lines_dashes; // Dashes size in pixel.
+    double          lines_dash_length;  // Dash length in pixel.
+    double          lines_dash_ratio;   // 0.5 for equal dash / space.
 
     // Point halo / core ratio (zero for no halo).
     double          points_halo;

@@ -92,8 +92,9 @@ struct item
     union {
         struct {
             float width;
-            float dashes;
             float glow;
+            float dash_length;
+            float dash_ratio;
         } lines;
 
         struct {
@@ -1010,8 +1011,11 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     gl_shader_t *shader;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
-
-    shader = shader_get("lines", NULL, ATTR_NAMES, init_shader);
+    shader_define_t defines[] = {
+        {"DASH", item->lines.dash_length && (item->lines.dash_ratio < 1.0)},
+        {}
+    };
+    shader = shader_get("lines", defines, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glDisable(GL_DEPTH_TEST));
@@ -1022,7 +1026,9 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_line_glow", item->lines.glow);
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_win_size", win_size);
-    gl_update_uniform(shader, "u_dashes", item->lines.dashes);
+
+    gl_update_uniform(shader, "u_dash_length", item->lines.dash_length);
+    gl_update_uniform(shader, "u_dash_ratio", item->lines.dash_ratio);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
 }
@@ -1407,7 +1413,10 @@ static void line_glow(renderer_t           *rend_,
     item = get_item(rend, ITEM_LINES_GLOW, mesh->verts_count,
                     mesh->indices_count, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
-    if (item && item->lines.dashes != painter->lines_dashes) item = NULL;
+    if (item && item->lines.dash_length != painter->lines_dash_length)
+        item = NULL;
+    if (item && item->lines.dash_ratio != painter->lines_dash_ratio)
+        item = NULL;
 
 
     if (!item) {
@@ -1417,7 +1426,8 @@ static void line_glow(renderer_t           *rend_,
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
         item->lines.width = painter->lines_width;
         item->lines.glow = painter->lines_glow;
-        item->lines.dashes = painter->lines_dashes;
+        item->lines.dash_length = painter->lines_dash_length;
+        item->lines.dash_ratio = painter->lines_dash_ratio;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }

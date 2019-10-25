@@ -11,7 +11,13 @@ uniform   lowp      vec2    u_win_size;
 uniform   lowp      float   u_line_width;
 uniform   lowp      float   u_line_glow;
 uniform   lowp      vec4    u_color;
-uniform   lowp      float   u_dashes; // Dash effect size (in uv units).
+
+#ifdef DASH
+// Dash effect defined as a total length (dash and space, in uv unit),
+// and the ratio of the dash dot to the length.
+uniform   lowp      float   u_dash_length;
+uniform   lowp      float   u_dash_ratio;
+#endif
 
 varying   mediump   vec2    v_uv;
 
@@ -39,10 +45,13 @@ void main()
     // Only use the most visible of both to avoid changing brightness
     gl_FragColor = vec4(u_color.rgb, u_color.a * max(glow, base));
 
-    if (u_dashes != 0.0) {
-        gl_FragColor.a *=
-            smoothstep(0.24, 0.26, abs(mod(v_uv.x / u_dashes, 1.0) - 0.5));
-    }
+#ifdef DASH
+    lowp float len = u_dash_length;
+    lowp float r = u_dash_ratio;
+    gl_FragColor.a *= smoothstep(len / 2.0 * r + 0.01,
+                                 len / 2.0 * r - 0.01,
+                                 abs(mod(v_uv.x, len) - len / 2.0));
+#endif
 }
 
 #endif

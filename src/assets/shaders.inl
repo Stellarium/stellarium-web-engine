@@ -208,7 +208,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_lines_glsl[1430] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_lines_glsl[1713] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -222,7 +222,13 @@ static const unsigned char DATA_shaders_lines_glsl[1430] __attribute__((aligned(
     "uniform   lowp      float   u_line_width;\n"
     "uniform   lowp      float   u_line_glow;\n"
     "uniform   lowp      vec4    u_color;\n"
-    "uniform   lowp      float   u_dashes; // Dash effect size (in uv units).\n"
+    "\n"
+    "#ifdef DASH\n"
+    "// Dash effect defined as a total length (dash and space, in uv unit),\n"
+    "// and the ratio of the dash dot to the length.\n"
+    "uniform   lowp      float   u_dash_length;\n"
+    "uniform   lowp      float   u_dash_ratio;\n"
+    "#endif\n"
     "\n"
     "varying   mediump   vec2    v_uv;\n"
     "\n"
@@ -250,10 +256,13 @@ static const unsigned char DATA_shaders_lines_glsl[1430] __attribute__((aligned(
     "    // Only use the most visible of both to avoid changing brightness\n"
     "    gl_FragColor = vec4(u_color.rgb, u_color.a * max(glow, base));\n"
     "\n"
-    "    if (u_dashes != 0.0) {\n"
-    "        gl_FragColor.a *=\n"
-    "            smoothstep(0.24, 0.26, abs(mod(v_uv.x / u_dashes, 1.0) - 0.5));\n"
-    "    }\n"
+    "#ifdef DASH\n"
+    "    lowp float len = u_dash_length;\n"
+    "    lowp float r = u_dash_ratio;\n"
+    "    gl_FragColor.a *= smoothstep(len / 2.0 * r + 0.01,\n"
+    "                                 len / 2.0 * r - 0.01,\n"
+    "                                 abs(mod(v_uv.x, len) - len / 2.0));\n"
+    "#endif\n"
     "}\n"
     "\n"
     "#endif\n"
