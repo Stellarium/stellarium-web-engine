@@ -540,9 +540,7 @@ static void render_recursion(
                          splits[dir] * (dir + 1), painter);
         }
     }
-
-    // Nothing left to render.
-    if (level >= steps[0]->level && level >= steps[1]->level) return;
+    return;
 
 keep_going:
     // Split this quad into smaller pieces.
