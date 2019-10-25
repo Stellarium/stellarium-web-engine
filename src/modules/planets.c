@@ -940,7 +940,11 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                            hips_alpha, &painter);
     }
 
-    if (selected || vmag <= painter.hints_limit_mag - 1.0)
+    // Note: I force rendering the label if the hips is visible for the
+    // moment because the vmag is not a good measure for planets: if the
+    // planet is big on the screen, we should see the label, no matter the
+    // vmag.
+    if (selected || vmag <= painter.hints_limit_mag - 1.0 || hips_alpha > 0)
         planet_render_label(planet, &painter, r_scale, point_size);
 
     // For the moment we never render the orbits!
