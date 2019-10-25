@@ -28,8 +28,7 @@ struct label
     int     align;        // Union of <ALIGN_FLAGS>.
     int     effects;      // Union of <TEXT_EFFECT_FLAGS>.
     fader_t fader;        // Use for auto fade-in/out of labels.
-    bool    skipped;      // Set when the label cannot be rendered.
-
+    bool    active;       // Set as long as the label is rendered.
     double  priority;     // Priority used in case of positioning conflicts.
                           // Higher value means higher priority.
     double  bounds[4];
@@ -52,6 +51,7 @@ void labels_reset(void)
             free(label->text);
             free(label);
         } else {
+            label->active = false;
             label->fader.target = false;
         }
     }
@@ -91,48 +91,40 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
                       label->size, bounds);
 }
 
-static bool label_get_possible_bounds(const painter_t *painter,
-        const label_t *label, int i, double bounds[4])
+// Compute the intersection of two bounding box.
+// If the boxes do not intersect, set out to 0 and return false.
+static bool bounds_intersection(const double a[4], const double b[4],
+                                double out[4])
 {
-    const int anchors_around[] = {
-        ALIGN_LEFT   | ALIGN_BOTTOM,
-        ALIGN_LEFT   | ALIGN_TOP,
-        ALIGN_RIGHT  | ALIGN_BOTTOM,
-        ALIGN_RIGHT  | ALIGN_TOP};
+    out[0] = max(a[0], b[0]);
+    out[1] = max(a[1], b[1]);
+    out[2] = min(a[2], b[2]);
+    out[3] = min(a[3], b[3]);
 
-    if (!(label->effects & TEXT_FLOAT)) {
-        if (i != 0) return false;
-        label_get_bounds(painter, label, label->align, label->effects, bounds);
-        return true;
-    }
-    if (label->effects & TEXT_FLOAT) {
-        if (i >= ARRAY_SIZE(anchors_around)) return false;
-        label_get_bounds(painter, label, anchors_around[i], label->effects,
-                         bounds);
+    if (out[0] >= out[2] || out[1] >= out[3]) {
+        memset(out, 0, 4 * sizeof(double));
+        return false;
     }
     return true;
 }
 
-static bool bounds_overlap(const double a[4], const double b[4])
-{
-    static const double margin = -5;
-    return a[2] > b[0] - margin &&
-           a[0] < b[2] + margin &&
-           a[3] > b[1] - margin &&
-           a[1] < b[3] + margin;
-}
-
-static bool test_label_overlaps(const label_t *label)
+static double test_label_overlaps(const label_t *label)
 {
     label_t *other;
-    if (!(label->effects & TEXT_FLOAT)) return false;
+    double ret = 0, overlap;
+    double inter[4];
+
+    if (!(label->effects & TEXT_FLOAT)) return 0.0;
     DL_FOREACH(g_labels->labels, other) {
         if (other == label) break;
-        if (other->skipped) continue;
         if (other->fader.target == false) continue;
-        if (bounds_overlap(other->bounds, label->bounds)) return true;
+        if (!bounds_intersection(label->bounds, other->bounds, inter))
+            continue;
+        overlap = max(inter[2] - inter[0], inter[3] - inter[1]);
+        if (overlap > ret)
+            ret = overlap;
     }
-    return false;
+    return ret;
 }
 
 static int label_cmp(void *a, void *b)
@@ -146,55 +138,30 @@ static int labels_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int labels_render(const obj_t *obj, const painter_t *painter_)
+static int labels_render(const obj_t *obj, const painter_t *painter)
 {
     label_t *label;
-    int i;
     double pos[2], color[4];
-    painter_t painter = *painter_;
+    const double max_overlap = 8;
+
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
         // Re-project label on screen
         if (label->frame != -1) {
-            painter_project(painter_, label->frame, label->pos, label->at_inf,
+            painter_project(painter, label->frame, label->pos, label->at_inf,
                             false, label->win_pos);
         }
-
-        for (i = 0; ; i++) {
-            if (!label_get_possible_bounds(&painter, label, i, label->bounds)) {
-                label->skipped = true;
-                goto skip;
-            }
-
-            // Don't try to fit label currently fading out
-            if (label->fader.target == false) break;
-
-            if (!test_label_overlaps(label)) break;
-
-            // The label is colliding with another one, try to fit up and
-            // down around position before giving up
-            label->bounds[1] -= 2;
-            label->bounds[3] -= 2;
-            if (!test_label_overlaps(label)) break;
-            label->bounds[1] += 4;
-            label->bounds[3] += 4;
-            if (!test_label_overlaps(label)) break;
-            label->bounds[1] -= 6;
-            label->bounds[3] -= 6;
-            if (!test_label_overlaps(label)) break;
-            label->bounds[1] -= 2;
-            label->bounds[3] -= 2;
-            if (!test_label_overlaps(label)) break;
-        }
+        label_get_bounds(painter, label, label->align, label->effects,
+                         label->bounds);
+        label->fader.target = label->active &&
+                                (test_label_overlaps(label) <= max_overlap);
         pos[0] = label->bounds[0];
         pos[1] = label->bounds[1];
         vec4_copy(label->color, color);
         color[3] *= label->fader.value;
-        paint_text(&painter, label->render_text, pos,
-                   ALIGN_LEFT | ALIGN_TOP, label->effects, label->size, color,
-                   label->angle);
-        label->skipped = false;
-skip:;
+        paint_text(painter, label->render_text, pos,
+                ALIGN_LEFT | ALIGN_TOP, label->effects, label->size, color,
+                label->angle);
     }
     return 0;
 }
@@ -262,6 +229,7 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
     label->effects = effects;
     label->priority = priority;
     label->fader.target = true;
+    label->active = true;
 }
 
 /*
