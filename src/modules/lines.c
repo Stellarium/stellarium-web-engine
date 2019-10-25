@@ -478,8 +478,7 @@ static void render_recursion(
         int level,
         const int splits[2],
         const int pos[2],
-        const step_t *steps[2],
-        int done_mask)
+        const step_t *steps[2])
 {
     int i, j, dir;
     int split_az, split_al, new_splits[2], new_pos[2];
@@ -491,8 +490,6 @@ static void render_recursion(
         .map   = spherical_project,
         .user  = rot,
     };
-
-    if (done_mask == 3) return; // Already done.
 
     // Compute transformation matrix from full sphere uv to the quad uv.
     mat3_iscale(mat, 1. / splits[0], 1. / splits[1], 0);
@@ -514,7 +511,7 @@ static void render_recursion(
         return;
 
     // Nothing to render yet.
-    if (level < steps[0]->level && level < steps[1]->level)
+    if (level < steps[0]->level || level < steps[1]->level)
         goto keep_going;
     // To get a good enough resolution of lines, don't attempt to render
     // before level 2.
@@ -528,10 +525,6 @@ static void render_recursion(
 
     for (dir = 0; dir < 2; dir++) {
         if (!line->grid && dir == 1) break;
-        if (done_mask & (1 << dir)) continue; // Marked as done already.
-
-        // Skip if are not aligned with the target steps.
-        if (splits[dir] != steps[dir]->n / (dir ? 2 : 1)) continue;
 
         // Limit to 4 meridian lines around the poles.
         if (    line->grid && dir == 0 &&
@@ -539,7 +532,6 @@ static void render_recursion(
                 (pos[1] == 0 || pos[1] == splits[1] - 1))
             continue;
 
-        done_mask |= (1 << dir);
         paint_lines(painter, line->frame, 2, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
         if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
@@ -564,7 +556,7 @@ keep_going:
         new_pos[0] = pos[0] * split_az + j;
         new_pos[1] = pos[1] * split_al + i;
         render_recursion(line, painter, rot, level + 1, new_splits, new_pos,
-                         steps, done_mask);
+                         steps);
     }
 }
 
@@ -730,7 +722,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
         steps[0] = &STEPS_DEG[1]; // 180°
         steps[1] = &STEPS_DEG[4]; //  20°: enough to avoid clipping errors.
     }
-    render_recursion(line, &painter, rot, 0, splits, pos, steps, 0);
+    render_recursion(line, &painter, rot, 0, splits, pos, steps);
     return 0;
 }
 
