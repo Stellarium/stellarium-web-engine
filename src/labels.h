@@ -11,10 +11,6 @@
 
 /***** Labels manager *****************************************************/
 
-enum {
-    LABEL_AROUND    = 1 << 8, // Auto place label around position.
-};
-
 void labels_reset(void);
 
 /*

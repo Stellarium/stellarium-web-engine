@@ -422,9 +422,10 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
     char buf[128] = "";
     const float vmag = s->display_vmag;
 
-    effects = TEXT_BOLD;
+    effects = TEXT_BOLD | TEXT_FLOAT;
     if (selected) {
         vec4_set(color, 1, 1, 1, 1);
+        effects &= ~TEXT_FLOAT;
     } else {
         vec4_set(color, 0.45, 0.83, 1, 0.5);
     }
@@ -436,7 +437,7 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
         snprintf(buf, sizeof(buf), "%s", s2->short_name);
     if (buf[0]) {
         labels_add_3d(buf, FRAME_ASTROM, s->bounding_cap, true, radius,
-                      FONT_SIZE_BASE - 2, color, 0, LABEL_AROUND, effects,
+                      FONT_SIZE_BASE - 2, color, 0, 0, effects,
                       -vmag, s->oid);
     }
 }

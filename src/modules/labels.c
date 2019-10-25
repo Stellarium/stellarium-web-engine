@@ -100,12 +100,12 @@ static bool label_get_possible_bounds(const painter_t *painter,
         ALIGN_RIGHT  | ALIGN_BOTTOM,
         ALIGN_RIGHT  | ALIGN_TOP};
 
-    if (!(label->align & LABEL_AROUND)) {
+    if (!(label->effects & TEXT_FLOAT)) {
         if (i != 0) return false;
         label_get_bounds(painter, label, label->align, label->effects, bounds);
         return true;
     }
-    if (label->align & LABEL_AROUND) {
+    if (label->effects & TEXT_FLOAT) {
         if (i >= ARRAY_SIZE(anchors_around)) return false;
         label_get_bounds(painter, label, anchors_around[i], label->effects,
                          bounds);
@@ -125,7 +125,7 @@ static bool bounds_overlap(const double a[4], const double b[4])
 static bool test_label_overlaps(const label_t *label)
 {
     label_t *other;
-    if (!(label->align & LABEL_AROUND)) return false;
+    if (!(label->effects & TEXT_FLOAT)) return false;
     DL_FOREACH(g_labels->labels, other) {
         if (other == label) break;
         if (other->skipped) continue;
@@ -224,7 +224,8 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
                    const double color[4], double angle, int align,
                    int effects, double priority, uint64_t oid)
 {
-    if (!(align & LABEL_AROUND)) priority = 1024.0; // Use FLT_MAX ?
+    if (!align) align = ALIGN_LEFT | ALIGN_BOTTOM;
+    if (!(effects & TEXT_FLOAT)) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
     assert(!angle); // Not supported at the moment.
