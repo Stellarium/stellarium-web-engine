@@ -541,19 +541,22 @@ static void get_steps(char type, int frame,
 {
     double a;   // Target angle.
     double azfov, altfov;
+    const int NB_DIVS = 6;
+    const double MAX_SEP = 15 * DD2R;
 
     get_azalt_fov(painter, frame, &azfov, &altfov);
 
-    // Try to get abount 8 lines in each directions.
-    a = azfov / 8;
-
-    // Max size between lines of 15°.
-    a = min(a, 15 * DD2R);
-
+    // First step can be in degrees of hours.
+    a = azfov / NB_DIVS;
+    a = min(a, MAX_SEP);
     if (type == 'd')
         steps[0] = steps_lookup(STEPS_DEG, ARRAY_SIZE(STEPS_DEG), a);
     else
         steps[0] = steps_lookup(STEPS_HOUR, ARRAY_SIZE(STEPS_HOUR), a);
+
+    // Second step is always in degrees.
+    a = altfov / NB_DIVS;
+    a = min(a, MAX_SEP);
     steps[1] = steps_lookup(STEPS_DEG, ARRAY_SIZE(STEPS_DEG), a);
 }
 
