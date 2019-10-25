@@ -90,12 +90,6 @@
       "type": "number",
       "widget": "number_range",
       "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
-    },
-    {
-      "id": "PointingActivity",
-      "name": "Pointing Activity",
-      "type": "string",
-      "widget": "tags"
     }
   ],
   "colorAssignedField": "Observation.SurveyId"
