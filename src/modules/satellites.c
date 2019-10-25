@@ -531,7 +531,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     size = max(8, size);
     if (*sat->name && (selected || vmag <= hints_limit_mag - 1.5)) {
         labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size,
-                      FONT_SIZE_BASE - 1, selected ? white : label_color, 0,
+                      FONT_SIZE_BASE - 2, selected ? white : label_color, 0,
                       0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
     }
 
