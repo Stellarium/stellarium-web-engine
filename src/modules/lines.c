@@ -263,6 +263,110 @@ static int line_update(obj_t *obj, double dt)
     return changed ? 1 : 0;
 }
 
+static void ndc_to_win(const projection_t *proj, const double ndc[2],
+                       double win[2])
+{
+    win[0] = (+ndc[0] + 1) / 2 * proj->window_size[0];
+    win[1] = (-ndc[1] + 1) / 2 * proj->window_size[1];
+}
+
+/*
+ * Function: segment_viewport_intersection
+ * Compute the intersection between a segment and the viewport.
+ *
+ * Parameters:
+ *   a      - Segment point A, in ndc coordinates (-1 to +1).
+ *   b      - Segment point B, in ndc coordinates (-1 to +1).
+ *   border - Output of the viewport border index, from 0 to 3.
+ *
+ * Returns:
+ *   The intersection position within the segment:
+ *   P = A + ret * (AB)
+ *   If there are no intersection, returns DBL_MAX.
+ *
+ */
+static double segment_viewport_intersection(
+        const double a[2], const double b[2], int *border)
+{
+    // We use the common 'slab' algo for AABB/seg intersection.
+    // With some care to make sure we never use infinite values.
+    double idx, idy,
+           tx1 = -DBL_MAX, tx2 = +DBL_MAX,
+           ty1 = -DBL_MAX, ty2 = +DBL_MAX,
+           txmin = -DBL_MAX, txmax = +DBL_MAX,
+           tymin = -DBL_MAX, tymax = +DBL_MAX,
+           ret = DBL_MAX, vmin, vmax;
+    if (a[0] != b[0]) {
+        idx = 1.0 / (b[0] - a[0]);
+        tx1 = (-1 == a[0] ? -DBL_MAX : (-1 - a[0]) * idx);
+        tx2 = (+1 == a[0] ?  DBL_MAX : (+1 - a[0]) * idx);
+        txmin = min(tx1, tx2);
+        txmax = max(tx1, tx2);
+    }
+    if (a[1] != b[1]) {
+        idy = 1.0 / (b[1] - a[1]);
+        ty1 = (-1 == a[1] ? -DBL_MAX : (-1 - a[1]) * idy);
+        ty2 = (+1 == a[1] ?  DBL_MAX : (+1 - a[1]) * idy);
+        tymin = min(ty1, ty2);
+        tymax = max(ty1, ty2);
+    }
+    ret = DBL_MAX;
+    if (tymin <= txmax && txmin <= tymax) {
+        vmin = max(txmin, tymin);
+        vmax = min(txmax, tymax);
+        if (0.0 <= vmax && vmin <= 1.0) {
+            ret = vmin >= 0 ? vmin : vmax;
+        }
+    }
+    *border = (ret == tx1) ? 0 :
+              (ret == tx2) ? 1 :
+              (ret == ty1) ? 2 :
+                             3;
+
+    return ret;
+}
+
+/*
+ * Function: check_borders
+ *
+ * Test if a segment intersects the window viewport.
+ *
+ * Parameters:
+ *   a      - Segment pos A in view coordinates.
+ *   b      - Semgnet pos B in view coordinates.
+ *   proj   - The view projection.
+ *   p      - Output of intersection in windows coordinates.
+ *   u      - Output direction of the line at the intersection.
+ *   v      - Output of the normal of the window border at the intersection.
+ *
+ */
+static bool check_borders(const double a[3], const double b[3],
+                          const projection_t *proj,
+                          double p[2], // Window pos on the border.
+                          double u[2], // Window direction of the line.
+                          double v[2]) // Window Norm of the border.
+{
+    double pos[2][4], q;
+    bool visible[2];
+    int border;
+    const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
+    visible[0] = project(proj, PROJ_TO_NDC_SPACE, a, pos[0]);
+    visible[1] = project(proj, PROJ_TO_NDC_SPACE, b, pos[1]);
+    if (visible[0] != visible[1]) {
+        q = segment_viewport_intersection(pos[0], pos[1], &border);
+        if (q == DBL_MAX) return false;
+        vec2_mix(pos[0], pos[1], q, p);
+        ndc_to_win(proj, p, p);
+        ndc_to_win(proj, pos[0], pos[0]);
+        ndc_to_win(proj, pos[1], pos[1]);
+        vec2_sub(pos[1], pos[0], u);
+        vec2_copy(VS[border], v);
+        return true;
+    }
+    return false;
+}
+
+
 static void spherical_project(
         const uv_map_t *map, const double v[2], double out[4])
 {
@@ -274,11 +378,6 @@ static void spherical_project(
     mat3_mul_vec3(*rot, out, out);
     out[3] = 0; // Project to infinity.
 }
-
-static bool check_borders(const double a[3], const double b[3],
-                          const projection_t *proj,
-                          double p[2], double u[2],
-                          double v[2]);
 
 /*
  * Function: render_label
@@ -635,82 +734,6 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-
-// Check if a line interect the normalized viewport.
-// If there is an intersection, `border` will be set with the border index
-// from 0 to 3.
-static double seg_intersect(const double a[2], const double b[2], int *border)
-{
-    // We use the common 'slab' algo for AABB/seg intersection.
-    // With some care to make sure we never use infinite values.
-    double idx, idy,
-           tx1 = -DBL_MAX, tx2 = +DBL_MAX,
-           ty1 = -DBL_MAX, ty2 = +DBL_MAX,
-           txmin = -DBL_MAX, txmax = +DBL_MAX,
-           tymin = -DBL_MAX, tymax = +DBL_MAX,
-           ret = DBL_MAX, vmin, vmax;
-    if (a[0] != b[0]) {
-        idx = 1.0 / (b[0] - a[0]);
-        tx1 = (-1 == a[0] ? -DBL_MAX : (-1 - a[0]) * idx);
-        tx2 = (+1 == a[0] ?  DBL_MAX : (+1 - a[0]) * idx);
-        txmin = min(tx1, tx2);
-        txmax = max(tx1, tx2);
-    }
-    if (a[1] != b[1]) {
-        idy = 1.0 / (b[1] - a[1]);
-        ty1 = (-1 == a[1] ? -DBL_MAX : (-1 - a[1]) * idy);
-        ty2 = (+1 == a[1] ?  DBL_MAX : (+1 - a[1]) * idy);
-        tymin = min(ty1, ty2);
-        tymax = max(ty1, ty2);
-    }
-    ret = DBL_MAX;
-    if (tymin <= txmax && txmin <= tymax) {
-        vmin = max(txmin, tymin);
-        vmax = min(txmax, tymax);
-        if (0.0 <= vmax && vmin <= 1.0) {
-            ret = vmin >= 0 ? vmin : vmax;
-        }
-    }
-    *border = (ret == tx1) ? 0 :
-              (ret == tx2) ? 1 :
-              (ret == ty1) ? 2 :
-                             3;
-
-    return ret;
-}
-
-static void ndc_to_win(const projection_t *proj, const double ndc[2],
-                       double win[2])
-{
-    win[0] = (+ndc[0] + 1) / 2 * proj->window_size[0];
-    win[1] = (-ndc[1] + 1) / 2 * proj->window_size[1];
-}
-
-static bool check_borders(const double a[3], const double b[3],
-                          const projection_t *proj,
-                          double p[2], // Window pos on the border.
-                          double u[2], // Window direction of the line.
-                          double v[2]) // Window Norm of the border.
-{
-    double pos[2][4], q;
-    bool visible[2];
-    int border;
-    const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
-    visible[0] = project(proj, PROJ_TO_NDC_SPACE, a, pos[0]);
-    visible[1] = project(proj, PROJ_TO_NDC_SPACE, b, pos[1]);
-    if (visible[0] != visible[1]) {
-        q = seg_intersect(pos[0], pos[1], &border);
-        if (q == DBL_MAX) return false;
-        vec2_mix(pos[0], pos[1], q, p);
-        ndc_to_win(proj, p, p);
-        ndc_to_win(proj, pos[0], pos[0]);
-        ndc_to_win(proj, pos[1], pos[1]);
-        vec2_sub(pos[1], pos[0], u);
-        vec2_copy(VS[border], v);
-        return true;
-    }
-    return false;
-}
 
 /*
  * Meta class declarations.
