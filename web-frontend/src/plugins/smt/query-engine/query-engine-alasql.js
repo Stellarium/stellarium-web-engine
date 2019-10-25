@@ -66,6 +66,11 @@ export default {
 
     // Insert all data
     for (let feature of jsonData.features) {
+      if (feature.geometry.type === 'MultiPolygon') {
+        // Currently the engine doesn't deal with multi-polygons
+        feature.geometry.coordinates = feature.geometry.coordinates[0]
+        feature.geometry.type = 'Polygon'
+      }
       for (let i = 0; i < that.fieldsList.length; ++i) {
         const field = that.fieldsList[i]
         let d
