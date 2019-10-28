@@ -524,7 +524,9 @@ static void render_recursion(
     vec2_copy(uv[1], lines[3]);
 
     for (dir = 0; dir < 2; dir++) {
-        if (!line->grid && dir == 1) break;
+        // Single line are just grid with most segments masked.
+        if (!line->grid && dir == 0) continue;
+        if (!line->grid && pos[1] != splits[1] / 2 - 1) continue;
 
         // Don't render last latitude, zero diameter circle at the north pole.
         if (dir == 1 && pos[1] == splits[1] - 1) continue;
@@ -699,9 +701,9 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
 
     // XXX: probably need to use enum id for the different lines/grids.
     if (strcmp(line->obj.id, "ecliptic") == 0) {
-        mat3_rx(M_PI / 2, core->observer->re2i, rot);
+        mat3_copy(core->observer->re2i, rot);
     }
-    if (strcmp(line->obj.id, "equator_line") == 0) {
+    if (strcmp(line->obj.id, "meridian") == 0) {
         mat3_rx(M_PI / 2, rot, rot);
     }
 
@@ -716,13 +718,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
     }
 
     // Compute the number of divisions of the grid.
-    if (line->grid) {
-        get_steps(line->format, line->frame, &painter, steps);
-    } else {
-        // Lines are the same as a grid with a split of 180° in one direction.
-        steps[0] = &STEPS_DEG[1]; // 180°
-        steps[1] = &STEPS_DEG[4]; //  20°: enough to avoid clipping errors.
-    }
+    get_steps(line->format, line->frame, &painter, steps);
     render_recursion(line, &painter, rot, 0, splits, pos, steps);
     return 0;
 }
