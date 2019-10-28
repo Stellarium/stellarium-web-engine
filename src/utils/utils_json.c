@@ -114,6 +114,7 @@ static int jcon_parse_(json_value *v, va_list *ap)
         int *i;
         double *d;
         const char **s;
+        json_value **v;
     } ptr;
 
     token = va_arg(*ap, const char*);
@@ -152,6 +153,13 @@ static int jcon_parse_(json_value *v, va_list *ap)
         if (!v) return 0;
         if (v->type != json_string) return -1;
         *ptr.s = v->u.string.ptr;
+        return 0;
+    }
+
+    if (token[0] == 'v') {
+        ptr.v = va_arg(*ap, json_value **);
+        if (!v) return 0;
+        *ptr.v = v;
         return 0;
     }
 

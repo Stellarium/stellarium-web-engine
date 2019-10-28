@@ -61,5 +61,6 @@ json_value *json_copy(json_value *val);
 #define JCON_FLOAT(v) "f", &(v)
 #define JCON_DOUBLE(v) "d", &(v)
 #define JCON_STR(v) "s", &(v)
+#define JCON_VAL(v) "v", &(v)
 
 int jcon_parse(json_value *v, ...);
