@@ -309,12 +309,12 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->dso_hints_mag_offset = -0.8;
     core->display_limit_mag = 99;
 
-    core->observer = (observer_t*)obj_create("observer", "observer",
-                                             (obj_t*)core, NULL);
+    core->observer = (observer_t*)module_add_new(
+            &core->obj, "observer", "observer", NULL);
 
     for (module = obj_get_all_klasses(); module; module = module->next) {
         if (!(module->flags & OBJ_MODULE)) continue;
-        obj_create(module->id, module->id, (obj_t*)core, NULL);
+        module_add_new(&core->obj, module->id, module->id, NULL);
     }
     DL_SORT(core->obj.children, modules_sort_cmp);
 

@@ -133,6 +133,16 @@ void module_changed(obj_t *module, const char *attr);
 void module_add(obj_t *module, obj_t *child);
 
 /*
+ * Function: module_add_new
+ * Add a new object as a child of a module
+ *
+ * The object is owned by the module, so we don't have to call obj_release
+ * but instead module_remove.
+ */
+obj_t *module_add_new(obj_t *module, const char *type, const char *id,
+                      json_value *args);
+
+/*
  * Function: module_remove
  * Remove an object from a parent.
  */

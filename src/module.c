@@ -169,6 +169,17 @@ void module_add(obj_t *parent, obj_t *child)
 }
 
 EMSCRIPTEN_KEEPALIVE
+obj_t *module_add_new(obj_t *module, const char *type, const char *id,
+                      json_value *args)
+{
+    obj_t *ret;
+    ret = obj_create(type, id, NULL, args);
+    module_add(module, ret);
+    obj_release(ret);
+    return ret;
+}
+
+EMSCRIPTEN_KEEPALIVE
 void module_remove(obj_t *parent, obj_t *child)
 {
     assert(child->parent == parent);

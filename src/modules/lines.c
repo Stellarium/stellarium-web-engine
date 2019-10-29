@@ -209,7 +209,7 @@ static int lines_init(obj_t *obj, json_value *args)
     line_t *line;
 
     for (i = 0; i < ARRAY_SIZE(LINES); i++) {
-        line = (line_t*)obj_create("line", LINES[i].id, lines, NULL);
+        line = (line_t*)module_add_new(lines, "line", LINES[i].id, NULL);
         line->frame = LINES[i].frame;
         line->grid = LINES[i].grid;
         hex_to_rgba(LINES[i].color, line->color);

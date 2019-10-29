@@ -88,7 +88,7 @@ static void load_data(comets_t *comets, const char *data, int size)
             continue;
         }
 
-        comet = (void*)obj_create("mpc_comet", NULL, &comets->obj, NULL);
+        comet = (void*)module_add_new(&comets->obj, "mpc_comet", NULL, NULL);
         comet->num = num;
         comet->amag = h;
         comet->slope_param = g;

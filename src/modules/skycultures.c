@@ -97,7 +97,7 @@ static void skyculture_activate(skyculture_t *cult)
         }
         args = json_object_new(0);
         json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
-        obj_create("constellation", id, constellations, args);
+        module_add_new(constellations, "constellation", id, args);
         json_builder_free(args);
     }
 
@@ -136,7 +136,7 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
                                   const char *id)
 {
     skyculture_t *cult;
-    cult = (void*)obj_create("skyculture", id, (obj_t*)cults, NULL);
+    cult = (void*)module_add_new(&cults->obj, "skyculture", id, NULL);
     cult->uri = strdup(uri);
     skyculture_update((obj_t*)cult, 0);
     return cult;

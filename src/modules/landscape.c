@@ -206,7 +206,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
     landscape_t *ls;
     const char *name = NULL;
 
-    ls = (void*)obj_create("landscape", id, (obj_t*)lss, NULL);
+    ls = (void*)module_add_new(&lss->obj, "landscape", id, NULL);
     ls->uri = strdup(uri);
     if (strcmp(id, "zero") != 0) {
         ls->hips = hips_create(uri, 0, NULL);
@@ -215,7 +215,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
         if (args) name = json_get_attr_s(args, "obs_title");
     } else {
         // Zero horizon shape.
-        ls->shape = obj_create("circle", NULL, &ls->obj, NULL);
+        ls->shape = module_add_new(&ls->obj, "circle", NULL, NULL);
         obj_set_attr(ls->shape, "pos", VEC(0, 0, -1, 0));
         obj_set_attr(ls->shape, "frame", FRAME_OBSERVED);
         obj_set_attr(ls->shape, "size", VEC(M_PI, M_PI));

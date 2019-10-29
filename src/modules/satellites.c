@@ -110,7 +110,7 @@ static int parse_tle_file(satellites_t *sats, const char *data,
         data += 1;
 
         snprintf(id, sizeof(id), "NORAD %.5s", line1 + 2);
-        sat = (satellite_t*)obj_create("tle_satellite", id, (obj_t*)sats, NULL);
+        sat = (void*)module_add_new(&sats->obj, "tle_satellite", id, NULL);
         sat_num = atoi(line1 + 2);
 
         sat->obj.oid = oid_create("NORA", sat_num);
@@ -245,7 +245,7 @@ static int load_jsonl_data(satellites_t *sats, const char *data, int size,
         line_idx++;
         json = json_parse(line, len);
         if (!json) goto error;
-        sat = (void*)obj_create("tle_satellite", NULL, (void*)sats, json);
+        sat = (void*)module_add_new(&sats->obj, "tle_satellite", NULL, json);
         json_value_free(json);
         if (!sat) goto error;
         *last_epoch = max(*last_epoch, sgp4_get_satepoch(sat->elsetrec));

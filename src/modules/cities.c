@@ -111,7 +111,7 @@ static void add_cities(cities_t *cities)
         timezone = TOK(pos, '\n');
 
         snprintf(id, sizeof(id), "CITY %s %s", country_code, asciiname_upper);
-        city = (city_t*)obj_create("city", id, (obj_t*)cities, NULL);
+        city = (city_t*)module_add_new(&cities->obj, "city", id, NULL);
         city->obj.oid = oid_create("CITY", crc32(0, (void*)id, strlen(id)));
 
         strcpy(city->country_code, country_code);
@@ -159,7 +159,7 @@ obj_t *city_create(const char *name, const char *country_code,
     }
     if (best) return &best->obj;
 
-    city = (city_t*)obj_create("city", id, (obj_t*)cities, NULL);
+    city = (city_t*)module_add_new(cities, "city", id, NULL);
     if (country_code) strcpy(city->country_code, country_code);
     if (timezone) city->timezone = strdup(timezone);
     city->latitude = latitude;
