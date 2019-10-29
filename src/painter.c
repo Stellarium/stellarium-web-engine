@@ -238,7 +238,7 @@ int paint_texture(const painter_t *painter,
 }
 
 
-static void line_func(void *user, double t, double out[2])
+static void line_func(void *user, double t, double out[4])
 {
     double pos[4];
     const painter_t *painter = USER_GET(user, 0);
@@ -249,11 +249,8 @@ static void line_func(void *user, double t, double out[2])
     vec4_mix(line[0], line[1], t, pos);
     if (map) uv_map(map, pos, pos, NULL);
     vec3_normalize(pos, pos);
-    convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
-    pos[3] = 0.0;
-    project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-            pos, pos);
-    vec2_copy(pos, out);
+    convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, out);
+    out[3] = 0.0;
 }
 
 /*
@@ -306,7 +303,6 @@ int paint_line(const painter_t *painter,
     double (*win_line)[2] = NULL;
     bool discontinuous = false;
     double splits[2][2][4];
-    double max_size = min(painter->fb_size[0], painter->fb_size[1]) / 2;
 
     if (!map) assert(flags & PAINTER_SKIP_DISCONTINUOUS); // For the moment.
 
@@ -327,8 +323,9 @@ int paint_line(const painter_t *painter,
     if (discontinuous)
         goto split;
 
-    size = line_tesselate(line_func, USER_PASS(painter, &frame, line, map),
-                          split, max_size, &win_line);
+    size = line_tesselate(line_func, painter->proj,
+                          USER_PASS(painter, &frame, line, map),
+                          split, &win_line);
     if (size < 0) goto split;
     REND(painter->rend, line, painter, win_line, size);
     free(win_line);

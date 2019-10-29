@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include "projection.h"
+
 /*
  * File: line.h
  *
@@ -61,18 +63,19 @@ void line_mesh_delete(line_mesh_t *mesh);
  *
  * Parameters:
  *   func   - Parametric line function.  The t argument ranges from 0 to 1.
+ *            Return a 4d homogenous position in view frame.
+ *   proj   - Screen projection.
  *   user   - User data passed to the function.
  *   split  - Number of segments requested in the output.  If set to 0 use
  *            an adaptive algorithm.
- *   max_dist - If > 0, and if two consecutive points distance is larger than
- *              this value, then return -1.
  *   out    - Allocated out line points.
  *
  * Return:
  *   The number of points in the line, or -1 in case or error (and out is not
  *   set).
  */
-int line_tesselate(void (*func)(void *user, double t, double pos[2]),
-                   void *user, int split, double max_dist, double (**out)[2]);
+int line_tesselate(void (*func)(void *user, double t, double pos[4]),
+                   const projection_t *proj,
+                   void *user, int split, double (**out)[2]);
 
 #endif // LINE_MESH_H

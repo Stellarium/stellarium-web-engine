@@ -99,54 +99,56 @@ static void line_push_point(double (**line)[2], const double p[2],
     memcpy((*line)[(*size)++], p, sizeof(**line));
 }
 
-static void line_tesselate_(void (*func)(void *user, double t, double pos[2]),
+static void line_tesselate_(void (*func)(void *user, double t, double pos[4]),
+                            const projection_t *proj,
                             void *user, double t0, double t1,
                             double (**out)[2],
                             int level, int *size, int *allocated)
 {
-    double p0[2], p1[2], pm[2], tm;
+    double p0[4], p1[4], pm[4], tm;
     const double max_dist = 1.0;
     const int max_level = 4;
     tm = (t0 + t1) / 2;
+
     func(user, t0, p0);
     func(user, t1, p1);
     func(user, tm, pm);
+
+    project(proj, PROJ_TO_WINDOW_SPACE, p0, p0);
+    project(proj, PROJ_TO_WINDOW_SPACE, p1, p1);
+    project(proj, PROJ_TO_WINDOW_SPACE, pm, pm);
+
     if (level > max_level || line_point_dist(p0, p1, pm) < max_dist) {
         line_push_point(out, p1, size, allocated);
         return;
     }
 
-    line_tesselate_(func, user, t0, tm, out, level + 1, size, allocated);
-    line_tesselate_(func, user, tm, t1, out, level + 1, size, allocated);
+    line_tesselate_(func, proj, user, t0, tm, out, level + 1, size, allocated);
+    line_tesselate_(func, proj, user, tm, t1, out, level + 1, size, allocated);
 }
 
 
-int line_tesselate(void (*func)(void *user, double t, double pos[2]),
-                   void *user, int split, double max_dist, double (**out)[2])
+int line_tesselate(void (*func)(void *user, double t, double pos[4]),
+                   const projection_t *proj,
+                   void *user, int split, double (**out)[2])
 {
     int i, allocated = 0, size = 0;
     *out = NULL;
-    double p0[2];
-    double max_dist2 = max_dist * max_dist;
+    double p[4];
 
     if (split) {
         size = split + 1;
         *out = calloc(size, sizeof(**out));
         for (i = 0; i < size; i++) {
-            func(user, (double)i / split, (*out)[i]);
-
-            if (i && max_dist &&
-                    vec2_dist2((*out)[i - 1], (*out)[i]) > max_dist2)
-            {
-                free(*out);
-                *out = NULL;
-                return -1;
-            }
+            func(user, (double)i / split, p);
+            project(proj, PROJ_TO_WINDOW_SPACE, p, p);
+            vec2_copy(p, (*out)[i]);
         }
     } else {
-        func(user, 0, p0);
-        line_push_point(out, p0, &size, &allocated);
-        line_tesselate_(func, user, 0, 1, out, 0, &size, &allocated);
+        func(user, 0, p);
+        project(proj, PROJ_TO_WINDOW_SPACE, p, p);
+        line_push_point(out, p, &size, &allocated);
+        line_tesselate_(func, proj, user, 0, 1, out, 0, &size, &allocated);
     }
     return size;
 }
