@@ -23,7 +23,6 @@ typedef struct planet planet_t;
 struct planet {
     obj_t       obj;
 
-    UT_hash_handle  hh;    // For the global map.
     const char  *name;
     planet_t    *parent;
     double      radius_m;  // (meter)
@@ -1009,18 +1008,6 @@ static obj_t *planets_get_by_oid(
     return NULL;
 }
 
-/*
- * Conveniance function to look for a planet by name
- */
-static planet_t *planet_get_by_name(planets_t *planets, const char *name)
-{
-    planet_t *planet;
-    char id[64];
-    str_to_upper(name, id);
-    HASH_FIND_STR(planets->planets, id, planet);
-    return planet;
-}
-
 // Parse an orbit line as returned by HORIZONS online service.
 static int parse_orbit(planet_t *p, const char *v)
 {
@@ -1050,6 +1037,19 @@ static int parse_orbit(planet_t *p, const char *v)
     return 0;
 }
 
+/*
+ * Conveniance function to look for a planet by name
+ */
+static planet_t *planet_get_by_name(planets_t *planets, const char *name)
+{
+    planet_t *p;
+    PLANETS_ITER(planets, p) {
+        if (strcasecmp(p->name, name) == 0)
+            return p;
+    }
+    return NULL;
+}
+
 // Parse the planet data.
 static int planets_ini_handler(void* user, const char* section,
                                const char* attr, const char* value)
@@ -1060,11 +1060,10 @@ static int planets_ini_handler(void* user, const char* section,
     float v;
 
     str_to_upper(section, id);
-    HASH_FIND_STR(planets->planets, id, planet);
+
+    planet = planet_get_by_name(planets, section);
     if (!planet) {
         planet = (void*)obj_create("planet", id, (obj_t*)planets, NULL);
-        HASH_ADD_KEYPTR(hh, planets->planets, planet->obj.id,
-                        strlen(planet->obj.id), planet);
         strcpy(name, section);
         name[0] += 'A' - 'a';
         planet->name = strdup(name);
