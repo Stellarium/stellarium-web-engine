@@ -430,8 +430,8 @@ static int render_bounds(const constellation_t *con,
         memcpy(line[0], info->edges[i][0], 2 * sizeof(double));
         memcpy(line[1], info->edges[i][1], 2 * sizeof(double));
         if (line[1][0] < line[0][0]) line[1][0] += 2 * M_PI;
-        paint_lines(&painter, FRAME_ICRF, 2, line, &map, 0,
-                    PAINTER_SKIP_DISCONTINUOUS);
+        paint_line(&painter, FRAME_ICRF, line, &map, 0,
+                   PAINTER_SKIP_DISCONTINUOUS);
     }
     return 0;
 }
@@ -571,8 +571,11 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
         line_animation_effect(&lines[i], visible * 2);
     }
 
-    paint_lines(&painter, FRAME_ICRF, con->count, lines, NULL, 1,
-                PAINTER_SKIP_DISCONTINUOUS);
+    for (i = 0; i < con->count; i += 2) {
+        paint_line(&painter, FRAME_ICRF, lines + i, NULL, 1,
+                   PAINTER_SKIP_DISCONTINUOUS);
+    }
+
     free(lines);
     return 0;
 }

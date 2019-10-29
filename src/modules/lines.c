@@ -537,7 +537,7 @@ static void render_recursion(
                 (pos[1] == 0 || pos[1] == splits[1] - 1))
             continue;
 
-        paint_lines(painter, line->frame, 2, lines + dir * 2, &map, 8, 0);
+        paint_line(painter, line->frame, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
         if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
                           p, u, v)) {
@@ -685,7 +685,8 @@ static int render_boundary(const painter_t *painter)
     };
     if (!(painter->proj->flags & PROJ_HAS_DISCONTINUITY))
         return 0;
-    paint_lines(painter, FRAME_VIEW, 4, lines, &map, 64, 0);
+    paint_line(painter, FRAME_VIEW, lines + 0, &map, 64, 0);
+    paint_line(painter, FRAME_VIEW, lines + 2, &map, 64, 0);
     return 0;
 }
 

@@ -321,8 +321,8 @@ int paint_tile_contour(const painter_t *painter, int frame,
                        int order, int pix, int split);
 
 /*
- * Function: paint_lines
- * Render 3d lines.
+ * Function: paint_line
+ * Render a 3d line.
  *
  * Warning: using the mapping function, it is in theory possible to render
  * a very large line with any shape in a single call.  However the current
@@ -331,8 +331,7 @@ int paint_tile_contour(const painter_t *painter, int frame,
  * Parameters:
  *   painter    - A painter instance.
  *   frame      - Frame of the inputs.
- *   nb         - Number of vertices.
- *   lines      - Vertices of the lines: [a0, a1, b0, b1, c0, c1, ...]
+ *   lines      - Vertices of the lines.
  *   map        - Optional function that can be used to represent lines as
  *                parametric function.  If set then the actual coordinates
  *                of the lines are the mapping of the point through this
@@ -344,11 +343,10 @@ int paint_tile_contour(const painter_t *painter, int frame,
  *                  PAINTER_SKIP_DISCONTINUOUS - if set, any line that
  *                  intersects a discontinuity is ignored.
  */
-int paint_lines(const painter_t *painter,
-                int frame,
-                int nb, double (*lines)[4],
-                const uv_map_t *map,
-                int split, int flags);
+int paint_line(const painter_t *painter,
+               int frame,
+               double line[2][4], const uv_map_t *map,
+               int split, int flags);
 
 /*
  * Function: paint_mesh

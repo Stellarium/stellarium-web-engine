@@ -296,10 +296,10 @@ static bool cap_intersects_discontinuity_line(
 }
 
 
-static int paint_line(const painter_t *painter,
-                      int frame,
-                      double line[2][4], const uv_map_t *map,
-                      int split, int flags)
+int paint_line(const painter_t *painter,
+               int frame,
+               double line[2][4], const uv_map_t *map,
+               int split, int flags)
 {
     int i, size;
     double view_pos[2][4];
@@ -345,22 +345,6 @@ split:
     paint_line(painter, frame, splits[0], map, split / 2, flags);
     paint_line(painter, frame, splits[1], map, split / 2, flags);
     return 0;
-}
-
-int paint_lines(const painter_t *painter,
-                int frame,
-                int nb, double (*lines)[4],
-                const uv_map_t *map,
-                int split, int flags)
-{
-    int i, ret = 0;
-    assert(nb % 2 == 0);
-    assert(lines);
-    // XXX: we should check for discontinutiy before we can paint_line.
-    // So that we don't abort in the middle of the rendering.
-    for (i = 0; i < nb; i += 2)
-        ret |= paint_line(painter, frame, (void*)lines[i], map, split, flags);
-    return ret;
 }
 
 /*
