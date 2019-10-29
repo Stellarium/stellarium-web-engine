@@ -165,6 +165,7 @@ void module_add(obj_t *parent, obj_t *child)
     assert(parent);
     child->parent = parent;
     DL_APPEND(parent->children, child);
+    obj_retain(child);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -172,8 +173,10 @@ void module_remove(obj_t *parent, obj_t *child)
 {
     assert(child->parent == parent);
     assert(parent);
+    assert(child->ref > 0);
     child->parent = NULL;
     DL_DELETE(parent->children, child);
+    obj_release(child);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -182,6 +185,7 @@ obj_t *module_get_child(const obj_t *module, const char *id)
     obj_t *ret;
     assert(id);
     DL_FOREACH(module->children, ret) {
+        assert(ret->ref > 0);
         if (ret->id && strcmp(ret->id, id) == 0) {
             ret->ref++;
             return ret;

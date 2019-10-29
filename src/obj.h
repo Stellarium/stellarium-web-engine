@@ -265,6 +265,10 @@ struct attribute {
  * Function: obj_create
  * Create a new object.
  *
+ * If we pass a parent argument, the new object is added to the parent,
+ * and the only ownership is the parent, so we don't have to call
+ * obj_release.  Otherwise we have to call obj_release.
+ *
  * Properties:
  *   type   - The type of the object (must have been registered).
  *   id     - Unique id to give the object.
