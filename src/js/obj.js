@@ -21,7 +21,7 @@ Module.afterInit(function() {
   var module_get_path = Module.cwrap('module_get_path', 'number',
     ['number', 'number']);
   var obj_create_str = Module.cwrap('obj_create_str', 'number',
-    ['string', 'string', 'number', 'string'])
+    ['string', 'string', 'string'])
   var module_get_child = Module.cwrap('module_get_child', 'number',
     ['number', 'string']);
   var core_get_module = Module.cwrap('core_get_module', 'number', ['string']);
@@ -129,8 +129,12 @@ Module.afterInit(function() {
     } else {
       var id = args ? args.id : undefined;
       args = JSON.stringify(args)
-      var ret = obj_create_str(type, id, this.v, args);
-      return ret ? new SweObj(ret) : null;
+      var ret = obj_create_str(type, id, args);
+      if (ret) {
+        module_add(this.v, ret);
+        return new SweObj(ret);
+      }
+      return null;
     }
   }
 
@@ -329,7 +333,7 @@ Module.afterInit(function() {
     args = args ? stringToC(JSON.stringify(args)) : 0;
     if (id) id = stringToC(id);
     const ctype = stringToC(type);
-    let ret = Module._obj_create_str(ctype, id, 0, args);
+    let ret = Module._obj_create_str(ctype, id, args);
     Module._free(type);
     Module._free(args);
     if (id) Module._free(id);

@@ -113,7 +113,7 @@ static void add_geojson_feature(image_t *image,
     static uint32_t g_id = 1;
     feature_t *feature;
 
-    feature = (void*)obj_create("geojson-feature", NULL, NULL, NULL);
+    feature = (void*)obj_create("geojson-feature", NULL, NULL);
     feature->frame = image->frame;
     feature->obj.oid = oid_create("GEOF", g_id++);
 

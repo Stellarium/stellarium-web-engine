@@ -352,7 +352,7 @@ void star_get_designations(
 static star_t *star_create(const star_data_t *data)
 {
     star_t *star;
-    star = (star_t*)obj_create("star", NULL, NULL, NULL);
+    star = (star_t*)obj_create("star", NULL, NULL);
     strncpy(star->obj.type, data->type, 4);
     star->data = *data;
     star->obj.oid = star->data.oid;
@@ -887,7 +887,7 @@ static void test_create_from_json(void)
         "       \"pm_ra\": 101.95"
         "   }"
         "}";
-    star = obj_create_str("star", NULL, NULL, data);
+    star = obj_create_str("star", NULL, data);
     assert(star);
     obj_get_info(star, core->observer, INFO_VMAG, &vmag);
     assert(fabs(vmag - 5.153) < 0.0001);

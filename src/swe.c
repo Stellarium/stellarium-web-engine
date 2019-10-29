@@ -252,7 +252,7 @@ static void test_pos(pos_test_t t)
     if (t.planet)
         obj = obj_get_by_oid(NULL, oid_create("HORI", t.planet), 0);
     else if (t.klass)
-        obj = obj_create_str(t.klass, NULL, NULL, t.json);
+        obj = obj_create_str(t.klass, NULL, t.json);
     else
         assert(false);
     assert(obj);

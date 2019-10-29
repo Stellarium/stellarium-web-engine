@@ -300,7 +300,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
              sys_get_user_dir(), ".cache");
     request_init(cache_dir);
 
-    core = (core_t*)obj_create("core", "core", NULL, NULL);
+    core = (core_t*)obj_create("core", "core", NULL);
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;

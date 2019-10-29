@@ -117,7 +117,7 @@ static uint64_t make_oid(uint64_t nuniq, int index)
 static dso_t *dso_create(const dso_data_t *data)
 {
     dso_t *dso;
-    dso = (dso_t*)obj_create("dso", NULL, NULL, NULL);
+    dso = (dso_t*)obj_create("dso", NULL, NULL);
     dso->data = *data;
     memcpy(&dso->obj.type, data->type, 4);
     dso->obj.oid = data->oid;
