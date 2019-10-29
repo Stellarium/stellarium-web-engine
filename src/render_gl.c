@@ -1174,7 +1174,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
 
     shader_define_t defines[] = {
         {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE &&
-                              !item->flags & PAINTER_ADD},
+                              !(item->flags & PAINTER_ADD)},
         {}
     };
     shader = shader_get("blit", defines, ATTR_NAMES, init_shader);
