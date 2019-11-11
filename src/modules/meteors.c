@@ -161,7 +161,6 @@ static int meteors_update(obj_t *obj, double dt)
         meteor_update(child, dt);
         if (m->time > m->duration) {
             module_remove(obj, child);
-            obj_release(child);
         }
     }
 
