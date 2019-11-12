@@ -498,7 +498,10 @@ static void quad_planet(
 
         // Model position (without scaling applied).
         vec4_copy(p, mpos);
+        assert(map->transf);
+        vec3_sub(mpos, (*map->transf)[3], mpos);
         vec3_mul(1.0 / painter->planet.scale, mpos, mpos);
+        vec3_add(mpos, (*map->transf)[3], mpos);
         gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC4_SPLIT(mpos));
 
         // Rendering position (with scaling applied).
