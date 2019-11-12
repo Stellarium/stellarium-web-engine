@@ -4,10 +4,19 @@ EXPOSE 8888
 
 WORKDIR /app
 
-# Configure default user environment, re-use node user/group
-RUN chown -R node /app
-USER node
-RUN id node
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+
+RUN deluser --remove-home node
+
+# Configure default user environment
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN addgroup -S app -g $USER_GID && adduser -S -G app -u $USER_UID app
+
+RUN chown app /app
+USER app
+RUN id app
 
 RUN yarn
 

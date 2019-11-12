@@ -39,7 +39,6 @@ update-engine-debug:
 
 USER_UID := $(shell id -u)
 USER_GID := $(shell id -g)
-
 setup: Dockerfile Dockerfile.jsbuild
 	# Build docker image for compilation with emscripten
 	docker build -f Dockerfile.jsbuild -t swe-dev . # --no-cache
