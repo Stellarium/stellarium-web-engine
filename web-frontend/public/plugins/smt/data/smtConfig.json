@@ -7,58 +7,176 @@
   ],
   "fields": [
     {
-      "id": "Observation.ObservationType",
-      "name": "Type",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
       "id": "Observation.SurveyId",
       "name": "Survey Id",
       "type": "string",
       "widget": "tags"
     },
     {
-      "id": "Observation.MissionPhase",
-      "name": "Mission Phase",
+      "id": "Planning.Acquisition.Estimated_Date_Start",
+      "name": "Acquisition Estimated Date Start",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "Planning.Acquisition.Real_Date_Start",
+      "name": "Acquisition Real Date Start",
+      "type": "date",
+      "widget": "date_range"
+    },
+    {
+      "id": "Planning.Acquisition.State",
+      "name": "Acquisition State",
       "type": "string",
       "widget": "tags"
-    },
-    {
-      "id": "PlanningStatus",
-      "name": "Planning Status",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.Ingestion.Estimated_Date",
-      "name": "Ingestion Estimated Date",
-      "type": "date",
-      "widget": "date_range"
-    },
-    {
-      "id": "Planning.Ingestion.Real_Date",
-      "name": "Ingestion Real Date",
-      "type": "date",
-      "widget": "date_range"
-    },
-    {
-      "id": "Planning.LE1.Estimated_Date_Start",
-      "name": "LE1 Estimated Date Start",
-      "type": "date",
-      "widget": "date_range"
-    },
-    {
-      "id": "Planning.LE1.Real_Date_Start",
-      "name": "LE1 Real Date Start",
-      "type": "date",
-      "widget": "date_range"
     },
     {
       "id": "Planning.LE1.State",
       "name": "LE1 State",
       "type": "string",
       "widget": "tags"
+    },
+    {
+      "id": "Planning.VIS.State",
+      "name": "VIS State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.NIR.State",
+      "name": "NIR State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.MER.State",
+      "name": "MER State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.PHZ.State",
+      "name": "PHZ State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.SIR.State",
+      "name": "SIR State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.SHE.State",
+      "name": "SHE State",
+      "type": "string",
+      "widget": "tags"
+    },
+    {
+      "id": "Planning.Acquisition.Delay_Acquisition",
+      "name": "Delay Acquisition",
+      "computed": "(date2unix(Planning.Acquisition.Real_Date_Start) - date2unix(Planning.Acquisition.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.LE1.Delay_Acquisition",
+      "name": "LE1 Delay Acquisition",
+      "computed": "(date2unix(Planning.LE1.Real_Date_Start) - date2unix(Planning.LE1.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.VIS.Delay_Acquisition",
+      "name": "VIS Delay Acquisition",
+      "computed": "(date2unix(Planning.VIS.Real_Date_Start) - date2unix(Planning.VIS.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.NIR.Delay_Acquisition",
+      "name": "NIR Delay Acquisition",
+      "computed": "(date2unix(Planning.NIR.Real_Date_Start) - date2unix(Planning.NIR.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.MER.Delay_Acquisition",
+      "name": "MER Delay Acquisition",
+      "computed": "(date2unix(Planning.MER.Real_Date_Start) - date2unix(Planning.MER.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.PHZ.Delay_Acquisition",
+      "name": "PHZ Delay Acquisition",
+      "computed": "(date2unix(Planning.PHZ.Real_Date_Start) - date2unix(Planning.PHZ.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.SIR.Delay_Acquisition",
+      "name": "SIR Delay Acquisition",
+      "computed": "(date2unix(Planning.SIR.Real_Date_Start) - date2unix(Planning.SIR.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.SHE.Delay_Acquisition",
+      "name": "SHE Delay Acquisition",
+      "computed": "(date2unix(Planning.SHE.Real_Date_Start) - date2unix(Planning.SHE.Estimated_Date_Start)) / 1000",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.LE1.Real_Time_Computation",
+      "name": "LE1 Computation time",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d hours\", x / 3600)"
+    },
+    {
+      "id": "Planning.VIS.Real_Time_Computation",
+      "name": "VIS Computation time",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d hours\", x / 3600)"
+    },
+    {
+      "id": "Planning.MER.Real_Time_Computation",
+      "name": "VIS Computation time",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+    },
+    {
+      "id": "Planning.PHZ.Real_Time_Computation",
+      "name": "PHZ Computation time",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d hours\", x / 3600)"
+    },
+    {
+      "id": "Planning.SIR.Real_Time_Computation",
+      "name": "SIR Computation time",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d hours\", x / 3600)"
+    },
+    {
+      "id": "Planning.SHE.Real_Time_Computation",
+      "name": "SHE Computation time",
+      "type": "number",
+      "widget": "number_range",
+      "formatFunc": "sprintf(\"%.2d hours\", x / 3600)"
     },
     {
       "id": "Planning.MER.Estimated_Date_Start",
@@ -73,18 +191,10 @@
       "widget": "date_range"
     },
     {
-      "id": "Planning.MER.State",
-      "name": "MER State",
+      "id": "Planning.Acquisition.Sdc",
+      "name": "Scientific Data Center",
       "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.MER.Delay_Acquisition",
-      "name": "MER Delay Acquisition",
-      "computed": "(date2unix(Planning.MER.Real_Date_Start) - date2unix(Planning.MER.Estimated_Date_Start)) / 1000",
-      "type": "number",
-      "widget": "number_range",
-      "formatFunc": "sprintf(\"%.2d days\", x / 86400)"
+      "widget" : "tags"
     }
   ],
   "colorAssignedField": "Observation.SurveyId"
