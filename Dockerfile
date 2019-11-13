@@ -16,6 +16,7 @@ WORKDIR /app
 
 # Run the build once to cache all emscripten dependencies compilations
 COPY . /app/
+RUN git clean -xdf
 RUN /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6"
 RUN rm -r /app
 
