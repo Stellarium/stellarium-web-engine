@@ -49,32 +49,38 @@ export default {
     app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
-    let smtConfig = require('./smtConfig.json')
+    fetch(process.env.BASE_URL + 'plugins/smt/smtConfig.json').then(resp => {
+      resp.json().then(smtConfig => {
+        let filtrexOptions = {
+          extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
+        }
+        for (let field of smtConfig.fields) {
+          if (field.formatFunc) {
+            field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
+          }
+        }
 
-    let filtrexOptions = {
-      extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
-    }
-    for (let field of smtConfig.fields) {
-      if (field.formatFunc) {
-        field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
-      }
-    }
+        Vue.prototype.$smt = smtConfig
 
-    Vue.prototype.$smt = smtConfig
+        app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
 
-    app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
+        let fetchAndIngest = function (url) {
+          if (url.startsWith('/')) {
+            url = process.env.BASE_URL + url.substr(1)
+          }
+          return qe.loadGeojson(url)
+        }
 
-    let fetchAndIngest = function (url) {
-      if (url.startsWith('/')) {
-        url = process.env.BASE_URL + url.substr(1)
-      }
-      return qe.loadGeojson(url)
-    }
-
-    qe.initDB(smtConfig.fields).then(_ => {
-      let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-      Promise.all(allPromise).then(_ => {
-        app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
+        qe.initDB(smtConfig.fields).then(_ => {
+          let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
+          Promise.all(allPromise).then(_ => {
+            app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
+          })
+        })
+      },
+      err => {
+        app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'error' })
+        throw err
       })
     })
   }
