@@ -49,7 +49,8 @@ export default {
     app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
-    fetch(process.env.BASE_URL + 'plugins/smt/smtConfig.json').then(resp => {
+    let baseDataURL = process.env.BASE_URL + 'plugins/smt/data/'
+    fetch(baseDataURL + 'smtConfig.json').then(resp => {
       resp.json().then(smtConfig => {
         let filtrexOptions = {
           extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
@@ -65,9 +66,7 @@ export default {
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
 
         let fetchAndIngest = function (url) {
-          if (url.startsWith('/')) {
-            url = process.env.BASE_URL + url.substr(1)
-          }
+          url = baseDataURL + url
           return qe.loadGeojson(url)
         }
 

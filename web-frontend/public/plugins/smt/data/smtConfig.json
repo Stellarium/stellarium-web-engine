@@ -1,14 +1,9 @@
 {
   "sources": [
-    "/plugins/smt/Surveys/CFIS_cap.geojson",
-    "/plugins/smt/Surveys/CFIS_crescent.geojson",
-    "/plugins/smt/Surveys/CFIS_JEDIS_PAN_north.geojson",
-    "/plugins/smt/Surveys/CFIS_JEDIS_PAN_south.geojson",
-    "/plugins/smt/Surveys/DES.geojson",
-    "/plugins/smt/Surveys/euclid.geojson",
-    "/plugins/smt/Surveys/lsst_main.geojson",
-    "/plugins/smt/Surveys/lsst_north_cap.geojson",
-    "/plugins/smt/Surveys/lsst_north_crescent.geojson"
+    "Surveys/DES.geojson",
+    "Surveys/JEDIS.geojson",
+    "Surveys/lsst_north.geojson",
+    "Surveys/lsst_south.geojson"
   ],
   "fields": [
     {
