@@ -298,7 +298,6 @@ static void mesh_subdivide_edge(mesh_t *mesh, int e1, int e2)
     vec3_mix(vs[e1], vs[e2], 0.5, new_point);
     // vec3_normalize(new_point, new_point);
     o = mesh_add_vertices(mesh, 1, &new_point);
-    vs = mesh->vertices;
 
     count = mesh->triangles_count;
     for (i = 0; i < count; i += 3) {
@@ -309,7 +308,6 @@ static void mesh_subdivide_edge(mesh_t *mesh, int e1, int e2)
             if ((b == e1 && c == e2) || (b == e2 && c == e1)) {
                 mesh->triangles[i + (j + 2) % 3] = o;
                 assert(!(a == e2 && c == e1));
-                vs = mesh->vertices;
                 mesh_add_triangle(mesh, a, o, c);
                 break;
             }
