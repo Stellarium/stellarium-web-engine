@@ -73,8 +73,10 @@ static void coordinates_push(geojson_linestring_t *line, const double p[2],
  *   allocated  - Currently allocated size of the line coordinate.
  */
 static void tesselate_bezier(geojson_linestring_t *line,
-                             const double p1[2], const double p2[2],
-                             const double p3[3], const double p4[2],
+                             const double p1[static 2],
+                             const double p2[static 2],
+                             const double p3[static 2],
+                             const double p4[static 2],
                              int level, int *allocated)
 {
     double p12[2], p23[2], p34[2], p123[2], p234[2], p1234[2];
