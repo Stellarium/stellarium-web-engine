@@ -328,11 +328,13 @@ static void mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
             sides[i] = vec3_dist2(vs[mesh->triangles[idx + (i + 1) % 3]],
                                   vs[mesh->triangles[idx + (i + 2) % 3]]);
         }
+        // Get largest side.
         for (i = 0; i < 3; i++) {
             if (    sides[i] >= sides[(i + 1) % 3] &&
                     sides[i] >= sides[(i + 2) % 3])
                 break;
         }
+        assert(i < 3);
         if (sides[i] < max_length * max_length)
             return;
 
