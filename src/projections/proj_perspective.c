@@ -25,7 +25,8 @@ static bool proj_perspective_backward(const projection_t *proj, int flags,
 {
     double p[4] = {v[0], v[1], 0, 1};
     double inv[4][4];
-    mat4_invert(proj->mat, inv);
+    if (!mat4_invert(proj->mat, inv))
+        assert(false);
     mat4_mul_vec4(inv, p, out);
     vec3_normalize(out, out);
     return true;
