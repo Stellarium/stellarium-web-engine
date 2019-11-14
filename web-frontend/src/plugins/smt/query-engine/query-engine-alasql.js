@@ -252,7 +252,7 @@ export default {
               }
               let retd = {}
               retd[agOpt.out] = data
-              return [retd]
+              return { q: q, res: [retd] }
             }
             let step = (res[0].dmax - res[0].dmin) / 10
 
