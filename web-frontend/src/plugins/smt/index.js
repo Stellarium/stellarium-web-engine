@@ -63,6 +63,12 @@ export default {
 
         Vue.prototype.$smt = smtConfig
 
+        if (smtConfig.watermarkImage) {
+          app.$store.commit('setValue', { varName: 'SMT.watermarkImage', newValue: smtConfig.watermarkImage })
+        }
+        if (smtConfig.dataLoadingImage) {
+          app.$store.commit('setValue', { varName: 'SMT.dataLoadingImage', newValue: smtConfig.dataLoadingImage })
+        }
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
 
         let fetchAndIngest = function (url) {

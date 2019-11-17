@@ -197,5 +197,7 @@
       "widget" : "tags"
     }
   ],
-  "colorAssignedField": "Observation.SurveyId"
+  "colorAssignedField": "Observation.SurveyId",
+  "dataLoadingImage": "images/euclid-logo.png",
+  "watermarkImage": "images/focse.png"
 }

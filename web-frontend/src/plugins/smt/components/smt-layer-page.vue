@@ -4,10 +4,10 @@
 
 <template>
   <div style="height: 100%; display: flex; flex-flow: column;">
-    <img src="../assets/focse.png" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
+    <img :src="watermarkImage" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
     <smt-selection-info v-if="selectedFootprintData !== undefined" :selectionData="selectedFootprintData" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
-    <img v-if="$store.state.SMT.status === 'loading'" src="../assets/euclid-logo.png" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
+    <img v-if="dataLoadingImage && $store.state.SMT.status === 'loading'" :src="dataLoadingImage" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
     <v-progress-circular v-if="query.refreshObservationsInSkyInProgress" size=160 width=10 indeterminate style="position: absolute; top: calc(50vh - 80px); right: calc(50vw + 200px - 80px); opacity: 0.2"></v-progress-circular>
     <v-card tile>
       <v-card-text>
@@ -330,6 +330,14 @@ export default {
     }
   },
   computed: {
+    watermarkImage: function () {
+      if (this.$store.state.SMT.watermarkImage) return process.env.BASE_URL + 'plugins/smt/data/' + this.$store.state.SMT.watermarkImage
+      return ''
+    },
+    dataLoadingImage: function () {
+      if (this.$store.state.SMT.dataLoadingImage) return process.env.BASE_URL + 'plugins/smt/data/' + this.$store.state.SMT.dataLoadingImage
+      return ''
+    },
     // Return real and implicit constraints to display in GUI
     constraintsToDisplay: function () {
       if (this.$store.state.SMT.status !== 'ready') {

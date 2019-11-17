@@ -7,7 +7,9 @@ import _ from 'lodash'
 const moduleStore = {
   namespaced: true,
   state: {
-    status: undefined
+    status: undefined,
+    watermarkImage: '',
+    dataLoadingImage: ''
   },
   mutations: {
     setValue (state, { varName, newValue }) {
