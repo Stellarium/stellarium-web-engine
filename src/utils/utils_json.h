@@ -26,6 +26,15 @@ int64_t json_get_attr_i(json_value *val, const char *attr,
 bool json_get_attr_b(json_value *val, const char *attr, bool default_value);
 
 /*
+ * Function: json_to_string
+ * Interpret a json value as a string.
+ *
+ * If the value is a list, returns the concatenation of all the lines with
+ * spaces added.  Return a new allocated string, or NULL in case of error.
+ */
+char *json_to_string(json_value *val);
+
+/*
  * Function: json_copy
  * Make a deep copy of a json value
  */
