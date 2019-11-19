@@ -53,7 +53,7 @@ void tests_run(const char *filter)
         if (!filter_test(filter, test)) continue;
         if (test->setup) test->setup();
         test->func();
-        LOG_I("Run %-20s OK (%s)", test->name, test->file);
+        // LOG_I("Run %-20s OK (%s)", test->name, test->file);
     }
 }
 
