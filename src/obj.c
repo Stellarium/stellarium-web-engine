@@ -367,6 +367,8 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
                 assert(false);
                 return NULL;
             }
+        } else if (attr->type == TYPE_JSON) {
+            return json_copy(*(json_value**)p);
         } else if (attr->type % 16 == TYPE_PTR)
             return args_value_new(attr->type, *(void**)p);
         else if (attr->type == TYPE_STRING_PTR)
