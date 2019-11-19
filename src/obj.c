@@ -198,6 +198,7 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
     double pvo[2][4], pos[3], ra, dec;
     int ret;
 
+    assert(obj);
     observer_update(obs, true);
 
     if (obj->klass->get_info) {
