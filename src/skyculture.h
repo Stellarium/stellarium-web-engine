@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "json.h"
 #include "uthash.h"
 
 /*
@@ -37,6 +38,7 @@ typedef struct constellation_infos
     int  nb_lines;
     double edges[64][2][2]; // Ra/dec B1875 boundaries polygon.
     int nb_edges;
+    char *description;
 } constellation_infos_t;
 
 /*
@@ -122,5 +124,16 @@ constellation_art_t *skyculture_parse_stellarium_constellations_art(
  *   A hash table of oid -> name.
  */
 skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data);
+
+
+// Experimental parsing functions for the new json format.
+
+int skyculture_parse_feature_json(const json_value *v,
+                                  constellation_infos_t *feature);
+
+int skyculture_parse_feature_art_json(const json_value *v,
+                                      constellation_art_t *art);
+
+skyculture_name_t *skyculture_parse_names_json(const json_value *v);
 
 #endif // SKYCULTURE_H

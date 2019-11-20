@@ -36,6 +36,7 @@ typedef struct constellation {
     constellation_infos_t info;
     char        *name;
     char        *name_translated;
+    char        *description;
     int         count;
     bool        show;       // Set whether we show this constellation.
     fader_t     lines_in_view;  // When the constellation is actually visible.
@@ -136,6 +137,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
+    cons->description = info->description ? strdup(info->description) : NULL;
     // XXX: remove that.
     constellation_update(cons, core->observer);
     return 0;
@@ -837,6 +839,11 @@ static obj_klass_t constellation_klass = {
     .del            = constellation_del,
     .get_designations = constellation_get_designations,
     .get_2d_ellipse = constellation_get_2d_ellipse,
+    .attributes = (attribute_t[]) {
+        PROPERTY(description, TYPE_STRING_PTR,
+                 MEMBER(constellation_t, description)),
+        {}
+    }
 };
 OBJ_REGISTER(constellation_klass)
 

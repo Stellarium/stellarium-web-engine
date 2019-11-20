@@ -18,9 +18,11 @@
  * Enum of all the data files we need to parse.
  */
 enum {
-    SK_INFO           = 1 << 0,
-    SK_EDGES          = 1 << 5,
+    SK_JSON                         = 1 << 0,
 
+    // For stellarium format.
+    SK_INFO                         = 1 << 1,
+    SK_EDGES                        = 1 << 5,
     SK_CONSTELLATIONS_STEL          = 1 << 6,
     SK_CONSTELLATION_NAMES_STEL     = 1 << 7,
     SK_IMGS_STEL                    = 1 << 8,
@@ -45,6 +47,7 @@ typedef struct skyculture {
     json_value      *imgs;
     int             parsed; // union of SK_ enum for each parsed file.
     char            *description;  // html description if any.
+    json_value      *tour;
 } skyculture_t;
 
 /*
@@ -202,7 +205,7 @@ static bool get_file(skyculture_t *cult, int file_id, const char *name,
     return *data;
 }
 
-static int skyculture_update(obj_t *obj, double dt)
+static int skyculture_update_old(obj_t *obj, double dt)
 {
     skyculture_t *cult = (skyculture_t*)obj;
     skycultures_t *cults = (skycultures_t*)obj->parent;
@@ -282,6 +285,83 @@ static int skyculture_update(obj_t *obj, double dt)
         if (active) skyculture_activate(cult);
     }
 
+    return 0;
+}
+
+
+static int skyculture_update(obj_t *obj, double dt)
+{
+    const char *json;
+    skyculture_t *cult = (skyculture_t*)obj;
+    char path[1024], *name;
+    int code, r, i, arts_nb;
+    json_value *doc;
+    const json_value *names, *features, *description, *tour;
+    constellation_art_t *arts;
+
+    if (cult->parsed & SK_JSON)
+        return 0;
+
+    snprintf(path, sizeof(path), "%s/%s", cult->uri, "index.json");
+    json = asset_get_data2(path, ASSET_USED_ONCE | ASSET_ACCEPT_404, NULL,
+                           &code);
+    if (!code) {
+        return 0;
+    }
+
+    // No index.json: try stellarium format.
+    if (!json) {
+        return skyculture_update_old(obj, dt);
+    }
+    cult->parsed |= SK_JSON;
+
+    doc = json_parse(json, strlen(json));
+    if (!doc) {
+        LOG_E("Cannot parse skyculture json");
+        return -1;
+    }
+
+    r = jcon_parse(doc, "{",
+        "!name", JCON_STR(name),
+        "names", JCON_VAL(names),
+        "!features", JCON_VAL(features),
+        "!description", JCON_VAL(description),
+        "tour", JCON_VAL(tour),
+    "}");
+    if (r) {
+        LOG_E("Cannot parse skyculture json");
+        return -1;
+    }
+
+    if (tour) cult->tour = json_copy(tour);
+    cult->description = json_to_string(description);
+    cult->info.name = strdup(name);
+    cult->names = skyculture_parse_names_json(names);
+
+    cult->constellations = calloc(features->u.object.length,
+                                  sizeof(*cult->constellations));
+    for (i = 0; i < features->u.object.length; i++) {
+        r = skyculture_parse_feature_json(
+                features->u.object.values[i].value,
+                &cult->constellations[cult->nb_constellations]);
+        if (r) continue;
+        cult->nb_constellations++;
+    }
+
+    // For the moment we parse the art separatly, it should all be merged
+    // int a 'feature'.
+    arts = calloc(features->u.object.length, sizeof(*arts));
+    arts_nb = 0;
+    for (i = 0; i < features->u.object.length; i++) {
+        r = skyculture_parse_feature_art_json(
+                features->u.object.values[i].value, &arts[arts_nb]);
+        if (r) continue;
+        arts_nb++;
+    }
+    if (arts_nb) cult->imgs = make_imgs_json(arts, cult->uri);
+    free(arts);
+
+    json_value_free(doc);
     return 0;
 }
 
@@ -408,6 +488,7 @@ static obj_klass_t skyculture_klass = {
         PROPERTY(description, TYPE_STRING_PTR,
                  MEMBER(skyculture_t, description)),
         PROPERTY(url, TYPE_STRING_PTR, MEMBER(skyculture_t, uri)),
+        PROPERTY(tour, TYPE_JSON, MEMBER(skyculture_t, tour)),
         {}
     },
 };
