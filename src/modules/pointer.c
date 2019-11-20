@@ -24,6 +24,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     double win_pos[2], win_size[2], angle;
     const double T = 2.0;    // Animation period.
     double r, transf[3][3];
+    bool has_name;
     obj_t *selection = core->selection;
     painter_t painter = *painter_;
     vec4_set(painter.color, 1, 1, 1, 1);
@@ -38,8 +39,12 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
                        win_pos, win_size, &angle);
     r = max(win_size[0], win_size[1]);
     r += 5;
+
     // Draw four strokes around the object.
+    // Skip the upper stroke if the selection has a label.
+    has_name = labels_has_obj(selection->oid);
     for (i = 0; i < 4; i++) {
+        if (has_name && i == 3) continue;
         r = max(r, 8);
         r += 0.4 * (sin(sys_get_unix_time() / T * 2 * M_PI) + 1.1);
         mat3_set_identity(transf);

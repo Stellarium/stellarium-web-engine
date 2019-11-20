@@ -191,7 +191,7 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
                    const double color[4], double angle, int align,
                    int effects, double priority, uint64_t oid)
 {
-    if (!align) align = ALIGN_LEFT | ALIGN_BOTTOM;
+    if (!align) align = ALIGN_CENTER | ALIGN_BOTTOM;
     if (!(effects & TEXT_FLOAT)) priority = 1024.0; // Use FLT_MAX ?
     assert(priority <= 1024.0);
     assert(color);
