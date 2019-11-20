@@ -57,14 +57,6 @@ def list_data_files():
                 yield os.path.relpath(p, SOURCE)
         dirs[:] = sorted(dirs)
 
-
-def is_extra(path):
-    """Return whether an asset should only be included if the macro
-       ASSETS_INCLUDE_EXTRA has been defined"""
-    if re.match(r'^skycultures/(?!western).*', path): return True
-    return False
-
-
 def encode_str(data):
     ret = '    "'
     for c in data:
@@ -115,14 +107,11 @@ for group in groups:
             data = encode_bin(data)
 
         name = f.replace('.', '_').replace('-', '_').replace('/', '_')
-        extra = is_extra(f)
 
-        if extra: print >>out, "#if ASSETS_INCLUDE_EXTRA"
         print >>out, ("static const unsigned char DATA_{}[{}] "
                       "__attribute__((aligned(4))) =\n{};\n").format(
                               name, size, data)
         print >>out, 'ASSET_REGISTER({name}, "{url}", DATA_{name}, {comp})' \
                         .format(name=name, url=f,
                                 comp='true' if compressed else 'false')
-        if extra: print >>out, "#endif"
         print >>out
