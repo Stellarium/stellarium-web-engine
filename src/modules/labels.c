@@ -233,6 +233,20 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
 }
 
 /*
+ * Function: labels_has_obj
+ * Check if an object is in the labels list
+ */
+bool labels_has_obj(uint64_t oid)
+{
+    label_t *label;
+    DL_FOREACH(g_labels->labels, label) {
+        if (label->oid == oid)
+            return true;
+    }
+    return false;
+}
+
+/*
  * Meta class declarations.
  */
 

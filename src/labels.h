@@ -59,3 +59,9 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
                    bool at_inf, double radius, double size,
                    const double color[4], double angle, int align,
                    int effects, double priority, uint64_t oid);
+
+/*
+ * Function: labels_has_obj
+ * Check if an object is in the labels list
+ */
+bool labels_has_obj(uint64_t oid);
