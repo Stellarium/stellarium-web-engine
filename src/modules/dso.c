@@ -430,7 +430,7 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
         vec4_set(color, 0.45, 0.83, 1, 0.5);
     }
     radius = min(win_size[0] / 2, win_size[1] / 2) +
-                 fabs(cos(win_angle - M_PI_4)) *
+                 fabs(cos(win_angle)) *
                  fabs(win_size[0] / 2 - win_size[1] / 2);
     radius += 1;
     if (s2->short_name[0])
