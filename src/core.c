@@ -243,7 +243,7 @@ static void core_set_default(void)
     obs->pressure = 1013.25 * exp(-obs->hm / (29.3 * tsl));
     obs->refraction = true;
 
-    core->fov = 90 * DD2R;
+    core->fov = 50 * DD2R;
     core->utc_offset = sys_get_utc_offset() / 60;
 
     core->proj = PROJ_STEREOGRAPHIC;
