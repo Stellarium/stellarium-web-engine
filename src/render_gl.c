@@ -792,8 +792,13 @@ static void text_using_texture(renderer_gl_t *rend,
     if (align & ALIGN_BOTTOM)   ofs[1] = -s[1] / 2;
     bounds[0] = pos[0] - s[0] / 2 + ofs[0] + ctex->xoff / scale;
     bounds[1] = pos[1] - s[1] / 2 + ofs[1] + ctex->yoff / scale;
-    if (!angle) bounds[0] = round(bounds[0] * scale) / scale;
-    if (!angle) bounds[1] = round(bounds[1] * scale) / scale;
+
+    // Round the position to the nearest pixel.  We add a small delta to
+    // fix a bug when we are exactly in between two pixels, which can happen
+    // for example with the label of a centered object.
+    if (!angle) bounds[0] = round(bounds[0] * scale + 0.000001) / scale;
+    if (!angle) bounds[1] = round(bounds[1] * scale + 0.000001) / scale;
+
     bounds[2] = bounds[0] + s[0];
     bounds[3] = bounds[1] + s[1];
 
