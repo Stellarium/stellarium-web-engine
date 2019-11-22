@@ -118,9 +118,6 @@ static double lookup_score(const item_t *item, const double pos[static 2],
 
     // XXX: probably need to change this algo.
     if (dist > max_dist) return 0.0;
-    // If we are inside a shape, the distance is clamped so that we still
-    // have a chance to select a DSO when we click in the middle of it.
-    dist = max(dist, -10);
     ret = max_dist - fabs(dist);
     ret += min(area, 10); // Up to 10 pixels advantage for larger objects.
     return ret;
