@@ -17,7 +17,7 @@
 // If performances becomes a problem, it may be possible to use the fast
 // ERFA model for higher altitudes, and revert to this one for lower ones.
 
-#define DD2Rf ((float)M_PI / 180.f)
+#define DD2R (1.745329251994329576923691e-2)
 
 /*
  * Function: refraction_prepare
@@ -50,37 +50,37 @@ void refraction(const double v[3], double pressure, double temperature,
     // just specified.
     static const float TRANSITION_WIDTH_GEO_DEG = 1.46f;
     // Hopefully, the compiler pre-compute this
-    const float min_sinalt = sinf(MIN_GEO_ALTITUDE_DEG * DD2Rf -
-                                         TRANSITION_WIDTH_GEO_DEG * DD2Rf);
+    const float min_sinalt = sinf(MIN_GEO_ALTITUDE_DEG * DD2R -
+                                         TRANSITION_WIDTH_GEO_DEG * DD2R);
 
     assert(vec3_is_normalized(v));
     vec3_copy(v, out);
     if (v[2] < min_sinalt)
         return;
 
-    float geom_alt_deg = asinf(v[2]) / DD2Rf;
+    double geom_alt_deg = asin(v[2]) / DD2R;
 
-    const float p_saemundson = 1.02f * pressure / 1010.f * 283.f /
-                         (273.f + temperature) / 60.f;
+    const double p_saemundson = 1.02 * pressure / 1010. * 283. /
+                         (273. + temperature) / 60.;
     if (geom_alt_deg > MIN_GEO_ALTITUDE_DEG)
     {
         // refraction from Saemundsson, S&T1986 p70 / in Meeus, Astr.Alg.
-        float r = p_saemundson / tanf((geom_alt_deg + 10.3f /
-                     (geom_alt_deg + 5.11f)) * DD2Rf) + 0.0019279f;
+        double r = p_saemundson / tan((geom_alt_deg + 10.3 /
+                     (geom_alt_deg + 5.11)) * DD2R) + 0.0019279;
         geom_alt_deg += r;
         if (geom_alt_deg > 90.)
             geom_alt_deg = 90.;
-        out[2] = sinf(geom_alt_deg * DD2Rf);
+        out[2] = sin(geom_alt_deg * DD2R);
     }
     else if (geom_alt_deg > MIN_GEO_ALTITUDE_DEG - TRANSITION_WIDTH_GEO_DEG)
     {
         // Avoids the jump below -5 by interpolating linearly between
         // MIN_GEO_ALTITUDE_DEG and bottom of transition zone
-        float r_m5 = p_saemundson / tanf((MIN_GEO_ALTITUDE_DEG + 10.3f /
-                     (MIN_GEO_ALTITUDE_DEG + 5.11f)) * DD2Rf) + 0.0019279f;
+        double r_m5 = p_saemundson / tan((MIN_GEO_ALTITUDE_DEG + 10.3 /
+                     (MIN_GEO_ALTITUDE_DEG + 5.11)) * DD2R) + 0.0019279;
         geom_alt_deg += r_m5 * (geom_alt_deg - (MIN_GEO_ALTITUDE_DEG -
                         TRANSITION_WIDTH_GEO_DEG)) / TRANSITION_WIDTH_GEO_DEG;
-        out[2] = sinf(geom_alt_deg * DD2Rf);
+        out[2] = sin(geom_alt_deg * DD2R);
     }
     vec3_normalize(out, out);
 }
