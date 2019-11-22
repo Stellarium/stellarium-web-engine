@@ -161,7 +161,7 @@ obj_t *core_get_obj_at(double x, double y, double max_dist)
     uint64_t oid, hint;
 
     // First test the labels, and then the global shape area.
-    oid = labels_get_obj_at(pos, max_dist);
+    oid = labels_get_obj_at(pos, 0);
     if (oid) {
         return obj_get_by_oid(NULL, oid, 0);
     }
