@@ -575,7 +575,7 @@ static int render_visitor(int order, int pix, void *user)
             .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                       luminance * 255},
             // This makes very faint stars not selectable
-            .oid = luminance > 0.5 ? s->oid : 0,
+            .oid = (luminance > 0.5 && size > 1) ? s->oid : 0,
             .hint = pix_to_nuniq(order, pix),
         };
         n++;
