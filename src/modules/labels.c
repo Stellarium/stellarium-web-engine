@@ -108,6 +108,18 @@ static bool bounds_intersection(const double a[4], const double b[4],
     return true;
 }
 
+// Return the signed distance of a point to a bounding rect.
+static double bounds_dist_point(const double rect[4], const double p[2])
+{
+    double x = (rect[0] + rect[2]) / 2;
+    double y = (rect[1] + rect[3]) / 2;
+    double w = rect[2] - rect[0];
+    double h = rect[3] - rect[1];
+    double dx = max(abs(p[0] - x) - w / 2, 0);
+    double dy = max(abs(p[1] - y) - h / 2, 0);
+    return sqrt(dx * dx + dy * dy);
+}
+
 static double test_label_overlaps(const label_t *label)
 {
     label_t *other;
@@ -244,6 +256,26 @@ bool labels_has_obj(uint64_t oid)
             return true;
     }
     return false;
+}
+
+/*
+ * Function: labels_get_at
+ * Find a label at a given position on screen.
+ */
+uint64_t labels_get_obj_at(const double pos[2], double max_dist)
+{
+    label_t *label;
+    double dist;
+
+    DL_FOREACH(g_labels->labels, label) {
+        if (!label->oid || !label->active || label->fader.value == 0)
+            continue;
+        dist = bounds_dist_point(label->bounds, pos);
+        if (dist <= max_dist) {
+            return label->oid;
+        }
+    }
+    return 0;
 }
 
 /*

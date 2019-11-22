@@ -65,3 +65,9 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
  * Check if an object is in the labels list
  */
 bool labels_has_obj(uint64_t oid);
+
+/*
+ * Function: labels_get_at
+ * Find the object with a label at a given position on screen.
+ */
+uint64_t labels_get_obj_at(const double pos[2], double max_dist);
