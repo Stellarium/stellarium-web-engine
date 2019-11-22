@@ -115,8 +115,8 @@ static double bounds_dist_point(const double rect[4], const double p[2])
     double y = (rect[1] + rect[3]) / 2;
     double w = rect[2] - rect[0];
     double h = rect[3] - rect[1];
-    double dx = max(abs(p[0] - x) - w / 2, 0);
-    double dy = max(abs(p[1] - y) - h / 2, 0);
+    double dx = max(fabs(p[0] - x) - w / 2, 0);
+    double dy = max(fabs(p[1] - y) - h / 2, 0);
     return sqrt(dx * dx + dy * dy);
 }
 
