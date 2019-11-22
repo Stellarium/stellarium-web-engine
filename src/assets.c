@@ -180,7 +180,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
         asset->request = request_create(asset->url);
     }
     data = request_get_data(asset->request, size, code);
-    if (*code && (flags & ASSET_USED_ONCE))
+    if (*code && data && (flags & ASSET_USED_ONCE))
         asset->flags |= CAN_RELEASE;
 
     // All error return codes return NULL data.
