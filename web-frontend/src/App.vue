@@ -9,7 +9,7 @@
 <template>
 
 <v-app>
-  <v-navigation-drawer absolute temporary clipped v-model="nav" width="300" class="py-0">
+  <v-navigation-drawer v-model="nav" app stateless width="300">
     <v-layout column fill-height>
       <v-list dense>
         <template v-for="(item,i) in menuItems">
@@ -52,12 +52,16 @@
     </v-layout>
   </v-navigation-drawer>
 
-  <div id="stel" v-bind:class="{ right_panel: $store.state.showSidePanel }">
-    <div style="position: relative; width: 100%; height: 100%">
-      <component v-bind:is="guiComponent"></component>
-      <canvas id="stel-canvas" ref='stelCanvas'></canvas>
-    </div>
-  </div>
+  <v-content>
+    <v-container class="fill-height" fluid style="padding: 0">
+      <div id="stel" v-bind:class="{ right_panel: $store.state.showSidePanel }">
+        <div style="position: relative; width: 100%; height: 100%">
+          <component v-bind:is="guiComponent"></component>
+          <canvas id="stel-canvas" ref='stelCanvas'></canvas>
+        </div>
+      </div>
+    </v-container>
+  </v-content>
 
 </v-app>
 
@@ -75,7 +79,6 @@ export default {
   data (context) {
     return {
       menuItems: [
-        { header: 'Main' },
         { title: 'View Settings', icon: 'mdi-settings', store_var_name: 'showViewSettingsDialog' },
         { title: 'Planets Tonight', icon: 'mdi-panorama-fisheye', store_var_name: 'showPlanetsVisibilityDialog' },
         { divider: true }
@@ -112,7 +115,6 @@ export default {
       return res
     },
     toggleStoreValue: function (storeVarName) {
-      this.nav = false
       this.$store.commit('toggleBool', storeVarName)
     },
     getStoreValue: function (storeVarName) {
@@ -262,8 +264,8 @@ a:link {
 }
 
 .divider_menu {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 html {
@@ -304,7 +306,7 @@ html, body, #app {
   background-color: transparent!important;
 }
 
-#stel {height: 100%; width: 100%; position: fixed;}
+#stel {height: 100%; width: 100%; position: absolute;}
 #stel-canvas {z-index: -10; width: 100%; height: 100%;}
 
 .right_panel {
