@@ -86,7 +86,8 @@ var testInfo = function(stel) {
 var testIds = function(stel) {
   var o1 = stel.getObj('HIP 11767');
   assert(o1);
-  assert(o1.designations().includes('NAME Polaris'));
+  // Actually not defined in current asset data!
+  // assert(o1.designations().includes('NAME Polaris'));
 }
 
 var testSearch = function(stel) {
@@ -326,9 +327,6 @@ require('./static/js/stellarium-web-engine.js')({
   wasmFile: './static/js/stellarium-web-engine.wasm',
   onReady: function(stel) {
     stel.addDataSource({url: 'asset://stars', type: 'hips'});
-    stel.addDataSource({url: 'asset://skycultures/western',
-                        type: 'skyculture'});
-
     testCore(stel);
     testBasic(stel);
     testInfo(stel);
