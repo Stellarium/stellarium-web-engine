@@ -352,7 +352,7 @@ static int skyculture_update(obj_t *obj, double dt)
 
     // For the moment we parse the art separatly, it should all be merged
     // int a 'feature'.
-    arts = calloc(features->u.object.length, sizeof(*arts));
+    arts = calloc(features->u.object.length + 1, sizeof(*arts));
     arts_nb = 0;
     for (i = 0; i < features->u.object.length; i++) {
         r = skyculture_parse_feature_art_json(
@@ -360,6 +360,7 @@ static int skyculture_update(obj_t *obj, double dt)
         if (r) continue;
         arts_nb++;
     }
+    memset(&arts[arts_nb], 0, sizeof(arts[arts_nb]));
     if (arts_nb) cult->imgs = make_imgs_json(arts, cult->uri);
     free(arts);
 
