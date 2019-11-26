@@ -367,7 +367,7 @@ int skyculture_parse_feature_json(const json_value *v,
 {
     const char *id, *name;
     int r;
-    const json_value *lines, *description;
+    const json_value *lines = NULL, *description = NULL;
 
     r = jcon_parse(v, "{",
         "!id", JCON_STR(id),
