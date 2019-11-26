@@ -160,15 +160,6 @@ static int process_dir(source_t *source)
         return 1;
     }
 
-    // Check for a skyculture dir.
-    data = get_data(source, "constellationship.fab",
-                    ASSET_ACCEPT_404 | ASSET_USED_ONCE, &code);
-    if (!code) return 0;
-    if (data) {
-        module_add_data_source(NULL, source->url, "skyculture", NULL);
-        return 1;
-    }
-
     // Check for a HiPS survey.
     data = get_data(source, "properties",
                     ASSET_ACCEPT_404 | ASSET_USED_ONCE, &code);
