@@ -35,8 +35,12 @@ if debug and target_os == 'posix':
 
 env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE',
            CXXFLAGS='-Wall -std=gnu++11 -Wno-narrowing '
-                    '-Wno-unknown-pragmas -Wno-unused-function '
-                    '-Wno-class-memaccess')
+                    '-Wno-unknown-pragmas -Wno-unused-function')
+
+# Attempt to fix a bug with imgui compilation.
+# XXX: should update imgui version instead.
+if target_os != 'js':
+    env.Append(CXXFLAGS='-Wno-class-memaccess')
 
 if werror:
     env.Append(CCFLAGS='-Werror')
