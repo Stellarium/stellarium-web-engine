@@ -371,14 +371,15 @@ int skyculture_parse_feature_json(const json_value *v,
 
     r = jcon_parse(v, "{",
         "!id", JCON_STR(id),
-        "!name", JCON_STR(name),
+        "name", JCON_STR(name),
         "lines", JCON_VAL(lines),
         "description", JCON_VAL(description),
     "}");
     if (r) goto error;
 
     snprintf(feature->id, sizeof(feature->id), "%s", id);
-    snprintf(feature->name, sizeof(feature->name), "%s", name);
+    if (name)
+        snprintf(feature->name, sizeof(feature->name), "%s", name);
     if (description)
         feature->description = json_to_string(description);
 

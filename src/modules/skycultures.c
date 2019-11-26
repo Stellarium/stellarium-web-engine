@@ -296,7 +296,8 @@ static int skyculture_update(obj_t *obj, double dt)
     char path[1024], *name;
     int code, r, i, arts_nb;
     json_value *doc;
-    const json_value *names, *features, *description, *tour;
+    const json_value *names = NULL, *features = NULL, *description = NULL,
+                     *tour = NULL;
     constellation_art_t *arts;
 
     if (cult->parsed & SK_JSON)
@@ -317,27 +318,28 @@ static int skyculture_update(obj_t *obj, double dt)
 
     doc = json_parse(json, strlen(json));
     if (!doc) {
-        LOG_E("Cannot parse skyculture json");
+        LOG_E("Cannot parse skyculture json (%s)", path);
         return -1;
     }
 
     r = jcon_parse(doc, "{",
         "!name", JCON_STR(name),
         "names", JCON_VAL(names),
-        "!features", JCON_VAL(features),
+        "features", JCON_VAL(features),
         "!description", JCON_VAL(description),
         "tour", JCON_VAL(tour),
     "}");
     if (r) {
-        LOG_E("Cannot parse skyculture json");
+        LOG_E("Cannot parse skyculture json (%s)", path);
         return -1;
     }
 
-    if (tour) cult->tour = json_copy(tour);
-    cult->description = json_to_string(description);
     cult->info.name = strdup(name);
-    cult->names = skyculture_parse_names_json(names);
+    cult->description = json_to_string(description);
+    if (names) cult->names = skyculture_parse_names_json(names);
+    if (tour) cult->tour = json_copy(tour);
 
+    if (!features) goto end;
     cult->constellations = calloc(features->u.object.length,
                                   sizeof(*cult->constellations));
     for (i = 0; i < features->u.object.length; i++) {
@@ -361,6 +363,7 @@ static int skyculture_update(obj_t *obj, double dt)
     if (arts_nb) cult->imgs = make_imgs_json(arts, cult->uri);
     free(arts);
 
+end:
     json_value_free(doc);
     return 0;
 }
