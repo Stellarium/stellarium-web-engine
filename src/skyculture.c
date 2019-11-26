@@ -12,10 +12,10 @@
 
 
 static constellation_infos_t *get_constellation(
-        constellation_infos_t *csts, const char *id)
+        constellation_infos_t *csts, int size, const char *id)
 {
     int i;
-    for (i = 0; *(csts[i].id); i++) {
+    for (i = 0; i < size; i++) {
         if (strcasecmp(csts[i].id, id) == 0)
             return &csts[i];
     }
@@ -24,30 +24,36 @@ static constellation_infos_t *get_constellation(
 
 /*
  * Function: skyculture_parse_edge
- * Parse a constellation edge file.
+ * Parse constellation edges.
  *
  * Parameters:
- *   data   - Text data in the edge file format.
+ *   edges  - json array of the edges (see western skyculture json).
  *   infos  - Constellation info to update with the edge data.
+ *   size   - Size of the infos array.
  *
  * Return:
  *   The number of lines parsed, or -1 in case of error.
  */
-int skyculture_parse_edges(const char *edges, constellation_infos_t *csts)
+int skyculture_parse_edges(const json_value *edges,
+                           constellation_infos_t *csts, int size)
 {
     constellation_infos_t *info = NULL;
-    const char *line;
+    const json_value *line;
     char cst[2][8];
-    int i, ra1_h, ra1_m, ra1_s, ra2_h, ra2_m, ra2_s, nb;
+    int i, j, ra1_h, ra1_m, ra1_s, ra2_h, ra2_m, ra2_s, nb = 0;
     char dec1_sign, dec2_sign;
     int dec1_d, dec1_m, dec1_s, dec2_d, dec2_m, dec2_s;
     double ra1, dec1, ra2, dec2;
     const int MAX_EDGES = ARRAY_SIZE(info->edges);
 
-    for (line = edges, nb = 0; *line; line = strchr(line, '\n') + 1, nb++) {
-        if (str_startswith(line, "//")) continue;
-        if (*line == '\n') continue;
-        if (sscanf(line, "%*s %*s"
+    for (i = 0; i < edges->u.array.length; i++) {
+        line = edges->u.array.values[i];
+        if (line->type != json_string) {
+            LOG_W("Cannot parse skyculture edge line");
+            continue;
+        }
+        if (sscanf(line->u.string.ptr,
+                         "%*s %*s"
                          "%d:%d:%d %c%d:%d:%d "
                          "%d:%d:%d %c%d:%d:%d "
                          "%s %s",
@@ -56,18 +62,20 @@ int skyculture_parse_edges(const char *edges, constellation_infos_t *csts)
                          &ra2_h, &ra2_m, &ra2_s,
                          &dec2_sign, &dec2_d, &dec2_m, &dec2_s,
                          cst[0], cst[1]) != 16) {
-            LOG_W("Cannot parse skyculture edge line: %.16s...", line);
+            LOG_W("Cannot parse skyculture edge line: %.16s...",
+                  line->u.string.ptr);
             continue;
         }
         eraTf2a('+', ra1_h, ra1_m, ra1_s, &ra1);
         eraTf2a('+', ra2_h, ra2_m, ra2_s, &ra2);
         eraAf2a(dec1_sign, dec1_d, dec1_m, dec1_s, &dec1);
         eraAf2a(dec2_sign, dec2_d, dec2_m, dec2_s, &dec2);
-        for (i = 0; i < 2; i++) {
-            info = get_constellation(csts, cst[i]);
+        for (j = 0; j < 2; j++) {
+            info = get_constellation(csts, size, cst[j]);
             if (!info) continue;
             if (info->nb_edges >= MAX_EDGES) {
-                LOG_E("Too many bounds in constellation %s", cst);
+                LOG_E("Too many bounds in constellation %s (%d)",
+                      cst, info->nb_edges);
                 continue;
             }
             info->edges[info->nb_edges][0][0] = ra1;
@@ -76,6 +84,7 @@ int skyculture_parse_edges(const char *edges, constellation_infos_t *csts)
             info->edges[info->nb_edges][1][1] = dec2;
             info->nb_edges++;
         }
+        nb++;
     }
     return nb;
 }

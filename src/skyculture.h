@@ -72,16 +72,18 @@ typedef struct skyculture_name
 
 /*
  * Function: skyculture_parse_edge
- * Parse a constellation edge file.
+ * Parse constellation edges.
  *
  * Parameters:
- *   data   - Text data in the edge file format.
+ *   edges  - json array of the edges (see western skyculture json).
  *   infos  - Constellation info to update with the edge data.
+ *   size   - Size of the infos array.
  *
  * Return:
  *   The number of lines parsed, or -1 in case of error.
  */
-int skyculture_parse_edges(const char *data, constellation_infos_t *infos);
+int skyculture_parse_edges(const json_value *edges,
+                           constellation_infos_t *infos, int size);
 
 
 // Experimental parsing functions for the new json format.

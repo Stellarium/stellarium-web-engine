@@ -170,7 +170,7 @@ static int skyculture_update(obj_t *obj, double dt)
     int code, r, i, arts_nb;
     json_value *doc;
     const json_value *names = NULL, *features = NULL, *description = NULL,
-                     *tour = NULL;
+                     *tour = NULL, *edges = NULL;
     constellation_art_t *arts;
 
     if (cult->parsed & SK_JSON)
@@ -197,6 +197,7 @@ static int skyculture_update(obj_t *obj, double dt)
         "names", JCON_VAL(names),
         "features", JCON_VAL(features),
         "!description", JCON_VAL(description),
+        "edges", JCON_VAL(edges),
         "tour", JCON_VAL(tour),
     "}");
     if (r) {
@@ -233,6 +234,11 @@ static int skyculture_update(obj_t *obj, double dt)
     memset(&arts[arts_nb], 0, sizeof(arts[arts_nb]));
     if (arts_nb) cult->imgs = make_imgs_json(arts, cult->uri);
     free(arts);
+
+    if (edges) {
+        skyculture_parse_edges(edges, cult->constellations,
+                               cult->nb_constellations);
+    }
 
 end:
     json_value_free(doc);
