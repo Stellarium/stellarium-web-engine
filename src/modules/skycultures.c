@@ -19,15 +19,6 @@
  */
 enum {
     SK_JSON                         = 1 << 0,
-
-    // For stellarium format.
-    SK_INFO                         = 1 << 1,
-    SK_EDGES                        = 1 << 5,
-    SK_CONSTELLATIONS_STEL          = 1 << 6,
-    SK_CONSTELLATION_NAMES_STEL     = 1 << 7,
-    SK_IMGS_STEL                    = 1 << 8,
-    SK_STAR_NAMES_STEL              = 1 << 9,
-    SK_DESCRIPTION_STEL             = 1 << 10,
 };
 
 /*
@@ -121,19 +112,6 @@ static void skyculture_activate(skyculture_t *cult)
     module_changed(cult->obj.parent, "current_id");
 }
 
-static int info_ini_handler(void* user, const char* section,
-                            const char* attr, const char* value)
-{
-    skyculture_t *cult = user;
-    if (strcmp(section, "info") == 0) {
-        if (strcmp(attr, "name") == 0)
-            cult->info.name = strdup(value);
-        if (strcmp(attr, "author") == 0)
-            cult->info.author = strdup(value);
-    }
-    return 0;
-}
-
 static int skyculture_update(obj_t *obj, double dt);
 static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
                                   const char *id)
@@ -184,111 +162,6 @@ static json_value *make_imgs_json(
     return values;
 }
 
-/*
- * Function: get_file
- * Convenience function to get a data file.
- *
- * This only return true the first time the file is retreive.  After that
- * the file_id flag is set to cult->parsed and the file is never read
- * again.
- */
-static bool get_file(skyculture_t *cult, int file_id, const char *name,
-                     const char **data, int extra_flags)
-{
-    char path[1024];
-    int code;
-    if (cult->parsed & file_id) return false;
-    snprintf(path, sizeof(path) - 1, "%s/%s", cult->uri, name);
-    *data = asset_get_data2(path, ASSET_USED_ONCE | extra_flags, NULL, &code);
-    if (!code) return false;
-    cult->parsed |= file_id;
-    return *data;
-}
-
-static int skyculture_update_old(obj_t *obj, double dt)
-{
-    skyculture_t *cult = (skyculture_t*)obj;
-    skycultures_t *cults = (skycultures_t*)obj->parent;
-    const char *data;
-    constellation_art_t *arts;
-    bool active = (cult == cults->current);
-    const int all_data = SK_INFO | SK_DESCRIPTION_STEL |
-                         SK_CONSTELLATIONS_STEL |
-                         SK_CONSTELLATION_NAMES_STEL |
-                         SK_STAR_NAMES_STEL | SK_EDGES | SK_IMGS_STEL;
-
-    /*
-     * We parse all the data files of the skyculture.
-     * Once they have all been parsed and if the skyculture is active, then
-     * we activate it, that is we set all the constellation and images into
-     * the constellations module.
-     *
-     * Note: we don't have to load all the data unless the skyculture is
-     * active, but we should at least load the info.ini and description
-     * that are needed for the GUI.
-     */
-
-    if (cult->parsed == all_data)
-        return 0;
-
-    if (get_file(cult, SK_INFO, "info.ini", &data, 0)) {
-        ini_parse_string(data, info_ini_handler, cult);
-    }
-
-    if (get_file(cult, SK_DESCRIPTION_STEL, "description.en.utf8",
-                 &data, ASSET_ACCEPT_404))
-    {
-        cult->description = strdup(data);
-        module_changed((obj_t*)cult, "description");
-    }
-
-    // The rest of the data is not needed until the skyculture is activated.
-    if (!active) return 0;
-
-    if (get_file(cult, SK_CONSTELLATIONS_STEL, "constellationship.fab",
-                 &data, 0))
-    {
-        cult->constellations = skyculture_parse_stellarium_constellations(
-                data, &cult->nb_constellations);
-    }
-
-    if (cult->constellations && get_file(cult, SK_CONSTELLATION_NAMES_STEL,
-                  "constellation_names.eng.fab", &data, 0))
-    {
-        skyculture_parse_stellarium_constellations_names(
-                data, cult->constellations);
-    }
-
-    if (get_file(cult, SK_STAR_NAMES_STEL, "star_names.fab", &data,
-                 ASSET_ACCEPT_404))
-    {
-        cult->names = skyculture_parse_stellarium_star_names(data);
-    }
-
-    if (cult->constellations &&
-            get_file(cult, SK_EDGES, "edges.txt", &data, ASSET_ACCEPT_404)) {
-        skyculture_parse_edges(data, cult->constellations);
-    }
-
-    if (cult->constellations && get_file(cult, SK_IMGS_STEL,
-                "constellationsart.fab", &data, ASSET_ACCEPT_404))
-    {
-        arts = skyculture_parse_stellarium_constellations_art(data, NULL);
-        if (arts) {
-            cult->imgs = make_imgs_json(arts, cult->uri);
-        }
-        free(arts);
-    }
-
-    // Once all has beed parsed, we can activate the skyculture.
-    if (cult->parsed == all_data) {
-        if (active) skyculture_activate(cult);
-    }
-
-    return 0;
-}
-
-
 static int skyculture_update(obj_t *obj, double dt)
 {
     const char *json;
@@ -304,17 +177,14 @@ static int skyculture_update(obj_t *obj, double dt)
         return 0;
 
     snprintf(path, sizeof(path), "%s/%s", cult->uri, "index.json");
-    json = asset_get_data2(path, ASSET_USED_ONCE | ASSET_ACCEPT_404, NULL,
-                           &code);
-    if (!code) {
-        return 0;
-    }
-
-    // No index.json: try stellarium format.
-    if (!json) {
-        return skyculture_update_old(obj, dt);
-    }
+    json = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
+    if (!code) return 0;
     cult->parsed |= SK_JSON;
+
+    if (!json) {
+        LOG_E("Failed to download skyculture json file");
+        return -1;
+    }
 
     doc = json_parse(json, strlen(json));
     if (!doc) {

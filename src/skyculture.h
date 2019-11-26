@@ -69,12 +69,6 @@ typedef struct skyculture_name
     char            name[128];
 } skyculture_name_t;
 
-/*
- * Function: skyculture_parse_constellations
- * Parse a skyculture constellation file.
- */
-constellation_infos_t *skyculture_parse_constellations(
-        const char *consts, int *nb);
 
 /*
  * Function: skyculture_parse_edge
@@ -88,42 +82,6 @@ constellation_infos_t *skyculture_parse_constellations(
  *   The number of lines parsed, or -1 in case of error.
  */
 int skyculture_parse_edges(const char *data, constellation_infos_t *infos);
-
-/*
- * Function: skyculture_parse_stellarium_constellations
- * Parse a skyculture constellation file in stellarium format.
- */
-constellation_infos_t *skyculture_parse_stellarium_constellations(
-        const char *consts, int *nb);
-
-/*
- * Function: skyculture_parse_stellarium_constellations_names
- * Parse a 'constellation_names.fab' file.
- *
- * Parameters:
- *   data   - Text data in the fab file format.
- *   infos  - Constellation info to update with the names.
- *
- * Return:
- *   The number of names parsed, or -1 in case of error.
- */
-int skyculture_parse_stellarium_constellations_names(
-        const char *data, constellation_infos_t *infos);
-
-constellation_art_t *skyculture_parse_stellarium_constellations_art(
-        const char *data, int *nb);
-
-/*
- * Function: skyculture_parse_stellarium_star_names
- * Parse a skyculture star names file.
- *
- * Note that for the moment we just ignore the alternative names for the same
- * star.
- *
- * Return:
- *   A hash table of oid -> name.
- */
-skyculture_name_t *skyculture_parse_stellarium_star_names(const char *data);
 
 
 // Experimental parsing functions for the new json format.
