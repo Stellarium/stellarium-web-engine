@@ -189,8 +189,7 @@ void core_add_default_sources(void)
     add_source(BASE_URL "surveys/dso/v1", "hips");
 
     // Skycultures.
-    add_source(BASE_URL "skycultures/v1/western", "skyculture");
-    add_source(BASE_URL "skycultures/v1", NULL);
+    add_source(BASE_URL "skycultures/v2", NULL);
 
     add_source(BASE_URL "surveys/dss/v1", "hips");
     add_source(BASE_URL "surveys/milkyway/v1", "hips");
