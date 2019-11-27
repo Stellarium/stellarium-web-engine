@@ -333,7 +333,7 @@ static double segment_viewport_intersection(
  *
  * Parameters:
  *   a      - Segment pos A in view coordinates.
- *   b      - Semgnet pos B in view coordinates.
+ *   b      - Segment pos B in view coordinates.
  *   proj   - The view projection.
  *   p      - Output of intersection in windows coordinates.
  *   u      - Output direction of the line at the intersection.
