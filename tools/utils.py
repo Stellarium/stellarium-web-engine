@@ -28,7 +28,7 @@ DR2D = 57.29577951308232087679815
 
 # Make sure that all the scripts are run from the root dir.
 if not os.path.relpath(__file__).startswith('tools/'):
-    print 'Should be run from root directory'
+    print('Should be run from root directory')
     sys.exit(-1)
 
 
@@ -98,7 +98,7 @@ def compute_dir_md5(path):
 def compute_file_md5(path):
     """Compute the md5 of a file or a directory"""
     if not path.endswith('/'):
-        return hashlib.md5(open(path).read()).hexdigest()
+        return hashlib.md5(open(path, 'rb').read()).hexdigest()
     else:
         return compute_dir_md5(path)
 
@@ -119,9 +119,9 @@ def generator(target, md5):
                 func(path)
             current_md5 = compute_file_md5(path)
             if current_md5 != md5:
-                print 'Md5 for file %s changed!' % target
-                print 'Current md5: %s' % current_md5
-                print 'Expected   : %s' % md5
+                print('Md5 for file %s changed!' % target)
+                print('Current md5: %s' % current_md5)
+                print('Expected   : %s' % md5)
                 if abort_on_wrong_md5:
                     raise ValueError
             return path
