@@ -118,9 +118,9 @@ bool project(const projection_t *proj, int flags,
         return true;
     }
     assert(!(proj->flags & PROJ_NO_CLIP));
-    visible = (p[0] >= -p[3] && p[0] <= +p[3] &&
-               p[1] >= -p[3] && p[1] <= +p[3] &&
-               p[2] >= -p[3] && p[2] <= +p[3]);
+    visible = (p[0] >= -p[3] && p[0] < +p[3] &&
+               p[1] >= -p[3] && p[1] < +p[3] &&
+               p[2] >= -p[3] && p[2] < +p[3]);
     if (p[3])
         vec3_mul(1.0 / p[3], p, p);
     p[3] = visible ? 1.0 : 0.0; // Not sure this is proper...
