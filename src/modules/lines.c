@@ -88,7 +88,8 @@ static struct {
     const char  *id;
     uint32_t    color;
     int         frame;      // One of the FRAME_ value.
-    char        format;     // 'h' for hour, 'd' for degree. 0 for no labels.
+    // How to render the labels: 'h' for hour, 'd' for degree, 'n' for name.
+    char        format;
     bool        grid;       // If true render the whole grid.
 } LINES[] = {
     {
@@ -120,6 +121,7 @@ static struct {
         .id         = "meridian",
         .color      = 0x339933ff,
         .frame      = FRAME_OBSERVED,
+        .format     = 'n',
         .grid       = false,
     },
     {
@@ -127,6 +129,7 @@ static struct {
         .id         = "ecliptic",
         .color      = 0xb33333ff,
         .frame      = FRAME_ICRF, // XXX: probably need to change that.
+        .format     = 'n',
         .grid       = false,
     },
     {
@@ -134,6 +137,7 @@ static struct {
         .id         = "equator_line",
         .color      = 0x2a81ad80,
         .frame      = FRAME_ICRF,
+        .format     = 'n',
         .grid       = false,
     },
     {
@@ -156,6 +160,7 @@ struct line {
     fader_t         visible;
     int             frame;      // One of FRAME_ value.
     char            format;     // 'd', 'h', or 0
+    const char      *name;
     bool            grid;       // If true render the whole grid.
     double          color[4];
 };
@@ -214,6 +219,7 @@ static int lines_init(obj_t *obj, json_value *args)
         line->grid = LINES[i].grid;
         hex_to_rgba(LINES[i].color, line->color);
         line->format = LINES[i].format;
+        line->name = LINES[i].name;
         fader_init(&line->visible, false);
     }
     return 0;
@@ -418,7 +424,9 @@ static void render_label(const double p[2], const double u[2],
 
     if (dir == 0) a = mix(-90, +90 , uv[1]) * DD2R;
     else          a = mix(  0, +360, uv[0]) * DD2R;
-    if (dir == 0 || line->format == 'd') {
+
+    // Compute label according to the 'format' attribute.
+    if (line->format == 'd' || (line->format == 'h' && dir == 0)) {
         eraA2af(1, a, &s, h);
         if (step <= 360)
             snprintf(buf, sizeof(buf), "%c%d°", s, h[0]);
@@ -426,7 +434,7 @@ static void render_label(const double p[2], const double u[2],
             snprintf(buf, sizeof(buf), "%c%d°%02d'", s, h[0], h[1]);
         else
             snprintf(buf, sizeof(buf), "%c%d°%02d'%02d\"", s, h[0], h[1], h[2]);
-    } else {
+    } else if (line->format == 'h') {
         eraA2tf(1, a, &s, h);
         if (step <= 24)
             snprintf(buf, sizeof(buf), "%c%dh", s, h[0]);
@@ -434,6 +442,10 @@ static void render_label(const double p[2], const double u[2],
             snprintf(buf, sizeof(buf), "%c%dh%02d", s, h[0], h[1]);
         else
             snprintf(buf, sizeof(buf), "%c%dh%02dm%02ds", s, h[0], h[1], h[2]);
+    } else if (line->format == 'n') {
+        snprintf(buf, sizeof(buf), "%s", sys_translate("gui", line->name));
+    } else {
+        assert(false);
     }
 
     paint_text_bounds(painter, buf, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
