@@ -779,6 +779,7 @@ static void planet_render_orbit(const planet_t *planet,
     double in, om, w, a, n, ec, ma;
 
     if (planet->color[3]) vec3_copy(planet->color, painter.color);
+    painter.color[3] *= alpha;
 
     // Compute orbit elements.
     vec3_sub(planet->pvo[0], planet->parent->pvo[0], p);
@@ -942,15 +943,6 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (selected || vmag <= painter.hints_limit_mag - 1.0 || hips_alpha > 0)
         planet_render_label(planet, &painter, r_scale, point_size);
 
-    // For the moment we never render the orbits!
-    // I think it would be better to render the orbit in a separate module
-    // so that it works with any body, not just planets.  But this is
-    // hard to know in advance what depth range to use.  I leave this
-    // disabled until I implement a deferred renderer.
-    if (0 && planet->parent) {
-        planet_render_orbit(planet, 1.0, &painter);
-    }
-
     // Render the Sun halo.
     if (planet->id == SUN) {
         // Modulate halo opacity according to sun's altitude
@@ -969,11 +961,25 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     return cmp(eraPm(pb->pvo[0]), eraPm(pa->pvo[0]));
 }
 
+static bool should_render_orbit(const planet_t *p, double *alpha)
+{
+    *alpha = 0.9;
+    if (!core->selection) return false;
+    if (!p->parent) return false;
+    if (p->id == EARTH) return false;
+    if (p->obj.oid == core->selection->oid) return true;
+    if (p->parent->obj.oid != core->selection->oid) return false;
+    if (p->mass / p->parent->mass < 0.000001) return false;
+    *alpha = 0.6;
+    return true;
+}
+
 static int planets_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(planets_render, 0);
     planets_t *planets = (planets_t*)obj;
     planet_t *p;
+    double alpha;
 
     // First sort all the planets by distance to the observer.
     PLANETS_ITER(planets, p) {
@@ -986,6 +992,15 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     painter_.color[3] = planets->visible.value;
     PLANETS_ITER(planets, p) {
         planet_render(p, &painter_);
+    }
+
+    // Render orbits after the planets for proper depth buffer.
+    // Note: the renderer could sort it itself?
+    // Still disabled by default for the moment.
+    if ((0)) // Disabled for the moment
+    PLANETS_ITER(planets, p) {
+        if (should_render_orbit(p, &alpha))
+            planet_render_orbit(p, alpha, painter);
     }
     return 0;
 }
