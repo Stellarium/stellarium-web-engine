@@ -12,6 +12,10 @@ uniform   lowp      float   u_line_width;
 uniform   lowp      float   u_line_glow;
 uniform   lowp      vec4    u_color;
 
+#ifdef USE_DEPTH
+uniform   lowp      vec2    u_depth_range;
+#endif
+
 #ifdef DASH
 // Dash effect defined as a total length (dash and space, in uv unit),
 // and the ratio of the dash dot to the length.
@@ -23,12 +27,18 @@ varying   mediump   vec2    v_uv;
 
 #ifdef VERTEX_SHADER
 
-attribute highp     vec2    a_pos;
+attribute highp     vec3    a_pos;
 attribute highp     vec2    a_tex_pos;
 
 void main()
 {
-    gl_Position = vec4((a_pos / u_win_size - 0.5) * vec2(2.0, -2.0), 0.0, 1.0);
+    gl_Position = vec4((a_pos.xy / u_win_size - 0.5) * vec2(2.0, -2.0),
+                       a_pos.z, 1.0);
+#ifdef USE_DEPTH
+    gl_Position.z = (gl_Position.z - u_depth_range[0]) /
+                    (u_depth_range[1] - u_depth_range[0]);
+#endif
+
     v_uv = a_tex_pos;
 }
 

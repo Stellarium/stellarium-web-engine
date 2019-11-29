@@ -174,10 +174,10 @@ static const gl_buf_info_t LINES_BUF = {
 };
 
 static const gl_buf_info_t LINES_GLOW_BUF = {
-    .size = 16,
+    .size = 20,
     .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 2, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 8},
+        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 12},
     },
 };
 
@@ -1019,26 +1019,37 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     gl_shader_t *shader;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
+    const float depth_range[] = {rend->depth_range[0], rend->depth_range[1]};
+    bool use_depth = item->depth_range[0] || item->depth_range[1];
+
     shader_define_t defines[] = {
         {"DASH", item->lines.dash_length && (item->lines.dash_ratio < 1.0)},
+        {"USE_DEPTH", use_depth},
         {}
     };
     shader = shader_get("lines", defines, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
-    GL(glDisable(GL_DEPTH_TEST));
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                            GL_ZERO, GL_ONE));
+    if (use_depth)
+        GL(glEnable(GL_DEPTH_TEST));
+    else
+        GL(glDisable(GL_DEPTH_TEST));
+    GL(glDepthMask(GL_FALSE));
+
     gl_update_uniform(shader, "u_line_width", item->lines.width);
     gl_update_uniform(shader, "u_line_glow", item->lines.glow);
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_win_size", win_size);
+    gl_update_uniform(shader, "u_depth_range", depth_range);
 
     gl_update_uniform(shader, "u_dash_length", item->lines.dash_length);
     gl_update_uniform(shader, "u_dash_ratio", item->lines.dash_ratio);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
+    GL(glDepthMask(GL_TRUE));
 }
 
 static void item_vg_render(renderer_gl_t *rend, const item_t *item)
@@ -1331,6 +1342,7 @@ static void rend_flush(renderer_gl_t *rend)
         rend->depth_range[1] = 1;
     }
 
+    GL(glDepthMask(GL_TRUE));
     GL(glClearColor(0.0, 0.0, 0.0, 1.0));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
@@ -1439,11 +1451,13 @@ static void line_glow(renderer_t           *rend_,
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
+    if (painter->depth_range)
+        vec2_to_float(*painter->depth_range, item->depth_range);
 
     // Append the mesh to the buffer.
     ofs = item->buf.nb;
     for (i = 0; i < mesh->verts_count; i++) {
-        gl_buf_2f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(mesh->verts[i].pos));
+        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(mesh->verts[i].pos));
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, VEC2_SPLIT(mesh->verts[i].uv));
         gl_buf_next(&item->buf);
     }

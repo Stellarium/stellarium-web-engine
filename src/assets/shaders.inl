@@ -208,7 +208,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_lines_glsl[1713] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_lines_glsl[1952] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -223,6 +223,10 @@ static const unsigned char DATA_shaders_lines_glsl[1713] __attribute__((aligned(
     "uniform   lowp      float   u_line_glow;\n"
     "uniform   lowp      vec4    u_color;\n"
     "\n"
+    "#ifdef USE_DEPTH\n"
+    "uniform   lowp      vec2    u_depth_range;\n"
+    "#endif\n"
+    "\n"
     "#ifdef DASH\n"
     "// Dash effect defined as a total length (dash and space, in uv unit),\n"
     "// and the ratio of the dash dot to the length.\n"
@@ -234,12 +238,18 @@ static const unsigned char DATA_shaders_lines_glsl[1713] __attribute__((aligned(
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
-    "attribute highp     vec2    a_pos;\n"
+    "attribute highp     vec3    a_pos;\n"
     "attribute highp     vec2    a_tex_pos;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = vec4((a_pos / u_win_size - 0.5) * vec2(2.0, -2.0), 0.0, 1.0);\n"
+    "    gl_Position = vec4((a_pos.xy / u_win_size - 0.5) * vec2(2.0, -2.0),\n"
+    "                       a_pos.z, 1.0);\n"
+    "#ifdef USE_DEPTH\n"
+    "    gl_Position.z = (gl_Position.z - u_depth_range[0]) /\n"
+    "                    (u_depth_range[1] - u_depth_range[0]);\n"
+    "#endif\n"
+    "\n"
     "    v_uv = a_tex_pos;\n"
     "}\n"
     "\n"
