@@ -765,26 +765,46 @@ static void planet_render_hips(const planet_t *planet,
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 
+/*
+ * Compute Kepler orbit elements of a planet in ICRF, centered on the parent
+ * body.
+ */
+static void planet_compute_orbit_elements(
+        const planet_t *planet,
+        const observer_t *obs,
+        double *in,
+        double *om,
+        double *w,
+        double *a,
+        double *n,
+        double *ec,
+        double *ma)
+{
+    const double G = 6.674e-11;
+    const double SPD = 60 * 60 * 24;
+    double p[3], v[3];
+    // μ in (AU)³(day)⁻²
+    double mu = G * planet->parent->mass / (DAU * DAU * DAU) * SPD * SPD;
+    vec3_sub(planet->pvo[0], planet->parent->pvo[0], p);
+    vec3_sub(planet->pvo[1], planet->parent->pvo[1], v);
+    orbit_elements_from_pv(p, v, mu, in, om, w, a, n, ec, ma);
+}
+
+
 static void planet_render_orbit(const planet_t *planet,
                                 double alpha,
                                 const painter_t *painter_)
 {
     painter_t painter = *painter_;
-    double pos[4], mat[4][4], p[3], v[3];
+    double pos[4], mat[4][4];
     double dist, depth_range[2];
-    const double G = 6.674e-11;
-    const double SPD = 60 * 60 * 24;
-    // μ in (AU)³(day)⁻²
-    double mu = G * planet->parent->mass / (DAU * DAU * DAU) * SPD * SPD;
     double in, om, w, a, n, ec, ma;
 
     if (planet->color[3]) vec3_copy(planet->color, painter.color);
     painter.color[3] *= alpha;
 
-    // Compute orbit elements.
-    vec3_sub(planet->pvo[0], planet->parent->pvo[0], p);
-    vec3_sub(planet->pvo[1], planet->parent->pvo[1], v);
-    orbit_elements_from_pv(p, v, mu, &in, &om, &w, &a, &n, &ec, &ma);
+    planet_compute_orbit_elements(planet, painter.obs, &in, &om, &w, &a, &n,
+                                  &ec, &ma);
 
     // Center the rendering on the parent planet.
     vec4_copy(planet->parent->pvo[0], pos);
