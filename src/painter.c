@@ -248,9 +248,7 @@ static void line_func(void *user, double t, double out[4])
 
     vec4_mix(line[0], line[1], t, pos);
     if (map) uv_map(map, pos, pos, NULL);
-    vec3_normalize(pos, pos);
-    convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, out);
-    out[3] = 0.0;
+    convert_framev4(painter->obs, frame, FRAME_VIEW, pos, out);
 }
 
 /*
