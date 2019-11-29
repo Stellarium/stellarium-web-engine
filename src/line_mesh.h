@@ -28,7 +28,7 @@
 typedef struct line_mesh
 {
     struct {
-        float pos[2];
+        float pos[3];
         float uv[2];
     } *verts;
     uint16_t *indices;
@@ -49,7 +49,7 @@ typedef struct line_mesh
  *   A new <line_mesh_t> instance, that should be released with
  *   <line_mesh_delete>.
  */
-line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width);
+line_mesh_t *line_to_mesh(const double (*line)[3], int size, double width);
 
 /*
  * Function: line_mesh_delete
@@ -68,7 +68,8 @@ void line_mesh_delete(line_mesh_t *mesh);
  *   user   - User data passed to the function.
  *   split  - Number of segments requested in the output.  If set to 0 use
  *            an adaptive algorithm.
- *   out    - Allocated out line points.
+ *   out    - Allocated out line points in windows coordinates (Z is set to
+ *            the depth).
  *
  * Return:
  *   The number of points in the line, or -1 in case or error (and out is not
@@ -76,6 +77,6 @@ void line_mesh_delete(line_mesh_t *mesh);
  */
 int line_tesselate(void (*func)(void *user, double t, double pos[4]),
                    const projection_t *proj,
-                   void *user, int split, double (**out)[2]);
+                   void *user, int split, double (**out)[3]);
 
 #endif // LINE_MESH_H

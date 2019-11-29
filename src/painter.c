@@ -298,7 +298,7 @@ int paint_line(const painter_t *painter,
 {
     int i, size;
     double view_pos[2][4];
-    double (*win_line)[2] = NULL;
+    double (*win_line)[3] = NULL;
     bool discontinuous = false;
     double splits[2][2][4];
 

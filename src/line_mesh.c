@@ -14,7 +14,7 @@
 #include <float.h>
 #include <stdlib.h>
 
-static void line_get_normal(const double (*line)[2], int size, int i,
+static void line_get_normal(const double (*line)[3], int size, int i,
                             double n[2])
 {
     double seg_before[2] = {}, seg_after[2] = {}, seg[2];
@@ -38,7 +38,7 @@ static void line_get_normal(const double (*line)[2], int size, int i,
         vec2_normalize(n, n);
 }
 
-line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width)
+line_mesh_t *line_to_mesh(const double (*line)[3], int size, double width)
 {
     int i, k;
     double n[2], v[2], length = 0;
@@ -59,6 +59,8 @@ line_mesh_t *line_to_mesh(const double (*line)[2], int size, double width)
         vec2_to_float(v, mesh->verts[i * 2 + 0].pos);
         vec2_addk(line[i], n, width / 2, v);
         vec2_to_float(v, mesh->verts[i * 2 + 1].pos);
+        mesh->verts[i * 2 + 0].pos[2] = line[i][2];
+        mesh->verts[i * 2 + 1].pos[2] = line[i][2];
         vec2_set(mesh->verts[i * 2 + 0].uv, length, -width / 2);
         vec2_set(mesh->verts[i * 2 + 1].uv, length, +width / 2);
     }
@@ -89,7 +91,7 @@ static double line_point_dist(const double a[2], const double b[2],
     return vec2_cross(ap, u) / vec2_norm(u);
 }
 
-static void line_push_point(double (**line)[2], const double p[2],
+static void line_push_point(double (**line)[3], const double p[3],
                             int *size, int *allocated)
 {
     if (*size <= *allocated) {
@@ -102,7 +104,7 @@ static void line_push_point(double (**line)[2], const double p[2],
 static void line_tesselate_(void (*func)(void *user, double t, double pos[4]),
                             const projection_t *proj,
                             void *user, double t0, double t1,
-                            double (**out)[2],
+                            double (**out)[3],
                             int level, int *size, int *allocated)
 {
     double p0[4], p1[4], pm[4], tm;
@@ -130,7 +132,7 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[4]),
 
 int line_tesselate(void (*func)(void *user, double t, double pos[4]),
                    const projection_t *proj,
-                   void *user, int split, double (**out)[2])
+                   void *user, int split, double (**out)[3])
 {
     int i, allocated = 0, size = 0;
     *out = NULL;
@@ -142,7 +144,7 @@ int line_tesselate(void (*func)(void *user, double t, double pos[4]),
         for (i = 0; i < size; i++) {
             func(user, (double)i / split, p);
             project(proj, PROJ_TO_WINDOW_SPACE, p, p);
-            vec2_copy(p, (*out)[i]);
+            vec3_copy(p, (*out)[i]);
         }
     } else {
         func(user, 0, p);

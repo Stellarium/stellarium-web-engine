@@ -79,7 +79,7 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
 
 static void line(renderer_t           *rend_,
                  const painter_t      *painter,
-                 const double         (*line)[2],
+                 const double         (*line)[3],
                  int size)
 {
     // Not supported yet.

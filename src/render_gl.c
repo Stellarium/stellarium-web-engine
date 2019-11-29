@@ -1400,7 +1400,7 @@ static void finish(renderer_t *rend_)
 
 static void line_glow(renderer_t           *rend_,
                       const painter_t      *painter,
-                      const double         (*line)[2],
+                      const double         (*line)[3],
                       int                  size)
 {
     renderer_gl_t *rend = (void*)rend_;
@@ -1458,7 +1458,7 @@ end:
 
 static void line(renderer_t           *rend_,
                  const painter_t      *painter,
-                 const double         (*line)[2],
+                 const double         (*line)[3],
                  int                  size)
 {
     int i, ofs;

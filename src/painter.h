@@ -109,7 +109,7 @@ struct renderer
 
     void (*line)(renderer_t           *rend,
                  const painter_t      *painter,
-                 const double         (*line)[2],
+                 const double         (*line)[3],
                  int                  size);
 
     void (*mesh)(renderer_t          *rend,
