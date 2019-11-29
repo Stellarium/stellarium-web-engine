@@ -127,6 +127,7 @@ bool project(const projection_t *proj, int flags,
     if (flags & PROJ_TO_WINDOW_SPACE) {
         p[0] = (+p[0] + 1) / 2 * proj->window_size[0];
         p[1] = (-p[1] + 1) / 2 * proj->window_size[1];
+        p[2] = -v[2]; // Z get the distance in view space.
     }
     memcpy(out, p, 4 * sizeof(double));
     return visible;
