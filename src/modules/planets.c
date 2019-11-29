@@ -785,8 +785,8 @@ static void planet_compute_orbit_elements(
     double p[3], v[3];
     // μ in (AU)³(day)⁻²
     double mu = G * planet->parent->mass / (DAU * DAU * DAU) * SPD * SPD;
-    vec3_sub(planet->pvo[0], planet->parent->pvo[0], p);
-    vec3_sub(planet->pvo[1], planet->parent->pvo[1], v);
+    vec3_sub(planet->pvh[0], planet->parent->pvh[0], p);
+    vec3_sub(planet->pvh[1], planet->parent->pvh[1], v);
     orbit_elements_from_pv(p, v, mu, in, om, w, a, n, ec, ma);
 }
 
