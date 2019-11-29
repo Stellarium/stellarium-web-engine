@@ -744,14 +744,12 @@ static void planet_render_hips(const planet_t *planet,
     // Lower current moon texture contrast.
     if (planet->id == MOON) painter.contrast = 0.6;
 
-    // XXX: for the moment we only use depth if the planet has a ring,
-    // to prevent having to clean the depth buffer.
-    if (planet->rings.tex) {
-        dist = vec3_norm(planet->pvo[0]);
-        depth_range[0] = dist * 0.5;
-        depth_range[1] = dist * 2;
-        painter.depth_range = &depth_range;
-    }
+    // Set the min required depth range needed with some margins for the
+    // actual planet size and the rings.
+    dist = vec3_norm(planet->pvo[0]);
+    depth_range[0] = dist * 0.5;
+    depth_range[1] = dist * 2;
+    painter.depth_range = &depth_range;
 
     // Compute the required split order, based on the size of the planet
     // on screen.
