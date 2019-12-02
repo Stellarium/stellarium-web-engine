@@ -36,6 +36,7 @@ typedef struct planet planet_t;
 struct planet {
     obj_t       obj;
 
+    // Constant data.
     const char  *name;
     planet_t    *parent;
     double      radius_m;  // (meter)
@@ -43,6 +44,7 @@ struct planet {
     double      color[4];
     double      shadow_brightness; // in [0-1].
     int         id; // Uniq id number, as defined in JPL HORIZONS.
+    double      mass;       // kg (0 if unknown).
 
     // Optimizations vars
     float update_delta_s;    // Number of seconds between 2 orbits full update
@@ -53,8 +55,6 @@ struct planet {
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      pvo[2][4];   // ICRF, observer centric.
     double      vmag;
-
-    double      mass;       // kg (0 if unknown).
 
     // Rotation elements
     struct {
