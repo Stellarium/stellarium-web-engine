@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[25683] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[25734] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -67,7 +67,9 @@ static const unsigned char DATA_planets_ini[25683] __attribute__((aligned(4))) =
     "rot_obliquity = 3.13 deg\n"
     "# Set so that the GRS position is correct.\n"
     "rot_period = 9.9289013 h\n"
-    "rot_offset = 160 deg\n"
+    "rot_offset = 240 deg\n"
+    "rot_pole_ra = 268.057 deg\n"
+    "rot_pole_de = 64.495 deg\n"
     "mass = 1.89813e+27 kg\n"
     "\n"
     "[saturn]\n"
