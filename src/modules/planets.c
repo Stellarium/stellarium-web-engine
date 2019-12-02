@@ -53,8 +53,8 @@ struct planet {
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      pvo[2][4];   // ICRF, observer centric.
     double      vmag;
-    double      phase;
     double      radius;     // Apparent disk radius (rad)
+
     double      mass;       // kg (0 if unknown).
 
     // Rotation elements
@@ -161,7 +161,6 @@ static int earth_update(planet_t *planet, const observer_t *obs)
     vec3_copy(pv[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-    planet->phase = NAN;
     return 0;
 }
 
@@ -212,7 +211,6 @@ static int sun_update(planet_t *planet, const observer_t *obs)
     vec3_copy(obs->sun_pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-    planet->phase = NAN;
 
     // Compute the apparent magnitude for the absolute mag (V: 4.83) and
     // observer's distance
@@ -251,7 +249,6 @@ static void moon_icrf_geocentric_pos(double tt, double pos[3])
 
 static int moon_update(planet_t *planet, const observer_t *obs)
 {
-    double i;   // Phase angle.
     double el, dist;
     double pv[2][3];
 
@@ -271,9 +268,6 @@ static int moon_update(planet_t *planet, const observer_t *obs)
     vec3_copy(pv[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-
-    i = eraSepp(planet->pvh[0], planet->pvo[0]);
-    planet->phase = 0.5 * cos(i) + 0.5;
 
     // Compute visual mag.
     // This is based on the algo of pyephem.
@@ -311,7 +305,6 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
     planet->pvo[1][3] = 1;
 
     i = eraSepp(planet->pvh[0], planet->pvo[0]);
-    planet->phase = 0.5 * cos(i) + 0.5;
     // Compute visual magnitude.
     i *= DR2D / 100;
     rho = vec3_norm(planet->pvh[0]);
@@ -328,7 +321,6 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     double mag;
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
-    double i;   // Phase angle.
     planet_t *jupiter = planet->parent;
     planet_update_(jupiter, obs);
     const double dt = obs->ut1 - planet->last_full_update;
@@ -347,8 +339,6 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
 
-    i = eraSepp(planet->pvh[0], planet->pvo[0]);
-    planet->phase = 0.5 * cos(i) + 0.5;
     // Compute visual magnitude.
     // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
     rho = vec3_norm(planet->pvh[0]);
@@ -363,7 +353,6 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 {
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
-    double i;   // Phase angle.
     double p[3], v[3], pv[2][3];
     planet_update_(planet->parent, obs);
     const double dt = obs->tt - planet->last_full_update;
@@ -396,8 +385,6 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
 
-    i = eraSepp(planet->pvh[0], planet->pvo[0]);
-    planet->phase = 0.5 * cos(i) + 0.5;
     // Compute visual magnitude.
     // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
     rho = vec3_norm(planet->pvh[0]);
@@ -473,6 +460,16 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
     return 0;
 }
 
+static double planet_get_phase(const planet_t *planet, const observer_t *obs)
+{
+    double i;   // Phase angle.
+    if (planet->id == EARTH || planet->id == SUN)
+        return NAN;
+    // XXX: assume pvh and pvo are up to date!  We should use getter instead.
+    i = eraSepp(planet->pvh[0], planet->pvo[0]);
+    return 0.5 * cos(i) + 0.5;
+}
+
 static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
                            void *out)
 {
@@ -486,7 +483,7 @@ static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = planet->vmag;
         return 0;
     case INFO_PHASE:
-        *(double*)out = planet->phase;
+        *(double*)out = planet_get_phase(planet, obs);
         return 0;
     case INFO_RADIUS:
         *(double*)out = planet->radius;
