@@ -866,7 +866,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double point_size;       // Radius size of point (pixel).
     double point_r;          // Size (rad) and luminance if the planet is seen
     double point_luminance;  // as a point source (like a star).
-    double radius_m, radius;
+    double radius_m;
     double r_scale = 1.0;    // Artificial size scale.
     double diam;                // Angular diameter (rad).
     double hips_alpha = 0;
@@ -893,16 +893,15 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
     point_r = core_get_apparent_angle_for_point(painter.proj, point_size * 2.0);
 
-    // Compute max angular radius of the planet, taking into account the
+    // Compute max radius of the planet, taking into account the
     // ring and the point size if it is bigger than the planet.
     radius_m = max(planet->radius_m, planet->rings.outer_radius) * r_scale;
-    radius = max(radius_m / DAU / vec3_norm(planet->pvo[0]), point_r);
 
     // Compute planet's pos and bounding cap in ICRF
     vec3_copy(planet->pvo[0], pos);
     vec3_normalize(pos, pos);
     vec3_copy(pos, cap);
-    cap[3] = cos(radius);
+    cap[3] = cos(max(radius_m / DAU / vec3_norm(planet->pvo[0]), point_r));
 
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
         return;
