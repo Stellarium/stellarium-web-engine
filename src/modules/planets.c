@@ -371,6 +371,10 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     double p[3], v[3], pv[2][3];
     planet_update_(planet->parent, obs);
     const double dt = obs->tt - planet->last_full_update;
+    double rmatecl[3][3] = MAT3_IDENTITY;
+    // J2000.0 obliquity (Lieske et al. 1977).
+    const double EPS0 = 84381.448 * ERFA_DAS2R;
+
     if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
         // Fast update from previous position
         eraPvu(dt, planet->last_full_pvh, planet->pvh);
@@ -386,12 +390,9 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
                 planet->orbit.kepler.ma,
                 0.0, 0.0);
         planet->last_full_update = obs->tt;
+
         // Ecliptic -> Equatorial.
-        double obl;
-        double rmatecl[3][3];
-        obl = eraObl06(DJM0, obs->tt); // Mean oblicity of ecliptic at J2000.
-        eraIr(rmatecl);
-        eraRx(-obl, rmatecl);
+        eraRx(-EPS0, rmatecl);
         eraRxp(rmatecl, p, p);
         eraRxp(rmatecl, v, v);
 
