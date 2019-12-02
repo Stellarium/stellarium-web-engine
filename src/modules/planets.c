@@ -17,6 +17,19 @@
  * All the data is in the file data/planets.ini.
  */
 
+// Orbit elements.
+typedef struct elements
+{
+    double mjd;     // date (MJD).
+    double in;      // inclination (rad).
+    double om;      // Longitude of the Ascending Node (rad).
+    double w;       // Argument of Perihelion (rad).
+    double a;       // Mean distance (Semi major axis) (AU).
+    double n;       // Daily motion (rad/day).
+    double ec;      // Eccentricity.
+    double ma;      // Mean Anomaly (rad).
+} elements_t;
+
 typedef struct planet planet_t;
 
 // The planet object klass.
@@ -58,16 +71,7 @@ struct planet {
     struct {
         int type; // 0: special, 1: kepler.
         union {
-            struct {
-                double mjd;      // date (MJD).
-                double in;      // inclination (rad).
-                double om;      // Longitude of the Ascending Node (rad).
-                double w;       // Argument of Perihelion (rad).
-                double a;       // Mean distance (Semi major axis) (AU).
-                double n;       // Daily motion (rad/day).
-                double ec;      // Eccentricity.
-                double ma;      // Mean Anomaly (rad).
-            } kepler;
+            elements_t kepler;
         };
     } orbit;
 
