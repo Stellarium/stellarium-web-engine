@@ -51,7 +51,6 @@ struct planet {
 
     // Cached values.
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
-    double      hpos[3];     // ecl, heliocentric pos J2000.0
     double      pvo[2][4];   // ICRF, observer centric.
     double      vmag;
     double      phase;
@@ -167,8 +166,6 @@ static int earth_update(planet_t *planet, const observer_t *obs)
     vec3_copy(pv[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-    // Ecliptic position.
-    mat3_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
     planet->phase = NAN;
     return 0;
 }
@@ -450,17 +447,18 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
     // Kepler orbit planets.
     if (planet->orbit.type == 1) kepler_update(planet, obs);
 
-    mat3_mul_vec3(obs->ri2e, planet->pvh[0], planet->hpos);
 
     // Adjust vmag for saturn.
     if (planet->id == SATURN) {
+        double hpos[3]; // Heliocentric pos J2000.0
         double hlon, hlat;
         double earth_hlon, earth_hlat;
         double et, st, set;
         double earth_hpos[3];
+        mat3_mul_vec3(obs->ri2e, planet->pvh[0], hpos);
         mat3_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
 
-        eraC2s(planet->hpos, &hlon, &hlat);
+        eraC2s(hpos, &hlon, &hlat);
         eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
         satrings(hlat, hlon, vec3_norm(planet->pvh[0]),
                  earth_hlon, vec3_norm(obs->earth_pvh[0]),
