@@ -53,7 +53,6 @@ struct planet {
     double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      pvo[2][4];   // ICRF, observer centric.
     double      vmag;
-    double      radius;     // Apparent disk radius (rad)
 
     double      mass;       // kg (0 if unknown).
 
@@ -454,9 +453,6 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
         planet->vmag += (-2.60 + 1.25 * set) * set;
     }
 
-    planet->radius = planet->radius_m / DAU /
-            eraPm((double*)planet->pvo[0]);
-
     return 0;
 }
 
@@ -486,7 +482,7 @@ static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = planet_get_phase(planet, obs);
         return 0;
     case INFO_RADIUS:
-        *(double*)out = planet->radius;
+        *(double*)out = planet->radius_m / DAU / vec3_norm(planet->pvo[0]);
         return 0;
     default:
         return 1;
@@ -845,8 +841,8 @@ static void planet_render_label(
     vec3_normalize(pos, pos);
 
     // Radius on screen in pixel.
-    radius = planet->radius / 2.0 *
-        painter->proj->window_size[0] / painter->proj->scaling[0];
+    radius = planet->radius_m / DAU / vec3_norm(planet->pvo[0]);
+    radius *= painter->proj->window_size[0] / painter->proj->scaling[0] / 2;
 
     s = point_size;
     s = max(s, radius);
@@ -906,6 +902,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
         return;
 
+    // Planet apparent diameter in rad
+    diam = 2.0 * planet->radius_m / DAU / vec3_norm(planet->pvo[0]);
+
     // Project planet's center
     convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
     project(painter.proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
@@ -918,11 +917,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (planet->id != SUN) {
         // Ignore planets below ground
         if (pos[2] > 0)
-            core_report_vmag_in_fov(vmag, planet->radius, 0);
+            core_report_vmag_in_fov(vmag, diam / 2, 0);
     }
 
-    // Planet apparent diameter in rad
-    diam = 2.0 * planet->radius;
     hips = planet->hips ?: planets->default_hips;
     if (hips && hips_k * diam * r_scale >= point_r) {
         hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * diam * r_scale ));
