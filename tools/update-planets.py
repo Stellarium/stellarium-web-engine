@@ -114,7 +114,7 @@ for id, name in all_bodies:
         res = requests.get('https://ssd.jpl.nasa.gov/horizons_batch.cgi',
                 params=dict(
                     batch=1, command=id, csv_format='yes',
-                    table_type='elements', center=center,
+                    table_type='elements', center=center, ref_plane='frame',
                     tlist=now,
                 ))
 

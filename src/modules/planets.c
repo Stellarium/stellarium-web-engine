@@ -17,7 +17,7 @@
  * All the data is in the file data/planets.ini.
  */
 
-// Orbit elements.
+// Orbit elements, with ICRF reference PLANE.
 typedef struct elements
 {
     double mjd;     // date (MJD).
@@ -375,9 +375,6 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
     double p[3], v[3], pv[2][3];
     planet_update_(planet->parent, obs);
     const double dt = obs->tt - planet->last_full_update;
-    double rmatecl[3][3] = MAT3_IDENTITY;
-    // J2000.0 obliquity (Lieske et al. 1977).
-    const double EPS0 = 84381.448 * ERFA_DAS2R;
 
     if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
         // Fast update from previous position
@@ -394,11 +391,6 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
                 planet->orbit.kepler.ma,
                 0.0, 0.0);
         planet->last_full_update = obs->tt;
-
-        // Ecliptic -> Equatorial.
-        eraRx(-EPS0, rmatecl);
-        eraRxp(rmatecl, p, p);
-        eraRxp(rmatecl, v, v);
 
         // Add parent position and speed to get heliocentric position.
         vec3_add(p, planet->parent->pvh[0], planet->last_full_pvh[0]);
