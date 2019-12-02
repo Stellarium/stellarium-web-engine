@@ -136,7 +136,7 @@ def compute_all():
     yield compute(iss, name='ISS', t=[2019, 8, 3, 20, 51, 46], json=json,
                   topo=['43.4822 N', '1.432 E'], # Goyrans
                   klass='tle_satellite',
-                  precision_radec=100, precision_azalt=100)
+                  precision_radec=150, precision_azalt=100)
 
     # Pallas, using MPC data as of 2019-08-06.
     data = {"Epoch": 2458600.5, "M": 59.69912, "Peri": 310.04884,
