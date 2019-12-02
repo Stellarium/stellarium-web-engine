@@ -48,7 +48,7 @@ struct planet {
 
     // Optimizations vars
     float update_delta_s;    // Number of seconds between 2 orbits full update
-    double last_full_update; // Time of last full orbit update (UT1)
+    double last_full_update; // Time of last full orbit update (TT)
     double last_full_pvh[2][3]; // equ, J2000.0, AU heliocentric pos and speed.
 
     // Cached values.
@@ -322,7 +322,7 @@ static int l12_update(planet_t *planet, const observer_t *obs)
     double rp;  // Distance to Sun (AU).
     planet_t *jupiter = planet->parent;
     planet_update_(jupiter, obs);
-    const double dt = obs->ut1 - planet->last_full_update;
+    const double dt = obs->tt - planet->last_full_update;
     if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
         // Fast update from previous position
         eraPvu(dt, planet->last_full_pvh, planet->pvh);
@@ -330,7 +330,7 @@ static int l12_update(planet_t *planet, const observer_t *obs)
         l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
         eraPvppv(pvj, jupiter->pvh, planet->last_full_pvh);
         eraCpv(planet->last_full_pvh, planet->pvh);
-        planet->last_full_update = obs->ut1;
+        planet->last_full_update = obs->tt;
     }
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->pvo[0]);
