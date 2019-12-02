@@ -50,6 +50,8 @@ struct planet {
         double obliquity;   // (rad)
         double period;      // (day)
         double offset;      // (rad)
+        double pole_ra;     // (rad)
+        double pole_de;     // (rad)
     } rot;
 
     // Orbit elements.
@@ -732,9 +734,16 @@ static void planet_render_hips(const planet_t *planet,
     painter.planet.sun = &sun_pos;
 
     // Apply the rotation.
-    mat3_to_mat4(painter.obs->re2i, tmp_mat);
-    mat4_mul(mat, tmp_mat, mat);
-    mat4_rx(-planet->rot.obliquity, mat, mat);
+    // Use pole ra/de position if available, else try with obliquity.
+    // XXX: Probably need to remove obliquity.
+    if (planet->rot.pole_ra || planet->rot.pole_de) {
+        mat4_rz(planet->rot.pole_ra, mat, mat);
+        mat4_ry(M_PI / 2 - planet->rot.pole_de, mat, mat);
+    } else {
+        mat3_to_mat4(painter.obs->re2i, tmp_mat);
+        mat4_mul(mat, tmp_mat, mat);
+        mat4_rx(-planet->rot.obliquity, mat, mat);
+    }
     mat4_rz(planet_get_rotation(planet, painter.obs->tt), mat, mat);
 
     if (planet->id == SUN)
@@ -1142,6 +1151,14 @@ static int planets_ini_handler(void* user, const char* section,
     if (strcmp(attr, "rot_offset") == 0) {
         sscanf(value, "%f", &v);
         planet->rot.offset = v * DD2R;
+    }
+    if (strcmp(attr, "rot_pole_ra") == 0) {
+        sscanf(value, "%f", &v);
+        planet->rot.pole_ra = v * DD2R;
+    }
+    if (strcmp(attr, "rot_pole_de") == 0) {
+        sscanf(value, "%f", &v);
+        planet->rot.pole_de = v * DD2R;
     }
     if (strcmp(attr, "rings_inner_radius") == 0) {
         sscanf(value, "%f km", &v);
