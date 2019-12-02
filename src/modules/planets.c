@@ -66,13 +66,8 @@ struct planet {
         double pole_de;     // (rad)
     } rot;
 
-    // Orbit elements.
-    struct {
-        int type; // 0: special, 1: kepler.
-        union {
-            elements_t kepler;
-        };
-    } orbit;
+    // Orbit elements (in ICRF plane, relative to the parent body).
+    elements_t orbit;
 
     // Rings attributes.
     struct {
@@ -378,14 +373,14 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
         eraPvu(dt, planet->last_full_pvh, planet->pvh);
     } else {
         orbit_compute_pv(0, obs->tt, p, v,
-                planet->orbit.kepler.mjd,
-                planet->orbit.kepler.in,
-                planet->orbit.kepler.om,
-                planet->orbit.kepler.w,
-                planet->orbit.kepler.a,
-                planet->orbit.kepler.n,
-                planet->orbit.kepler.ec,
-                planet->orbit.kepler.ma,
+                planet->orbit.mjd,
+                planet->orbit.in,
+                planet->orbit.om,
+                planet->orbit.w,
+                planet->orbit.a,
+                planet->orbit.n,
+                planet->orbit.ec,
+                planet->orbit.ma,
                 0.0, 0.0);
         planet->last_full_update = obs->tt;
 
@@ -419,34 +414,39 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
     // Compute the position of the planet.
     // XXX: we could use an approximation at the beginning, and only compute
     // the exact pos if needed.
-    if (planet->id == EARTH) earth_update(planet, obs);
-    if (planet->id == SUN) sun_update(planet, obs);
-    if (planet->id == MOON) moon_update(planet, obs);
+    switch (planet->id) {
+    case EARTH:
+        earth_update(planet, obs);
+        break;
+    case SUN:
+        sun_update(planet, obs);
+        break;
+    case MOON:
+        moon_update(planet, obs);
+        break;
 
-    // Solar system planet: use PLAN94 model.
-    if (    planet->id == MERCURY ||
-            planet->id == VENUS ||
-            planet->id == MARS ||
-            planet->id == JUPITER ||
-            planet->id == SATURN ||
-            planet->id == URANUS ||
-            planet->id == NEPTUNE)
-    {
+    case MERCURY:
+    case VENUS:
+    case MARS:
+    case JUPITER:
+    case SATURN:
+    case URANUS:
+    case NEPTUNE:
         plan94_update(planet, obs);
-    }
+        break;
 
-    // Galilean moons: Use L12.
-    if (    planet->id == IO ||
-            planet->id == EUROPA ||
-            planet->id == GANYMEDE ||
-            planet->id == CALLISTO)
-    {
+    case IO:
+    case EUROPA:
+    case GANYMEDE:
+    case CALLISTO:
         l12_update(planet, obs);
+        break;
+
+    default:
+        assert(planet->orbit.mjd);
+        kepler_update(planet, obs);
+        break;
     }
-
-    // Kepler orbit planets.
-    if (planet->orbit.type == 1) kepler_update(planet, obs);
-
 
     // Adjust vmag for saturn.
     if (planet->id == SATURN) {
@@ -1056,18 +1056,17 @@ static int parse_orbit(planet_t *p, const char *v)
         LOG_E("Cannot parse orbit line '%s'", v);
         return -1;
     }
-    p->orbit.type = 1;
-    p->orbit.kepler.mjd = jd - 2400000.5;
-    p->orbit.kepler.in = in * DD2R;
-    p->orbit.kepler.om = om * DD2R;
-    p->orbit.kepler.w = w * DD2R;
-    p->orbit.kepler.a = a * (1000.0 / DAU);
-    p->orbit.kepler.n = n * DD2R * 60 * 60 * 24;
-    p->orbit.kepler.ec = ec;
-    p->orbit.kepler.ma = ma * DD2R;
+    p->orbit.mjd = jd - 2400000.5;
+    p->orbit.in = in * DD2R;
+    p->orbit.om = om * DD2R;
+    p->orbit.w = w * DD2R;
+    p->orbit.a = a * (1000.0 / DAU);
+    p->orbit.n = n * DD2R * 60 * 60 * 24;
+    p->orbit.ec = ec;
+    p->orbit.ma = ma * DD2R;
 
     // Make sure the epoch was in MJD, and not in JD.
-    assert(fabs(p->orbit.kepler.mjd - DJM00) < DJY * 100);
+    assert(fabs(p->orbit.mjd - DJM00) < DJY * 100);
 
     return 0;
 }
