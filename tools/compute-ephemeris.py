@@ -112,6 +112,9 @@ def compute_all():
     yield compute('Moon')
     yield compute('Jupiter barycenter', planet=599)
     yield compute('Io', kernel=jup310)
+    # XXX: would be better to pass the orbit elements for Metis, since the
+    # test might fail when we update the planet.ini data.
+    yield compute('Metis', kernel=jup310, t=[2019, 12, 3, 15, 0, 0])
     yield compute('Phobos', kernel=mar097, precision_radec=30)
     yield compute('Deimos', kernel=mar097, precision_radec=30)
 
