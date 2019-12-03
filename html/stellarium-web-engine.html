@@ -180,8 +180,9 @@
           that.stel = stel;
           // Add all data sources.
           var baseUrl = 'https://data.stellarium.org/';
+          var doUrl = 'https://stellarium.sfo2.digitaloceanspaces.com/';
           stel.addDataSource({url: 'asset://stars', type: 'hips'});
-          stel.addDataSource({url: 'asset://skycultures/western',
+          stel.addDataSource({url: doUrl + 'skycultures/v2/western',
                               type: 'skyculture'});
           stel.addDataSource({url: baseUrl + 'surveys/dso', type: 'hips'});
           stel.addDataSource({url: baseUrl + 'surveys/gaia_dr2_v2' +
