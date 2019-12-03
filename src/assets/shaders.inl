@@ -208,7 +208,7 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
 
 ASSET_REGISTER(shaders_fog_glsl, "shaders/fog.glsl", DATA_shaders_fog_glsl, false)
 
-static const unsigned char DATA_shaders_lines_glsl[1952] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_lines_glsl[2238] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -234,6 +234,12 @@ static const unsigned char DATA_shaders_lines_glsl[1952] __attribute__((aligned(
     "uniform   lowp      float   u_dash_ratio;\n"
     "#endif\n"
     "\n"
+    "#ifdef FADE\n"
+    "uniform     lowp    float   u_fade_dist_min;\n"
+    "uniform     lowp    float   u_fade_dist_max;\n"
+    "varying     lowp    float   v_alpha;\n"
+    "#endif\n"
+    "\n"
     "varying   mediump   vec2    v_uv;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
@@ -249,8 +255,11 @@ static const unsigned char DATA_shaders_lines_glsl[1952] __attribute__((aligned(
     "    gl_Position.z = (gl_Position.z - u_depth_range[0]) /\n"
     "                    (u_depth_range[1] - u_depth_range[0]);\n"
     "#endif\n"
-    "\n"
     "    v_uv = a_tex_pos;\n"
+    "\n"
+    "#ifdef FADE\n"
+    "    v_alpha = smoothstep(u_fade_dist_max, u_fade_dist_min, a_pos.z);\n"
+    "#endif\n"
     "}\n"
     "\n"
     "#endif\n"
@@ -272,6 +281,10 @@ static const unsigned char DATA_shaders_lines_glsl[1952] __attribute__((aligned(
     "    gl_FragColor.a *= smoothstep(len / 2.0 * r + 0.01,\n"
     "                                 len / 2.0 * r - 0.01,\n"
     "                                 abs(mod(v_uv.x, len) - len / 2.0));\n"
+    "#endif\n"
+    "\n"
+    "#ifdef FADE\n"
+    "    gl_FragColor.a *= v_alpha;\n"
     "#endif\n"
     "}\n"
     "\n"

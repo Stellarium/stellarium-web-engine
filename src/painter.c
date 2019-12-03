@@ -625,7 +625,7 @@ static void orbit_map(const uv_map_t *map, const double v[2], double out[4])
  *   k_ec       - Eccentricity.
  *   k_ma       - Mean Anomaly (rad).
  */
-int paint_orbit(const painter_t *painter, int frame,
+int paint_orbit(const painter_t *painter_, int frame,
                 const double transf[4][4],
                 double k_jd,      // date (MJD).
                 double k_in,      // inclination (rad).
@@ -636,6 +636,7 @@ int paint_orbit(const painter_t *painter, int frame,
                 double k_ec,      // Eccentricity.
                 double k_ma)      // Mean Anomaly (rad).
 {
+    painter_t painter = *painter_;
     const double orbit[8] = {k_jd, k_in, k_om, k_w, k_a, k_n, k_ec, k_ma};
     uv_map_t map = {
         .map        = orbit_map,
@@ -643,9 +644,13 @@ int paint_orbit(const painter_t *painter, int frame,
         .user       = (void*)orbit,
     };
     double line[2][4] = {{0}, {1}};
+    double center[3];
     // We only support ICRF for the moment to make things simpler.
     assert(frame == FRAME_ICRF);
-    paint_line(painter, frame, line, &map, 128, 0);
+    convert_frame(painter.obs, frame, FRAME_VIEW, false, transf[3], center);
+    painter.line.fade_dist_min = -center[2] - k_a;
+    painter.line.fade_dist_max = -center[2] + k_a * 2;
+    paint_line(&painter, frame, line, &map, 128, 0);
     return 0;
 }
 

@@ -23,6 +23,12 @@ uniform   lowp      float   u_dash_length;
 uniform   lowp      float   u_dash_ratio;
 #endif
 
+#ifdef FADE
+uniform     lowp    float   u_fade_dist_min;
+uniform     lowp    float   u_fade_dist_max;
+varying     lowp    float   v_alpha;
+#endif
+
 varying   mediump   vec2    v_uv;
 
 #ifdef VERTEX_SHADER
@@ -38,8 +44,11 @@ void main()
     gl_Position.z = (gl_Position.z - u_depth_range[0]) /
                     (u_depth_range[1] - u_depth_range[0]);
 #endif
-
     v_uv = a_tex_pos;
+
+#ifdef FADE
+    v_alpha = smoothstep(u_fade_dist_max, u_fade_dist_min, a_pos.z);
+#endif
 }
 
 #endif
@@ -61,6 +70,10 @@ void main()
     gl_FragColor.a *= smoothstep(len / 2.0 * r + 0.01,
                                  len / 2.0 * r - 0.01,
                                  abs(mod(v_uv.x, len) - len / 2.0));
+#endif
+
+#ifdef FADE
+    gl_FragColor.a *= v_alpha;
 #endif
 }
 

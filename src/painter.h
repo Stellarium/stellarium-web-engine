@@ -245,6 +245,11 @@ struct painter
             float (*compute_lum)(void *user, const float pos[3]);
             void *user;
         } atm;
+
+        struct {
+            float fade_dist_min;
+            float fade_dist_max;
+        } line;
     };
 };
 

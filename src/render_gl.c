@@ -95,6 +95,8 @@ struct item
             float glow;
             float dash_length;
             float dash_ratio;
+            float fade_dist_min;
+            float fade_dist_max;
         } lines;
 
         struct {
@@ -1025,6 +1027,7 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     shader_define_t defines[] = {
         {"DASH", item->lines.dash_length && (item->lines.dash_ratio < 1.0)},
         {"USE_DEPTH", use_depth},
+        {"FADE", item->lines.fade_dist_min},
         {}
     };
     shader = shader_get("lines", defines, ATTR_NAMES, init_shader);
@@ -1047,6 +1050,11 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
 
     gl_update_uniform(shader, "u_dash_length", item->lines.dash_length);
     gl_update_uniform(shader, "u_dash_ratio", item->lines.dash_ratio);
+
+    if (item->lines.fade_dist_min) {
+        gl_update_uniform(shader, "u_fade_dist_min", item->lines.fade_dist_min);
+        gl_update_uniform(shader, "u_fade_dist_max", item->lines.fade_dist_max);
+    }
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glDepthMask(GL_TRUE));
@@ -1448,6 +1456,8 @@ static void line_glow(renderer_t           *rend_,
         item->lines.glow = painter->lines_glow;
         item->lines.dash_length = painter->lines_dash_length;
         item->lines.dash_ratio = painter->lines_dash_ratio;
+        item->lines.fade_dist_min = painter->line.fade_dist_min;
+        item->lines.fade_dist_max = painter->line.fade_dist_max;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
