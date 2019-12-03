@@ -251,18 +251,15 @@ static int moon_update(planet_t *planet, const observer_t *obs)
     double el, dist;
     double pv[2][3];
 
-    moon_icrf_geocentric_pos(obs->tt, pv[0]);
-    dist = vec3_norm(pv[0]);
-
     // Compute the speed using the position in one day.
+    moon_icrf_geocentric_pos(obs->tt, pv[0]);
     moon_icrf_geocentric_pos(obs->tt + 1, pv[1]);
     vec3_sub(pv[1], pv[0], pv[1]);
-
     // Compute heliocentric position.
     eraPvppv(pv, obs->earth_pvh, planet->pvh);
 
     // Compute apparent position
-    position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->pvo[0]);
     vec3_copy(pv[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
@@ -271,6 +268,7 @@ static int moon_update(planet_t *planet, const observer_t *obs)
     // Compute visual mag.
     // This is based on the algo of pyephem.
     // XXX: move into 'algos'.
+    dist = vec3_norm(pv[0]);
     el = eraSepp(planet->pvo[0], obs->sun_pvo[0]); // Elongation.
     planet->vmag = -12.7 +
         2.5 * (log10(M_PI) - log10(M_PI / 2.0 * (1.0 + 1.e-6 - cos(el)))) +
