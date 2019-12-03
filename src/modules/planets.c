@@ -149,11 +149,115 @@ static const double VIS_ELEMENTS[][5] = {
             p; \
             p = (planet_t*)p->obj.next)
 
+
+/*
+ * Function: moon_icrf_geocentric
+ * Compute moon position at a given time
+ *
+ * Parameters:
+ *   tt     - TT time in MJD.
+ *   pos    - Output position in ICRF frame, geocentric.
+ */
+static void moon_icrf_geocentric_pos(double tt, double pos[3])
+{
+    double rmatecl[3][3], rmatp[3][3];
+    double lambda, beta, dist, obl;
+    // Get ecliptic position of date.
+    moon_pos(DJM0 + tt, &lambda, &beta, &dist);
+    dist *= 1000.0 / DAU; // km to AU.
+    // Convert to equatorial.
+    obl = eraObl06(DJM0, tt); // Mean oblicity of ecliptic at J2000.
+    eraIr(rmatecl);
+    eraRx(-obl, rmatecl);
+    eraS2p(lambda, beta, dist, pos);
+    eraRxp(rmatecl, pos, pos);
+    // Precess back to J2000.
+    eraPmat76(DJM0, tt, rmatp);
+    eraTrxp(rmatp, pos, pos);
+}
+
+
+/*
+ * Function: planet_get_pvh
+ * Get the heliocentric (ICRF) position of a planet at a given time.
+ */
+static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
+                           double pvh[2][3])
+{
+    double dt, parent_pvh[2][3];
+    int n;
+
+    // Use cached value if possible.
+    if (planet->last_full_update) {
+        dt = obs->tt - planet->last_full_update;
+        if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
+            eraPvu(dt, planet->last_full_pvh, pvh);
+            return;
+        }
+    }
+
+    switch (planet->id) {
+    case EARTH:
+        eraCpv(obs->earth_pvh, pvh);
+        return;
+    case SUN:
+        eraZpv(pvh);
+        return;
+    case MOON:
+        moon_icrf_geocentric_pos(obs->tt, pvh[0]);
+        moon_icrf_geocentric_pos(obs->tt + 1, pvh[1]);
+        vec3_sub(pvh[1], pvh[0], pvh[1]);
+        eraPvppv(pvh, obs->earth_pvh, pvh);
+        return;
+
+    case MERCURY:
+    case VENUS:
+    case MARS:
+    case JUPITER:
+    case SATURN:
+    case URANUS:
+    case NEPTUNE:
+        n = (planet->id - MERCURY) / 100 + 1;
+        eraPlan94(DJM0, obs->tt, n, pvh);
+        break;
+
+    case IO:
+    case EUROPA:
+    case GANYMEDE:
+    case CALLISTO:
+        planet_get_pvh(planet->parent, obs, parent_pvh);
+        l12(DJM0, obs->tt, planet->id - IO + 1, pvh);
+        vec3_add(pvh[0], parent_pvh[0], pvh[0]);
+        vec3_add(pvh[1], parent_pvh[1], pvh[1]);
+        break;
+
+    default:
+        planet_get_pvh(planet->parent, obs, parent_pvh);
+        orbit_compute_pv(0, obs->tt, pvh[0], pvh[1],
+                planet->orbit.mjd,
+                planet->orbit.in,
+                planet->orbit.om,
+                planet->orbit.w,
+                planet->orbit.a,
+                planet->orbit.n,
+                planet->orbit.ec,
+                planet->orbit.ma,
+                0.0, 0.0);
+        vec3_add(pvh[0], parent_pvh[0], pvh[0]);
+        vec3_add(pvh[1], parent_pvh[1], pvh[1]);
+        break;
+    }
+
+    // Cache the value for next time.
+    eraCpv(pvh, planet->last_full_pvh);
+    ((planet_t*)planet)->last_full_update = obs->tt;
+}
+
 static int earth_update(planet_t *planet, const observer_t *obs)
 {
     double pv[2][3];
     // Heliocentric position of the earth (AU)
-    eraCpv(obs->earth_pvh, planet->pvh);
+    planet_get_pvh(planet, obs, planet->pvh);
     eraZpv(pv);
     position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
     vec3_copy(pv[0], planet->pvo[0]);
@@ -205,7 +309,7 @@ static int sun_update(planet_t *planet, const observer_t *obs)
 {
     double eclipse_factor;
     double dist_pc; // Distance in parsec.
-    eraZpv(planet->pvh);
+    planet_get_pvh(planet, obs, planet->pvh);
     vec3_copy(obs->sun_pvo[0], planet->pvo[0]);
     vec3_copy(obs->sun_pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
@@ -220,44 +324,12 @@ static int sun_update(planet_t *planet, const observer_t *obs)
     return 0;
 }
 
-/*
- * Function: moon_icrf_geocentric
- * Compute moon position at a given time
- *
- * Parameters:
- *   tt     - TT time in MJD.
- *   pos    - Output position in ICRF frame, geocentric.
- */
-static void moon_icrf_geocentric_pos(double tt, double pos[3])
-{
-    double rmatecl[3][3], rmatp[3][3];
-    double lambda, beta, dist, obl;
-    // Get ecliptic position of date.
-    moon_pos(DJM0 + tt, &lambda, &beta, &dist);
-    dist *= 1000.0 / DAU; // km to AU.
-    // Convert to equatorial.
-    obl = eraObl06(DJM0, tt); // Mean oblicity of ecliptic at J2000.
-    eraIr(rmatecl);
-    eraRx(-obl, rmatecl);
-    eraS2p(lambda, beta, dist, pos);
-    eraRxp(rmatecl, pos, pos);
-    // Precess back to J2000.
-    eraPmat76(DJM0, tt, rmatp);
-    eraTrxp(rmatp, pos, pos);
-}
-
 static int moon_update(planet_t *planet, const observer_t *obs)
 {
     double el, dist;
     double pv[2][3];
 
-    // Compute the speed using the position in one day.
-    moon_icrf_geocentric_pos(obs->tt, pv[0]);
-    moon_icrf_geocentric_pos(obs->tt + 1, pv[1]);
-    vec3_sub(pv[1], pv[0], pv[1]);
-    // Compute heliocentric position.
-    eraPvppv(pv, obs->earth_pvh, planet->pvh);
-
+    planet_get_pvh(planet, obs, planet->pvh);
     // Compute apparent position
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->pvo[0]);
@@ -285,16 +357,8 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
     double i;   // Phase angle.
     double pv[2][3];
     int n = (planet->id - MERCURY) / 100 + 1;
-    const double dt = obs->tt - planet->last_full_update;
-    if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
-        // Fast update from previous position
-        eraPvu(dt, planet->last_full_pvh, planet->pvh);
-    } else {
-        eraPlan94(DJM0, obs->tt, n, planet->last_full_pvh);
-        eraCpv(planet->last_full_pvh, planet->pvh);
-        planet->last_full_update = obs->tt;
-    }
 
+    planet_get_pvh(planet, obs, planet->pvh);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->pvo[0]);
     vec3_copy(pv[1], planet->pvo[1]);
@@ -314,22 +378,12 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
 
 static int l12_update(planet_t *planet, const observer_t *obs)
 {
-    double pvj[2][3], pv[2][3];
+    double pv[2][3];
     double mag;
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
-    planet_t *jupiter = planet->parent;
-    planet_update_(jupiter, obs);
-    const double dt = obs->tt - planet->last_full_update;
-    if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
-        // Fast update from previous position
-        eraPvu(dt, planet->last_full_pvh, planet->pvh);
-    } else {
-        l12(DJM0, obs->tt, planet->id - IO + 1, pvj);
-        eraPvppv(pvj, jupiter->pvh, planet->last_full_pvh);
-        eraCpv(planet->last_full_pvh, planet->pvh);
-        planet->last_full_update = obs->tt;
-    }
+
+    planet_get_pvh(planet, obs, planet->pvh);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->pvo[0]);
     vec3_copy(pv[1], planet->pvo[1]);
@@ -350,32 +404,10 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 {
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
-    double p[3], v[3], pv[2][3];
+    double pv[2][3];
     planet_update_(planet->parent, obs);
-    const double dt = obs->tt - planet->last_full_update;
 
-    if (fabs(dt) < planet->update_delta_s / ERFA_DAYSEC) {
-        // Fast update from previous position
-        eraPvu(dt, planet->last_full_pvh, planet->pvh);
-    } else {
-        orbit_compute_pv(0, obs->tt, p, v,
-                planet->orbit.mjd,
-                planet->orbit.in,
-                planet->orbit.om,
-                planet->orbit.w,
-                planet->orbit.a,
-                planet->orbit.n,
-                planet->orbit.ec,
-                planet->orbit.ma,
-                0.0, 0.0);
-        planet->last_full_update = obs->tt;
-
-        // Add parent position and speed to get heliocentric position.
-        vec3_add(p, planet->parent->pvh[0], planet->last_full_pvh[0]);
-        vec3_add(v, planet->parent->pvh[1], planet->last_full_pvh[1]);
-        eraCpv(planet->last_full_pvh, planet->pvh);
-    }
-
+    planet_get_pvh(planet, obs, planet->pvh);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
     vec3_copy(pv[0], planet->pvo[0]);
     vec3_copy(pv[1], planet->pvo[1]);
