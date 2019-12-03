@@ -137,7 +137,7 @@ static int jcon_parse_(json_value *v, va_list *ap)
         double *d;
         const char **s;
         json_value **v;
-    } ptr;
+    } ptr = {};
 
     token = va_arg(*ap, const char*);
     assert(token[1] == '\0');
