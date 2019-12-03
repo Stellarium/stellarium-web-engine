@@ -52,7 +52,6 @@ struct planet {
     double last_full_pvh[2][3]; // equ, J2000.0, AU heliocentric pos and speed.
 
     // Cached values.
-    double      pvh[2][3];   // equ, J2000.0, AU heliocentric pos and speed.
     double      pvo[2][4];   // ICRF, observer centric.
     double      vmag;
 
@@ -257,7 +256,6 @@ static int earth_update(planet_t *planet, const observer_t *obs)
 {
     double pv[2][3];
     // Heliocentric position of the earth (AU)
-    planet_get_pvh(planet, obs, planet->pvh);
     eraZpv(pv);
     position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
     vec3_copy(pv[0], planet->pvo[0]);
@@ -309,7 +307,6 @@ static int sun_update(planet_t *planet, const observer_t *obs)
 {
     double eclipse_factor;
     double dist_pc; // Distance in parsec.
-    planet_get_pvh(planet, obs, planet->pvh);
     vec3_copy(obs->sun_pvo[0], planet->pvo[0]);
     vec3_copy(obs->sun_pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
@@ -327,20 +324,20 @@ static int sun_update(planet_t *planet, const observer_t *obs)
 static int moon_update(planet_t *planet, const observer_t *obs)
 {
     double el, dist;
-    double pv[2][3];
+    double pvh[2][3], pvo[2][3];
 
-    planet_get_pvh(planet, obs, planet->pvh);
+    planet_get_pvh(planet, obs, pvh);
     // Compute apparent position
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
-    vec3_copy(pv[0], planet->pvo[0]);
-    vec3_copy(pv[1], planet->pvo[1]);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    vec3_copy(pvo[0], planet->pvo[0]);
+    vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
 
     // Compute visual mag.
     // This is based on the algo of pyephem.
     // XXX: move into 'algos'.
-    dist = vec3_norm(pv[0]);
+    dist = vec3_norm(pvo[0]);
     el = eraSepp(planet->pvo[0], obs->sun_pvo[0]); // Elongation.
     planet->vmag = -12.7 +
         2.5 * (log10(M_PI) - log10(M_PI / 2.0 * (1.0 + 1.e-6 - cos(el)))) +
@@ -355,20 +352,20 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
     double i;   // Phase angle.
-    double pv[2][3];
+    double pvh[2][3], pvo[2][3];
     int n = (planet->id - MERCURY) / 100 + 1;
 
-    planet_get_pvh(planet, obs, planet->pvh);
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
-    vec3_copy(pv[0], planet->pvo[0]);
-    vec3_copy(pv[1], planet->pvo[1]);
+    planet_get_pvh(planet, obs, pvh);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    vec3_copy(pvo[0], planet->pvo[0]);
+    vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
 
-    i = eraSepp(planet->pvh[0], planet->pvo[0]);
+    i = eraSepp(pvh[0], planet->pvo[0]);
     // Compute visual magnitude.
     i *= DR2D / 100;
-    rho = vec3_norm(planet->pvh[0]);
+    rho = vec3_norm(pvh[0]);
     rp = vec3_norm(planet->pvo[0]);
     vis = VIS_ELEMENTS[n];
     planet->vmag = vis[1] + 5 * log10(rho * rp) +
@@ -378,21 +375,21 @@ static int plan94_update(planet_t *planet, const observer_t *obs)
 
 static int l12_update(planet_t *planet, const observer_t *obs)
 {
-    double pv[2][3];
+    double pvh[2][3], pvo[2][3];
     double mag;
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
 
-    planet_get_pvh(planet, obs, planet->pvh);
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
-    vec3_copy(pv[0], planet->pvo[0]);
-    vec3_copy(pv[1], planet->pvo[1]);
+    planet_get_pvh(planet, obs, pvh);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    vec3_copy(pvo[0], planet->pvo[0]);
+    vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
 
     // Compute visual magnitude.
     // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
-    rho = vec3_norm(planet->pvh[0]);
+    rho = vec3_norm(pvh[0]);
     rp = vec3_norm(planet->pvo[0]);
     mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
             2.0 * planet->radius_m / 1000.0 / 1329.0);
@@ -404,19 +401,18 @@ static int kepler_update(planet_t *planet, const observer_t *obs)
 {
     double rho; // Distance to Earth (AU).
     double rp;  // Distance to Sun (AU).
-    double pv[2][3];
-    planet_update_(planet->parent, obs);
+    double pvh[2][3], pvo[2][3];
 
-    planet_get_pvh(planet, obs, planet->pvh);
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, planet->pvh, pv);
-    vec3_copy(pv[0], planet->pvo[0]);
-    vec3_copy(pv[1], planet->pvo[1]);
+    planet_get_pvh(planet, obs, pvh);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    vec3_copy(pvo[0], planet->pvo[0]);
+    vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
 
     // Compute visual magnitude.
     // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
-    rho = vec3_norm(planet->pvh[0]);
+    rho = vec3_norm(pvh[0]);
     rp = vec3_norm(planet->pvo[0]);
     double mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
             2.0 * planet->radius_m / 1000.0 / 1329.0);
@@ -471,12 +467,14 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
         double earth_hlon, earth_hlat;
         double et, st, set;
         double earth_hpos[3];
-        mat3_mul_vec3(obs->ri2e, planet->pvh[0], hpos);
+        double pvh[2][3];
+        planet_get_pvh(planet, obs, pvh);
+        mat3_mul_vec3(obs->ri2e, pvh[0], hpos);
         mat3_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
 
         eraC2s(hpos, &hlon, &hlat);
         eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
-        satrings(hlat, hlon, vec3_norm(planet->pvh[0]),
+        satrings(hlat, hlon, vec3_norm(pvh[0]),
                  earth_hlon, vec3_norm(obs->earth_pvh[0]),
                  obs->ut1 + DJM0, &et, &st);
         set = sin(fabs(et));
@@ -489,10 +487,12 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
 static double planet_get_phase(const planet_t *planet, const observer_t *obs)
 {
     double i;   // Phase angle.
+    double pvh[2][3];
     if (planet->id == EARTH || planet->id == SUN)
         return NAN;
-    // XXX: assume pvh and pvo are up to date!  We should use getter instead.
-    i = eraSepp(planet->pvh[0], planet->pvo[0]);
+    // XXX: assume pvo is up to date!  We should use getter instead.
+    planet_get_pvh(planet, obs, pvh);
+    i = eraSepp(pvh[0], planet->pvo[0]);
     return 0.5 * cos(i) + 0.5;
 }
 
@@ -623,12 +623,14 @@ static void render_rings(const planet_t *planet,
  * if a is NULL, then we return false if we know for sure that no body
  * could cast a shadow on b.
  */
-static bool could_cast_shadow(const planet_t *a, const planet_t *b)
+static bool could_cast_shadow(const planet_t *a, const planet_t *b,
+                              const observer_t *obs)
 {
     // Not sure about this algo, I took it pretty as it is from Stellarium.
     const double SUN_RADIUS = 695508000.0 / DAU;
     double pp[3];
     double shadow_dist, d, penumbra_r;
+    double apvh[2][3], bpvh[2][3];
 
     // For the moment we only consider the Jupiter major moons or the
     // Earth on the Moon.
@@ -639,13 +641,15 @@ static bool could_cast_shadow(const planet_t *a, const planet_t *b)
             return false;
     if (b->id == MOON && a->id != EARTH) return false;
 
-    if (vec3_norm2(a->pvh[0]) > vec3_norm2(b->pvh[0])) return false;
-    vec3_normalize(a->pvh[0], pp);
-    shadow_dist = vec3_dot(pp, b->pvh[0]);
-    d = vec2_norm(a->pvh[0]) / (a->radius_m / DAU / SUN_RADIUS + 1.0);
+    planet_get_pvh(a, obs, apvh);
+    planet_get_pvh(b, obs, bpvh);
+    if (vec3_norm2(apvh[0]) > vec3_norm2(bpvh[0])) return false;
+    vec3_normalize(apvh[0], pp);
+    shadow_dist = vec3_dot(pp, bpvh[0]);
+    d = vec2_norm(apvh[0]) / (a->radius_m / DAU / SUN_RADIUS + 1.0);
     penumbra_r = (shadow_dist - d) / d * SUN_RADIUS;
     vec3_mul(shadow_dist, pp, pp);
-    vec3_sub(pp, b->pvh[0], pp);
+    vec3_sub(pp, bpvh[0], pp);
     return (vec3_norm(pp) < penumbra_r + b->radius_m / DAU);
 }
 
@@ -663,17 +667,19 @@ static int sort_shadow_cmp(const void *a, const void *b)
  *
  * Return the number of candidates.
  */
-static int get_shadow_candidates(const planet_t *planet, int nb_max,
+static int get_shadow_candidates(const planet_t *planet,
+                                 const observer_t *obs,
+                                 int nb_max,
                                  double (*spheres)[4])
 {
     int nb = 0;
     planets_t *planets = (planets_t*)planet->obj.parent;
     planet_t *other;
 
-    if (!could_cast_shadow(NULL, planet)) return 0;
+    if (!could_cast_shadow(NULL, planet, obs)) return 0;
 
     PLANETS_ITER(planets, other) {
-        if (could_cast_shadow(other, planet)) {
+        if (could_cast_shadow(other, planet, obs)) {
             // No more space: replace the smallest one in the list if
             // we can.
             if (nb >= nb_max) {
@@ -734,7 +740,7 @@ static void planet_render_hips(const planet_t *planet,
 
     // Get potential shadow casting spheres.
     painter.planet.shadow_spheres_nb =
-        get_shadow_candidates(planet, 4, shadow_spheres);
+        get_shadow_candidates(planet, painter.obs, 4, shadow_spheres);
     painter.planet.shadow_spheres = shadow_spheres;
 
     painter.color[3] *= alpha;
@@ -812,8 +818,11 @@ static void planet_compute_orbit_elements(
     double p[3], v[3];
     // μ in (AU)³(day)⁻²
     double mu = G * planet->parent->mass / (DAU * DAU * DAU) * SPD * SPD;
-    vec3_sub(planet->pvh[0], planet->parent->pvh[0], p);
-    vec3_sub(planet->pvh[1], planet->parent->pvh[1], v);
+    double pvh[2][3], parent_pvh[2][3];
+    planet_get_pvh(planet->parent, obs, parent_pvh);
+    planet_get_pvh(planet, obs, pvh);
+    vec3_sub(pvh[0], parent_pvh[0], p);
+    vec3_sub(pvh[1], parent_pvh[1], v);
     orbit_elements_from_pv(p, v, mu, in, om, w, a, n, ec, ma);
 }
 
