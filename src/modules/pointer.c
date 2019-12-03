@@ -57,7 +57,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
         mat3_rz(i * 90 * DD2R, transf, transf);
         mat3_itranslate(transf, r, 0);
         mat3_iscale(transf, 8, 1, 1);
-        painter.lines_width = 3;
+        painter.lines.width = 3;
         paint_2d_line(&painter, transf, VEC(0, 0), VEC(1, 0));
     }
     return 0;

@@ -509,7 +509,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 
     if (vmag <= hints_limit_mag + 0.5) {
         tmp_painter = *painter;
-        tmp_painter.lines_width = 2;
+        tmp_painter.lines.width = 2;
         if (selected) {
             // Smooth fade out when it's getting large, even when selected
             // for performance reasons

@@ -1441,9 +1441,9 @@ static void line_glow(renderer_t           *rend_,
     item = get_item(rend, ITEM_LINES_GLOW, mesh->verts_count,
                     mesh->indices_count, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
-    if (item && item->lines.dash_length != painter->lines_dash_length)
+    if (item && item->lines.dash_length != painter->lines.dash_length)
         item = NULL;
-    if (item && item->lines.dash_ratio != painter->lines_dash_ratio)
+    if (item && item->lines.dash_ratio != painter->lines.dash_ratio)
         item = NULL;
 
 
@@ -1452,12 +1452,12 @@ static void line_glow(renderer_t           *rend_,
         item->type = ITEM_LINES_GLOW;
         gl_buf_alloc(&item->buf, &LINES_GLOW_BUF, 1024);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
-        item->lines.width = painter->lines_width;
-        item->lines.glow = painter->lines_glow;
-        item->lines.dash_length = painter->lines_dash_length;
-        item->lines.dash_ratio = painter->lines_dash_ratio;
-        item->lines.fade_dist_min = painter->line.fade_dist_min;
-        item->lines.fade_dist_max = painter->line.fade_dist_max;
+        item->lines.width = painter->lines.width;
+        item->lines.glow = painter->lines.glow;
+        item->lines.dash_length = painter->lines.dash_length;
+        item->lines.dash_ratio = painter->lines.dash_ratio;
+        item->lines.fade_dist_min = painter->lines.fade_dist_min;
+        item->lines.fade_dist_max = painter->lines.fade_dist_max;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
@@ -1491,7 +1491,7 @@ static void line(renderer_t           *rend_,
     float color[4];
     double pos[2];
 
-    if (painter->lines_glow) {
+    if (painter->lines.glow) {
         line_glow(rend_, painter, line, size);
         return;
     }
@@ -1499,14 +1499,14 @@ static void line(renderer_t           *rend_,
     vec4_to_float(painter->color, color);
     item = get_item(rend, ITEM_LINES, size, size * 2, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
-    if (item && item->lines.width != painter->lines_width) item = NULL;
+    if (item && item->lines.width != painter->lines.width) item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_LINES;
         gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
-        item->lines.width = painter->lines_width;
+        item->lines.width = painter->lines.width;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
@@ -1548,7 +1548,7 @@ static void mesh(renderer_t          *rend_,
 
     item = get_item(rend, ITEM_MESH, verts_count, indices_count, NULL);
     if (item && item->mesh.mode != mode) item = NULL;
-    if (item && item->mesh.stroke_width != painter->lines_width) item = NULL;
+    if (item && item->mesh.stroke_width != painter->lines.width) item = NULL;
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
 
     if (!item) {
@@ -1556,7 +1556,7 @@ static void mesh(renderer_t          *rend_,
         item->type = ITEM_MESH;
         memcpy(item->color, color, sizeof(color));
         item->mesh.mode = mode;
-        item->mesh.stroke_width = painter->lines_width;
+        item->mesh.stroke_width = painter->lines.width;
         gl_buf_alloc(&item->buf, &MESH_BUF, max(verts_count, 1024));
         gl_buf_alloc(&item->indices, &INDICES_BUF, max(indices_count, 1024));
         DL_APPEND(rend->items, item);
@@ -1610,7 +1610,7 @@ static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
     vec4_to_float(painter->color, item->color);
     item->vg.angle = angle;
     item->vg.dashes = dashes;
-    item->vg.stroke_width = painter->lines_width;
+    item->vg.stroke_width = painter->lines.width;
     DL_APPEND(rend->items, item);
 }
 
@@ -1625,7 +1625,7 @@ static void rect_2d(renderer_t *rend_, const painter_t *painter,
     vec2_to_float(size, item->vg.size);
     vec4_to_float(painter->color, item->color);
     item->vg.angle = angle;
-    item->vg.stroke_width = painter->lines_width;
+    item->vg.stroke_width = painter->lines.width;
     DL_APPEND(rend->items, item);
 }
 
@@ -1639,7 +1639,7 @@ static void line_2d(renderer_t *rend_, const painter_t *painter,
     vec2_to_float(p1, item->vg.pos);
     vec2_to_float(p2, item->vg.pos2);
     vec4_to_float(painter->color, item->color);
-    item->vg.stroke_width = painter->lines_width;
+    item->vg.stroke_width = painter->lines.width;
     DL_APPEND(rend->items, item);
 }
 

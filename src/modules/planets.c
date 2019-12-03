@@ -804,7 +804,7 @@ static void planet_render_orbit(const planet_t *planet,
     depth_range[1] = dist * 2;
     painter.depth_range = &depth_range;
 
-    painter.lines_width = 1;
+    painter.lines.width = 1;
     paint_orbit(&painter, FRAME_ICRF, mat, painter.obs->tt,
                 in, om, w, a, n, ec, ma);
 }

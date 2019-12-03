@@ -100,7 +100,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     vec4_emul(painter_->color, circle->color, painter.color);
     paint_quad(&painter, circle->frame, &map, 64);
     if (selected) {
-        painter.lines_width = 2;
+        painter.lines.width = 2;
         vec4_copy(white, painter.color);
     } else {
         vec4_emul(painter_->color, circle->border_color, painter.color);

@@ -193,11 +193,6 @@ struct painter
     // above variables.
     double          hard_limit_mag;
 
-    double          lines_width;
-    double          lines_glow;
-    double          lines_dash_length;  // Dash length in pixel.
-    double          lines_dash_ratio;   // 0.5 for equal dash / space.
-
     // Point halo / core ratio (zero for no halo).
     double          points_halo;
     double          (*depth_range)[2]; // If set use depth test.
@@ -246,10 +241,15 @@ struct painter
             void *user;
         } atm;
 
+        // For line rendering only.
         struct {
+            float width;
+            float glow;
+            float dash_length;  // Dash length in pixel.
+            float dash_ratio;   // 0.5 for equal dash / space.
             float fade_dist_min;
             float fade_dist_max;
-        } line;
+        } lines;
     };
 };
 

@@ -648,8 +648,8 @@ int paint_orbit(const painter_t *painter_, int frame,
     // We only support ICRF for the moment to make things simpler.
     assert(frame == FRAME_ICRF);
     convert_frame(painter.obs, frame, FRAME_VIEW, false, transf[3], center);
-    painter.line.fade_dist_min = -center[2] - k_a;
-    painter.line.fade_dist_max = -center[2] + k_a * 2;
+    painter.lines.fade_dist_min = -center[2] - k_a;
+    painter.lines.fade_dist_max = -center[2] + k_a * 2;
     paint_line(&painter, frame, line, &map, 128, 0);
     return 0;
 }

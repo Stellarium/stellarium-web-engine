@@ -731,9 +731,9 @@ int core_render(double win_w, double win_h, double pixel_scale)
         .points_halo = 7.0,
         .color = {1.0, 1.0, 1.0, 1.0},
         .contrast = 1.0,
-        .lines_width = 1.0,
+        .lines.width = 1.0,
+        .lines.glow = 0.2,
         .flags = (is_below_horizon_hidden() ? PAINTER_HIDE_BELOW_HORIZON : 0),
-        .lines_glow = 0.2
     };
     painter_update_clip_info(&painter);
     paint_prepare(&painter, win_w, win_h, pixel_scale);

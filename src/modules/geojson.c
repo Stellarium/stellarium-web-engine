@@ -272,7 +272,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->hidden || feature->stroke_color[3] == 0) continue;
         vec4_copy(feature->stroke_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            painter.lines_width = feature->stroke_width;
+            painter.lines.width = feature->stroke_width;
             paint_mesh(&painter, frame, MODE_LINES, mesh);
         }
     }

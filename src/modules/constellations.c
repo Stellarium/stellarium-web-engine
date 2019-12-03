@@ -424,8 +424,8 @@ static int render_bounds(const constellation_t *con,
     if (!painter.color[3]) return 0;
 
     vec4_set(painter.color, 0.6, 0.3, 0.3, 0.4 * painter.color[3]);
-    painter.lines_dash_ratio = 0.75;
-    painter.lines_dash_length = 8;
+    painter.lines.dash_ratio = 0.75;
+    painter.lines.dash_length = 8;
     info = &con->info;
     if (!info) return 0;
     for (i = 0; i < info->nb_edges; i++) {
@@ -545,7 +545,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
                   con->lines_in_view.value;
     } else {
         visible = 1;
-        painter.lines_width *= 2;
+        painter.lines.width *= 2;
     }
 
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
