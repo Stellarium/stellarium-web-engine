@@ -53,7 +53,6 @@ struct planet {
 
     // Cached values.
     double      pvo[2][4];   // ICRF, observer centric.
-    double      vmag;
 
     // Rotation elements
     struct {
@@ -305,25 +304,15 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
 
 static int sun_update(planet_t *planet, const observer_t *obs)
 {
-    double eclipse_factor;
-    double dist_pc; // Distance in parsec.
     vec3_copy(obs->sun_pvo[0], planet->pvo[0]);
     vec3_copy(obs->sun_pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-
-    // Compute the apparent magnitude for the absolute mag (V: 4.83) and
-    // observer's distance
-    dist_pc = vec3_norm(obs->earth_pvh[0]) * (M_PI / 648000);
-    eclipse_factor = max(compute_sun_eclipse_factor(planet, obs), 0.000128);
-    planet->vmag = 4.83 + 5.0 * (log10(dist_pc) - 1.0) -
-                   2.5 * (log10(eclipse_factor));
     return 0;
 }
 
 static int moon_update(planet_t *planet, const observer_t *obs)
 {
-    double el, dist;
     double pvh[2][3], pvo[2][3];
 
     planet_get_pvh(planet, obs, pvh);
@@ -333,90 +322,42 @@ static int moon_update(planet_t *planet, const observer_t *obs)
     vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-
-    // Compute visual mag.
-    // This is based on the algo of pyephem.
-    // XXX: move into 'algos'.
-    dist = vec3_norm(pvo[0]);
-    el = eraSepp(planet->pvo[0], obs->sun_pvo[0]); // Elongation.
-    planet->vmag = -12.7 +
-        2.5 * (log10(M_PI) - log10(M_PI / 2.0 * (1.0 + 1.e-6 - cos(el)))) +
-        5.0 * log10(dist / .0025);
-
     return 0;
 }
 
 static int plan94_update(planet_t *planet, const observer_t *obs)
 {
-    const double *vis;  // Visual element of planet.
-    double rho; // Distance to Earth (AU).
-    double rp;  // Distance to Sun (AU).
-    double i;   // Phase angle.
     double pvh[2][3], pvo[2][3];
-    int n = (planet->id - MERCURY) / 100 + 1;
-
     planet_get_pvh(planet, obs, pvh);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
     vec3_copy(pvo[0], planet->pvo[0]);
     vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-
-    i = eraSepp(pvh[0], planet->pvo[0]);
-    // Compute visual magnitude.
-    i *= DR2D / 100;
-    rho = vec3_norm(pvh[0]);
-    rp = vec3_norm(planet->pvo[0]);
-    vis = VIS_ELEMENTS[n];
-    planet->vmag = vis[1] + 5 * log10(rho * rp) +
-                        i * (vis[2] + i * (vis[3] + i * vis[4]));
     return 0;
 }
 
 static int l12_update(planet_t *planet, const observer_t *obs)
 {
     double pvh[2][3], pvo[2][3];
-    double mag;
-    double rho; // Distance to Earth (AU).
-    double rp;  // Distance to Sun (AU).
-
     planet_get_pvh(planet, obs, pvh);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
     vec3_copy(pvo[0], planet->pvo[0]);
     vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-
-    // Compute visual magnitude.
-    // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
-    rho = vec3_norm(pvh[0]);
-    rp = vec3_norm(planet->pvo[0]);
-    mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
-            2.0 * planet->radius_m / 1000.0 / 1329.0);
-    planet->vmag = mag + 5 * log10(rho * rp);
     return 0;
 }
 
 static int kepler_update(planet_t *planet, const observer_t *obs)
 {
-    double rho; // Distance to Earth (AU).
-    double rp;  // Distance to Sun (AU).
     double pvh[2][3], pvo[2][3];
-
     planet_get_pvh(planet, obs, pvh);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
     vec3_copy(pvo[0], planet->pvo[0]);
     vec3_copy(pvo[1], planet->pvo[1]);
     planet->pvo[0][3] = 1;
     planet->pvo[1][3] = 1;
-
-    // Compute visual magnitude.
-    // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
-    rho = vec3_norm(pvh[0]);
-    rp = vec3_norm(planet->pvo[0]);
-    double mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
-            2.0 * planet->radius_m / 1000.0 / 1329.0);
-    planet->vmag = mag + 5 * log10(rho * rp);
     return 0;
 }
 
@@ -460,27 +401,6 @@ static int planet_update_(planet_t *planet, const observer_t *obs)
         break;
     }
 
-    // Adjust vmag for saturn.
-    if (planet->id == SATURN) {
-        double hpos[3]; // Heliocentric pos J2000.0
-        double hlon, hlat;
-        double earth_hlon, earth_hlat;
-        double et, st, set;
-        double earth_hpos[3];
-        double pvh[2][3];
-        planet_get_pvh(planet, obs, pvh);
-        mat3_mul_vec3(obs->ri2e, pvh[0], hpos);
-        mat3_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
-
-        eraC2s(hpos, &hlon, &hlat);
-        eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
-        satrings(hlat, hlon, vec3_norm(pvh[0]),
-                 earth_hlon, vec3_norm(obs->earth_pvh[0]),
-                 obs->ut1 + DJM0, &et, &st);
-        set = sin(fabs(et));
-        planet->vmag += (-2.60 + 1.25 * set) * set;
-    }
-
     return 0;
 }
 
@@ -496,6 +416,103 @@ static double planet_get_phase(const planet_t *planet, const observer_t *obs)
     return 0.5 * cos(i) + 0.5;
 }
 
+static double sun_get_vmag(const planet_t *sun, const observer_t *obs)
+{
+    double eclipse_factor;
+    double dist_pc; // Distance in parsec.
+    // Compute the apparent magnitude for the absolute mag (V: 4.83) and
+    // observer's distance
+    dist_pc = vec3_norm(obs->earth_pvh[0]) * (M_PI / 648000);
+    eclipse_factor = max(compute_sun_eclipse_factor(sun, obs), 0.000128);
+    return 4.83 + 5.0 * (log10(dist_pc) - 1.0) - 2.5 * (log10(eclipse_factor));
+}
+
+static double moon_get_vmag(const planet_t *moon, const observer_t *obs)
+{
+    double el, dist;
+    double pvh[2][3], pvo[2][3];
+
+    // This is based on the algo of pyephem.
+    // XXX: move into 'algos'.
+    planet_get_pvh(moon, obs, pvh);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    dist = vec3_norm(pvo[0]);
+    el = eraSepp(moon->pvo[0], obs->sun_pvo[0]); // Elongation.
+    return -12.7 +
+        2.5 * (log10(M_PI) - log10(M_PI / 2.0 * (1.0 + 1.e-6 - cos(el)))) +
+        5.0 * log10(dist / .0025);
+}
+
+// Compute vmag adjustment from rings.
+static double rings_vmag(const planet_t *planet, const observer_t *obs)
+{
+    double hpos[3]; // Heliocentric pos J2000.0
+    double hlon, hlat;
+    double earth_hlon, earth_hlat;
+    double et, st, set;
+    double earth_hpos[3];
+    double pvh[2][3];
+
+    if (planet->id != SATURN) return 0;
+    planet_get_pvh(planet, obs, pvh);
+    mat3_mul_vec3(obs->ri2e, pvh[0], hpos);
+    mat3_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
+
+    eraC2s(hpos, &hlon, &hlat);
+    eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
+    satrings(hlat, hlon, vec3_norm(pvh[0]),
+             earth_hlon, vec3_norm(obs->earth_pvh[0]),
+             obs->ut1 + DJM0, &et, &st);
+    set = sin(fabs(et));
+    return (-2.60 + 1.25 * set) * set;
+}
+
+static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
+{
+    const double *vis;  // Visual element of planet.
+    double rho; // Distance to Earth (AU).
+    double rp;  // Distance to Sun (AU).
+    double i;   // Phase angle.
+    double mag;
+    int n;
+    double pvh[2][3];
+
+    switch (planet->id) {
+    case SUN:
+        return sun_get_vmag(planet, obs);
+    case MOON:
+        return moon_get_vmag(planet, obs);
+
+    case MERCURY:
+    case VENUS:
+    case MARS:
+    case JUPITER:
+    case SATURN:
+    case URANUS:
+    case NEPTUNE:
+        planet_get_pvh(planet, obs, pvh);
+        n = (planet->id - MERCURY) / 100 + 1;
+        i = eraSepp(pvh[0], planet->pvo[0]);
+        // Compute visual magnitude.
+        i *= DR2D / 100;
+        rho = vec3_norm(pvh[0]);
+        rp = vec3_norm(planet->pvo[0]);
+        vis = VIS_ELEMENTS[n];
+        return vis[1] + 5 * log10(rho * rp) +
+               i * (vis[2] + i * (vis[3] + i * vis[4])) +
+               rings_vmag(planet, obs);
+
+    default:
+        // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
+        planet_get_pvh(planet, obs, pvh);
+        rho = vec3_norm(pvh[0]);
+        rp = vec3_norm(planet->pvo[0]);
+        mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
+                2.0 * planet->radius_m / 1000.0 / 1329.0);
+        return mag + 5 * log10(rho * rp);
+    }
+}
+
 static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
                            void *out)
 {
@@ -506,7 +523,7 @@ static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
         memcpy(out, planet->pvo, sizeof(planet->pvo));
         return 0;
     case INFO_VMAG:
-        *(double*)out = planet->vmag;
+        *(double*)out = planet_get_vmag(planet, obs);
         return 0;
     case INFO_PHASE:
         *(double*)out = planet_get_phase(planet, obs);
@@ -859,8 +876,8 @@ static void planet_render_orbit(const planet_t *planet,
 }
 
 static void planet_render_label(
-        const planet_t *planet, const painter_t *painter, double scale,
-        double point_size)
+        const planet_t *planet, const painter_t *painter, double vmag,
+        double scale, double point_size)
 {
     const double label_color[4] = RGBA(124, 124, 205, 255);
     const double white[4] = {1, 1, 1, 1};
@@ -890,7 +907,7 @@ static void planet_render_label(
                   true, s + 4, FONT_SIZE_BASE,
                   selected ? white : label_color, 0, 0,
                   selected ? TEXT_BOLD : TEXT_FLOAT,
-                  -planet->vmag, planet->obj.oid);
+                  -vmag, planet->obj.oid);
 }
 
 static void planet_render(const planet_t *planet, const painter_t *painter_)
@@ -913,9 +930,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double cap[4];
     const hips_t *hips;
 
-    vmag = planet->vmag;
     if (planet->id == EARTH) return;
 
+    vmag = planet_get_vmag(planet, painter.obs);
     if (planet->id != MOON && vmag > painter.stars_limit_mag) return;
 
     // Artificially increase the moon size when we are zoomed out, so that
@@ -997,7 +1014,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // planet is big on the screen, we should see the label, no matter the
     // vmag.
     if (selected || vmag <= painter.hints_limit_mag - 1.0 || hips_alpha > 0)
-        planet_render_label(planet, &painter, r_scale, point_size);
+        planet_render_label(planet, &painter, vmag, r_scale, point_size);
 
     // Render the Sun halo.
     if (planet->id == SUN) {
@@ -1151,10 +1168,6 @@ static int planets_ini_handler(void* user, const char* section,
     if (strcmp(attr, "parent") == 0) {
         planet->parent = planet_get_by_name(planets, value);
         assert(planet->parent);
-    }
-    if (strcmp(attr, "vmag") == 0) {
-        sscanf(value, "%f", &v);
-        planet->vmag = v;
     }
     if (strcmp(attr, "color") == 0) {
         sscanf(value, "%lf, %lf, %lf",
