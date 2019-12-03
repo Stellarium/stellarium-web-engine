@@ -166,12 +166,14 @@ static int skyculture_update(obj_t *obj, double dt)
 {
     const char *json;
     skyculture_t *cult = (skyculture_t*)obj;
+    skycultures_t *cults = (skycultures_t*)obj->parent;
     char path[1024], *name;
     int code, r, i, arts_nb;
     json_value *doc;
     const json_value *names = NULL, *features = NULL, *description = NULL,
                      *tour = NULL, *edges = NULL;
     constellation_art_t *arts;
+    bool active = (cult == cults->current);
 
     if (cult->parsed & SK_JSON)
         return 0;
@@ -239,6 +241,9 @@ static int skyculture_update(obj_t *obj, double dt)
         skyculture_parse_edges(edges, cult->constellations,
                                cult->nb_constellations);
     }
+
+    // Once all has beed parsed, we can activate the skyculture.
+    if (active) skyculture_activate(cult);
 
 end:
     json_value_free(doc);
