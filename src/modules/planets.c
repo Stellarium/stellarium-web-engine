@@ -782,7 +782,7 @@ static void planet_render_orbit(const planet_t *planet,
                                 const painter_t *painter_)
 {
     painter_t painter = *painter_;
-    double pos[4], mat[4][4], parent_pvo[2][3];
+    double mat[4][4] = MAT4_IDENTITY, parent_pvo[2][3];
     double dist, depth_range[2];
     double in, om, w, a, n, ec, ma;
 
@@ -794,9 +794,7 @@ static void planet_render_orbit(const planet_t *planet,
 
     // Center the rendering on the parent planet.
     planet_get_pvo(planet->parent, painter.obs, parent_pvo, true);
-    vec4_copy(parent_pvo[0], pos);
-    mat4_set_identity(mat);
-    mat4_itranslate(mat, pos[0], pos[1], pos[2]);
+    mat4_itranslate(mat, parent_pvo[0][0], parent_pvo[0][1], parent_pvo[0][2]);
 
     // Set the depth range same as the parent!!!!
     dist = vec3_norm(parent_pvo[0]);
