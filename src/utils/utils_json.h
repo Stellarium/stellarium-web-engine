@@ -61,7 +61,7 @@ json_value *json_copy(json_value *val);
  * "}");
  *
  * By default all dict attribute are optional: if the key is not present
- * we just ignore the value.  We can make a key required by adding a '!'
+ * we set the value to NULL/zero.  We can make a key required by adding a '!'
  * before the key.
  */
 
