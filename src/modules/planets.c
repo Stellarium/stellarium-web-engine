@@ -76,6 +76,8 @@ struct planet {
 
     hips_t      *hips;              // Hips survey of the planet.
     hips_t      *hips_normalmap;    // Normal map survey.
+
+    fader_t     orbit_visible;
 };
 
 // Planets layer object type;
@@ -989,16 +991,41 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     return cmp(eraPm(bpvo[0]), eraPm(apvo[0]));
 }
 
-static bool should_render_orbit(const planet_t *p, double *alpha)
+static double planet_get_pixel_radius(const planet_t *p,
+                                      const painter_t *painter)
 {
-    *alpha = 0.9;
+    double vmag, angle, pvo[2][3], radius_physical, radius_vmag;
+
+    planet_get_pvo(p, painter->obs, pvo, true);
+    angle = p->radius_m / DAU / vec3_norm(pvo[0]);
+    radius_physical = core_get_point_for_apparent_angle(painter->proj, angle);
+    vmag = planet_get_vmag(p, painter->obs);
+    core_get_point_for_mag(vmag, &radius_vmag, NULL);
+    return max(radius_physical, radius_vmag);
+}
+
+/*
+* Heuristic to decide if we should render the orbit of a planet.
+*/
+static bool should_render_orbit(const planet_t *p, const painter_t *painter)
+{
+
+    // Only consider planets moons.
     if (!core->selection) return false;
     if (!p->parent) return false;
-    if (p->id == EARTH) return false;
+    if (p->id == SUN) return false;
+    if (p->parent->id == SUN) return false;
+
+    // If the moon is selected, always render the orbit.
     if (p->obj.oid == core->selection->oid) return true;
+
+    // If the parent is not selected, don't render.
     if (p->parent->obj.oid != core->selection->oid) return false;
-    if (p->mass / p->parent->mass < 0.000001) return false;
-    *alpha = 0.6;
+
+    // Only render the orbit if the visible radius on screen is larger than
+    // a threshold value.
+    if (planet_get_pixel_radius(p, painter) < 1.5) return false;
+
     return true;
 }
 
@@ -1007,7 +1034,6 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     PROFILE(planets_render, 0);
     planets_t *planets = (planets_t*)obj;
     planet_t *p;
-    double alpha;
 
     // First sort all the planets by distance to the observer.
     DL_SORT(planets->obj.children, sort_cmp);
@@ -1024,8 +1050,9 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     // Still disabled by default for the moment.
     if ((0)) // Disabled for the moment
     PLANETS_ITER(planets, p) {
-        if (should_render_orbit(p, &alpha))
-            planet_render_orbit(p, alpha, painter);
+        p->orbit_visible.target = should_render_orbit(p, painter);
+        if (p->orbit_visible.value)
+            planet_render_orbit(p, 0.6 * p->orbit_visible.value, painter);
     }
     return 0;
 }
@@ -1105,6 +1132,7 @@ static int planets_ini_handler(void* user, const char* section,
         if (strcmp(id, "SUN") == 0) planets->sun = planet;
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
         planet->update_delta_s = 1.f + 1.f * rand() * 1.f / RAND_MAX;
+        fader_init(&planet->orbit_visible, false);
     }
     if (strcmp(attr, "horizons_id") == 0) {
         sscanf(value, "%d", &planet->id);
@@ -1216,7 +1244,13 @@ static int planets_init(obj_t *obj, json_value *args)
 static int planets_update(obj_t *obj, double dt)
 {
     planets_t *planets = (void*)obj;
-    return fader_update(&planets->visible, dt);
+    planet_t *p;
+
+    fader_update(&planets->visible, dt);
+    PLANETS_ITER(obj, p) {
+        fader_update(&p->orbit_visible, dt);
+    }
+    return 0;
 }
 
 static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
