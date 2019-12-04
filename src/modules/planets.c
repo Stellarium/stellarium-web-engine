@@ -51,6 +51,10 @@ struct planet {
     double last_full_update; // Time of last full orbit update (TT)
     double last_full_pvh[2][3]; // equ, J2000.0, AU heliocentric pos and speed.
 
+    // Cached pvo value and the observer hash used for the computation.
+    uint64_t pvo_obs_hash;
+    double pvo[2][3];
+
     // Rotation elements
     struct {
         double obliquity;   // (rad)
@@ -261,6 +265,12 @@ static void planet_get_pvo(const planet_t *planet, const observer_t *obs,
     double pvh[2][3];
     double ldt;
 
+    // Use cached value if possible.
+    if (adjust_light_speed && obs->hash == planet->pvo_obs_hash) {
+        eraCpv(planet->pvo, pvo);
+        return;
+    }
+
     planet_get_pvh(planet, obs, pvh);
     eraCpv(pvh, pvo);
     eraPvppv(pvo, obs->sun_pvb, pvo);
@@ -275,6 +285,10 @@ static void planet_get_pvo(const planet_t *planet, const observer_t *obs,
     eraCpv(pvh, pvo);
     eraPvppv(pvo, obs->sun_pvb, pvo);
     eraPvmpv(pvo, obs->obs_pvb, pvo);
+
+    // Copy value into cache to speed up next access.
+    ((planet_t*)planet)->pvo_obs_hash = obs->hash;
+    eraCpv(pvo, planet->pvo);
 }
 
 // Same as get_pvo, but return homogenous 4d coordinates.
