@@ -634,7 +634,7 @@ static int get_shadow_candidates(const planet_t *planet,
                     continue;
                 nb--; // Remove the last one.
             }
-            planet_get_pvo(planet, obs, pvo, true);
+            planet_get_pvo(other, obs, pvo, true);
             vec3_copy(pvo[0], spheres[nb]);
             spheres[nb][3] = other->radius_m / DAU;
             nb++;
