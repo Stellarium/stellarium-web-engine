@@ -946,6 +946,26 @@ double core_get_apparent_angle_for_point(const projection_t *proj, double r)
 }
 
 /*
+ * Function: core_get_point_for_apparent_angle
+ * Get the pixel radius of a circle with a given apparent angle
+ *
+ * This is the inverse of <core_get_apparent_angle_for_point>
+ *
+ * Parameters:
+ *   proj   - The projection used.
+ *   angle  - Apparent angle (rad).
+ *
+ * Return:
+ *   Point radius in window pixel.
+ */
+double core_get_point_for_apparent_angle(const projection_t *proj,
+                                         double angle)
+{
+    const double win_w = proj->window_size[0];
+    return angle / proj->scaling[0] * win_w / 2;
+}
+
+/*
  * Function: core_report_vmag_in_fov
  * Inform the core that an object with a given vmag is visible.
  *

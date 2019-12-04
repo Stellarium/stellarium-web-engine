@@ -361,6 +361,22 @@ double core_mag_to_lum_apparent(double mag, double surf);
 double core_get_apparent_angle_for_point(const projection_t *proj, double r);
 
 /*
+ * Function: core_get_point_for_apparent_angle
+ * Get the pixel radius of a circle with a given apparent angle
+ *
+ * This is the inverse of <core_get_apparent_angle_for_point>
+ *
+ * Parameters:
+ *   proj   - The projection used.
+ *   angle  - Apparent angle (rad).
+ *
+ * Return:
+ *   Point radius in window pixel.
+ */
+double core_get_point_for_apparent_angle(const projection_t *proj,
+                                         double angle);
+
+/*
  * Function: core_lookat
  * Move view direction to the given position.
  *
