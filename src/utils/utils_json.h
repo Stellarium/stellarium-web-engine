@@ -86,4 +86,4 @@ json_value *json_copy(json_value *val);
 #define JCON_STR(v) "s", &(v)
 #define JCON_VAL(v) "v", &(v)
 
-int jcon_parse(json_value *v, ...);
+int jcon_parse(json_value *v, ...) __attribute__((warn_unused_result));
