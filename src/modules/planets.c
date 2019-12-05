@@ -845,8 +845,9 @@ static void planet_render_label(
     // Radius on screen in pixel.
     radius = planet->radius_m / DAU / vec3_norm(pvo[0]);
     radius *= painter->proj->window_size[0] / painter->proj->scaling[0] / 2;
+    radius *= scale;
 
-    s = point_size;
+    s = point_size / 2;
     s = max(s, radius);
 
     labels_add_3d(name, FRAME_ICRF, pos,
@@ -886,7 +887,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // we can render it as a hips survey.
     if (planet->id == MOON) {
         hips_k = 4.0;
-        r_scale = mix(1, 8, smoothstep(35 * DD2R, 220 * DD2R, core->fov));
+        r_scale = max(1.0, core->fov / (20.0 * core->star_scale_screen_factor
+                                        * DD2R));
     }
 
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
