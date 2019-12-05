@@ -86,7 +86,7 @@ void telescope_auto(telescope_t *tel, double fov)
     // This is ad-hoc but required to match more closely what a user
     // expects when zooming when transitioning from visual observation
     // to photograpic exposure.
-    tel->exposure = pow(max(1, 10.0 * M_PI / 180 / fov), 0.33);
+    tel->exposure = pow(max(1, 5.0 * M_PI / 180 / fov), 0.07);
 
     tel->light_grasp = pow(tel->diameter / Deye, 2) * tel->exposure;
     // Make sure we never simulate a too small eye pupil. This allows to remove
