@@ -26,7 +26,8 @@ int module_update(obj_t *module, double dt);
  * Parameters:
  *   module   - The module (core for all objects).
  *   obs      - The observer used to compute the object vmag.
- *   max_mag  - Only consider objects below this magnitude.
+ *   max_mag  - Only consider objects below this magnitude.  Can be set to
+ *              NAN to ignore.
  *   user     - Data passed to the callback.
  *   f        - Callback function called once per object.
  *

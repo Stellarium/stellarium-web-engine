@@ -27,7 +27,8 @@ int module_update(obj_t *module, double dt)
  * Parameters:
  *   obj      - The module (core for all objects).
  *   obs      - The observer used to compute the object vmag.
- *   max_mag  - Only consider objects below this magnitude.
+ *   max_mag  - Only consider objects below this magnitude.  Can be set to
+ *              NAN to ignore.
  *   user     - Data passed to the callback.
  *   f        - Callback function called once per object.
  *
@@ -43,6 +44,7 @@ int module_list_objs(const obj_t *obj, observer_t *obs,
 {
     obj_t *child;
     double vmag;
+    bool test_vmag = !isnan(max_mag);
 
     if (obj->klass->list)
         return obj->klass->list(obj, obs, max_mag, hint, user, f);
@@ -50,7 +52,7 @@ int module_list_objs(const obj_t *obj, observer_t *obs,
 
     // Default for listable modules: list all the children.
     DL_FOREACH(obj->children, child) {
-        if (obj_get_info(child, obs, INFO_VMAG, &vmag) == 0 &&
+        if (test_vmag && obj_get_info(child, obs, INFO_VMAG, &vmag) == 0 &&
                 vmag > max_mag)
             continue;
         if (f && f(user, child)) break;
