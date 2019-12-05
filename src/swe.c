@@ -397,17 +397,17 @@ static void test_jcon(void)
     assert(json);
 
     r = jcon_parse(json, "{",
-        "x", JCON_INT(x),
-        "l", "[", JCON_INT(l_0), "]",
+        "x", JCON_INT(x, 0),
+        "l", "[", JCON_INT(l_0, 0), "]",
         "d", "{",
-            "x", JCON_INT(d_x),
-            "y", JCON_INT(d_y),
+            "x", JCON_INT(d_x, 0),
+            "y", JCON_INT(d_y, 0),
         "}",
         "e", "{",
-            "x", JCON_INT(e_x),
+            "x", JCON_INT(e_x, 1),
         "}",
     "}");
-    assert(r == 0 && x == 1 && d_x == 10 && d_y == 20 && e_x == -1 &&
+    assert(r == 0 && x == 1 && d_x == 10 && d_y == 20 && e_x == 1 &&
            l_0 == 3);
 
     json_value_free(json);

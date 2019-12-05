@@ -158,7 +158,7 @@ int skyculture_parse_feature_art_json(const json_value *v,
 
     r = jcon_parse(v, "{",
         "!file", JCON_STR(img),
-        "!size", "[", JCON_INT(w), JCON_INT(h), "]",
+        "!size", "[", JCON_INT(w, 0), JCON_INT(h, 0), "]",
         "!anchors", "[",
             JCON_VAL(anchors[0]),
             JCON_VAL(anchors[1]),
@@ -172,8 +172,8 @@ int skyculture_parse_feature_art_json(const json_value *v,
 
     for (i = 0; i < 3; i++) {
         r = jcon_parse(anchors[i], "{",
-            "pos", "[", JCON_INT(x), JCON_INT(y), "]",
-            "hip", JCON_INT(hip),
+            "pos", "[", JCON_INT(x, 0), JCON_INT(y, 0), "]",
+            "hip", JCON_INT(hip, 0),
         "}");
         if (r) goto error;
         art->anchors[i].hip = hip;

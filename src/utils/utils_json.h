@@ -52,23 +52,24 @@ json_value *json_copy(json_value *val);
  *
  * jcon_parse(json, "{",
  *    "attr1", "{",
- *        "x",      JCON_FLOAT(x),
- *        "y",      JCON_INT(y),
+ *        "x",      JCON_FLOAT(x, 0),
+ *        "y",      JCON_INT(y, 0),
  *        "s",      JCON_STR(str),
- *        "!z",     JCON_INT(z), // Non optional.
+ *        "!z",     JCON_INT(z, 0), // Non optional.
  *    "}",
  *    "list", "[", JCON_FLOAT(y), JCON_FLOAT(z), "]"
  * "}");
  *
  * By default all dict attribute are optional: if the key is not present
- * we don't touch the value.  We can make a key required by adding a '!' before
+ * we use the passed default value for numbers and NULL for strings and json
+ * objects.  We can make a key required by adding a '!' before
  * the key.
  */
 
 #define JCON_NEW(...) jcon_new(0, __VA_ARGS__)
-#define JCON_INT(v) "i", &(v)
-#define JCON_FLOAT(v) "f", &(v)
-#define JCON_DOUBLE(v) "d", &(v)
+#define JCON_INT(v, d) "i", &(v), ((int)d)
+#define JCON_FLOAT(v, d) "f", &(v), ((double)d)
+#define JCON_DOUBLE(v, d) "d", &(v), ((double)d)
 #define JCON_STR(v) "s", &(v)
 #define JCON_VAL(v) "v", &(v)
 
