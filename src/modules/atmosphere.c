@@ -29,7 +29,7 @@ typedef struct atmosphere {
         bool            visible;
     } tiles[12];
     fader_t         visible;
-    double      turbidity;
+    double          turbidity;
 } atmosphere_t;
 
 // All the precomputed data
@@ -46,6 +46,8 @@ typedef struct {
     skybrightness_t skybrightness;
     double eclipse_factor; // Solar eclipse adjustment.
     double landscape_lum; // Average luminance of the landscape.
+
+    double light_pollution_lum;
 
     // Updated during rendering.
     double sum_lum;
@@ -73,7 +75,7 @@ static double F(const double *lam , double theta, double gamma)
 static render_data_t prepare_render_data(
         const double sun_pos[3], double sun_vmag,
         const double moon_pos[3], double moon_vmag,
-        double T)
+        double T, double bortle_index)
 {
     render_data_t data = {};
     double thetaS;
@@ -125,6 +127,7 @@ static render_data_t prepare_render_data(
     // I am using an ad-hoc formula to make it look OK here.
     data.eclipse_factor = pow(10, (base_sun_vmag - sun_vmag) / 2.512 * 1.1);
 
+    data.light_pollution_lum = max(0., 0.0004 * pow(bortle_index - 1, 2.1));
     return data;
 }
 
@@ -157,6 +160,8 @@ static float compute_lum(void *user, const float pos[3])
                 min(vec3_dot(p, d->sun_pos), d->cos_grid_angular_step),
                 vec3_dot(p, zenith));
     lum *= d->eclipse_factor;
+
+    lum += d->light_pollution_lum;
 
     // Update luminance sum for eye adaptation.
     // If we are below horizon use the precomputed landscape luminance.
@@ -221,7 +226,7 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 
     // XXX: this could be cached!
     data = prepare_render_data(sun_pos, sun_vmag, moon_pos, moon_vmag,
-                               atm->turbidity);
+                               atm->turbidity, core->bortle_index);
     // This is quite ad-hoc as in reality we are using a HIPS grid
     data.cos_grid_angular_step = cos(15. * DD2R);
     prepare_skybrightness(&data.skybrightness,

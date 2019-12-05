@@ -47,6 +47,8 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     lum *= core->telescope.light_grasp;
     lum /= pow(core->telescope.magnification, 2);
     c = tonemapper_map(&core->tonemapper, lum);
+    // Ad-hoc integration of the Bortle scale
+    c *= 1.0 / (6.0 / 8.0) * (9.0 - core->bortle_index) / 8.0;
     c = max(0, c);
     c *= visibility;
     c = min(c, 1.2);

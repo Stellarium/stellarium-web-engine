@@ -49,6 +49,9 @@ struct core
     double          star_scale_screen_factor;
     double          star_relative_scale;
 
+    // Bortle index, see https://en.wikipedia.org/wiki/Bortle_scale
+    int             bortle_index;
+
     // Another offset just for DSOs
     double          dso_hints_mag_offset;
     // Objects fainter than this magnitude won't be displayed, independently

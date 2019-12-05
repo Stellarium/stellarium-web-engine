@@ -252,6 +252,7 @@ static void core_set_default(void)
     core->star_linear_scale = 0.8;
     core->star_scale_screen_factor = 0.5;
     core->star_relative_scale = 1.1;
+    core->bortle_index = 3;
 
     core->lwmax_min = 0.052;
     core->max_point_radius = 50.0;
@@ -537,7 +538,11 @@ static void core_get_point_for_mag_(
         double mag, double *radius, double *luminance)
 {
     double ld;
-    double s_linear = core->star_linear_scale * core->star_scale_screen_factor;
+
+    // Poor man's extinction function taking the Bortle index into account
+    double s_linear = (core->star_linear_scale + 3.0 / 11.0 -
+                       core->bortle_index / 11.0) *
+                       core->star_scale_screen_factor;
     double s_relative = core->star_relative_scale;
     // Compute apparent luminance, i.e. the luminance percieved by the eye
     // when looking in the telescope eyepiece.
@@ -1134,6 +1139,7 @@ static obj_klass_t core_klass = {
                  MEMBER(core_t, star_linear_scale)),
         PROPERTY(star_relative_scale, TYPE_FLOAT,
                  MEMBER(core_t, star_relative_scale)),
+        PROPERTY(bortle_index, TYPE_INT, MEMBER(core_t, bortle_index)),
         PROPERTY(tonemapper_p, TYPE_FLOAT, MEMBER(core_t, tonemapper_p)),
         PROPERTY(display_limit_mag, TYPE_FLOAT,
                  MEMBER(core_t, display_limit_mag)),
