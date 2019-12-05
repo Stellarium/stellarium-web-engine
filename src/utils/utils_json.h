@@ -55,15 +55,28 @@ json_value *json_copy(json_value *val);
  *        "x",      JCON_FLOAT(x, 0),
  *        "y",      JCON_INT(y, 0),
  *        "s",      JCON_STR(str),
- *        "!z",     JCON_INT(z, 0), // Non optional.
+ *        "?z",     JCON_INT(z, 0), // Optional, default to 0.
  *    "}",
  *    "list", "[", JCON_FLOAT(y), JCON_FLOAT(z), "]"
  * "}");
  *
- * By default all dict attribute are optional: if the key is not present
- * we use the passed default value for numbers and NULL for strings and json
- * objects.  We can make a key required by adding a '!' before
- * the key.
+ * By default all dict attribute are compulsary: if the key is not present
+ * the function stops and returns an error.  We can add a '?' before a key
+ * to make it optional.
+ *
+ * If a dict attribute is optional, and the value is not present in the json,
+ * then all the children get the default values.  for example:
+ *
+ * float x;
+ * const char *json = "{}";
+ * int r;
+ * r = jcon_parse(json, "{",
+ *     "?dict", "{",
+ *         "x", JCON_INT(x, 1),
+ *     "}"
+ * "}")
+ * // r is set to 0 (success), and x is set to 1 (default value).
+ *
  */
 
 #define JCON_NEW(...) jcon_new(0, __VA_ARGS__)

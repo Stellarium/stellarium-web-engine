@@ -199,15 +199,16 @@ static int jcon_parse_(json_value *v, va_list *ap)
                 break;
             }
 
-            // attribute staring with '!' are compulsory
-            required = false;
-            if (token[0] == '!') {
-                required = true;
+            // attribute staring with '?' are optional
+            required = true;
+            if (token[0] == '?') {
+                required = false;
                 token++;
             }
+            assert(token[0] >= 'A' && token[0] <= 'z');
 
             child = v ? json_get_attr(v, token, 0) : NULL;
-            if (!child && required) return -1;
+            if (v && !child && required) return -1;
             r = jcon_parse_(child, ap);
             if (r) return -1;
         }

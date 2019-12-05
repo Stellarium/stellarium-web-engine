@@ -195,12 +195,12 @@ static int skyculture_update(obj_t *obj, double dt)
     }
 
     r = jcon_parse(doc, "{",
-        "!name", JCON_STR(name),
-        "names", JCON_VAL(names),
-        "features", JCON_VAL(features),
-        "!description", JCON_VAL(description),
-        "edges", JCON_VAL(edges),
-        "tour", JCON_VAL(tour),
+        "name", JCON_STR(name),
+        "?names", JCON_VAL(names),
+        "?features", JCON_VAL(features),
+        "description", JCON_VAL(description),
+        "?edges", JCON_VAL(edges),
+        "?tour", JCON_VAL(tour),
     "}");
     if (r) {
         LOG_E("Cannot parse skyculture json (%s)", path);

@@ -116,10 +116,10 @@ int skyculture_parse_feature_json(const json_value *v,
     const json_value *lines = NULL, *description = NULL;
 
     r = jcon_parse(v, "{",
-        "!id", JCON_STR(id),
-        "name", JCON_STR(name),
-        "lines", JCON_VAL(lines),
-        "description", JCON_VAL(description),
+        "id", JCON_STR(id),
+        "?name", JCON_STR(name),
+        "?lines", JCON_VAL(lines),
+        "?description", JCON_VAL(description),
     "}");
     if (r) goto error;
 
@@ -157,9 +157,9 @@ int skyculture_parse_feature_art_json(const json_value *v,
     if (!v) return -1;
 
     r = jcon_parse(v, "{",
-        "!file", JCON_STR(img),
-        "!size", "[", JCON_INT(w, 0), JCON_INT(h, 0), "]",
-        "!anchors", "[",
+        "file", JCON_STR(img),
+        "size", "[", JCON_INT(w, 0), JCON_INT(h, 0), "]",
+        "anchors", "[",
             JCON_VAL(anchors[0]),
             JCON_VAL(anchors[1]),
             JCON_VAL(anchors[2]),

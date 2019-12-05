@@ -389,13 +389,13 @@ static int satellite_init(obj_t *obj, json_value *args)
 
     if (args) {
         r = jcon_parse(args, "{",
-            "types", "[", JCON_STR(type), "]",
-            "!model_data", "{",
-                "!norad_number", JCON_INT(sat->number, 0),
-                "mag", JCON_DOUBLE(sat->stdmag, SATELLITE_DEFAULT_MAG),
-                "!tle", "[", JCON_STR(tle1), JCON_STR(tle2), "]",
+            "?types", "[", JCON_STR(type), "]",
+            "model_data", "{",
+                "norad_number", JCON_INT(sat->number, 0),
+                "?mag", JCON_DOUBLE(sat->stdmag, SATELLITE_DEFAULT_MAG),
+                "tle", "[", JCON_STR(tle1), JCON_STR(tle2), "]",
             "}",
-            "short_name", JCON_STR(name),
+            "?short_name", JCON_STR(name),
         "}");
         if (r) {
             LOG_E("Cannot parse satellite json data");

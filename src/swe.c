@@ -403,12 +403,19 @@ static void test_jcon(void)
             "x", JCON_INT(d_x, 0),
             "y", JCON_INT(d_y, 0),
         "}",
-        "e", "{",
+        "?e", "{",
             "x", JCON_INT(e_x, 1),
         "}",
     "}");
     assert(r == 0 && x == 1 && d_x == 10 && d_y == 20 && e_x == 1 &&
            l_0 == 3);
+
+    r = jcon_parse(json, "{",
+        "e", "{",
+            "x", JCON_INT(e_x, 1),
+        "}",
+    "}");
+    assert(r != 0);
 
     json_value_free(json);
 }
