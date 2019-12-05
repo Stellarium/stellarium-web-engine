@@ -853,6 +853,10 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXT;
         vec4_to_float(color, item->color);
+        item->color[0] = clamp(item->color[0], 0.0, 1.0);
+        item->color[1] = clamp(item->color[1], 0.0, 1.0);
+        item->color[2] = clamp(item->color[2], 0.0, 1.0);
+        item->color[3] = clamp(item->color[3], 0.0, 1.0);
         vec2_to_float(pos, item->text.pos);
         item->text.size = size;
         item->text.align = align;
