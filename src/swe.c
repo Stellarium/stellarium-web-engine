@@ -407,7 +407,7 @@ static void test_jcon(void)
             "x", JCON_INT(e_x),
         "}",
     "}");
-    assert(r == 0 && x == 1 && d_x == 10 && d_y == 20 && e_x == 0 &&
+    assert(r == 0 && x == 1 && d_x == 10 && d_y == 20 && e_x == -1 &&
            l_0 == 3);
 
     json_value_free(json);

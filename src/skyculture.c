@@ -111,7 +111,7 @@ static int parse_lines_json(const json_value *v, int lines[64][2])
 int skyculture_parse_feature_json(const json_value *v,
                                   constellation_infos_t *feature)
 {
-    const char *id, *name;
+    const char *id, *name = NULL;
     int r;
     const json_value *lines = NULL, *description = NULL;
 

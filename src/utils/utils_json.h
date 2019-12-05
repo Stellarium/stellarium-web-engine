@@ -61,8 +61,8 @@ json_value *json_copy(json_value *val);
  * "}");
  *
  * By default all dict attribute are optional: if the key is not present
- * we set the value to NULL/zero.  We can make a key required by adding a '!'
- * before the key.
+ * we don't touch the value.  We can make a key required by adding a '!' before
+ * the key.
  */
 
 #define JCON_NEW(...) jcon_new(0, __VA_ARGS__)

@@ -146,7 +146,6 @@ static int jcon_parse_(json_value *v, va_list *ap)
 
     if (token[0] == 'f') {
         ptr.f = va_arg(*ap, float*);
-        *ptr.f = 0;
         if (!v) return 0;
         if (v->type != json_double && v->type != json_integer) return -1;
         if (v->type == json_double) *ptr.f = v->u.dbl;
@@ -156,7 +155,6 @@ static int jcon_parse_(json_value *v, va_list *ap)
 
     if (token[0] == 'd') {
         ptr.d = va_arg(*ap, double*);
-        *ptr.d = 0;
         if (!v) return 0;
         if (v->type != json_double && v->type != json_integer) return -1;
         if (v->type == json_double) *ptr.d = v->u.dbl;
@@ -166,7 +164,6 @@ static int jcon_parse_(json_value *v, va_list *ap)
 
     if (token[0] == 'i') {
         ptr.i = va_arg(*ap, int*);
-        *ptr.i = 0;
         if (!v) return 0;
         if (v->type != json_integer) return -1;
         *ptr.i = v->u.integer;
@@ -175,7 +172,6 @@ static int jcon_parse_(json_value *v, va_list *ap)
 
     if (token[0] == 's') {
         ptr.s = va_arg(*ap, const char **);
-        *ptr.s = NULL;
         if (!v) return 0;
         if (v->type != json_string) return -1;
         *ptr.s = v->u.string.ptr;
@@ -184,7 +180,6 @@ static int jcon_parse_(json_value *v, va_list *ap)
 
     if (token[0] == 'v') {
         ptr.v = va_arg(*ap, json_value **);
-        *ptr.v = NULL;
         if (!v) return 0;
         *ptr.v = v;
         return 0;
