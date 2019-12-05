@@ -833,15 +833,10 @@ static void planet_render_label(
     double s, radius;
     double pos[3];
     const char *name;
-    char label[256];
     bool selected = core->selection && planet->obj.oid == core->selection->oid;
     double pvo[2][3];
 
     name = sys_translate("skyculture", planet->name);
-    if (scale == 1.0)
-        snprintf(label, sizeof(label), "%s", name);
-    else
-        snprintf(label, sizeof(label), "%s x%.1f", name, scale);
 
     planet_get_pvo(planet, painter->obs, pvo, true);
     vec3_copy(pvo[0], pos);
@@ -854,7 +849,7 @@ static void planet_render_label(
     s = point_size;
     s = max(s, radius);
 
-    labels_add_3d(label, FRAME_ICRF, pos,
+    labels_add_3d(name, FRAME_ICRF, pos,
                   true, s + 4, FONT_SIZE_BASE,
                   selected ? white : label_color, 0, 0,
                   selected ? TEXT_BOLD : TEXT_FLOAT,
