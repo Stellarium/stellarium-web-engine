@@ -218,7 +218,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
                            "υ", "φ", "χ", "ψ", "ω"};
     int bayer, bayer_n;
     const char *name = NULL;
-    double label_color[4] = {color[0], color[1], color[2], 0.5};
+    double label_color[4] = {color[0], color[1], color[2], 0.8};
     static const double white[4] = {1, 1, 1, 1};
     const bool selected = core->selection && s->oid == core->selection->oid;
     int effects = TEXT_FLOAT;

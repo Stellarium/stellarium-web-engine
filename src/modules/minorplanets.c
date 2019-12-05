@@ -245,7 +245,7 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
     double pvo[2][4], win_pos[2], vmag, size, luminance;
-    double label_color[4] = RGBA(255, 124, 124, 255);
+    double label_color[4] = RGBA(255, 223, 223, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
     const bool selected = core->selection && obj->oid == core->selection->oid;

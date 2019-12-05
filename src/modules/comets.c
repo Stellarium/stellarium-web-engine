@@ -199,7 +199,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     double win_pos[2], vmag, size, luminance;
     comet_t *comet = (comet_t*)obj;
     point_t point;
-    double label_color[4] = RGBA(255, 124, 124, 255);
+    double label_color[4] = RGBA(255, 223, 223, 255);
     const bool selected = core->selection && obj->oid == core->selection->oid;
     vmag = comet->vmag;
 

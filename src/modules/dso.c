@@ -427,7 +427,7 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
         vec4_set(color, 1, 1, 1, 1);
         effects &= ~TEXT_FLOAT;
     } else {
-        vec4_set(color, 0.45, 0.83, 1, 0.5);
+        vec4_set(color, 0.83, 0.83, 1, 0.7);
     }
     radius = min(win_size[0] / 2, win_size[1] / 2) +
                  fabs(cos(win_angle)) *

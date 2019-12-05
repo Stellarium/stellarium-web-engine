@@ -423,7 +423,10 @@ static int render_bounds(const constellation_t *con,
     }
     if (!painter.color[3]) return 0;
 
-    vec4_set(painter.color, 0.6, 0.3, 0.3, 0.4 * painter.color[3]);
+    if (selected)
+        vec4_set(painter.color, 1.0, 0.84, 0.84, 0.5 * painter.color[3]);
+    else
+        vec4_set(painter.color, 0.8, 0.34, 0.34, 0.5 * painter.color[3]);
     painter.lines.dash_ratio = 0.75;
     painter.lines.dash_length = 8;
     info = &con->info;
@@ -550,7 +553,8 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
 
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
 
-    vec4_set(lines_color, 0.2, 0.4, 0.7, 0.5);
+    vec4_set(lines_color, 0.36, 0.72, 1.0, 0.5);
+    vec3_mul(1.8, lines_color, lines_color);
     vec4_emul(lines_color, painter.color, painter.color);
 
     lines = calloc(con->count, sizeof(*lines));
@@ -650,7 +654,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         return 0;
 
     if (!selected)
-        vec4_set(names_color, 0.3, 0.4, 0.7, 0.7);
+        vec4_set(names_color, 0.54, 0.72, 1.0, 0.7);
     else
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
     // Estimate the label bouding cap
