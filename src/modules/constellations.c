@@ -616,7 +616,7 @@ static int render_img(constellation_t *con, const painter_t *painter_,
 
     painter.flags |= PAINTER_ADD;
     vec3_set(painter.color, 1, 1, 1);
-    painter.color[3] *= 0.3 * con->image_loaded_fader.value;
+    painter.color[3] *= (selected ? 0.6 : 0.3) * con->image_loaded_fader.value;
     mat3_copy(con->mat, map.mat);
     map.map = img_map;
     painter_set_texture(&painter, PAINTER_TEX_COLOR, con->img, NULL);
@@ -649,7 +649,10 @@ static int render_label(constellation_t *con, const painter_t *painter_,
                                       true))
         return 0;
 
-    vec4_set(names_color, 0.3, 0.4, 0.7, 0.7);
+    if (!selected)
+        vec4_set(names_color, 0.3, 0.4, 0.7, 0.7);
+    else
+        vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
     // Estimate the label bouding cap
     painter_project(&painter, FRAME_ICRF, con->lines_cap, true, false,
                     win_pos);
