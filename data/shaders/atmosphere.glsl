@@ -91,8 +91,10 @@ void main()
     xyy.z = 0.4468 * (1. - s) * xyy.z + s * xyy.z;
 
     // Apply logarithmic tonemapping on luminance Y only.
-    // Code should be the same as in tonemapper.c, assuming q == 1.
-    xyy.z = log(1.0 + xyy.z * u_tm[0]) / log(1.0 + u_tm[1] * u_tm[0]) * u_tm[2];
+    // There is a difference with the code in tonemapper.c (assuming q == 1)
+    // because we cap the exposure to 1 to avoid saturating the sky.
+    // This is ad-hoc code to fix rendering issue.
+    xyy.z = log(1.0 + xyy.z * u_tm[0]) / log(1.0 + u_tm[1] * u_tm[0]) * min(1.0, u_tm[2]);
 
     // Convert xyY to sRGB
     highp vec3 rgb = xyy_to_srgb(xyy);

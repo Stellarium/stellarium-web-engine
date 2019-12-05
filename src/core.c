@@ -249,7 +249,7 @@ static void core_set_default(void)
     core->lwmax = 5000;
 
     // Adjust those values to make the sky look good.
-    core->star_linear_scale = 1.17;
+    core->star_linear_scale = 0.8;
     core->star_scale_screen_factor = 0.5;
     core->star_relative_scale = 1.1;
 
@@ -258,7 +258,7 @@ static void core_set_default(void)
     core->min_point_radius = 0.9;  // In physical pixels
     core->skip_point_radius = 0.25;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
-    core->exposure_scale = 1;
+    core->exposure_scale = 2;
     core->tonemapper_p = 2.2;     // Setup using atmosphere as reference
 
     tonemapper_update(&core->tonemapper, core->tonemapper_p, 1, 1, core->lwmax);

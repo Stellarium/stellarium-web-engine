@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[3591] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[3730] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -94,8 +94,10 @@ static const unsigned char DATA_shaders_atmosphere_glsl[3591] __attribute__((ali
     "    xyy.z = 0.4468 * (1. - s) * xyy.z + s * xyy.z;\n"
     "\n"
     "    // Apply logarithmic tonemapping on luminance Y only.\n"
-    "    // Code should be the same as in tonemapper.c, assuming q == 1.\n"
-    "    xyy.z = log(1.0 + xyy.z * u_tm[0]) / log(1.0 + u_tm[1] * u_tm[0]) * u_tm[2];\n"
+    "    // There is a difference with the code in tonemapper.c (assuming q == 1)\n"
+    "    // because we cap the exposure to 1 to avoid saturating the sky.\n"
+    "    // This is ad-hoc code to fix rendering issue.\n"
+    "    xyy.z = log(1.0 + xyy.z * u_tm[0]) / log(1.0 + u_tm[1] * u_tm[0]) * min(1.0, u_tm[2]);\n"
     "\n"
     "    // Convert xyY to sRGB\n"
     "    highp vec3 rgb = xyy_to_srgb(xyy);\n"
