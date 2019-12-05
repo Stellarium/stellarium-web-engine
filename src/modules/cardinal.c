@@ -77,7 +77,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
     color[3] = 0.6 + 0.4 * brightness;
     color[3] *= c->visible.value;
 
-    for (i = 0; i < ARRAY_SIZE(POINTS); i++) {
+    for (i = 0; i < 4; i++) {
         if (painter_is_point_clipped_fast(painter, FRAME_OBSERVED,
                 POINTS[i].pos, true))
             continue;
