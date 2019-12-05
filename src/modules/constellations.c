@@ -670,7 +670,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         return 0;
 
     labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
-                  con->lines_cap, true, 0, FONT_SIZE_BASE,
+                  con->lines_cap, true, 0, FONT_SIZE_BASE + 2,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
                   TEXT_SMALL_CAP | TEXT_DEMI_BOLD,
                   0, con->obj.oid);
