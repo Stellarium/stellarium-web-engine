@@ -798,6 +798,7 @@ void core_on_key(int key, int action)
         {"G", "core.landscapes"},
         {"F", "core.landscapes", "fog_visible"},
         {"C", "core.constellations", "lines_visible"},
+        {"C", "core.constellations", "labels_visible"},
         {"R", "core.constellations", "images_visible"},
         {"Z", "core.lines.azimuthal"},
         {"E", "core.lines.equatorial"},

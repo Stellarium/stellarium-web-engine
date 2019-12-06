@@ -144,6 +144,7 @@ static void menu_main(void *user)
         {"core.planets", "visible", "Planets"},
         {"core.milkyway", "visible", "Milkyway"},
         {"core.constellations", "lines_visible", "Cst Lines"},
+        {"core.constellations", "labels_visible", "Cst Labels"},
         {"core.constellations", "images_visible", "Cst Art"},
         {"core.constellations", "bounds_visible", "Cst Bounds"},
         {"core.constellations", "show_all", "Cst show all"},

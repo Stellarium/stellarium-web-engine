@@ -70,6 +70,7 @@ typedef struct constellations {
     fader_t     images_visible;
     fader_t     lines_visible;
     fader_t     bounds_visible;
+    fader_t     labels_visible;
     bool        show_all;
     int         labels_display_style;
 } constellations_t;
@@ -643,7 +644,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
 
     if (!selected) {
         painter.color[3] *= cons->visible.value *
-                            cons->lines_visible.value *
+                            cons->labels_visible.value *
                             con->lines_in_view.value;
     }
     if (painter.color[3] == 0.0) return 0;
@@ -761,6 +762,7 @@ static int constellations_init(obj_t *obj, json_value *args)
     conss->show_all = true;
     fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
+    fader_init(&conss->labels_visible, false);
     fader_init(&conss->images_visible, false);
     fader_init(&conss->bounds_visible, false);
     return 0;
@@ -786,6 +788,7 @@ static int constellations_update(obj_t *obj, double dt)
     fader_update(&cons->visible, dt);
     fader_update(&cons->images_visible, dt);
     fader_update(&cons->lines_visible, dt);
+    fader_update(&cons->labels_visible, dt);
     fader_update(&cons->bounds_visible, dt);
 
     // Skip update if not visible.
@@ -793,6 +796,7 @@ static int constellations_update(obj_t *obj, double dt)
     if (cons->lines_visible.value == 0.0 &&
         cons->images_visible.value == 0.0 &&
         cons->bounds_visible.value == 0.0 &&
+        cons->labels_visible.value == 0.0 &&
         (!core->selection || core->selection->parent != obj)) return 0;
 
     MODULE_ITER(obj, con, "constellation") {
@@ -809,6 +813,7 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
     constellation_t *con;
     if (cons->visible.value == 0.0) return 0;
     if (cons->lines_visible.value == 0.0 &&
+        cons->labels_visible.value == 0.0 &&
         cons->images_visible.value == 0.0 &&
         cons->bounds_visible.value == 0.0 &&
         (!core->selection || core->selection->parent != obj)) return 0;
@@ -867,6 +872,8 @@ static obj_klass_t constellations_klass = {
     .attributes = (attribute_t[]) {
         PROPERTY(lines_visible, TYPE_BOOL,
                  MEMBER(constellations_t, lines_visible.target)),
+        PROPERTY(labels_visible, TYPE_BOOL,
+                 MEMBER(constellations_t, labels_visible.target)),
         PROPERTY(images_visible, TYPE_BOOL,
                  MEMBER(constellations_t, images_visible.target)),
         PROPERTY(bounds_visible, TYPE_BOOL,
