@@ -849,7 +849,7 @@ static void planet_render_label(
     radius *= painter->proj->window_size[0] / painter->proj->scaling[0] / 2;
     radius *= scale;
 
-    s = point_size / 2;
+    s = point_size * 0.9;
     s = max(s, radius);
 
     labels_add_3d(name, FRAME_ICRF, pos,
@@ -942,6 +942,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     vec4_copy(planet->color, color);
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
     color[3] *= point_luminance * (1.0 - hips_alpha);
+
+    if (color[3] <= 0.001)
+        point_size = 0;
 
     // Lower point halo effect for objects with large radius.
     // (Mostly for the Sun, but also affect planets at large fov).
