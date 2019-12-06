@@ -505,7 +505,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     satellite_update(sat, painter.obs);
     vmag = sat->vmag;
     if (sat->error) return 0;
-    if (vmag > painter.stars_limit_mag && vmag > hints_limit_mag) return 0;
+    if (!selected && vmag > painter.stars_limit_mag && vmag > hints_limit_mag)
+        return 0;
 
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return 0;
@@ -513,10 +514,10 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
-    if (vmag <= hints_limit_mag) {
+    if (selected || vmag <= hints_limit_mag) {
         vec4_copy(label_color, color);
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
-                      VEC(24.0, 24.0), color, 0.0);
+                      VEC(24.0, 24.0), selected ? white : color, 0.0);
     }
 
     point = (point_t) {
@@ -530,8 +531,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     // Render name if needed.
     size = max(8, size);
     if (*sat->name && (selected || vmag <= hints_limit_mag - 1.5)) {
-        labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size,
-                      FONT_SIZE_BASE - 2, selected ? white : label_color, 0,
+        labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size + 1,
+                      FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
                       0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
     }
 
