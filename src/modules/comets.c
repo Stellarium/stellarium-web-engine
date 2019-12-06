@@ -228,7 +228,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     if (*comet->name && (selected || vmag < painter->hints_limit_mag)) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
-        labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size,
+        labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size + 4,
             FONT_SIZE_BASE, label_color, 0, 0,
             selected ? TEXT_BOLD : TEXT_FLOAT,
             0, obj->oid);
