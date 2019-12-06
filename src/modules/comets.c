@@ -258,7 +258,7 @@ static int comets_add_data_source(
 static bool range_contains(int range_start, int range_size, int nb, int i)
 {
     if (i < range_start) i += nb;
-    return i > range_start && i < range_start + range_size;
+    return i >= range_start && i < range_start + range_size;
 }
 
 static int comets_update(obj_t *obj, double dt)
