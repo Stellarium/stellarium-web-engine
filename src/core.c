@@ -614,14 +614,15 @@ static double compute_vmag_for_radius(double target_r)
     // Compute by dichotomy.
     const int max_iter = 32;
     double m = 0.0, m1 = -192.0, m2 = 64.0;
-    double r, l;
+    double r;
     const double delta = 0.001;
     int i;
 
-    core_get_point_for_mag_(m1, &r, &l);
+    core_get_point_for_mag_(m1, &r, NULL);
+
     for (i = 0; i < max_iter; i++) {
         m = (m1 + m2) / 2;
-        core_get_point_for_mag_(m, &r, &l);
+        core_get_point_for_mag_(m, &r, NULL);
         if (fabs(r - target_r) < delta) return m;
         *(r > target_r ? &m1 : &m2) = m;
     }
