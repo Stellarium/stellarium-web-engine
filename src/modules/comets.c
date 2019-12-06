@@ -52,6 +52,8 @@ typedef struct {
     bool    visible;
 } comets_t;
 
+// Hints/labels magnitude offset
+static double hints_mag_offset = 0;
 
 static const char *orbit_type_to_otype(char o)
 {
@@ -369,6 +371,7 @@ static obj_klass_t comets_klass = {
     .render_order   = 20,
     .attributes     = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(comets_t, visible)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
         {},
     },
 };

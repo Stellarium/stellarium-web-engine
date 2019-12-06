@@ -53,6 +53,8 @@ typedef struct mplanets {
     bool    visible;
 } mplanets_t;
 
+// Hints/labels magnitude offset
+static double hints_mag_offset = 0;
 
 static uint64_t compute_oid(int number, const char desig[static 22])
 {
@@ -252,7 +254,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
-    if (vmag > painter->stars_limit_mag) return 0;
+    if (vmag > painter->stars_limit_mag + hints_mag_offset) return 0;
     obj_get_pvo(obj, painter->obs, pvo);
     if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
         return 0;
@@ -269,7 +271,8 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     paint_2d_points(painter, 1, &point);
 
     // Render name if needed.
-    if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag)) {
+    if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag +
+                           hints_mag_offset)) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size,
@@ -358,7 +361,6 @@ static obj_t *mplanets_get_by_oid(
     return NULL;
 }
 
-
 /*
  * Meta class declarations.
  */
@@ -385,6 +387,7 @@ static obj_klass_t mplanets_klass = {
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(mplanets_t, visible)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
         {},
     },
 };

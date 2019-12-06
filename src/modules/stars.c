@@ -74,6 +74,9 @@ struct stars {
     bool            visible;
 };
 
+// Hints/labels magnitude offset
+static double hints_mag_offset = 0;
+
 /*
  * Type: tile_t
  * Custom tile structure for the stars hips survey.
@@ -238,7 +241,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     // Names for fainter stars tend to be suspiscious, and just
     // pollute the screen space.
     // For those, we rather display bayer name below.
-    if (s->vmag < max(3, painter->hints_limit_mag - 8.0)) {
+    if (s->vmag < max(3, painter->hints_limit_mag - 8.0 + hints_mag_offset)) {
         skycultures = core_get_module("skycultures");
         name = skycultures_get_name(skycultures, s->oid, buf);
     }
@@ -298,7 +301,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     };
     paint_2d_points(&painter, 1, &point);
 
-    if (selected || (s->vmag <= painter.hints_limit_mag - 4.0)) {
+    if (selected || (s->vmag <= painter.hints_limit_mag - 4.0
+                     + hints_mag_offset)) {
         star_render_name(&painter, s, FRAME_ICRF, pvo[0], size,
                 s->vmag, color);
     }
@@ -580,8 +584,8 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         selected = core->selection && s->oid == core->selection->oid;
-        if (selected || (s->vmag <= painter.hints_limit_mag - 4.0 &&
-            survey != SURVEY_GAIA))
+        if (selected || (s->vmag <= painter.hints_limit_mag - 4.0 +
+                         hints_mag_offset && survey != SURVEY_GAIA))
             star_render_name(&painter, s, FRAME_ASTROM, s->pos, size,
                              s->vmag, color);
     }
@@ -863,6 +867,7 @@ static obj_klass_t stars_klass = {
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(stars_t, visible)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
         {},
     },
 };

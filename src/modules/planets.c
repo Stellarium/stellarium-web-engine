@@ -96,6 +96,8 @@ typedef struct planets {
     hips_t *default_hips;
 } planets_t;
 
+// Hints/labels magnitude offset
+static double hints_mag_offset = 0;
 
 /*
  * List of known bodies id.
@@ -963,7 +965,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // moment because the vmag is not a good measure for planets: if the
     // planet is big on the screen, we should see the label, no matter the
     // vmag.
-    if (selected || vmag <= painter.hints_limit_mag - 1.0 || hips_alpha > 0)
+    if (selected || vmag <= painter.hints_limit_mag - 1.0 + hints_mag_offset
+        || hips_alpha > 0)
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
 
     // Render the Sun halo.
@@ -1302,7 +1305,6 @@ static int planets_add_data_source(
     return 0;
 }
 
-
 /*
  * Meta class declarations.
  */
@@ -1329,6 +1331,7 @@ static obj_klass_t planets_klass = {
     .render_order = 30,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(planets_t, visible.target)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
         {}
     },
 };
