@@ -576,16 +576,6 @@ static json_value *satellite_data_fn(obj_t *obj, const attribute_t *attr,
     return NULL;
 }
 
-static json_value *satellites_hints_mag_offset_fn(obj_t *obj,
-                                     const attribute_t *attr,
-                                     const json_value *args)
-{
-    if (!args)
-        return args_value_new(TYPE_FLOAT, hints_mag_offset);
-    args_get(args, TYPE_FLOAT, &hints_mag_offset);
-    return NULL;
-}
-
 /*
  * Meta class declarations.
  */
@@ -619,8 +609,7 @@ static obj_klass_t satellites_klass = {
     .get_by_oid     = satellites_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(satellites_t, visible)),
-        PROPERTY(hints_mag_offset, TYPE_FLOAT,
-                 .fn = satellites_hints_mag_offset_fn),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
         {}
     }
 };
