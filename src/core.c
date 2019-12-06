@@ -824,7 +824,6 @@ void core_on_key(int key, int action)
             module = core_get_module(SC[i][1]);
             obj_get_attr(module, attr, &v);
             obj_set_attr(module, attr, !v);
-            return;
         }
     }
     if (key == ' ' && core->selection) {
