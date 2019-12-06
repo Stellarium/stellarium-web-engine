@@ -1042,9 +1042,6 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
                            GL_ZERO, GL_ONE));
     if (use_depth)
         GL(glEnable(GL_DEPTH_TEST));
-    else
-        GL(glDisable(GL_DEPTH_TEST));
-    GL(glDepthMask(GL_FALSE));
 
     gl_update_uniform(shader, "u_line_width", item->lines.width);
     gl_update_uniform(shader, "u_line_glow", item->lines.glow);
@@ -1061,7 +1058,7 @@ static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
     }
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
-    GL(glDepthMask(GL_TRUE));
+    GL(glDisable(GL_DEPTH_TEST));
 }
 
 static void item_vg_render(renderer_gl_t *rend, const item_t *item)
@@ -1308,10 +1305,10 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
         GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                                GL_ZERO, GL_ONE));
     }
-    if (item->depth_range[0] || item->depth_range[1])
+    if (item->depth_range[0] || item->depth_range[1]) {
         GL(glEnable(GL_DEPTH_TEST));
-    else
-        GL(glDisable(GL_DEPTH_TEST));
+        GL(glDepthMask(GL_TRUE));
+    }
 
     // Set all uniforms.
     is_moon = item->flags & PAINTER_IS_MOON;
@@ -1332,6 +1329,8 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
+    GL(glDepthMask(GL_FALSE));
+    GL(glDisable(GL_DEPTH_TEST));
 }
 
 static void rend_flush(renderer_gl_t *rend)
@@ -1354,10 +1353,12 @@ static void rend_flush(renderer_gl_t *rend)
         rend->depth_range[1] = 1;
     }
 
-    GL(glDepthMask(GL_TRUE));
+    // Set default OpenGL state.
     GL(glClearColor(0.0, 0.0, 0.0, 1.0));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
+    GL(glDepthMask(GL_FALSE));
+    GL(glDisable(GL_DEPTH_TEST));
 
     // On OpenGL Desktop, we have to enable point sprite support.
 #ifndef GLES2
@@ -1414,6 +1415,8 @@ static void rend_flush(renderer_gl_t *rend)
         gl_buf_release(&item->indices);
         free(item);
     }
+    // Reset to default OpenGL settings.
+    GL(glDepthMask(GL_TRUE));
 }
 
 static void finish(renderer_t *rend_)
