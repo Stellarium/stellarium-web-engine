@@ -207,7 +207,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     comet_update(comet, painter->obs);
     vmag = comet->vmag;
 
-    if (vmag > painter->stars_limit_mag) return 0;
+    if (!selected && vmag > painter->stars_limit_mag + 1.4 + hints_mag_offset)
+        return 0;
     if (isnan(comet->pvo[0][0])) return 0; // For the moment!
     if (!painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true,
                          win_pos))
@@ -225,7 +226,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     paint_2d_points(painter, 1, &point);
 
     // Render name if needed.
-    if (*comet->name && (selected || vmag < painter->hints_limit_mag)) {
+    if (*comet->name && (selected || vmag < painter->hints_limit_mag + 1.4 +
+                         hints_mag_offset)) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size + 4,

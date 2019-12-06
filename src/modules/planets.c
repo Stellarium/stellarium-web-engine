@@ -965,7 +965,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // moment because the vmag is not a good measure for planets: if the
     // planet is big on the screen, we should see the label, no matter the
     // vmag.
-    if (selected || vmag <= painter.hints_limit_mag - 1.0 + hints_mag_offset
+    if (selected || vmag <= painter.hints_limit_mag + 0.4 + hints_mag_offset
         || hips_alpha > 0)
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
 

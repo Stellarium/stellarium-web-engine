@@ -254,7 +254,8 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
-    if (!selected && vmag > painter->stars_limit_mag + hints_mag_offset)
+
+    if (!selected && vmag > painter->stars_limit_mag + 1.4 + hints_mag_offset)
         return 0;
     obj_get_pvo(obj, painter->obs, pvo);
     if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
@@ -273,7 +274,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     // Render name if needed.
     if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag +
-                           hints_mag_offset)) {
+                           1.4 + hints_mag_offset)) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,
