@@ -225,6 +225,7 @@ struct obj
  *   fn         - Attribute function (setter/getter for property).
  *   member     - Member info for common case of attributes that map directly
  *                to an object struct member.
+ *   static_var - If not null, the attribute is stored at this address
  *   desc       - Description of the attribute.
  *   on_changed - Callback called when a property changed.
  */
@@ -239,6 +240,7 @@ struct attribute {
         int offset;
         int size;
     } member;
+    void *static_var;
     const char *desc;
     void (*on_changed)(obj_t *obj, const attribute_t *attr);
 };
@@ -260,6 +262,13 @@ struct attribute {
  * Convenience macro to define that a property map to a C struct attribute.
  */
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
+
+/*
+ * Macro: STATIC_VAR
+ * Convenience macro to define that a property maps to a static variable.
+ */
+#define STATIC_VAR(v) .static_var = (&(v)), .member = {0, sizeof(v)}
+
 
 /*
  * Function: obj_create
