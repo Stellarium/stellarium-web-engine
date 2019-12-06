@@ -203,6 +203,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
     double label_color[4] = RGBA(255, 223, 223, 255);
     const bool selected = core->selection && obj->oid == core->selection->oid;
+
+    comet_update(comet, painter->obs);
     vmag = comet->vmag;
 
     if (vmag > painter->stars_limit_mag) return 0;
