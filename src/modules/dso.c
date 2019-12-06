@@ -91,6 +91,9 @@ typedef struct {
     hips_t      *survey;
 } dsos_t;
 
+// Hints/labels magnitude offset
+static double hints_mag_offset = -0.8;
+
 static uint64_t pix_to_nuniq(int order, int pix)
 {
     return pix + 4 * (1L << (2 * order));
@@ -450,8 +453,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
     double win_pos[2], win_size[2], win_angle;
-    double hints_limit_mag = painter->hints_limit_mag - 0.5 +
-            core->dso_hints_mag_offset;
+    double hints_limit_mag = painter->hints_limit_mag - 0.5 + hints_mag_offset;
     const bool selected = core->selection && s->oid == core->selection->oid;
     double opacity;
     painter_t tmp_painter;
@@ -472,15 +474,13 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     if (s2->symbol == SYMBOL_OPEN_GALACTIC_CLUSTER ||
         s2->symbol == SYMBOL_CLUSTER_OF_STARS ||
         s2->symbol == SYMBOL_MULTIPLE_DEFAULT) {
-        hints_limit_mag = painter->hints_limit_mag - 2. +
-                core->dso_hints_mag_offset;
+        hints_limit_mag = painter->hints_limit_mag - 2. + hints_mag_offset;
     }
 
     if (s2->smax == 0) {
         // DSO without shape don't need to have labels displayed unless they are
         // much zoomed or selected
-        hints_limit_mag = painter->stars_limit_mag - 10 +
-                core->dso_hints_mag_offset;
+        hints_limit_mag = painter->stars_limit_mag - 10 + hints_mag_offset;
     }
 
     if (selected)
@@ -749,6 +749,7 @@ static obj_klass_t dsos_klass = {
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(dsos_t, visible.target)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
         {}
     },
 };

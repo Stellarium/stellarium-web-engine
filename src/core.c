@@ -312,7 +312,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_pixels_scale = pixel_scale;
     core->show_hints_radius = 2.8;
     core->point_dim_factor = 3;
-    core->dso_hints_mag_offset = -0.8;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)module_add_new(
@@ -1133,8 +1132,6 @@ static obj_klass_t core_klass = {
         PROPERTY(selection, TYPE_OBJ, MEMBER(core_t, selection)),
         PROPERTY(lock, TYPE_OBJ, MEMBER(core_t, target.lock)),
         PROPERTY(hovered, TYPE_OBJ, MEMBER(core_t, hovered)),
-        PROPERTY(dso_hints_mag_offset, TYPE_FLOAT,
-                 MEMBER(core_t, dso_hints_mag_offset)),
         PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),
         PROPERTY(fps, TYPE_FLOAT, MEMBER(core_t, prof.fps)),
         PROPERTY(clicks, TYPE_INT, MEMBER(core_t, clicks)),

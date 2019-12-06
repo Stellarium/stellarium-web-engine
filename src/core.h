@@ -52,8 +52,6 @@ struct core
     // Bortle index, see https://en.wikipedia.org/wiki/Bortle_scale
     int             bortle_index;
 
-    // Another offset just for DSOs
-    double          dso_hints_mag_offset;
     // Objects fainter than this magnitude won't be displayed, independently
     // of zoom/exposure levels. Set to e.g. 99 to practically disable.
     double          display_limit_mag;
