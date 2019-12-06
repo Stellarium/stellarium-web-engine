@@ -924,7 +924,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // atmosphere luminance feedack
     if (planet->id != SUN) {
         // Ignore planets below ground
-        if (pos[2] > 0)
+        if (core->fov < 30 * DD2R || pos[2] > 0)
             core_report_vmag_in_fov(vmag, diam / 2, 0);
     }
 
