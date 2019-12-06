@@ -55,10 +55,11 @@ typedef struct satellites {
     int     qsmags_status;
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
-    double  hints_mag_offset;
     bool    visible;
 } satellites_t;
 
+// Global values
+static double hints_mag_offset = 0;
 
 static int satellites_init(obj_t *obj, json_value *args)
 {
@@ -497,10 +498,9 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
     satellite_t *sat = (satellite_t*)obj;
-    const satellites_t *sats = (satellites_t*)obj->parent;
     const bool selected = core->selection && obj->oid == core->selection->oid;
     const double hints_limit_mag = painter.hints_limit_mag +
-                                   sats->hints_mag_offset - 2.5;
+                                   hints_mag_offset - 2.5;
 
     satellite_update(sat, painter.obs);
     vmag = sat->vmag;
@@ -576,6 +576,16 @@ static json_value *satellite_data_fn(obj_t *obj, const attribute_t *attr,
     return NULL;
 }
 
+static json_value *satellites_hints_mag_offset_fn(obj_t *obj,
+                                     const attribute_t *attr,
+                                     const json_value *args)
+{
+    if (!args)
+        return args_value_new(TYPE_FLOAT, hints_mag_offset);
+    args_get(args, TYPE_FLOAT, &hints_mag_offset);
+    return NULL;
+}
+
 /*
  * Meta class declarations.
  */
@@ -609,8 +619,8 @@ static obj_klass_t satellites_klass = {
     .get_by_oid     = satellites_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(satellites_t, visible)),
-        PROPERTY(hints_mag_offset, TYPE_MAG,
-                 MEMBER(satellites_t, hints_mag_offset)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT,
+                 .fn = satellites_hints_mag_offset_fn),
         {}
     }
 };
