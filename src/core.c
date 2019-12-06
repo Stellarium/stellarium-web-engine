@@ -618,7 +618,13 @@ static double compute_vmag_for_radius(double target_r)
     const double delta = 0.001;
     int i;
 
+    /*
+     * If the lowest magnitude is already too high for the target, then
+     * just return it, since the dichotomy algo will fail anyway.  It would be
+     * nice to use a better algo to avoid that at some point.
+     */
     core_get_point_for_mag_(m1, &r, NULL);
+    if (r < target_r) return m1;
 
     for (i = 0; i < max_iter; i++) {
         m = (m1 + m2) / 2;
