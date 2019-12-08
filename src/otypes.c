@@ -84,6 +84,26 @@ void otype_get_digits(const char *id, uint8_t out[4])
     memcpy(out, e->n, 4);
 }
 
+/*
+ * Function: otype_match
+ * Test if an otype matches an other otype
+ *
+ * Return true if the type is equal to or is a subclass of the other.
+ */
+bool otype_match(const char *otype, const char *match)
+{
+    uint8_t o[4], m[4];
+    int i;
+    if (strcmp(otype, match) == 0) return true;
+    otype_get_digits(otype, o);
+    otype_get_digits(match, m);
+    for (i = 0; i < 4; i++) {
+        if (m[i] == 0) return true;
+        if (o[i] != m[i]) return false;
+    }
+    return true;
+}
+
 // STYLE-CHECK OFF
 
 // The actual database.  See 'tools/makeotype.py'.
