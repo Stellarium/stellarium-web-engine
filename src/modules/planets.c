@@ -1241,6 +1241,16 @@ static int planets_init(obj_t *obj, json_value *args)
     planets->halo_tex =
         texture_from_url("asset://textures/halo.png", TF_LAZY_LOAD);
 
+
+    // Some data check.
+    PLANETS_ITER(obj, p) {
+        assert(*p->obj.type);
+        assert(otype_match(p->obj.type, "SSO"));
+        assert(p->id == SUN || p->parent->id == SUN ||
+               otype_match(p->obj.type, "Moo"));
+        continue;
+    }
+
     return 0;
 }
 
