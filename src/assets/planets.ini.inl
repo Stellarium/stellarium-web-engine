@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[25734] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[25733] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -598,9 +598,8 @@ static const unsigned char DATA_planets_ini[25734] __attribute__((aligned(4))) =
     "albedo = 0.372\n"
     "orbit = horizons:2458819.500000000, A.D. 2019-Dec-02 00:00:00.0000,  1.477950961194875E-04,  1.959394937140057E+04,  9.625364114377922E+01,  2.230146242471567E+02,  1.721950077414197E+02,  2.458817705436320E+06,  6.523445586984761E-04,  1.011462208239336E+02,  1.011628368362798E+02,  1.959684568909282E+04,  1.959974200678508E+04,  5.518556032999697E+05,\n"
     "parent = pluto\n"
-    "type = Pla\n"
+    "type = Moo\n"
     "mass = 1.53e+21 kg\n"
-    "\n"
     "";
 
 ASSET_REGISTER(planets_ini, "planets.ini", DATA_planets_ini, false)
