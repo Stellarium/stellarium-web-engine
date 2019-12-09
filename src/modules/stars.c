@@ -74,6 +74,7 @@ struct stars {
     bool            visible;
     // Hints/labels magnitude offset
     double          hints_mag_offset;
+    bool            hints_visible;
 };
 
 // Static instance.
@@ -304,7 +305,8 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     };
     paint_2d_points(&painter, 1, &point);
 
-    if (selected || (s->vmag <= painter.hints_limit_mag - 4.0
+    if (selected || (g_stars->hints_visible &&
+                     s->vmag <= painter.hints_limit_mag - 3.5
                      + g_stars->hints_mag_offset)) {
         star_render_name(&painter, s, FRAME_ICRF, pvo[0], size,
                 s->vmag, color);
@@ -506,6 +508,7 @@ static int stars_init(obj_t *obj, json_value *args)
     stars->visible = true;
     regcomp(&stars->search_reg, "(hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
+    stars->hints_visible = true;
     return 0;
 }
 
@@ -589,7 +592,8 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         selected = core->selection && s->oid == core->selection->oid;
-        if (selected || (s->vmag <= painter.hints_limit_mag - 4.0 +
+        if (selected || (stars->hints_visible &&
+                         s->vmag <= painter.hints_limit_mag - 3.5 +
                          stars->hints_mag_offset && survey != SURVEY_GAIA))
             star_render_name(&painter, s, FRAME_ASTROM, s->pos, size,
                              s->vmag, color);
@@ -874,6 +878,7 @@ static obj_klass_t stars_klass = {
         PROPERTY(visible, TYPE_BOOL, MEMBER(stars_t, visible)),
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(stars_t, hints_mag_offset)),
+        PROPERTY(hints_visible, TYPE_BOOL, MEMBER(stars_t, hints_visible)),
         {},
     },
 };

@@ -96,6 +96,7 @@ typedef struct planets {
     hips_t *default_hips;
     // Hints/labels magnitude offset
     double hints_mag_offset;
+    bool   hints_visible;
 } planets_t;
 
 
@@ -968,9 +969,9 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // moment because the vmag is not a good measure for planets: if the
     // planet is big on the screen, we should see the label, no matter the
     // vmag.
-    if (selected ||
-        vmag <= painter.hints_limit_mag + 0.4 + planets->hints_mag_offset ||
-        hips_alpha > 0)
+    if (selected || (planets->hints_visible && (
+        vmag <= painter.hints_limit_mag + 2.4 + planets->hints_mag_offset ||
+        hips_alpha > 0)))
     {
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
     }
@@ -1219,6 +1220,7 @@ static int planets_init(obj_t *obj, json_value *args)
     regmatch_t matches[2];
 
     fader_init(&planets->visible, true);
+    planets->hints_visible = true;
 
     data = asset_get_data("asset://planets.ini", NULL, NULL);
     ini_parse_string(data, planets_ini_handler, planets);
@@ -1349,6 +1351,7 @@ static obj_klass_t planets_klass = {
         PROPERTY(visible, TYPE_BOOL, MEMBER(planets_t, visible.target)),
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(planets_t, hints_mag_offset)),
+        PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
         {}
     },
 };

@@ -52,6 +52,7 @@ typedef struct mplanets {
     int     update_pos; // Index of the position for iterative update.
     bool    visible;
     double hints_mag_offset; // Hints/labels magnitude offset
+    bool   hints_visible;
 } mplanets_t;
 
 // Static instance.
@@ -276,8 +277,9 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     paint_2d_points(painter, 1, &point);
 
     // Render name if needed.
-    if (*mplanet->name && (selected || vmag <= painter->hints_limit_mag +
-                           1.4 + hints_mag_offset)) {
+    if (*mplanet->name && (selected || (g_mplanets->hints_visible &&
+                                        vmag <= painter->hints_limit_mag +
+                                        1.4 + hints_mag_offset))) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,
@@ -314,6 +316,7 @@ static int mplanets_init(obj_t *obj, json_value *args)
     assert(!g_mplanets);
     g_mplanets = mps;
     mps->visible = true;
+    mps->hints_visible = true;
     return 0;
 }
 
@@ -396,6 +399,7 @@ static obj_klass_t mplanets_klass = {
         PROPERTY(visible, TYPE_BOOL, MEMBER(mplanets_t, visible)),
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(mplanets_t, hints_mag_offset)),
+        PROPERTY(hints_visible, TYPE_BOOL, MEMBER(mplanets_t, hints_visible)),
         {},
     },
 };

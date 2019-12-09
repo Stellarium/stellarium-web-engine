@@ -91,6 +91,7 @@ typedef struct {
     hips_t      *survey;
     // Hints/labels magnitude offset
     double      hints_mag_offset;
+    bool        hints_visible;
 } dsos_t;
 
 // Static instance.
@@ -371,6 +372,7 @@ static int dsos_init(obj_t *obj, json_value *args)
     assert(!g_dsos);
     g_dsos = dsos;
     dsos->hints_mag_offset = -0.8;
+    dsos->hints_visible = true;
     fader_init(&dsos->visible, true);
     regcomp(&dsos->search_reg, "(m|ngc|ic) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
@@ -511,6 +513,9 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     // But the previous steps are still necessary as we want to be able to
     // select them even without hints/names
     if (painter->color[3] < 0.01 && !selected)
+        return 0;
+
+    if (!g_dsos->hints_visible)
         return 0;
 
     if (vmag <= hints_limit_mag + 0.5) {
@@ -757,6 +762,7 @@ static obj_klass_t dsos_klass = {
         PROPERTY(visible, TYPE_BOOL, MEMBER(dsos_t, visible.target)),
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(dsos_t, hints_mag_offset)),
+        PROPERTY(hints_visible, TYPE_BOOL, MEMBER(dsos_t, hints_visible)),
         {}
     },
 };

@@ -57,6 +57,7 @@ typedef struct satellites {
     bool    loaded;
     bool    visible;
     double  hints_mag_offset;
+    bool    hints_visible;
 } satellites_t;
 
 // Static instance.
@@ -68,6 +69,7 @@ static int satellites_init(obj_t *obj, json_value *args)
     assert(!g_satellites);
     g_satellites = sats;
     sats->visible = true;
+    sats->hints_visible = true;
     return 0;
 }
 
@@ -517,7 +519,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
-    if (selected || vmag <= hints_limit_mag) {
+    if (g_satellites->hints_visible && (selected || vmag <= hints_limit_mag)) {
         vec4_copy(label_color, color);
         symbols_paint(&painter, SYMBOL_ARTIFICIAL_SATELLITE, p_win,
                       VEC(24.0, 24.0), selected ? white : color, 0.0);
@@ -533,7 +535,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     size = max(8, size);
-    if (*sat->name && (selected || vmag <= hints_limit_mag - 1.5)) {
+    if (g_satellites->hints_visible && *sat->name &&
+        (selected || vmag <= hints_limit_mag - 1.5)) {
         labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size + 1,
                       FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
                       0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
@@ -615,6 +618,7 @@ static obj_klass_t satellites_klass = {
         PROPERTY(visible, TYPE_BOOL, MEMBER(satellites_t, visible)),
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(satellites_t, hints_mag_offset)),
+        PROPERTY(hints_visible, TYPE_BOOL, MEMBER(satellites_t, hints_visible)),
         {}
     }
 };

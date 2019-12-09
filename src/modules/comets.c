@@ -52,6 +52,7 @@ typedef struct {
     bool    visible;
     // Hints/labels magnitude offset
     double hints_mag_offset;
+    bool   hints_visible;
 } comets_t;
 
 // Static instance.
@@ -211,7 +212,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     comet_update(comet, painter->obs);
     vmag = comet->vmag;
 
-    if (!selected && vmag > painter->stars_limit_mag + 1.4 + hints_mag_offset)
+    if (!selected && vmag > painter->stars_limit_mag + 2.0 + hints_mag_offset)
         return 0;
     if (isnan(comet->pvo[0][0])) return 0; // For the moment!
     if (!painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true,
@@ -230,8 +231,9 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     paint_2d_points(painter, 1, &point);
 
     // Render name if needed.
-    if (*comet->name && (selected || vmag < painter->hints_limit_mag + 1.4 +
-                         hints_mag_offset)) {
+    if (*comet->name && (selected || (g_comets->hints_visible &&
+                                      vmag < painter->hints_limit_mag + 2.0 +
+                                      hints_mag_offset))) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size + 4,
@@ -248,6 +250,7 @@ static int comets_init(obj_t *obj, json_value *args)
     assert(!g_comets);
     g_comets = comets;
     comets->visible = true;
+    comets->hints_visible = true;
     regcomp(&comets->search_reg,
             "(([PCXDAI])/([0-9]+) [A-Z].+)|([0-9]+[PCXDAI]/.+)",
             REG_EXTENDED);
@@ -383,6 +386,7 @@ static obj_klass_t comets_klass = {
         PROPERTY(visible, TYPE_BOOL, MEMBER(comets_t, visible)),
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(comets_t, hints_mag_offset)),
+        PROPERTY(hints_visible, TYPE_BOOL, MEMBER(comets_t, hints_visible)),
         {},
     },
 };
