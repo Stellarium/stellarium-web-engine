@@ -256,7 +256,7 @@ static void core_set_default(void)
 
     core->lwmax_min = 0.052;
     core->max_point_radius = 50.0;
-    core->min_point_radius = 0.9;  // In physical pixels
+    core->min_point_radius = 0.6;
     core->skip_point_radius = 0.25;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
     core->exposure_scale = 2;
@@ -311,7 +311,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     core->show_hints_radius = 2.8;
-    core->point_dim_factor = 3;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)module_add_new(
@@ -573,20 +572,21 @@ static void core_get_point_for_mag_(
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double ld, r;
-    const double r_min = core->min_point_radius / core->win_pixels_scale;
+    const double r_min = core->min_point_radius;
+    const double r_skip = core->skip_point_radius;
 
-    // Get radius and luminance without any contraint on the radius.
+    // Get radius and luminance without any constraint on the radius.
     core_get_point_for_mag_(mag, &r, &ld);
 
     // If the radius is really too small, we don't render the star.
-    if (r < core->skip_point_radius) {
+    if (r < r_skip) {
         r = 0;
         ld = 0;
     }
 
     // If the radius is too small, we adjust the luminance.
     if (r > 0 && r < r_min) {
-        ld *= pow(r / r_min, core->point_dim_factor);
+        ld *= pow((r - r_skip) / (r_min - r_skip), 2);
         r = r_min;
     }
 
