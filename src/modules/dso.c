@@ -89,10 +89,12 @@ typedef struct {
     regex_t     search_reg;
     fader_t     visible;
     hips_t      *survey;
+    // Hints/labels magnitude offset
+    double      hints_mag_offset;
 } dsos_t;
 
-// Hints/labels magnitude offset
-static double hints_mag_offset = -0.8;
+// Static instance.
+static dsos_t *g_dsos = NULL;
 
 static uint64_t pix_to_nuniq(int order, int pix)
 {
@@ -366,6 +368,9 @@ static const void *dsos_create_tile(void *user, int order, int pix, void *data,
 static int dsos_init(obj_t *obj, json_value *args)
 {
     dsos_t *dsos = (dsos_t*)obj;
+    assert(!g_dsos);
+    g_dsos = dsos;
+    dsos->hints_mag_offset = -0.8;
     fader_init(&dsos->visible, true);
     regcomp(&dsos->search_reg, "(m|ngc|ic) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
@@ -452,13 +457,14 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
-    double win_pos[2], win_size[2], win_angle;
-    double hints_limit_mag = painter->hints_limit_mag - 0.5 + hints_mag_offset;
+    double win_pos[2], win_size[2], win_angle, hints_limit_mag;
     const bool selected = core->selection && s->oid == core->selection->oid;
     double opacity;
     painter_t tmp_painter;
-
     const float vmag = s->display_vmag;
+    const double hints_mag_offset = g_dsos->hints_mag_offset;
+
+    hints_limit_mag = painter->hints_limit_mag - 0.5 + hints_mag_offset;
 
     // Allow to select DSO a bit fainter than the faintest star
     // as they tend to be more visible as they are extended objects.
@@ -749,7 +755,8 @@ static obj_klass_t dsos_klass = {
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(dsos_t, visible.target)),
-        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT,
+                 MEMBER(dsos_t, hints_mag_offset)),
         {}
     },
 };

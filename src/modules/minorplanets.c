@@ -51,10 +51,12 @@ typedef struct mplanets {
     obj_t   obj;
     int     update_pos; // Index of the position for iterative update.
     bool    visible;
+    double hints_mag_offset; // Hints/labels magnitude offset
 } mplanets_t;
 
-// Hints/labels magnitude offset
-static double hints_mag_offset = 0;
+// Static instance.
+static mplanets_t *g_mplanets = NULL;
+
 
 static uint64_t compute_oid(int number, const char desig[static 22])
 {
@@ -251,6 +253,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
     const bool selected = core->selection && obj->oid == core->selection->oid;
+    double hints_mag_offset = g_mplanets->hints_mag_offset;
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
@@ -308,6 +311,8 @@ void mplanet_get_designations(
 static int mplanets_init(obj_t *obj, json_value *args)
 {
     mplanets_t *mps = (void*)obj;
+    assert(!g_mplanets);
+    g_mplanets = mps;
     mps->visible = true;
     return 0;
 }
@@ -389,7 +394,8 @@ static obj_klass_t mplanets_klass = {
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(mplanets_t, visible)),
-        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT,
+                 MEMBER(mplanets_t, hints_mag_offset)),
         {},
     },
 };

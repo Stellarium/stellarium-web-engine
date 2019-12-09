@@ -56,14 +56,17 @@ typedef struct satellites {
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
     bool    visible;
+    double  hints_mag_offset;
 } satellites_t;
 
-// Global values
-static double hints_mag_offset = 0;
+// Static instance.
+static satellites_t *g_satellites = NULL;
 
 static int satellites_init(obj_t *obj, json_value *args)
 {
     satellites_t *sats = (void*)obj;
+    assert(!g_satellites);
+    g_satellites = sats;
     sats->visible = true;
     return 0;
 }
@@ -500,7 +503,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     satellite_t *sat = (satellite_t*)obj;
     const bool selected = core->selection && obj->oid == core->selection->oid;
     const double hints_limit_mag = painter.hints_limit_mag +
-                                   hints_mag_offset - 2.5;
+                                   g_satellites->hints_mag_offset - 2.5;
 
     satellite_update(sat, painter.obs);
     vmag = sat->vmag;
@@ -610,7 +613,8 @@ static obj_klass_t satellites_klass = {
     .get_by_oid     = satellites_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(satellites_t, visible)),
-        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT,
+                 MEMBER(satellites_t, hints_mag_offset)),
         {}
     }
 };

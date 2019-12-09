@@ -50,10 +50,13 @@ typedef struct {
     int     update_pos; // Index of the position for iterative update.
     regex_t search_reg;
     bool    visible;
+    // Hints/labels magnitude offset
+    double hints_mag_offset;
 } comets_t;
 
-// Hints/labels magnitude offset
-static double hints_mag_offset = 0;
+// Static instance.
+static comets_t *g_comets = NULL;
+
 
 static const char *orbit_type_to_otype(char o)
 {
@@ -203,6 +206,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
     double label_color[4] = RGBA(255, 223, 223, 255);
     const bool selected = core->selection && obj->oid == core->selection->oid;
+    double hints_mag_offset = g_comets->hints_mag_offset;
 
     comet_update(comet, painter->obs);
     vmag = comet->vmag;
@@ -241,6 +245,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
 static int comets_init(obj_t *obj, json_value *args)
 {
     comets_t *comets = (comets_t*)obj;
+    assert(!g_comets);
+    g_comets = comets;
     comets->visible = true;
     regcomp(&comets->search_reg,
             "(([PCXDAI])/([0-9]+) [A-Z].+)|([0-9]+[PCXDAI]/.+)",
@@ -375,7 +381,8 @@ static obj_klass_t comets_klass = {
     .render_order   = 20,
     .attributes     = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(comets_t, visible)),
-        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT,
+                 MEMBER(comets_t, hints_mag_offset)),
         {},
     },
 };

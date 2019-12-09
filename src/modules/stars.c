@@ -72,10 +72,12 @@ struct stars {
     } surveys[2];
 
     bool            visible;
+    // Hints/labels magnitude offset
+    double          hints_mag_offset;
 };
 
-// Hints/labels magnitude offset
-static double hints_mag_offset = 0;
+// Static instance.
+static stars_t *g_stars = NULL;
 
 /*
  * Type: tile_t
@@ -228,6 +230,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     char buf[128];
     char cst[5];
     obj_t *skycultures;
+    const double hints_mag_offset = g_stars->hints_mag_offset;
 
     //if (!s->hip) return;
     if (selected) {
@@ -302,7 +305,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (selected || (s->vmag <= painter.hints_limit_mag - 4.0
-                     + hints_mag_offset)) {
+                     + g_stars->hints_mag_offset)) {
         star_render_name(&painter, s, FRAME_ICRF, pvo[0], size,
                 s->vmag, color);
     }
@@ -498,6 +501,8 @@ static const void *stars_create_tile(
 static int stars_init(obj_t *obj, json_value *args)
 {
     stars_t *stars = (stars_t*)obj;
+    assert(!g_stars);
+    g_stars = stars;
     stars->visible = true;
     regcomp(&stars->search_reg, "(hip|gaia) *([0-9]+)",
             REG_EXTENDED | REG_ICASE);
@@ -585,7 +590,7 @@ static int render_visitor(int order, int pix, void *user)
         n++;
         selected = core->selection && s->oid == core->selection->oid;
         if (selected || (s->vmag <= painter.hints_limit_mag - 4.0 +
-                         hints_mag_offset && survey != SURVEY_GAIA))
+                         stars->hints_mag_offset && survey != SURVEY_GAIA))
             star_render_name(&painter, s, FRAME_ASTROM, s->pos, size,
                              s->vmag, color);
     }
@@ -867,7 +872,8 @@ static obj_klass_t stars_klass = {
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(stars_t, visible)),
-        PROPERTY(hints_mag_offset, TYPE_FLOAT, STATIC_VAR(hints_mag_offset)),
+        PROPERTY(hints_mag_offset, TYPE_FLOAT,
+                 MEMBER(stars_t, hints_mag_offset)),
         {},
     },
 };
