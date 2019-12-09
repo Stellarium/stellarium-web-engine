@@ -569,7 +569,7 @@ static void core_get_point_for_mag_(
  *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
  *               set to NULL.
  */
-void core_get_point_for_mag(double mag, double *radius, double *luminance)
+bool core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double ld, r;
     double r_min = core->min_point_radius;
@@ -584,8 +584,9 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
 
     // If the radius is really too small, we don't render the star.
     if (r < r_skip) {
-        r = 0;
-        ld = 0;
+        *radius = 0;
+        if (luminance) *luminance = 0;
+        return false;
     }
 
     // If the radius is too small, we adjust the luminance.
@@ -600,6 +601,7 @@ void core_get_point_for_mag(double mag, double *radius, double *luminance)
     r = min(r, core->max_point_radius);
     *radius = r;
     if (luminance) *luminance = clamp(ld, 0, 1);
+    return true;
 }
 
 /*

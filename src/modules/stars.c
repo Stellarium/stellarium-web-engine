@@ -293,7 +293,9 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     if (!painter_project(painter_, FRAME_ICRF, pvo[0], true, true, p))
         return 0;
 
-    core_get_point_for_mag(s->vmag, &size, &luminance);
+    bool visible = core_get_point_for_mag(s->vmag, &size, &luminance);
+    if (!visible)
+        return 0;
     bv_to_rgb(s->bv, color);
 
     point = (point_t) {
@@ -579,7 +581,9 @@ static int render_visitor(int order, int pix, void *user)
             continue;
 
         (*illuminance) += s->illuminance;
-        core_get_point_for_mag(s->vmag, &size, &luminance);
+        bool visible = core_get_point_for_mag(s->vmag, &size, &luminance);
+        if (!visible)
+            continue;
         bv_to_rgb(s->bv, color);
         points[n] = (point_t) {
             .pos = {p_win[0], p_win[1]},

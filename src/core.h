@@ -273,7 +273,7 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
  *   luminance - Output luminance from 0 to 1, gamma corrected.  Ignored if
  *               set to NULL.
  */
-void core_get_point_for_mag(double mag, double *radius, double *luminance);
+bool core_get_point_for_mag(double mag, double *radius, double *luminance);
 
 /*
  * Function: core_mag_to_illuminance
