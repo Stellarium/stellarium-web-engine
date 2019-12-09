@@ -231,7 +231,6 @@ struct obj
 struct attribute {
     const char *name;
     int type;
-    int info;       // Sky object info id (see obj_info.h)
     bool is_prop;
     json_value *(*fn)(obj_t *obj, const attribute_t *attr,
                       const json_value *args);
