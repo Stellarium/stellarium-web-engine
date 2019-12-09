@@ -345,8 +345,7 @@ static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
                                   const json_value *args)
 {
     assert(attr->type);
-    void *p = attr->static_var ? attr->static_var :
-                                 ((void*)obj) + attr->member.offset;
+    void *p = ((void*)obj) + attr->member.offset;
     // Buffer large enough to contain any kind of property data, including
     // static strings.
     char buf[4096] __attribute__((aligned(8)));
