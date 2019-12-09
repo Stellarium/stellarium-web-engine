@@ -306,7 +306,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (selected || (g_stars->hints_visible &&
-                     s->vmag <= painter.hints_limit_mag - 3.5
+                     s->vmag <= painter.hints_limit_mag - 4.0
                      + g_stars->hints_mag_offset)) {
         star_render_name(&painter, s, FRAME_ICRF, pvo[0], size,
                 s->vmag, color);
@@ -593,7 +593,7 @@ static int render_visitor(int order, int pix, void *user)
         n++;
         selected = core->selection && s->oid == core->selection->oid;
         if (selected || (stars->hints_visible &&
-                         s->vmag <= painter.hints_limit_mag - 3.5 +
+                         s->vmag <= painter.hints_limit_mag - 4.0 +
                          stars->hints_mag_offset && survey != SURVEY_GAIA))
             star_render_name(&painter, s, FRAME_ASTROM, s->pos, size,
                              s->vmag, color);
