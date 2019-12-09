@@ -572,8 +572,12 @@ static void core_get_point_for_mag_(
 void core_get_point_for_mag(double mag, double *radius, double *luminance)
 {
     double ld, r;
-    const double r_min = core->min_point_radius;
+    double r_min = core->min_point_radius;
     const double r_skip = core->skip_point_radius;
+
+    // Fix aliasing on low res screen
+    if (r_min * core->win_pixels_scale < 1.0)
+        r_min = 1.0;
 
     // Get radius and luminance without any constraint on the radius.
     core_get_point_for_mag_(mag, &r, &ld);
