@@ -250,7 +250,7 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
     double pvo[2][4], win_pos[2], vmag, size, luminance;
-    double label_color[4] = RGBA(255, 223, 223, 255);
+    double label_color[4] = RGBA(223, 223, 255, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
     const bool selected = core->selection && obj->oid == core->selection->oid;
@@ -283,9 +283,9 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,
-                      FONT_SIZE_BASE, label_color, 0, 0,
-                      selected ? TEXT_BOLD : TEXT_FLOAT,
-                      0, obj->oid);
+              FONT_SIZE_BASE - 1, label_color, 0, 0,
+              TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
+              0, obj->oid);
     }
     return 0;
 }

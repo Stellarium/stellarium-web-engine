@@ -205,7 +205,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     double win_pos[2], vmag, size, luminance;
     comet_t *comet = (comet_t*)obj;
     point_t point;
-    double label_color[4] = RGBA(255, 223, 223, 255);
+    double label_color[4] = RGBA(223, 223, 255, 255);
     const bool selected = core->selection && obj->oid == core->selection->oid;
     double hints_mag_offset = g_comets->hints_mag_offset;
 
@@ -237,8 +237,8 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size + 4,
-            FONT_SIZE_BASE, label_color, 0, 0,
-            selected ? TEXT_BOLD : TEXT_FLOAT,
+            FONT_SIZE_BASE - 2, label_color, 0, 0,
+            TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
             0, obj->oid);
     }
     return 0;
