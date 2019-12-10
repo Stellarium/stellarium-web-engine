@@ -1025,7 +1025,7 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
     lum /= 300;
 
     lum *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
-    core_report_luminance_in_fov(lum * 13.0, false);
+    core_report_luminance_in_fov(lum * 7.0, false);
 }
 
 void core_report_luminance_in_fov(double lum, bool fast_adaptation)
