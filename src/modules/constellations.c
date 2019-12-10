@@ -554,8 +554,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
 
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
 
-    vec4_set(lines_color, 0.36, 0.72, 1.0, 0.5);
-    vec3_mul(1.8, lines_color, lines_color);
+    vec4_set(lines_color, 0.65, 1.0, 1.0, 0.4);
     vec4_emul(lines_color, painter.color, painter.color);
 
     lines = calloc(con->count, sizeof(*lines));
@@ -655,7 +654,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         return 0;
 
     if (!selected)
-        vec4_set(names_color, 0.54, 0.72, 1.0, 0.7);
+        vec4_set(names_color, 0.65, 1.0, 1.0, 0.6);
     else
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
     // Estimate the label bouding cap
@@ -675,9 +674,9 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         return 0;
 
     labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
-                  con->lines_cap, true, 0, FONT_SIZE_BASE + 2,
+                  con->lines_cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
-                  TEXT_SMALL_CAP | TEXT_DEMI_BOLD,
+                  TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
                   0, con->obj.oid);
 
     return 0;
