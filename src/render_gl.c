@@ -310,10 +310,10 @@ static item_t *get_item(renderer_gl_t *rend, int type,
     return NULL;
 }
 
-static void points(renderer_t *rend_,
-                   const painter_t *painter,
-                   int n,
-                   const point_t *points)
+static void points_2d(renderer_t *rend_,
+                      const painter_t *painter,
+                      int n,
+                      const point_t *points)
 {
     renderer_gl_t *rend = (void*)rend_;
     item_t *item;
@@ -1708,7 +1708,7 @@ renderer_t* render_gl_create(void)
 
     rend->rend.prepare = prepare;
     rend->rend.finish = finish;
-    rend->rend.points_2d = points;
+    rend->rend.points_2d = points_2d;
     rend->rend.quad = quad;
     rend->rend.quad_wireframe = quad_wireframe;
     rend->rend.texture = texture;
