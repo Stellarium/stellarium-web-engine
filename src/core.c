@@ -310,7 +310,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    core->show_hints_radius = 2.8;
+    core->show_hints_radius = 0.4;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)module_add_new(
@@ -720,7 +720,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     observer_update(core->observer, true);
     max_vmag = compute_vmag_for_radius(core->skip_point_radius);
     hints_vmag = compute_vmag_for_radius(core->show_hints_radius);
-    hints_vmag += 4; // To keep compatibility for the moment!
 
     t = sys_get_unix_time();
     if (!core->prof.start_time) core->prof.start_time = t;
