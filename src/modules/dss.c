@@ -30,7 +30,7 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     double visibility;
     dss_t *dss = (dss_t*)obj;
     painter_t painter2 = *painter;
-    double lum, c, sep;
+    double lum, c, sep, ratio;
     int render_order, split_order;
 
     if (dss->visible.value == 0.0) return 0;
@@ -52,6 +52,15 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     c = max(0, c);
     c *= visibility;
     c = min(c, 1.2);
+
+    // limit mag = 4 -> no dss
+    // limit mag > 14 -> 100% dss
+    if (core->display_limit_mag < 14.0) {
+        ratio = (14.0 - core->display_limit_mag) / 10;
+        ratio = clamp(ratio, 0.0, 1.0);
+        c *= 1.0 - ratio;
+    }
+
     vec4_mul(c, painter2.color, painter2.color);
 
     // Don't even try to display if the brightness is too low
