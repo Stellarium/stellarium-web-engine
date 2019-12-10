@@ -1119,6 +1119,12 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
         if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
         else font_handle = 0;
     }
+    if (item->text.effects & TEXT_SPACED)
+        nvgTextLetterSpacing(rend->vg, round(item->text.size *
+                             rend->font_scales[font_handle] * 0.2));
+    if (item->text.effects & TEXT_SEMI_SPACED)
+        nvgTextLetterSpacing(rend->vg, round(item->text.size *
+                             rend->font_scales[font_handle] * 0.05));
     nvgFontSize(rend->vg, item->text.size * rend->font_scales[font_handle]);
     nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                    item->color[1] * 255,
