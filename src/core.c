@@ -493,10 +493,10 @@ int core_update(double dt)
     core->lwmax = core->lwmax_min; // Reset for next frame.
 
     // Adjust star linear scale in function of screen pixel size
-    // It ranges from 0.5 for a small screen to 1.4 for large screens
-    double delta = -1.0 + min(core->win_size[0], core->win_size[1]) / 400;
-    delta = min(max(0, delta), 0.9);
-    core->star_scale_screen_factor = 0.5 + delta;
+    // It ranges from 0.7 for a small screen to 1.5 for large screens
+    double screen_s = min(core->win_size[0], core->win_size[1]);
+    double fact = screen_s / 600;
+    core->star_scale_screen_factor = min(max(0.7, fact), 1.5);
 
     core_update_direction(dt);
     core_update_mount(dt);
