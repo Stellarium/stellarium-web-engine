@@ -34,7 +34,7 @@ void u8_lower(char *dst, const char *str, int n)
 {
     const char* ptr;
     int len;
-    while (*str && n) {
+    while (*str && n > 2) {
         len = u8_char_len(str);
         if (len == 1 && *str >= 'A' && *str <= 'Z') {
             *dst = *str - 'A' + 'a';
@@ -51,7 +51,7 @@ void u8_lower(char *dst, const char *str, int n)
         }
         str += len;
         dst += len;
-        n--;
+        n -= len;
     }
     *dst = '\0';
 }
@@ -60,7 +60,7 @@ void u8_upper(char *dst, const char *str, int n)
 {
     const char* ptr;
     int len;
-    while (*str && n) {
+    while (*str && n > 2) {
         len = u8_char_len(str);
         if (len == 1 && *str >= 'a' && *str <= 'z') {
             *dst = *str - 'a' + 'A';
@@ -77,7 +77,7 @@ void u8_upper(char *dst, const char *str, int n)
         }
         str += len;
         dst += len;
-        n--;
+        n -= len;
     }
     *dst = '\0';
 }
