@@ -22,8 +22,20 @@ static const char LEN_TABLE[256] = {
     2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
 };
 
-static const char *UPPER =
-    "ĀāÁáǍǎÀàĒēÉéĚěÈèĪīÍíǏǐÌìŌōÓóǑǒÒòŪūÚúǓǔÙùǕǖǗǘǙǚǛǜÜü";
+/*
+ * List of accentued characters:
+ *   Accent Upper       2 bytes.
+ *   Accent Lower       2 bytes.
+ *   Non accent Upper   1 byte.
+ *   Non accent Lower   1 byte.
+ *   Padding            2 bytes.
+ */
+static const char *ACCENTS =
+    "ĀāAa  ÁáAa  ǍǎAa  ÀàAa  "
+    "ĒēEe  ÉéEe  ĚěEe  ÈèEe  "
+    "ĪīIi  ÍíIi  ǏǐIi  ÌìIi  "
+    "ŌōOo  ÓóOo  ǑǒOo  ÒòOo  "
+    "ŪūUu  ÚúUu  ǓǔUu  ÙùUu  ǕǖUu  ǗǘUu  ǙǚUu  ǛǜUu  ÜüUu  ";
 
 int u8_char_len(const char *c)
 {
@@ -40,7 +52,7 @@ void u8_lower(char *dst, const char *str, int n)
             *dst = *str - 'A' + 'a';
         } else if (len == 2) {
             memcpy(dst, str, 2);
-            for (ptr = UPPER; *ptr; ptr += 4) {
+            for (ptr = ACCENTS; *ptr; ptr += 8) {
                 if (memcmp(ptr, str, 2) == 0) {
                     memcpy(dst, ptr + 2, 2);
                     break;
@@ -66,7 +78,7 @@ void u8_upper(char *dst, const char *str, int n)
             *dst = *str - 'a' + 'A';
         } else if (len == 2) {
             memcpy(dst, str, 2);
-            for (ptr = UPPER; *ptr; ptr += 4) {
+            for (ptr = ACCENTS; *ptr; ptr += 8) {
                 if (memcmp(ptr + 2, str, 2) == 0) {
                     memcpy(dst, ptr, 2);
                     break;
@@ -105,4 +117,38 @@ int u8_char_code(const char *c)
     default:
         return ' ';
     }
+}
+
+/*
+ * Function: u8_remove_accents
+ * Replace accents to non accentuated letters in a utf8 string
+ *
+ * dst and str can be the same.
+ */
+void u8_remove_accents(char *dst, const char *str, int n)
+{
+    int len;
+    const char *ptr;
+    while (*str && n > 0) {
+        len = u8_char_len(str);
+        memcpy(dst, str, len);
+        str += len;
+        if (len == 2) {
+            for (ptr = ACCENTS; *ptr; ptr += 8) {
+                if (memcmp(ptr + 0, dst, 2) == 0) {
+                    len = 1;
+                    *dst = *(ptr + 4);
+                    break;
+                }
+                if (memcmp(ptr + 2, dst, 2) == 0) {
+                    len = 1;
+                    *dst = *(ptr + 5);
+                    break;
+                }
+            }
+        }
+        dst += len;
+        n -= len;
+    }
+    *dst = '\0';
 }

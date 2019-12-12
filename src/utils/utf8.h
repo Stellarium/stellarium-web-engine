@@ -33,6 +33,14 @@ void u8_lower(char *dst, const char *str, int n);
 void u8_upper(char *dst, const char *str, int n);
 
 /*
+ * Function: u8_remove_accents
+ * Replace accents to non accentuated letters in a utf8 string
+ *
+ * dst and str can be the same.
+ */
+void u8_remove_accents(char *dst, const char *str, int n);
+
+/*
  * Function: u8_char_len
  * Return the number of characters in a utf-8 string.
  */
