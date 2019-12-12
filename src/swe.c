@@ -420,11 +420,33 @@ static void test_jcon(void)
     json_value_free(json);
 }
 
+static void test_u8(void)
+{
+    char buf[8];
+    assert(u8_char_len("a") == 1);
+    assert(u8_char_len("é") == 2);
+    assert(u8_char_len("你") == 3);
+    u8_upper(buf, "Vénus", sizeof(buf));
+    assert(strcmp(buf, "VÉNUS") == 0);
+    u8_lower(buf, "Vénus", sizeof(buf));
+    assert(strcmp(buf, "vénus") == 0);
+
+    // Make sure we don't segfault on overflow.
+    u8_upper(buf, "A long line", sizeof(buf));
+    assert(strlen(buf) < sizeof(buf));
+    u8_lower(buf, "A long line", sizeof(buf));
+    assert(strlen(buf) < sizeof(buf));
+
+    u8_remove_accents(buf, "Vénus", sizeof(buf));
+    assert(strcmp(buf, "Venus") == 0);
+}
+
 TEST_REGISTER(NULL, test_events, 0);
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);
 TEST_REGISTER(NULL, test_clipping, TEST_AUTO);
 TEST_REGISTER(NULL, test_iter_lines, TEST_AUTO);
 TEST_REGISTER(NULL, test_jcon, TEST_AUTO);
+TEST_REGISTER(NULL, test_u8, TEST_AUTO);
 
 #endif
 
