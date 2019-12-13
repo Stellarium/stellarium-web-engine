@@ -25,6 +25,7 @@ def run():
         chars = (u"abcdefghijklmnopqrstuvwxyz"
                  u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                  u"0123456789"
+                 u"⁰¹²³⁴⁵⁶⁷⁸⁹"
                  u" ?!\"#$%&'()*+,-./°¯[]:<>{}"
                  u"☉☿♀♁♂♃♄⛢♆⚳⚴⚵⚶🍷⚘⚕♇"
                  u"αβγδεζηθικλμνξοπρςστυφχψω")
