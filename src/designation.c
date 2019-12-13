@@ -119,17 +119,62 @@ bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed)
     return true;
 }
 
+/*
+ * Function: designation_cleanup
+ * Create a printable version of a designation
+ *
+ * This can be used for example to compute the label to render for an object.
+ */
+void designation_cleanup(const char *dsgn, char *out, int size)
+{
+    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
+                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
+                           "υ", "φ", "χ", "ψ", "ω"};
+    char cst[5];
+    int i, n;
+    const char *remove[] = {"NAME ", "Cl ", "Cl* ", "** ", "MPC "};
+
+    if (strncmp(dsgn, "V* ", 3) == 0)
+        dsgn++;
+
+    if (designation_parse_bayer(dsgn, cst, &n)) {
+        snprintf(out, size, "%s %s", greek[n - 1], cst);
+        return;
+    }
+    if (designation_parse_flamsteed(dsgn, cst, &n)) {
+        snprintf(out, size, "%d %s", n, cst);
+        return;
+    }
+
+    for (i = 0; i < ARRAY_SIZE(remove); i++) {
+        if (strncmp(dsgn, remove[i], strlen(remove[i])) == 0) {
+            snprintf(out, size, "%s", dsgn + strlen(remove[i]));
+            return;
+        }
+    }
+
+    snprintf(out, size, "%s", dsgn);
+}
+
 #if COMPILE_TESTS
 
 static void test_designations(void)
 {
-    char cst[5];
+    char cst[5], buf[128];
     int n;
     bool r;
+
     r = designation_parse_bayer("* alf Aqr", cst, &n);
     assert(r && strcmp(cst, "Aqr") == 0 && n == 1);
     r = designation_parse_flamsteed("* 10 Aqr", cst, &n);
     assert(r && strcmp(cst, "Aqr") == 0 && n == 10);
+
+    designation_cleanup("NAME Polaris", buf, sizeof(buf));
+    assert(strcmp(buf, "Polaris") == 0);
+    designation_cleanup("* alf Aqr", buf, sizeof(buf));
+    assert(strcmp(buf, "α Aqr") == 0);
+    designation_cleanup("V* alf Aqr", buf, sizeof(buf));
+    assert(strcmp(buf, "α Aqr") == 0);
 }
 
 TEST_REGISTER(NULL, test_designations, TEST_AUTO);

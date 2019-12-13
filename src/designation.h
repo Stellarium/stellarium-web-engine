@@ -41,3 +41,11 @@ bool designation_parse_bayer(const char *dsgn, char cst[5], int *bayer);
  *   False if the designation doesn't match a flamsteed name
  */
 bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed);
+
+/*
+ * Function: designation_cleanup
+ * Create a printable version of a designation
+ *
+ * This can be used for example to compute the label to render for an object.
+ */
+void designation_cleanup(const char *dsgn, char *out, int size);
