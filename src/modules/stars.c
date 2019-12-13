@@ -311,17 +311,14 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
         star_get_common_name(s, buf, sizeof(buf));
 
     // If the star is selected, display longer Bayer name
-    if (!buf[0] && selected) {
-        star_get_bayer_name(s, buf, sizeof(buf), BAYER_LATIN_LONG |
-                            BAYER_CONST_LONG);
-    }
-
-    // Otherwise, only the letter /number to save space.
+    // Otherwise, only the letter/number to save space.
     if (!buf[0]) {
-        star_get_bayer_name(s, buf, sizeof(buf), 0);
+        star_get_bayer_name(s, buf, sizeof(buf), selected ?
+                                BAYER_LATIN_LONG | BAYER_CONST_LONG : 0);
     }
 
-    // If there is no bayer name, fallback to first name
+    // If there is no bayer name, fallback to default name, but only for
+    // stars a bit brighter to avoid crowding the field.
     if (!buf[0] && (s->vmag <= lim_mag2 || selected)) {
         if (s->names && s->names[0])
             designation_cleanup(s->names, buf, sizeof(buf), selected ?
