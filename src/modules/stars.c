@@ -215,25 +215,73 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
     }
 }
 
+/*
+ * Function: star_get_label
+ * Compute the label to show for a given star
+ *
+ * Parameters:
+ *   s      - A star_data_t struct instance.
+ *   level  - Define how big we accept the label:
+ *              0 - Only bayer number.
+ *              1 - Bayer and constellation name.
+ *              2 - Full name.
+ *   out    - Output buffer.
+ *   size   - Output buffer size.
+ *
+ * Return:
+ *   true if a label was found, false otherwise.
+ */
+static bool star_get_label(const star_data_t *s, int level,
+                           char *out, int size)
+{
+    const char *name;
+    char cst[5];
+    int bayer, bayer_n;
+    char buf[128];
+    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
+                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
+                           "υ", "φ", "χ", "ψ", "ω"};
+
+    obj_t *skycultures;
+    if (level >= 2) {
+        skycultures = core_get_module("skycultures");
+        name = skycultures_get_name(skycultures, s->oid, buf);
+        if (name) {
+            snprintf(out, size, "%s", name);
+            return true;
+        }
+    }
+
+    bayer_get(s->hip, cst, &bayer, &bayer_n);
+
+    if (level >= 1 && bayer) {
+        snprintf(out, size, "%s%.*d %s",
+                 greek[bayer - 1], bayer_n ? 1 : 0, bayer_n, cst);
+        return true;
+    }
+
+    if (bayer) {
+        snprintf(out, size, "%s%.*d",
+                 greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
+        return true;
+    }
+
+    return false;
+}
+
+
 static void star_render_name(const painter_t *painter, const star_data_t *s,
                              int frame, const double pos[3], double radius,
                              double vmag, double color[3])
 {
-    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
-                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
-                           "υ", "φ", "χ", "ψ", "ω"};
-    int bayer, bayer_n;
-    const char *name = NULL;
     double label_color[4] = {color[0], color[1], color[2], 0.8};
     static const double white[4] = {1, 1, 1, 1};
     const bool selected = core->selection && s->oid == core->selection->oid;
     int effects = TEXT_FLOAT;
     char buf[128];
-    char cst[5];
-    obj_t *skycultures;
     const double hints_mag_offset = g_stars->hints_mag_offset;
+    int level;
 
-    //if (!s->hip) return;
     if (selected) {
         vec4_copy(white, label_color);
         effects = TEXT_BOLD;
@@ -245,35 +293,19 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     // Names for fainter stars tend to be suspiscious, and just
     // pollute the screen space.
     // For those, we rather display bayer name below.
-    if (s->vmag < max(3, painter->hints_limit_mag - 8.0 + hints_mag_offset)) {
-        skycultures = core_get_module("skycultures");
-        name = skycultures_get_name(skycultures, s->oid, buf);
-    }
+    if (s->vmag < max(3, painter->hints_limit_mag - 8.0 + hints_mag_offset))
+        level = 2;
+    else if (selected)
+        level = 1;
+    else
+        level = 0;
 
-    if (!name && selected) {
-        bayer_get(s->hip, cst, &bayer, &bayer_n);
-        if (bayer) {
-            snprintf(buf, sizeof(buf), "%s%.*d %s",
-                     greek[bayer - 1], bayer_n ? 1 : 0, bayer_n, cst);
-            name = buf;
-        }
-    }
-
-    if (name) {
-        labels_add_3d(sys_translate("skyculture", name), frame, pos, true,
-                      radius, FONT_SIZE_BASE, label_color, 0, 0,
-                      effects, -vmag, s->oid);
+    if (!star_get_label(s, level, buf, sizeof(buf)))
         return;
-    }
 
-    // Still no name, maybe we can show a bayer id.
-    bayer_get(s->hip, NULL, &bayer, &bayer_n);
-    if (bayer) {
-        snprintf(buf, sizeof(buf), "%s%.*d",
-                 greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-        labels_add_3d(buf, frame, pos, true, radius, FONT_SIZE_BASE,
-                      label_color, 0, 0, effects, -vmag, s->oid);
-    }
+    labels_add_3d(sys_translate("skyculture", buf), frame, pos, true,
+                 radius, FONT_SIZE_BASE, label_color, 0, 0,
+                 effects, -vmag, s->oid);
 }
 
 // Render a single star.
