@@ -142,18 +142,20 @@ static const char *CSTS[88][2] = {
  *   cst    - Output constellation id
  *   bayer  - Output bayer number (1 -> α, 2 -> β, etc.)
  *   nb     - Output extra number to use as exponent. 0 means no exponent.
+ *   suffix - Output extra suffix to append after the bayer name.
  *
  * Return:
  *   False if the designation doesn't match a bayer name.
  */
 static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
-                                    int *nb)
+                                    int *nb, char** suffix)
 {
     int i;
     char *endptr;
 
     *bayer = 0;
     *nb = 0;
+    *suffix = NULL;
 
     if (!dsgn) return false;
     // Parse the '* '
@@ -194,6 +196,9 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
     }
     if (i == 88) return false;
     *cst = i;
+
+    dsgn += strlen(CSTS[i][0]);
+    *suffix = dsgn;
     return true;
 }
 
@@ -205,17 +210,19 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
  *   dsgn       - A designation (eg: '* 49 Aqr')
  *   cst        - Output constellation id
  *   flamsteed  - Output Flamsteed number.
+ *   suffix     - Output extra suffix to append after the bayer name.
  *
  * Return:
  *   False if the designation doesn't match a flamsteed name
  */
 static bool designation_parse_flamsteed(const char *dsgn, int *cst,
-                                        int *flamsteed)
+                                        int *flamsteed, char** suffix)
 {
     int i;
     char *endptr;
 
     *flamsteed = 0;
+    *suffix = NULL;
 
     if (!dsgn) return false;
     // Parse the '* '
@@ -235,6 +242,9 @@ static bool designation_parse_flamsteed(const char *dsgn, int *cst,
     }
     if (i == 88) return false;
     *cst = i;
+
+    dsgn += strlen(CSTS[i][0]);
+    *suffix = dsgn;
     return true;
 }
 
@@ -277,15 +287,18 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     const char *remove[] = {"NAME ", "* ", "Cl ", "Cl* ", "** ", "MPC "};
     const char *greek;
     const char *cstname;
+    char *suffix;
     char tmp[64], tmp_letter[32];
     char exponent[256];
 
     if (strncmp(dsgn, "V* ", 3) == 0)
         dsgn++;
 
-    if (designation_parse_bayer(dsgn, &cst, &g, &nb)) {
+    if (designation_parse_bayer(dsgn, &cst, &g, &nb, &suffix)) {
         exponent[0] = 0;
         tmp[0] = 0;
+        if (!suffix)
+            suffix = "";
         if (g >= 'a' && g <= 'z') {
             snprintf(tmp_letter, sizeof(tmp_letter), "%c", g);
             greek = tmp_letter;
@@ -302,17 +315,19 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
         }
         if (flags & BAYER_CONST_SHORT || flags & BAYER_CONST_LONG) {
             cstname = (flags & BAYER_CONST_SHORT) ? CSTS[cst][0] : CSTS[cst][1];
-            snprintf(out, size, "%s%s %s", greek, exponent, cstname);
+            snprintf(out, size, "%s%s %s%s", greek, exponent, cstname, suffix);
         } else
-            snprintf(out, size, "%s%s", greek, exponent);
+            snprintf(out, size, "%s%s%s", greek, exponent, suffix);
         return;
     }
-    if (designation_parse_flamsteed(dsgn, &cst, &g)) {
+    if (designation_parse_flamsteed(dsgn, &cst, &g, &suffix)) {
+        if (!suffix)
+            suffix = "";
         if (flags & BAYER_CONST_SHORT || flags & BAYER_CONST_LONG) {
             cstname = (flags & BAYER_CONST_SHORT) ? CSTS[cst][0] : CSTS[cst][1];
-            snprintf(out, size, "%d %s", g, cstname);
+            snprintf(out, size, "%d %s%s", g, cstname, suffix);
         } else
-            snprintf(out, size, "%d", g);
+            snprintf(out, size, "%d%s", g, suffix);
         return;
     }
 
@@ -331,12 +346,13 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 static void test_designations(void)
 {
     char buf[128];
+    char *suffix;
     int n, cst, nb;
     bool r;
 
-    r = designation_parse_bayer("* alf Aqr", &cst, &n, &nb);
+    r = designation_parse_bayer("* alf Aqr", &cst, &n, &nb, &suffix);
     assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 1);
-    r = designation_parse_flamsteed("* 10 Aqr", &cst, &n);
+    r = designation_parse_flamsteed("* 10 Aqr", &cst, &n, &suffix);
     assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 10);
 
     designation_cleanup("NAME Polaris", buf, sizeof(buf), 0);
@@ -349,6 +365,11 @@ static void test_designations(void)
     assert(strcmp(buf, "α¹²³⁴⁵⁶⁷⁸⁹") == 0);
     designation_cleanup("* alf04 Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "α⁴") == 0);
+    designation_cleanup("* s07 Aqr B", buf, sizeof(buf), 0);
+    assert(strcmp(buf, "s⁷ B") == 0);
+    designation_cleanup("* zet Aqr B", buf, sizeof(buf), BAYER_LATIN_LONG |
+                        BAYER_CONST_LONG);
+    assert(strcmp(buf, "Zeta Aquarii B") == 0);
     designation_cleanup("* b04 Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "b⁴") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_SHORT);
@@ -358,8 +379,13 @@ static void test_designations(void)
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_LONG |
                         BAYER_CONST_LONG);
     assert(strcmp(buf, "Alpha Aquarii") == 0);
+    designation_cleanup("* alf Aqr B", buf, sizeof(buf), BAYER_LATIN_LONG |
+                        BAYER_CONST_LONG);
+    assert(strcmp(buf, "Alpha Aquarii B") == 0);
     designation_cleanup("* 104 Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "104") == 0);
+    designation_cleanup("* 104 Aqr B", buf, sizeof(buf), 0);
+    assert(strcmp(buf, "104 B") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
     assert(strcmp(buf, "α Aqr") == 0);
     designation_cleanup("V* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
