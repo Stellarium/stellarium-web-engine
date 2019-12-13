@@ -258,6 +258,7 @@ static void core_set_default(void)
     core->max_point_radius = 50.0;
     core->min_point_radius = 0.6;
     core->skip_point_radius = 0.25;
+    core->show_hints_radius = 0.4;
     core->lwsky_average = 0.0001;  // Updated by atmosphere rendering
     core->exposure_scale = 2;
     core->tonemapper_p = 2.2;     // Setup using atmosphere as reference
@@ -310,7 +311,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
-    core->show_hints_radius = 0.4;
     core->display_limit_mag = 99;
 
     core->observer = (observer_t*)module_add_new(
