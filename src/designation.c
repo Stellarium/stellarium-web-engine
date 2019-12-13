@@ -42,16 +42,96 @@ static const char *GREEK[25][4] = {
     {"ω", "ome", "Ome", "Omega"}
 };
 
-static const char *CSTS[88] = {
-    "Aql", "And", "Scl", "Ara", "Lib", "Cet", "Ari", "Sct", "Pyx", "Boo",
-    "Cae", "Cha", "Cnc", "Cap", "Car", "Cas", "Cen", "Cep", "Com", "CVn",
-    "Aur", "Col", "Cir", "Crt", "CrA", "CrB", "Crv", "Cru", "Cyg", "Del",
-    "Dor", "Dra", "Nor", "Eri", "Sge", "For", "Gem", "Cam", "CMa", "UMa",
-    "Gru", "Her", "Hor", "Hya", "Hyi", "Ind", "Lac", "Mon", "Lep", "Leo",
-    "Lup", "Lyn", "Lyr", "Ant", "Mic", "Mus", "Oct", "Aps", "Oph", "Ori",
-    "Pav", "Peg", "Pic", "Per", "Equ", "CMi", "LMi", "Vul", "UMi", "Phe",
-    "Psc", "PsA", "Vol", "Pup", "Ret", "Sgr", "Sco", "Ser", "Sex", "Men",
-    "Tau", "Tel", "Tuc", "Tri", "TrA", "Aqr", "Vir", "Vel"};
+static const char *CSTS[88][2] = {
+    {"And", "Andromedae"},
+    {"Ant", "Antliae"},
+    {"Aps", "Apodis"},
+    {"Aqr", "Aquarii"},
+    {"Aql", "Aquilae"},
+    {"Ara", "Arae"},
+    {"Ari", "Arietis"},
+    {"Aur", "Aurigae"},
+    {"Boo", "Boötis"},
+    {"Cae", "Caeli"},
+    {"Cam", "Camelopardalis"},
+    {"Cnc", "Cancri"},
+    {"CVn", "Canum Venaticorum"},
+    {"CMa", "Canis Majoris"},
+    {"CMi", "Canis Minoris"},
+    {"Cap", "Capricorni"},
+    {"Car", "Carinae"},
+    {"Cas", "Cassiopeiae"},
+    {"Cen", "Centauri"},
+    {"Cep", "Cephei"},
+    {"Cet", "Ceti"},
+    {"Cha", "Chamaeleontis"},
+    {"Cir", "Circini"},
+    {"Col", "Columbae"},
+    {"Com", "Comae Berenices"},
+    {"CrA", "Coronae Australis"},
+    {"CrB", "Coronae Borealis"},
+    {"Crv", "Corvi"},
+    {"Crt", "Crateris"},
+    {"Cru", "Crucis"},
+    {"Cyg", "Cygni"},
+    {"Del", "Delphini"},
+    {"Dor", "Doradus"},
+    {"Dra", "Draconis"},
+    {"Equ", "Equulei"},
+    {"Eri", "Eridani"},
+    {"For", "Fornacis"},
+    {"Gem", "Geminorum"},
+    {"Gru", "Gruis"},
+    {"Her", "Herculis"},
+    {"Hor", "Horologii"},
+    {"Hya", "Hydrae"},
+    {"Hyi", "Hydri"},
+    {"Ind", "Indi"},
+    {"Lac", "Lacertae"},
+    {"Leo", "Leonis"},
+    {"LMi", "Leonis Minoris"},
+    {"Lep", "Leporis"},
+    {"Lib", "Librae"},
+    {"Lup", "Lupi"},
+    {"Lyn", "Lyncis"},
+    {"Lyr", "Lyrae"},
+    {"Men", "Mensae"},
+    {"Mic", "Microscopii"},
+    {"Mon", "Monocerotis"},
+    {"Mus", "Muscae"},
+    {"Nor", "Normae"},
+    {"Oct", "Octantis"},
+    {"Oph", "Ophiuchi"},
+    {"Ori", "Orionis"},
+    {"Pav", "Pavonis"},
+    {"Peg", "Pegasi"},
+    {"Per", "Persei"},
+    {"Phe", "Phoenicis"},
+    {"Pic", "Pictoris"},
+    {"Psc", "Piscium"},
+    {"PsA", "Piscis Austrini"},
+    {"Pup", "Puppis"},
+    {"Pyx", "Pyxidis"},
+    {"Ret", "Reticuli"},
+    {"Sge", "Sagittae"},
+    {"Sgr", "Sagittarii"},
+    {"Sco", "Scorpii"},
+    {"Scl", "Sculptoris"},
+    {"Sct", "Scuti"},
+    {"Ser", "Serpentis"},
+    {"Sex", "Sextantis"},
+    {"Tau", "Tauri"},
+    {"Tel", "Telescopii"},
+    {"Tri", "Trianguli"},
+    {"TrA", "Trianguli Australis"},
+    {"Tuc", "Tucanae"},
+    {"UMa", "Ursae Majoris"},
+    {"UMi", "Ursae Minoris"},
+    {"Vel", "Velorum"},
+    {"Vir", "Virginis"},
+    {"Vol", "Volantis"},
+    {"Vul", "Vulpeculae"}
+};
 
 /*
  * Function: designation_parse_bayer
@@ -59,18 +139,17 @@ static const char *CSTS[88] = {
  *
  * Params:
  *   dsgn   - A designation (eg: '* alf Aqr')
- *   cst    - Output constellation short name.
+ *   cst    - Output constellation id
  *   bayer  - Output bayer number (1 -> α, 2 -> β, etc.)
  *
  * Return:
  *   False if the designation doesn't match a bayer name.
  */
-bool designation_parse_bayer(const char *dsgn, char cst[5], int *bayer)
+static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer)
 {
     int i;
 
     *bayer = 0;
-    cst[0] = '\0';
 
     if (!dsgn) return false;
     // Parse the '* '
@@ -92,11 +171,11 @@ bool designation_parse_bayer(const char *dsgn, char cst[5], int *bayer)
 
     // Parse constellation.
     for (i = 0; i < 88; i++) {
-        if (strncasecmp(CSTS[i], dsgn, strlen(CSTS[i])) == 0)
+        if (strncasecmp(CSTS[i][0], dsgn, strlen(CSTS[i][0])) == 0)
             break;
     }
     if (i == 88) return false;
-    snprintf(cst, 5, "%s", CSTS[i]);
+    *cst = i;
     return true;
 }
 
@@ -106,19 +185,19 @@ bool designation_parse_bayer(const char *dsgn, char cst[5], int *bayer)
  *
  * Params:
  *   dsgn       - A designation (eg: '* 49 Aqr')
- *   cst        - Output constellation short name.
+ *   cst        - Output constellation id
  *   flamsteed  - Output Flamsteed number.
  *
  * Return:
  *   False if the designation doesn't match a flamsteed name
  */
-bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed)
+static bool designation_parse_flamsteed(const char *dsgn, int *cst,
+                                        int *flamsteed)
 {
     int i;
     char *endptr;
 
     *flamsteed = 0;
-    cst[0] = '\0';
 
     if (!dsgn) return false;
     // Parse the '* '
@@ -133,11 +212,11 @@ bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed)
 
     // Parse constellation.
     for (i = 0; i < 88; i++) {
-        if (strncasecmp(CSTS[i], dsgn, strlen(CSTS[i])) == 0)
+        if (strncasecmp(CSTS[i][0], dsgn, strlen(CSTS[i][0])) == 0)
             break;
     }
     if (i == 88) return false;
-    snprintf(cst, 5, "%s", CSTS[i]);
+    *cst = i;
     return true;
 }
 
@@ -149,27 +228,30 @@ bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed)
  */
 void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 {
-    char cst[5];
+    int cst;
     int i, n;
     const char *remove[] = {"NAME ", "Cl ", "Cl* ", "** ", "MPC "};
     const char *greek;
+    const char *cstname;
 
     if (strncmp(dsgn, "V* ", 3) == 0)
         dsgn++;
 
-    if (designation_parse_bayer(dsgn, cst, &n)) {
+    if (designation_parse_bayer(dsgn, &cst, &n)) {
         greek = (flags & BAYER_LATIN_SHORT) ? GREEK[n - 1][2] :
                 (flags & BAYER_LATIN_LONG) ? GREEK[n - 1][3] : GREEK[n - 1][0];
-        if (flags & BAYER_CONST_SHORT)
-            snprintf(out, size, "%s %s", greek, cst);
-        else
+        if (flags & BAYER_CONST_SHORT || flags & BAYER_CONST_LONG) {
+            cstname = (flags & BAYER_CONST_SHORT) ? CSTS[cst][0] : CSTS[cst][1];
+            snprintf(out, size, "%s %s", greek, cstname);
+        } else
             snprintf(out, size, "%s", greek);
         return;
     }
-    if (designation_parse_flamsteed(dsgn, cst, &n)) {
-        if (flags & BAYER_CONST_SHORT)
-            snprintf(out, size, "%d %s", n, cst);
-        else
+    if (designation_parse_flamsteed(dsgn, &cst, &n)) {
+        if (flags & BAYER_CONST_SHORT || flags & BAYER_CONST_LONG) {
+            cstname = (flags & BAYER_CONST_SHORT) ? CSTS[cst][0] : CSTS[cst][1];
+            snprintf(out, size, "%d %s", n, cstname);
+        } else
             snprintf(out, size, "%d", n);
         return;
     }
@@ -188,14 +270,14 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 
 static void test_designations(void)
 {
-    char cst[5], buf[128];
-    int n;
+    char buf[128];
+    int n, cst;
     bool r;
 
-    r = designation_parse_bayer("* alf Aqr", cst, &n);
-    assert(r && strcmp(cst, "Aqr") == 0 && n == 1);
-    r = designation_parse_flamsteed("* 10 Aqr", cst, &n);
-    assert(r && strcmp(cst, "Aqr") == 0 && n == 10);
+    r = designation_parse_bayer("* alf Aqr", &cst, &n);
+    assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 1);
+    r = designation_parse_flamsteed("* 10 Aqr", &cst, &n);
+    assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 10);
 
     designation_cleanup("NAME Polaris", buf, sizeof(buf), 0);
     assert(strcmp(buf, "Polaris") == 0);
@@ -205,6 +287,9 @@ static void test_designations(void)
     assert(strcmp(buf, "Alf") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_LONG);
     assert(strcmp(buf, "Alpha") == 0);
+    designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_LONG |
+                        BAYER_CONST_LONG);
+    assert(strcmp(buf, "Alpha Aquarii") == 0);
     designation_cleanup("* 104 Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "104") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
