@@ -166,8 +166,19 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
         if (strncasecmp(GREEK[i][1], dsgn, strlen(GREEK[i][1])) == 0)
             break;
     }
-    if (i == 25) return false;
-    dsgn += strlen(GREEK[i][1]);
+    if (i == 25) {
+        // No greek letter were found, try a letter
+        if (*dsgn >= 'a' && *dsgn <= 'z') {
+            *bayer = *dsgn;
+            dsgn++;
+        } else {
+            return false;
+        }
+    } else {
+        *bayer = i + 1;
+        dsgn += strlen(GREEK[i][1]);
+    }
+
     if (*dsgn == '.') dsgn++;
 
     *nb = strtol(dsgn, &endptr, 10);
@@ -175,8 +186,6 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
         dsgn = endptr;
 
     if (*dsgn == ' ') dsgn++;
-
-    *bayer = i + 1;
 
     // Parse constellation.
     for (i = 0; i < 88; i++) {
@@ -268,7 +277,7 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     const char *remove[] = {"NAME ", "* ", "Cl ", "Cl* ", "** ", "MPC "};
     const char *greek;
     const char *cstname;
-    char tmp[64];
+    char tmp[64], tmp_letter[32];
     char exponent[256];
 
     if (strncmp(dsgn, "V* ", 3) == 0)
@@ -277,8 +286,14 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     if (designation_parse_bayer(dsgn, &cst, &g, &nb)) {
         exponent[0] = 0;
         tmp[0] = 0;
-        greek = (flags & BAYER_LATIN_SHORT) ? GREEK[g - 1][2] :
-                (flags & BAYER_LATIN_LONG) ? GREEK[g - 1][3] : GREEK[g - 1][0];
+        if (g >= 'a' && g <= 'z') {
+            snprintf(tmp_letter, sizeof(tmp_letter), "%c", g);
+            greek = tmp_letter;
+        } else {
+            greek = (flags & BAYER_LATIN_SHORT) ? GREEK[g - 1][2] :
+                    (flags & BAYER_LATIN_LONG) ? GREEK[g - 1][3] :
+                    GREEK[g - 1][0];
+        }
         if (nb) {
             snprintf(tmp, sizeof(tmp), "%d", nb);
             for (i = 0; i < strlen(tmp); ++i)
@@ -334,6 +349,8 @@ static void test_designations(void)
     assert(strcmp(buf, "α¹²³⁴⁵⁶⁷⁸⁹") == 0);
     designation_cleanup("* alf04 Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "α⁴") == 0);
+    designation_cleanup("* b04 Aqr", buf, sizeof(buf), 0);
+    assert(strcmp(buf, "b⁴") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_SHORT);
     assert(strcmp(buf, "Alf") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_LONG);
