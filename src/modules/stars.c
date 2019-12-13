@@ -647,7 +647,7 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         selected = core->selection && s->oid == core->selection->oid;
-        if (selected || (stars->hints_visible))
+        if (selected || (stars->hints_visible && survey != SURVEY_GAIA))
             star_render_name(&painter, s, FRAME_ASTROM, s->pos, size, color);
     }
     paint_2d_points(&painter, n, points);
