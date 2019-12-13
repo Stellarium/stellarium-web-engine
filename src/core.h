@@ -21,7 +21,6 @@
 #include "obj.h"
 #include "module.h"
 #include "otypes.h"
-#include "bayer.h"
 #include "telescope.h"
 #include "tonemapper.h"
 
