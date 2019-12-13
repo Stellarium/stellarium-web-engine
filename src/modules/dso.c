@@ -371,7 +371,6 @@ static int dsos_init(obj_t *obj, json_value *args)
     dsos_t *dsos = (dsos_t*)obj;
     assert(!g_dsos);
     g_dsos = dsos;
-    dsos->hints_mag_offset = -0.8;
     dsos->hints_visible = true;
     fader_init(&dsos->visible, true);
     regcomp(&dsos->search_reg, "(m|ngc|ic) *([0-9]+)",
@@ -464,7 +463,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
     double opacity;
     painter_t tmp_painter;
     const float vmag = s->display_vmag;
-    const double hints_mag_offset = g_dsos->hints_mag_offset;
+    const double hints_mag_offset = g_dsos->hints_mag_offset - 0.8;
 
     hints_limit_mag = painter->hints_limit_mag - 0.5 + hints_mag_offset;
 
