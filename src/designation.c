@@ -29,7 +29,7 @@ static const char *GREEK[25][4] = {
     {"μ", "mu" , "Mu" , "Mu"},
     {"ν", "nu" , "Nu" , "Nu"},
     {"ξ", "xi" , "Xi" , "Xi"},
-    {"ξ", "ksi", "Xi", "Xi"},
+    {"ξ", "ksi", "Xi" , "Xi"},
     {"ο", "omi", "Omi", "Omicron"},
     {"π", "pi" , "Pi" , "Pi"},
     {"ρ", "rho", "Rho", "Rho"},
@@ -152,15 +152,18 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     char cst[5];
     int i, n;
     const char *remove[] = {"NAME ", "Cl ", "Cl* ", "** ", "MPC "};
+    const char *greek;
 
     if (strncmp(dsgn, "V* ", 3) == 0)
         dsgn++;
 
     if (designation_parse_bayer(dsgn, cst, &n)) {
+        greek = (flags & BAYER_LATIN_SHORT) ? GREEK[n - 1][2] :
+                (flags & BAYER_LATIN_LONG) ? GREEK[n - 1][3] : GREEK[n - 1][0];
         if (flags & BAYER_CONST_SHORT)
-            snprintf(out, size, "%s %s", GREEK[n - 1][0], cst);
+            snprintf(out, size, "%s %s", greek, cst);
         else
-            snprintf(out, size, "%s", GREEK[n - 1][0]);
+            snprintf(out, size, "%s", greek);
         return;
     }
     if (designation_parse_flamsteed(dsgn, cst, &n)) {
@@ -198,6 +201,10 @@ static void test_designations(void)
     assert(strcmp(buf, "Polaris") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "α") == 0);
+    designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_SHORT);
+    assert(strcmp(buf, "Alf") == 0);
+    designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_LATIN_LONG);
+    assert(strcmp(buf, "Alpha") == 0);
     designation_cleanup("* 104 Aqr", buf, sizeof(buf), 0);
     assert(strcmp(buf, "104") == 0);
     designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
