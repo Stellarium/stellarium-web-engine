@@ -259,26 +259,21 @@ static bool star_get_common_name(const star_data_t *s, char *out, int size)
 static bool star_get_bayer_name(const star_data_t *s, char *out, int size,
                                 int flags)
 {
-    char cst[5];
-    int bayer, bayer_n;
-    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
-                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
-                           "υ", "φ", "χ", "ψ", "ω"};
-
-    bayer_get(s->hip, cst, &bayer, &bayer_n);
-    if (!bayer)
+    const char *names = s->names;
+    if (!names)
         return false;
 
-    if (flags & BAYER_CONST_SHORT) {
-        snprintf(out, size, "%s%.*d %s",
-                 greek[bayer - 1], bayer_n ? 1 : 0, bayer_n, cst);
+    while (*names) {
+        if (strncmp(names, "* ", 2) != 0)
+            names += strlen(names) + 1;
+        else
+            break;
+    }
+    if (*names) {
+        designation_cleanup(names, out, size, flags);
         return true;
     }
-
-    snprintf(out, size, "%s%.*d",
-             greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-
-    return true;
+    return false;
 }
 
 

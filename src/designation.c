@@ -14,11 +14,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char *GREEK[25] = {
-    "alf", "bet", "gam", "del", "eps", "zet", "eta", "tet",
-    "iot", "kap", "lam", "mu",  "nu",  "xi",  "ksi", "omi",
-    "pi",  "rho", "sig", "tau", "ups", "phi", "chi", "psi", "ome"};
-
+static const char *GREEK[25][4] = {
+    {"α", "alf", "Alf", "Alpha"},
+    {"β", "bet", "Bet", "Beta"},
+    {"γ", "gam", "Gam", "Gamma"},
+    {"δ", "del", "Del", "Delta"},
+    {"ε", "eps", "Eps", "Epsilon"},
+    {"ζ", "zet", "Zet", "Zeta"},
+    {"η", "eta", "Eta", "Eta"},
+    {"θ", "tet", "Tet", "Theta"},
+    {"ι", "iot", "Iot", "Iota"},
+    {"κ", "kap", "Kap", "Kappa"},
+    {"λ", "lam", "Lam", "Lambda"},
+    {"μ", "mu" , "Mu" , "Mu"},
+    {"ν", "nu" , "Nu" , "Nu"},
+    {"ξ", "xi" , "Xi" , "Xi"},
+    {"ξ", "ksi", "Xi", "Xi"},
+    {"ο", "omi", "Omi", "Omicron"},
+    {"π", "pi" , "Pi" , "Pi"},
+    {"ρ", "rho", "Rho", "Rho"},
+    {"σ", "sig", "Sig", "Sigma"},
+    {"τ", "tau", "Tau", "Tau"},
+    {"υ", "ups", "Ups", "Upsilon"},
+    {"φ", "phi", "Phi", "Phi"},
+    {"χ", "chi", "Chi", "Chi"},
+    {"ψ", "psi", "Psi", "Psi"},
+    {"ω", "ome", "Ome", "Omega"}
+};
 
 static const char *CSTS[88] = {
     "Aql", "And", "Scl", "Ara", "Lib", "Cet", "Ari", "Sct", "Pyx", "Boo",
@@ -58,11 +80,11 @@ bool designation_parse_bayer(const char *dsgn, char cst[5], int *bayer)
 
     // Parse greek letter.
     for (i = 0; i < 25; i++) {
-        if (strncasecmp(GREEK[i], dsgn, strlen(GREEK[i])) == 0)
+        if (strncasecmp(GREEK[i][1], dsgn, strlen(GREEK[i][1])) == 0)
             break;
     }
     if (i == 25) return false;
-    dsgn += strlen(GREEK[i]);
+    dsgn += strlen(GREEK[i][1]);
     if (*dsgn == '.') dsgn++;
     if (*dsgn == ' ') dsgn++;
 
@@ -127,9 +149,6 @@ bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed)
  */
 void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 {
-    const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
-                           "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
-                           "υ", "φ", "χ", "ψ", "ω"};
     char cst[5];
     int i, n;
     const char *remove[] = {"NAME ", "Cl ", "Cl* ", "** ", "MPC "};
@@ -139,9 +158,9 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 
     if (designation_parse_bayer(dsgn, cst, &n)) {
         if (flags & BAYER_CONST_SHORT)
-            snprintf(out, size, "%s %s", greek[n - 1], cst);
+            snprintf(out, size, "%s %s", GREEK[n - 1][0], cst);
         else
-            snprintf(out, size, "%s", greek[n - 1]);
+            snprintf(out, size, "%s", GREEK[n - 1][0]);
         return;
     }
     if (designation_parse_flamsteed(dsgn, cst, &n)) {
