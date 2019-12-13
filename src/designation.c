@@ -125,7 +125,7 @@ bool designation_parse_flamsteed(const char *dsgn, char cst[5], int *flamsteed)
  *
  * This can be used for example to compute the label to render for an object.
  */
-void designation_cleanup(const char *dsgn, char *out, int size)
+void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 {
     const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
                            "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
@@ -138,11 +138,17 @@ void designation_cleanup(const char *dsgn, char *out, int size)
         dsgn++;
 
     if (designation_parse_bayer(dsgn, cst, &n)) {
-        snprintf(out, size, "%s %s", greek[n - 1], cst);
+        if (flags & BAYER_CONST_SHORT)
+            snprintf(out, size, "%s %s", greek[n - 1], cst);
+        else
+            snprintf(out, size, "%s", greek[n - 1]);
         return;
     }
     if (designation_parse_flamsteed(dsgn, cst, &n)) {
-        snprintf(out, size, "%d %s", n, cst);
+        if (flags & BAYER_CONST_SHORT)
+            snprintf(out, size, "%d %s", n, cst);
+        else
+            snprintf(out, size, "%d", n);
         return;
     }
 
@@ -169,11 +175,15 @@ static void test_designations(void)
     r = designation_parse_flamsteed("* 10 Aqr", cst, &n);
     assert(r && strcmp(cst, "Aqr") == 0 && n == 10);
 
-    designation_cleanup("NAME Polaris", buf, sizeof(buf));
+    designation_cleanup("NAME Polaris", buf, sizeof(buf), 0);
     assert(strcmp(buf, "Polaris") == 0);
-    designation_cleanup("* alf Aqr", buf, sizeof(buf));
+    designation_cleanup("* alf Aqr", buf, sizeof(buf), 0);
+    assert(strcmp(buf, "α") == 0);
+    designation_cleanup("* 104 Aqr", buf, sizeof(buf), 0);
+    assert(strcmp(buf, "104") == 0);
+    designation_cleanup("* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
     assert(strcmp(buf, "α Aqr") == 0);
-    designation_cleanup("V* alf Aqr", buf, sizeof(buf));
+    designation_cleanup("V* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
     assert(strcmp(buf, "α Aqr") == 0);
 }
 

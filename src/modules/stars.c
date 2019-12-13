@@ -10,6 +10,7 @@
 #include "swe.h"
 
 #include "hip.h"
+#include "designation.h"
 #include "ini.h"
 
 #include <regex.h>
@@ -216,63 +217,74 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
 }
 
 /*
- * Function: star_get_label
- * Compute the label to show for a given star
+ * Function: star_get_common_name
+ * Return the common name for a given star. The name can come from the sky
+ * culture if available and is translated in the current locale.
  *
  * Parameters:
  *   s      - A star_data_t struct instance.
- *   level  - Define how big we accept the label:
- *              0 - Only bayer number.
- *              1 - Bayer and constellation name.
- *              2 - Full name.
  *   out    - Output buffer.
  *   size   - Output buffer size.
  *
  * Return:
  *   true if a label was found, false otherwise.
  */
-static bool star_get_label(const star_data_t *s, int level,
-                           char *out, int size)
+static bool star_get_common_name(const star_data_t *s, char *out, int size)
 {
     const char *name;
+    char buf[128];
+    const obj_t * skycultures = core_get_module("skycultures");
+    name = skycultures_get_name(skycultures, s->oid, buf);
+    if (name) {
+        snprintf(out, size, "%s", sys_translate("skyculture", name));
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * Function: star_get_bayer_name
+ * Return the Bayer / Flamsteed name for a given star
+ *
+ * Parameters:
+ *   s      - A star_data_t struct instance.
+ *   out    - Output buffer.
+ *   size   - Output buffer size.
+ *   flag   - Combination of BAYER_FLAGS
+ *
+ * Return:
+ *   true if a label was found, false otherwise.
+ */
+static bool star_get_bayer_name(const star_data_t *s, char *out, int size,
+                                int flags)
+{
     char cst[5];
     int bayer, bayer_n;
-    char buf[128];
     const char *greek[] = {"α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ",
                            "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ",
                            "υ", "φ", "χ", "ψ", "ω"};
 
-    obj_t *skycultures;
-    if (level >= 2) {
-        skycultures = core_get_module("skycultures");
-        name = skycultures_get_name(skycultures, s->oid, buf);
-        if (name) {
-            snprintf(out, size, "%s", name);
-            return true;
-        }
-    }
-
     bayer_get(s->hip, cst, &bayer, &bayer_n);
+    if (!bayer)
+        return false;
 
-    if (level >= 1 && bayer) {
+    if (flags & BAYER_CONST_SHORT) {
         snprintf(out, size, "%s%.*d %s",
                  greek[bayer - 1], bayer_n ? 1 : 0, bayer_n, cst);
         return true;
     }
 
-    if (bayer) {
-        snprintf(out, size, "%s%.*d",
-                 greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
-        return true;
-    }
+    snprintf(out, size, "%s%.*d",
+             greek[bayer - 1], bayer_n ? 1 : 0, bayer_n);
 
-    return false;
+    return true;
 }
 
 
 static void star_render_name(const painter_t *painter, const star_data_t *s,
                              int frame, const double pos[3], double radius,
-                             double vmag, double color[3])
+                             double color[3])
 {
     double label_color[4] = {color[0], color[1], color[2], 0.8};
     static const double white[4] = {1, 1, 1, 1};
@@ -280,7 +292,14 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     int effects = TEXT_FLOAT;
     char buf[128];
     const double hints_mag_offset = g_stars->hints_mag_offset;
-    int level;
+
+    double lim_mag = painter->hints_limit_mag - 5 + hints_mag_offset;
+    double lim_mag2 = painter->hints_limit_mag - 7.5 + hints_mag_offset;
+    double lim_mag3 = painter->hints_limit_mag - 9.0 + hints_mag_offset;
+
+    // Decide whether a label must be displayed
+    if (!selected && s->vmag > lim_mag)
+        return;
 
     if (selected) {
         vec4_copy(white, label_color);
@@ -288,24 +307,36 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     }
     radius += LABEL_SPACING;
 
+    buf[0] = 0;
     // Display the current skyculture's star name, but only
     // for bright stars (mag < 3) or when very zoomed.
     // Names for fainter stars tend to be suspiscious, and just
     // pollute the screen space.
-    // For those, we rather display bayer name below.
-    if (s->vmag < max(3, painter->hints_limit_mag - 8.0 + hints_mag_offset))
-        level = 2;
-    else if (selected)
-        level = 1;
-    else
-        level = 0;
+    if (s->vmag < max(3, lim_mag3))
+        star_get_common_name(s, buf, sizeof(buf));
 
-    if (!star_get_label(s, level, buf, sizeof(buf)))
-        return;
+    // If the star is selected, display longer Bayer name
+    if (!buf[0] && selected) {
+        star_get_bayer_name(s, buf, sizeof(buf), BAYER_CONST_SHORT);
+    }
 
-    labels_add_3d(sys_translate("skyculture", buf), frame, pos, true,
+    // Otherwise, only the letter /number to save space.
+    if (!buf[0]) {
+        star_get_bayer_name(s, buf, sizeof(buf), 0);
+    }
+
+    // If there is no bayer name, fallback to first name
+    if (!buf[0] && (s->vmag <= lim_mag2 || selected)) {
+        if (s->names && s->names[0])
+            designation_cleanup(s->names, buf, sizeof(buf), selected ?
+                                    BAYER_CONST_SHORT : 0);
+    }
+
+    if (!buf[0]) return;
+
+    labels_add_3d(buf, frame, pos, true,
                  radius, FONT_SIZE_BASE, label_color, 0, 0,
-                 effects, -vmag, s->oid);
+                 effects, -s->vmag, s->oid);
 }
 
 // Render a single star.
@@ -319,7 +350,6 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     double color[3];
     painter_t painter = *painter_;
     point_t point;
-    const bool selected = core->selection && obj->oid == core->selection->oid;
 
     obj_get_pvo(obj, painter.obs, pvo);
     if (!painter_project(painter_, FRAME_ICRF, pvo[0], true, true, p))
@@ -338,12 +368,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     };
     paint_2d_points(&painter, 1, &point);
 
-    if (selected || (g_stars->hints_visible &&
-                     s->vmag <= painter.hints_limit_mag - 4.0
-                     + g_stars->hints_mag_offset)) {
-        star_render_name(&painter, s, FRAME_ICRF, pvo[0], size,
-                s->vmag, color);
-    }
+    star_render_name(&painter, s, FRAME_ICRF, pvo[0], size, color);
     return 0;
 }
 
@@ -626,11 +651,8 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         selected = core->selection && s->oid == core->selection->oid;
-        if (selected || (stars->hints_visible &&
-                         s->vmag <= painter.hints_limit_mag - 4.0 +
-                         stars->hints_mag_offset && survey != SURVEY_GAIA))
-            star_render_name(&painter, s, FRAME_ASTROM, s->pos, size,
-                             s->vmag, color);
+        if (selected || (stars->hints_visible))
+            star_render_name(&painter, s, FRAME_ASTROM, s->pos, size, color);
     }
     paint_2d_points(&painter, n, points);
     free(points);
