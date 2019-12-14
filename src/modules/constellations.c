@@ -162,15 +162,15 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
 static int constellation_create_stars(constellation_t *cons)
 {
     int i, err = 0, hip;
-    uint64_t oid;
+    char id[128];
     if (cons->stars) return 0;
     cons->count = cons->info.nb_lines * 2;
     cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
         hip = cons->info.lines[i / 2][i % 2];
         assert(hip);
-        oid = oid_create("HIP", hip);
-        cons->stars[i] = obj_get_by_oid(NULL, oid, 0);
+        snprintf(id, sizeof(id), "HIP %d", hip);
+        cons->stars[i] = obj_get(NULL, id, 0);
         if (!cons->stars[i]) {
             LOG_W("Cannot find cst star: %s, HIP %d", cons->info.id, hip);
             err = 1;
@@ -182,17 +182,17 @@ static int constellation_create_stars(constellation_t *cons)
 static int compute_img_mat(const anchor_t anchors[static 3], double mat[3][3])
 {
     int i, r;
-    uint64_t oid;
     double pos[3][3];
     double uvs[3][3];
     double tmp[3][3];
     double pvo[2][4];
+    char id[128];
     obj_t *star;
     for (i = 0; i < 3; i++) {
         vec2_copy(anchors[i].uv, uvs[i]);
         uvs[i][2] = 1.0;
-        oid = oid_create("HIP", anchors[i].hip);
-        star = obj_get_by_oid(NULL, oid, 0);
+        snprintf(id, sizeof(id), "HIP %d", anchors[i].hip);
+        star = obj_get(NULL, id, 0);
         if (!star) {
             LOG_W("Cannot find star HIP %d", anchors[i].hip);
             return -1;
