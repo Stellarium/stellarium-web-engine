@@ -44,3 +44,16 @@ enum {
  * This can be used for example to compute the label to render for an object.
  */
 void designation_cleanup(const char *dsgn, char *out, int size, int flags);
+
+
+/*
+ * Function: designations_get_tyc
+ * Extract a TYC number from a designations list.
+ *
+ * Parameters:
+ *   dsgns  - Null terminated list of null terminated strings.
+ *
+ * Return:
+ *   True if a TYC was found.
+ */
+bool designations_get_tyc(const char *dsgns, int *tyc1, int *tyc2, int *tyc3);

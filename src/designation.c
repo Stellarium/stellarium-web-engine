@@ -341,6 +341,28 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     snprintf(out, size, "%s", dsgn);
 }
 
+/*
+ * Function: designations_get_tyc
+ * Extract a TYC number from a designations list.
+ *
+ * Parameters:
+ *   dsgns  - Null terminated list of null terminated strings.
+ *
+ * Return:
+ *   True if a TYC was found.
+ */
+bool designations_get_tyc(const char *dsgns, int *tyc1, int *tyc2, int *tyc3)
+{
+    const char *dsgn;
+    if (!dsgns) return false;
+    for (dsgn = dsgns; *dsgn; dsgn = dsgn + strlen(dsgn) + 1) {
+        if (strncmp(dsgn, "TYC ", 4) != 0) continue;
+        if (sscanf(dsgn, "TYC %d-%d-%d", tyc1, tyc2, tyc3) == 3)
+            return true;
+    }
+    return false;
+}
+
 #if COMPILE_TESTS
 
 static void test_designations(void)
@@ -348,6 +370,7 @@ static void test_designations(void)
     char buf[128];
     char *suffix;
     int n, cst, nb;
+    int tyc1, tyc2, tyc3;
     bool r;
 
     r = designation_parse_bayer("* alf Aqr", &cst, &n, &nb, &suffix);
@@ -390,6 +413,9 @@ static void test_designations(void)
     assert(strcmp(buf, "α Aqr") == 0);
     designation_cleanup("V* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
     assert(strcmp(buf, "α Aqr") == 0);
+
+    r = designations_get_tyc("TYC 8841-489-2\0", &tyc1, &tyc2, &tyc3);
+    assert(r && tyc1 == 8841 && tyc2 == 489 && tyc3 == 2);
 }
 
 TEST_REGISTER(NULL, test_designations, TEST_AUTO);
