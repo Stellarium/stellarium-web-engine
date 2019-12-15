@@ -30,7 +30,6 @@ typedef struct stars stars_t;
 typedef struct {
     uint64_t oid;
     uint64_t gaia;  // Gaia source id (0 if none)
-    uint32_t tyc;   // Tycho2 id.
     char    type[4];
     int     hip;    // HIP number.
     float   vmag;
@@ -452,7 +451,6 @@ static int on_file_tile_loaded(const char type[4],
         {"type", 's', .size=4},
         {"gaia", 'Q'},
         {"hip",  'i'},
-        {"tyc",  'i'},
         {"vmag", 'f', EPH_VMAG},
         {"gmag", 'f', EPH_VMAG},
         {"ra",   'f', EPH_RAD},
@@ -496,7 +494,7 @@ static int on_file_tile_loaded(const char type[4],
         s = &tile->sources[tile->nb];
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                s->type, &s->gaia, &s->hip, &s->tyc, &vmag, &gmag,
+                s->type, &s->gaia, &s->hip, &vmag, &gmag,
                 &ra, &de, &plx, &pra, &pde, &bv, ids);
         assert(!isnan(ra));
         assert(!isnan(de));
@@ -512,9 +510,7 @@ static int on_file_tile_loaded(const char type[4],
         s->pde = pde;
         s->plx = plx;
         s->bv = isnan(bv) ? 0 : bv;
-        s->oid = s->hip ? oid_create("HIP", s->hip) :
-                 s->tyc ? oid_create("TYC", s->tyc) :
-                 s->gaia;
+        s->oid = s->hip ? oid_create("HIP", s->hip) : s->gaia;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
         s->illuminance = core_mag_to_illuminance(vmag);
@@ -779,7 +775,6 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 
     if (!hint) {
         if (    !oid_is_catalog(oid, "HIP") &&
-                !oid_is_catalog(oid, "TYC") &&
                 !oid_is_gaia(oid)) return NULL;
         hips_traverse(&d, stars_get_visitor);
         return d.ret;
