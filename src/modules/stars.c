@@ -708,7 +708,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 
 static int stars_get_visitor(int order, int pix, void *user)
 {
-    int i, p, code;
+    int i, p, code, hip = 0;
     bool is_gaia, sync;
     struct {
         stars_t     *stars;
@@ -727,8 +727,12 @@ static int stars_get_visitor(int order, int pix, void *user)
     }
 
     // For HIP lookup, we can use the bundled hip -> pix data if available.
-    if (d->cat == 3 && oid_is_catalog(d->n, "HIP")) {
-        p = hip_get_pix(oid_get_index(d->n), order);
+    if (d->cat == 3 && oid_is_catalog(d->n, "HIP"))
+        hip = oid_get_index(d->n);
+    if (d->cat == 0)
+        hip = d->n;
+    if (hip) {
+        p = hip_get_pix(hip, order);
         if ((p != -1) && (p != pix)) return 0;
     }
 
