@@ -189,18 +189,17 @@ error:
 
 skyculture_name_t *skyculture_parse_names_json(const json_value *v)
 {
-    int i, j;
+    int i, j, hip;
     const char *key, *name;
-    uint64_t oid;
     skyculture_name_t *ret = NULL, *entry;
 
     if (v->type != json_object) goto error;
     for (i = 0; i < v->u.object.length; i++) {
-        oid = 0;
+        hip = 0;
         key = v->u.object.values[i].name;
         if (strncmp(key, "HIP ", 4) == 0)
-            oid = oid_create("HIP", atoi(key + 4));
-        if (!oid) goto error;
+            hip = atoi(key + 4);
+        if (!hip) goto error;
 
         if (v->u.object.values[i].value->type != json_array)
             goto error;
@@ -208,9 +207,9 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
         for (j = 0; j < v->u.object.values[i].value->u.array.length; j++) {
             name = v->u.object.values[i].value->u.array.values[j]->u.string.ptr;
             entry = calloc(1, sizeof(*entry));
-            entry->oid = oid;
+            entry->hip = hip;
             snprintf(entry->name, sizeof(entry->name), "%s", name);
-            HASH_ADD(hh, ret, oid, sizeof(entry->oid), entry);
+            HASH_ADD(hh, ret, hip, sizeof(entry->hip), entry);
 
             // Ignore alternative names for the moment!
             break;

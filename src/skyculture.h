@@ -65,7 +65,7 @@ typedef struct constellation_art
 typedef struct skyculture_name
 {
     UT_hash_handle  hh;
-    uint64_t        oid;
+    int             hip;
     char            name[128];
 } skyculture_name_t;
 

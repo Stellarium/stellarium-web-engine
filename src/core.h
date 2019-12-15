@@ -423,11 +423,10 @@ obj_t *city_create(const char *name, const char *country_code,
  *
  * Parameters:
  *   skycultures    - A skyculture module.
- *   oid            - Object id of a star.
+ *   hip            - HIP number.
  *   buf            - A text buffer that get filled with the name.
  *
  * Return:
  *   NULL if no name was found.  A pointer to the passed buffer otherwise.
  */
-const char *skycultures_get_name(obj_t *skycultures, uint64_t oid,
-                                 char buf[128]);
+const char *skycultures_get_name(obj_t *skycultures, int hip, char buf[128]);

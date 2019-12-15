@@ -310,22 +310,22 @@ static int skycultures_add_data_source(
  *
  * Parameters:
  *   skycultures    - A skyculture module.
- *   oid            - Object id of a star.
+ *   hip            - HIP number.
  *   buf            - A text buffer that get filled with the name.
  *
  * Return:
  *   NULL if no name was found.  A pointer to the passed buffer otherwise.
  */
-const char *skycultures_get_name(obj_t *skycultures, uint64_t oid,
-                                 char buf[128])
+const char *skycultures_get_name(obj_t *skycultures, int hip, char buf[128])
 {
     skyculture_t *cult;
     skyculture_name_t *entry;
     if (!skycultures) return NULL;
+    if (!hip) return NULL;
     assert(strcmp(skycultures->klass->id, "skycultures") == 0);
     cult = ((skycultures_t*)skycultures)->current;
     if (!cult) return NULL;
-    HASH_FIND(hh, cult->names, &oid, sizeof(oid), entry);
+    HASH_FIND(hh, cult->names, &hip, sizeof(hip), entry);
     if (!entry) return NULL;
     strcpy(buf, entry->name);
     return buf;

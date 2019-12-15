@@ -233,7 +233,7 @@ static bool star_get_common_name(const star_data_t *s, char *out, int size)
     const char *name;
     char buf[128];
     const obj_t * skycultures = core_get_module("skycultures");
-    name = skycultures_get_name(skycultures, s->oid, buf);
+    name = skycultures_get_name(skycultures, s->hip, buf);
     if (name) {
         snprintf(out, size, "%s", sys_translate("skyculture", name));
         return true;
@@ -384,7 +384,7 @@ void star_get_designations(
      */
     if (!names) {
         skycultures = core_get_module("skycultures");
-        name = skycultures_get_name(skycultures, obj->oid, buf);
+        name = skycultures_get_name(skycultures, s->hip, buf);
         if (name) f(obj, user, "NAME", name);
         if (s->hip) {
             snprintf(buf, sizeof(buf), "%d", s->hip);
