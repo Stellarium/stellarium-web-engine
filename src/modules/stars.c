@@ -510,7 +510,7 @@ static int on_file_tile_loaded(const char type[4],
         s->pde = pde;
         s->plx = plx;
         s->bv = isnan(bv) ? 0 : bv;
-        s->oid = s->hip ? oid_create("HIP", s->hip) : s->gaia;
+        s->oid = s->gaia ?: s->hip ? oid_create("HIP", s->hip) : 0;
         assert(s->oid);
         compute_pv(ra, de, pra, pde, plx, s);
         s->illuminance = core_mag_to_illuminance(vmag);
