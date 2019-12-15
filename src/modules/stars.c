@@ -434,6 +434,23 @@ static int star_data_cmp(const void *a, const void *b)
     return cmp(((const star_data_t*)a)->vmag, ((const star_data_t*)b)->vmag);
 }
 
+/*
+ * Compute the oid of a given star.
+ * We pick the gaia number if present, else we fallback to the TYC and HIP
+ */
+static uint64_t compute_oid(const star_data_t *s)
+{
+    int tyc1, tyc2, tyc3;
+    if (s->gaia)
+        return s->gaia;
+    if (designations_get_tyc(s->names, &tyc1, &tyc2, &tyc3))
+        return oid_create("TYC", tyc1 * 100000 + tyc2 * 10 + tyc3);
+    if (s->hip)
+        return oid_create("HIP", s->hip);
+    assert(false);
+    return oid_create("HIP", 0);
+}
+
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size, void *user)
 {
@@ -510,10 +527,6 @@ static int on_file_tile_loaded(const char type[4],
         s->pde = pde;
         s->plx = plx;
         s->bv = isnan(bv) ? 0 : bv;
-        s->oid = s->gaia ?: s->hip ? oid_create("HIP", s->hip) : 0;
-        assert(s->oid);
-        compute_pv(ra, de, pra, pde, plx, s);
-        s->illuminance = core_mag_to_illuminance(vmag);
 
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
@@ -521,6 +534,10 @@ static int on_file_tile_loaded(const char type[4],
             for (j = 0; ids[j]; j++)
                 s->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
+
+        compute_pv(ra, de, pra, pde, plx, s);
+        s->illuminance = core_mag_to_illuminance(vmag);
+        s->oid = compute_oid(s);
 
         tile->illuminance += s->illuminance;
         tile->mag_min = min(tile->mag_min, vmag);
@@ -775,6 +792,7 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 
     if (!hint) {
         if (    !oid_is_catalog(oid, "HIP") &&
+                !oid_is_catalog(oid, "TYC") &&
                 !oid_is_gaia(oid)) return NULL;
         hips_traverse(&d, stars_get_visitor);
         return d.ret;
