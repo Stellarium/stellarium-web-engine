@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding: utf-8
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
@@ -17,7 +17,7 @@ URL = 'https://minorplanetcenter.net/Extended_Files/mpcorb_extended.dat.gz'
 
 def run():
     path = download(URL)
-    lines = gzip.GzipFile(path).readlines()
+    lines = gzip.open(path, 'rt').readlines()
     lines = [x for x in lines if len(x) > 162]
     # Remove Pluto (we have it as a planet)
     lines = [x for x in lines if x[175:180] != 'Pluto']
@@ -27,7 +27,7 @@ def run():
     lines = lines[:500]
     out = open("data/mpcorb.dat", "w")
     for line in lines:
-        print >>out, line
+        print(line, file=out)
     out.close()
 
 
