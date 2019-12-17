@@ -28,8 +28,8 @@ typedef struct orbit_t {
 typedef struct {
     obj_t       obj;
     int         num;
-    double      amag;
-    double      slope_param;
+    double      h;  // Absolute magnitude.
+    double      g;  // Slope parameter.
     orbit_t     orbit;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
     bool        on_screen;  // Set once the object has been visible.
@@ -96,8 +96,8 @@ static void load_data(comets_t *comets, const char *data, int size)
 
         comet = (void*)module_add_new(&comets->obj, "mpc_comet", NULL, NULL);
         comet->num = num;
-        comet->amag = h;
-        comet->slope_param = g;
+        comet->h = h;
+        comet->g = g;
         comet->orbit.d = peri_time;
         comet->orbit.i = i * DD2R;
         comet->orbit.o = node * DD2R;
@@ -168,10 +168,11 @@ static int comet_update(comet_t *comet, const observer_t *obs)
     // Compute vmag.
     // We use the g,k model: m = g + 5*log10(D) + 2.5*k*log10(r)
     // (http://www.clearskyinstitute.com/xephem/help/xephem.html)
+    // XXX: probably better to switch to the same model as for asteroids.
     sr = vec3_norm(ph[0]);
     or = vec3_norm(comet->pvo[0]);
-    comet->vmag = comet->amag + 5 * log10(or) +
-                      2.5 * comet->slope_param * log10(sr);
+    comet->vmag = comet->h + 5 * log10(or) +
+                      2.5 * comet->g * log10(sr);
     return 0;
 }
 
