@@ -102,7 +102,7 @@ static double get_global_brightness(void)
     if (sin_angle > -0.1 / 1.5 )
         brightness += moon_phase * 0.2 * (sin_angle + 0.1 / 1.5);
 
-    return min(brightness * 2.0, 1.0);
+    return min(brightness * 1.5, 1.0);
 }
 
 /*
