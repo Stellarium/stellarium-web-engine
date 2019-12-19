@@ -151,9 +151,6 @@ float skybrightness_get_luminance(
                    cos_zenith_dist * cos_zenith_dist)) * sb->b_night_term * bKX;
     }
 
-    // Light pollution
-    b_total += 0.0000000000015f;
-
     if (b_total < 0.f)
         return 0.f;
 
