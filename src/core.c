@@ -795,6 +795,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     assert(bck.obs.yaw == core->observer->yaw);
     assert(bck.obs.pitch == core->observer->pitch);
+    assert(bck.obs.tt == core->observer->tt);
     assert(bck.fov == core->fov);
     return 0;
 }
