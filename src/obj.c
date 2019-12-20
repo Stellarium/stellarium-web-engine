@@ -503,6 +503,10 @@ int obj_set_attr(const obj_t *obj, const char *name, ...)
     const attribute_t *attr;
 
     attr = obj_get_attr_(obj, name);
+    if (!attr) {
+        LOG_E("Unknow attribute %s", name);
+        assert(false);
+    }
     va_start(ap, name);
     arg = args_vvalue_new(attr->type, &ap);
     ret = obj_call_json(obj, name, arg);
