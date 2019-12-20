@@ -666,7 +666,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
 
     label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
                 con->name : con->name_translated;
-    label_pixel_length = 0.5 * FONT_SIZE_BASE * strlen(label);
+    label_pixel_length = 0.5 * FONT_SIZE_BASE * 1.4 * strlen(label);
     vec3_copy(con->lines_cap, label_cap);
     label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
 
