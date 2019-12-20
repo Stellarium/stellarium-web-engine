@@ -462,6 +462,21 @@ static int core_update_mount(double dt)
     return 0;
 }
 
+// Update the core time animation.
+static void core_update_time(double dt)
+{
+    typeof(core->time_animation) *anim = &core->time_animation;
+    double t, tt;
+
+    if (!anim->duration) return;
+    anim->t += dt / anim->duration;
+    t = smoothstep(0.0, 1.0, anim->t);
+    tt = mix(anim->src, anim->dst, t);
+    obj_set_attr(&core->observer->obj, "tt", tt);
+    if (t >= 1.0)
+        anim->duration = 0.0;
+}
+
 EMSCRIPTEN_KEEPALIVE
 int core_update(double dt)
 {
@@ -500,6 +515,7 @@ int core_update(double dt)
 
     core_update_direction(dt);
     core_update_mount(dt);
+    core_update_time(dt);
 
     DL_SORT(core->obj.children, modules_sort_cmp);
     DL_FOREACH(core->obj.children, module) {
@@ -1110,6 +1126,22 @@ void core_zoomto(double fov, double duration)
     anim->dst_fov = fov;
     anim->duration = duration;
     anim->t = 0.0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void core_set_time(double tt, double duration)
+{
+    typeof(core->time_animation) *anim = &core->time_animation;
+
+    anim->duration = 0;
+    if (duration == 0.0) {
+        obj_set_attr(&core->observer->obj, "tt", tt);
+        return;
+    }
+    anim->src = core->observer->tt;
+    anim->dst = tt;
+    anim->duration = duration;
+    anim->t = 0;
 }
 
 // Return a static string representation of a an object type id.

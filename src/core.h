@@ -120,6 +120,13 @@ struct core
         double      dst_fov;  // Destination fov.
     } fov_animation;
 
+    struct {
+        double      t;        // Goes from 0 to 1.
+        double      duration; // Animation duration in sec.
+        double      src;
+        double      dst;
+    } time_animation;
+
     // Zoom movement. -1 to zoom out, +1 to zoom in.
     double zoom;
 
@@ -406,6 +413,16 @@ void core_point_and_lock(obj_t *target, double duration);
  *   duration - Movement duration in sec.
  */
 void core_zoomto(double fov, double duration);
+
+/*
+ * Function: core_set_time
+ * Change the core observer time, possibly using an animation.
+ *
+ * Parameters:
+ *   tt       - The target time in TT MJD.
+ *   duration - Transition duration in sec.
+ */
+void core_set_time(double tt, double duration);
 
 // Return a static string representation of an object type id.
 const char *otype_to_str(const char *type);
