@@ -151,7 +151,7 @@ float skybrightness_get_luminance(
                    cos_zenith_dist * cos_zenith_dist)) * sb->b_night_term * bKX;
 
         // Ad-hoc addition to make the sky slightly more blueish
-        b_total += 0.0000000000005f;
+        b_total += 0.0000000000012f;
     }
 
     if (b_total < 0.f)
