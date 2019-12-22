@@ -787,6 +787,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
     // Flush all rendering pipeline
     paint_finish(&painter);
 
+    assert(bck.obs.tt == core->observer->tt);
+
     // Do post render (e.g. for GUI)
     DL_FOREACH(core->obj.children, module) {
         if (module->klass->post_render)
@@ -795,7 +797,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
 
     assert(bck.obs.yaw == core->observer->yaw);
     assert(bck.obs.pitch == core->observer->pitch);
-    assert(bck.obs.tt == core->observer->tt);
     assert(bck.fov == core->fov);
     return 0;
 }
