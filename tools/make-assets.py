@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding: utf-8
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
@@ -23,7 +23,7 @@ if len(sys.argv) > 1:
     SOURCE, DEST = sys.argv[1:]
 
 if os.path.dirname(__file__) != "./tools":
-    print "Should be run from root directory"
+    print("Should be run from root directory")
     sys.exit(-1)
 
 TYPES = {
@@ -58,8 +58,9 @@ def list_data_files():
         dirs[:] = sorted(dirs)
 
 def encode_str(data):
+    assert isinstance(data, bytes)
     ret = '    "'
-    for c in data:
+    for c in data.decode('utf8'):
         if c == '\n':
             ret += '\\n"\n    "'
             continue
@@ -70,15 +71,15 @@ def encode_str(data):
     return ret
 
 def encode_bin(data):
-    ret = "{\n"
-    line = ""
+    ret = '{\n'
+    line = ''
     for i, c in enumerate(data):
-        line += "{},".format(ord(c))
+        line += '{},'.format(c)
         if len(line) >= 70 or i == len(data) - 1:
-            ret += "    " + line + "\n"
-            line = ""
-    ret += "}"
-    return ret;
+            ret += '    ' + line + '\n'
+            line = ''
+    ret += '}'
+    return ret
 
 # Get all the asset files sorted by group:
 groups = {}
@@ -88,19 +89,19 @@ for f in list_data_files():
 
 for group in groups:
     out = open(os.path.join(DEST, "%s.inl" % group), "w")
-    print >>out, "// Auto generated from tools/makeassets.py\n"
+    print("// Auto generated from tools/makeassets.py\n", file=out)
     for f in groups[group]:
-        data = open(os.path.join(SOURCE, f)).read()
-        type = TYPES[os.path.basename(f).split(".")[-1]]
+        data = open(os.path.join(SOURCE, f), 'rb').read()
+        data_type = TYPES[os.path.basename(f).split(".")[-1]]
         size = len(data)
         compressed = False
-        if type["compress"]:
+        if data_type["compress"]:
             data = zlib.compress(data, 9)
             data = struct.pack('I', size) + data
             compressed = True
         size = len(data)
 
-        if type["text"]:
+        if data_type["text"]:
             size += 1 # NULL terminated string.
             data = encode_str(data)
         else:
@@ -108,10 +109,11 @@ for group in groups:
 
         name = f.replace('.', '_').replace('-', '_').replace('/', '_')
 
-        print >>out, ("static const unsigned char DATA_{}[{}] "
-                      "__attribute__((aligned(4))) =\n{};\n").format(
-                              name, size, data)
-        print >>out, 'ASSET_REGISTER({name}, "{url}", DATA_{name}, {comp})' \
-                        .format(name=name, url=f,
-                                comp='true' if compressed else 'false')
-        print >>out
+        print("static const unsigned char DATA_{}[{}] "
+              "__attribute__((aligned(4))) =\n{};\n"
+              .format(name, size, data), file=out)
+
+        print('ASSET_REGISTER({name}, "{url}", DATA_{name}, {comp})'
+              .format(name=name, url=f,
+                      comp='true' if compressed else 'false'), file=out)
+        print(file=out)
