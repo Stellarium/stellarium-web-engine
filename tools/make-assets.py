@@ -10,6 +10,7 @@
 # repository.
 
 
+import io
 import os
 import re
 import struct
@@ -88,7 +89,7 @@ for f in list_data_files():
     groups.setdefault(group, []).append(f)
 
 for group in groups:
-    out = open(os.path.join(DEST, "%s.inl" % group), "w")
+    out = io.StringIO()
     print("// Auto generated from tools/makeassets.py\n", file=out)
     for f in groups[group]:
         data = open(os.path.join(SOURCE, f), 'rb').read()
@@ -117,3 +118,9 @@ for group in groups:
               .format(name=name, url=f,
                       comp='true' if compressed else 'false'), file=out)
         print(file=out)
+
+    # Only write the data if it has changed, so that we don't change the
+    # timestamp of the files unnecessarily.
+    path = os.path.join(DEST, "%s.inl" % group)
+    if open(path).read() != out.getvalue():
+        open(path, 'w').write(out.getvalue())
