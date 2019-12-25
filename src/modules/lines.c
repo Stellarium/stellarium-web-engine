@@ -103,7 +103,7 @@ static struct {
     {
         .name       = "Equatorial",
         .id         = "equatorial",
-        .color      = 0x2a81ad80,
+        .color      = 0x6ab17d80,
         .frame      = FRAME_ICRF,
         .format     = 'h',
         .grid       = true,
@@ -112,7 +112,7 @@ static struct {
         .name       = "Equatorial (of date)",
         .id         = "equatorial_jnow",
         .color      = 0x2a81ad80,
-        .frame      = FRAME_CIRS,
+        .frame      = FRAME_JNOW,
         .format     = 'h',
         .grid       = true,
     },
