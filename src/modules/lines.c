@@ -428,6 +428,11 @@ static void render_label(const double p[2], const double u[2],
     // Compute label according to the 'format' attribute.
     if (line->format == 'd' || (line->format == 'h' && dir == 0)) {
         eraA2af(1, a, &s, h);
+        if (s == '-' && h[0] == 0) {
+            s = ' ';
+        }
+        if (dir == 1 && s == '+')
+            s = ' ';
         if (step <= 360)
             snprintf(buf, sizeof(buf), "%c%d°", s, h[0]);
         else if (step <= 21600)
@@ -436,12 +441,14 @@ static void render_label(const double p[2], const double u[2],
             snprintf(buf, sizeof(buf), "%c%d°%02d'%02d\"", s, h[0], h[1], h[2]);
     } else if (line->format == 'h') {
         eraA2tf(1, a, &s, h);
+        if (s == '-')
+            h[0] = -h[0];
         if (step <= 24)
-            snprintf(buf, sizeof(buf), "%c%dh", s, h[0]);
+            snprintf(buf, sizeof(buf), "%dh", h[0]);
         else  if (step <= 1440)
-            snprintf(buf, sizeof(buf), "%c%dh%02d", s, h[0], h[1]);
+            snprintf(buf, sizeof(buf), "%dh%02d", h[0], h[1]);
         else
-            snprintf(buf, sizeof(buf), "%c%dh%02dm%02ds", s, h[0], h[1], h[2]);
+            snprintf(buf, sizeof(buf), "%dh%02dm%02ds", h[0], h[1], h[2]);
     } else if (line->format == 'n') {
         snprintf(buf, sizeof(buf), "%s", sys_translate("gui", line->name));
     } else {
