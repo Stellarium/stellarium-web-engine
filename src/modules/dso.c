@@ -443,7 +443,8 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
                  fabs(win_size[0] / 2 - win_size[1] / 2);
     radius += 1;
     if (s2->short_name[0])
-        snprintf(buf, sizeof(buf), "%s", s2->short_name);
+        snprintf(buf, sizeof(buf), "%s", sys_translate("skyculture",
+                                                       s2->short_name));
     if (buf[0]) {
         labels_add_3d(buf, FRAME_ASTROM, s->bounding_cap, true, radius,
                       FONT_SIZE_BASE - 2, color, 0, 0, effects,
