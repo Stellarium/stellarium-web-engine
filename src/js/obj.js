@@ -52,7 +52,7 @@ Module.afterInit(function() {
           set: function(v) {return that._call(name, v)},
         })
       }
-    }, 'vii')
+    }, 'viii')
     Module._obj_foreach_attr(this.v, 0, callback);
     Module.removeFunction(callback);
 
