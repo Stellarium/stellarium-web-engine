@@ -1138,7 +1138,7 @@ static int planets_ini_handler(void* user, const char* section,
         planet->name = strdup(name);
         if (strcmp(id, "SUN") == 0) planets->sun = planet;
         if (strcmp(id, "EARTH") == 0) planets->earth = planet;
-        planet->update_delta_s = 1.f + 1.f * rand() * 1.f / RAND_MAX;
+        planet->update_delta_s = 1.f + 1.f * rand() * 1.f / (float)RAND_MAX;
         fader_init(&planet->orbit_visible, false);
     }
     if (strcmp(attr, "horizons_id") == 0) {
