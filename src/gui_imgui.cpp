@@ -7,12 +7,16 @@
  * repository.
  */
 
+#ifndef SWE_GUI
+#define SWE_GUI 1
+#endif
+
+#if SWE_GUI
+
 extern "C" {
 #include "swe.h"
 #include "utils/gl.h"
 }
-
-#if DEFINED(SWE_GUI)
 
 #include "imgui.h"
 
