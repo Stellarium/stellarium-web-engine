@@ -184,6 +184,7 @@ if target_os == 'js':
         'lengthBytesUTF8',
         'removeFunction',
         'setValue',
+        'stringToUTF8',
         'writeAsciiToMemory',
     ]
     extra_exported = ','.join("'%s'" % x for x in extra_exported)

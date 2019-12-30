@@ -166,3 +166,10 @@ char *sys_render_text(const char *txt, float height, int flags,
     return sys_callbacks.render_text(
             sys_callbacks.user, txt, height, flags, w, h, xoffset, yoffset);
 }
+
+EMSCRIPTEN_KEEPALIVE
+void sys_set_translate_function(
+    const char *(*callback)(void *user, const char *domain, const char *str))
+{
+    sys_callbacks.translate = callback;
+}

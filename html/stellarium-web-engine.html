@@ -176,6 +176,9 @@
       StelWebEngine({
         wasmFile: 'static/js/stellarium-web-engine.wasm',
         canvas: document.getElementById('stel-canvas'),
+        translateFn: function(domain, str) {
+          return str;
+        },
         onReady: function(stel) {
           that.stel = stel;
           // Add all data sources.

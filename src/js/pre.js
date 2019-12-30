@@ -49,6 +49,26 @@ Module['onRuntimeInitialized'] = function() {
   Module._core_init(0, 0, 1);
   Module.core = Module.getModule('core');
   Module.observer = Module.getModule('observer');
+
+  // Setup the translation function provided by the client if any.
+  if (Module.translateFn) {
+    Module.translationsCache = {};
+    let callback = Module.addFunction(function(user, domain, str) {
+      domain = Module.UTF8ToString(domain);
+      str = Module.UTF8ToString(str);
+      let key = domain + '/' + str;
+      let value = Module.translationsCache[key];
+      if (value) return value;
+      str = Module.translateFn(domain, str);
+      let size = Module.lengthBytesUTF8(str) + 1;
+      value = Module._malloc(size);
+      Module.stringToUTF8(str, value, size);
+      Module.translationsCache[key] = value;
+      return value;
+    }, 'iiii');
+    Module._sys_set_translate_function(callback);
+  }
+
   if (Module.onReady) Module.onReady(Module);
 }
 
