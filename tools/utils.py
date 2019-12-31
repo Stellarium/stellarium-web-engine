@@ -50,9 +50,9 @@ def download(url, dest=None, sha256=None, md5=None, unpacked_md5=False, headers=
         with open(dest, 'wb') as out:
             out.write(r.content)
     if md5:
-        assert hashlib.md5(open(dest).read()).hexdigest() == md5
+        assert hashlib.md5(open(dest, 'rb').read()).hexdigest() == md5
     if sha256:
-        assert hashlib.sha256(open(dest).read()).hexdigest() == sha256
+        assert hashlib.sha256(open(dest, 'rb').read()).hexdigest() == sha256
     if unpacked_md5:
         data_md5 = hashlib.md5(gzip.open(dest).read()).hexdigest()
         assert data_md5 == unpacked_md5
@@ -89,9 +89,9 @@ def compute_dir_md5(path):
         dirnames[:] = sorted(dirnames)
         filenames[:] = sorted(filenames)
         for d in dirnames:
-            m.update(d)
+            m.update(d.encode('utf8'))
         for f in filenames:
-            m.update(open(os.path.join(dirpath, f)).read())
+            m.update(open(os.path.join(dirpath, f), 'rb').read())
     return m.hexdigest()
 
 

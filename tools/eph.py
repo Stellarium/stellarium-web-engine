@@ -10,6 +10,7 @@
 
 from math import *
 
+import numpy as np
 import os
 import struct
 import sys
@@ -30,18 +31,15 @@ def ensure_dir(file_path):
 
 def shuffle_bytes(data, size):
     assert len(data) % size == 0
-    ret = ''
-    for i in range(size):
-        for j in range(len(data) / size):
-            ret += data[j * size + i]
-    return ret
+    a = np.frombuffer(data, dtype='b')
+    return a.reshape((-1, size)).transpose().tobytes('C')
 
 
 def float_trunc(v, zerobits):
     """Truncate a float value so that it can be better compressed"""
     # A float is represented in binary like this:
     # seeeeeeeefffffffffffffffffffffff
-    mask = -(1L << zerobits)
+    mask = -(1 << zerobits)
     v = struct.unpack('I', struct.pack('f', v))[0]
     v &= mask
     return struct.unpack('f', struct.pack('I', v))[0]
@@ -56,25 +54,28 @@ def col_get_size(col):
 
 
 def create_tile(data, chunk_type, nuniq, path, columns):
-    order = int(log(nuniq / 4, 2) / 2);
+    chunk_type = bytes(chunk_type, 'utf8')
+    assert len(chunk_type) == 4
+    order = int(log(nuniq // 4, 2) / 2);
     pix = nuniq - 4 * (1 << (2 * order));
     path = '%s/Norder%d/Dir%d/Npix%d.eph' % (
-            path, order, (pix / 10000) * 10000, pix)
+            path, order, (pix // 10000) * 10000, pix)
     ensure_dir(path)
     row_size = sum(col_get_size(x) for x in columns)
     # Header:
-    header = ''
+    header = b''
     header += struct.pack('iiii', 1, row_size, len(columns), len(data))
     ofs = 0
     for col in columns:
-        t = col['type']
+        t = bytes(col['type'], 'utf8')
+        i = bytes(col['id'], 'utf8')
         s = col_get_size(col)
         unit = col.get('unit', 0)
-        header += struct.pack('4s4siii', col['id'], t, unit, ofs, s)
+        header += struct.pack('4s4siii', i, t, unit, ofs, s)
         ofs += s
 
     # Create packed binary data table.
-    buf = ''
+    buf = bytearray()
     for d in data:
         if hasattr(d, '_asdict'): d = d._asdict() # For named tuple.
         for col in columns:
@@ -82,8 +83,8 @@ def create_tile(data, chunk_type, nuniq, path, columns):
             t = col['type']
             if t == 's':
                 if len(v) > col['size']:
-                    print >>sys.stderr, 'String too long (%s)' % col['id']
-                    print >>sys.stderr, d
+                    print('String too long (%s)' % col['id'], file=sys.stderr)
+                    print(d, file=sys.stderr)
                     assert False
                 t = '%ds' % col['size']
             zerobits = col.get('zerobits', 0)
@@ -93,10 +94,10 @@ def create_tile(data, chunk_type, nuniq, path, columns):
 
     comp_data = zlib.compress(data)
 
-    ret = 'EPHE'
+    ret = bytearray(b'EPHE')
     ret += struct.pack('I', 2) # File version
 
-    chunk = ''
+    chunk = bytearray()
     chunk += struct.pack('I', 3) # Tile Version
     chunk += struct.pack('Q', nuniq)
     chunk += header
@@ -116,7 +117,7 @@ def create_tile(data, chunk_type, nuniq, path, columns):
 
 def read_tile(path):
     f = open(path, 'rb')
-    assert f.read(4) == 'EPHE'
+    assert f.read(4) == b'EPHE'
     version = struct.unpack('I', f.read(4))[0]
     assert version == 2
     chunk_type, chunk_len = struct.unpack('4sI', f.read(8))
@@ -126,8 +127,8 @@ def read_tile(path):
     cols = []
     for i in range(nb_col):
         id, type, unit, ofs, size = struct.unpack('4s4siii', f.read(20))
-        id = id.strip('\0')
-        type = type.strip('\0')
+        id = id.decode().strip('\0')
+        type = type.decode().strip('\0')
         cols.append(dict(id=id, type=type, unit=unit, ofs=ofs, size=size))
     data_len, comp_data_len = struct.unpack('II', f.read(8))
     comp_data = f.read(comp_data_len)
