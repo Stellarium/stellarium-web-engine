@@ -21,6 +21,11 @@
 
 #define GRID_CACHE_SIZE (2 * (1 << 20))
 
+enum {
+    FONT_REGULAR = 0,
+    FONT_BOLD    = 1,
+};
+
 // All the shader attribute locations.
 enum {
     ATTR_POS,
@@ -241,8 +246,12 @@ typedef struct renderer_gl {
     texture_t   *white_tex;
     tex_cache_t *tex_cache;
     NVGcontext *vg;
-    // Map font handle -> font scale to fix nanovg font sizes.
-    float       font_scales[8];
+
+    // Nanovg fonts references for regular and bold.
+    struct {
+        int   id;
+        float scale;
+    } fonts[2];
 
     item_t  *items;
     cache_t *grid_cache;
@@ -842,7 +851,7 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
 {
     item_t *item;
     float fbounds[4];
-    int font_handle = 0;
+    int font = (effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
 
     if (strlen(text) >= sizeof(item->text.text)) {
         LOG_W("Text too large: %s", text);
@@ -872,12 +881,8 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
     }
     if (bounds) {
         nvgSave(rend->vg);
-        if (effects & TEXT_BOLD) {
-            font_handle = nvgFindFont(rend->vg, "bold");
-            if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
-            else font_handle = 0;
-        }
-        nvgFontSize(rend->vg, size * rend->font_scales[font_handle]);
+        nvgFontFaceId(rend->vg, rend->fonts[font].id);
+        nvgFontSize(rend->vg, size * rend->fonts[font].scale);
         nvgTextAlign(rend->vg, align);
         nvgTextBounds(rend->vg, pos[0], pos[1], text, NULL, fbounds);
         bounds[0] = fbounds[0];
@@ -1106,7 +1111,7 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
 
 static void item_text_render(renderer_gl_t *rend, const item_t *item)
 {
-    int font_handle = 0;
+    int font = (item->text.effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
@@ -1114,18 +1119,15 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
         nvgGlobalCompositeBlendFunc(rend->vg, NVG_ONE, NVG_ONE);
     nvgTranslate(rend->vg, item->text.pos[0], item->text.pos[1]);
     nvgRotate(rend->vg, item->text.angle);
-    if (item->text.effects & TEXT_BOLD) {
-        font_handle = nvgFindFont(rend->vg, "bold");
-        if (font_handle != -1) nvgFontFaceId(rend->vg, font_handle);
-        else font_handle = 0;
-    }
+
+    nvgFontFaceId(rend->vg, rend->fonts[font].id);
     if (item->text.effects & TEXT_SPACED)
         nvgTextLetterSpacing(rend->vg, round(item->text.size *
-                             rend->font_scales[font_handle] * 0.2));
+                             rend->fonts[font].scale * 0.2));
     if (item->text.effects & TEXT_SEMI_SPACED)
         nvgTextLetterSpacing(rend->vg, round(item->text.size *
-                             rend->font_scales[font_handle] * 0.05));
-    nvgFontSize(rend->vg, item->text.size * rend->font_scales[font_handle]);
+                             rend->fonts[font].scale * 0.05));
+    nvgFontSize(rend->vg, item->text.size * rend->fonts[font].scale);
     nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                    item->color[1] * 255,
                                    item->color[2] * 255,
@@ -1667,18 +1669,39 @@ static texture_t *create_white_texture(int w, int h)
     return tex;
 }
 
-static int on_font(void *user, const char *path,
-                   const char *name, float scale)
+static void set_font(renderer_gl_t *rend, const char *name,
+                     const uint8_t *data, int size,
+                     float scale)
 {
-    void *data;
-    int size, handle;
-    renderer_gl_t *rend = user;
+    int id;
+    int font;
+    assert(data && size);
 
-    data = asset_get_data2(path, ASSET_USED_ONCE, &size, NULL);
-    assert(data);
-    handle = nvgCreateFontMem(rend->vg, name, data, size, 0);
-    rend->font_scales[handle] = scale;
-    return 0;
+    if (strcmp(name, "regular") == 0)
+        font = FONT_REGULAR;
+    else if (strcmp(name, "bold") == 0)
+        font = FONT_BOLD;
+    else
+        assert(false);
+
+    id = nvgCreateFontMem(rend->vg, name, data, size, 0);
+    rend->fonts[font].id = id;
+    rend->fonts[font].scale = scale;
+}
+
+static void set_default_fonts(renderer_gl_t *rend)
+{
+    const float scale = 1.38;
+    const char *FONTS[2][2] = {
+        {"regular", "asset://font/NotoSans-Regular.ttf"},
+        {"bold", "asset://font/NotoSans-Bold.ttf"},
+    };
+    int i, size;
+    const uint8_t *data;
+    for (i = 0; i < 2; i++) {
+        data = asset_get_data(FONTS[i][1], &size, NULL);
+        set_font(rend, FONTS[i][0], data, size, scale);
+    }
 }
 
 renderer_t* render_gl_create(void)
@@ -1690,9 +1713,8 @@ renderer_t* render_gl_create(void)
     rend->white_tex = create_white_texture(16, 16);
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS);
 
-    // Default bundled fonts.
-    on_font(rend, "asset://font/NotoSans-Regular.ttf", "regular", 1.38);
-    on_font(rend, "asset://font/NotoSans-Bold.ttf", "bold", 1.38);
+    if (!sys_callbacks.render_text)
+        set_default_fonts(rend);
 
     // Query the point size range.
     GL(glGetIntegerv(GL_ALIASED_POINT_SIZE_RANGE, range));
