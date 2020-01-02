@@ -118,31 +118,6 @@ char *sys_render_text(const char *txt, float height, int flags,
                       int *w, int *h, int* xoffset, int* yoffset);
 
 /*
- * Function: sys_list_fonts
- * List all the font files available.
- *
- * Parameters:
- *   user   - User data passed to the callback.
- *   f      - Callback function called once per font file.  If it returns
- *            a value different than zero we stop the iteration.  The
- *            callback takes the following arguments:
- *              user        - The original user data.
- *              path        - Path to the font file.
- *              name        - Name for the font.
- *              fallback    - If not NULL, name of a previous font this font
- *                            should be used as a fallback for.
- *              scale       - Auto scale to apply (this is to fix a problem
- *                            with nanovg that seems to render some fonts
- *                            with the wrong size!).
- * Return:
- *   The number of fonts listed.
- */
-int sys_list_fonts(void *user,
-                   int (*f)(void *user, const char *path,
-                            const char *name, const char *fallback,
-                            float scale));
-
-/*
  * Global structure that holds pointers to functions that allow to change
  * the behavior of system calls.
  */
@@ -160,9 +135,6 @@ typedef struct {
                          int *w, int *h, int *xoffset, int *yoffset);
     int (*list_dir)(void *user, const char *dir, void *cuser,
                     int (*f)(void *user, const char *path, int is_dir));
-    int (*list_fonts)(void *user, void *cuser,
-                      int (*f)(void *user, const char *path, const char *name,
-                               const char *fallback, float scale));
 } sys_callbacks_t;
 
 extern sys_callbacks_t sys_callbacks;

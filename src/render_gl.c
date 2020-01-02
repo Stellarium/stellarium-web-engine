@@ -1668,26 +1668,16 @@ static texture_t *create_white_texture(int w, int h)
 }
 
 static int on_font(void *user, const char *path,
-                   const char *name, const char *fallback, float scale)
+                   const char *name, float scale)
 {
     void *data;
     int size, handle;
-    char buf[128] = {}, *tok, *tmp;
     renderer_gl_t *rend = user;
 
     data = asset_get_data2(path, ASSET_USED_ONCE, &size, NULL);
     assert(data);
     handle = nvgCreateFontMem(rend->vg, name, data, size, 0);
     rend->font_scales[handle] = scale;
-    if (fallback) {
-        assert(strlen(fallback) < sizeof(buf));
-        strcpy(buf, fallback);
-        for (tok = strtok_r(buf, ",", &tmp); tok;
-             tok = strtok_r(NULL, ",", &tmp))
-        {
-            nvgAddFallbackFont(rend->vg, tok, name);
-        }
-    }
     return 0;
 }
 
@@ -1699,13 +1689,10 @@ renderer_t* render_gl_create(void)
     rend = calloc(1, sizeof(*rend));
     rend->white_tex = create_white_texture(16, 16);
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS);
-    if (sys_list_fonts(rend, on_font) == 0) {
-        // Default bundled font used only if the system didn't add any.
-        on_font(rend, "asset://font/NotoSans-Regular.ttf",
-                "regular", NULL, 1.38);
-        on_font(rend, "asset://font/NotoSans-Bold.ttf",
-                "bold", NULL, 1.38);
-    }
+
+    // Default bundled fonts.
+    on_font(rend, "asset://font/NotoSans-Regular.ttf", "regular", 1.38);
+    on_font(rend, "asset://font/NotoSans-Bold.ttf", "bold", 1.38);
 
     // Query the point size range.
     GL(glGetIntegerv(GL_ALIASED_POINT_SIZE_RANGE, range));
