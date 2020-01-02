@@ -178,6 +178,7 @@ if target_os == 'js':
         '_malloc',
         'addFunction',
         'allocate',
+        'ccall',
         'cwrap',
         'getValue',
         'intArrayFromString',
@@ -186,6 +187,7 @@ if target_os == 'js':
         'setValue',
         'stringToUTF8',
         'writeAsciiToMemory',
+        'writeArrayToMemory',
     ]
     extra_exported = ','.join("'%s'" % x for x in extra_exported)
 

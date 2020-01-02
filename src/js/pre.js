@@ -444,3 +444,31 @@ Module['on'] = function(eventName, callback) {
   }, 'idd');
   Module.core.on_click = onClickFn;
 }
+
+
+/*
+ * Function: setFont
+ * Load a font from a url and add it into the engine.
+ *
+ * Parameters:
+ *   font   - One of 'regular' or 'bold'
+ *   url    - Url to a ttf font.
+ *   scale  - User scale to apply to the font, since nanovg seem to change
+ *            the size of some fonts.
+ *
+ * Return:
+ *   A promise that can be used to be notified once the font has been loaded.
+ */
+Module['setFont'] = function(font, url, scale) {
+  return fetch(url).then(function(response) {
+    if (!response.ok) throw new Error(`Cannot get ${url}`);
+    return response.arrayBuffer();
+  }).then(function(data) {
+    data = new Uint8Array(data);
+    let ptr = Module._malloc(data.length);
+    Module.writeArrayToMemory(data, ptr);
+    Module.ccall('render_set_font', null,
+                 ['number', 'string', 'number', 'number', 'number'],
+                 [0, font, ptr, data.length, scale]);
+  });
+}

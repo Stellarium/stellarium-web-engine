@@ -1669,20 +1669,23 @@ static texture_t *create_white_texture(int w, int h)
     return tex;
 }
 
-static void set_font(renderer_gl_t *rend, const char *name,
-                     const uint8_t *data, int size,
-                     float scale)
+EMSCRIPTEN_KEEPALIVE
+void render_set_font(renderer_gl_t *rend, const char *name,
+                     const uint8_t *data, int size, float scale)
 {
     int id;
     int font;
     assert(data && size);
 
+    rend = rend ?: (void*)core->rend;
     if (strcmp(name, "regular") == 0)
         font = FONT_REGULAR;
     else if (strcmp(name, "bold") == 0)
         font = FONT_BOLD;
-    else
+    else {
         assert(false);
+        return;
+    }
 
     id = nvgCreateFontMem(rend->vg, name, data, size, 0);
     rend->fonts[font].id = id;
@@ -1700,7 +1703,7 @@ static void set_default_fonts(renderer_gl_t *rend)
     const uint8_t *data;
     for (i = 0; i < 2; i++) {
         data = asset_get_data(FONTS[i][1], &size, NULL);
-        set_font(rend, FONTS[i][0], data, size, scale);
+        render_set_font(rend, FONTS[i][0], data, size, scale);
     }
 }
 
