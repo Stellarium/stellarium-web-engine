@@ -135,6 +135,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+<script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+<script src="https://www.unpkg.com/i18next-xhr-backend/dist/umd/i18nextXHRBackend.min.js"></script>
 <script src="static/js/stellarium-web-engine.js"></script>
 
 <!-- Button component -->
@@ -165,6 +167,18 @@
 
 
 <script>
+
+  // Setup i18next for translations.
+  i18next.use(i18nextXHRBackend).init({
+    lng: 'en',
+    ns: ['gui', 'skyculture'],
+    debug: false,
+    backend: {
+      loadPath: 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/' +
+                'i18n/v1/{{ns}}/{{lng}}.json'
+    }
+  });
+
   new Vue({
     vuetify: new Vuetify({
       theme: {dark: true}
@@ -177,7 +191,7 @@
         wasmFile: 'static/js/stellarium-web-engine.wasm',
         canvas: document.getElementById('stel-canvas'),
         translateFn: function(domain, str) {
-          return str;
+          return i18next.t(str, {ns: domain});
         },
         onReady: function(stel) {
           that.stel = stel;
