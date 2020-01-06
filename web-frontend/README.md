@@ -24,6 +24,19 @@ make build
 make start
 ```
 
+Note that before you build the web GUI the first time, the JS version of
+the engine also needs to be built by running the following commands:
+
+``` bash
+# generate the engine buider docker image. Run only once.
+cd .. && make setup
+```
+
+You can the update the engine at any time by running
+``` bash
+make update-engine
+```
+
 ## Build Setup without Docker
 
 ``` bash
