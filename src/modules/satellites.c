@@ -16,20 +16,6 @@
  */
 
 /*
- * Type: qsmag_t
- * Represent an entry in the qs.mag file, that contains some extra
- * information about visible satellites.  For the moment we only use it
- * for the vmag.
- */
-typedef struct qsmag qsmag_t;
-struct qsmag {
-    UT_hash_handle  hh;    // For the global map.
-    int             id;
-    double          stdmag;
-    char            name[16];
-};
-
-/*
  * Type: satellite_t
  * Represents an individual satellite.
  */
@@ -39,7 +25,7 @@ typedef struct satellite {
     char name2[26]; // Extra name.
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
-    double stdmag; // Taken from the qsmag data.
+    double stdmag;
     double pvg[3]; // XXX: rename that.
     double pvo[2][4];
     double vmag;
@@ -51,8 +37,6 @@ typedef struct satellite {
 typedef struct satellites {
     obj_t   obj;
     char    *norad_url; // Online norad files location.
-    qsmag_t *qsmags; // Hash table id -> qsmag entry.
-    int     qsmags_status;
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
     bool    visible;
@@ -77,154 +61,11 @@ static int satellites_add_data_source(
         obj_t *obj, const char *url, const char *type, json_value *args)
 {
     satellites_t *sats = (void*)obj;
-    if (strcmp(type, "norad") == 0)
-        sats->norad_url = strdup(url);
-    else if (strcmp(type, "jsonl/sat") == 0)
+    if (strcmp(type, "jsonl/sat") == 0)
         sats->jsonl_url = strdup(url);
     else
         return 1;
     return 0;
-}
-
-/*
- * Parse a TLE sources file and add all the satellites.
- *
- * Return:
- *   The number of satellites parsed, or a negative number in case of error.
- */
-static int parse_tle_file(satellites_t *sats, const char *data,
-                          double *last_epoch)
-{
-    const char *line0, *line1, *line2;
-    char id[16];
-    int i, nb = 0, sat_num;
-    satellite_t *sat;
-    double startmfe, stopmfe, deltamin;
-    qsmag_t *qsmag;
-
-    *last_epoch = 0;
-    while (*data) {
-        line0 = data;
-        line1 = strchr(line0, '\n');
-        if (!line1) goto error;
-        line1 += 1;
-        line2 = strchr(line1, '\n');
-        if (!line2) goto error;
-        line2 += 1;
-        data  = strchr(line2, '\n');
-        if (!data) break;
-        data += 1;
-
-        snprintf(id, sizeof(id), "NORAD %.5s", line1 + 2);
-        sat = (void*)module_add_new(&sats->obj, "tle_satellite", id, NULL);
-        sat_num = atoi(line1 + 2);
-
-        sat->obj.oid = oid_create("NORA", sat_num);
-        sat->stdmag = NAN;
-        strcpy(sat->obj.type, "Asa"); // Otype code.
-
-        // If the sat is in the qsmag file, set its stdmag.
-        sat->number = atoi(line2 + 2);
-        // Copy and strip name.
-        memcpy(sat->name, line0, 24);
-        for (i = 23; sat->name[i] == ' '; i--) sat->name[i] = '\0';
-
-        // Use qsmag values if available.
-        HASH_FIND_INT(sats->qsmags, &sat->number, qsmag);
-        if (qsmag) {
-            if (qsmag->stdmag)
-                sat->stdmag = qsmag->stdmag;
-            if (*qsmag->name) {
-                snprintf(sat->name2, sizeof(sat->name2), "%s", sat->name);
-                snprintf(sat->name, sizeof(sat->name), "%s", qsmag->name);
-            }
-        }
-
-        sat->elsetrec = sgp4_twoline2rv(
-                line1, line2, 'c', 'm', 'i',
-                &startmfe, &stopmfe, &deltamin);
-
-        *last_epoch = max(*last_epoch, sgp4_get_satepoch(sat->elsetrec));
-        nb++;
-    }
-    return nb;
-error:
-    LOG_E("Cannot parse TLE file");
-    return nb;
-}
-
-static void strip_str(char *str)
-{
-    int i;
-    for (i = strlen(str) - 1; i >= 0; i--) {
-        if (str[i] != ' ') break;
-        str[i] = '\0';
-    }
-}
-
-static bool load_qsmag(satellites_t *sats)
-{
-    int size, id;
-    float stdmag;
-    const char *data, *line;
-    char url[1024], name[16];
-    qsmag_t *qsmag;
-
-    if (sats->qsmags_status >= 200 && sats->qsmags_status < 400) return true;
-    if (sats->qsmags_status) return false;
-    if (!sats->norad_url) return false;
-
-    snprintf(url, sizeof(url), "%s/%s", sats->norad_url, "qs.mag");
-    data = asset_get_data2(url, ASSET_USED_ONCE, &size, &sats->qsmags_status);
-    if (sats->qsmags_status && !data)
-        LOG_E("Error while loading %s: %d", url, sats->qsmags_status);
-    if (!data) return false;
-
-    for (line = data; line; line = strchr(line, '\n')) {
-        if (*line == '\n') line++;
-        if (!(*line)) break;
-        memset(name, 0, sizeof(name));
-        if (sscanf(line, "%5d%*13c%14c %f", &id, name, &stdmag) < 2) {
-            LOG_W("Incorrect qsmag line");
-            continue;
-        }
-        if (id <= 1 || id >= 99999)
-            continue;
-
-        qsmag = calloc(1, sizeof(*qsmag));
-        qsmag->id = id;
-        qsmag->stdmag = stdmag;
-        assert(sizeof(qsmag->name) == 16 && sizeof(name) == 16);
-        memcpy(qsmag->name, name, 16);
-        strip_str(qsmag->name);
-        HASH_ADD_INT(sats->qsmags, id, qsmag);
-    }
-    return true;
-}
-
-static bool load_norad_data(satellites_t *sats)
-{
-    int size, code, nb;
-    const char *data;
-    double last_epoch;
-    char url[1024];
-    char buf[128];
-    if (sats->loaded) return true;
-    if (!sats->norad_url) return false;
-
-    // Only visual for the moment.
-    snprintf(url, sizeof(url), "%s/%s", sats->norad_url, "visual.txt");
-    data = asset_get_data2(url, ASSET_USED_ONCE, &size, &code);
-    if (!data && code) {
-        LOG_E("Cannot load %s: %d", url, code);
-        sats->loaded = true;
-    }
-    if (!data) return false;
-    nb = parse_tle_file(sats, data, &last_epoch);
-    LOG_D("Parsed %d satellites (latest epoch: %s)", nb,
-          format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
-    sats->loaded = true;
-    return true;
 }
 
 static int load_jsonl_data(satellites_t *sats, const char *data, int size,
@@ -287,11 +128,6 @@ static int satellites_update(obj_t *obj, double dt)
         }
 
         sats->loaded = true;
-    }
-
-    if (sats->norad_url) {
-        if (!load_qsmag(sats)) return 0;
-        if (!load_norad_data(sats)) return 0;
     }
 
     return 0;
