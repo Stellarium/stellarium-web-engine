@@ -26,10 +26,25 @@
 
 
 typedef struct core core_t;
+typedef struct task task_t;
 
 extern core_t *core;    // Global core object.
 
 /******* Section: Core ****************************************************/
+
+/*
+ * Type: task_t
+ * Contains info about some extra running tasks.
+ *
+ * All the tasks will be called once before the module update.  A task runs
+ * as long as it returns zero.
+ */
+struct task
+{
+    task_t *next, *prev;
+    int (*fun)(task_t *task, double dt);
+    void *user;
+};
 
 /* Type: core_t
  * Contains all the modules and global state of the program.
@@ -139,6 +154,9 @@ struct core
     // Click callback that can be set by the client.  If it returns true,
     // the event is canceled (no selection is made).
     bool (*on_click)(double x, double y);
+
+    // List of running tasks.
+    task_t *tasks;
 
     // Can be used for debugging.  It's conveniant to have an exposed test
     // attribute.
@@ -447,3 +465,11 @@ obj_t *city_create(const char *name, const char *country_code,
  *   NULL if no name was found.  A pointer to the passed buffer otherwise.
  */
 const char *skycultures_get_name(obj_t *skycultures, int hip, char buf[128]);
+
+/*
+ * Function: core_add_task
+ * Add a function that will be executed at each frame.
+ *
+ * The runs as along at it returns zero.
+ */
+void core_add_task(int (*fun)(task_t *task, double dt), void *user);

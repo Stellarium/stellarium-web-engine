@@ -484,6 +484,7 @@ int core_update(double dt)
     double lwmax;
     int r;
     obj_t *atm, *module;
+    task_t *task, *task_tmp;
 
     atm = core_get_module("atmosphere");
     assert(atm);
@@ -516,6 +517,13 @@ int core_update(double dt)
     core_update_direction(dt);
     core_update_mount(dt);
     core_update_time(dt);
+
+    DL_FOREACH_SAFE(core->tasks, task, task_tmp) {
+        if (task->fun(task, dt) != 0) {
+            DL_DELETE(core->tasks, task);
+            free(task);
+        }
+    }
 
     DL_SORT(core->obj.children, modules_sort_cmp);
     DL_FOREACH(core->obj.children, module) {
@@ -1152,6 +1160,14 @@ const char *otype_to_str(const char *otype)
 {
     const char *res = otype_get_str(otype);
     return res ? res : "";
+}
+
+void core_add_task(int (*fun)(task_t *task, double dt), void *user)
+{
+    task_t *task = calloc(1, sizeof(*task));
+    task->fun = fun;
+    task->user = user;
+    DL_APPEND(core->tasks, task);
 }
 
 static obj_klass_t core_klass = {
