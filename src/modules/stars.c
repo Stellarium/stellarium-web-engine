@@ -851,7 +851,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     nuniq_to_pix(hint, &order, &pix);
     tile = get_tile(stars, 0, order, pix, false, &code);
     if (!tile) {
-        if (!code) return OBJ_AGAIN; // Try again later.
+        if (!code) return MODULE_AGAIN; // Try again later.
         return -1;
     }
     for (i = 0; i < tile->nb; i++) {

@@ -10,6 +10,11 @@
 #ifndef MODULE_H
 #define MODULE_H
 
+enum {
+    MODULE_AGAIN       = 2 // Returned if obj_list can be called again.
+};
+
+
 /*
  * Function: module_update
  * Update the module.
@@ -32,10 +37,10 @@ int module_update(obj_t *module, double dt);
  *   f        - Callback function called once per object.
  *
  * Return:
- *    0         - Success.
- *   -1         - The object doesn't support listing, or a hint is needed.
- *   OBJ_AGAIN  - Some resources are still loading and so calling the function
- *                again later might return more values.
+ *    0           - Success.
+ *   -1           - The object doesn't support listing, or a hint is needed.
+ *   MODULE_AGAIN - Some resources are still loading and so calling the
+ *                  function again later might return more values.
  */
 int module_list_objs(const obj_t *module, observer_t *obs,
                      double max_mag, uint64_t hint, void *user,

@@ -53,10 +53,6 @@ enum {
     OBJ_LISTABLE     = 1 << 2,
 };
 
-enum {
-    OBJ_AGAIN       = 1 // Returned if obj_list can be called again.
-};
-
 typedef struct _json_value json_value;
 typedef struct attribute attribute_t;
 typedef struct obj obj_t;
