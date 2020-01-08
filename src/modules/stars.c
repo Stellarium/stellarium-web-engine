@@ -60,6 +60,7 @@ struct survey {
     char    url[URL_MAX_SIZE - 256];
     int     min_order;
     double  min_vmag; // Don't render survey below this mag.
+    bool    is_gaia;
 };
 
 /*
@@ -610,7 +611,7 @@ static int render_visitor(int order, int pix, void *user)
 {
     PROFILE(stars_render_visitor, PROFILE_AGGREGATE);
     stars_t *stars = USER_GET(user, 0);
-    int survey = *((int*)USER_GET(user, 1));
+    const survey_t *survey = (void*)USER_GET(user, 1);
     painter_t painter = *(const painter_t*)USER_GET(user, 2);
     int *nb_tot = USER_GET(user, 3);
     int *nb_loaded = USER_GET(user, 4);
@@ -626,10 +627,10 @@ static int render_visitor(int order, int pix, void *user)
     // Early exit if the tile is clipped.
     if (painter_is_healpix_clipped(&painter, FRAME_ASTROM, order, pix, true))
         return 0;
-    if (order < stars->surveys[survey].min_order) return 1;
+    if (order < survey->min_order) return 1;
 
     (*nb_tot)++;
-    tile = get_tile(stars, &stars->surveys[survey], order, pix, false, &code);
+    tile = get_tile(stars, survey, order, pix, false, &code);
     if (code) (*nb_loaded)++;
 
     if (!tile) goto end;
@@ -658,7 +659,7 @@ static int render_visitor(int order, int pix, void *user)
         };
         n++;
         selected = core->selection && s->oid == core->selection->oid;
-        if (selected || (stars->hints_visible && survey != SURVEY_GAIA))
+        if (selected || (stars->hints_visible && !survey->is_gaia))
             star_render_name(&painter, s, FRAME_ASTROM, s->pos, size, color);
     }
     paint_2d_points(&painter, n, points);
@@ -689,7 +690,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
         if (    !isnan(stars->surveys[i].min_vmag) &&
                 stars->surveys[i].min_vmag > painter.stars_limit_mag)
             continue;
-        hips_traverse(USER_PASS(stars, &i, &painter,
+        hips_traverse(USER_PASS(stars, &stars->surveys[i], &painter,
                       &nb_tot, &nb_loaded, &illuminance),
                       render_visitor);
     }
@@ -828,13 +829,14 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     stars_t *stars = (void*)obj;
     star_t *star;
     hips_iterator_t iter;
+    // XXX: for the moment we only list the first survey!
+    survey_t *survey = &stars->surveys[0];
 
     // Without hint, we have to iter all the tiles.
     if (!hint) {
         hips_iter_init(&iter);
         while (hips_iter_next(&iter, &order, &pix)) {
-            tile = get_tile(stars, &stars->surveys[0], order, pix, false,
-                            &code);
+            tile = get_tile(stars, survey, order, pix, false, &code);
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
                 if (tile->sources[i].vmag > max_mag) continue;
@@ -852,7 +854,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    tile = get_tile(stars, &stars->surveys[0], order, pix, false, &code);
+    tile = get_tile(stars, survey, order, pix, false, &code);
     if (!tile) {
         if (!code) return MODULE_AGAIN; // Try again later.
         return -1;
@@ -912,6 +914,7 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
 
     if (key && strcasecmp(key, "gaia") == 0) {
         survey = &stars->surveys[SURVEY_GAIA];
+        survey->is_gaia = true;
     }
 
     // Already filled.
