@@ -129,19 +129,16 @@ def read_tile(path):
         id, type, unit, ofs, size = struct.unpack('4s4siii', f.read(20))
         id = id.decode().strip('\0')
         type = type.decode().strip('\0')
+        if type == 's': type = '%ds' % size
         cols.append(dict(id=id, type=type, unit=unit, ofs=ofs, size=size))
     data_len, comp_data_len = struct.unpack('II', f.read(8))
     comp_data = f.read(comp_data_len)
     data = zlib.decompress(comp_data)
     data = shuffle_bytes(data, nb_sources)
+
     ret = []
-    for i in range(nb_sources):
-        source = {}
-        for col in cols:
-            id = col['id']
-            t = col['type']
-            if t == 's': t = '%ds' % col['size']
-            pos = i * row_size + col['ofs']
-            source[id] = struct.unpack(t, data[pos: pos + col['size']])[0]
-        ret.append(source)
+    format = ''.join(col['type'] for col in cols)
+    keys = [x['id'] for x in cols]
+    for line in struct.iter_unpack(format, data):
+        ret.append({k: v for k, v in zip(keys, line)})
     return ret
