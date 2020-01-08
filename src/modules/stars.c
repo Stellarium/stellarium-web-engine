@@ -53,6 +53,15 @@ typedef struct {
     star_data_t data;
 } star_t;
 
+typedef struct survey survey_t;
+struct survey {
+    stars_t *stars;
+    hips_t *hips;
+    char    url[URL_MAX_SIZE - 256];
+    int     min_order;
+    double  min_vmag; // Don't render survey below this mag.
+};
+
 /*
  * Type: stars_t
  * The module object.
@@ -63,14 +72,7 @@ struct stars {
 
     // The stars module supports up to two surveys.
     // One for the bundled stars, and one for the online gaia survey.
-    struct {
-        stars_t *stars;
-        hips_t  *hips;
-        char    url[URL_MAX_SIZE - 256];
-        int     min_order;
-        double  min_vmag; // Don't render survey below this mag.
-    } surveys[2];
-
+    survey_t        surveys[2];
     bool            visible;
     // Hints/labels magnitude offset
     double          hints_mag_offset;
@@ -457,7 +459,7 @@ static int on_file_tile_loaded(const char type[4],
     int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
     double vmag, gmag, ra, de, pra, pde, plx, bv;
     char ids[256] = {};
-    typeof(((stars_t*)0)->surveys[0]) *survey = USER_GET(user, 0);
+    survey_t *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
     void *table_data;
@@ -558,7 +560,7 @@ static const void *stars_create_tile(
         int *cost, int *transparency)
 {
     tile_t *tile = NULL;
-    typeof(((stars_t*)0)->surveys[0]) *survey = user;
+    survey_t *survey = user;
     eph_load(data, size, USER_PASS(survey, &tile), on_file_tile_loaded);
     if (tile) *cost = tile->nb * sizeof(*tile->sources);
     return tile;
