@@ -897,8 +897,9 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
     };
-    int code, survey = SURVEY_DEFAULT;
+    int code;
     double release_date = 0;
+    survey_t *survey = &stars->surveys[SURVEY_DEFAULT];
 
     // We can't add the source until the properties file has been parsed.
     args = hips_load_properties(url, &code);
@@ -909,33 +910,31 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
     if (!args_type || strcmp(args_type, "stars")) return 1;
 
     if (key && strcasecmp(key, "gaia") == 0) {
-        survey = SURVEY_GAIA;
+        survey = &stars->surveys[SURVEY_GAIA];
     }
 
     // Already filled.
-    if (stars->surveys[survey].hips) return 1;
+    if (survey->hips) return 1;
 
     release_date_str = json_get_attr_s(args, "hips_release_date");
     if (release_date_str)
         release_date = hips_parse_date(release_date_str);
 
-    survey_settings.user = &stars->surveys[survey];
-    snprintf(stars->surveys[survey].url, sizeof(stars->surveys[survey].url),
-             "%s", url);
-    stars->surveys[survey].hips = hips_create(
-            stars->surveys[survey].url, release_date, &survey_settings);
+    survey_settings.user = survey;
+    snprintf(survey->url, sizeof(survey->url), "%s", url);
+    survey->hips = hips_create(survey->url, release_date, &survey_settings);
 
     order_min_str = json_get_attr_s(args, "hips_order_min");
     if (order_min_str)
-        stars->surveys[survey].min_order = atoi(order_min_str);
+        survey->min_order = atoi(order_min_str);
 
     // Tell online gaia survey to only start after the vmag for this survey.
     // XXX: We should remove that.
-    if (survey == SURVEY_DEFAULT) {
+    if (survey == &stars->surveys[SURVEY_DEFAULT]) {
         max_vmag_str = json_get_attr_s(args, "max_vmag");
         if (max_vmag_str)
             stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
-        stars->surveys[survey].min_vmag = NAN;
+        survey->min_vmag = NAN;
     }
 
     json_builder_free(args);
