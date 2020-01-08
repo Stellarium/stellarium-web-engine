@@ -424,6 +424,8 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
         return sun_get_vmag(planet, obs);
     case MOON:
         return moon_get_vmag(planet, obs);
+    case EARTH:
+        return 0.0;
 
     case MERCURY:
     case VENUS:
