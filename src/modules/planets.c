@@ -453,6 +453,7 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
         planet_get_pvo(planet, obs, pvo, true);
         rho = vec3_norm(pvh[0]);
         rp = vec3_norm(pvo[0]);
+        assert(planet->albedo);
         mag = -1.0 / 0.2 * log10(sqrt(planet->albedo) *
                 2.0 * planet->radius_m / 1000.0 / 1329.0);
         return mag + 5 * log10(rho * rp);
