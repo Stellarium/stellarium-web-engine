@@ -1286,40 +1286,28 @@ static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
 
 
 static int planets_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+        obj_t *obj, const char *url, const char *key)
 {
-    const char *args_type, *frame, *release_date_str;
-    double release_date = 0;
     planets_t *planets = (void*)obj;
     planet_t *p;
 
-    if (!type || !args || strcmp(type, "hips")) return 1;
-    args_type = json_get_attr_s(args, "type");
-    if (!args_type) return 1;
-    if (strcmp(args_type, "planet") && strcmp(args_type, "planet-normal"))
-        return 1;
-
-    frame = json_get_attr_s(args, "hips_frame");
-    if (!frame) return 1;
-    release_date_str = json_get_attr_s(args, "hips_release_date");
-    if (release_date_str)
-        release_date = hips_parse_date(release_date_str);
-
-    if (strcmp(frame, "default") == 0) {
-        planets->default_hips = hips_create(url, release_date, NULL);
+    if (strcmp(key, "default") == 0) {
+        planets->default_hips = hips_create(url, 0, NULL);
         hips_set_frame(planets->default_hips, FRAME_ICRF);
-        return 1;
+        return 0;
     }
 
-    p = planet_get_by_name(planets, frame);
-    if (!p) return 1;
-    if (strcmp(args_type, "planet") == 0) {
-        p->hips = hips_create(url, release_date, NULL);
-        hips_set_frame(p->hips, FRAME_ICRF);
-    } else {
-        p->hips_normalmap = hips_create(url, release_date, NULL);
+    if (strcmp(key, "moon-normal") == 0) {
+        p = planet_get_by_name(planets, "moon");
+        p->hips_normalmap = hips_create(url, 0, NULL);
         hips_set_frame(p->hips_normalmap, FRAME_ICRF);
+        return 0;
     }
+
+    p = planet_get_by_name(planets, key);
+    if (!p) return -1;
+    p->hips = hips_create(url, 0, NULL);
+    hips_set_frame(p->hips, FRAME_ICRF);
     return 0;
 }
 

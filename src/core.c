@@ -112,20 +112,6 @@ static int core_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
-static int core_add_data_source(obj_t *obj, const char *url, const char *type,
-                                json_value *args)
-{
-    obj_t *module;
-    int r;
-    DL_FOREACH(core->obj.children, module) {
-        if (!(module->klass->flags & OBJ_MODULE)) continue;
-        r = module_add_data_source(module, url, type, args);
-        if (r == 1) continue; // Can't add here.
-        return r;
-    }
-    return 1;
-}
-
 static int modules_sort_cmp(void *a, void *b)
 {
     obj_t *at, *bt;
@@ -171,56 +157,66 @@ obj_t *core_get_obj_at(double x, double y, double max_dist)
     return NULL;
 }
 
+static void add_source(const char *module, const char *url, const char *key)
+{
+    obj_t *m = NULL;
+    if (module) {
+        m = core_get_module(module);
+        assert(m);
+    }
+    module_add_data_source(m, url, key);
+}
+
 EMSCRIPTEN_KEEPALIVE
 void core_add_default_sources(void)
 {
-    #define BASE_URL "https://stellarium.sfo2.cdn.digitaloceanspaces.com/"
-    #define add_source(url, type) \
-        module_add_data_source(NULL, url, type, NULL)
+    #define BASE "https://stellarium.sfo2.cdn.digitaloceanspaces.com/"
 
-    add_source(BASE_URL "landscapes/v1/guereins", "landscape");
-    add_source(BASE_URL "landscapes/v1", NULL);
+    add_source("landscapes", BASE "landscapes/v1/guereins", "guereins");
+    add_source("landscapes", BASE "landscapes/v1/hurricane", "hurricane");
+    add_source("landscapes", BASE "landscapes/v1/zero", "zero");
 
     // Bundled star survey.
-    add_source("asset://stars", "hips");
+    add_source("stars", "asset://stars", NULL);
     // Online gaia survey.
-    add_source(BASE_URL "surveys/gaia/v1?v=2019-02-11T05:34Z", "hips");
+    add_source("stars", BASE "surveys/gaia/v1", "gaia");
     // Online DSO survey.
-    add_source(BASE_URL "surveys/dso/v1", "hips");
+    add_source("dsos", BASE "surveys/dso/v1", NULL);
 
     // Skycultures.
-    add_source(BASE_URL "skycultures/v2", NULL);
+    add_source("skycultures", BASE "skycultures/v2/western", "western");
+    add_source("skycultures", BASE "skycultures/v2/belarusian", "belarusion");
 
-    add_source(BASE_URL "surveys/dss/v1", "hips");
-    add_source(BASE_URL "surveys/milkyway/v1", "hips");
+    add_source("dss", BASE "surveys/dss/v1", "hips");
+    add_source("milkyway", BASE "surveys/milkyway/v1", "hips");
 
     // All the planets.
-    add_source(BASE_URL "surveys/sso/callisto/v1", "hips");
-    add_source(BASE_URL "surveys/sso/default/v1", "hips");
-    add_source(BASE_URL "surveys/sso/europa/v1", "hips");
-    add_source(BASE_URL "surveys/sso/ganymede/v1", "hips");
-    add_source(BASE_URL "surveys/sso/io/v1", "hips");
-    add_source(BASE_URL "surveys/sso/jupiter/v1", "hips");
-    add_source(BASE_URL "surveys/sso/mars/v1", "hips");
-    add_source(BASE_URL "surveys/sso/mercury/v1", "hips");
-    add_source(BASE_URL "surveys/sso/moon/v1", "hips");
-    add_source(BASE_URL "surveys/sso/moon-normal/v1", "hips");
-    add_source(BASE_URL "surveys/sso/neptune/v1", "hips");
-    add_source(BASE_URL "surveys/sso/saturn/v1", "hips");
-    add_source(BASE_URL "surveys/sso/sun/v1", "hips");
-    add_source(BASE_URL "surveys/sso/uranus/v1", "hips");
-    add_source(BASE_URL "surveys/sso/venus/v1", "hips");
+    add_source("planets", BASE "surveys/sso/callisto/v1", "callisto");
+    add_source("planets", BASE "surveys/sso/default/v1", "default");
+    add_source("planets", BASE "surveys/sso/europa/v1", "europa");
+    add_source("planets", BASE "surveys/sso/ganymede/v1", "ganymede");
+    add_source("planets", BASE "surveys/sso/io/v1", "io");
+    add_source("planets", BASE "surveys/sso/jupiter/v1", "jupiter");
+    add_source("planets", BASE "surveys/sso/mars/v1", "mars");
+    add_source("planets", BASE "surveys/sso/mercury/v1", "mercury");
+    add_source("planets", BASE "surveys/sso/moon/v1", "moon");
+    add_source("planets", BASE "surveys/sso/moon-normal/v1", "moon-normal");
+    add_source("planets", BASE "surveys/sso/neptune/v1", "neptune");
+    add_source("planets", BASE "surveys/sso/saturn/v1", "saturn");
+    add_source("planets", BASE "surveys/sso/sun/v1", "sun");
+    add_source("planets", BASE "surveys/sso/uranus/v1", "uranus");
+    add_source("planets", BASE "surveys/sso/venus/v1", "venus");
 
     // MPC data.
-    add_source("asset://mpcorb.dat", "mpc_asteroids");
-    add_source(BASE_URL "mpc/v1/CometEls.txt", "mpc_comets");
+    add_source("minor_planets", "asset://mpcorb.dat", "mpc_asteroids");
+    add_source("comets", BASE "mpc/v1/CometEls.txt", "mpc_comets");
 
     // Artificial satellites files.
-    add_source(BASE_URL "/skysources/v1/tle_satellite.jsonl.gz?v=2019-09-16",
+    add_source("satellites",
+               BASE "/skysources/v1/tle_satellite.jsonl.gz?v=2019-09-16",
                "jsonl/sat");
 
-    #undef ADD_SOURCE
-    #undef BASE_URL
+    #undef BASE
 }
 
 // Set the default init values.
@@ -1177,7 +1173,6 @@ static obj_klass_t core_klass = {
     .get = core_get,
     .get_by_oid = core_get_by_oid,
     .list = core_list,
-    .add_data_source = core_add_data_source,
     .attributes = (attribute_t[]) {
         PROPERTY(utcoffset, TYPE_INT, MEMBER(core_t, utc_offset),
                  .on_changed = core_on_utcoffset_changed),

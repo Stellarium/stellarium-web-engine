@@ -714,19 +714,14 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
     return nb;
 }
 
-static int dsos_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+static int dsos_add_data_source(obj_t *obj, const char *url, const char *key)
 {
     dsos_t *dsos = (void*)obj;
-    const char *args_type;
     hips_settings_t survey_settings = {
         .create_tile = dsos_create_tile,
         .delete_tile = del_tile,
     };
-    if (!type || !args || strcmp(type, "hips")) return 1;
-    args_type = json_get_attr_s(args, "type");
-    if (!args_type || strcmp(args_type, "dso")) return 1;
-    if (dsos->survey) return 1; // Already present.
+    if (dsos->survey) return -1; // Already present.
     dsos->survey = hips_create(url, 0, &survey_settings);
     return 0;
 }

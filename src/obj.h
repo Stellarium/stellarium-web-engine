@@ -142,8 +142,7 @@ struct obj_klass
                 int (*f)(void *user, obj_t *obj));
 
     // Add a source of data.
-    int (*add_data_source)(obj_t *obj, const char *url, const char *type,
-                           json_value *args);
+    int (*add_data_source)(obj_t *obj, const char *url, const char *key);
 
     // Return the render order.
     // By default this return the class attribute `render_order`.

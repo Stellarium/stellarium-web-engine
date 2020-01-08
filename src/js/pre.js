@@ -13,12 +13,6 @@ Module['locateFile'] = function(path) {
   return path;
 }
 
-Module['addDataSource'] = function(args) {
-  var add_data_source = Module.cwrap('module_add_data_source', 'number', [
-          'number', 'string', 'string', 'number']);
-  add_data_source(0, args.url, args.type || 0, 0);
-}
-
 Module['onRuntimeInitialized'] = function() {
   // Init OpenGL context.
   if (Module.canvasElement) Module.canvas = Module.canvasElement;

@@ -158,12 +158,12 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
 }
 
 static int mplanets_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+        obj_t *obj, const char *url, const char *key)
 {
     const char *data;
     int size, code;
     mplanets_t *mplanets = (void*)obj;
-    if (strcmp(type, "mpc_asteroids") != 0) return 1;
+    if (strcmp(key, "mpc_asteroids") != 0) return 1;
     data = asset_get_data(url, &size, &code);
     if (!data) {
         LOG_W("Cannot read asteroids data (%s)", url);

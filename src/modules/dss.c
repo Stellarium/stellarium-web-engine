@@ -93,21 +93,11 @@ static int dss_update(obj_t *obj, double dt)
     return fader_update(&dss->visible, dt);
 }
 
-static int dss_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+static int dss_add_data_source(obj_t *obj, const char *url, const char *key)
 {
     dss_t *dss = (dss_t*)obj;
-    const char *title, *release_date_str;
-    double release_date = 0;
-
-    if (dss->hips) return 1;
-    if (!type || !args || strcmp(type, "hips")) return 1;
-    title = json_get_attr_s(args, "obs_title");
-    if (!title || strcasecmp(title, "DSS colored") != 0) return 1;
-    release_date_str = json_get_attr_s(args, "hips_release_date");
-    if (release_date_str)
-        release_date = hips_parse_date(release_date_str);
-    dss->hips = hips_create(url, release_date, NULL);
+    if (dss->hips) return -1;
+    dss->hips = hips_create(url, 0, NULL);
     return 0;
 }
 

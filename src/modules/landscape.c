@@ -201,18 +201,17 @@ static void landscape_on_active_changed(obj_t *obj, const attribute_t *attr)
 }
 
 static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
-                                 const char *id, json_value *args)
+                                 const char *key)
 {
     landscape_t *ls;
-    const char *name = NULL;
 
-    ls = (void*)module_add_new(&lss->obj, "landscape", id, NULL);
+    ls = (void*)module_add_new(&lss->obj, "landscape", key, NULL);
     ls->uri = strdup(uri);
-    if (strcmp(id, "zero") != 0) {
+    if (strcmp(key, "zero") != 0) {
         ls->hips = hips_create(uri, 0, NULL);
         hips_set_label(ls->hips, "Landscape");
         hips_set_frame(ls->hips, FRAME_OBSERVED);
-        if (args) name = json_get_attr_s(args, "obs_title");
+        ls->info.name = strdup(key);
     } else {
         // Zero horizon shape.
         ls->shape = module_add_new(&ls->obj, "circle", NULL, NULL);
@@ -221,10 +220,8 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
         obj_set_attr(ls->shape, "size", VEC(M_PI, M_PI));
         obj_set_attr(ls->shape, "color", VEC(0.1, 0.15, 0.1, 1.0));
         obj_set_attr(ls->shape, "border_color", VEC(0.2, 0.4, 0.1, 1.0));
-        name = "Zero Horizon";
+        ls->info.name = strdup("Zero Horizon");
     }
-
-    ls->info.name = strdup(name ?: id);
     return ls;
 }
 
@@ -273,25 +270,14 @@ static void landscapes_gui(obj_t *obj, int location)
 }
 
 static int landscapes_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+        obj_t *obj, const char *url, const char *key)
 {
-    const char *key;
-    const char *args_type;
     landscapes_t *lss = (landscapes_t*)obj;
     landscape_t *ls;
 
-    if (!type) return 1;
-    if (strcmp(type, "landscape") && strcmp(type, "hips")) return 1;
-    if (strcmp(type, "hips") == 0) {
-        if (!args) return 1;
-        args_type = json_get_attr_s(args, "type");
-        if (!args_type || strcmp(args_type, "landscape")) return 1;
-    }
-
-    key = strrchr(url, '/') + 1;
     // Skip if we already have it.
     if (obj_get((obj_t*)lss, key, 0)) return 0;
-    ls = add_from_uri(lss, url, key, args);
+    ls = add_from_uri(lss, url, key);
     // If this is the first landscape, use it immediatly.
     if (ls == (void*)lss->obj.children) {
         obj_set_attr((obj_t*)ls, "active", true);

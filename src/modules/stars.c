@@ -864,25 +864,49 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     return 0;
 }
 
-static int stars_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+static int hips_property_handler(void* user, const char* section,
+                                 const char* name, const char* value)
+{
+    json_value *args = user;
+    json_object_push(args, name, json_string_new(value));
+    return 0;
+}
+
+static json_value *hips_load_properties(const char *url, int *code)
+{
+    char path[1024];
+    const char *data;
+    json_value *ret;
+    snprintf(path, sizeof(path), "%s/properties", url);
+    data = asset_get_data(path, NULL, code);
+    if (!data) return NULL;
+    ret = json_object_new(0);
+    ini_parse_string(data, hips_property_handler, ret);
+    return ret;
+}
+
+static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
 {
     stars_t *stars = (stars_t*)obj;
-    const char *args_type, *title, *release_date_str, *max_vmag_str,
+    json_value *args;
+    const char *args_type, *release_date_str, *max_vmag_str,
                *order_min_str;
     hips_settings_t survey_settings = {
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
     };
-    int survey = SURVEY_DEFAULT;
+    int code, survey = SURVEY_DEFAULT;
     double release_date = 0;
 
-    if (!type || !args || strcmp(type, "hips")) return 1;
+    // We can't add the source until the properties file has been parsed.
+    args = hips_load_properties(url, &code);
+    if (code == 0) return MODULE_AGAIN;
+
+    if (!args) return -1;
     args_type = json_get_attr_s(args, "type");
-    title = json_get_attr_s(args, "obs_title");
     if (!args_type || strcmp(args_type, "stars")) return 1;
 
-    if (title && strcasecmp(title, "gaia") == 0) {
+    if (key && strcasecmp(key, "gaia") == 0) {
         survey = SURVEY_GAIA;
     }
 
@@ -912,6 +936,7 @@ static int stars_add_data_source(
         stars->surveys[survey].min_vmag = NAN;
     }
 
+    json_builder_free(args);
     return 0;
 }
 

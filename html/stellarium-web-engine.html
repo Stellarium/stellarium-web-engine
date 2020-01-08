@@ -196,24 +196,16 @@
         onReady: function(stel) {
           that.stel = stel;
           // Add all data sources.
-          var baseUrl = 'https://data.stellarium.org/';
           var doUrl = 'https://stellarium.sfo2.digitaloceanspaces.com/';
-          stel.addDataSource({url: 'asset://stars', type: 'hips'});
-          stel.addDataSource({url: doUrl + 'skycultures/v2/western',
-                              type: 'skyculture'});
-          stel.addDataSource({url: baseUrl + 'surveys/dso', type: 'hips'});
-          stel.addDataSource({url: baseUrl + 'surveys/gaia_dr2_v2' +
-                                             '?v=2019-02-11T05:34Z',
-                              type: 'hips'});
-          stel.addDataSource({url: baseUrl + 'landscapes'});
-          stel.addDataSource({url: baseUrl + 'surveys', type: 'hipslist'});
-          stel.addDataSource({url: 'https://alasky.unistra.fr/DSS/DSSColor',
-                              type: 'hips'});
-          stel.addDataSource({url: 'asset://mpcorb.dat',
-                              type: 'mpc_asteroids'});
-          stel.addDataSource({url: baseUrl + 'mpc/CometEls.txt',
-                              type: 'mpc_comets'});
-          stel.addDataSource({url: baseUrl + 'norad', type: 'norad'});
+          let core = stel.core;
+          core.stars.addDataSource({url: 'asset://stars'});
+          core.skycultures.addDataSource({url: doUrl + 'skycultures/v2/western', key: 'western'});
+          core.dsos.addDataSource({url: doUrl + 'surveys/dso/v1'});
+          core.stars.addDataSource({url: doUrl + 'surveys/gaia/v1', key: 'gaia'});
+          core.landscapes.addDataSource({url: doUrl + 'landscapes/v1/guereins', key: 'guereins'});
+          core.dss.addDataSource({url: doUrl + 'surveys/dss/v1'});
+          core.minor_planets.addDataSource({url: 'asset://mpcorb.dat', key: 'mpc_asteroids'});
+          core.comets.addDataSource({url: doUrl + 'mpc/v1/CometEls.txt', key: 'mpc_comets'});
 
           // Force ui update when there is any change.
           stel.change(function(obj, attr) {

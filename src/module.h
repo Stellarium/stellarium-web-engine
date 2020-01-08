@@ -55,19 +55,13 @@ int module_list_objs2(const obj_t *obj, observer_t *obs,
  * Add a data source url to a module
  *
  * Parameters:
- *   module - a module, or NULL for any module.
- *   url    - base url of the data.
- *   type   - type of data.  NULL for directory.
- *   args   - additional arguments passed.  Can be used by the modules to
- *            check if they can handle the source or not.
- *
- * Return:
- *   0 if the source was accepted.
- *   1 if the source was no recognised.
- *   a negative error code otherwise.
+ *   module - A module.
+ *   url    - Url of the data.
+ *   key    - Key passed to the module.  The meaning depends on the module,
+ *            and is used to differentiate the sources when a module accepts
+ *            several sources.
  */
-int module_add_data_source(obj_t *module, const char *url, const char *type,
-                           json_value *args);
+int module_add_data_source(obj_t *module, const char *url, const char *key);
 
 
 //XXX: probably should rename this to obj_query.

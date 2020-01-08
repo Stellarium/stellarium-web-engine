@@ -282,6 +282,13 @@ Module.afterInit(function() {
     return ret.v;
   }
 
+  SweObj.prototype.addDataSource = function(args) {
+    var add_data_source = Module.cwrap('module_add_data_source', 'number', [
+          'number', 'string', 'string']);
+    add_data_source(this.v, args.url, args.key || 0);
+  }
+
+
   Module['getModule'] = function(name) {
     var obj = core_get_module(name);
     return obj ? new SweObj(obj) : null;

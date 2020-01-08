@@ -284,16 +284,13 @@ static int skycultures_update(obj_t *obj, double dt)
 }
 
 static int skycultures_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+        obj_t *obj, const char *url, const char *key)
 {
-    const char *key;
     skycultures_t *cults = (void*)obj;
     skyculture_t *cult;
 
-    if (!type || strcmp(type, "skyculture") != 0) return 1;
-    key = strrchr(url, '/') + 1;
     // Skip if we already have it.
-    if (module_get_child(&cults->obj, key)) return 0;
+    if (module_get_child(&cults->obj, key)) return -1;
     cult = add_from_uri(cults, url, key);
     if (!cult) LOG_W("Cannot add skyculture (%s)", url);
     // If it's the default skyculture (western) activate it immediatly.

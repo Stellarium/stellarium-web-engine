@@ -259,10 +259,10 @@ static int comets_init(obj_t *obj, json_value *args)
 }
 
 static int comets_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+        obj_t *obj, const char *url, const char *key)
 {
     comets_t *comets = (void*)obj;
-    if (strcmp(type, "mpc_comets") != 0) return 1;
+    if (strcmp(key, "mpc_comets") != 0) return -1;
     comets->source_url = strdup(url);
     return 0;
 }

@@ -68,30 +68,55 @@ int module_list_objs2(const obj_t *obj, observer_t *obs,
     return module_list_objs(obj, obs, max_mag, 0, user, f);
 }
 
+static int module_add_data_source_task(task_t *task, double dt)
+{
+    struct {
+        obj_t *module;
+        char *url;
+        char *key;
+    } *data = task->user;
+    int r;
+    obj_t *module = data->module;
+    r = module->klass->add_data_source(module, data->url, data->key);
+    if (r == MODULE_AGAIN) return 0;
+    free(data->url);
+    free(data->key);
+    free(data);
+    return 1;
+}
+
 /*
  * Function: module_add_data_source
  * Add a data source url to a module
  *
  * Parameters:
- *   module - a module, or NULL for any module.
- *   url    - base url of the data.
- *   type   - type of data.  NULL for directory.
- *   args   - additional arguments passed.  Can be used by the modules to
- *            check if they can handle the source or not.
- *
- * Return:
- *   0 if the source was accepted.
- *   1 if the source was no recognised.
- *   a negative error code otherwise.
+ *   module - A module.
+ *   url    - Url of the data.
+ *   key    - Key passed to the module.  The meaning depends on the module,
+ *            and is used to differentiate the sources when a module accepts
+ *            several sources.
  */
 EMSCRIPTEN_KEEPALIVE
-int module_add_data_source(obj_t *obj, const char *url, const char *type,
-                           json_value *args)
+int module_add_data_source(obj_t *module, const char *url, const char *key)
 {
-    if (!obj) obj = &core->obj;
-    if (obj->klass->add_data_source)
-        return obj->klass->add_data_source(obj, url, type, args);
-    return 1; // Not recognised.
+    int r;
+    assert(module);
+    assert(module->klass->add_data_source);
+    r = module->klass->add_data_source(module, url, key);
+    // If the module needs to be called again (for example to have time to
+    // read a hips properties file, we enqueue a call in the core tasks.
+    if (r == MODULE_AGAIN) {
+        struct {
+            obj_t *module;
+            char *url;
+            char *key;
+        } *data = calloc(1, sizeof(*data));
+        data->module = module;
+        data->url = strdup(url);
+        data->key = strdup(key);
+        core_add_task(module_add_data_source_task, data);
+    }
+    return r;
 }
 
 

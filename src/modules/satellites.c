@@ -58,13 +58,12 @@ static int satellites_init(obj_t *obj, json_value *args)
 }
 
 static int satellites_add_data_source(
-        obj_t *obj, const char *url, const char *type, json_value *args)
+        obj_t *obj, const char *url, const char *key)
 {
     satellites_t *sats = (void*)obj;
-    if (strcmp(type, "jsonl/sat") == 0)
-        sats->jsonl_url = strdup(url);
-    else
-        return 1;
+    if (strcmp(key, "jsonl/sat") != 0)
+        return -1;
+    sats->jsonl_url = strdup(url);
     return 0;
 }
 
