@@ -123,13 +123,6 @@ static int hips_property_handler(void* user, const char* section,
     return 0;
 }
 
-static int on_sub_dir(void *user, const char *path, int is_dir)
-{
-    if (!is_dir) return 0;
-    module_add_data_source(NULL, path, NULL, NULL);
-    return 0;
-}
-
 static int process_dir(source_t *source)
 {
     const char *data;
@@ -152,10 +145,6 @@ static int process_dir(source_t *source)
         return 1;
     }
 
-    // Finally try to iter for subdirectories.
-    if (strncmp(source->url, "http", 4) != 0) {
-        sys_list_dir(source->url, NULL, on_sub_dir);
-    }
     return 1;
 }
 
