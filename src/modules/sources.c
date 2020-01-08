@@ -24,7 +24,6 @@
 
 enum {
     SOURCE_DIR = 0,
-    SOURCE_HIPSLIST,
     SOURCE_HIPS,
 };
 
@@ -53,10 +52,6 @@ static int add_data_source(obj_t *obj, const char *url, const char *type,
     if (!type) {
         source = calloc(1, sizeof(*source));
         source->url = strdup(url);
-    } else if (strcmp(type, "hipslist") == 0) {
-        source = calloc(1, sizeof(*source));
-        source->url = strdup(url);
-        source->type = SOURCE_HIPSLIST;
     } else if (strcmp(type, "hips") == 0 && !args) {
         source = calloc(1, sizeof(*source));
         source->url = strdup(url);
@@ -120,18 +115,6 @@ static int parse_index(const char *base_url, const char *data)
     return 0;
 }
 
-static int on_hips(void *user, const char *url, double release_date)
-{
-    sources_t *sources = (sources_t*)user;
-    source_t *source;
-    source = calloc(1, sizeof(*source));
-    source->url = strdup(url);
-    source->type = SOURCE_HIPS;
-    source->release_date = release_date;
-    DL_APPEND(sources->sources, source);
-    return 0;
-}
-
 static int hips_property_handler(void* user, const char* section,
                                  const char* name, const char* value)
 {
@@ -185,12 +168,6 @@ static int process_source(sources_t *sources, source_t *source)
     switch (source->type) {
     case SOURCE_DIR:
         if (!process_dir(source)) return 0;
-        break;
-    case SOURCE_HIPSLIST:
-        data = get_data(source, "hipslist", 0, &code);
-        if (!data && code) break; // Error.
-        if (!data) return 0;
-        hips_parse_hipslist(data, sources, on_hips);
         break;
     case SOURCE_HIPS:
         data = get_data(source, "properties", 0, &code);
