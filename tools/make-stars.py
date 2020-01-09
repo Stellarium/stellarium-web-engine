@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# coding: utf-8
+#!/usr/bin/python3
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
 #
@@ -29,7 +28,7 @@ MAX_SOURCES_PER_TILE = 1024
 Star = collections.namedtuple('Star',
         ['hip', 'hd', 'vmag', 'ra', 'de', 'plx', 'pra', 'pde', 'bv'])
 
-print 'parse stars'
+print('parse stars')
 stars = {}
 hip_file = download(
         'http://cdsarc.u-strasbg.fr/ftp/pub/cats/I/239/hip_main.dat.gz',
@@ -53,7 +52,7 @@ stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
 
 # Create the tiles.
 # For each star, try to add to the lowest tile that is not already full.
-print 'create tiles'
+print('create tiles')
 
 max_vmag_order0 = 0
 
@@ -61,15 +60,15 @@ tiles = {}
 for s in stars:
     for order in range(8):
         pix = healpy.ang2pix(1 << order, pi / 2.0 - s.de, s.ra, nest=True)
-        nuniq = pix + 4 * (1L << (2 * order))
-        assert int(log(nuniq / 4, 2) / 2) == order
+        nuniq = pix + 4 * (1 << (2 * order))
+        assert int(log(nuniq // 4, 2) / 2) == order
         tile = tiles.setdefault(nuniq, [])
         if len(tile) >= MAX_SOURCES_PER_TILE: continue # Try higher order
         tile.append(s)
         if order == 0: max_vmag_order0 = max(max_vmag_order0, s.vmag)
         break
 
-print 'save tiles'
+print('save tiles')
 out_dir = './data/stars/'
 COLUMNS = [
     {'id': 'hip',  'type': 'i'},
@@ -97,4 +96,4 @@ with open(os.path.join(out_dir, 'properties'), 'w') as out:
         hips_tile_format = 'eph',
     )
     for key, v in props.items():
-        print >>out, '{:<24} = {}'.format(key, v)
+        print('{:<24} = {}'.format(key, v), file=out)
