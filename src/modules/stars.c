@@ -515,7 +515,7 @@ static int on_file_tile_loaded(const char type[4],
         if (isnan(vmag)) vmag = gmag;
         assert(!isnan(vmag));
 
-        if (!isnan(survey->min_vmag) && (vmag < survey->min_vmag)) continue;
+        if (vmag < survey->min_vmag) continue;
         if (!*s->type) strncpy(s->type, "*", 4); // Default type.
         s->vmag = vmag;
         s->ra = ra;
@@ -691,8 +691,7 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
     DL_FOREACH(stars->surveys, survey) {
         // Don't even traverse if the min vmag of the survey is higher than
         // the max visible vmag.
-        if (    !isnan(survey->min_vmag) &&
-                survey->min_vmag > painter.stars_limit_mag)
+        if (survey->min_vmag > painter.stars_limit_mag)
             continue;
         hips_traverse(USER_PASS(stars, survey, &painter,
                       &nb_tot, &nb_loaded, &illuminance),
@@ -958,7 +957,7 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
     survey->hips = hips_create(survey->url, release_date, &survey_settings);
     survey->min_order = properties_get_f(args, "hips_order_min", 0);
     survey->max_vmag = properties_get_f(args, "max_vmag", NAN);
-    survey->min_vmag = properties_get_f(args, "min_vmag", NAN);
+    survey->min_vmag = properties_get_f(args, "min_vmag", -2.0);
 
     DL_APPEND(stars->surveys, survey);
     DL_SORT(stars->surveys, survey_cmp);
