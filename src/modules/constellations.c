@@ -161,7 +161,7 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
 // Get the list of the constellation stars.
 static int constellation_create_stars(constellation_t *cons)
 {
-    int i, err = 0, hip;
+    int i, nb_err = 0, hip;
     char id[128];
     if (cons->stars) return 0;
     cons->count = cons->info.nb_lines * 2;
@@ -171,12 +171,13 @@ static int constellation_create_stars(constellation_t *cons)
         assert(hip);
         snprintf(id, sizeof(id), "HIP %d", hip);
         cons->stars[i] = obj_get(NULL, id, 0);
-        if (!cons->stars[i]) {
-            LOG_W("Cannot find cst star: %s, HIP %d", cons->info.id, hip);
-            err = 1;
-        }
+        if (!cons->stars[i]) nb_err++;
     }
-    return err;
+    if (nb_err) {
+        LOG_W("%d stars not found in constellation %s (%s)",
+              nb_err, cons->info.name, cons->info.id);
+    }
+    return nb_err;
 }
 
 static int compute_img_mat(const anchor_t anchors[static 3], double mat[3][3])
@@ -326,16 +327,12 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     // The position of a constellation is its middle point.
     constellations_t *cons = (constellations_t*)con->obj.parent;
     double pvo[2][4], pos[4] = {0, 0, 0, 0};
-    int i, err;
+    int i;
     if (con->error) return 0;
     // Optimization: don't update invisible constellation.
     if (!con->show) goto end;
 
-    err = constellation_create_stars(con);
-    if (err) {
-        con->error = err;
-        return 0;
-    }
+    constellation_create_stars(con);
     if (con->count == 0) return 0;
 
     if (obs->tt - con->last_update < 1.0) {
@@ -346,6 +343,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     con->last_update = obs->tt;
 
     for (i = 0; i < con->count; i++) {
+        if (!con->stars[i]) continue;
         obj_get_pvo(con->stars[i], obs, pvo);
         vec3_add(pos, pvo[0], pos);
     }
@@ -359,6 +357,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     con->lines_cap[3] = 1.0;
 
     for (i = 0; i < con->count; i++) {
+        if (!con->stars[i]) continue;
         obj_get_pvo(con->stars[i], obs, pvo);
         cap_extends(con->lines_cap, pvo[0]);
     }
@@ -455,7 +454,7 @@ static int render_bounds(const constellation_t *con,
 static bool constellation_lines_in_view(const constellation_t *con,
                                         const painter_t *painter)
 {
-    int i;
+    int i, nb = 0;
     double (*pos)[4], mx, my;
     bool ret;
     const double m = 100; // Border margins (windows unit).
@@ -468,11 +467,15 @@ static bool constellation_lines_in_view(const constellation_t *con,
     // Clipping test.
     pos = calloc(con->count, sizeof(*pos));
     for (i = 0; i < con->count; i++) {
-        assert(con->stars[i]);
-        obj_get_pos(con->stars[i], painter->obs, FRAME_VIEW, pos[i]);
-        project(painter->proj, 0, pos[i], pos[i]);
+        if (!con->stars[i]) continue;
+        obj_get_pos(con->stars[i], painter->obs, FRAME_VIEW, pos[nb]);
+        project(painter->proj, 0, pos[nb], pos[nb]);
+        nb++;
     }
-
+    if (nb == 0) {
+        free(pos);
+        return true;
+    }
     // Compute margins in NDC.
     mx = m * painter->pixel_scale / painter->fb_size[0] * 2;
     my = m * painter->pixel_scale / painter->fb_size[1] * 2;
@@ -559,12 +562,14 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
 
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
+        if (!con->stars[i]) continue;
         obj_get_pvo(con->stars[i], obs, pvo);
         vec3_normalize(pvo[0], lines[i]);
         lines[i][3] = 0; // To infinity.
     }
 
     for (i = 0; i < con->count; i += 2) {
+        if (!con->stars[i + 0] || !con->stars[i + 1]) continue;
         obj_get_info(con->stars[i + 0], obs, INFO_VMAG, &mag[0]);
         obj_get_info(con->stars[i + 1], obs, INFO_VMAG, &mag[1]);
         core_get_point_for_mag(mag[0], &radius[0], NULL);
@@ -578,6 +583,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     }
 
     for (i = 0; i < con->count; i += 2) {
+        if (!con->stars[i + 0] || !con->stars[i + 1]) continue;
         paint_line(&painter, FRAME_ICRF, lines + i, NULL, 1,
                    PAINTER_SKIP_DISCONTINUOUS);
     }
