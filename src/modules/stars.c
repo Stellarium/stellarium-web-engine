@@ -20,12 +20,6 @@
 
 static const double LABEL_SPACING = 4;
 
-// Indices of the two surveys we use.
-enum {
-    SURVEY_DEFAULT  = 0,
-    SURVEY_GAIA     = 1,
-};
-
 typedef struct stars stars_t;
 typedef struct {
     uint64_t oid;
@@ -56,11 +50,14 @@ typedef struct {
 typedef struct survey survey_t;
 struct survey {
     stars_t *stars;
+    char    key[128];
     hips_t *hips;
     char    url[URL_MAX_SIZE - 256];
     int     min_order;
     double  min_vmag; // Don't render survey below this mag.
+    double  max_vmag;
     bool    is_gaia;
+    survey_t *next, *prev;
 };
 
 /*
@@ -70,10 +67,7 @@ struct survey {
 struct stars {
     obj_t           obj;
     regex_t         search_reg;
-
-    // The stars module supports up to two surveys.
-    // One for the bundled stars, and one for the online gaia survey.
-    survey_t        surveys[2];
+    survey_t        *surveys; // All the added surveys.
     bool            visible;
     // Hints/labels magnitude offset
     double          hints_mag_offset;
@@ -579,6 +573,16 @@ static int stars_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+static survey_t *get_survey(const stars_t *stars, const char *key)
+{
+    survey_t *survey;
+    DL_FOREACH(stars->surveys, survey) {
+        if (survey->key && strcmp(survey->key, key) == 0)
+            return survey;
+    }
+    return NULL;
+}
+
 /*
  * Function: get_tile
  * Load and return a tile.
@@ -677,20 +681,20 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
     PROFILE(stars_render, 0);
     stars_t *stars = (stars_t*)obj;
-    int i, nb_tot = 0, nb_loaded = 0;
+    int nb_tot = 0, nb_loaded = 0;
     double illuminance = 0; // Totall illuminance
     painter_t painter = *painter_;
+    survey_t *survey;
 
     if (!stars->visible) return 0;
 
-    for (i = 0; i < ARRAY_SIZE(stars->surveys); i++) {
-        if (!stars->surveys[i].hips) break;
+    DL_FOREACH(stars->surveys, survey) {
         // Don't even traverse if the min vmag of the survey is higher than
         // the max visible vmag.
-        if (    !isnan(stars->surveys[i].min_vmag) &&
-                stars->surveys[i].min_vmag > painter.stars_limit_mag)
+        if (    !isnan(survey->min_vmag) &&
+                survey->min_vmag > painter.stars_limit_mag)
             continue;
-        hips_traverse(USER_PASS(stars, &stars->surveys[i], &painter,
+        hips_traverse(USER_PASS(stars, survey, &painter,
                       &nb_tot, &nb_loaded, &illuminance),
                       render_visitor);
     }
@@ -712,6 +716,7 @@ static int stars_get_visitor(int order, int pix, void *user)
 {
     int i, p, code, hip = 0;
     bool is_gaia, sync;
+    survey_t *survey;
     struct {
         stars_t     *stars;
         obj_t       *ret;
@@ -738,12 +743,12 @@ static int stars_get_visitor(int order, int pix, void *user)
         if ((p != -1) && (p != pix)) return 0;
     }
 
-    // Try both surveys (bundled and gaia).  For the bundled survey we
+    // Try all surveys (bundled and gaia).  For the bundled survey we
     // don't load in a thread.  This is a fix for the constellations!
-    for (i = 0; !tile && i < 2; i++) {
-        sync = i == SURVEY_DEFAULT;
-        tile = get_tile(d->stars, &d->stars->surveys[i], order, pix, sync,
-                        &code);
+    DL_FOREACH(d->stars->surveys, survey) {
+        sync = !survey->is_gaia;
+        tile = get_tile(d->stars, survey, order, pix, sync, &code);
+        if (tile) break; // XXX: should test all tiles.
     }
 
     // Gaia survey has a min order of 3.
@@ -786,9 +791,10 @@ static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
 
 static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
-    int order, pix, s, i, code;
+    int order, pix, i, code;
     stars_t *stars = (void*)obj;
     tile_t *tile = NULL;
+    survey_t *survey;
 
     struct {
         stars_t  *stars;
@@ -807,9 +813,10 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    // Try both surveys (bundled and gaia).
-    for (s = 0; s < 2; s++) {
-        tile = get_tile(stars, &stars->surveys[s], order, pix, false, &code);
+
+    // Try all surveys.
+    DL_FOREACH(stars->surveys, survey) {
+        tile = get_tile(stars, survey, order, pix, false, &code);
         if (!tile) continue;
         for (i = 0; i < tile->nb; i++) {
             if (tile->sources[i].oid == oid) {
@@ -830,7 +837,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     star_t *star;
     hips_iterator_t iter;
     // XXX: for the moment we only list the first survey!
-    survey_t *survey = &stars->surveys[0];
+    survey_t *survey = stars->surveys;
 
     // Without hint, we have to iter all the tiles.
     if (!hint) {
@@ -890,19 +897,43 @@ static json_value *hips_load_properties(const char *url, int *code)
     return ret;
 }
 
+static int survey_cmp(const void *s1_, const void *s2_)
+{
+    const survey_t *s1 = s1_;
+    const survey_t *s2 = s2_;
+    const double inf = 1000;
+    return cmp(isnan(s1->max_vmag) ? inf : s1->max_vmag,
+               isnan(s2->max_vmag) ? inf : s2->max_vmag);
+}
+
+/*
+ * Function: properties_get_f
+ * Extract a float value from a hips properties json.
+ *
+ * We can just use json_get_attr_f, since the properties files attributes
+ * are not typed and so all parsed as string.
+ */
+static double properties_get_f(const json_value *props, const char *key,
+                               double default_value)
+{
+    const char *str;
+    str = json_get_attr_s(props, key);
+    if (!str) return default_value;
+    return atof(str);
+}
+
 static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
 {
     stars_t *stars = (stars_t*)obj;
     json_value *args;
-    const char *args_type, *release_date_str, *max_vmag_str,
-               *order_min_str;
+    const char *args_type, *release_date_str;
     hips_settings_t survey_settings = {
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
     };
     int code;
     double release_date = 0;
-    survey_t *survey = &stars->surveys[SURVEY_DEFAULT];
+    survey_t *survey, *gaia;
 
     // We can't add the source until the properties file has been parsed.
     args = hips_load_properties(url, &code);
@@ -910,15 +941,13 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
 
     if (!args) return -1;
     args_type = json_get_attr_s(args, "type");
-    if (!args_type || strcmp(args_type, "stars")) return 1;
+    if (!args_type || strcmp(args_type, "stars")) return -1;
 
+    survey = calloc(1, sizeof(*survey));
+    if (key) snprintf(survey->key, sizeof(survey->key), "%s", key);
     if (key && strcasecmp(key, "gaia") == 0) {
-        survey = &stars->surveys[SURVEY_GAIA];
         survey->is_gaia = true;
     }
-
-    // Already filled.
-    if (survey->hips) return 1;
 
     release_date_str = json_get_attr_s(args, "hips_release_date");
     if (release_date_str)
@@ -927,18 +956,23 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
     survey_settings.user = survey;
     snprintf(survey->url, sizeof(survey->url), "%s", url);
     survey->hips = hips_create(survey->url, release_date, &survey_settings);
+    survey->min_order = properties_get_f(args, "hips_order_min", 0);
+    survey->max_vmag = properties_get_f(args, "max_vmag", NAN);
+    survey->min_vmag = properties_get_f(args, "min_vmag", NAN);
 
-    order_min_str = json_get_attr_s(args, "hips_order_min");
-    if (order_min_str)
-        survey->min_order = atoi(order_min_str);
+    DL_APPEND(stars->surveys, survey);
+    DL_SORT(stars->surveys, survey_cmp);
+    if (survey->is_gaia) assert(survey == stars->surveys->prev);
 
     // Tell online gaia survey to only start after the vmag for this survey.
     // XXX: We should remove that.
-    if (survey == &stars->surveys[SURVEY_DEFAULT]) {
-        max_vmag_str = json_get_attr_s(args, "max_vmag");
-        if (max_vmag_str)
-            stars->surveys[SURVEY_GAIA].min_vmag = atof(max_vmag_str);
-        survey->min_vmag = NAN;
+    gaia = get_survey(stars, "gaia");
+    if (gaia) {
+        DL_FOREACH(stars->surveys, survey) {
+            if (!survey->is_gaia && !isnan(survey->max_vmag)) {
+                gaia->min_vmag = max(gaia->min_vmag, survey->max_vmag);
+            }
+        }
     }
 
     json_builder_free(args);
