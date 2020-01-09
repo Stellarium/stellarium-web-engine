@@ -169,7 +169,7 @@ int obj_render(const obj_t *obj, const painter_t *painter)
  */
 void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 {
-    assert(obj->klass->get_info);
+    assert(obj && obj->klass->get_info);
     obj->klass->get_info(obj, obs, INFO_PVO, pvo);
 }
 
@@ -188,6 +188,7 @@ void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 void obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[4])
 {
     double pvo[2][4];
+    assert(obj);
     obj_get_pvo(obj, obs, pvo);
     convert_framev4(obs, FRAME_ICRF, frame, pvo[0], pos);
 }
