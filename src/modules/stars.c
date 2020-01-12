@@ -577,7 +577,7 @@ static survey_t *get_survey(const stars_t *stars, const char *key)
 {
     survey_t *survey;
     DL_FOREACH(stars->surveys, survey) {
-        if (survey->key && strcmp(survey->key, key) == 0)
+        if (strcmp(survey->key, key) == 0)
             return survey;
     }
     return NULL;
