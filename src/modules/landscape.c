@@ -302,6 +302,7 @@ static json_value *landscapes_current_id_fn(
             }
         }
     }
+    if (!lss->current) return json_null_new();
     return args_value_new(TYPE_STRING, lss->current->obj.id);
 }
 
