@@ -198,11 +198,10 @@ static const gl_buf_info_t POINTS_BUF = {
 };
 
 static const gl_buf_info_t TEXTURE_BUF = {
-    .size = 28,
+    .size = 24,
     .attrs = {
         [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
         [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 24},
     },
 };
 
@@ -612,7 +611,6 @@ static void quad(renderer_t          *rend_,
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, 0, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
-        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         // For atmosphere shader, in the first pass we do not compute the
         // luminance yet, only if the point is visible.
         if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
@@ -669,7 +667,6 @@ static void quad_wireframe(renderer_t          *rend_,
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
         project(painter->proj, 0, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
-        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
     }
     if (should_delete_grid) free(grid);
@@ -722,7 +719,6 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     for (i = 0; i < 4; i++) {
         gl_buf_4f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1], 0.0, 1.0);
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, uv[i][0], uv[i][1]);
-        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
     }
     for (i = 0; i < 6; i++) {
