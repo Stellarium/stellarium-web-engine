@@ -20,8 +20,13 @@
  *    label     - Label to show.
  *    v         - Current progress value.
  *    total     - Progress total.
- *    keepalive - How many iterations until we remove the progressbar.
- *                if set to -1, we use a default value.
+ *    keepalive - Defines when we remove the progressbar from the list.
+ *                If set to 0, we keep the progressbar alive until we get
+ *                a value v equal to total.
+ *                If set to a positive value, we keep the progressbar alive
+ *                for this number of frames, regardless of the progress
+ *                status.
+ *                if set to -1, we use a default small value.
  */
 void progressbar_report(const char *id, const char *label, int v, int total,
                         int keepalive);

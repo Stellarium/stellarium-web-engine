@@ -82,13 +82,16 @@ void progressbar_update(void)
 {
     bar_t *bar, *tmp;
     HASH_ITER(hh, g_bars, bar, tmp) {
-        if (bar->keepalive && g_tick > bar->last_update + bar->keepalive) {
-            HASH_DEL(g_bars, bar);
-            g_listener(bar->id);
-            free(bar->id);
-            free(bar->label);
-            free(bar);
-        }
+        assert(bar->keepalive >= 0);
+        if (bar->keepalive == 0 && bar->v < bar->total)
+            continue;
+        if (bar->keepalive > 0 && g_tick <= bar->last_update + bar->keepalive)
+            continue;
+        HASH_DEL(g_bars, bar);
+        g_listener(bar->id);
+        free(bar->id);
+        free(bar->label);
+        free(bar);
     }
     g_tick++;
 }
