@@ -94,8 +94,8 @@ struct observer
     char cst[5];
 
     // Frame rotation matrices.
-    // h: Horizontal (RA/DE, left handed, X->N, Y->E, Z->up).
-    // o: Observed: horizontal with refraction (RA/DE, left handed).
+    // h: Horizontal (Alt/Az, left handed, X->N, Y->E, Z->up).
+    // o: Observed: horizontal with refraction (Alt/Az, left handed).
     // c: ICRF (~Equatorial J2000)
     // i: CIRF
     // e: Ecliptic (right handed).
