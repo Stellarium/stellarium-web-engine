@@ -381,5 +381,8 @@ T(17, 0, 0, 0, "Cul", N_("Cultural Sky Representation"))
 T(17, 1, 0, 0, "Con",   N_("Constellation"))
 T(17, 2, 0, 0, "Ast",   N_("Asterism"))
 
+// Extra fields for Coordinates.
+T(18, 0, 0, 0, "Coo", N_("Coordinates"))
+
 {}
 };
