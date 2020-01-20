@@ -39,6 +39,7 @@ typedef struct {
     double  distance;    // Distance in AU
     // List of extra names, separated by '\0', terminated by two '\0'.
     char    *names;
+    char    *sp_type;
 } star_data_t;
 
 // A single star.
@@ -206,6 +207,9 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
         return 0;
     case INFO_PARALLAX:
         *(double*)out = star->data.plx * 1000;
+        return 0;
+    case INFO_SP_TYPE:
+        *(char**)out = star->data.sp_type;
         return 0;
     default:
         return 1;
@@ -420,7 +424,10 @@ static int del_tile(void *data)
 {
     int i;
     tile_t *tile = data;
-    for (i = 0; i < tile->nb; i++) free(tile->sources[i].names);
+    for (i = 0; i < tile->nb; i++) {
+        free(tile->sources[i].names);
+        free(tile->sources[i].sp_type);
+    }
     free(tile->sources);
     free(tile);
     return 0;
@@ -454,6 +461,7 @@ static int on_file_tile_loaded(const char type[4],
     int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
     double vmag, gmag, ra, de, pra, pde, plx, bv;
     char ids[256] = {};
+    char sp_type[32] = {};
     survey_t *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     tile_t *tile;
@@ -474,6 +482,7 @@ static int on_file_tile_loaded(const char type[4],
         {"pde",  'f', EPH_RAD_PER_YEAR},
         {"bv",   'f'},
         {"ids",  's', .size=256},
+        {"spec", 's', .size=32},
     };
 
     *out = NULL;
@@ -509,7 +518,7 @@ static int on_file_tile_loaded(const char type[4],
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
                 s->type, &s->gaia, &s->hip, &vmag, &gmag,
-                &ra, &de, &plx, &pra, &pde, &bv, ids);
+                &ra, &de, &plx, &pra, &pde, &bv, ids, sp_type);
         assert(!isnan(ra));
         assert(!isnan(de));
         if (isnan(vmag)) vmag = gmag;
@@ -530,6 +539,9 @@ static int on_file_tile_loaded(const char type[4],
             s->names = calloc(1, 2 + strlen(ids));
             for (j = 0; ids[j]; j++)
                 s->names[j] = ids[j] != '|' ? ids[j] : '\0';
+        }
+        if (*sp_type) {
+            s->sp_type = strdup(sp_type);
         }
 
         compute_pv(ra, de, pra, pde, plx, s);
