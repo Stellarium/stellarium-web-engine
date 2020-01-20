@@ -285,8 +285,10 @@ void obj_release(obj_t *obj);
 /*
  * Function: obj_retain
  * Increment object ref count by 1.
+ *
+ * Return the object.
  */
-void obj_retain(obj_t *obj);
+obj_t *obj_retain(obj_t *obj);
 
 /*
  * Function: obj_clone

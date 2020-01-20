@@ -106,11 +106,12 @@ void obj_release(obj_t *obj)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void obj_retain(obj_t *obj)
+obj_t *obj_retain(obj_t *obj)
 {
-    if (!obj) return;
+    if (!obj) return NULL;
     assert(obj->ref);
     obj->ref++;
+    return obj;
 }
 
 EMSCRIPTEN_KEEPALIVE
