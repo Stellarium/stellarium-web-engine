@@ -115,8 +115,9 @@ def create_tile(data, chunk_type, nuniq, path, columns):
         out.write(ret)
 
 
-def read_tile(path):
-    f = open(path, 'rb')
+def read_tile(f):
+    if isinstance(f, str):
+        f = open(f, 'rb')
     assert f.read(4) == b'EPHE'
     version = struct.unpack('I', f.read(4))[0]
     assert version == 2
