@@ -703,8 +703,8 @@ static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 }
 
 static int dsos_list(const obj_t *obj, observer_t *obs,
-                     double max_mag, uint64_t hint, void *user,
-                     int (*f)(void *user, obj_t *obj))
+                     double max_mag, uint64_t hint, const char *source,
+                     void *user, int (*f)(void *user, obj_t *obj))
 {
     int order, pix, i, r, nb = 0;
     dsos_t *dsos = (dsos_t*)obj;

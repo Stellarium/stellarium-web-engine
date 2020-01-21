@@ -39,15 +39,15 @@ int module_update(obj_t *module, double dt)
  *                again later might return more values.
  */
 int module_list_objs(const obj_t *obj, observer_t *obs,
-                     double max_mag, uint64_t hint, void *user,
-                     int (*f)(void *user, obj_t *obj))
+                     double max_mag, uint64_t hint, const char *source,
+                     void *user, int (*f)(void *user, obj_t *obj))
 {
     obj_t *child;
     double vmag;
     bool test_vmag = !isnan(max_mag);
 
     if (obj->klass->list)
-        return obj->klass->list(obj, obs, max_mag, hint, user, f);
+        return obj->klass->list(obj, obs, max_mag, hint, source, user, f);
     if (!(obj->klass->flags & OBJ_LISTABLE)) return -1;
 
     // Default for listable modules: list all the children.
@@ -66,7 +66,7 @@ int module_list_objs2(const obj_t *obj, observer_t *obs,
                      double max_mag, void *user,
                      int (*f)(void *, obj_t *))
 {
-    return module_list_objs(obj, obs, max_mag, 0, user, f);
+    return module_list_objs(obj, obs, max_mag, 0, NULL, user, f);
 }
 
 static int module_add_data_source_task(task_t *task, double dt)

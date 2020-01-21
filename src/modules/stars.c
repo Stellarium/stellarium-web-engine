@@ -839,16 +839,25 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 }
 
 static int stars_list(const obj_t *obj, observer_t *obs,
-                      double max_mag, uint64_t hint, void *user,
-                      int (*f)(void *user, obj_t *obj))
+                      double max_mag, uint64_t hint, const char *source,
+                      void *user, int (*f)(void *user, obj_t *obj))
 {
     int order, pix, i, r, code;
     tile_t *tile;
     stars_t *stars = (void*)obj;
     star_t *star;
     hips_iterator_t iter;
-    // XXX: for the moment we only list the first survey!
-    survey_t *survey = stars->surveys;
+    survey_t *survey = NULL;
+
+    // Find the survey corresponding to the source.  If we don't find it,
+    // default to the first survey.
+    if (source) {
+        DL_FOREACH(stars->surveys, survey) {
+            if (strcmp(survey->key, source) == 0)
+                break;
+        }
+    }
+    if (!survey) survey = stars->surveys;
 
     // Without hint, we have to iter all the tiles.
     if (!hint) {

@@ -425,12 +425,12 @@ static void list_objs(observer_t *obs, void *user,
 
     // All stars and planets up to mag 2.
     stars = core_get_module("stars");
-    module_list_objs(stars, obs, 2.0, 0, user, f);
+    module_list_objs(stars, obs, 2.0, 0, NULL, user, f);
     planets = core_get_module("planets");
-    module_list_objs(planets, obs, 2.0, 0, user, f);
+    module_list_objs(planets, obs, 2.0, 0, NULL, user, f);
     // All asteroids up to mag 10.
     asteroids = core_get_module("minor_planets");
-    module_list_objs(asteroids, obs, 10.0, 0, user, f);
+    module_list_objs(asteroids, obs, 10.0, 0, NULL, user, f);
 }
 
 EMSCRIPTEN_KEEPALIVE

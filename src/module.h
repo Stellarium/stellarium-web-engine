@@ -33,6 +33,8 @@ int module_update(obj_t *module, double dt);
  *   obs      - The observer used to compute the object vmag.
  *   max_mag  - Only consider objects below this magnitude.  Can be set to
  *              NAN to ignore.
+ *   source   - Only consider objects from the given data source.  Can be
+ *              set to NULL to ignore.
  *   user     - Data passed to the callback.
  *   f        - Callback function called once per object.
  *
@@ -43,8 +45,8 @@ int module_update(obj_t *module, double dt);
  *                  function again later might return more values.
  */
 int module_list_objs(const obj_t *module, observer_t *obs,
-                     double max_mag, uint64_t hint, void *user,
-                     int (*f)(void *user, obj_t *obj));
+                     double max_mag, uint64_t hint, const char *source,
+                     void *user, int (*f)(void *user, obj_t *obj));
 
 /*
  * Function: module_add_data_source
