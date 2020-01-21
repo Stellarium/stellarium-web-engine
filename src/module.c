@@ -60,6 +60,7 @@ int module_list_objs(const obj_t *obj, observer_t *obs,
     return 0;
 }
 
+// Only there because we can't easily call module_list_objs from js.
 EMSCRIPTEN_KEEPALIVE
 int module_list_objs2(const obj_t *obj, observer_t *obs,
                      double max_mag, void *user,
