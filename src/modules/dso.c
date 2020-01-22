@@ -107,6 +107,12 @@ static uint64_t pix_to_nuniq(int order, int pix)
     return pix + 4 * (1L << (2 * order));
 }
 
+static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
+{
+    *order = log2(nuniq / 4) / 2;
+    *pix = nuniq - 4 * (1 << (2 * (*order)));
+}
+
 /*
  * Generate a uniq oid for a DSO.
  *
@@ -461,7 +467,7 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
 
 // Render a DSO from its data.
 static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
-                                const painter_t *painter)
+                                const painter_t *painter, uint64_t hint)
 {
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
@@ -513,7 +519,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
         return 0;
 
     areas_add_ellipse(core->areas, win_pos, win_angle,
-                      win_size[0] / 2, win_size[1] / 2, s->oid, 0);
+                      win_size[0] / 2, win_size[1] / 2, s->oid, hint);
 
     // Don't display when DSO global fader is off
     // But the previous steps are still necessary as we want to be able to
@@ -557,7 +563,7 @@ static int dso_render_from_data(const dso_data_t *s2, const dso_clip_data_t *s,
 static int dso_render(const obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (const dso_t*)obj;
-    return dso_render_from_data(&dso->data, &dso->data.clip_data, painter);
+    return dso_render_from_data(&dso->data, &dso->data.clip_data, painter, 0);
 }
 
 void dso_get_designations(
@@ -592,6 +598,7 @@ static int render_visitor(int order, int pix, void *user)
     tile_t *tile;
     int i, ret;
     bool loaded;
+    uint64_t hint;
 
     // Early exit if the tile is clipped.
     if (painter_is_healpix_clipped(&painter, FRAME_ICRF, order, pix, true))
@@ -604,9 +611,10 @@ static int render_visitor(int order, int pix, void *user)
     if (!tile) return 0;
     if (tile->mag_min > painter.stars_limit_mag + 1.5) return 0;
 
+    hint = pix_to_nuniq(order, pix);
     for (i = 0; i < tile->nb; i++) {
         ret = dso_render_from_data(&tile->sources[i], &tile->sources_quick[i],
-                                   &painter);
+                                   &painter, hint);
         if (ret)
             break;
     }
@@ -688,18 +696,41 @@ static obj_t *dsos_get(const obj_t *obj, const char *id, int flags)
 
 static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
+    int order, pix, i;
+    dsos_t *dsos = (void*)obj;
+    tile_t *tile = NULL;
+    survey_t *survey = NULL;
+
     struct {
         dsos_t      *dsos;
         obj_t       *ret;
         int         cat;
         uint64_t    n;
     } d = {.dsos=(void*)obj, .cat=4, .n=oid};
-    if (    !oid_is_catalog(oid, "NGC") &&
-            !oid_is_catalog(oid, "IC") &&
-            !oid_is_catalog(oid, "NDSO"))
-        return NULL;
-    hips_traverse(&d, dsos_get_visitor);
-    return d.ret;
+
+    if (!hint) {
+        if (    !oid_is_catalog(oid, "NGC") &&
+                !oid_is_catalog(oid, "IC") &&
+                !oid_is_catalog(oid, "NDSO"))
+            return NULL;
+        hips_traverse(&d, dsos_get_visitor);
+        return d.ret;
+    }
+
+    // Get tile from hint (as nuniq).
+    nuniq_to_pix(hint, &order, &pix);
+
+    // Try all surveys.
+    DL_FOREACH(dsos->surveys, survey) {
+        tile = get_tile(dsos, survey, order, pix, false, NULL);
+        if (!tile) continue;
+        for (i = 0; i < tile->nb; i++) {
+            if (tile->sources[i].oid == oid) {
+                return (obj_t*)dso_create(&tile->sources[i]);
+            }
+        }
+    }
+    return NULL;
 }
 
 static int dsos_list(const obj_t *obj, observer_t *obs,
