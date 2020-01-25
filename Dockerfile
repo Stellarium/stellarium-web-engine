@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get install -y wget build-essential cmake python apt-transport-https git scons pkg-config nodejs
+RUN apt-get update && apt-get install -y wget build-essential cmake python3 apt-transport-https git scons pkg-config nodejs
 
 # Download emscripten SDK
 RUN git clone https://github.com/emscripten-core/emsdk.git
