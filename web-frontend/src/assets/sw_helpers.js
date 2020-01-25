@@ -71,8 +71,8 @@ const swh = {
         core.planets.addDataSource({ url: 'surveys/sso/uranus/v1', key: 'uranus' })
         core.planets.addDataSource({ url: 'surveys/sso/venus/v1', key: 'venus' })
 
-        lstel.setFont('regular', '/static/fonts/Roboto-Regular.ttf', 1.38)
-        lstel.setFont('bold', '/static/fonts/Roboto-Bold.ttf', 1.38)
+        lstel.setFont('regular', process.env.BASE_URL + 'fonts/Roboto-Regular.ttf', 1.38)
+        lstel.setFont('bold', process.env.BASE_URL + 'fonts/Roboto-Bold.ttf', 1.38)
 
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
