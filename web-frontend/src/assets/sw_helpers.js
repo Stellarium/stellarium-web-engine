@@ -35,44 +35,44 @@ const swh = {
       canvas: canvasElem,
       onReady: function (Module) {
         Module.onBeforeRendering = onBeforeRendering
+
         // Add all data sources.
-        var baseUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
+        var doUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
+        let core = lstel.core
+        core.stars.addDataSource({ url: 'asset://stars' })
+        core.skycultures.addDataSource({ url: doUrl + 'skycultures/v2/western', key: 'western' })
+        core.dsos.addDataSource({ url: doUrl + 'surveys/dso/v1' })
+        core.stars.addDataSource({ url: doUrl + 'surveys/gaia/v1', key: 'gaia' })
+        core.landscapes.addDataSource({ url: doUrl + 'landscapes/v1/guereins', key: 'guereins' })
+        core.milkyway.addDataSource({ url: doUrl + 'surveys/milkyway/v1' })
+        core.dss.addDataSource({ url: doUrl + 'surveys/dss/v1' })
 
-        // Bundled stars (just the very bright ones)
-        lstel.addDataSource({ url: 'asset://stars', type: 'hips' })
-        // Gaia stars tiles
-        lstel.addDataSource({ url: baseUrl + 'surveys/gaia/v1?v=2019-02-11T05:34Z', type: 'hips' })
+        core.minor_planets.addDataSource({ url: 'asset://mpcorb.dat', key: 'mpc_asteroids' })
+        core.comets.addDataSource({ url: doUrl + 'mpc/v1/CometEls.txt?v=2019-12-17', key: 'mpc_comets' })
 
-        lstel.addDataSource({ url: baseUrl + 'skycultures/v1/western', type: 'skyculture' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/dso/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'landscapes/v1/guereins', type: 'landscape' })
+        // Artificial satellites. Add v= to defeat locally cached files before
+        // this date because they had incorrect Cache-Control: max-age of 1 year
+        // set on the server (instead of 1 hour now).
+        core.satellites.addDataSource({ url: doUrl + 'skysources/v1/tle_satellite.jsonl.gz?v=2019-09-16', key: 'jsonl/sat' })
 
-        // MPC data
-        lstel.addDataSource({ url: 'asset://mpcorb.dat', type: 'mpc_asteroids' })
-        lstel.addDataSource({ url: baseUrl + 'mpc/v1/CometEls.txt', type: 'mpc_comets' })
-        // Artificial Satellites
-        lstel.addDataSource({ url: baseUrl + 'skysources/v1/tle_satellite.jsonl.gz', type: 'jsonl/sat' })
+        core.planets.addDataSource({ url: 'surveys/sso/callisto/v1', key: 'callisto' })
+        core.planets.addDataSource({ url: 'surveys/sso/default/v1', key: 'default' })
+        core.planets.addDataSource({ url: 'surveys/sso/europa/v1', key: 'europa' })
+        core.planets.addDataSource({ url: 'surveys/sso/ganymede/v1', key: 'ganymede' })
+        core.planets.addDataSource({ url: 'surveys/sso/io/v1', key: 'io' })
+        core.planets.addDataSource({ url: 'surveys/sso/jupiter/v1', key: 'jupiter' })
+        core.planets.addDataSource({ url: 'surveys/sso/mars/v1', key: 'mars' })
+        core.planets.addDataSource({ url: 'surveys/sso/mercury/v1', key: 'mercury' })
+        core.planets.addDataSource({ url: 'surveys/sso/moon/v1', key: 'moon' })
+        core.planets.addDataSource({ url: 'surveys/sso/moon-normal/v1', key: 'moon-normal' })
+        core.planets.addDataSource({ url: 'surveys/sso/neptune/v1', key: 'neptune' })
+        core.planets.addDataSource({ url: 'surveys/sso/saturn/v1', key: 'saturn' })
+        core.planets.addDataSource({ url: 'surveys/sso/sun/v1', key: 'sun' })
+        core.planets.addDataSource({ url: 'surveys/sso/uranus/v1', key: 'uranus' })
+        core.planets.addDataSource({ url: 'surveys/sso/venus/v1', key: 'venus' })
 
-        // Background images
-        lstel.addDataSource({ url: baseUrl + 'surveys/dss/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/milkyway/v1', type: 'hips' })
-
-        // All planetary images
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/callisto/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/default/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/europa/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/ganymede/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/io/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/jupiter/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/mars/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/mercury/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/moon/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/moon-normal/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/neptune/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/saturn/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/sun/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/uranus/v1', type: 'hips' })
-        lstel.addDataSource({ url: baseUrl + 'surveys/sso/venus/v1', type: 'hips' })
+        lstel.setFont('regular', '/static/fonts/Roboto-Regular.ttf', 1.38)
+        lstel.setFont('bold', '/static/fonts/Roboto-Bold.ttf', 1.38)
 
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
