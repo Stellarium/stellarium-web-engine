@@ -16,7 +16,7 @@
     <bottom-button label="Constellations"
                 :img="require('@/assets/images/btn-cst-lines.svg')"
                 :toggled="$store.state.stel.constellations.lines_visible"
-                @clicked="(b) => { $stel.core.constellations.lines_visible = b }">
+                @clicked="(b) => { $stel.core.constellations.lines_visible = b; $stel.core.constellations.labels_visible = b }">
     </bottom-button>
     <bottom-button label="Constellations Art"
                 :img="require('@/assets/images/btn-cst-art.svg')"
