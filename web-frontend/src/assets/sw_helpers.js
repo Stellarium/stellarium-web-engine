@@ -33,6 +33,10 @@ const swh = {
     let lstel = StelWebEngine({
       wasmFile: wasmFile,
       canvas: canvasElem,
+      translateFn: function (domain, str) {
+        return str
+        // return i18next.t(str, {ns: domain});
+      },
       onReady: function (Module) {
         Module.onBeforeRendering = onBeforeRendering
 
