@@ -157,7 +157,7 @@ static int movements_on_mouse(obj_t *obj, int id, int state,
     if (core->gui_want_capture_mouse) return 0;
     gesture_t *gs[] = {&movs->gest_pan, &movs->gest_pinch,
                        &movs->gest_click, &movs->gest_hover};
-    gesture_on_mouse(4, gs, id, state, x, y);
+    gesture_on_mouse(4, gs, id, state, x, y, movs);
     return 0;
 }
 

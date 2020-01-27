@@ -28,7 +28,7 @@ static double g_start_dist = 6.0;
 
 static double sqr(double x) { return x * x; }
 
-static int pan_on_mouse(gesture_t *g, const inputs_t *in)
+static int pan_on_mouse(gesture_t *g, const inputs_t *in, void *user)
 {
     vec2_set(g->pos, in->ts[0].pos[0], in->ts[0].pos[1]);
     switch (g->state) {
@@ -45,7 +45,7 @@ static int pan_on_mouse(gesture_t *g, const inputs_t *in)
         if (vec2_dist2(g->start_pos[0], g->pos) > sqr(g_start_dist)) {
             g->state = GESTURE_BEGIN;
             vec2_copy(g->start_pos[0], g->pos);
-            g->callback(g, NULL);
+            g->callback(g, user);
             g->state = GESTURE_UPDATE;
             return 1;
         }
@@ -54,13 +54,13 @@ static int pan_on_mouse(gesture_t *g, const inputs_t *in)
         if (!in->ts[0].down[0] || in->ts[1].down[0]) {
             g->state = GESTURE_END;
         }
-        g->callback(g, NULL);
+        g->callback(g, user);
         return 1;
     }
     return 0;
 }
 
-static int pinch_on_mouse(gesture_t *g, const inputs_t *in)
+static int pinch_on_mouse(gesture_t *g, const inputs_t *in, void *user)
 {
     switch (g->state) {
     case GESTURE_POSSIBLE:
@@ -72,7 +72,7 @@ static int pinch_on_mouse(gesture_t *g, const inputs_t *in)
             vec2_copy(in->ts[1].pos, g->start_pos[1]);
             g->pinch = 1.0;
             vec2_mix(in->ts[0].pos, in->ts[1].pos, 0.5, g->pos);
-            g->callback(g, NULL);
+            g->callback(g, user);
             return 1;
         }
         break;
@@ -84,17 +84,17 @@ static int pinch_on_mouse(gesture_t *g, const inputs_t *in)
         vec2_mix(in->ts[0].pos, in->ts[1].pos, 0.5, g->pos);
         if (!in->ts[0].down[0] || !in->ts[1].down[0]) {
             g->state = GESTURE_END;
-            g->callback(g, NULL);
+            g->callback(g, user);
             return 1;
         }
-        g->callback(g, NULL);
+        g->callback(g, user);
         return 1;
         break;
     }
     return 0;
 }
 
-static int click_on_mouse(gesture_t *g, const inputs_t *in)
+static int click_on_mouse(gesture_t *g, const inputs_t *in, void *user)
 {
     vec2_set(g->pos, in->ts[0].pos[0], in->ts[0].pos[1]);
     if (in->ts[1].down[0]) g->state = GESTURE_FAILED;
@@ -111,7 +111,7 @@ static int click_on_mouse(gesture_t *g, const inputs_t *in)
 
     if (g->state == GESTURE_RECOGNISED && !in->ts[0].down[0]) {
         g->state = GESTURE_BEGIN;
-        g->callback(g, NULL);
+        g->callback(g, user);
         g->state = GESTURE_END;
         return 1;
     }
@@ -119,17 +119,17 @@ static int click_on_mouse(gesture_t *g, const inputs_t *in)
     return 0;
 }
 
-static int hover_on_mouse(gesture_t *g, const inputs_t *in)
+static int hover_on_mouse(gesture_t *g, const inputs_t *in, void *user)
 {
     if (g->state == GESTURE_POSSIBLE && !in->ts[0].down[0]) {
         vec2_set(g->pos, in->ts[0].pos[0], in->ts[0].pos[1]);
-        g->callback(g, NULL);
+        g->callback(g, user);
     }
     return 0;
 }
 
 int gesture_on_mouse(int n, gesture_t **gs, int id, int state,
-                     double x, double y)
+                     double x, double y, void *user)
 {
     int i;
     gesture_t *g;
@@ -139,13 +139,13 @@ int gesture_on_mouse(int n, gesture_t **gs, int id, int state,
 
     for (i = 0; i < n; i++) {
         g = gs[i];
-        if (g->type == GESTURE_PAN && pan_on_mouse(g, &g_inputs))
+        if (g->type == GESTURE_PAN && pan_on_mouse(g, &g_inputs, user))
             break;
-        if (g->type == GESTURE_PINCH && pinch_on_mouse(g, &g_inputs))
+        if (g->type == GESTURE_PINCH && pinch_on_mouse(g, &g_inputs, user))
             break;
-        if (g->type == GESTURE_CLICK && click_on_mouse(g, &g_inputs))
+        if (g->type == GESTURE_CLICK && click_on_mouse(g, &g_inputs, user))
             break;
-        if (g->type == GESTURE_HOVER && hover_on_mouse(g, &g_inputs))
+        if (g->type == GESTURE_HOVER && hover_on_mouse(g, &g_inputs, user))
             break;
     }
 

@@ -57,5 +57,5 @@ struct gesture
 
 // Pass a mouse event to a list of gestures.
 int gesture_on_mouse(int n, gesture_t **gs, int id, int state,
-                     double x, double y);
+                     double x, double y, void *user);
 
