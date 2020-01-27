@@ -1,17 +1,17 @@
 {
   "name": "stellarium-web",
   "version": "0.1.0",
-  "description": "Stellarium Web is an online planetarium that lets you discover the night sky. It's easy to use and beautiful.",
-  "author": "Fabien Chereau <fabien.chereau@gmail.com>",
   "private": true,
+  "description": "Stellarium Web is an online planetarium that lets you discover the night sky. It's easy to use and beautiful.",
+  "author": "Noctua Software <contact@noctua-software.com>",
   "scripts": {
-    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "dev": "vue-cli-service serve"
   },
   "dependencies": {
     "@mdi/font": "^3.6.95",
-    "core-js": "^2.6.5",
+    "core-js": "^3.4.4",
     "leaflet": "^1.5.1",
     "leaflet-control-geocoder": "^1.9.0",
     "moment": "^2.24.0",
@@ -27,9 +27,9 @@
     "vuex": "^3.0.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.11.0",
-    "@vue/cli-plugin-eslint": "^3.11.0",
-    "@vue/cli-service": "^3.11.0",
+    "@vue/cli-plugin-babel": "^4.1.2",
+    "@vue/cli-plugin-eslint": "^4.1.2",
+    "@vue/cli-service": "^4.1.2",
     "@vue/eslint-config-standard": "^4.0.0",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
@@ -37,7 +37,7 @@
     "eslint-plugin-vuetify": "^1.0.0-beta.3",
     "sass": "^1.17.4",
     "sass-loader": "^7.1.0",
-    "vue-cli-plugin-vuetify": "^0.6.3",
+    "vue-cli-plugin-vuetify": "^2.0.3",
     "vue-template-compiler": "^2.6.10",
     "vuetify-loader": "^1.2.2"
   },
@@ -66,22 +66,22 @@
       "parser": "babel-eslint"
     }
   },
-  "eslintIgnore": [
-    "/build/",
-    "/dist/",
-    "/*.js",
-    "src/assets/js/*.js"
-  ],
   "postcss": {
     "plugins": {
       "autoprefixer": {}
     }
   },
-  "workspaces": [
-    "src/plugins/*"
-  ],
   "browserslist": [
     "> 1%",
     "last 2 versions"
+  ],
+  "workspaces": [
+    "src/plugins/*"
+  ],
+  "eslintIgnore": [
+    "/build/",
+    "/dist/",
+    "/*.js",
+    "src/assets/js/*.js"
   ]
 }
