@@ -8,7 +8,8 @@
 # The terms of the AGPL v3 license can be found in the main directory of this
 # repository.
 
-# This script generates the eph format stars survey from HIP and BSC catalog.
+# This script generates a small stars survey from Hipparcos catalog.  This
+# survey is directly bundled in the code so we can always use it by default.
 
 from math import *
 import collections
@@ -26,9 +27,27 @@ from utils import ensure_dir, download, parse, DD2R
 MAX_SOURCES_PER_TILE = 1024
 
 Star = collections.namedtuple('Star',
-        ['hip', 'hd', 'vmag', 'ra', 'de', 'plx', 'pra', 'pde', 'bv'])
+        ['hip', 'hd', 'vmag', 'ra', 'de', 'plx', 'pra', 'pde', 'bv', 'ids'])
 
-print('parse stars')
+print('Parse bayer cat')
+bayers = {}
+bayer_file = download(
+        'http://cdsarc.u-strasbg.fr/vizier/ftp/cats/IV/27A/catalog.dat',
+        dest='data-src/IV_27A.dat',
+        md5='7b51c0aa8255c6aaf261a1083e0f0bd8')
+for line in open(bayer_file):
+    hd = int(line[0:6].strip())
+    flamsteed = line[64:67].strip()
+    bayer = line[68:73].strip()
+    cst = line[74:77].strip()
+    ids = []
+    if bayer:
+        ids.append('* %s %s' % (bayer, cst))
+    if flamsteed:
+        ids.append('* %s %s' % (flamsteed, cst))
+    bayers[hd] = ids
+
+print('Parse stars')
 stars = {}
 hip_file = download(
         'http://cdsarc.u-strasbg.fr/ftp/pub/cats/I/239/hip_main.dat.gz',
@@ -44,8 +63,9 @@ for line in gzip.open(hip_file):
     if ra is None or de is None: continue
     plx = parse(line, 80, 86, default=0.0, conv=1/1000.)
     bv = parse(line, 246, 251, default=0.0)
+    ids = '|'.join(bayers.get(hd, [])).encode()
     star = Star(hip=hip, hd=hd, vmag=vmag,
-                ra=ra, de=de, plx=plx, pra=0, pde=0, bv=bv)
+                ra=ra, de=de, plx=plx, pra=0, pde=0, bv=bv, ids=ids)
     stars[hd] = star
 
 stars = sorted(stars.values(), key=lambda x: (x.vmag, x.hd))
@@ -80,6 +100,7 @@ COLUMNS = [
     {'id': 'pra',  'type': 'f', 'unit': eph.UNIT_RAD_PER_YEAR, 'zerobits': 16},
     {'id': 'pde',  'type': 'f', 'unit': eph.UNIT_RAD_PER_YEAR, 'zerobits': 16},
     {'id': 'bv',   'type': 'f'},
+    {'id': 'ids',  'type': 's', 'size': 256},
 ]
 
 for nuniq, stars in tiles.items():
