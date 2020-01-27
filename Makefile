@@ -48,30 +48,6 @@ js-es6-debug:
 js-es6-prof:
 	emscons scons -j8 debug=0 profile=1 es6=1 emscripten=1
 
-.PHONY: setup
-
-setup: Dockerfile
-	docker build -t swe-dev . # --no-cache
-
-dev:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev
-
-dev-jsdebug:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && cd html && python -m SimpleHTTPServer
-
-dev-jsprof:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-prof" && cd html && python -m SimpleHTTPServer
-
-
-gen-es6:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6"
-
-gen-es6-debug:
-	docker run -it -p 8000:8000 -v "$(PWD):/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-debug"
-
-gen-es6-prof:
-	docker run -it -p 8000:8000 -v "$(PWD):/app"  swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-prof"
-
 # Make the doc using natualdocs.  On debian, we only have an old version
 # of naturaldocs available, where it is not possible to exclude files by
 # pattern.  I don't want to parse the C files (only the headers), so for

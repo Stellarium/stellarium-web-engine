@@ -8,27 +8,47 @@
 
 .PHONY: setup build dev start
 
+test-page:
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js" && cd html && python -m SimpleHTTPServer
+
+dev-jsdebug:
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && cd html && python -m SimpleHTTPServer
+
+dev-jsprof:
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-prof" && cd html && python -m SimpleHTTPServer
+
+gen-es6:
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6"
+
+gen-es6-debug:
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-debug"
+
+gen-es6-prof:
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD/..):/app"  swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-prof"
+
+
 update-engine:
-	cd .. && make gen-es6
+	make gen-es6
 	cp ../stellarium-web-engine.js src/assets/js/
 	cp ../stellarium-web-engine.wasm src/assets/js/
 
 update-engine-debug:
-	cd .. && make gen-es6-debug
+	make gen-es6-debug
 	cp ../stellarium-web-engine.js src/assets/js/
 	cp ../stellarium-web-engine.wasm src/assets/js/
 
-setup: Dockerfile
+setup: Dockerfile Dockerfile.jsbuild
+	# Build docker image for compilation with emscripten
+	cd .. && docker build -f web-frontend/Dockerfile.jsbuild -t swe-dev . # --no-cache
+	make update-engine
+	# Build docker image for webpack/node development
 	docker build -t stellarium-web-dev .
 	docker run -it -v "$(PWD):/app" stellarium-web-dev yarn
 
-src/assets/js/stellarium-web-engine.js: update-engine
-src/assets/js/stellarium-web-engine.wasm: update-engine
-
-dev: src/assets/js/stellarium-web-engine.js src/assets/js/stellarium-web-engine.wasm
+dev:
 	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" stellarium-web-dev yarn run dev
 
-build: src/assets/js/stellarium-web-engine.js src/assets/js/stellarium-web-engine.wasm
+build:
 	docker run -it -v "$(PWD):/app" stellarium-web-dev yarn run build
 
 start:
