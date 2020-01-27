@@ -58,6 +58,8 @@ for line in gzip.open(hip_file):
     if hd is None: continue
     hip = parse(line, 9, 14, type=int, required=True)
     vmag = parse(line, 42, 46, required=True)
+    # Ignore stars with vmag > 7.
+    if vmag > 7: continue
     ra = parse(line, 52, 63, conv=DD2R)
     de = parse(line, 65, 76, conv=DD2R)
     if ra is None or de is None: continue
