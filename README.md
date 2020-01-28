@@ -44,3 +44,10 @@ For development, it is useful to work on a native build of the code, since the
 code is written in C with OpenGL, you can simply build it with:
 
     make
+
+
+Contributing
+------------
+
+In order for your contribution to Stellarium Web Engine to be accepted, you have to sign the
+[Stellarium Web Contributor License Agreement (CLA)](doc/cla/sign-cla.md).

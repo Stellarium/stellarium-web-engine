@@ -34,7 +34,4 @@ make update-engine
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
 
-## Contributing
 
-In order for your contribution to Stellarium Web to be accepted, you have to sign the
-[Stellarium Web Contributor License Agreement (CLA)](doc/cla/sign-cla.md).
