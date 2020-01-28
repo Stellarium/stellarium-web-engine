@@ -49,7 +49,6 @@ const createStore = () => {
       nightmode: false,
       wasmSupport: true,
 
-      orange: false,
       timeSpeed: 1,
 
       autoDetectedLocation: {
