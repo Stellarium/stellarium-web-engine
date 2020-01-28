@@ -124,7 +124,7 @@ export default {
           txt += ','
         }
       }
-      txt += '); min-width: 100%;'
+      txt += '); min-width: 100%; height: 100%'
       return txt
     },
     startDate: function () {
