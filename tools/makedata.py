@@ -97,7 +97,6 @@ def make_cities():
 
 def make_symbols():
     files = [
-        'pointer.svg',
         'artificial-satellite.svg',
     ]
     dst = 'data/symbols.png'

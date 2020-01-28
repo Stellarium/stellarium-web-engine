@@ -22,10 +22,8 @@
  * List of all the supported symbols.
  */
 enum {
-    SYMBOL_POINTER = 1,
-
     // All the otype symbols.
-    SYMBOL_ARTIFICIAL_SATELLITE,
+    SYMBOL_ARTIFICIAL_SATELLITE = 1,
     SYMBOL_OPEN_GALACTIC_CLUSTER,
     SYMBOL_GLOBULAR_CLUSTER,
     SYMBOL_GALAXY,

@@ -26,7 +26,6 @@ static const struct {
     uint32_t    color;
     void        (*paint)(const painter_t *painter, const double transf[3][3]);
 } ENTRIES[] = {
-    [SYMBOL_POINTER]                = {"POIN", 0x4CFF4CFF},
     [SYMBOL_ARTIFICIAL_SATELLITE]   = {"Ast",  0xff00ffff},
     [SYMBOL_OPEN_GALACTIC_CLUSTER]  = {"OpC" , 0xF2E9267F, opc_paint},
     [SYMBOL_GLOBULAR_CLUSTER]       = {"GlC" , 0xF2E9267F, glc_paint},
