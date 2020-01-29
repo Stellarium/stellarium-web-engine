@@ -257,7 +257,6 @@ void asset_set_hook(void *user,
 }
 
 
-#include "assets/cities.txt.inl"
 #include "assets/font.inl"
 #include "assets/mpcorb.dat.inl"
 #include "assets/planets.ini.inl"

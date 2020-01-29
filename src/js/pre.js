@@ -179,17 +179,6 @@ Module['typeToStr'] = function(t) {
   return type_to_str(t);
 }
 
-Module['cityCreate'] = function(args) {
-  var city_create = Module.cwrap('city_create', 'number',
-    ['string', 'string', 'string', 'number',
-      'number', 'number', 'number', 'number']);
-  var ret = new Module.EphObj(city_create(
-                    args.name, args.countryCode,
-                    args.timezone, args.latitude, args.longitude,
-                    args.elevation, args.nearby));
-  return ret;
-}
-
 /*
  * Function: calendar
  * Compute calendar events.

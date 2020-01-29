@@ -77,24 +77,6 @@ def check_uptodate(src, dst):
 create_dir('data-src')
 requests_cache.install_cache('data-src/cache')
 
-def make_cities():
-    out = codecs.open('data/cities.txt', "w", "utf-8")
-    path = download('http://download.geonames.org/export/dump/cities15000.zip')
-    zp = zipfile.ZipFile(path, 'r')
-    f = zp.open('cities15000.txt')
-    for line in f:
-        line = line.decode('utf-8')
-        (geonameid, name, asciiname, alternatenames, latitude, longitude,
-         feature_class, feature_code, country_code, cc2, admin1_code,
-         admin2_code, admin3_code, admin4_code, population, elevation,
-         dem, timezone, modification_date) = line.split('\t')
-        if int(population) < 500000: continue
-        line = (u"{name}\t{asciiname}\t{latitude}\t{longitude}\t{elevation}\t"
-                u"{country_code}\t{timezone}").format(**locals())
-        print >>out, line
-    out.close()
-
-
 def make_symbols():
     files = [
         'artificial-satellite.svg',
@@ -114,6 +96,4 @@ def make_symbols():
         ret_img.paste(img, (32 * (i % 4), 32 * (i / 4)))
     ret_img.save(dst)
 
-
-make_cities()
 make_symbols()
