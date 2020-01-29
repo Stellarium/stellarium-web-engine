@@ -9,59 +9,19 @@
 # The terms of the AGPL v3 license can be found in the main directory of this
 # repository.
 
+# Generates the symbols png image from the svg sources.
 
-import codecs
-import csv
-import gzip
-import hashlib
-import json
 from math import *
 import os
 import os.path
-import re
-import requests
-import requests_cache
-import struct
 import subprocess
 import sys
-import unicodedata
-import zipfile
-import zlib
 import PIL.Image
-
-# DEPRECATED: I try to move the data generation into separate scripts since
-#             usually we only want to update one type of data.  You should
-#             not have to generate the data since they are already bundled
-#             in the src/assets/<something>.c files.
-
-# Generate some of the data to be bundled in the sources.
-# I guess we should split this in separate scripts for each type of data.
-# For the moment this generates:
-#
-# - The cities list.
-# - The symbols.
-# - Some minor planet sources.
 
 
 if os.path.dirname(__file__) != "./tools":
     print "Should be run from root directory"
     sys.exit(-1)
-
-def create_dir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-def download(url, md5=None):
-    filename = os.path.basename(url)
-    outpath = 'data-src/{}'.format(filename)
-    print("Download '{}'".format(url))
-    r = requests.get(url)
-    if md5 and hashlib.md5(r.content).hexdigest() != md5:
-        print "Wrong md5 for %s" % url
-        sys.exit(-1)
-    with open(outpath, 'wb') as out:
-        out.write(r.content)
-    return outpath
 
 def check_uptodate(src, dst):
     """Check if any file in dst is older than any file file in src"""
@@ -73,9 +33,6 @@ def check_uptodate(src, dst):
             if os.path.getmtime(d) < os.path.getmtime(s):
                 return False
     return True
-
-create_dir('data-src')
-requests_cache.install_cache('data-src/cache')
 
 def make_symbols():
     files = [
