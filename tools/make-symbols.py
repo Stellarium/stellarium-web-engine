@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# coding: utf-8
+#!/usr/bin/python3
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
 #
@@ -20,7 +19,7 @@ import PIL.Image
 
 
 if os.path.dirname(__file__) != "./tools":
-    print "Should be run from root directory"
+    print("Should be run from root directory")
     sys.exit(-1)
 
 def check_uptodate(src, dst):
@@ -39,11 +38,11 @@ def make_symbols():
         'artificial-satellite.svg',
     ]
     dst = 'data/symbols.png'
-    if check_uptodate(['symbols/{}'.format(x) for x in files], dst):
+    if check_uptodate(['data/symbols/{}'.format(x) for x in files], dst):
         return
     ret_img = PIL.Image.new('L', (128, 128))
     for i, src in enumerate(files):
-        path = 'symbols/{}'.format(src)
+        path = 'data/symbols/{}'.format(src)
         subprocess.check_output([
             'inkscape', path, '--export-area-page',
             '--export-width=32', '--export-height=32',
