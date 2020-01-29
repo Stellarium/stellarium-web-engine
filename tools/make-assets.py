@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# coding: utf-8
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
 #
@@ -12,15 +11,22 @@
 
 import io
 import os
+import re
 import struct
 import sys
 import zlib
 
-SOURCE = "data"
+ROOT = "data"
+SOURCES = [
+    "font/",
+    "mpcorb.dat",
+    "planets.ini",
+    "shaders/",
+    "stars/",
+    "symbols.png",
+    "textures/"
+]
 DEST = "src/assets/"
-
-if len(sys.argv) > 1:
-    SOURCE, DEST = sys.argv[1:]
 
 if os.path.dirname(__file__) != "./tools":
     print("Should be run from root directory")
@@ -47,12 +53,16 @@ TYPES = {
 }
 
 def list_data_files():
-    for root, dirs, files in os.walk(SOURCE):
-        for f in sorted(files, key=lambda x: x.upper()):
-            if any(f.endswith(x) for x in TYPES.keys()):
-                p = os.path.join(root, f)
-                yield os.path.relpath(p, SOURCE)
-        dirs[:] = sorted(dirs)
+    for src in SOURCES:
+        if os.path.isfile(os.path.join(ROOT, src)):
+            yield src
+            continue
+        for root, dirs, files in os.walk(os.path.join(ROOT, src)):
+            for f in sorted(files, key=lambda x: x.upper()):
+                if any(f.endswith(x) for x in TYPES.keys()):
+                    p = os.path.join(root, f)
+                    yield os.path.relpath(p, ROOT)
+            dirs[:] = sorted(dirs)
 
 def encode_str(data):
     assert isinstance(data, bytes)
@@ -88,7 +98,7 @@ for group in groups:
     out = io.StringIO()
     print("// Auto generated from tools/makeassets.py\n", file=out)
     for f in groups[group]:
-        data = open(os.path.join(SOURCE, f), 'rb').read()
+        data = open(os.path.join(ROOT, f), 'rb').read()
         data_type = TYPES[os.path.basename(f).split(".")[-1]]
         size = len(data)
         compressed = False
