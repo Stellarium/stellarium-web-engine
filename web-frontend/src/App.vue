@@ -89,7 +89,8 @@ export default {
       guiComponent: 'GuiLoader',
       startTimeIsSet: false,
       initDone: false,
-      timeRef: undefined
+      timeRef: undefined,
+      dataSourceInitDone: false
     }
   },
   components: { Gui, GuiLoader },
@@ -236,6 +237,10 @@ export default {
           swh.getGeolocation().then(swh.geoCodePosition).then((loc) => {
             that.$store.commit('setAutoDetectedLocation', loc)
           }, (error) => { console.log(error) })
+
+          that.$stel.setFont('regular', process.env.BASE_URL + 'fonts/Roboto-Regular.ttf', 1.38)
+          that.$stel.setFont('bold', process.env.BASE_URL + 'fonts/Roboto-Bold.ttf', 1.38)
+
           that.setStateFromQueryArgs()
           that.guiComponent = 'Gui'
           for (let i in that.$stellariumWebPlugins()) {
@@ -243,6 +248,22 @@ export default {
             if (plugin.onEngineReady) {
               plugin.onEngineReady(that)
             }
+          }
+
+          if (!that.dataSourceInitDone) {
+            // Set all default data sources
+            let core = that.$stel.core
+            core.stars.addDataSource({ url: 'asset://stars' })
+            core.skycultures.addDataSource({ url: process.env.BASE_URL + 'skydata/skycultures/western', key: 'western' })
+            core.dsos.addDataSource({ url: process.env.BASE_URL + 'skydata/dso' })
+            core.landscapes.addDataSource({ url: process.env.BASE_URL + 'skydata/landscapes/guereins', key: 'guereins' })
+            core.milkyway.addDataSource({ url: process.env.BASE_URL + 'skydata/surveys/milkyway' })
+            core.minor_planets.addDataSource({ url: 'asset://mpcorb.dat', key: 'mpc_asteroids' })
+            core.planets.addDataSource({ url: process.env.BASE_URL + 'skydata/surveys/sso/moon', key: 'moon' })
+            core.planets.addDataSource({ url: process.env.BASE_URL + 'skydata/surveys/sso/sun', key: 'sun' })
+            core.planets.addDataSource({ url: process.env.BASE_URL + 'skydata/surveys/sso/moon', key: 'default' })
+            core.comets.addDataSource({ url: process.env.BASE_URL + 'skydata/CometEls.txt', key: 'mpc_comets' })
+            core.satellites.addDataSource({ url: process.env.BASE_URL + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
           }
         }, that.onBeforeRendering)
       } catch (e) {

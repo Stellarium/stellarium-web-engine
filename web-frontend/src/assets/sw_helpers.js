@@ -40,44 +40,6 @@ const swh = {
       onReady: function (Module) {
         Module.onBeforeRendering = onBeforeRendering
 
-        // Add all data sources.
-        var doUrl = 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/'
-        let core = lstel.core
-        core.stars.addDataSource({ url: 'asset://stars' })
-        core.skycultures.addDataSource({ url: doUrl + 'skycultures/v2/western', key: 'western' })
-        core.dsos.addDataSource({ url: doUrl + 'surveys/dso/v1' })
-        core.stars.addDataSource({ url: doUrl + 'surveys/gaia/v1', key: 'gaia' })
-        core.landscapes.addDataSource({ url: doUrl + 'landscapes/v1/guereins', key: 'guereins' })
-        core.milkyway.addDataSource({ url: doUrl + 'surveys/milkyway/v1' })
-        core.dss.addDataSource({ url: doUrl + 'surveys/dss/v1' })
-
-        core.minor_planets.addDataSource({ url: 'asset://mpcorb.dat', key: 'mpc_asteroids' })
-        core.comets.addDataSource({ url: doUrl + 'mpc/v1/CometEls.txt?v=2019-12-17', key: 'mpc_comets' })
-
-        // Artificial satellites. Add v= to defeat locally cached files before
-        // this date because they had incorrect Cache-Control: max-age of 1 year
-        // set on the server (instead of 1 hour now).
-        core.satellites.addDataSource({ url: doUrl + 'skysources/v1/tle_satellite.jsonl.gz?v=2019-09-16', key: 'jsonl/sat' })
-
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/callisto/v1', key: 'callisto' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/default/v1', key: 'default' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/europa/v1', key: 'europa' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/ganymede/v1', key: 'ganymede' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/io/v1', key: 'io' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/jupiter/v1', key: 'jupiter' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/mars/v1', key: 'mars' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/mercury/v1', key: 'mercury' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/moon/v1', key: 'moon' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/moon-normal/v1', key: 'moon-normal' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/neptune/v1', key: 'neptune' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/saturn/v1', key: 'saturn' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/sun/v1', key: 'sun' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/uranus/v1', key: 'uranus' })
-        core.planets.addDataSource({ url: doUrl + 'surveys/sso/venus/v1', key: 'venus' })
-
-        lstel.setFont('regular', process.env.BASE_URL + 'fonts/Roboto-Regular.ttf', 1.38)
-        lstel.setFont('bold', process.env.BASE_URL + 'fonts/Roboto-Bold.ttf', 1.38)
-
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
           let tree = store.state.stel
