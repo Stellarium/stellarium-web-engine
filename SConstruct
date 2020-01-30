@@ -60,7 +60,7 @@ if not debug:
 
 sources = (glob.glob('src/*.c*') + glob.glob('src/algos/*.c') +
            glob.glob('src/projections/*.c') + glob.glob('src/modules/*.c') +
-           glob.glob('src/utils/*.c'))
+           glob.glob('src/utils/*.c') + glob.glob('src/private/*.c'))
 env.Append(CPPPATH=['src'])
 
 env.Append(CCFLAGS='-include config.h')

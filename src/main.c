@@ -135,7 +135,8 @@ static void add_source(const char *module, const char *url, const char *key)
     module_add_data_source(m, url, key);
 }
 
-static void add_default_sources(void)
+void add_default_sources(void) __attribute__ ((weak));
+void add_default_sources(void)
 {
     #define BASE "data/skydata/"
 
