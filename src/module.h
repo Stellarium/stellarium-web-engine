@@ -84,6 +84,27 @@ obj_t *obj_get(const obj_t *module, const char *query, int flags);
 obj_t *obj_get_by_oid(const obj_t *module, uint64_t oid, uint64_t hint);
 
 /*
+ * Function: obj_get_by_hip
+ * Find a star object by its Hipparcos number.
+ *
+ * Note: this could be replaced by obj_get, but this is faster for the case
+ * of HIP, and most important this function returns an error code that can
+ * be used to know if we can call again.
+ *
+ * Parameters:
+ *   hip    - A Hipparcos number.
+ *   code   - Output for request code:
+ *            200 - OK
+ *            404 - Not found.
+ *              0 - Not found yet, but we can try again later.
+ *
+ * Return:
+ *   A star object, or NULL.  The caller is responsible for calling
+ *   obj_release on the object.
+ */
+obj_t *obj_get_by_hip(int hip, int *code);
+
+/*
  * Function: module_get_render_order
  *
  * For modules: return the order in which the modules should be rendered.

@@ -999,6 +999,32 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
     return 0;
 }
 
+obj_t *obj_get_by_hip(int hip, int *code)
+{
+    int order, pix, i;
+    stars_t *stars = g_stars;
+    survey_t *survey = stars->surveys;
+    tile_t *tile;
+
+    for (order = 0; order < 2; order++) {
+        pix = hip_get_pix(hip, order);
+        if (pix == -1) {
+            *code = 404;
+            return NULL;
+        }
+        tile = get_tile(stars, survey, order, pix, true, code);
+        if (code == 0) return NULL; // Still loading.
+        if (!tile) return NULL;
+        for (i = 0; i < tile->nb; i++) {
+            if (tile->sources[i].hip == hip) {
+                return (obj_t*)star_create(&tile->sources[i]);
+            }
+        }
+    }
+    *code = 404;
+    return NULL;
+}
+
 /*
  * Meta class declarations.
  */
