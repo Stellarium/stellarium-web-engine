@@ -47,6 +47,7 @@ typedef struct constellation {
     // Texture and associated transformation matrix.
     struct {
         texture_t   *tex;
+        anchor_t    anchors[3];
         double      mat[3][3];
         double      cap[4]; // Bounding cap of the image (ICRF)
     } img;
@@ -158,67 +159,34 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
 }
 
 // Get the list of the constellation stars.
+// Return 0 if all the stars have been loaded (even if we had errors).
 static int constellation_create_stars(constellation_t *cons)
 {
     int i, nb_err = 0, hip, code;
-    if (cons->stars) return 0;
+    if (cons->stars) return 0; // Already created.
     cons->count = cons->info.nb_lines * 2;
     cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
         hip = cons->info.lines[i / 2][i % 2];
         assert(hip);
         cons->stars[i] = obj_get_by_hip(hip, &code);
+        if (code == 0) goto still_loading;
         if (!cons->stars[i]) nb_err++;
     }
     if (nb_err) {
         LOG_W("%d stars not found in constellation %s (%s)",
               nb_err, cons->info.name, cons->info.id);
     }
-    return nb_err;
-}
-
-static int compute_img_mat(const anchor_t anchors[static 3], double mat[3][3])
-{
-    int i, r, code;
-    double pos[3][3];
-    double uvs[3][3];
-    double tmp[3][3];
-    double pvo[2][4];
-    obj_t *star;
-    for (i = 0; i < 3; i++) {
-        vec2_copy(anchors[i].uv, uvs[i]);
-        uvs[i][2] = 1.0;
-        star = obj_get_by_hip(anchors[i].hip, &code);
-        if (!star) {
-            LOG_W("Cannot find star HIP %d", anchors[i].hip);
-            return -1;
-        }
-        // XXX: instead we should get the star g_ra and g_dec, since they
-        // shouldn't change.
-        obj_get_pvo(star, core->observer, pvo);
-        vec3_normalize(pvo[0], pos[i]);
-        obj_release(star);
-    }
-    // Compute the transformation matrix M from uv to ICRS:
-    // M . uv = pos  =>   M = pos * inv(uv)
-    r = mat3_invert(uvs, tmp);
-    (void)r;
-    assert(r);
-    mat3_mul(pos, tmp, mat);
     return 0;
-}
 
-// Still experimental.
-static int parse_anchors(const char *str, anchor_t anchors[static 3])
-{
-    if (sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
-            &anchors[0].uv[0], &anchors[0].uv[1], &anchors[0].hip,
-            &anchors[1].uv[0], &anchors[1].uv[1], &anchors[1].hip,
-            &anchors[2].uv[0], &anchors[2].uv[1], &anchors[2].hip) != 9) {
-        LOG_E("Cannot parse constellation anchors: %s", str);
-        return -1;
-    }
-    return 0;
+still_loading:
+    // Release everything.
+    for (i = 0; i < cons->info.nb_lines * 2; i++)
+        obj_release(cons->stars[i]);
+    free(cons->stars);
+    cons->stars = NULL;
+    cons->count = 0;
+    return 1;
 }
 
 // Extends a cap to include a given point, without changing the cap direction.
@@ -246,36 +214,83 @@ static void compute_image_cap(const double mat[3][3], double cap[4])
     }
 }
 
+static void update_image_mat(constellation_t *cons)
+{
+    int i, r, code;
+    double pos[3][3];
+    double uvs[3][3];
+    double tmp[3][3];
+    double pvo[2][4];
+    obj_t *star;
+
+    if (!cons->img.tex || cons->img.mat[2][2]) return;
+    for (i = 0; i < 3; i++) {
+        vec2_copy(cons->img.anchors[i].uv, uvs[i]);
+        uvs[i][2] = 1.0;
+        star = obj_get_by_hip(cons->img.anchors[i].hip, &code);
+        if (code == 0) return; // Still loading.
+        if (!star) {
+            LOG_W("Cannot find star HIP %d", cons->img.anchors[i].hip);
+            goto error;
+        }
+        // XXX: instead we should get the star g_ra and g_dec, since they
+        // shouldn't change.
+        obj_get_pvo(star, core->observer, pvo);
+        vec3_normalize(pvo[0], pos[i]);
+        obj_release(star);
+    }
+    // Compute the transformation matrix M from uv to ICRS:
+    // M . uv = pos  =>   M = pos * inv(uv)
+    r = mat3_invert(uvs, tmp);
+    if (!r) goto error;
+    mat3_mul(pos, tmp, cons->img.mat);
+    compute_image_cap(cons->img.mat, cons->img.cap);
+    return;
+
+error:
+    LOG_W("Cannot compute image for constellation %s", cons->name);
+    texture_release(cons->img.tex);
+    cons->img.tex = NULL;
+}
+
+// Still experimental.
+static int parse_anchors(const char *str, anchor_t anchors[static 3])
+{
+    if (sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
+            &anchors[0].uv[0], &anchors[0].uv[1], &anchors[0].hip,
+            &anchors[1].uv[0], &anchors[1].uv[1], &anchors[1].hip,
+            &anchors[2].uv[0], &anchors[2].uv[1], &anchors[2].hip) != 9) {
+        LOG_E("Cannot parse constellation anchors: %s", str);
+        return -1;
+    }
+    return 0;
+}
+
 // Called by skyculture after we enable a new culture.
 int constellation_set_image(obj_t *obj, const json_value *args)
 {
     const char *img, *anchors_str, *base_path;
     constellation_t *cons = (void*)obj;
     char path[1024];
-    anchor_t anchors[3];
-    int err;
 
     if (cons->img.tex) return 0; // Already set.
     img = json_get_attr_s(args, "img");
     anchors_str = json_get_attr_s(args, "anchors");
     base_path = json_get_attr_s(args, "base_path");
 
-    if (parse_anchors(anchors_str, anchors) != 0) goto error;
+    if (parse_anchors(anchors_str, cons->img.anchors) != 0) goto error;
     join_path(base_path, img, path, sizeof(path));
     cons->img.tex = texture_from_url(path, TF_LAZY_LOAD);
     assert(cons->img.tex);
-    // Compute the image transformation matrix
-    err = compute_img_mat(anchors, cons->img.mat);
-    if (err)
-        cons->error = -1;
-    else
-        compute_image_cap(cons->img.mat, cons->img.cap);
+
     cons->image_loaded_fader.target = false;
     cons->image_loaded_fader.value = 0;
     return 0;
 
 error:
     LOG_W("Cannot add img to constellation %s", cons->obj.id);
+    texture_release(cons->img.tex);
+    cons->img.tex = NULL;
     return -1;
 }
 
@@ -316,18 +331,22 @@ static void line_animation_effect(double pos[2][4], double k)
     vec3_normalize(p, pos[1]);
 }
 
+/*
+ * Load the stars and the image matrix.
+ * Return 0 if we are ready to render.
+ */
 static int constellation_update(constellation_t *con, const observer_t *obs)
 {
     // The position of a constellation is its middle point.
     constellations_t *cons = (constellations_t*)con->obj.parent;
     double pvo[2][4], pos[4] = {0, 0, 0, 0};
     int i;
-    if (con->error) return 0;
+    if (con->error) return -1;
     // Optimization: don't update invisible constellation.
     if (!con->show) goto end;
 
-    constellation_create_stars(con);
-    if (con->count == 0) return 0;
+    if (constellation_create_stars(con)) return 1;
+    if (con->count == 0) return 1;
 
     if (obs->tt - con->last_update < 1.0) {
         // Constellation shape change cannot be seen over the course of
@@ -341,6 +360,8 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
         obj_get_pvo(con->stars[i], obs, pvo);
         vec3_add(pos, pvo[0], pos);
     }
+    if (vec3_norm2(pos) == 0) return 1; // No stars loaded yet.
+
     vec3_normalize(pos, pos);
     vec3_copy(pos, con->pvo[0]);
     con->pvo[0][3] = 0; // At infinity.
@@ -357,6 +378,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     }
 
 end:
+    update_image_mat(con);
     con->show = (cons && cons->show_all) ||
                 (strcasecmp(obs->cst, con->info.id) == 0) ||
                 ((obj_t*)con == core->selection);
@@ -679,7 +701,8 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
     painter_t painter = *_painter;
     const bool selected = core->selection && obj->oid == core->selection->oid;
 
-    constellation_update(con, painter.obs);
+    if (constellation_update(con, painter.obs))
+        return 0;
     if (con->error)
         return 0;
 
