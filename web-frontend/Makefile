@@ -24,7 +24,7 @@ gen-es6-debug:
 	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-debug"
 
 gen-es6-prof:
-	cd .. && docker run -it -p 8000:8000 -v "$(PWD/..):/app"  swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-prof"
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app"  swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6-prof"
 
 
 update-engine:
