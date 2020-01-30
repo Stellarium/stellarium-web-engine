@@ -12,6 +12,11 @@
 
 static const int DEFAULT_DELAY = 60;
 
+#ifdef __EMSCRIPTEN__
+static const bool HAS_FS = false;
+#else
+static const bool HAS_FS = true;
+#endif
 
 static void assets_update(void);
 
@@ -156,7 +161,7 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     }
 
     // Special handler for local files.
-    if (!asset->data && !strchr(url, ':')) {
+    if (HAS_FS && !asset->data && !strchr(url, ':')) {
         if (!file_exists(url)) {
             *code = 404;
             goto end;
