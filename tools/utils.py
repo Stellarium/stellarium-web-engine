@@ -14,6 +14,7 @@
 import functools
 import gzip
 import hashlib
+import math
 import os
 import requests
 import struct
@@ -127,3 +128,25 @@ def generator(target, md5):
             return path
         return wrapper
     return decorator
+
+
+def s2c(theta, phi):
+   cp = math.cos(phi)
+   return (math.cos(theta) * cp, math.sin(theta) * cp, math.sin(phi))
+
+
+def sepp(a, b):
+   axb = (a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - b[0] * b[2],
+          a[0] * b[1] - a[1] * b[0])
+   ss = math.sqrt(axb[0]**2 + axb[1]**2 + axb[2]**2)
+   cs = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+   s = math.atan2(ss, cs) if ss != 0.0 or cs != 0.0 else 0.0
+   return s
+
+
+def seps(al, ap, bl, bp):
+    '''Angular separation between two sets of spherical coordinates'''
+    a = s2c(al, ap)
+    b = s2c(bl, bp)
+    return sepp(a, b)
