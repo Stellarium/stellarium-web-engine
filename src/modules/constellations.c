@@ -226,6 +226,31 @@ static int parse_anchors(const char *str, anchor_t anchors[static 3])
     return 0;
 }
 
+// Extends a cap to include a given point, without changing the cap direction.
+static void cap_extends(double cap[4], double p[static 3])
+{
+    double n[3];
+    vec3_normalize(p, n);
+    cap[3] = min(cap[3], vec3_dot(cap, n));
+}
+
+// Compute the cap of an image from its 3d mat.
+static void compute_image_cap(const double mat[3][3], double cap[4])
+{
+    int i;
+    double p[4];
+
+    // Center point (UV = [0.5, 0.5])
+    mat3_mul_vec3(mat, VEC(0.5, 0.5, 1.0), p);
+    vec3_normalize(p, cap);
+    cap[3] = 1.0;
+    for (i = 0; i < 4; i++) {
+        mat3_mul_vec3(mat, VEC(i / 2, i % 2, 1.0), p);
+        vec3_normalize(p, p);
+        cap_extends(cap, p);
+    }
+}
+
 // Called by skyculture after we enable a new culture.
 int constellation_set_image(obj_t *obj, const json_value *args)
 {
@@ -250,6 +275,8 @@ int constellation_set_image(obj_t *obj, const json_value *args)
     err = compute_img_mat(anchors, cons->mat);
     if (err)
         cons->error = -1;
+    else
+        compute_image_cap(cons->mat, cons->image_cap);
     cons->image_loaded_fader.target = false;
     cons->image_loaded_fader.value = 0;
     return 0;
@@ -294,32 +321,6 @@ static void line_animation_effect(double pos[2][4], double k)
     k = smoothstep(0.0, 1.0, k); // Smooth transition speed.
     vec3_mix(pos[0], pos[1], k, p);
     vec3_normalize(p, pos[1]);
-}
-
-// Extends a cap to include a given point, without changing the cap direction.
-static void cap_extends(double cap[4], double p[static 3])
-{
-    double n[3];
-    vec3_normalize(p, n);
-    cap[3] = min(cap[3], vec3_dot(cap, n));
-}
-
-// Compute the cap of an image from its 3d mat.
-static void compute_image_cap(const double mat[3][3], double cap[4])
-{
-    int i;
-    double p[4];
-
-    // Center point (UV = [0.5, 0.5])
-    mat3_mul_vec3(mat, VEC(0.5, 0.5, 1.0), p);
-    vec3_normalize(p, cap);
-
-    cap[3] = 1.0;
-    for (i = 0; i < 4; i++) {
-        mat3_mul_vec3(mat, VEC(i / 2, i % 2, 1.0), p);
-        vec3_normalize(p, p);
-        cap_extends(cap, p);
-    }
 }
 
 static int constellation_update(constellation_t *con, const observer_t *obs)
