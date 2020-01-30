@@ -196,16 +196,20 @@
         onReady: function(stel) {
           that.stel = stel;
           // Add all data sources.
-          var doUrl = 'https://stellarium.sfo2.digitaloceanspaces.com/';
+          var baseUrl = '../data/';
           let core = stel.core;
-          core.stars.addDataSource({url: 'asset://stars'});
-          core.skycultures.addDataSource({url: doUrl + 'skycultures/v2/western', key: 'western'});
-          core.dsos.addDataSource({url: doUrl + 'surveys/dso/v1'});
-          core.stars.addDataSource({url: doUrl + 'surveys/gaia/v1', key: 'gaia'});
-          core.landscapes.addDataSource({url: doUrl + 'landscapes/v1/guereins', key: 'guereins'});
-          core.dss.addDataSource({url: doUrl + 'surveys/dss/v1'});
-          core.minor_planets.addDataSource({url: 'asset://mpcorb.dat', key: 'mpc_asteroids'});
-          core.comets.addDataSource({url: doUrl + 'mpc/v1/CometEls.txt', key: 'mpc_comets'});
+
+          core.stars.addDataSource({ url: 'asset://stars' })
+          core.skycultures.addDataSource({ url: baseUrl + 'skydata/skycultures/western', key: 'western' })
+          core.dsos.addDataSource({ url: baseUrl + 'skydata/dso' })
+          core.landscapes.addDataSource({ url: baseUrl + 'skydata/landscapes/guereins', key: 'guereins' })
+          core.milkyway.addDataSource({ url: baseUrl + 'skydata/surveys/milkyway' })
+          core.minor_planets.addDataSource({ url: 'asset://mpcorb.dat', key: 'mpc_asteroids' })
+          core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'moon' })
+          core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/sun', key: 'sun' })
+          core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'default' })
+          core.comets.addDataSource({ url: baseUrl + 'skydata/CometEls.txt', key: 'mpc_comets' })
+          core.satellites.addDataSource({ url: baseUrl + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
 
           // Force ui update when there is any change.
           stel.change(function(obj, attr) {
@@ -213,8 +217,8 @@
               that.stel = Object.assign(Object.create(stel), {}, stel)
           })
 
-          stel.setFont('regular', '/static/fonts/Roboto-Regular.ttf', 1.38);
-          stel.setFont('bold', '/static/fonts/Roboto-Bold.ttf', 1.38);
+          stel.setFont('regular', 'static/fonts/Roboto-Regular.ttf', 1.38);
+          stel.setFont('bold', 'static/fonts/Roboto-Bold.ttf', 1.38);
         }
       })
     },
