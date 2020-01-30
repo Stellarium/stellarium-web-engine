@@ -43,14 +43,18 @@ typedef struct constellation {
     fader_t     image_in_view;  // When the image is actually visible.
     fader_t     image_loaded_fader;
     obj_t       **stars;
+
     // Texture and associated transformation matrix.
-    texture_t   *img;
-    double      mat[3][3];
+    struct {
+        texture_t   *tex;
+        double      mat[3][3];
+        double      cap[4]; // Bounding cap of the image (ICRF)
+    } img;
+
     int         error; // Set if we couldn't parse the stars.
     double last_update; // Last update time in TT
 
     double lines_cap[4]; // Bounding cap of the lines (ICRF)
-    double image_cap[4]; // Bounding cap of the image (ICRF)
 
     double pvo[2][4];
 } constellation_t;
@@ -255,21 +259,21 @@ int constellation_set_image(obj_t *obj, const json_value *args)
     anchor_t anchors[3];
     int err;
 
-    if (cons->img) return 0; // Already set.
+    if (cons->img.tex) return 0; // Already set.
     img = json_get_attr_s(args, "img");
     anchors_str = json_get_attr_s(args, "anchors");
     base_path = json_get_attr_s(args, "base_path");
 
     if (parse_anchors(anchors_str, anchors) != 0) goto error;
     join_path(base_path, img, path, sizeof(path));
-    cons->img = texture_from_url(path, TF_LAZY_LOAD);
-    assert(cons->img);
+    cons->img.tex = texture_from_url(path, TF_LAZY_LOAD);
+    assert(cons->img.tex);
     // Compute the image transformation matrix
-    err = compute_img_mat(anchors, cons->mat);
+    err = compute_img_mat(anchors, cons->img.mat);
     if (err)
         cons->error = -1;
     else
-        compute_image_cap(cons->mat, cons->image_cap);
+        compute_image_cap(cons->img.mat, cons->img.cap);
     cons->image_loaded_fader.target = false;
     cons->image_loaded_fader.value = 0;
     return 0;
@@ -488,18 +492,18 @@ static bool constellation_image_in_view(const constellation_t *con,
     const observer_t *obs = painter->obs;
 
     // Check that the image is loaded and the mat computed.
-    if (!con->img || !texture_load(con->img, NULL)) return false;
-    if (!con->mat[2][2]) return false;
+    if (!con->img.tex || !texture_load(con->img.tex, NULL)) return false;
+    if (!con->img.mat[2][2]) return false;
 
     // First fast tests for the case when the constellation is not in the
     // screen at all.
-    if (painter_is_cap_clipped(painter, FRAME_ICRF, con->image_cap))
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, con->img.cap))
         return false;
 
     // Clipping test.
     for (i = 0; i < 4; i++) {
         vec4_set(pos[i], i / 2, i % 2, 1, 0);
-        mat3_mul_vec3(con->mat, pos[i], pos[i]);
+        mat3_mul_vec3(con->img.mat, pos[i], pos[i]);
         vec3_normalize(pos[i], pos[i]);
         convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, pos[i], pos[i]);
         project(painter->proj, 0, pos[i], pos[i]);
@@ -593,10 +597,10 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
     // Skip if not ready yet.
-    if (!con->img || !texture_load(con->img, NULL)) return 0;
-    if (!con->mat[2][2]) return 0;
+    if (!con->img.tex || !texture_load(con->img.tex, NULL)) return 0;
+    if (!con->img.mat[2][2]) return 0;
 
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->image_cap))
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->img.cap))
         return 0;
 
     if (!selected) {
@@ -611,9 +615,9 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     painter.flags |= PAINTER_ADD;
     vec3_set(painter.color, 1, 1, 1);
     painter.color[3] *= (selected ? 0.6 : 0.3) * con->image_loaded_fader.value;
-    mat3_copy(con->mat, map.mat);
+    mat3_copy(con->img.mat, map.mat);
     map.map = img_map;
-    painter_set_texture(&painter, PAINTER_TEX_COLOR, con->img, NULL);
+    painter_set_texture(&painter, PAINTER_TEX_COLOR, con->img.tex, NULL);
     paint_quad(&painter, FRAME_ICRF, &map, 4);
     return 0;
 }
@@ -708,7 +712,7 @@ static void constellation_del(obj_t *obj)
 {
     int i;
     constellation_t *con = (constellation_t*)obj;
-    texture_release(con->img);
+    texture_release(con->img.tex);
     for (i = 0; i < con->count; i++) {
         obj_release(con->stars[i]);
     }
