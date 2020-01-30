@@ -10,9 +10,7 @@
 #include <stdint.h>
 
 static const uint8_t PIX_ORDER_2[] = {
-#ifdef USE_HIP_LOOKUP
 #include "hip.inl"
-#endif
 };
 
 int hip_get_pix(int hip, int order)
