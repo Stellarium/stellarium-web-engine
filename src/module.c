@@ -114,7 +114,7 @@ int module_add_data_source(obj_t *module, const char *url, const char *key)
         } *data = calloc(1, sizeof(*data));
         data->module = module;
         data->url = strdup(url);
-        data->key = strdup(key);
+        data->key = key ? strdup(key) : NULL;
         core_add_task(module_add_data_source_task, data);
     }
     return r;
