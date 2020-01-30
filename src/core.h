@@ -189,7 +189,6 @@ enum {
 };
 
 void core_init(double win_w, double win_h, double pixel_scale);
-void core_add_default_sources(void);
 
 void core_release(void);
 

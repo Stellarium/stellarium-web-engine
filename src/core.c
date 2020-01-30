@@ -157,68 +157,6 @@ obj_t *core_get_obj_at(double x, double y, double max_dist)
     return NULL;
 }
 
-static void add_source(const char *module, const char *url, const char *key)
-{
-    obj_t *m = NULL;
-    if (module) {
-        m = core_get_module(module);
-        assert(m);
-    }
-    module_add_data_source(m, url, key);
-}
-
-EMSCRIPTEN_KEEPALIVE
-void core_add_default_sources(void)
-{
-    #define BASE "https://stellarium.sfo2.cdn.digitaloceanspaces.com/"
-
-    add_source("landscapes", BASE "landscapes/v1/guereins", "guereins");
-    add_source("landscapes", BASE "landscapes/v1/hurricane", "hurricane");
-    add_source("landscapes", BASE "landscapes/v1/zero", "zero");
-
-    // Bundled star survey.
-    add_source("stars", "asset://stars", NULL);
-    // Online gaia survey.
-    add_source("stars", BASE "surveys/gaia/v1", "gaia");
-    // Online DSO survey.
-    add_source("dsos", BASE "surveys/dso/v1", NULL);
-
-    // Skycultures.
-    add_source("skycultures", BASE "skycultures/v2/western", "western");
-    add_source("skycultures", BASE "skycultures/v2/belarusian", "belarusion");
-
-    add_source("dss", BASE "surveys/dss/v1", "hips");
-    add_source("milkyway", BASE "surveys/milkyway/v1", "hips");
-
-    // All the planets.
-    add_source("planets", BASE "surveys/sso/callisto/v1", "callisto");
-    add_source("planets", BASE "surveys/sso/default/v1", "default");
-    add_source("planets", BASE "surveys/sso/europa/v1", "europa");
-    add_source("planets", BASE "surveys/sso/ganymede/v1", "ganymede");
-    add_source("planets", BASE "surveys/sso/io/v1", "io");
-    add_source("planets", BASE "surveys/sso/jupiter/v1", "jupiter");
-    add_source("planets", BASE "surveys/sso/mars/v1", "mars");
-    add_source("planets", BASE "surveys/sso/mercury/v1", "mercury");
-    add_source("planets", BASE "surveys/sso/moon/v1", "moon");
-    add_source("planets", BASE "surveys/sso/moon-normal/v1", "moon-normal");
-    add_source("planets", BASE "surveys/sso/neptune/v1", "neptune");
-    add_source("planets", BASE "surveys/sso/saturn/v1", "saturn");
-    add_source("planets", BASE "surveys/sso/sun/v1", "sun");
-    add_source("planets", BASE "surveys/sso/uranus/v1", "uranus");
-    add_source("planets", BASE "surveys/sso/venus/v1", "venus");
-
-    // MPC data.
-    add_source("minor_planets", "asset://mpcorb.dat", "mpc_asteroids");
-    add_source("comets", BASE "mpc/v1/CometEls.txt", "mpc_comets");
-
-    // Artificial satellites files.
-    add_source("satellites",
-               BASE "/skysources/v1/tle_satellite.jsonl.gz?v=2019-09-16",
-               "jsonl/sat");
-
-    #undef BASE
-}
-
 // Set the default init values.
 static void core_set_default(void)
 {

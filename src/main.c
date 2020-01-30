@@ -124,6 +124,45 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     core_on_zoom(pow(ZOOM_FACTOR, yoffset), xpos, ypos);
 }
 
+
+static void add_source(const char *module, const char *url, const char *key)
+{
+    obj_t *m = NULL;
+    if (module) {
+        m = core_get_module(module);
+        assert(m);
+    }
+    module_add_data_source(m, url, key);
+}
+
+static void add_default_sources(void)
+{
+    #define BASE "data/skydata/"
+
+    add_source("landscapes", BASE "landscapes/guereins", "guereins");
+
+    // Bundled star survey.
+    add_source("stars", "asset://stars", NULL);
+    // DSO survey.
+    add_source("dsos", BASE "dso", NULL);
+    add_source("skycultures", BASE "skycultures/western", "western");
+    add_source("milkyway", BASE "surveys/milkyway", "hips");
+
+    // All the planets.
+    add_source("planets", BASE "surveys/sso/moon", "default");
+    add_source("planets", BASE "surveys/sso/moon", "moon");
+    add_source("planets", BASE "surveys/sso/sun", "sun");
+
+    // MPC data.
+    add_source("minor_planets", "asset://mpcorb.dat", "mpc_asteroids");
+    add_source("comets", BASE "CometEls.txt", "mpc_comets");
+
+    // Artificial satellites files.
+    add_source("satellites", BASE "tle_satellite.jsonl.gz", "jsonl/sat");
+
+    #undef BASE
+}
+
 int main(int argc, char **argv)
 {
     int w = 800, h = 600;
@@ -142,7 +181,7 @@ int main(int argc, char **argv)
 #endif
     if (args.calendar) {
         core_init(0, 0, 1);
-        core_add_default_sources();
+        add_default_sources();
         calendar_print();
         return 0;
     }
@@ -172,7 +211,7 @@ int main(int argc, char **argv)
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
 
     core_init(fb_size[0], fb_size[1], 1.0);
-    core_add_default_sources();
+    add_default_sources();
 
     if (DEFINED(COMPILE_TESTS)) {
         tests_run("auto"); // Run all the automatic tests.
