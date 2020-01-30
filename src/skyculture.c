@@ -168,8 +168,6 @@ int skyculture_parse_feature_art_json(const json_value *v,
     if (r) goto error;
 
     snprintf(art->img, sizeof(art->img), "%s", img);
-    art->uv_in_pixel = false;
-
     for (i = 0; i < 3; i++) {
         r = jcon_parse(anchors[i], "{",
             "pos", "[", JCON_INT(x, 0), JCON_INT(y, 0), "]",

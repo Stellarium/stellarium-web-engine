@@ -133,7 +133,6 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
  *   "id": "And",
  *   "img": "And.webp",
  *   "type": "constellation"
- *   "uv_in_pixel": true,
  *   "base_path": "asset://skycultures/western/img"
  *  }
  *
@@ -156,7 +155,6 @@ static json_value *make_imgs_json(
             a->anchors[1].uv[0], a->anchors[1].uv[1], a->anchors[1].hip,
             a->anchors[2].uv[0], a->anchors[2].uv[1], a->anchors[2].hip);
         json_object_push(v, "anchors", json_string_new(anchors));
-        json_object_push(v, "uv_in_pixel", json_boolean_new(a->uv_in_pixel));
         json_array_push(values, v);
     }
     return values;

@@ -49,7 +49,6 @@ typedef struct constellation_art
 {
     char cst[8];    // Id of the constellation.
     char img[128];  // Name of the image file.
-    bool uv_in_pixel; // Set to true if anchors uv are in pixel.
     struct {
         double  uv[2]; // Texture UV position.
         int     hip;   // Star HIP.

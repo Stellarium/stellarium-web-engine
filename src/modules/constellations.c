@@ -46,11 +46,6 @@ typedef struct constellation {
     // Texture and associated transformation matrix.
     texture_t   *img;
     double      mat[3][3];
-    // Set to true if the img matrix need to be rescaled to the image size.
-    // This happens if we get image anchors in pixel size before we know
-    // the size of the image.
-    bool        img_need_rescale;
-
     int         error; // Set if we couldn't parse the stars.
     double last_update; // Last update time in TT
 
@@ -268,8 +263,6 @@ int constellation_set_image(obj_t *obj, const json_value *args)
     if (parse_anchors(anchors_str, anchors) != 0) goto error;
     join_path(base_path, img, path, sizeof(path));
     cons->img = texture_from_url(path, TF_LAZY_LOAD);
-    if (json_get_attr_b(args, "uv_in_pixel", false))
-        cons->img_need_rescale = true;
     assert(cons->img);
     // Compute the image transformation matrix
     err = compute_img_mat(anchors, cons->mat);
@@ -364,16 +357,6 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     }
 
 end:
-    // Rescale the image matrix once we got the texture if the anchors
-    // coordinates were in pixels.
-    if (con->img_need_rescale && con->img && con->img->w) {
-        assert(con->mat[2][2]);
-        mat3_iscale(con->mat, con->img->w, con->img->h, 1.0);
-        con->img_need_rescale = false;
-        // XXX: should be done for non rescaled mat as well!
-        compute_image_cap(con->mat, con->image_cap);
-    }
-
     con->show = (cons && cons->show_all) ||
                 (strcasecmp(obs->cst, con->info.id) == 0) ||
                 ((obj_t*)con == core->selection);
@@ -506,7 +489,7 @@ static bool constellation_image_in_view(const constellation_t *con,
 
     // Check that the image is loaded and the mat computed.
     if (!con->img || !texture_load(con->img, NULL)) return false;
-    if (!con->mat[2][2] || con->img_need_rescale) return false;
+    if (!con->mat[2][2]) return false;
 
     // First fast tests for the case when the constellation is not in the
     // screen at all.
@@ -611,7 +594,7 @@ static int render_img(constellation_t *con, const painter_t *painter_,
 
     // Skip if not ready yet.
     if (!con->img || !texture_load(con->img, NULL)) return 0;
-    if (!con->mat[2][2] || con->img_need_rescale) return 0;
+    if (!con->mat[2][2]) return 0;
 
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->image_cap))
         return 0;
