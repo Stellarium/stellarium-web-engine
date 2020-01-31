@@ -9,7 +9,7 @@
 .PHONY: setup build dev start
 
 test-page:
-	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js" && python3 -m http.server 8000
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && python3 -m http.server 8000
 
 dev-jsdebug:
 	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && cd html && python -m SimpleHTTPServer
