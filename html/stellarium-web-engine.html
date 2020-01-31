@@ -137,7 +137,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
 <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
 <script src="https://www.unpkg.com/i18next-xhr-backend/dist/umd/i18nextXHRBackend.min.js"></script>
-<script src="static/js/stellarium-web-engine.js"></script>
+<script src="../build/stellarium-web-engine.js"></script>
 
 <!-- Button component -->
 <script type="text/x-template" id="stel-button-template">
@@ -188,7 +188,7 @@
     mounted: function() {
       var that = this;
       StelWebEngine({
-        wasmFile: 'static/js/stellarium-web-engine.wasm',
+        wasmFile: '../build/stellarium-web-engine.wasm',
         canvas: document.getElementById('stel-canvas'),
         translateFn: function(domain, str) {
           return i18next.t(str, {ns: domain});

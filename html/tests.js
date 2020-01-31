@@ -320,8 +320,8 @@ var testGeojson = function(stel) {
   }
 }
 
-require('./static/js/stellarium-web-engine.js')({
-  wasmFile: './static/js/stellarium-web-engine.wasm',
+require('../build/stellarium-web-engine.js')({
+  wasmFile: '../build/stellarium-web-engine.wasm',
   onReady: function(stel) {
     // Create test stars, re-used in several tests
     polaris = stel.createObj('star', {"interest":4.3192,"model":"star","model_data":{"Bmag":2.62,"Imag":1.22,"Rmag":1.53,"Umag":3.0,"Vmag":2.02,"de":89.26410897,"plx":7.54,"pm_de":-11.85,"pm_ra":44.48,"ra":37.95456067,"rv":-16.42,"spect_t":"F8Ib"},"names":["NAME Polaris","* alf UMi","* 1 UMi","V* alf UMi","HD 8890","HR 424","SAO 308","HIP 11767","TYC 4628-237-1","BD+88 8","FK5 907","Gaia DR2 576402619921505664","** WRH 39","** STF 93A","PLX 299","SBC9 76","AG+89 4","PPM 431","SBC7 51","WEB 2438","ADS 1477 A","CSI+88 8 1","GC 2243","GCRV 1037","ROT 3491","SKY# 3738","TD1 835","UBV M 8201","ADS 1477 AP","HIC 11767","JP11 498","N30 381","UBV 21589","PLX 299.00","AAVSO 0122+88","PMC 90-93 640","CCDM J02319+8915A","GEN# +1.00008890A","IDS 01226+8846 A","IRAS 01490+8901","WDS J02318+8916Aa,Ab","WDS J02318+8916A","GSC 04628-00237","2MASS J02314822+8915503"],"short_name":"Polaris","types":["cC*","Pu*","V*","*"]});

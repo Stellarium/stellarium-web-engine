@@ -232,11 +232,6 @@ if target_os == 'js':
 
     # Copy js files in the html example after build.
     env.Depends('build/stellarium-web-engine.wasm', prog)
-    env.Command('html/static/js/stellarium-web-engine.js',
-                'build/stellarium-web-engine.js', 'cp $SOURCE $TARGET')
-    env.Command('html/static/js/stellarium-web-engine.wasm',
-                'build/stellarium-web-engine.wasm',
-                'cp $SOURCE $TARGET')
 
 env.Program(target='build/stellarium-web-engine', source=sources)
 

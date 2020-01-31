@@ -10,5 +10,3 @@
 /build*
 /.sconsign.dblite
 /.cache
-html/static/js/stellarium-web-engine.js
-html/static/js/stellarium-web-engine.wasm
