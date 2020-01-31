@@ -9,9 +9,6 @@
 /todo
 /build*
 /data-src
-/stellarium-web-engine
-/stellarium-web-engine.js
-/stellarium-web-engine.wasm
 /.sconsign.dblite
 /.cache
 /doc
