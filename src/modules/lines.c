@@ -601,19 +601,20 @@ static void get_azalt_fov(const painter_t *painter, int frame,
     double theta_max = 0, theta_min = 0;
     double phi_max = 0, phi_min = 0;
     int i;
+    const int N = 3;
 
     /*
-     * This works by unprojection the four screen corners into the grid
-     * frame and testing the maximum and minimum distance to the central
-     * point for each of them.
+     * This works by unprojection all the points of an NxN grid from the screen
+     * into the frame and testing the maximum and minimum distance to the
+     * central point for each of them.
      */
     project(painter->proj, PROJ_BACKWARD, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
     eraC2s(p, &theta0, &phi0);
 
-    for (i = 0; i < 4; i++) {
-        p[0] = 2 * ((i % 2) - 0.5);
-        p[1] = 2 * ((i / 2) - 0.5);
+    for (i = 0; i < N * N; i++) {
+        p[0] = N * ((i % N) / (double)(N - 1) - 0.5);
+        p[1] = N * ((i / N) / (double)(N - 1) - 0.5);
         project(painter->proj, PROJ_BACKWARD, p, p);
         convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
         eraC2s(p, &theta, &phi);
