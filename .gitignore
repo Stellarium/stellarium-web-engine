@@ -8,7 +8,6 @@
 /imgui.ini
 /todo
 /build*
-/data-src
 /.sconsign.dblite
 /.cache
 html/static/js/stellarium-web-engine.js

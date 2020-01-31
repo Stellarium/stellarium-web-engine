@@ -33,7 +33,7 @@ print('Parse bayer cat')
 bayers = {}
 bayer_file = download(
         'http://cdsarc.u-strasbg.fr/vizier/ftp/cats/IV/27A/catalog.dat',
-        dest='data-src/IV_27A.dat',
+        dest='build/data-src/IV_27A.dat',
         md5='7b51c0aa8255c6aaf261a1083e0f0bd8')
 for line in open(bayer_file):
     hd = int(line[0:6].strip())

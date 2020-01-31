@@ -41,7 +41,7 @@ def ensure_dir(file_path):
 
 def download(url, dest=None, sha256=None, md5=None, unpacked_md5=False, headers=None):
     '''download a file into data-src and return a path to it'''
-    dest = dest or 'data-src/'
+    dest = dest or 'build/data-src/'
     if dest.endswith('/'):
         dest = os.path.join(dest, os.path.basename(url))
     if not os.path.exists(dest):
@@ -113,7 +113,7 @@ def generator(target, md5):
         def wrapper(abort_on_wrong_md5=True):
             path = target
             if not path.startswith('./'):
-                path = os.path.join('data-src', path)
+                path = os.path.join('build/data-src', path)
             if not os.path.exists(path):
                 print('Generating %s' % path)
                 ensure_dir(path)
