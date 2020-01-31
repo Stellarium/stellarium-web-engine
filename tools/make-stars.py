@@ -91,7 +91,7 @@ for s in stars:
         break
 
 print('save tiles')
-out_dir = './data/stars/'
+out_dir = './data/skydata/stars/'
 COLUMNS = [
     {'id': 'hip',  'type': 'i'},
     {'id': 'hd',   'type': 'i'},

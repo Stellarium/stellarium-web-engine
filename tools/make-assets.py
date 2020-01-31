@@ -22,7 +22,6 @@ SOURCES = [
     "mpcorb.dat",
     "planets.ini",
     "shaders/",
-    "stars/",
     "symbols.png",
     "textures/"
 ]

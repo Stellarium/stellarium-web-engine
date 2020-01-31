@@ -282,6 +282,5 @@ void asset_set_hook(void *user,
 #include "assets/mpcorb.dat.inl"
 #include "assets/planets.ini.inl"
 #include "assets/shaders.inl"
-#include "assets/stars.inl"
 #include "assets/symbols.png.inl"
 #include "assets/textures.inl"

@@ -143,7 +143,7 @@ void add_default_sources(void)
     add_source("landscapes", BASE "landscapes/guereins", "guereins");
 
     // Bundled star survey.
-    add_source("stars", "asset://stars", NULL);
+    add_source("stars", BASE "stars", NULL);
     // DSO survey.
     add_source("dsos", BASE "dso", NULL);
     add_source("skycultures", BASE "skycultures/western", "western");

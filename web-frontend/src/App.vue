@@ -253,7 +253,7 @@ export default {
           if (!that.dataSourceInitDone) {
             // Set all default data sources
             let core = that.$stel.core
-            core.stars.addDataSource({ url: 'asset://stars' })
+            core.stars.addDataSource({ url: process.env.BASE_URL + 'skydata/stars' })
             core.skycultures.addDataSource({ url: process.env.BASE_URL + 'skydata/skycultures/western', key: 'western' })
             core.dsos.addDataSource({ url: process.env.BASE_URL + 'skydata/dso' })
             core.landscapes.addDataSource({ url: process.env.BASE_URL + 'skydata/landscapes/guereins', key: 'guereins' })
