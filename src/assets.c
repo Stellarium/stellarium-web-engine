@@ -63,6 +63,19 @@ void LOG_RET(asset_t *asset, const char *url, int code, int flags)
     if (asset) asset->flags |= LOGGED;
 }
 
+/*
+ * Remove the parameters part of an url
+ * eg: /something?v=10 -> /something
+ */
+static void remove_url_parameters(const char *url, char *out, int size)
+{
+    char *pos;
+    pos = strrchr(url, '?');
+    if (!pos)
+        snprintf(out, size, "%s", url);
+    else
+        snprintf(out, size, "%.*s", (int)(pos - url), url);
+}
 
 static bool file_exists(const char *path)
 {
@@ -121,6 +134,8 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
     int r, default_size, default_code;
     const void *data = NULL;
     (void)r;
+    char path[1204];
+
     size = size ?: &default_size;
     code = code ?: &default_code;
 
@@ -162,11 +177,12 @@ const void *asset_get_data2(const char *url, int flags, int *size, int *code)
 
     // Special handler for local files.
     if (HAS_FS && !asset->data && !strchr(url, ':')) {
-        if (!file_exists(url)) {
+        remove_url_parameters(url, path, sizeof(path));
+        if (!file_exists(path)) {
             *code = 404;
             goto end;
         }
-        asset->data = read_file(url, &asset->size);
+        asset->data = read_file(path, &asset->size);
         asset->flags |= FREE_DATA;
     }
 
