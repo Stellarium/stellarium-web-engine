@@ -1,5 +1,9 @@
 #!/usr/bin/nodejs
 
+var polaris
+var vega
+var sigauct
+
 var assert = function(cond, msg) {
   if (!cond) {
     msg = msg || "Assertion failed";
@@ -40,7 +44,6 @@ var testBasic = function(stel) {
 
   // Test Polaris pos.
   {
-    let polaris = stel.getObj('HIP 11767');
     assert(polaris);
     let pvo = polaris.getInfo('pvo', stel.observer);
     let cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
@@ -77,17 +80,14 @@ var testInfo = function(stel) {
   }
 
   {
-    let polaris = stel.getObj('HIP 11767');
     assert(polaris);
     let radius = polaris.getInfo('RADIUS');
   }
 }
 
 var testIds = function(stel) {
-  var o1 = stel.getObj('HIP 11767');
-  assert(o1);
-  // Actually not defined in current asset data!
-  // assert(o1.designations().includes('NAME Polaris'));
+  assert(polaris);
+  assert(polaris.designations().includes('NAME Polaris'));
 }
 
 var testSearch = function(stel) {
@@ -150,12 +150,11 @@ var testVisibility = function(stel) {
   stel.observer.utc = stel.date2MJD(Date.UTC(2009, 8, 6, 17, 0, 0));
   stel.observer.longitude = -84.388 * stel.D2R;
   stel.observer.latitude = 33.749 * stel.D2R;
-  let vega = stel.getObj('HIP 91262');
+  assert(vega)
   assert(vega.computeVisibility().length === 1);
-  let polaris = stel.getObj('HIP 11767');
+  assert(polaris)
   assert(JSON.stringify(polaris.computeVisibility()) ==
           '[{"rise":null,"set":null}]');
-  let sigauct = stel.getObj('HIP 104382');
   assert(sigauct);
   assert(sigauct.computeVisibility().length === 0);
 };
@@ -181,8 +180,7 @@ var testTree = function(stel) {
   assert(stel.getValue('selection') === null);
 
   // Test that object values are returned as pointer.
-  var o = stel.getObj('HIP 11767');
-  stel.core.selection = o;
+  stel.core.selection = polaris;
   assert(typeof(stel.getValue('selection')) === 'number');
 }
 
@@ -296,8 +294,7 @@ var testPositions = function(stel) {
   obs.utc = 55080.7083;
   obs.longitude = -84.39 * stel.D2R;
   obs.latitude = 33.75 * stel.D2R;
-  var o = stel.getObj('HIP 11767');
-  var icrs = o.getInfo('pvo', obs)[0];
+  var icrs = polaris.getInfo('pvo', obs)[0];
   var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', icrs);
   var a_ra  = stel.anp(stel.c2s(icrs)[0]);
   var a_dec = stel.anpm(stel.c2s(icrs)[1]);
@@ -326,7 +323,11 @@ var testGeojson = function(stel) {
 require('./static/js/stellarium-web-engine.js')({
   wasmFile: './static/js/stellarium-web-engine.wasm',
   onReady: function(stel) {
-    stel.core.stars.addDataSource({url: 'asset://stars'});
+    // Create test stars, re-used in several tests
+    polaris = stel.createObj('star', {"interest":4.3192,"model":"star","model_data":{"Bmag":2.62,"Imag":1.22,"Rmag":1.53,"Umag":3.0,"Vmag":2.02,"de":89.26410897,"plx":7.54,"pm_de":-11.85,"pm_ra":44.48,"ra":37.95456067,"rv":-16.42,"spect_t":"F8Ib"},"names":["NAME Polaris","* alf UMi","* 1 UMi","V* alf UMi","HD 8890","HR 424","SAO 308","HIP 11767","TYC 4628-237-1","BD+88 8","FK5 907","Gaia DR2 576402619921505664","** WRH 39","** STF 93A","PLX 299","SBC9 76","AG+89 4","PPM 431","SBC7 51","WEB 2438","ADS 1477 A","CSI+88 8 1","GC 2243","GCRV 1037","ROT 3491","SKY# 3738","TD1 835","UBV M 8201","ADS 1477 AP","HIC 11767","JP11 498","N30 381","UBV 21589","PLX 299.00","AAVSO 0122+88","PMC 90-93 640","CCDM J02319+8915A","GEN# +1.00008890A","IDS 01226+8846 A","IRAS 01490+8901","WDS J02318+8916Aa,Ab","WDS J02318+8916A","GSC 04628-00237","2MASS J02314822+8915503"],"short_name":"Polaris","types":["cC*","Pu*","V*","*"]});
+    vega = stel.createObj('star', {"interest":4.3988,"model":"star","model_data":{"Bmag":0.03,"Imag":0.1,"Rmag":0.07,"Umag":0.03,"Vmag":0.03,"de":38.783688956,"plx":130.23,"pm_de":286.23,"pm_ra":200.94,"ra":279.234734787,"rv":-20.6,"spect_t":"A0Va"},"names":["NAME Vega","* alf Lyr","* 3 Lyr","V* alf Lyr","HD 172167","HR 7001","SAO 67174","HIP 91262","TYC 3105-2070-1","BD+38 3238","GJ 721","GJ 721.0","FK5 699","HGAM 706","USNO 882","Zkh 277","PLX 4293","CEL 4636","RAFGL 2208","ROT 2633","GAT 1285","WEB 15681","ADS 11510 A","GC 25466","GCRV 11085","HIC 91262","IRC +40322","LTT 15486","NLTT 46746","NSV 11128","PPM 81558","SKY# 34103","UBV 15842","UBV M 23118","ASCC 507896","8pc 128.93","AG+38 1711","CSV 101745","JP11 2999","N30 4138","TD1 22883","PLX 4293.00","CSI+38 3238 1","PMC 90-93 496","EUVE J1836+38.7","LSPM J1836+3847","CCDM J18369+3847A","GEN# +1.00172167","IDS 18336+3841 A","IRAS 18352+3844","WDS J18369+3846A","IRAS F18352+3844","uvby98 100172167","1E 183515+3844.3","JCMTSF J183656.4+384709","JCMTSE J183656.4+384709","USNO-B1.0 1287-00305764","AKARI-IRC-V1 J1836564+384703","EQ 183456.7+384615.4","WISE J183656.49+384703.9","2MASS J18365633+3847012"],"short_name":"Vega","types":["dS*","Pu*","V*","*"]});
+    sigauct = stel.createObj('star', {"interest":4.1832,"match":"HIP 104382","model":"star","model_data":{"Bmag":5.74,"Vmag":5.42,"de":-88.9565032486872,"plx":11.092,"pm_de":5.612,"pm_ra":26.671,"ra":317.195180933923,"rv":11.9,"spect_t":"F0IV"},"names":["NAME Polaris Australis","* sig Oct","V* sig Oct","HD 177482","HR 7228","SAO 258857","HIP 104382","TYC 9536-384-1","FK5 923","Gaia DR2 6341181494973204096","CPD-89 47","ROT 2717","WEB 19004","GC 28194","GCRV 12662","SKY# 40219","UBV 16180","UBV M 23463","CPC 22 2512","HIC 104382","N30 4483","PPM 378539","TD1 23828","GEN# +1.00177482","IRAS 20151-8908","uvby98 100177482","2MASS J21084697-8857236"],"short_name":"sig Oct","types":["dS*","Pu*","V*","*"]});
+
     testCore(stel);
     testBasic(stel);
     testInfo(stel);
