@@ -435,6 +435,7 @@ texture_t *hips_get_tile_texture(
                     hips->allsky.bpp,
                     x, y, hips->allsky.w / nbw, hips->allsky.w / nbw, 0);
         }
+        if (flags & HIPS_FORCE_USE_ALLSKY) *loading_complete = true;
         return hips->allsky.textures[pix];
     }
 
