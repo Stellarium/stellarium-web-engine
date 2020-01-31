@@ -616,8 +616,8 @@ static void get_azalt_fov(const painter_t *painter, int frame,
     eraC2s(p, &theta0, &phi0);
 
     for (i = 0; i < N * N; i++) {
-        p[0] = N * ((i % N) / (double)(N - 1) - 0.5);
-        p[1] = N * ((i / N) / (double)(N - 1) - 0.5);
+        p[0] = 2 * ((i % N) / (double)(N - 1) - 0.5);
+        p[1] = 2 * ((i / N) / (double)(N - 1) - 0.5);
         project(painter->proj, PROJ_BACKWARD, p, p);
         convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
         eraC2s(p, &theta, &phi);
