@@ -27,60 +27,60 @@ typedef struct
     uint8_t splits[16];     // Split decomposition at each iteration.
 } step_t;
 
-static const step_t STEPS_DEG[] = {
-    {      1,  0, {                                              }}, // 360°
-    {      2,  1, {2                                             }}, // 180°
-    {      4,  2, {2, 2                                          }}, //  90°
-    {      6,  2, {2, 3                                          }}, //  60°
+static const step_t STEPS_RA[] = {
+    {     24,  4, {2, 2, 2, 3                                    }}, //  1h
+    {     72,  5, {2, 2, 2, 3, 3                                 }}, // 20m
+    {    144,  6, {2, 2, 2, 2, 3, 3                              }}, // 10m
+    {    288,  7, {2, 2, 2, 2, 2, 3, 3                           }}, //  5m
+    {   1440,  8, {2, 2, 2, 2, 2, 3, 3, 5                        }}, //  1m
+    {   4320,  9, {2, 2, 2, 2, 2, 3, 3, 3, 5                     }}, // 20s
+    {   8640, 10, {2, 2, 2, 2, 2, 2, 3, 3, 3, 5                  }}, // 10s
+    {  17280, 11, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 5               }}, //  5s
+    {  86400, 12, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 5, 5            }}, //  1s
+};
 
-    {     12,  3, {2, 2, 3                                       }}, //  30°
+static const step_t STEPS_DEC[] = {
     {     18,  3, {2, 3, 3                                       }}, //  20°
-    {     24,  4, {2, 2, 2, 3                                    }}, //  15°
     {     36,  4, {2, 2, 3, 3                                    }}, //  10°
     {     72,  5, {2, 2, 2, 3, 3                                 }}, //   5°
-    {    180,  5, {2, 2, 3, 3, 5                                 }}, //   2°
     {    360,  6, {2, 2, 2, 3, 3, 5                              }}, //   1°
-
-    {    720,  7, {2, 2, 2, 2, 3, 3, 5                           }}, //  30'
     {   1080,  7, {2, 2, 2, 3, 3, 3, 5                           }}, //  20'
-    {   1440,  8, {2, 2, 2, 2, 2, 3, 3, 5                        }}, //  15'
     {   2160,  8, {2, 2, 2, 2, 3, 3, 3, 5                        }}, //  10'
     {   4320,  9, {2, 2, 2, 2, 2, 3, 3, 3, 5                     }}, //   5'
-    {  10800,  9, {2, 2, 2, 2, 3, 3, 3, 5, 5                     }}, //   2'
     {  21600, 10, {2, 2, 2, 2, 2, 3, 3, 3, 5, 5                  }}, //   1'
-
-    {  43200, 11, {2, 2, 2, 2, 2, 2, 3, 3, 3, 5, 5               }}, //  30"
     {  64800, 11, {2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5               }}, //  20"
-    {  86400, 12, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 5, 5            }}, //  15"
     { 129600, 12, {2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5            }}, //  10"
     { 259200, 13, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5         }}, //   5"
-    { 648000, 13, {2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5, 5         }}, //   2"
     {1296000, 14, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5, 5      }}, //   1"
 };
 
-static const step_t STEPS_HOUR[] = {
-    {      1,  0, {                                              }}, // 24h
-    {      2,  1, {2                                             }}, // 12h
-    {      3,  1, {3                                             }}, //  8h
-    {      6,  2, {2, 3                                          }}, //  4h
-    {     12,  3, {2, 2, 3                                       }}, //  2h
-    {     24,  4, {2, 2, 2, 3                                    }}, //  1h
+static const step_t STEPS_AZ[] = {
+    {     24,  4, {2, 2, 2, 3                                    }}, //  15°
+    {     72,  5, {2, 2, 2, 3, 3                                 }}, //   5°
+    {    360,  6, {2, 2, 2, 3, 3, 5                              }}, //   1°
+    {   1080,  7, {2, 2, 2, 3, 3, 3, 5                           }}, //  20'
+    {   2160,  8, {2, 2, 2, 2, 3, 3, 3, 5                        }}, //  10'
+    {   4320,  9, {2, 2, 2, 2, 2, 3, 3, 3, 5                     }}, //   5'
+    {  21600, 10, {2, 2, 2, 2, 2, 3, 3, 3, 5, 5                  }}, //   1'
+    {  64800, 11, {2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5               }}, //  20"
+    { 129600, 12, {2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5            }}, //  10"
+    { 259200, 13, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5         }}, //   5"
+    {1296000, 14, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5, 5      }}, //   1"
+};
 
-    {     48,  5, {2, 2, 2, 2, 3                                 }}, // 30m
-    {     72,  5, {2, 2, 2, 3, 3                                 }}, // 20m
-    {     96,  6, {2, 2, 2, 2, 2, 3                              }}, // 15m
-    {    144,  6, {2, 2, 2, 2, 3, 3                              }}, // 10m
-    {    288,  7, {2, 2, 2, 2, 2, 3, 3                           }}, //  5m
-    {    720,  7, {2, 2, 2, 2, 3, 3, 5                           }}, //  2m
-    {   1440,  8, {2, 2, 2, 2, 2, 3, 3, 5                        }}, //  1m
-
-    {   2880,  9, {2, 2, 2, 2, 2, 2, 3, 3, 5                     }}, // 30s
-    {   4320,  9, {2, 2, 2, 2, 2, 3, 3, 3, 5                     }}, // 20s
-    {   5760, 10, {2, 2, 2, 2, 2, 2, 2, 3, 3, 5                  }}, // 15s
-    {   8640, 10, {2, 2, 2, 2, 2, 2, 3, 3, 3, 5                  }}, // 10s
-    {  17280, 11, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 5               }}, //  5s
-    {  43200, 11, {2, 2, 2, 2, 2, 2, 3, 3, 3, 5, 5               }}, //  2s
-    {  86400, 12, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 5, 5            }}, //  1s
+static const step_t STEPS_ALT[] = {
+    {     18,  3, {2, 3, 3                                       }}, //  20°
+    {     36,  4, {2, 2, 3, 3                                    }}, //  10°
+    {     72,  5, {2, 2, 2, 3, 3                                 }}, //   5°
+    {    360,  6, {2, 2, 2, 3, 3, 5                              }}, //   1°
+    {   1080,  7, {2, 2, 2, 3, 3, 3, 5                           }}, //  20'
+    {   2160,  8, {2, 2, 2, 2, 3, 3, 3, 5                        }}, //  10'
+    {   4320,  9, {2, 2, 2, 2, 2, 3, 3, 3, 5                     }}, //   5'
+    {  21600, 10, {2, 2, 2, 2, 2, 3, 3, 3, 5, 5                  }}, //   1'
+    {  64800, 11, {2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5               }}, //  20"
+    { 129600, 12, {2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5            }}, //  10"
+    { 259200, 13, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5         }}, //   5"
+    {1296000, 14, {2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5, 5      }}, //   1"
 };
 
 static struct {
@@ -497,7 +497,8 @@ static void render_recursion(
         int level,
         const int splits[2],
         const int pos[2],
-        const step_t *steps[2])
+        const step_t *steps[2],
+        bool skip_half)
 {
     int i, j, dir;
     int split_az, split_al, new_splits[2], new_pos[2];
@@ -549,6 +550,8 @@ static void render_recursion(
 
         // Don't render last latitude, zero diameter circle at the north pole.
         if (dir == 1 && pos[1] == splits[1] - 1) continue;
+        // Skip every other lines of Az if required.
+        if (dir == 1 && skip_half && (pos[1] % 2)) continue;
 
         // Limit to 4 meridian lines around the poles.
         if (    line->grid && dir == 0 &&
@@ -578,7 +581,7 @@ keep_going:
         new_pos[0] = pos[0] * split_az + j;
         new_pos[1] = pos[1] * split_al + i;
         render_recursion(line, painter, rot, level + 1, new_splits, new_pos,
-                         steps);
+                         steps, skip_half);
     }
 }
 
@@ -660,18 +663,23 @@ static void get_steps(char type, int frame,
 
     get_azalt_fov(painter, frame, &azfov, &altfov);
 
-    // First step can be in degrees of hours.
+    // First step.
     a = azfov / NB_DIVS;
     a = min(a, MAX_SEP);
-    if (type == 'd')
-        steps[0] = steps_lookup(STEPS_DEG, ARRAY_SIZE(STEPS_DEG), a);
-    else
-        steps[0] = steps_lookup(STEPS_HOUR, ARRAY_SIZE(STEPS_HOUR), a);
+    if (type == 'd') {
+        steps[0] = steps_lookup(STEPS_AZ, ARRAY_SIZE(STEPS_AZ), a);
+    } else {
+        steps[0] = steps_lookup(STEPS_RA, ARRAY_SIZE(STEPS_RA), a);
+    }
 
-    // Second step is always in degrees.
+    // Second step.
     a = altfov / NB_DIVS;
     a = min(a, MAX_SEP);
-    steps[1] = steps_lookup(STEPS_DEG, ARRAY_SIZE(STEPS_DEG), a);
+    if (type == 'd') {
+        steps[1] = steps_lookup(STEPS_ALT, ARRAY_SIZE(STEPS_ALT), a);
+    } else {
+        steps[1] = steps_lookup(STEPS_DEC, ARRAY_SIZE(STEPS_DEC), a);
+    }
 }
 
 /* Mapping function that render the antimeridian line twice.
@@ -718,6 +726,7 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
     const step_t *steps[2];
     int splits[2] = {1, 1};
     int pos[2] = {0, 0};
+    bool skip_half = false;
     painter_t painter = *painter_;
 
     // XXX: probably need to use enum id for the different lines/grids.
@@ -740,7 +749,15 @@ static int line_render(const obj_t *obj, const painter_t *painter_)
 
     // Compute the number of divisions of the grid.
     get_steps(line->format, line->frame, &painter, steps);
-    render_recursion(line, &painter, rot, 0, splits, pos, steps);
+
+    // For the Az (or Dec) step, if we are at 20°, use 10° and skip every
+    // other lines (mod = 2)
+    if (steps[1]->n == 18) {
+        steps[1]++;
+        skip_half = true;
+    }
+
+    render_recursion(line, &painter, rot, 0, splits, pos, steps, skip_half);
     return 0;
 }
 
