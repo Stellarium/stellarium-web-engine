@@ -286,21 +286,21 @@
     canvas: document.getElementById('stel-canvas'),
     onReady: function() {
 
-      // Add all data sources.
-      var baseUrl = 'https://data.stellarium.org/';
-      stel.addDataSource({url: 'asset://stars', type: 'hips'});
-      stel.addDataSource({url: 'asset://skycultures/western',
-                          type: 'skyculture'});
-      stel.addDataSource({url: baseUrl + 'surveys/dso', type: 'hips'});
-      stel.addDataSource({url: baseUrl + 'landscapes'});
-      stel.addDataSource({url: baseUrl + 'surveys', type: 'hipslist'});
-      stel.addDataSource({url: 'https://alasky.unistra.fr/DSS/DSSColor',
-                          type: 'hips'});
-      stel.addDataSource({url: 'asset://mpcorb.dat',
-                          type: 'mpc_asteroids'});
-      stel.addDataSource({url: baseUrl + 'mpc/CometEls.txt',
-                          type: 'mpc_comets'});
-      stel.addDataSource({url: baseUrl + 'norad', type: 'norad'});
+    // Add all data sources.
+    var baseUrl = '../data/';
+    let core = stel.core;
+
+    core.stars.addDataSource({ url: baseUrl + 'skydata/stars' })
+    core.skycultures.addDataSource({ url: baseUrl + 'skydata/skycultures/western', key: 'western' })
+    core.dsos.addDataSource({ url: baseUrl + 'skydata/dso' })
+    core.landscapes.addDataSource({ url: baseUrl + 'skydata/landscapes/guereins', key: 'guereins' })
+    core.milkyway.addDataSource({ url: baseUrl + 'skydata/surveys/milkyway' })
+    core.minor_planets.addDataSource({ url: 'asset://mpcorb.dat', key: 'mpc_asteroids' })
+    core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'moon' })
+    core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/sun', key: 'sun' })
+    core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'default' })
+    core.comets.addDataSource({ url: baseUrl + 'skydata/CometEls.txt', key: 'mpc_comets' })
+    core.satellites.addDataSource({ url: baseUrl + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
 
       var app = new Vue({
         el: '#gui',
