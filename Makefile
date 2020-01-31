@@ -57,7 +57,7 @@ js-es6-prof:
 doc:
 	rm -rf /tmp/swe_src
 	cp -rf src /tmp/swe_src
-	./stellarium-web-engine --gen-doc > /tmp/swe_src/generated-doc.h
+	./build/stellarium-web-engine --gen-doc > /tmp/swe_src/generated-doc.h
 	find /tmp/swe_src -name '*.c' | xargs rm
-	mkdir -p doc/ndconfig
-	naturaldocs -nag -i /tmp/swe_src -o html doc -p doc/ndconfig
+	mkdir -p build/doc/ndconfig
+	naturaldocs -nag -i /tmp/swe_src -o html doc -p build/doc/ndconfig
