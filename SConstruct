@@ -226,19 +226,19 @@ if target_os == 'js':
     env.Append(LINKFLAGS=flags)
     env.Append(LIBS=['GL'])
 
-    prog = env.Program(target='stellarium-web-engine.js', source=sources)
+    prog = env.Program(target='build/stellarium-web-engine.js', source=sources)
     env.Depends(prog, glob.glob('src/*.js'))
     env.Depends(prog, glob.glob('src/js/*.js'))
 
     # Copy js files in the html example after build.
-    env.Depends('stellarium-web-engine.wasm', prog)
+    env.Depends('build/stellarium-web-engine.wasm', prog)
     env.Command('html/static/js/stellarium-web-engine.js',
-                'stellarium-web-engine.js', 'cp $SOURCE $TARGET')
+                'build/stellarium-web-engine.js', 'cp $SOURCE $TARGET')
     env.Command('html/static/js/stellarium-web-engine.wasm',
-                'stellarium-web-engine.wasm',
+                'build/stellarium-web-engine.wasm',
                 'cp $SOURCE $TARGET')
 
-env.Program(target='stellarium-web-engine', source=sources)
+env.Program(target='build/stellarium-web-engine', source=sources)
 
 # Ugly hack to run makeasset before each compilation
 from subprocess import call

@@ -29,13 +29,13 @@ gen-es6-prof:
 
 update-engine:
 	make gen-es6
-	cp ../stellarium-web-engine.js src/assets/js/
-	cp ../stellarium-web-engine.wasm src/assets/js/
+	cp ../build/stellarium-web-engine.js src/assets/js/
+	cp ../build/stellarium-web-engine.wasm src/assets/js/
 
 update-engine-debug:
 	make gen-es6-debug
-	cp ../stellarium-web-engine.js src/assets/js/
-	cp ../stellarium-web-engine.wasm src/assets/js/
+	cp ../build/stellarium-web-engine.js src/assets/js/
+	cp ../build/stellarium-web-engine.wasm src/assets/js/
 
 setup: Dockerfile Dockerfile.jsbuild
 	# Build docker image for compilation with emscripten
