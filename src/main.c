@@ -155,7 +155,7 @@ void add_default_sources(void)
     add_source("planets", BASE "surveys/sso/sun", "sun");
 
     // MPC data.
-    add_source("minor_planets", "asset://mpcorb.dat", "mpc_asteroids");
+    add_source("minor_planets", BASE "mpcorb.dat", "mpc_asteroids");
     add_source("comets", BASE "CometEls.txt", "mpc_comets");
 
     // Artificial satellites files.

@@ -19,7 +19,6 @@ import zlib
 ROOT = "data"
 SOURCES = [
     "font/",
-    "mpcorb.dat",
     "planets.ini",
     "shaders/",
     "symbols.png",
