@@ -951,7 +951,7 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
         .create_tile = stars_create_tile,
         .delete_tile = del_tile,
     };
-    int code;
+    int i, code;
     double release_date = 0;
     survey_t *survey, *gaia;
 
@@ -979,6 +979,13 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
     survey->min_order = properties_get_f(args, "hips_order_min", 0);
     survey->max_vmag = properties_get_f(args, "max_vmag", NAN);
     survey->min_vmag = properties_get_f(args, "min_vmag", -2.0);
+
+    // Preload the first level of the survey (only for bright stars).
+    if (survey->min_order == 0 && survey->min_vmag <= 0.0) {
+        for (i = 0; i < 12; i++) {
+            hips_get_tile(survey->hips, 0, i, 0, &code);
+        }
+    }
 
     DL_APPEND(stars->surveys, survey);
     DL_SORT(stars->surveys, survey_cmp);
