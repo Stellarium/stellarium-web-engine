@@ -49,6 +49,8 @@ typedef struct {
  */
 typedef struct mplanets {
     obj_t   obj;
+    char    *source_url;
+    bool    parsed; // Set to true once the data has been parsed.
     int     update_pos; // Index of the position for iterative update.
     bool    visible;
     double hints_mag_offset; // Hints/labels magnitude offset
@@ -160,17 +162,9 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
 static int mplanets_add_data_source(
         obj_t *obj, const char *url, const char *key)
 {
-    const char *data;
-    int size, code;
     mplanets_t *mplanets = (void*)obj;
     if (strcmp(key, "mpc_asteroids") != 0) return 1;
-    data = asset_get_data(url, &size, &code);
-    if (!data) {
-        LOG_W("Cannot read asteroids data (%s)", url);
-        return 0;
-    }
-    load_data(mplanets, data, size);
-    asset_release(url);
+    mplanets->source_url = strdup(url);
     return 0;
 }
 
@@ -326,6 +320,26 @@ static bool range_contains(int range_start, int range_size, int nb, int i)
     return i >= range_start && i < range_start + range_size;
 }
 
+static int mplanets_update(obj_t *obj, double dt)
+{
+    int size, code;
+    const char *data;
+    mplanets_t *mps = (void*)obj;
+
+    if (!mps->parsed && mps->source_url) {
+        data = asset_get_data(mps->source_url, &size, &code);
+        if (!code) return 0; // Still loading.
+        mps->parsed = true;
+        if (!data) {
+            LOG_W("Cannot read asteroids data: %s (%d)", mps->source_url, code);
+            return 0;
+        }
+        load_data(mps, data, size);
+        asset_release(mps->source_url);
+    }
+    return 0;
+}
+
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(mplanets_render, 0);
@@ -392,6 +406,7 @@ static obj_klass_t mplanets_klass = {
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE | OBJ_LISTABLE,
     .init           = mplanets_init,
     .add_data_source    = mplanets_add_data_source,
+    .update         = mplanets_update,
     .render         = mplanets_render,
     .get_by_oid     = mplanets_get_by_oid,
     .render_order   = 20,
