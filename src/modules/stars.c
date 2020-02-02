@@ -961,7 +961,11 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
 
     if (!args) return -1;
     args_type = json_get_attr_s(args, "type");
-    if (!args_type || strcmp(args_type, "stars")) return -1;
+    if (!args_type || strcmp(args_type, "stars")) {
+        LOG_W("Source is not a star survey: %s", url);
+        json_builder_free(args);
+        return -1;
+    }
 
     survey = calloc(1, sizeof(*survey));
     if (key) snprintf(survey->key, sizeof(survey->key), "%s", key);
