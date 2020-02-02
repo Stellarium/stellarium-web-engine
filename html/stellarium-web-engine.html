@@ -179,6 +179,16 @@
     }
   });
 
+  // Return the current page absolute base url.
+  // Used because at the moment emscripten doesn't support relative url
+  // properly.
+  function getBaseUrl() {
+    let url = document.location.href.split('/');
+    url.pop();
+    url = url.join('/');
+    return url + '/';
+  }
+
   new Vue({
     vuetify: new Vuetify({
       theme: {dark: true}
@@ -196,7 +206,8 @@
         onReady: function(stel) {
           that.stel = stel;
           // Add all data sources.
-          var baseUrl = '../data/';
+          getBaseUrl();
+          var baseUrl = getBaseUrl() + '../data/';
           let core = stel.core;
 
           core.stars.addDataSource({ url: baseUrl + 'skydata/stars' })
