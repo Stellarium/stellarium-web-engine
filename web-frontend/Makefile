@@ -12,10 +12,10 @@ test-page:
 	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && python3 -m http.server 8000
 
 dev-jsdebug:
-	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && cd html && python -m SimpleHTTPServer
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-debug" && cd html && python3 -m http.server 8000
 
 dev-jsprof:
-	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-prof" && cd html && python -m SimpleHTTPServer
+	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-prof" && cd html && python3 -m http.server 8000
 
 gen-es6:
 	cd .. && docker run -it -p 8000:8000 -v "$(PWD)/..:/app" swe-dev /bin/bash -c "source /emsdk/emsdk_env.sh && make js-es6"
@@ -52,4 +52,4 @@ build:
 	docker run -it -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn run build
 
 start:
-	cd dist && python -m SimpleHTTPServer
+	cd dist && python3 -m http.server 8080
