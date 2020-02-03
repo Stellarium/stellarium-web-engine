@@ -341,4 +341,8 @@ html, body, #app {
   margin-bottom: 6px;
 }
 
+.v-application--wrap {
+  min-height: 100%!important;
+}
+
 </style>
