@@ -17,14 +17,21 @@ Module.afterInit(function() {
 
     // Check for canvas resize
     var canvas = Module.canvas;
-    var displayWidth  = Math.floor(canvas.clientWidth);
-    var displayHeight = Math.floor(canvas.clientHeight);
+
+    // Get the device pixel ratio, falling back to 1.
+    var dpr = window.devicePixelRatio || 1;
+
+    // Get the size of the canvas in CSS pixels.
+    var rect = canvas.getBoundingClientRect();
+
+    var displayWidth  = rect.width;
+    var displayHeight = rect.height;
     var sizeChanged = (canvas.width  !== displayWidth) ||
                       (canvas.height !== displayHeight);
 
     if (sizeChanged) {
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
     }
 
     if (!prevTimestamp)
@@ -42,7 +49,7 @@ Module.afterInit(function() {
     // TODO: manage paning and flicking here
 
     Module._core_update(dt / 1000);
-    Module._core_render(canvas.width, canvas.height, 1);
+    Module._core_render(displayWidth, displayHeight, dpr);
 
     window.requestAnimationFrame(render)
   }
