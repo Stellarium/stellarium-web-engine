@@ -30,6 +30,7 @@ typedef struct satellite {
     double pvo[2][4];
     double vmag;
     bool error; // Set if we got an error computing the position.
+    bool on_screen;  // Set once the object has been visible.
     json_value *data; // Data passed in the constructor.
 } satellite_t;
 
@@ -39,6 +40,7 @@ typedef struct satellites {
     char    *norad_url; // Online norad files location.
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
+    int     update_pos; // Index of the position for iterative update.
     bool    visible;
     double  hints_mag_offset;
     bool    hints_visible;
@@ -132,14 +134,39 @@ static int satellites_update(obj_t *obj, double dt)
     return 0;
 }
 
+static bool range_contains(int range_start, int range_size, int nb, int i)
+{
+    if (i < range_start) i += nb;
+    return i >= range_start && i < range_start + range_size;
+}
+
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(satellites_render, 0);
+
     satellites_t *sats = (void*)obj;
-    obj_t *child;
+    int i, nb;
+    const int update_nb = 32;
+    uint64_t selection_oid = core->selection ? core->selection->oid : 0;
+    satellite_t *child;
+    obj_t *tmp;
+
     if (!sats->visible) return false;
-    MODULE_ITER(obj, child, "tle_satellite")
-        obj_render(child, painter);
+    DL_COUNT(obj->children, tmp, nb);
+
+    /* To prevent spending too much time computing position of asteroids that
+     * are not visible, we only update a small number of them at each
+     * frame, using a moving range.  The asteroids who have been flagged as
+     * on screen get updated no matter what.  */
+    i = 0;
+    MODULE_ITER(obj, child, "tle_satellite") {
+        if (    !child->on_screen &&
+                child->obj.oid != selection_oid &&
+                !range_contains(sats->update_pos, update_nb, nb, i))
+            continue;
+        obj_render((obj_t*)child, painter);
+    }
+    sats->update_pos = nb ? (sats->update_pos + update_nb) % nb : 0;
     return 0;
 }
 
@@ -351,6 +378,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return 0;
 
+    sat->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
