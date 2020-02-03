@@ -53,10 +53,10 @@ typedef struct constellation {
     } img;
 
     int         error; // Set if we couldn't parse the stars.
+
     double last_update; // Last update time in TT
-
+    double (*stars_pos)[3]; // ICRF/observer pos for all stars.
     double lines_cap[4]; // Bounding cap of the lines (ICRF)
-
     double pvo[2][4];
 } constellation_t;
 
@@ -173,6 +173,7 @@ static int constellation_create_stars(constellation_t *cons)
         if (code == 0) goto still_loading;
         if (!cons->stars[i]) nb_err++;
     }
+    cons->stars_pos = calloc(cons->count, sizeof(*cons->stars_pos));
     if (nb_err) {
         LOG_W("%d stars not found in constellation %s (%s)",
               nb_err, cons->info.name, cons->info.id);
@@ -358,7 +359,8 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     for (i = 0; i < con->count; i++) {
         if (!con->stars[i]) continue;
         obj_get_pvo(con->stars[i], obs, pvo);
-        vec3_add(pos, pvo[0], pos);
+        vec3_normalize(pvo[0], con->stars_pos[i]);
+        vec3_add(pos, con->stars_pos[i], pos);
     }
     if (vec3_norm2(pos) == 0) return 1; // No stars loaded yet.
 
@@ -373,8 +375,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
 
     for (i = 0; i < con->count; i++) {
         if (!con->stars[i]) continue;
-        obj_get_pvo(con->stars[i], obs, pvo);
-        cap_extends(con->lines_cap, pvo[0]);
+        cap_extends(con->lines_cap, con->stars_pos[i]);
     }
 
 end:
@@ -474,7 +475,8 @@ static bool constellation_lines_in_view(const constellation_t *con,
     pos = calloc(con->count, sizeof(*pos));
     for (i = 0; i < con->count; i++) {
         if (!con->stars[i]) continue;
-        obj_get_pos(con->stars[i], painter->obs, FRAME_VIEW, pos[nb]);
+        convert_frame(painter->obs, FRAME_ICRF, FRAME_VIEW, true,
+                      con->stars_pos[i], pos[nb]);
         project(painter->proj, 0, pos[nb], pos[nb]);
         nb++;
     }
@@ -544,7 +546,6 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     int i;
     double (*lines)[4];
     double lines_color[4];
-    double pvo[2][4];
     double mag[2], radius[2], visible;
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
@@ -569,8 +570,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     lines = calloc(con->count, sizeof(*lines));
     for (i = 0; i < con->count; i++) {
         if (!con->stars[i]) continue;
-        obj_get_pvo(con->stars[i], obs, pvo);
-        vec3_normalize(pvo[0], lines[i]);
+        vec3_copy(con->stars_pos[i], lines[i]);
         lines[i][3] = 0; // To infinity.
     }
 
@@ -736,6 +736,7 @@ static void constellation_del(obj_t *obj)
         obj_release(con->stars[i]);
     }
     free(con->stars);
+    free(con->stars_pos);
     free(con->name);
     free(con->name_translated);
 }
