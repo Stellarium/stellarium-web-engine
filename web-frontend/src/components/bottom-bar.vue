@@ -15,48 +15,57 @@
 
     <bottom-button label="Constellations"
                 :img="require('@/assets/images/btn-cst-lines.svg')"
+                img_alt="Constellations Button"
                 :toggled="$store.state.stel.constellations.lines_visible"
                 @clicked="(b) => { $stel.core.constellations.lines_visible = b; $stel.core.constellations.labels_visible = b }">
     </bottom-button>
     <bottom-button label="Constellations Art"
                 :img="require('@/assets/images/btn-cst-art.svg')"
+                img_alt="Constellations Art Button"
                 :toggled="$store.state.stel.constellations.images_visible"
                 @clicked="(b) => { $stel.core.constellations.images_visible = b }">
     </bottom-button>
     <bottom-button label="Atmosphere"
                 :img="require('@/assets/images/btn-atmosphere.svg')"
+                img_alt="Atmosphere Button"
                 :toggled="$store.state.stel.atmosphere.visible"
                 @clicked="(b) => { $stel.core.atmosphere.visible = b }">
     </bottom-button>
     <bottom-button label="Landscape"
                 :img="require('@/assets/images/btn-landscape.svg')"
+                img_alt="Landscape Button"
                 :toggled="$store.state.stel.landscapes.visible"
                 @clicked="(b) => { $stel.core.landscapes.visible = b }">
     </bottom-button>
     <bottom-button label="Azimuthal Grid"
                 :img="require('@/assets/images/btn-azimuthal-grid.svg')"
+                img_alt="Azimuthal Button"
                 :toggled="$store.state.stel.lines.azimuthal.visible"
                 @clicked="(b) => { $stel.core.lines.azimuthal.visible = b }">
     </bottom-button>
     <bottom-button label="Equatorial Grid"
                 :img="require('@/assets/images/btn-equatorial-grid.svg')"
+                img_alt="Equatorial Grid Button"
                 :toggled="$store.state.stel.lines.equatorial.visible"
                 @clicked="(b) => { $stel.core.lines.equatorial.visible = b }">
     </bottom-button>
     <bottom-button label="Deep Sky Objects"
                 :img="require('@/assets/images/btn-nebulae.svg')"
+                img_alt="Deep Sky Objects Button"
                 class="mr-auto"
                 :toggled="$store.state.stel.dsos.visible"
                 @clicked="(b) => { $stel.core.dsos.visible = b }">
     </bottom-button>
     <bottom-button label="Night Mode"
                 :img="require('@/assets/images/btn-night-mode.svg')"
+                img_alt="Night Mode Button"
                 class="mr-auto"
                 :toggled="$store.state.nightmode"
                 @clicked="(b) => { setNightMode(b) }">
     </bottom-button>
     <bottom-button label="Fullscreen"
                 :img="fullscreenBtnImage"
+                img_alt="Fullscreen Button"
                 class="mr-auto hidden-xs-only"
                 :toggled="$store.state.fullscreen"
                 @clicked="(b) => { setFullscreen(b) }">
