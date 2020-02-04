@@ -9,7 +9,7 @@
 <template>
   <div class="bottom-button" :class="{on: toggled}">
     <a v-on:click='clicked'>
-      <img :src="img"/>
+      <img :src="img" :alt="img_alt"/>
     </a>
     <div class="hint">{{label}}</div>
   </div>
@@ -46,7 +46,7 @@
 <script>
 export default {
   name: 'bottom-button',
-  props: ['label', 'img', 'toggled'],
+  props: ['label', 'img', 'toggled', 'img_alt'],
   methods: {
     clicked: function () {
       var b = !this.toggled

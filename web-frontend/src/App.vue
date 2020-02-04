@@ -24,7 +24,7 @@
             </v-list-item-content>
           </v-list-item>
           <template v-else>
-            <v-list-item v-if='item.link' target="_blank" :href='item.link' :key="i">
+            <v-list-item v-if='item.link' target="_blank" rel="noopener" :href='item.link' :key="i">
               <v-list-item-icon><v-icon>{{ item.icon }}</v-icon></v-list-item-icon>
               <v-list-item-title v-text="item.title"/>
               <v-icon disabled>mdi-open-in-new</v-icon>

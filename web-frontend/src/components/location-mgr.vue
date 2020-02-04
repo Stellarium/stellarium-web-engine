@@ -45,7 +45,7 @@
               </v-btn>
             <l-map class="black--text" ref="myMap" :center="mapCenter" :zoom="10" style="width: 100%; height: 100%;" :options="{zoomControl: false}">
               <l-control-zoom position="topright"></l-control-zoom>
-              <l-tile-layer :url="url" attribution='&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors'></l-tile-layer>
+              <l-tile-layer :url="url" attribution='&copy; <a target="_blank" rel="noopener" href="http://osm.org/copyright">OpenStreetMap</a> contributors'></l-tile-layer>
               <l-marker :key="loc.id"
                   v-for="loc in knownLocations"
                   :lat-lng="[ loc.lat, loc.lng ]"

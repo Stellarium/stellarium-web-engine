@@ -115,7 +115,7 @@ export default {
       if (!this.wikipediaData) return ''
       let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
       if (!page || !page.extract) return ''
-      return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; more on <b><a style="color: #62d1df;" target="_blank" href="' + this.wikipediaLink + '">wikipedia</a></b></i></span>'
+      return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; more on <b><a style="color: #62d1df;" target="_blank" rel="noopener" href="' + this.wikipediaLink + '">wikipedia</a></b></i></span>'
     },
     wikipediaLink: function () {
       let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
