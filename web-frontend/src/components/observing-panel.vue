@@ -10,7 +10,7 @@
 
 <div id="observing-panel-container" :class="{observingpanelhidden: !$store.state.showSidePanel}" class="get-click">
   <div class="observing-panel-tabsbtn" v-if="$store.state.showObservingPanelTabsButtons">
-    <v-btn class='tab-bt' v-for="tab in tabs" small :key="tab.tabName" :to="tab.url" active-class="tab-bt-active">{{ tab.tabName }}</v-btn>
+    <v-btn class='tab-bt' v-for="tab in tabs" small :key="tab.tabName" :to="tab.url" active-class="tab-bt-active">{{ $t(tab.tabName) }}</v-btn>
   </div>
   <div id="observing-panel">
     <router-view style="height: 100%"/>

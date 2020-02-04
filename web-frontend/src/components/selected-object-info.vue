@@ -123,7 +123,7 @@ export default {
       return 'https://en.wikipedia.org/wiki/' + page.title
     },
     type: function () {
-      if (!this.selectedObject) return 'Unknown'
+      if (!this.selectedObject) return this.$t('Unknown')
       let morpho = ''
       if (this.selectedObject.model_data && this.selectedObject.model_data.morpho) {
         morpho = swh.nameForGalaxyMorpho(this.selectedObject.model_data.morpho)
@@ -139,6 +139,7 @@ export default {
     items: function () {
       let obj = this.$stel.core.selection
       if (!obj) return []
+      let that = this
 
       let ret = []
 
@@ -152,25 +153,25 @@ export default {
         }
       }
 
-      addAttr('Magnitude', 'vmag', this.formatMagnitude)
-      addAttr('Distance', 'distance', this.formatDistance)
+      addAttr(that.$t('Magnitude'), 'vmag', this.formatMagnitude)
+      addAttr(that.$t('Distance'), 'distance', this.formatDistance)
       if (this.selectedObject.model_data) {
         if (this.selectedObject.model_data.radius) {
           ret.push({
-            key: 'Radius',
+            key: that.$t('Radius'),
             value: this.selectedObject.model_data.radius.toString() + ' Km'
           })
         }
         if (this.selectedObject.model_data.spect_t) {
           ret.push({
-            key: 'Spectral Type',
+            key: that.$t('Spectral Type'),
             value: this.selectedObject.model_data.spect_t
           })
         }
         if (this.selectedObject.model_data.dimx) {
           let dimy = this.selectedObject.model_data.dimy ? this.selectedObject.model_data.dimy : this.selectedObject.model_data.dimx
           ret.push({
-            key: 'Size',
+            key: that.$t('Size'),
             value: this.selectedObject.model_data.dimx.toString() + "' x " + dimy.toString() + "'"
           })
         }
@@ -179,7 +180,6 @@ export default {
         let pad = new Array(1 + padLen).join('0')
         return (pad + num).slice(-pad.length)
       }
-      let that = this
       const formatRA = function (a) {
         let raf = that.$stel.a2tf(a, 1)
         return '<div class="radecVal">' + formatInt(raf.hours, 2) + '<span class="radecUnit">h</span>&nbsp;</div><div class="radecVal">' + formatInt(raf.minutes, 2) + '<span class="radecUnit">m</span></div><div class="radecVal">' + formatInt(raf.seconds, 2) + '.' + raf.fraction + '<span class="radecUnit">s</span></div>'
@@ -197,28 +197,28 @@ export default {
       let raCIRS = this.$stel.anp(radecCIRS[0])
       let decCIRS = this.$stel.anpm(radecCIRS[1])
       ret.push({
-        key: 'Ra/Dec',
+        key: that.$t('Ra/Dec'),
         value: formatRA(raCIRS) + '&nbsp;&nbsp;&nbsp;' + formatDec(decCIRS)
       })
       let azalt = this.$stel.c2s(this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'OBSERVED', obj.getInfo('radec')))
       let az = this.$stel.anp(azalt[0])
       let alt = this.$stel.anpm(azalt[1])
       ret.push({
-        key: 'Az/Alt',
+        key: that.$t('Az/Alt'),
         value: formatAz(az) + '&nbsp;&nbsp;&nbsp;' + formatDec(alt)
       })
-      addAttr('Phase', 'phase', this.formatPhase)
+      addAttr(that.$t('Phase'), 'phase', this.formatPhase)
       let vis = obj.computeVisibility()
       let str = ''
       if (vis.length === 0) {
-        str = 'Not visible tonight'
+        str = that.$t('Not visible tonight')
       } else if (vis[0].rise === null) {
-        str = 'Always visible tonight'
+        str = that.$t('Always visible tonight')
       } else {
-        str = 'Rise: ' + this.formatTime(vis[0].rise) + '&nbsp;&nbsp;&nbsp; Set: ' + this.formatTime(vis[0].set)
+        str = that.$t('Rise: {0}&nbsp;&nbsp;&nbsp; Set: {1}', [this.formatTime(vis[0].rise), this.formatTime(vis[0].set)])
       }
       ret.push({
-        key: 'Visibility',
+        key: that.$t('Visibility'),
         value: str
       })
       return ret

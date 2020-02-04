@@ -79,11 +79,11 @@ export default {
   data (context) {
     return {
       menuItems: [
-        { title: 'View Settings', icon: 'mdi-settings', store_var_name: 'showViewSettingsDialog' },
-        { title: 'Planets Tonight', icon: 'mdi-panorama-fisheye', store_var_name: 'showPlanetsVisibilityDialog' },
+        { title: this.$t('View Settings'), icon: 'mdi-settings', store_var_name: 'showViewSettingsDialog' },
+        { title: this.$t('Planets Tonight'), icon: 'mdi-panorama-fisheye', store_var_name: 'showPlanetsVisibilityDialog' },
         { divider: true }
       ].concat(this.getPluginsMenuItems()).concat([
-        { title: 'Data Credits', footer: true, icon: 'mdi-copyright', store_var_name: 'showDataCreditsDialog' }
+        { title: this.$t('Data Credits'), footer: true, icon: 'mdi-copyright', store_var_name: 'showDataCreditsDialog' }
       ]),
       menuComponents: [].concat(this.getPluginsMenuComponents()),
       guiComponent: 'GuiLoader',
@@ -145,7 +145,7 @@ export default {
 
         if (this.$route.query.lng && this.$route.query.lat) {
           let pos = { lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1 }
-          swh.geoCodePosition(pos).then((loc) => {
+          swh.geoCodePosition(pos, that).then((loc) => {
             that.$store.commit('setCurrentLocation', loc)
           }, (error) => { console.log(error) })
         }
@@ -234,7 +234,7 @@ export default {
       try {
         swh.initStelWebEngine(that.$store, f.default, that.$refs.stelCanvas, function () {
           // Start auto location detection (even if we don't use it)
-          swh.getGeolocation().then(swh.geoCodePosition).then((loc) => {
+          swh.getGeolocation().then(p => swh.geoCodePosition(p, that)).then((loc) => {
             that.$store.commit('setAutoDetectedLocation', loc)
           }, (error) => { console.log(error) })
 

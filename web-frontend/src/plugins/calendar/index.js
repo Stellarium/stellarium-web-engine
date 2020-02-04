@@ -8,9 +8,13 @@
 
 import Calendar from './components/calendar.vue'
 
+let t = function (s) {
+  return s
+}
+
 export default {
   name: 'calendar',
   panelRoutes: [
-    { path: '/p/calendar', component: Calendar, meta: { tabName: 'Calendar', prio: 2 } }
+    { path: '/p/calendar', component: Calendar, meta: { tabName: t('Calendar'), prio: 2 } }
   ]
 }

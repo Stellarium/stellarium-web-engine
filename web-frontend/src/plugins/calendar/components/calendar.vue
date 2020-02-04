@@ -14,7 +14,7 @@
       <v-container fluid style="height: 100%">
         <v-card>
           <v-card-title primary-title>
-            <h3 class="headline mb-0">Calendar of events</h3>
+            <h3 class="headline mb-0">{{ $t('Calendar of events') }}</h3>
           </v-card-title>
           <v-card-text>
             <v-row justify="space-between">

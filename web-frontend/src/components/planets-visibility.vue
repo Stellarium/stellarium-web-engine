@@ -9,13 +9,13 @@
 <template>
 <v-dialog max-width='600' v-model="$store.state.showPlanetsVisibilityDialog">
   <v-card v-if="$store.state.showPlanetsVisibilityDialog" transparent class="secondary white--text">
-    <v-card-title><div class="headline">Planets Visibility</div></v-card-title>
-    <v-card-text>Night from {{ startDate.format('MMMM Do') }} to {{ endDate.format('MMMM Do') }}</v-card-text>
+    <v-card-title><div class="headline">{{ $t('Planets Visibility') }}</div></v-card-title>
+    <v-card-text>{{ $t('Night from {0} to {1}', [startDate.format('MMMM Do'), endDate.format('MMMM Do')]) }}</v-card-text>
     <v-card-text>
       <div>
         <v-row no-gutters>
-          <v-col cols="1" offset="2"><span>Rise</span></v-col>
-          <v-col cols="1"><span>Set</span></v-col>
+          <v-col cols="1" offset="2"><span>{{ $t('Rise') }}</span></v-col>
+          <v-col cols="1"><span>{{ $t('Set') }}</span></v-col>
           <v-col cols="8">
             <v-row justify="space-between">
               <span>12:00</span><span>18:00</span><span>00:00</span><span>06:00</span><span>12:00</span>

@@ -25,7 +25,7 @@
           <template v-slot:activator="{ on }">
             <v-btn text icon @click="resetTime" style="margin-top: 5px" v-on="on"><v-icon>mdi-history</v-icon></v-btn>
           </template>
-          <span>Back to real time</span>
+          <span>{{ $t('Back to real time') }}</span>
         </v-tooltip>
         </div>
         <div>
@@ -33,7 +33,7 @@
           <template v-slot:activator="{ on }">
             <v-btn text icon @click="togglePauseTime" style="margin-top: 0px" v-on="on"><v-icon>{{ togglePauseTimeIcon }}</v-icon></v-btn>
           </template>
-          <span>Pause/unpause time</span>
+          <span>{{ $t('Pause/unpause time') }}</span>
         </v-tooltip>
         </div>
         </div>
@@ -131,12 +131,12 @@ export default {
       let stop = this.stops[Math.floor(tm * this.stops.length / 1440)]
       if (!stop) return ''
       if (stop.sunAlt > 0) {
-        return 'Daylight'
+        return this.$t('Daylight')
       }
       if (stop.sunAlt < -16) {
-        return stop.moonAlt < 5 ? 'Dark night' : 'Moonlight'
+        return stop.moonAlt < 5 ? this.$t('Dark night') : this.$t('Moonlight')
       }
-      return tm > 720 ? 'Dawn' : 'Twilight'
+      return tm > 720 ? this.$t('Dawn') : this.$t('Twilight')
     },
     isTimePaused: function () {
       return this.$store.state.timeSpeed === 0

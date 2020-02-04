@@ -490,10 +490,11 @@ const swh = {
     })
   },
 
-  geoCodePosition: function (pos) {
-    console.log('Geocoding position...')
+  geoCodePosition: function (pos, ctx) {
+    console.log('Geocoding position... ')
+    let ll = ctx.$t('Lat {0}° Lon {1}°', [pos.lat.toFixed(3), pos.lng.toFixed(3)])
     var loc = {
-      short_name: (pos.accuracy > 500 ? 'Near ' : '') + 'Lat ' + pos.lat.toFixed(3) + '° Lon ' + pos.lng.toFixed(3) + '°',
+      short_name: pos.accuracy > 500 ? ctx.$t('Near {0}', [ll]) : ll,
       country: 'Unknown',
       lng: pos.lng,
       lat: pos.lat,
@@ -506,7 +507,7 @@ const swh = {
       if (response.ok) {
         return response.json().then(res => {
           let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
-          loc.short_name = pos.accuracy > 500 ? 'Near ' + city : city
+          loc.short_name = pos.accuracy > 500 ? ctx.$t('Near {0}', [city]) : city
           loc.country = res.address.country
           if (pos.accuracy < 50) {
             loc.street_address = res.address.road ? res.address.road : res.display_name

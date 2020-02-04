@@ -1,6 +1,7 @@
 module.exports = {
   runtimeCompiler: true,
   publicPath: process.env.CDN_ENV ? process.env.CDN_ENV : '/',
+
   chainWebpack: config => {
     // workaround taken from webpack/webpack#6642
     config.output
@@ -25,5 +26,14 @@ module.exports = {
          })
          return [pathConfigs]
        })
+  },
+
+  pluginOptions: {
+    i18n: {
+      locale: 'en',
+      fallbackLocale: 'en',
+      localeDir: 'locales',
+      enableInSFC: true
+    }
   }
 }

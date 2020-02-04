@@ -11,7 +11,7 @@
     <v-row justify="space-around">
       <v-col cols="4" v-if="doShowMyLocation">
         <v-list two-line subheader>
-          <v-subheader>My Locations</v-subheader>
+          <v-subheader>{{ $t('My Locations') }}</v-subheader>
           <v-list-item href="javascript:;" v-for="item in knownLocations" v-bind:key="item.id" @click.native.stop="selectKnownLocation(item)" :style="(item && knownLocationMode && selectedKnownLocation && item.id === selectedKnownLocation.id) ? 'background-color: #455a64' : ''">
             <v-list-item-icon>
               <v-icon>mdi-map-marker</v-icon>
@@ -31,8 +31,8 @@
                 <v-col>
                   <div>
                     <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
-                    <v-btn @click.native.stop="useLocation()" style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> Use this location</v-btn>
-                    <div class="grey--text subtitle-2" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : 'Unknown Address') : '-' }}</div>
+                    <v-btn @click.native.stop="useLocation()" style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> {{ $t('Use this location') }}</v-btn>
+                    <div class="grey--text subtitle-2" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : $t('Unknown Address')) : '-' }}</div>
                     <div class="grey--text subtitle-2">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</div>
                   </div>
                 </v-col>
@@ -122,9 +122,10 @@ export default {
         var pos = { lat: e.geocode.center.lat, lng: e.geocode.center.lng }
         that.mapCenter = [ pos.lat, pos.lng ]
         pos.accuracy = 100
+        let ll = that.$t('Lat {0}° Lon {1}°', [pos.lat.toFixed(3), pos.lng.toFixed(3)])
         var loc = {
-          short_name: (pos.accuracy > 500 ? 'Near ' : '') + 'Lat ' + pos.lat.toFixed(3) + '° Lon ' + pos.lng.toFixed(3) + '°',
-          country: 'Unknown',
+          short_name: pos.accuracy > 500 ? that.$t('Near {0}', [ll]) : ll,
+          country: that.$t('Unknown'),
           lng: pos.lng,
           lat: pos.lat,
           alt: pos.alt ? pos.alt : 0,
@@ -133,7 +134,7 @@ export default {
         }
         let res = e.geocode.properties
         let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
-        loc.short_name = pos.accuracy > 500 ? 'Near ' + city : city
+        loc.short_name = pos.accuracy > 500 ? that.$t('Near {0}', [city]) : city
         loc.country = res.address.country
         if (pos.accuracy < 50) {
           loc.street_address = res.address.road ? res.address.road : res.display_name
@@ -181,7 +182,7 @@ export default {
     dragEnd: function (event) {
       var that = this
       var pos = { lat: event.target._latlng.lat, lng: event.target._latlng.lng, accuracy: 0 }
-      swh.geoCodePosition(pos).then((p) => { that.pickLocation = p; that.setPickLocationMode() })
+      swh.geoCodePosition(pos, that).then((p) => { that.pickLocation = p; that.setPickLocationMode() })
     }
   },
   components: { LMap, LTileLayer, LMarker, LCircle, LTooltip, LControlZoom }
