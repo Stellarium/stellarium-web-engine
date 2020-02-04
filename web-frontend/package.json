@@ -75,13 +75,13 @@
     "> 1%",
     "last 2 versions"
   ],
-  "workspaces": [
-    "src/plugins/*"
-  ],
   "eslintIgnore": [
     "/build/",
     "/dist/",
     "/*.js",
     "src/assets/js/*.js"
+  ],
+  "workspaces": [
+    "src/plugins/*"
   ]
 }
