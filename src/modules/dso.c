@@ -268,11 +268,14 @@ static int on_file_tile_loaded(const char type[4],
     tile_t *tile;
     dso_data_t *s;
     int nb, i, j, version, data_ofs = 0, flags, row_size, order, pix;
+    int children_mask;
     char morpho[32], ids[256] = {};
     double bmag, temp_mag, tmp_ra, tmp_de, tmp_smax, tmp_smin, tmp_angle;
     void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
     uint64_t nuniq;
+    tile_t **out = USER_GET(user, 0); // Receive the tile.
+    int *transparency = USER_GET(user, 1);
 
     eph_table_column_t columns[] = {
         {"type", 's', .size=4},
@@ -288,6 +291,7 @@ static int on_file_tile_loaded(const char type[4],
         {"ids",  's', .size=256},
     };
 
+    *out = NULL;
     if (strncmp(type, "DSO ", 4) != 0) return 0;
 
     eph_read_tile_header(data, size, &data_ofs, &version, &order, &pix);
@@ -296,7 +300,6 @@ static int on_file_tile_loaded(const char type[4],
             ARRAY_SIZE(columns), columns);
     if (nb < 0) {
         LOG_E("Cannot parse file");
-        *(tile_t**)user = NULL;
         return -1;
     }
     tile_data = eph_read_compressed_block(data, size, &data_ofs, &size);
@@ -366,7 +369,15 @@ static int on_file_tile_loaded(const char type[4],
     for (i = 0; i < tile->nb; ++i)
         tile->sources_quick[i] = tile->sources[i].clip_data;
 
-    *(tile_t**)user = tile;
+    // If we have a json header, check for a children mask value.
+    if (json) {
+        children_mask = json_get_attr_i(json, "children_mask", -1);
+        if (children_mask != -1) {
+            *transparency = (~children_mask) & 15;
+        }
+    }
+
+    *out = tile;
     return 0;
 }
 
@@ -374,7 +385,7 @@ static const void *dsos_create_tile(void *user, int order, int pix, void *data,
                                     int size, int *cost, int *transparency)
 {
     tile_t *tile;
-    eph_load(data, size, &tile, on_file_tile_loaded);
+    eph_load(data, size, USER_PASS(&tile, transparency), on_file_tile_loaded);
     if (tile) *cost = tile->nb * sizeof(*tile->sources);
     return tile;
 }

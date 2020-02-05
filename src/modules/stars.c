@@ -461,11 +461,13 @@ static int on_file_tile_loaded(const char type[4],
                                void *user)
 {
     int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
+    int children_mask;
     double vmag, gmag, ra, de, pra, pde, plx, bv;
     char ids[256] = {};
     char sp_type[32] = {};
     survey_t *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
+    int *transparency = USER_GET(user, 2);
     tile_t *tile;
     void *table_data;
     star_data_t *s;
@@ -560,6 +562,14 @@ static int on_file_tile_loaded(const char type[4],
     qsort(tile->sources, tile->nb, sizeof(*tile->sources), star_data_cmp);
     free(table_data);
 
+    // If we have a json header, check for a children mask value.
+    if (json) {
+        children_mask = json_get_attr_i(json, "children_mask", -1);
+        if (children_mask != -1) {
+            *transparency = (~children_mask) & 15;
+        }
+    }
+
     *out = tile;
     return 0;
 }
@@ -570,7 +580,8 @@ static const void *stars_create_tile(
 {
     tile_t *tile = NULL;
     survey_t *survey = user;
-    eph_load(data, size, USER_PASS(survey, &tile), on_file_tile_loaded);
+    eph_load(data, size, USER_PASS(survey, &tile, transparency),
+             on_file_tile_loaded);
     if (tile) *cost = tile->nb * sizeof(*tile->sources);
     return tile;
 }
