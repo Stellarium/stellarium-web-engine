@@ -261,7 +261,9 @@ static int dso_data_cmp(const void *a, const void *b)
 }
 
 static int on_file_tile_loaded(const char type[4],
-                               const void *data, int size, void *user)
+                               const void *data, int size,
+                               const json_value *json,
+                               void *user)
 {
     tile_t *tile;
     dso_data_t *s;

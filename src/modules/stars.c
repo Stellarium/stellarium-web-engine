@@ -456,7 +456,9 @@ static uint64_t compute_oid(const star_data_t *s)
 }
 
 static int on_file_tile_loaded(const char type[4],
-                               const void *data, int size, void *user)
+                               const void *data, int size,
+                               const json_value *json,
+                               void *user)
 {
     int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
     double vmag, gmag, ra, de, pra, pde, plx, bv;

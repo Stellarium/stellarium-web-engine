@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include "json.h"
+
 /*
  * File: eph-file.h
  * Some support functions to read and write eph file format.
@@ -22,7 +24,9 @@
 
 int eph_load(const void *data, int data_size, void *user,
              int (*callback)(const char type[4],
-                             const void *data, int size, void *user));
+                             const void *data, int size,
+                             const json_value *json,
+                             void *user));
 
 int eph_read_tile_header(const void *data, int data_size, int *data_ofs,
                          int *version, int *order, int *pix);

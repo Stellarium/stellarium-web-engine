@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 /* The stars tile file format is as follow:
  *
@@ -97,10 +98,13 @@ void *eph_read_compressed_block(const void *data, int data_size,
 
 int eph_load(const void *data, int data_size, void *user,
              int (*callback)(const char type[4],
-                             const void *data, int size, void *user))
+                             const void *data, int size,
+                             const json_value *json,
+                             void *user))
 {
     int version, chunk_data_size;
     char type[4];
+    json_value *json = NULL;
 
     assert(data);
     CHECK(data_size >= 4);
@@ -115,11 +119,17 @@ int eph_load(const void *data, int data_size, void *user,
         memcpy(&chunk_data_size, data + 4, 4);
         CHECK(chunk_data_size >= 0);
         CHECK(data_size >= 8 + chunk_data_size);
-        callback(type, data + 8, chunk_data_size, user);
+        if (strncmp(type, "JSON", 4) == 0) {
+            CHECK(!json);
+            json = json_parse(data + 8, chunk_data_size);
+        } else {
+            callback(type, data + 8, chunk_data_size, json, user);
+        }
         // XXX: check crc.
         data += chunk_data_size + 12;
         data_size -= chunk_data_size + 12;
     }
+    json_value_free(json);
     return 0;
 }
 

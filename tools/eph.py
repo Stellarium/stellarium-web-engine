@@ -10,6 +10,7 @@
 
 from math import *
 
+import json
 import numpy as np
 import os
 import struct
@@ -53,9 +54,21 @@ def col_get_size(col):
     assert False
 
 
-def create_tile(data, chunk_type, nuniq, path, columns):
+def create_tile(data, chunk_type, nuniq, path, columns, json_data=None):
     chunk_type = bytes(chunk_type, 'utf8')
     assert len(chunk_type) == 4
+
+    ret = bytearray(b'EPHE')
+    ret += struct.pack('I', 2) # File version
+
+    # Add json chunk if any.
+    if json_data:
+        chunk = json.dumps(json_data).encode()
+        ret += b'JSON'
+        ret += struct.pack('I', len(chunk))
+        ret += chunk
+        ret += struct.pack('I', 0) # CRC TODO
+
     order = int(log(nuniq // 4, 2) / 2);
     pix = nuniq - 4 * (1 << (2 * order));
     path = '%s/Norder%d/Dir%d/Npix%d.eph' % (
@@ -93,9 +106,6 @@ def create_tile(data, chunk_type, nuniq, path, columns):
     data = shuffle_bytes(buf, row_size)
 
     comp_data = zlib.compress(data)
-
-    ret = bytearray(b'EPHE')
-    ret += struct.pack('I', 2) # File version
 
     chunk = bytearray()
     chunk += struct.pack('I', 3) # Tile Version
