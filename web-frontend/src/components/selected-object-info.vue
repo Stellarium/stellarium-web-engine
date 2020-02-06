@@ -100,10 +100,10 @@ export default {
       return this.$store.state.stel && this.$store.state.stel.selection ? this.$store.state.stel.selection : undefined
     },
     title: function () {
-      return this.selectedObject ? swh.nameForSkySource(this.selectedObject) : 'Selection'
+      return this.selectedObject ? this.$stel.translateFn('skyculture', swh.nameForSkySource(this.selectedObject)) : 'Selection'
     },
     otherNames: function () {
-      return this.selectedObject ? swh.sortedNamesForSkySource(this.selectedObject) : undefined
+      return this.selectedObject ? swh.sortedNamesForSkySource(this.selectedObject).map(o => this.$stel.translateFn('skyculture', o)) : undefined
     },
     otherNames1to7: function () {
       return this.otherNames.slice(1, 8)
@@ -127,12 +127,12 @@ export default {
       if (!this.selectedObject) return this.$t('Unknown')
       let morpho = ''
       if (this.selectedObject.model_data && this.selectedObject.model_data.morpho) {
-        morpho = swh.nameForGalaxyMorpho(this.selectedObject.model_data.morpho)
+        morpho = this.$t(swh.nameForGalaxyMorpho(this.selectedObject.model_data.morpho))
         if (morpho) {
           morpho = morpho + ' '
         }
       }
-      return morpho + swh.nameForSkySourceType(this.selectedObject.types[0])
+      return morpho + this.$stel.translateFn('otypes', swh.nameForSkySourceType(this.selectedObject.types[0]))
     },
     icon: function () {
       return swh.iconForSkySource(this.selectedObject)

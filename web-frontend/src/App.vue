@@ -74,6 +74,8 @@ import Gui from '@/components/gui.vue'
 import GuiLoader from '@/components/gui-loader.vue'
 import swh from '@/assets/sw_helpers.js'
 import Moment from 'moment'
+import Vue from 'vue'
+import VueI18n from 'vue-i18n'
 
 export default {
   data (context) {
@@ -126,6 +128,45 @@ export default {
       let d = new Date().getMJD()
       this.$stel.observer.utc += this.$store.state.timeSpeed * (d - this.timeRef)
       this.timeRef = d
+    },
+    translateFn: function (domain, str) {
+      let that = this
+      if (!Vue.prototype.$skyCultureTranslator) {
+        Vue.prototype.$skyCultureTranslator = new VueI18n({
+          locale: that.$i18n.locale,
+          formatFallbackMessages: true,
+          silentTranslationWarn: true
+        })
+        return fetch(process.env.BASE_URL + 'i18n/skycultures/' + that.$i18n.locale + '.json',
+          { headers: { 'Content-Type': 'application/json; charset=UTF-8' } }).then(response => {
+          if (response.ok) {
+            return response.json().then(res => {
+              Vue.prototype.$skyCultureTranslator.mergeLocaleMessage(Vue.prototype.$skyCultureTranslator.locale, res)
+            })
+          }
+        })
+      }
+      if (!Vue.prototype.$otypesTranslator) {
+        Vue.prototype.$otypesTranslator = new VueI18n({
+          locale: that.$i18n.locale,
+          formatFallbackMessages: true,
+          silentTranslationWarn: true
+        })
+        return fetch(process.env.BASE_URL + 'i18n/otypes/' + that.$i18n.locale + '.json',
+          { headers: { 'Content-Type': 'application/json; charset=UTF-8' } }).then(response => {
+          if (response.ok) {
+            return response.json().then(res => {
+              Vue.prototype.$otypesTranslator.mergeLocaleMessage(Vue.prototype.$otypesTranslator.locale, res)
+            })
+          }
+        })
+      }
+      if (domain === 'skyculture') {
+        return Vue.prototype.$skyCultureTranslator.t(str)
+      } else if (domain === 'otypes') {
+        return Vue.prototype.$otypesTranslator.t(str)
+      }
+      return that.$t(str)
     },
     setStateFromQueryArgs: function () {
       // Check whether the observing panel must be displayed
@@ -265,7 +306,7 @@ export default {
             core.comets.addDataSource({ url: process.env.BASE_URL + 'skydata/CometEls.txt', key: 'mpc_comets' })
             core.satellites.addDataSource({ url: process.env.BASE_URL + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
           }
-        }, that.onBeforeRendering)
+        }, that.onBeforeRendering, that.translateFn)
       } catch (e) {
         this.$store.commit('setValue', { varName: 'wasmSupport', newValue: false })
       }

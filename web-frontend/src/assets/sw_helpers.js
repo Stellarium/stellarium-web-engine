@@ -29,14 +29,11 @@ DDDate.prototype.setMJD = function (mjd) {
 }
 
 const swh = {
-  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone, onBeforeRendering) {
+  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone, onBeforeRendering, translateFn) {
     let lstel = StelWebEngine({
       wasmFile: wasmFile,
       canvas: canvasElem,
-      translateFn: function (domain, str) {
-        return str
-        // return i18next.t(str, {ns: domain});
-      },
+      translateFn: translateFn,
       onReady: function (Module) {
         Module.onBeforeRendering = onBeforeRendering
 

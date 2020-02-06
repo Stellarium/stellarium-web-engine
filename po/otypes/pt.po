@@ -1,0 +1,1168 @@
+# Portuguese translations for Stellarium Web Engine.
+# Copyright (C) 2020 Noctua Software
+# This file is distributed under the same license as the stellarium web
+# package.
+#
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2019-12-11 11:09+0800\n"
+"PO-Revision-Date: 2019-03-25 12:46+0800\n"
+"Last-Translator: Guillaume Chereau <guillaume@noctua-software.com>\n"
+"Language-Team: Portuguese\n"
+"Language: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/otypes.c:136
+msgid "(Micro)Lensing Event"
+msgstr ""
+
+#: src/otypes.c:322
+msgid "Absorption Line system"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:341
+msgid "Active Galaxy Nucleus"
+msgstr "Galáxia ativa"
+
+# Filled from glossary
+#: src/otypes.c:370
+msgid "Amor Asteroid"
+msgstr "Asteroide Amor"
+
+# Filled from glossary
+#: src/otypes.c:369
+msgid "Apollo Asteroid"
+msgstr "Asteroide Apollo"
+
+#: src/otypes.c:356
+msgid "Artificial Satellite"
+msgstr "Satélite artificial"
+
+#: src/otypes.c:203
+msgid "Association of Stars"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:382
+msgid "Asterism"
+msgstr "Asterismo"
+
+# Filled from glossary
+#: src/otypes.c:263
+msgid "Asymptotic Giant Branch Star"
+msgstr "Ramo assintótico das gigantes"
+
+# Filled from glossary
+#: src/otypes.c:368
+msgid "Aten Asteroid"
+msgstr "Asteroide Aton"
+
+#: src/otypes.c:367
+msgid "Atira Asteroid"
+msgstr ""
+
+#: src/otypes.c:347
+msgid "BL Lac - type object"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:260
+msgid "Be Star"
+msgstr "Estrela Be"
+
+# Filled from glossary
+#: src/otypes.c:346
+msgid "Blazar"
+msgstr "Blazar"
+
+# Filled from glossary
+#: src/otypes.c:261
+msgid "Blue Straggler Star"
+msgstr "Estrela retardatária azul"
+
+#: src/otypes.c:337
+msgid "Blue compact Galaxy"
+msgstr "Galáxia compacta azul"
+
+#: src/otypes.c:127
+msgid "Blue object"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:269
+msgid "Blue supergiant star"
+msgstr "Supergigante azul"
+
+# Filled from glossary
+#: src/otypes.c:232
+msgid "Bright Nebula"
+msgstr "Nebulosa"
+
+#: src/otypes.c:318
+msgid "Brightest Galaxy in a Cluster"
+msgstr ""
+
+#: src/otypes.c:327
+msgid "Broad Absorption Line system"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:275
+msgid "Brown Dwarf"
+msgstr "Anã marrom"
+
+# Filled from glossary
+#: src/otypes.c:228
+msgid "Bubble"
+msgstr "Bubble"
+
+#: src/otypes.c:216
+msgid "CV DQ Her type"
+msgstr ""
+
+#: src/otypes.c:217
+msgid "CV of AM Her type"
+msgstr ""
+
+#: src/otypes.c:143
+msgid "Candidate objects"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:264
+msgid "Carbon Star"
+msgstr "Estrela de carbono"
+
+# Filled from glossary
+#: src/otypes.c:215
+msgid "Cataclysmic Variable Star"
+msgstr "Variável cataclísmica"
+
+# Filled from glossary
+#: src/otypes.c:300
+msgid "Cepheid variable Star"
+msgstr "Cefeida"
+
+#: src/otypes.c:245
+msgid "CircumStellar matter"
+msgstr ""
+
+#: src/otypes.c:305
+msgid "Classical Cepheid"
+msgstr "Cefeida Clássica"
+
+# Filled from glossary
+#: src/otypes.c:193
+msgid "Cluster of Galaxies"
+msgstr "Aglomerado de galáxias"
+
+# Filled from glossary
+#: src/otypes.c:200
+msgid "Cluster of Stars"
+msgstr "Aglomerado estelar"
+
+# Filled from glossary
+#: src/otypes.c:359
+msgid "Comet"
+msgstr "Cometa"
+
+# Filled from glossary
+#: src/otypes.c:227
+msgid "Cometary Globule"
+msgstr "Glóbulo de Bok"
+
+# Filled from glossary
+#: src/otypes.c:195
+msgid "Compact Group of Galaxies"
+msgstr "Grupo de galáxias"
+
+#: src/otypes.c:189
+msgid "Composite object"
+msgstr ""
+
+#: src/otypes.c:276
+msgid "Confirmed Neutron Star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:381
+msgid "Constellation"
+msgstr "Constelação"
+
+#: src/otypes.c:380
+msgid "Cultural Sky Representation"
+msgstr ""
+
+#: src/otypes.c:324
+msgid "Damped Ly-alpha Absorption Line system"
+msgstr ""
+
+#: src/otypes.c:233
+msgid "Dark Cloud"
+msgstr "Nebulosa escura"
+
+#: src/otypes.c:237
+msgid "Dense core"
+msgstr ""
+
+#: src/otypes.c:363
+msgid "Disappeared Comet"
+msgstr ""
+
+#: src/otypes.c:375
+msgid "Distant Object Asteroid"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:206
+msgid "Double or multiple star"
+msgstr "Sistema estelar"
+
+#: src/otypes.c:220
+msgid "Dwarf Nova"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:358
+msgid "Dwarf Planet"
+msgstr "Planeta anão"
+
+# Filled from glossary
+#: src/otypes.c:207
+msgid "Eclipsing binary"
+msgstr "Estrela binária"
+
+#: src/otypes.c:208
+msgid "Eclipsing binary of Algol type"
+msgstr ""
+
+#: src/otypes.c:210
+msgid "Eclipsing binary of W UMa type"
+msgstr ""
+
+#: src/otypes.c:209
+msgid "Eclipsing binary of beta Lyr type"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:213
+msgid "Ellipsoidal variable Star"
+msgstr "Variável elipsoidal rotacional"
+
+#: src/otypes.c:229
+msgid "Emission Object"
+msgstr ""
+
+#: src/otypes.c:335
+msgid "Emission-line Galaxy"
+msgstr ""
+
+#: src/otypes.c:259
+msgid "Emission-line Star"
+msgstr ""
+
+#: src/otypes.c:288
+msgid "Eruptive variable Star"
+msgstr ""
+
+#: src/otypes.c:266
+msgid "Evolved supergiant star"
+msgstr ""
+
+#: src/otypes.c:314
+msgid "Extra-solar Confirmed Planet"
+msgstr ""
+
+#: src/otypes.c:126
+msgid "Extremely Red Object"
+msgstr ""
+
+#: src/otypes.c:123
+msgid "Far-IR source"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:289
+msgid "Flare Star"
+msgstr "Estrela eruptiva"
+
+#: src/otypes.c:231
+msgid "Galactic Nebula"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:315
+msgid "Galaxy"
+msgstr "Galáxia"
+
+#: src/otypes.c:317
+msgid "Galaxy in Cluster of Galaxies"
+msgstr ""
+
+#: src/otypes.c:319
+msgid "Galaxy in Group of Galaxies"
+msgstr ""
+
+#: src/otypes.c:320
+msgid "Galaxy in Pair of Galaxies"
+msgstr ""
+
+#: src/otypes.c:321
+msgid "Galaxy with high redshift"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:201
+msgid "Globular Cluster"
+msgstr "Aglomerado globular"
+
+#: src/otypes.c:236
+msgid "Globule"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:140
+msgid "Gravitational Lens"
+msgstr "Lente gravitacional"
+
+#: src/otypes.c:141
+msgid "Gravitational Lens System"
+msgstr ""
+
+#: src/otypes.c:135
+msgid "Gravitational Source"
+msgstr ""
+
+#: src/otypes.c:142
+msgid "Gravitational Wave Event"
+msgstr ""
+
+#: src/otypes.c:338
+msgid "Gravitationally Lensed Image"
+msgstr ""
+
+#: src/otypes.c:339
+msgid "Gravitationally Lensed Image of a Galaxy"
+msgstr ""
+
+#: src/otypes.c:340
+msgid "Gravitationally Lensed Image of a Quasar"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:194
+msgid "Group of Galaxies"
+msgstr "Grupo de galáxias"
+
+#: src/otypes.c:242
+msgid "HI shell"
+msgstr ""
+
+#: src/otypes.c:119
+msgid "HI source"
+msgstr ""
+
+#: src/otypes.c:329
+msgid "HII Galaxy"
+msgstr ""
+
+#: src/otypes.c:240
+msgid "HII region"
+msgstr ""
+
+#: src/otypes.c:258
+msgid "Herbig Ae/Be star"
+msgstr ""
+
+#: src/otypes.c:248
+msgid "Herbig-Haro Object"
+msgstr ""
+
+#: src/otypes.c:223
+msgid "High Mass X-ray Binary"
+msgstr ""
+
+#: src/otypes.c:282
+msgid "High proper-motion Star"
+msgstr ""
+
+#: src/otypes.c:239
+msgid "High-velocity Cloud"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:283
+msgid "High-velocity Star"
+msgstr "Cinemática estelar"
+
+# Filled from glossary
+#: src/otypes.c:373
+msgid "Hilda Asteroid"
+msgstr "Família Hilda"
+
+# Filled from glossary
+#: src/otypes.c:256
+msgid "Horizontal Branch Star"
+msgstr "Ramo horizontal"
+
+# Filled from glossary
+#: src/otypes.c:270
+msgid "Hot subdwarf"
+msgstr "Estrela subanã"
+
+# Filled from glossary
+#: src/otypes.c:371
+msgid "Hungaria Asteroid"
+msgstr "Família Hungaria"
+
+#: src/otypes.c:122
+msgid "Infra-Red source"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:197
+msgid "Interacting Galaxies"
+msgstr "Colisão de galáxias"
+
+#: src/otypes.c:377
+msgid "Interplanetary Spacecraft"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:230
+msgid "Interstellar Cloud"
+msgstr "Nuvem interestelar"
+
+# Filled from glossary
+#: src/otypes.c:365
+msgid "Interstellar Object"
+msgstr "Objeto interestelar"
+
+# Filled from glossary
+#: src/otypes.c:224
+msgid "Interstellar matter"
+msgstr "Meio interestelar"
+
+#: src/otypes.c:374
+msgid "Jupiter Trojan Asteroid"
+msgstr ""
+
+#: src/otypes.c:342
+msgid "LINER-type Active Galaxy Nucleus"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:308
+msgid "Long-period variable star"
+msgstr "Variável de longo período"
+
+#: src/otypes.c:222
+msgid "Low Mass X-ray Binary"
+msgstr ""
+
+#: src/otypes.c:330
+msgid "Low Surface Brightness Galaxy"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:274
+msgid "Low-mass star"
+msgstr "Formação estelar"
+
+#: src/otypes.c:323
+msgid "Ly alpha Absorption Line system"
+msgstr ""
+
+#: src/otypes.c:326
+msgid "Lyman limit system"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:376
+msgid "Main Belt Asteroid"
+msgstr "Cintura de asteroides"
+
+#: src/otypes.c:121
+msgid "Maser"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:364
+msgid "Minor  Planet"
+msgstr "Planeta menor"
+
+# Filled from glossary
+#: src/otypes.c:357
+msgid "Minor Planet"
+msgstr "Planeta menor"
+
+# Filled from glossary
+#: src/otypes.c:235
+msgid "Molecular Cloud"
+msgstr "Nuvem molecular"
+
+# Filled from glossary
+#: src/otypes.c:355
+msgid "Moon"
+msgstr "Lua"
+
+# Filled from glossary
+#: src/otypes.c:205
+msgid "Moving Group"
+msgstr "Cinemática estelar"
+
+# Filled from glossary
+#: src/otypes.c:366
+msgid "Near Earth Object"
+msgstr "Objetos Próximos à Terra"
+
+#: src/otypes.c:124
+msgid "Near-IR source"
+msgstr ""
+
+#: src/otypes.c:361
+msgid "Non Periodic Comet"
+msgstr ""
+
+#: src/otypes.c:134
+msgid "Not an object"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:219
+msgid "Nova"
+msgstr "Nova"
+
+#: src/otypes.c:218
+msgid "Nova-like Star"
+msgstr ""
+
+#: src/otypes.c:277
+msgid "OH/IR star"
+msgstr ""
+
+#: src/otypes.c:112
+msgid "Object of unknown nature"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:202
+msgid "Open Cluster"
+msgstr "Aglomerado estelar aberto"
+
+#: src/otypes.c:348
+msgid "Optically Violently Variable object"
+msgstr ""
+
+#: src/otypes.c:247
+msgid "Outflow"
+msgstr ""
+
+#: src/otypes.c:196
+msgid "Pair of Galaxies"
+msgstr ""
+
+#: src/otypes.c:225
+msgid "Part of Cloud"
+msgstr ""
+
+#: src/otypes.c:316
+msgid "Part of a Galaxy"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:255
+msgid "Peculiar Star"
+msgstr "Estrela peculiar"
+
+# Filled from glossary
+#: src/otypes.c:360
+msgid "Periodic Comet"
+msgstr "Lista de cometas periódicos"
+
+# Filled from glossary
+#: src/otypes.c:372
+msgid "Phocaea Asteroid"
+msgstr "Família Foceia"
+
+# Filled from glossary
+#: src/otypes.c:354
+msgid "Planet"
+msgstr "Planeta"
+
+# Filled from glossary
+#: src/otypes.c:241
+msgid "Planetary Nebula"
+msgstr "Nebulosa planetária"
+
+#: src/otypes.c:331
+msgid "Possible Active Galaxy Nucleus"
+msgstr ""
+
+#: src/otypes.c:148
+msgid "Possible Association of Stars"
+msgstr ""
+
+#: src/otypes.c:176
+msgid "Possible Asymptotic Giant Branch Star"
+msgstr ""
+
+#: src/otypes.c:334
+msgid "Possible BL Lac"
+msgstr ""
+
+#: src/otypes.c:166
+msgid "Possible Be Star"
+msgstr ""
+
+#: src/otypes.c:185
+msgid "Possible Black Hole"
+msgstr ""
+
+#: src/otypes.c:333
+msgid "Possible Blazar"
+msgstr ""
+
+#: src/otypes.c:181
+msgid "Possible Blue Straggler Star"
+msgstr ""
+
+#: src/otypes.c:175
+msgid "Possible Blue supergiant star"
+msgstr ""
+
+#: src/otypes.c:188
+msgid "Possible Brown Dwarf"
+msgstr ""
+
+#: src/otypes.c:161
+msgid "Possible Carbon Star"
+msgstr ""
+
+#: src/otypes.c:152
+msgid "Possible Cataclysmic Binary"
+msgstr ""
+
+#: src/otypes.c:170
+msgid "Possible Cepheid"
+msgstr ""
+
+#: src/otypes.c:146
+msgid "Possible Cluster of Galaxies"
+msgstr ""
+
+#: src/otypes.c:150
+msgid "Possible Eclipsing Binary"
+msgstr ""
+
+#: src/otypes.c:313
+msgid "Possible Extra-solar Planet"
+msgstr ""
+
+#: src/otypes.c:144
+msgid "Possible Galaxy"
+msgstr ""
+
+#: src/otypes.c:199
+msgid "Possible Globular Cluster"
+msgstr ""
+
+#: src/otypes.c:147
+msgid "Possible Group of Galaxies"
+msgstr ""
+
+#: src/otypes.c:167
+msgid "Possible Herbig Ae/Be Star"
+msgstr ""
+
+#: src/otypes.c:156
+msgid "Possible High-Mass X-ray binary"
+msgstr ""
+
+#: src/otypes.c:168
+msgid "Possible Horizontal Branch Star"
+msgstr ""
+
+#: src/otypes.c:182
+msgid "Possible Hot subdwarf"
+msgstr ""
+
+#: src/otypes.c:177
+msgid "Possible Long Period Variable"
+msgstr ""
+
+#: src/otypes.c:155
+msgid "Possible Low-Mass X-ray binary"
+msgstr ""
+
+#: src/otypes.c:187
+msgid "Possible Low-mass star"
+msgstr ""
+
+#: src/otypes.c:178
+msgid "Possible Mira"
+msgstr ""
+
+#: src/otypes.c:184
+msgid "Possible Neutron Star"
+msgstr ""
+
+#: src/otypes.c:153
+msgid "Possible Nova"
+msgstr ""
+
+#: src/otypes.c:246
+msgid "Possible Outflow"
+msgstr ""
+
+#: src/otypes.c:157
+msgid "Possible Peculiar Star"
+msgstr ""
+
+#: src/otypes.c:149
+msgid "Possible Physical Binary"
+msgstr ""
+
+#: src/otypes.c:226
+msgid "Possible Planetary Nebula"
+msgstr ""
+
+#: src/otypes.c:180
+msgid "Possible Post-AGB Star"
+msgstr ""
+
+#: src/otypes.c:159
+msgid "Possible Pre-main sequence Star"
+msgstr ""
+
+#: src/otypes.c:332
+msgid "Possible Quasar"
+msgstr ""
+
+#: src/otypes.c:171
+msgid "Possible Red Giant Branch star"
+msgstr ""
+
+#: src/otypes.c:173
+msgid "Possible Red supergiant star"
+msgstr ""
+
+#: src/otypes.c:162
+msgid "Possible S Star"
+msgstr ""
+
+#: src/otypes.c:179
+msgid "Possible Semi-regular variable"
+msgstr ""
+
+#: src/otypes.c:198
+msgid "Possible Star Cluster"
+msgstr ""
+
+#: src/otypes.c:169
+msgid "Possible Star of RR Lyr type"
+msgstr ""
+
+#: src/otypes.c:164
+msgid "Possible Star with envelope of CH type"
+msgstr ""
+
+#: src/otypes.c:163
+msgid "Possible Star with envelope of OH/IR type"
+msgstr ""
+
+#: src/otypes.c:186
+msgid "Possible SuperNova"
+msgstr ""
+
+#: src/otypes.c:243
+msgid "Possible SuperNova Remnant"
+msgstr ""
+
+#: src/otypes.c:145
+msgid "Possible Supercluster of Galaxies"
+msgstr ""
+
+#: src/otypes.c:172
+msgid "Possible Supergiant star"
+msgstr ""
+
+#: src/otypes.c:151
+msgid "Possible Symbiotic Star"
+msgstr ""
+
+#: src/otypes.c:160
+msgid "Possible T Tau star"
+msgstr ""
+
+#: src/otypes.c:130
+msgid "Possible Ultra-luminous X-ray"
+msgstr ""
+
+#: src/otypes.c:183
+msgid "Possible White Dwarf"
+msgstr ""
+
+#: src/otypes.c:165
+msgid "Possible Wolf-Rayet Star"
+msgstr ""
+
+#: src/otypes.c:154
+msgid "Possible X-ray binary"
+msgstr ""
+
+#: src/otypes.c:174
+msgid "Possible Yellow supergiant star"
+msgstr ""
+
+#: src/otypes.c:158
+msgid "Possible Young Stellar Object"
+msgstr ""
+
+#: src/otypes.c:138
+msgid "Possible gravitational lens"
+msgstr ""
+
+#: src/otypes.c:137
+msgid "Possible gravitational lens System"
+msgstr ""
+
+#: src/otypes.c:139
+msgid "Possible gravitationally lensed image"
+msgstr ""
+
+#: src/otypes.c:271
+msgid "Post-AGB Star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:279
+msgid "Pre-main sequence Star"
+msgstr "Estrela pré-sequência principal"
+
+# Filled from glossary
+#: src/otypes.c:295
+msgid "Pulsar"
+msgstr "Pulsar"
+
+#: src/otypes.c:273
+msgid "Pulsating White Dwarf"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:298
+msgid "Pulsating variable Star"
+msgstr "Estrela variável"
+
+# Filled from glossary
+#: src/otypes.c:349
+msgid "Quasar"
+msgstr "Quasar"
+
+# Filled from glossary
+#: src/otypes.c:328
+msgid "Radio Galaxy"
+msgstr "Radiogaláxia"
+
+#: src/otypes.c:114
+msgid "Radio-source"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:262
+msgid "Red Giant Branch star"
+msgstr "Gigante vermelha"
+
+#: src/otypes.c:267
+msgid "Red supergiant star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:234
+msgid "Reflection Nebula"
+msgstr "Nebulosa de reflexão"
+
+#: src/otypes.c:190
+msgid "Region defined in the sky"
+msgstr ""
+
+#: src/otypes.c:293
+msgid "Rotationally variable Star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:265
+msgid "S Star"
+msgstr "Estrela de tipo S"
+
+#: src/otypes.c:310
+msgid "Semi-regular pulsating Star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:344
+msgid "Seyfert 1 Galaxy"
+msgstr "Galáxia Seyfert"
+
+# Filled from glossary
+#: src/otypes.c:345
+msgid "Seyfert 2 Galaxy"
+msgstr "Galáxia Seyfert"
+
+# Filled from glossary
+#: src/otypes.c:343
+msgid "Seyfert Galaxy"
+msgstr "Galáxia Seyfert"
+
+#: src/otypes.c:352
+msgid "Solar System Object"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:212
+msgid "Spectroscopic binary"
+msgstr "Estrela binária"
+
+# Filled from glossary
+#: src/otypes.c:249
+msgid "Star"
+msgstr "Estrela"
+
+# Filled from glossary
+#: src/otypes.c:238
+msgid "Star forming region"
+msgstr "Formação estelar"
+
+#: src/otypes.c:252
+msgid "Star in Association"
+msgstr ""
+
+#: src/otypes.c:250
+msgid "Star in Cluster"
+msgstr ""
+
+#: src/otypes.c:251
+msgid "Star in Nebula"
+msgstr ""
+
+#: src/otypes.c:253
+msgid "Star in double system"
+msgstr ""
+
+#: src/otypes.c:211
+msgid "Star showing eclipses by its planet"
+msgstr ""
+
+#: src/otypes.c:254
+msgid "Star suspected of Variability"
+msgstr ""
+
+#: src/otypes.c:278
+msgid "Star with envelope of CH type"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:336
+msgid "Starburst Galaxy"
+msgstr "Galáxia starburst"
+
+# Filled from glossary
+#: src/otypes.c:204
+msgid "Stellar Stream"
+msgstr "Cinemática estelar"
+
+# Filled from glossary
+#: src/otypes.c:312
+msgid "Sub-stellar object"
+msgstr "Objeto subestelar"
+
+# Filled from glossary
+#: src/otypes.c:353
+msgid "Sun"
+msgstr "Sol"
+
+# Filled from glossary
+#: src/otypes.c:311
+msgid "SuperNova"
+msgstr "Supernova"
+
+# Filled from glossary
+#: src/otypes.c:244
+msgid "SuperNova Remnant"
+msgstr "Remanescente de supernova"
+
+# Filled from glossary
+#: src/otypes.c:192
+msgid "Supercluster of Galaxies"
+msgstr "Superaglomerado de galáxias"
+
+#: src/otypes.c:214
+msgid "Symbiotic Star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:280
+msgid "T Tau-type Star"
+msgstr "Variável T Tauri"
+
+#: src/otypes.c:128
+msgid "UV-emission source"
+msgstr ""
+
+#: src/otypes.c:131
+msgid "Ultra-luminous X-ray source"
+msgstr ""
+
+#: src/otypes.c:191
+msgid "Underdense region of the Universe"
+msgstr ""
+
+#: src/otypes.c:362
+msgid "Unreliable (Historical) Comet"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:284
+msgid "Variable Star"
+msgstr "Estrela variável"
+
+#: src/otypes.c:290
+msgid "Variable Star of FU Ori type"
+msgstr ""
+
+#: src/otypes.c:309
+msgid "Variable Star of Mira Cet type"
+msgstr ""
+
+#: src/otypes.c:286
+msgid "Variable Star of Orion Type"
+msgstr ""
+
+#: src/otypes.c:291
+msgid "Variable Star of R CrB type"
+msgstr ""
+
+#: src/otypes.c:292
+msgid "Variable Star of R CrB type candiate"
+msgstr ""
+
+#: src/otypes.c:299
+msgid "Variable Star of RR Lyr type"
+msgstr ""
+
+#: src/otypes.c:302
+msgid "Variable Star of RV Tau type"
+msgstr ""
+
+#: src/otypes.c:307
+msgid "Variable Star of SX Phe type"
+msgstr ""
+
+#: src/otypes.c:303
+msgid "Variable Star of W Vir type"
+msgstr ""
+
+#: src/otypes.c:294
+msgid "Variable Star of alpha2 CVn type"
+msgstr ""
+
+#: src/otypes.c:304
+msgid "Variable Star of beta Cep type"
+msgstr ""
+
+#: src/otypes.c:301
+msgid "Variable Star of delta Sct type"
+msgstr ""
+
+#: src/otypes.c:306
+msgid "Variable Star of gamma Dor type"
+msgstr ""
+
+#: src/otypes.c:285
+msgid "Variable Star of irregular type"
+msgstr ""
+
+#: src/otypes.c:287
+msgid "Variable Star with rapid variations"
+msgstr ""
+
+#: src/otypes.c:296
+msgid "Variable of BY Dra type"
+msgstr ""
+
+#: src/otypes.c:297
+msgid "Variable of RS CVn type"
+msgstr ""
+
+#: src/otypes.c:125
+msgid "Very red source"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:272
+msgid "White Dwarf"
+msgstr "Anã branca"
+
+#: src/otypes.c:281
+msgid "Wolf-Rayet Star"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:221
+msgid "X-ray Binary"
+msgstr "Binário de raio X"
+
+#: src/otypes.c:129
+msgid "X-ray source"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:268
+msgid "Yellow supergiant star"
+msgstr "Supergigante amarela"
+
+# Filled from glossary
+#: src/otypes.c:257
+msgid "Young Stellar Object"
+msgstr "Objeto estelar jovem"
+
+#: src/otypes.c:116
+msgid "centimetric Radio-source"
+msgstr ""
+
+# Filled from glossary
+#: src/otypes.c:133
+msgid "gamma-ray Burst"
+msgstr "Erupção de raios gama"
+
+# Filled from glossary
+#: src/otypes.c:132
+msgid "gamma-ray source"
+msgstr "Radiação gama"
+
+#: src/otypes.c:325
+msgid "metallic Absorption Line system"
+msgstr ""
+
+#: src/otypes.c:115
+msgid "metric Radio-source"
+msgstr ""
+
+#: src/otypes.c:117
+msgid "millimetric Radio-source"
+msgstr ""
+
+#: src/otypes.c:120
+msgid "radio Burst"
+msgstr ""
+
+#: src/otypes.c:118
+msgid "sub-millimetric source"
+msgstr ""
+
+#: src/otypes.c:113
+msgid "transient event"
+msgstr ""
