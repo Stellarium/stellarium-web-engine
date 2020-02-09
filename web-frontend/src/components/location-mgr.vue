@@ -117,7 +117,9 @@ export default {
     this.$nextTick(() => {
       let map = this.$refs.myMap.mapObject
       var geocoder = new L.Control.Geocoder({
-        defaultMarkGeocode: false, position: 'topleft'
+        defaultMarkGeocode: false,
+        position: 'topleft',
+        collapsed: false
       }).on('markgeocode', function (e) {
         var pos = { lat: e.geocode.center.lat, lng: e.geocode.center.lng }
         that.mapCenter = [ pos.lat, pos.lng ]
@@ -141,6 +143,7 @@ export default {
         }
         that.pickLocation = loc
         that.setPickLocationMode()
+        geocoder.setQuery('')
       })
       geocoder.addTo(map)
     })
