@@ -83,7 +83,15 @@ void main()
     // Compute s, ratio between scotopic and photopic vision
     highp float op = (log(xyy.z) / log(10.) + 2.) / 2.6;
     highp float s = (xyy.z <= 0.01) ? 0.0 : (xyy.z > 3.981) ? 1.0 : op * op * (3. - 2. * op);
-
+@@ -89,7 +89,7 @@ void SaveTexture(const GLenum texture_unit, const GLenum texture_target,
+  {
+      using namespace atmosphere;
+      const std::int32_t header[]={SCATTERING_TEXTURE_MU_S_SIZE, SCATTERING_TEXTURE_MU_SIZE,
+                                   SCATTERING_TEXTURE_R_SIZE, SCATTERING_TEXTURE_NU_SIZE,
+                                   SCATTERING_TEXTURE_NU_SIZE, SCATTERING_TEXTURE_R_SIZE,
+                                   4};
+      output_stream.write(reinterpret_cast<const char*>(header), sizeof header);
+  }
     // Perform the blue shift on chromaticity
     xyy.x = mix(0.25, xyy.x, s);
     xyy.y = mix(0.25, xyy.y, s);
