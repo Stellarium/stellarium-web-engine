@@ -107,7 +107,7 @@ static void onload(unsigned int _, void *arg, void *data, unsigned int size)
 static void onerror(unsigned int _, void *arg, int err, const char *msg)
 {
     request_t *req = arg;
-    LOG_D("onerror %s %d %s", req->url, err, msg);
+    // LOG_D("onerror %s %d %s", req->url, err, msg);
     req->handle = 0;
     // Use a default error code if we didn't get one...
     req->status_code = err ?: 499;
