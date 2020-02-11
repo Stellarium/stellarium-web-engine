@@ -73,6 +73,7 @@ typedef struct constellations {
     fader_t     labels_visible;
     bool        show_all;
     int         labels_display_style;
+    bool        lines_animation;
 } constellations_t;
 
 static int constellation_update(constellation_t *con, const observer_t *obs);
@@ -585,7 +586,8 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
         // Add some space, using ad-hoc formula.
         line_truncate(&lines[i], radius[0] * 1.0 + 0.2 * DD2R,
                                  radius[1] * 1.0 + 0.2 * DD2R);
-        line_animation_effect(&lines[i], visible * 2);
+        if (cons->lines_animation)
+            line_animation_effect(&lines[i], visible * 2);
     }
 
     for (i = 0; i < con->count; i += 2) {
@@ -773,6 +775,7 @@ static int constellations_init(obj_t *obj, json_value *args)
 {
     constellations_t *conss = (void*)obj;
     conss->show_all = true;
+    conss->lines_animation = true;
     fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->labels_visible, false);
@@ -894,6 +897,8 @@ static obj_klass_t constellations_klass = {
         PROPERTY(show_all, TYPE_BOOL, MEMBER(constellations_t, show_all)),
         PROPERTY(labels_display_style, TYPE_ENUM,
                  MEMBER(constellations_t, labels_display_style)),
+        PROPERTY(lines_animation TYPE_BOOL,
+                 MEMBER(constellations_t, lines_animation)),
         {}
     },
 };
