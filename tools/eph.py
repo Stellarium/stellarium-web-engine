@@ -131,7 +131,13 @@ def read_tile(f):
     assert f.read(4) == b'EPHE'
     version = struct.unpack('I', f.read(4))[0]
     assert version == 2
-    chunk_type, chunk_len = struct.unpack('4sI', f.read(8))
+
+    # Read until the first non JSON chunk.
+    while True:
+        chunk_type, chunk_len = struct.unpack('4sI', f.read(8))
+        if chunk_type != b'JSON': break
+        f.read(chunk_len + 4)
+
     chunk_version = f.read(4)[0]
     nuniq = struct.unpack('Q', f.read(8))
     _, row_size, nb_col, nb_sources = struct.unpack('iiii', f.read(16))
