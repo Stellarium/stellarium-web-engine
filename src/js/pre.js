@@ -429,7 +429,7 @@ Module['on'] = function(eventName, callback) {
 
 
 /*
- * Function: addFont
+ * Function: setFont
  * Load a font from a url and add it into the engine.
  *
  * If we add several fonts to the same face ('regular' or 'bold'), the
@@ -444,16 +444,7 @@ Module['on'] = function(eventName, callback) {
  * Return:
  *   A promise that can be used to be notified once the font has been loaded.
  */
-Module['addFont'] = function(font, url, scale) {
-  // Special case for asset font: no need to make a request.
-  // Note: should return a promise too!
-  if (url.startsWith('asset:/')) {
-    Module.ccall('render_add_font', null,
-                 ['number', 'string', 'string', 'number', 'number', 'number'],
-                 [0, font, url, 0, 0, scale]);
-    return;
-  }
-
+Module['setFont'] = function(font, url, scale) {
   return fetch(url).then(function(response) {
     if (!response.ok) throw new Error(`Cannot get ${url}`);
     return response.arrayBuffer();
@@ -461,8 +452,15 @@ Module['addFont'] = function(font, url, scale) {
     data = new Uint8Array(data);
     let ptr = Module._malloc(data.length);
     Module.writeArrayToMemory(data, ptr);
-    Module.ccall('render_add_font', null,
+    Module.ccall('core_add_font', null,
                  ['number', 'string', 'string', 'number', 'number', 'number'],
                  [0, font, null, ptr, data.length, scale]);
+
+    // Also add the internal fallback font.
+    let url = (font === 'regular') ? 'asset://font/NotoSans-Regular.ttf' :
+                                     'asset://font/NotoSans-Bold.ttf';
+    Module.ccall('core_add_font', null,
+                 ['number', 'string', 'string', 'number', 'number', 'number'],
+                 [0, font, url, 0, 0, scale]);
   });
 }
