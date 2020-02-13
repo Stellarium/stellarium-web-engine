@@ -228,8 +228,10 @@
               that.stel = Object.assign(Object.create(stel), {}, stel)
           })
 
-          stel.setFont('regular', 'static/fonts/Roboto-Regular.ttf', 1.38);
-          stel.setFont('bold', 'static/fonts/Roboto-Bold.ttf', 1.38);
+          stel.addFont('regular', 'static/fonts/Roboto-Regular.ttf', 1.38);
+          stel.addFont('regular', 'asset://fonts/NotoSans-Regular.ttf', 1.38);
+          stel.addFont('bold', 'static/fonts/Roboto-Bold.ttf', 1.38);
+          stel.addFont('bold', 'asset://fonts/NotoSans-Bold.ttf', 1.38);
         }
       })
     },

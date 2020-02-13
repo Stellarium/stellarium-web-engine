@@ -250,6 +250,7 @@ typedef struct renderer_gl {
     struct {
         int   id;
         float scale;
+        bool  is_default_font; // Set only for the original default fonts.
     } fonts[2];
 
     item_t  *items;
@@ -1666,14 +1667,19 @@ static texture_t *create_white_texture(int w, int h)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void render_set_font(renderer_gl_t *rend, const char *name,
-                     const uint8_t *data, int size, float scale)
+void core_add_font(renderer_gl_t *rend, const char *name,
+                   const char *url, const uint8_t *data,
+                   int size, float scale)
 {
     int id;
     int font;
-    assert(data && size);
-
     rend = rend ?: (void*)core->rend;
+
+    if (!data) {
+        data = asset_get_data(url, &size, NULL);
+        assert(data);
+    }
+
     if (strcmp(name, "regular") == 0)
         font = FONT_REGULAR;
     else if (strcmp(name, "bold") == 0)
@@ -1684,23 +1690,24 @@ void render_set_font(renderer_gl_t *rend, const char *name,
     }
 
     id = nvgCreateFontMem(rend->vg, name, data, size, 0);
-    rend->fonts[font].id = id;
-    rend->fonts[font].scale = scale;
+    if (!rend->fonts[font].id || rend->fonts[font].is_default_font) {
+        rend->fonts[font].id = id;
+        rend->fonts[font].scale = scale;
+        rend->fonts[font].is_default_font = false;
+    } else {
+        nvgAddFallbackFontId(rend->vg, rend->fonts[font].id, id);
+    }
 }
 
 static void set_default_fonts(renderer_gl_t *rend)
 {
     const float scale = 1.38;
-    const char *FONTS[2][2] = {
-        {"regular", "asset://font/NotoSans-Regular.ttf"},
-        {"bold", "asset://font/NotoSans-Bold.ttf"},
-    };
-    int i, size;
-    const uint8_t *data;
-    for (i = 0; i < 2; i++) {
-        data = asset_get_data(FONTS[i][1], &size, NULL);
-        render_set_font(rend, FONTS[i][0], data, size, scale);
-    }
+    core_add_font(rend, "regular", "asset://font/NotoSans-Regular.ttf",
+                  NULL, 0, scale);
+    core_add_font(rend, "bold", "asset://font/NotoSans-Bold.ttf",
+                  NULL, 0, scale);
+    rend->fonts[FONT_REGULAR].is_default_font = true;
+    rend->fonts[FONT_BOLD].is_default_font = true;
 }
 
 renderer_t* render_gl_create(void)
