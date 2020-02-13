@@ -897,7 +897,7 @@ static obj_klass_t constellations_klass = {
         PROPERTY(show_all, TYPE_BOOL, MEMBER(constellations_t, show_all)),
         PROPERTY(labels_display_style, TYPE_ENUM,
                  MEMBER(constellations_t, labels_display_style)),
-        PROPERTY(lines_animation TYPE_BOOL,
+        PROPERTY(lines_animation, TYPE_BOOL,
                  MEMBER(constellations_t, lines_animation)),
         {}
     },
