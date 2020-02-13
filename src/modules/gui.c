@@ -377,7 +377,7 @@ static int gui_render(const obj_t *obj, const painter_t *painter)
     gui_same_line();
     gui_text("FOV: %.1f°", core->fov * DR2D);
     gui_same_line();
-    gui_text("FPS: %.0f", core->prof.fps);
+    gui_fps_histo(core->fps.hist, ARRAY_SIZE(core->fps.hist));
     gui_same_line();
     gui_text("lwmax: %f cd/m2", core->lwmax);
     gui_same_line();

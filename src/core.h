@@ -24,6 +24,7 @@
 #include "telescope.h"
 #include "tonemapper.h"
 
+#include "utils/fps.h"
 
 typedef struct core core_t;
 typedef struct task task_t;
@@ -95,12 +96,7 @@ struct core
     obj_t           *selection;
     obj_t           *hovered;
 
-    // Profiling data.
-    struct {
-        double      start_time; // Start of measurement window (sec)
-        int         nb_frames;  // Number of frames elapsed.
-        double      fps;        // Averaged FPS counter.
-    } prof;
+    fps_t           fps; // FPS counter.
 
     // Number of clicks so far.  This is just so that we can wait for clicks
     // from the ui.

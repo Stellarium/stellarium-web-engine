@@ -657,7 +657,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
     PROFILE(core_render, 0);
     obj_t *module;
     projection_t proj;
-    double t;
     double max_vmag, hints_vmag;
 
     // Used to make sure some values are not touched during render.
@@ -679,15 +678,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
     max_vmag = compute_vmag_for_radius(core->skip_point_radius);
     hints_vmag = compute_vmag_for_radius(core->show_hints_radius);
 
-    t = sys_get_unix_time();
-    if (!core->prof.start_time) core->prof.start_time = t;
-    // Reset counter every 60 frames.
-    if (core->prof.nb_frames++ >= 60) {
-        core->prof.fps = core->prof.nb_frames / (t - core->prof.start_time);
-        module_changed(&core->obj, "fps");
-        core->prof.start_time = t;
-        core->prof.nb_frames = 0;
-    }
+    fps_tick(&core->fps, sys_get_unix_time());
+    module_changed(&core->obj, "fps");
 
     if (!core->rend)
         core->rend = render_gl_create();
@@ -1121,7 +1113,7 @@ static obj_klass_t core_klass = {
         PROPERTY(lock, TYPE_OBJ, MEMBER(core_t, target.lock)),
         PROPERTY(hovered, TYPE_OBJ, MEMBER(core_t, hovered)),
         PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),
-        PROPERTY(fps, TYPE_FLOAT, MEMBER(core_t, prof.fps)),
+        PROPERTY(fps, TYPE_INT, MEMBER(core_t, fps.avg)),
         PROPERTY(clicks, TYPE_INT, MEMBER(core_t, clicks)),
         PROPERTY(ignore_clicks, TYPE_BOOL, MEMBER(core_t, ignore_clicks)),
         PROPERTY(zoom, TYPE_FLOAT, MEMBER(core_t, zoom)),

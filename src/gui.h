@@ -102,5 +102,7 @@ bool gui_card_end();
 void gui_separator(void);
 void gui_header(const char *label);
 
+void gui_fps_histo(const int *values, int size);
+
 void gui_render_prepare(void);
 void gui_render_finish(void);

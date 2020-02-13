@@ -681,6 +681,23 @@ bool gui_card_end(void)
     return ImGui::IsItemClicked();
 }
 
+void gui_fps_histo(const int *values, int size)
+{
+    int i, avg = 0;
+    float *vs = (float*)malloc(size * sizeof(*vs));
+    char text[64];
+    for (i = 0; i < size; i++) {
+        vs[i] = values[i];
+        avg += values[i];
+    }
+    avg = round((float)avg / size);
+    snprintf(text, sizeof(text), "FPS %d", avg);
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.9, 0.7, 0.0, 0.8));
+    ImGui::PlotHistogram("", vs, size, 0, text, 0, 120, ImVec2(60, 0));
+    ImGui::PopStyleColor();
+    free(vs);
+}
+
 void gui_render_prepare(void)
 {
     int i;
