@@ -232,6 +232,20 @@ void core_on_char(uint32_t c);
 void core_on_zoom(double zoom, double x, double y);
 
 /*
+ * Function: core_on_pan
+ * Called from the cliend to perform a panning gesture.
+ *
+ * Parameters:
+ *   state  - State of the panning gesture:
+ *              0 - Panning started.
+ *              1 - Panning updated.
+ *              2 - Panning ended.
+ *   x      - X position in windows coordinates.
+ *   y      - Y position in windows coordinates.
+ */
+void core_on_pan(int state, double x, double y);
+
+/*
  * Function: core_get_proj
  * Get the core current view projection
  *

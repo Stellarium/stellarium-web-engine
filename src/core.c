@@ -747,6 +747,17 @@ void core_on_mouse(int id, int state, double x, double y)
 }
 
 EMSCRIPTEN_KEEPALIVE
+void core_on_pan(int state, double x, double y)
+{
+    obj_t *module;
+    DL_FOREACH(core->obj.children, module) {
+        if (module->klass->on_pan) {
+            module->klass->on_pan(module, state, x, y);
+        };
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
 void core_on_key(int key, int action)
 {
     static char *SC[][3] = {
