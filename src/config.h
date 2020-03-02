@@ -45,9 +45,6 @@ extern "C" {
 #   endif
 #endif
 
-// Imgui configs.
-#define IMGUI_INCLUDE_IMGUI_USER_INL
-
 // Force imgui to only compile stb image for jpeg and png.
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG

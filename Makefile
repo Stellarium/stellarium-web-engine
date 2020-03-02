@@ -1,52 +1,29 @@
 
-all:
-	./tools/checkstyle.py && scons -j8
-
-release:
-	scons -j8 debug=0
-
-debug:
-	scons -j8 debug=1
-
-clean:
-	scons -c
-
-run:
-	./stellarium-web-engine
-
-profile:
-	scons profile=1 debug=0
-
-# Start with remotery server running so we can do real time profiling.
-remotery:
-	scons -j8 debug=0 remotery=1
-
-analyze:
-	scan-build scons analyze=1
+-include src/private/Makefile
 
 .PHONY: js
 js:
-	emscons scons -j8 debug=0 emscripten=1
+	emscons scons -j8 mode=release
 
 .PHONY: js-debug
 js-debug:
-	emscons scons -j8 debug=1 emscripten=1
+	emscons scons -j8 mode=debug
 
 .PHONY: js-prof
 js-prof:
-	emscons scons -j8 debug=0 profile=1 emscripten=1
+	emscons scons -j8 mode=profile
 
 .PHONY: js-es6
 js-es6:
-	emscons scons -j8 debug=0 es6=1 emscripten=1
+	emscons scons -j8 mode=release es6=1
   
 .PHONY: js-es6-debug
 js-es6-debug:
-	emscons scons -j8 debug=1 es6=1 emscripten=1
+	emscons scons -j8 mode=debug es6=1
 
 .PHONY: js-es6-prof
 js-es6-prof:
-	emscons scons -j8 debug=0 profile=1 es6=1 emscripten=1
+	emscons scons -j8 mode=profile es6=1
 
 # Make the doc using natualdocs.  On debian, we only have an old version
 # of naturaldocs available, where it is not possible to exclude files by
