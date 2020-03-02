@@ -38,3 +38,6 @@ doc:
 	find /tmp/swe_src -name '*.c' | xargs rm
 	mkdir -p build/doc/ndconfig
 	naturaldocs -nag -i /tmp/swe_src -o html doc -p build/doc/ndconfig
+
+clean:
+	scons -c

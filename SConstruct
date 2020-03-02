@@ -94,13 +94,13 @@ env.Append(CPPPATH=['ext_src/webp/src'])
 
 sources = ['build/%s' % x for x in sources]
 
-assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
-# EMSCRIPTEN_ROOT need to be set, but current emscripten version doesn't
-# provide it. Here we set it automatically from EMSCRIPTEN_TOOL_PATH:
-os.environ['EMSCRIPTEN_ROOT'] = os.path.join(
-    os.environ['EMSCRIPTEN_TOOL_PATH'], '../../../../../')
-# os.environ['EMSCRIPTEN_ROOT'] = '/home/guillaume/emsdk/fastcomp/emscripten'
-env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
+if not env.GetOption('clean'):
+    assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
+    # EMSCRIPTEN_ROOT need to be set, but current emscripten version doesn't
+    # provide it. Here we set it automatically from EMSCRIPTEN_TOOL_PATH:
+    os.environ['EMSCRIPTEN_ROOT'] = os.path.join(
+        os.environ['EMSCRIPTEN_TOOL_PATH'], '../../../../../')
+    env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
 
 # Clang does not like overrided initializers.
 env.Append(CCFLAGS=['-Wno-initializer-overrides'])
