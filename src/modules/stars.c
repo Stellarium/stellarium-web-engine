@@ -211,6 +211,13 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_SP_TYPE:
         *(char**)out = star->data.sp_type;
         return 0;
+    case INFO_BVMAG:
+        if (isnan(star->data.bv)) {
+            *(double*)out = 0;
+            return 1;
+        }
+        *(double*)out = star->data.bv;
+        return 0;
     default:
         return 1;
     }
@@ -350,7 +357,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
 
     if (!core_get_point_for_mag(s->vmag, &size, &luminance))
         return 0;
-    bv_to_rgb(s->bv, color);
+    bv_to_rgb(isnan(s->bv) ? 0 : s->bv, color);
 
     point = (point_t) {
         .pos = {p[0], p[1]},
@@ -536,7 +543,7 @@ static int on_file_tile_loaded(const char type[4],
         s->pra = pra;
         s->pde = pde;
         s->plx = plx;
-        s->bv = isnan(bv) ? 0 : bv;
+        s->bv = bv;
 
         // Turn '|' separated ids into '\0' separated values.
         if (*ids) {
@@ -676,7 +683,7 @@ static int render_visitor(int order, int pix, void *user)
         (*illuminance) += s->illuminance;
         if (!core_get_point_for_mag(s->vmag, &size, &luminance))
             continue;
-        bv_to_rgb(s->bv, color);
+        bv_to_rgb(isnan(s->bv) ? 0 : s->bv, color);
         points[n] = (point_t) {
             .pos = {p_win[0], p_win[1]},
             .size = size,
