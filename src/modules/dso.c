@@ -452,6 +452,39 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
     win_size[1] /= 2.0;
 }
 
+// Find the best name to display
+static bool dso_get_short_name(const dso_data_t *s, char *out, int size)
+{
+    const char *names = s->names;
+    if (!names)
+        return false;
+
+    char best_name[size];
+    int best_name_len = size - 1;
+    int len;
+
+    best_name[0] = '\0';
+    while (*names) {
+        designation_cleanup(names, out, size, DSGN_TRANSLATE);
+        len = strlen(out);
+        if (len < 12) {
+            return true;
+        }
+        if (len < best_name_len) {
+            best_name_len = len;
+            strncpy(best_name, out, size);
+        }
+        if (strncmp(names, "NAME ", 5) != 0) {
+            break;
+        }
+        names += strlen(names) + 1;
+    }
+    strncpy(out, best_name, size);
+    return true;
+
+}
+
+
 static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
                              const painter_t *painter,
                              const double win_size[2], double win_angle)
@@ -473,9 +506,7 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
                  fabs(cos(win_angle)) *
                  fabs(win_size[0] / 2 - win_size[1] / 2);
     radius += 1;
-    if (s2->names) {
-        designation_cleanup(s2->names, buf, sizeof(buf), DSGN_TRANSLATE);
-    }
+    dso_get_short_name(s2, buf, sizeof(buf));
     if (buf[0]) {
         labels_add_3d(buf, FRAME_ASTROM, s->bounding_cap, true, radius,
                       FONT_SIZE_BASE - 2, color, 0, 0, effects,
