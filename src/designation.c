@@ -331,6 +331,12 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
         return;
     }
 
+    // NAME designation with translation.
+    if ((flags & DSGN_TRANSLATE) && strncmp(dsgn, "NAME ", 5) == 0) {
+        snprintf(out, size, "%s", sys_translate("skyculture", dsgn + 5));
+        return;
+    }
+
     for (i = 0; i < ARRAY_SIZE(remove); i++) {
         if (strncmp(dsgn, remove[i], strlen(remove[i])) == 0) {
             snprintf(out, size, "%s", dsgn + strlen(remove[i]));

@@ -15,7 +15,7 @@
 #include <stdbool.h>
 
 /*
- * Enum: BAYER_FLAGS
+ * Enum: DESIGNATION_FLAGS
  * Flags that specify how to format a Bayer or Flamsteed name.
  *
  * Values:
@@ -29,12 +29,14 @@
  *                        Default is to display no constellation name.
  *   BAYER_CONST_LONG   - Append long constellation name, e.g. 'ß Centauri'.
  *                        Default is to display no constellation name.
+ *   DSGN_TRANSLATE     - Return locally translated designation for names.
  */
 enum {
     BAYER_LATIN_SHORT       = 1 << 0,
     BAYER_LATIN_LONG        = 1 << 1,
     BAYER_CONST_SHORT       = 1 << 2,
     BAYER_CONST_LONG        = 1 << 3,
+    DSGN_TRANSLATE          = 1 << 4,
 };
 
 /*
