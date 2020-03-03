@@ -82,6 +82,7 @@ typedef struct tile {
 typedef struct survey survey_t;
 struct survey {
     char key[128];
+    int idx;
     hips_t *hips;
     survey_t *next, *prev;
 };
@@ -120,16 +121,17 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
  * The oid number is generated from the nuniq number of the tile healpix
  * pixel and the index in the tile.
  *
- * We use 20 bits for the nuniq, and 12 bits for the running index.  This
- * should allow to go up to order 8, with 4096 sources per tile.
+ * We use 20 bits for the nuniq, 10 bits for the running index, and 2 bits
+ * for the source index. This should allow to go up to order 8, with 1024
+ * sources per tile, with up to 4 data sources.
  */
-static uint64_t make_oid(uint64_t nuniq, int index)
+static uint64_t make_oid(int source, uint64_t nuniq, int index)
 {
-    if (nuniq >= 1 << 20 || index >= 1 << 12) {
+    if (nuniq >= 1 << 20 || index >= 1 << 10 || source >= 1 << 2) {
         LOG_W("Cannot generate uniq oid for DSO");
         LOG_W("Nuniq: %llu, index: %d", nuniq, index);
     }
-    return oid_create("NDSO", (uint32_t)nuniq << 12 | index);
+    return oid_create("NDSO", (uint32_t)nuniq << 12 | source << 10 | index);
 }
 
 static dso_t *dso_create(const dso_data_t *data)
@@ -216,7 +218,7 @@ static int dso_init(obj_t *obj, json_value *args)
     // the oid.
     if (dso->data.names) {
         index = crc32(0, (void*)dso->data.names, strlen(dso->data.names));
-        dso->data.oid = make_oid(0, index % 1024 + 1);
+        dso->data.oid = make_oid(0, 0, index % 1024 + 1);
     }
 
     types = json_get_attr(args, "types", json_array);
@@ -275,8 +277,9 @@ static int on_file_tile_loaded(const char type[4],
     void *tile_data;
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
     uint64_t nuniq;
-    tile_t **out = USER_GET(user, 0); // Receive the tile.
-    int *transparency = USER_GET(user, 1);
+    survey_t *survey = USER_GET(user, 0);
+    tile_t **out = USER_GET(user, 1); // Receive the tile.
+    int *transparency = USER_GET(user, 2);
 
     eph_table_column_t columns[] = {
         {"type", 's', .size=4},
@@ -291,6 +294,7 @@ static int on_file_tile_loaded(const char type[4],
         {"ids",  's', .size=256},
     };
 
+    assert(survey);
     *out = NULL;
     if (strncmp(type, "DSO ", 4) != 0) return 0;
 
@@ -348,7 +352,7 @@ static int on_file_tile_loaded(const char type[4],
         tile->mag_min = min(tile->mag_min, s->display_vmag);
         tile->mag_max = max(tile->mag_max, s->display_vmag);
         nuniq = pix_to_nuniq(order, pix);
-        s->oid = make_oid(nuniq, i);
+        s->oid = make_oid(survey->idx, nuniq, i);
 
         if (*morpho) s->morpho = strdup(morpho);
         s->symbol = symbols_get_for_otype(s->type);
@@ -384,8 +388,10 @@ static int on_file_tile_loaded(const char type[4],
 static const void *dsos_create_tile(void *user, int order, int pix, void *data,
                                     int size, int *cost, int *transparency)
 {
-    tile_t *tile;
-    eph_load(data, size, USER_PASS(&tile, transparency), on_file_tile_loaded);
+    tile_t *tile = NULL;
+    survey_t *survey = user;
+    eph_load(data, size, USER_PASS(survey, &tile, transparency),
+             on_file_tile_loaded);
     if (tile) *cost = tile->nb * sizeof(*tile->sources);
     return tile;
 }
@@ -778,12 +784,17 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
 static int dsos_add_data_source(obj_t *obj, const char *url, const char *key)
 {
     dsos_t *dsos = (void*)obj;
+    survey_t *survey;
+    int idx;
     hips_settings_t survey_settings = {
         .create_tile = dsos_create_tile,
         .delete_tile = del_tile,
     };
-    survey_t *survey = calloc(1, sizeof(*survey));
+    DL_COUNT(dsos->surveys, survey, idx);
+    survey = calloc(1, sizeof(*survey));
+    survey_settings.user = survey;
     survey->hips = hips_create(url, 0, &survey_settings);
+    survey->idx = idx;
     if (key)
         snprintf(survey->key, sizeof(survey->key), "%s", key);
     DL_APPEND(dsos->surveys, survey);
