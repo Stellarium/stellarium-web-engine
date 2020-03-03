@@ -8,6 +8,8 @@
  */
 
 #include "swe.h"
+
+#include "designation.h"
 #include "utstring.h"
 #include <regex.h>
 #include <zlib.h> // For crc32
@@ -50,7 +52,6 @@ typedef struct {
     int symbol;
 
     char *morpho;
-    char short_name[64];
     // List of extra names, separated by '\0', terminated by two '\0'.
     char *names;
     float  vmag;
@@ -287,7 +288,6 @@ static int on_file_tile_loaded(const char type[4],
         {"smin", 'f', EPH_ARCMIN},
         {"angl", 'f', EPH_DEG},
         {"morp", 's', .size=32},
-        {"snam", 's', .size=64},
         {"ids",  's', .size=256},
     };
 
@@ -323,7 +323,7 @@ static int on_file_tile_loaded(const char type[4],
                            s->type,
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
-                           morpho, s->short_name, ids);
+                           morpho, ids);
         s->ra = tmp_ra * DD2R;
         s->de = tmp_de * DD2R;
 
@@ -467,9 +467,9 @@ static void dso_render_label(const dso_data_t *s2, const dso_clip_data_t *s,
                  fabs(cos(win_angle)) *
                  fabs(win_size[0] / 2 - win_size[1] / 2);
     radius += 1;
-    if (s2->short_name[0])
-        snprintf(buf, sizeof(buf), "%s", sys_translate("skyculture",
-                                                       s2->short_name));
+    if (s2->names) {
+        designation_cleanup(s2->names, buf, sizeof(buf), DSGN_TRANSLATE);
+    }
     if (buf[0]) {
         labels_add_3d(buf, FRAME_ASTROM, s->bounding_cap, true, radius,
                       FONT_SIZE_BASE - 2, color, 0, 0, effects,
@@ -588,7 +588,6 @@ void dso_get_designations(
 
     const char *names = s->names;
     char cat[128] = {};
-    f(obj, user, "", s->short_name); // XXX: should extract cat.
     while (names && *names) {
         strncpy(cat, names, sizeof(cat) - 1);
         if (!strchr(cat, ' ')) { // No catalog.
