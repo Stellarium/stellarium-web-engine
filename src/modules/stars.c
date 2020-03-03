@@ -179,14 +179,7 @@ static int star_get_pvo(const obj_t *obj, const observer_t *obs,
                         double pvo[2][4])
 {
     star_data_t *s = &((star_t*)obj)->data;
-    double plx = s->plx, astro_pv[3];
-
-    if (isnan(plx)) plx = 0;
-    eraPmpx(s->ra, s->de, 0, 0, plx, 0, obs->astrom.pmt, obs->astrom.eb,
-            astro_pv);
-    vec3_normalize(astro_pv, astro_pv);
-    astrometric_to_apparent(obs, astro_pv, true, pvo[0]);
-    pvo[0][3] = 0.0;
+    convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, s->pos, pvo[0]);
     pvo[1][0] = pvo[1][2] = pvo[1][3] = 0.0;
     return 0;
 }
