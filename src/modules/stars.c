@@ -180,7 +180,8 @@ static int star_get_pvo(const obj_t *obj, const observer_t *obs,
 {
     star_data_t *s = &((star_t*)obj)->data;
     convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, s->pos, pvo[0]);
-    pvo[1][0] = pvo[1][2] = pvo[1][3] = 0.0;
+    pvo[0][3] = 0.0;
+    pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0.0;
     return 0;
 }
 
