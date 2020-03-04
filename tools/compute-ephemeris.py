@@ -15,6 +15,7 @@ import ephem
 import json
 import skyfield.api as sf
 
+from skyfield.data import hipparcos
 from math import *
 
 # Load all the needed kernels.
@@ -107,6 +108,17 @@ def compute_asteroid(name, data, t, precision_radec=15, precision_azalt=120):
         json = dict(model_data=data),
     )
 
+def compute_star(star, name):
+    data = dict(
+        ra = star.ra._degrees,
+        de = star.dec._degrees,
+        plx = star.parallax_mas,
+        pm_ra = star.ra_mas_per_year,
+        pm_de = star.dec_mas_per_year,
+    )
+    return compute(star, name=name, klass='star', json=dict(model_data=data))
+
+
 
 def compute_all():
     yield compute('Sun', precision_radec=30)
@@ -148,6 +160,12 @@ def compute_all():
             "a": 2.772466}
     yield compute_asteroid('Pallas', data=data, t='2019/08/10 17:00',
                            precision_radec=200, precision_azalt=400)
+
+    with sf.load.open(hipparcos.URL) as f:
+        df = hipparcos.load_dataframe(f)
+    polaris = sf.Star.from_dataframe(df.loc[11767])
+    # This fails at the moment, not sure why!
+    # yield compute_star(polaris, name='Polaris')
 
 
 def c_format(v):
