@@ -220,6 +220,7 @@ typedef struct
     double dec;
     double alt;
     double az;
+    double pos[3]; // ICRF, observer centric.
     double geo[3];
     int planet;
     const char *klass;
@@ -258,6 +259,13 @@ static void test_pos(pos_test_t t)
     assert(obj);
 
     obj_get_pvo(obj, &obs, pvo);
+    sep = eraSepp(pvo[0], t.pos) * DR2D * 3600;
+    if (sep > t.precision_radec) {
+        LOG_E("Error %s", t.name);
+        LOG_E("ICRF (observer) error: %.5f arcsec", sep);
+        assert(false);
+    }
+
     convert_framev4(&obs, FRAME_ICRF, FRAME_JNOW, pvo[0], p);
     eraC2s(p, &ra, &dec);
 

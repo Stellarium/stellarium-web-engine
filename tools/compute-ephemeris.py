@@ -48,7 +48,7 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
     obs = (earth + topo).at(t)
     pos = obs.observe(target)
     geo = earth.at(t).observe(target)
-    radec = pos.radec(t)
+    radec = pos.radec(epoch='date')
     altaz = pos.apparent().altaz()
     # skyfield use JD, ephemeride uses Modified JD.
     ut1 = t.ut1 - 2400000.5
@@ -61,6 +61,7 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
         utc = utc,
         longitude = topo.longitude.degrees,
         latitude = topo.latitude.degrees,
+        pos = list(pos.position.au),
         ra = radec[0]._degrees,
         dec = radec[1].degrees,
         alt = altaz[0].degrees,
