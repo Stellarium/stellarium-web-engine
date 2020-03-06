@@ -138,9 +138,9 @@ def compute_all():
     # test might fail when we update the planet.ini data.
     yield compute('Metis', kernel=jup310, t=[2019, 12, 3, 15, 0, 0],
                   precision_radec=15, precision_azalt=20)
-    yield compute('Phobos', kernel=mar097, precision_radec=6,
+    yield compute('Phobos', kernel=mar097, precision_radec=5,
                   precision_azalt=10)
-    yield compute('Deimos', kernel=mar097, precision_radec=6,
+    yield compute('Deimos', kernel=mar097, precision_radec=5,
                   precision_azalt=10)
 
     # ISS, using TLE as of 2019-08-04.
