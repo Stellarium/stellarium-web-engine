@@ -26,8 +26,8 @@ mar097 = loader('https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/'
                 'satellites/mar097.bsp')
 
 # Compute target using skyfield.
-def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
-            precision_radec=15, precision_azalt=120, klass=None, json=None):
+def compute(target, kernel=de421, name=None, topo=None, t=None, planet=None,
+            precision_radec=3, precision_azalt=5, klass=None, json=None):
     ts = sf.load.timescale()
     if isinstance(target, str):
         name = target
@@ -42,19 +42,20 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
     t = ts.utc(*t)
     if name is None:
         name = target.target_name
-    if not planet and isinstance(target.target, int):
+
+    if planet is None and isinstance(target.target, int):
         planet = target.target
 
     earth = de421['earth']
     obs = (earth + topo).at(t)
-    pos = obs.observe(target)
+    pos = obs.observe(target)  # Astrometric position
+    apparent = obs.observe(target).apparent()  # Apparent position
     geo = earth.at(t).observe(target)
-    radec = pos.radec(epoch='date')
+    radec = apparent.radec(epoch='date')
     altaz = pos.apparent().altaz()
     # skyfield use JD, ephemeride uses Modified JD.
     ut1 = t.ut1 - 2400000.5
     utc = ut1 - t.dut1 / (60 * 60 * 24)
-
     ret = dict(
         name = name,
         planet = planet,
@@ -62,7 +63,7 @@ def compute(target, kernel=de421, name=None, topo=None, t=None, planet=0,
         utc = utc,
         longitude = topo.longitude.degrees,
         latitude = topo.latitude.degrees,
-        pos = list(pos.position.au),
+        pos = list(apparent.position.au),
         ra = radec[0]._degrees,
         dec = radec[1].degrees,
         alt = altaz[0].degrees,
@@ -95,6 +96,7 @@ def compute_asteroid(name, data, t, precision_radec=15, precision_azalt=120):
     mjd = o.date + 15020 - 0.5
     return dict(
         name = name,
+        planet = 0,
         utc = mjd,
         longitude = o.lon * R2D,
         latitude = o.lat * R2D,
@@ -121,15 +123,18 @@ def compute_star(star, name):
 
 
 def compute_all():
-    yield compute('Sun', precision_radec=30)
+    yield compute('Sun', precision_radec=1)
     yield compute('Moon')
     yield compute('Jupiter barycenter', planet=599)
     yield compute('Io', kernel=jup310)
     # XXX: would be better to pass the orbit elements for Metis, since the
     # test might fail when we update the planet.ini data.
-    yield compute('Metis', kernel=jup310, t=[2019, 12, 3, 15, 0, 0])
-    yield compute('Phobos', kernel=mar097, precision_radec=30)
-    yield compute('Deimos', kernel=mar097, precision_radec=30)
+    yield compute('Metis', kernel=jup310, t=[2019, 12, 3, 15, 0, 0],
+                  precision_radec=15, precision_azalt=20)
+    yield compute('Phobos', kernel=mar097, precision_radec=6,
+                  precision_azalt=10)
+    yield compute('Deimos', kernel=mar097, precision_radec=6,
+                  precision_azalt=10)
 
     # ISS, using TLE as of 2019-08-04.
     tle = [
@@ -146,13 +151,13 @@ def compute_all():
     }
 
     yield compute(iss, name='ISS', t=[2019, 8, 4, 17, 0], json=json,
-                  klass='tle_satellite',
-                  precision_radec=100, precision_azalt=100)
+                  planet=0, klass='tle_satellite',
+                  precision_radec=15, precision_azalt=15)
 
     yield compute(iss, name='ISS', t=[2019, 8, 3, 20, 51, 46], json=json,
                   topo=['43.4822 N', '1.432 E'], # Goyrans
-                  klass='tle_satellite',
-                  precision_radec=150, precision_azalt=100)
+                  planet=0, klass='tle_satellite',
+                  precision_radec=100, precision_azalt=100)
 
     # Pallas, using MPC data as of 2019-08-06.
     data = {"Epoch": 2458600.5, "M": 59.69912, "Peri": 310.04884,
