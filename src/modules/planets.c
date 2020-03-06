@@ -269,6 +269,7 @@ static void planet_get_pvo(const planet_t *planet, const observer_t *obs,
                            double pvo[2][3])
 {
     double pvh[2][3];
+    double ldt;
 
     // Use cached value if possible.
     if (obs->hash == planet->pvo_obs_hash) {
@@ -277,7 +278,21 @@ static void planet_get_pvo(const planet_t *planet, const observer_t *obs,
     }
 
     planet_get_pvh(planet, obs, pvh);
-    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
+    eraPvppv(pvh, obs->sun_pvb, pvo);
+    eraPvmpv(pvo, obs->obs_pvb, pvo);
+
+    // Apply light speed adjustment.
+    ldt = vec3_norm(pvo[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
+    observer_t obs2 = *obs;
+    obs2.tt -= ldt;
+    observer_update(&obs2, true);
+    planet_get_pvh(planet, &obs2, pvh);
+
+    // Recenter position on earth center to obtain astrometric position
+    eraPvppv(pvh, obs->sun_pvb, pvo);
+    eraPvmpv(pvo, obs->earth_pvb, pvo);
+
+    astrometric_to_apparent(obs, pvo[0], false, pvo[0]);
 
     // Copy value into cache to speed up next access.
     ((planet_t*)planet)->pvo_obs_hash = obs->hash;
