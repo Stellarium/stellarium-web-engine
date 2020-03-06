@@ -50,12 +50,16 @@ void eph_shuffle_bytes(uint8_t *data, int nb, int size);
  */
 enum {
     EPH_RAD             = 1 << 16,
-    EPH_DEG             = 2 << 16 | 1,          // D2R
+    EPH_DEG             = EPH_RAD | 1,      // Degree
+    EPH_ARCMIN          = EPH_DEG | 2,      // (1/60)
+    EPH_ARCSEC          = EPH_ARCMIN | 4,   // (1/60)
+
     EPH_VMAG            = 3 << 16,
-    EPH_ARCMIN          = 4 << 16 | 1 | 2,      // D2R * (1/60)
-    EPH_ARCSEC          = 5 << 16 | 1 | 2 | 4,  // D2R * (1/60) * (1/60)
+
     EPH_RAD_PER_YEAR    = 6 << 16,
-    EPH_RAD_PER_DAY     = 7 << 16 | 8,          // 365.25
+
+    // Legacy unit still used in gaia survey.
+    EPH_ARCSEC_         = 5 << 16 | 1 | 2 | 4,
 };
 
 typedef struct eph_table_column {

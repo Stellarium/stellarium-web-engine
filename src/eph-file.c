@@ -176,6 +176,9 @@ int eph_read_table_header(int version, const void *data, int data_size,
         memcpy(&columns[j].src_unit, data + 24 + i * 20, 4);
         memcpy(&columns[j].start, data + 28 + i * 20, 4);
         memcpy(&columns[j].size, data + 32 + i * 20, 4);
+        // Fix legacy units.
+        if (columns[j].src_unit == EPH_ARCSEC_)
+            columns[j].src_unit = EPH_ARCSEC;
     }
     for (i = 0; i < nb_columns; i++) columns[i].row_size = *row_size;
     *data_ofs += 16 + n_col * 20;
@@ -186,6 +189,7 @@ double eph_convert_f(int src_unit, int unit, double v)
 {
     if (!unit || src_unit == unit) return v; // Most common case.
 
+    assert(src_unit >> 16 == unit >> 16);
     // 1 -> deg to rad
     if ( (src_unit & 1) && !(unit & 1)) v *= DD2R;
     if (!(src_unit & 1) &&  (unit & 1)) v *= DR2D;
@@ -228,9 +232,11 @@ int eph_read_table_row(const void *data, int data_size, int *data_ofs,
             *va_arg(ap, int*) = v.i;
             break;
         case 'f':
-            if (got) memcpy(&v.f, data + columns[i].start, 4);
-            *va_arg(ap, double*) = eph_convert_f(
-                    columns[i].src_unit, columns[i].unit, v.f);
+            if (got) {
+                memcpy(&v.f, data + columns[i].start, 4);
+                v.f = eph_convert_f(columns[i].src_unit, columns[i].unit, v.f);
+            }
+            *va_arg(ap, double*) = v.f;
             break;
         case 'Q':
             if (got) memcpy(&v.q, data + columns[i].start, 8);
