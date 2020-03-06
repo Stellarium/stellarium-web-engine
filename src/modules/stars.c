@@ -34,8 +34,8 @@ typedef struct {
     float   plx;    // Parallax (arcsec)
     float   bv;
     float   illuminance; // (lux)
-    // Normalized Astrometric direction.
-    double  pos[3];
+    // Normalized Astrometric direction + movement.
+    double  pvo[2][3];
     double  distance;    // Distance in AU
     // List of extra names, separated by '\0', terminated by two '\0'.
     char    *names;
@@ -111,29 +111,24 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
  *   pde    - Proper motion (rad/year).
  *   plx    - Parallax (arcseconds).
  */
-static void compute_pv(double ra, double de,
-                       double pra, double pde, double plx, star_data_t *s)
+static void compute_pv(double ra, double de, double pra, double pde,
+                       double plx, double epoch, star_data_t *s)
 {
     int r;
-    double pv[2][3];
     double djm0, djm = 0;
 
     if (isnan(plx)) plx = 0;
     if (isnan(pde)) pde = 0;
     if (isnan(pra)) pra = 0;
 
-    eraEpb2jd(1991.25, &djm0, &djm);
-    eraPmpx(ra, de, pra / cos(de), pde, plx, 0,
-            (core->observer->tt - djm) / ERFA_DJY,
-            core->observer->obs_pvb[0], s->pos);
-
     /* For the moment we ignore the proper motion of stars without parallax,
      * because that would result in an infinite vector speed. */
     if (plx <= 0)
         plx = pde = pra = 0;
 
-    // Compute distance
-    r = eraStarpv(ra, de, pra / cos(de), pde, plx, 0, pv);
+    // Pre-compute 3D position and speed in catalog/barycentric position
+    // at epoch 2000, to broadly match DSS images.
+    r = eraStarpv(ra, de, pra / cos(de), pde, plx, 0, s->pvo);
     if (r & (2 | 4)) {
         LOG_W("Wrong star coordinates");
         if (r & 2) LOG_W("Excessive speed");
@@ -146,8 +141,13 @@ static void compute_pv(double ra, double de,
     if (r & 1) {
         s->distance = NAN;
     } else {
-        s->distance = vec3_norm(pv[0]);
+        s->distance = vec3_norm(s->pvo[0]);
     }
+
+    // Apply proper motion to bring from catalog epoch to 2000.0 epoch
+    eraEpb2jd(epoch, &djm0, &djm);
+    double dt = ERFA_DJM00 - djm;
+    vec3_addk(s->pvo[0], s->pvo[1], dt, s->pvo[0]);
 }
 
 // Get the pix number from a gaia source id at a given level.
@@ -179,6 +179,7 @@ static int star_init(obj_t *obj, json_value *args)
     star_t *star = (star_t*)obj;
     json_value *model, *names;
     star_data_t *d = &star->data;
+    double epoch;
 
     model= json_get_attr(args, "model_data", json_object);
     if (model) {
@@ -188,10 +189,11 @@ static int star_init(obj_t *obj, json_value *args)
         d->pra = json_get_attr_f(model, "pm_ra", 0) * ERFA_DMAS2R;
         d->pde = json_get_attr_f(model, "pm_de", 0) * ERFA_DMAS2R;
         d->vmag = json_get_attr_f(model, "Vmag", NAN);
+        epoch = json_get_attr_f(model, "epoch", 2000);
         if (isnan(d->vmag))
             d->vmag = json_get_attr_f(model, "Bmag", NAN);
         d->illuminance = core_mag_to_illuminance(d->vmag);
-        compute_pv(d->ra, d->de, d->pra, d->pde, d->plx, d);
+        compute_pv(d->ra, d->de, d->pra, d->pde, d->plx, epoch, d);
     }
 
     names = json_get_attr(args, "names", json_array);
@@ -200,14 +202,26 @@ static int star_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+static void star_data_get_pvo(const star_data_t *s, const observer_t *obs,
+                        double pvo[2][4])
+{
+    // Apply proper motion
+    double dt = obs->tt - ERFA_DJM00;
+    vec3_addk(s->pvo[0], s->pvo[1], dt, pvo[0]);
+    // Move to geocentric to get the astrometric position (apply parallax)
+    vec3_sub(pvo[0], obs->earth_pvb[0], pvo[0]);
+    vec3_normalize(pvo[0], pvo[0]);
+    convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, pvo[0], pvo[0]);
+    pvo[0][3] = 0.0;
+    pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0.0;
+}
+
 // Return position and velocity in ICRF with origin on observer (AU).
 static int star_get_pvo(const obj_t *obj, const observer_t *obs,
                         double pvo[2][4])
 {
     star_data_t *s = &((star_t*)obj)->data;
-    convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, s->pos, pvo[0]);
-    pvo[0][3] = 0.0;
-    pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0.0;
+    star_data_get_pvo(s, obs, pvo);
     return 0;
 }
 
@@ -577,7 +591,7 @@ static int on_file_tile_loaded(const char type[4],
             s->sp_type = strdup(sp_type);
         }
 
-        compute_pv(ra, de, pra, pde, plx, s);
+        compute_pv(ra, de, pra, pde, plx, epoch, s);
         s->illuminance = core_mag_to_illuminance(vmag);
         s->oid = compute_oid(s);
 
@@ -679,6 +693,7 @@ static int render_visitor(int order, int pix, void *user)
     star_data_t *s;
     double p_win[4], size, luminance;
     double color[3];
+    double pos[3];
     double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
     bool selected;
 
@@ -699,7 +714,13 @@ static int render_visitor(int order, int pix, void *user)
         s = &tile->sources[i];
         if (s->vmag > limit_mag) break;
 
-        if (!painter_project(&painter, FRAME_ASTROM, s->pos, true, true, p_win))
+        // Use J2000 position for display for the moment to avoid
+        // discrepancy with the DSS
+        vec3_copy(s->pvo[0], pos);
+        // Move to geocentric to get the astrometric position (apply parallax)
+        vec3_sub(pos, painter.obs->earth_pvb[0], pos);
+        vec3_normalize(pos, pos);
+        if (!painter_project(&painter, FRAME_ASTROM, pos, true, true, p_win))
             continue;
 
         (*illuminance) += s->illuminance;
@@ -718,7 +739,7 @@ static int render_visitor(int order, int pix, void *user)
         n++;
         selected = core->selection && s->oid == core->selection->oid;
         if (selected || (stars->hints_visible && !survey->is_gaia))
-            star_render_name(&painter, s, FRAME_ASTROM, s->pos, size, color);
+            star_render_name(&painter, s, FRAME_ASTROM, pos, size, color);
     }
     paint_2d_points(&painter, n, points);
     free(points);
