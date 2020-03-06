@@ -113,14 +113,19 @@ static void compute_pv(double ra, double de,
     int r;
     double pv[2][3];
     if (isnan(plx)) plx = 0;
-    r = eraStarpv(ra, de, pra, pde, plx, 0, pv);
+    double djm0, djm = 0;
+    eraEpb2jd(1991.25, &djm0, &djm);
+    eraPmpx(ra, de, pra / cos(de), pde, plx, 0,
+            (core->observer->tt - djm) / ERFA_DJY,
+            core->observer->obs_pvb[0], s->pos);
+
+    // Compute distance
+    r = eraStarpv(ra, de, pra / cos(de), pde, plx, 0, pv);
     if (r & (2 | 4)) LOG_W("Wrong star coordinates");
     if (r & 1) {
         s->distance = NAN;
-        vec3_normalize(pv[0], s->pos);
     } else {
         s->distance = vec3_norm(pv[0]);
-        vec3_mul(1.0 / s->distance, pv[0], s->pos);
     }
 }
 
