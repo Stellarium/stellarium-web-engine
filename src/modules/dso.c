@@ -275,7 +275,6 @@ static int on_file_tile_loaded(const char type[4],
     char morpho[32], ids[256] = {};
     double bmag, temp_mag, tmp_ra, tmp_de, tmp_smax, tmp_smin, tmp_angle;
     void *tile_data;
-    const double DAM2R = DD2R / 60.0; // arcmin to rad.
     uint64_t nuniq;
     survey_t *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
@@ -285,11 +284,11 @@ static int on_file_tile_loaded(const char type[4],
         {"type", 's', .size=4},
         {"vmag", 'f', EPH_VMAG},
         {"bmag", 'f', EPH_VMAG},
-        {"ra",   'f', EPH_DEG},
-        {"de",   'f', EPH_DEG},
-        {"smax", 'f', EPH_ARCMIN},
-        {"smin", 'f', EPH_ARCMIN},
-        {"angl", 'f', EPH_DEG},
+        {"ra",   'f', EPH_RAD},
+        {"de",   'f', EPH_RAD},
+        {"smax", 'f', EPH_RAD},
+        {"smin", 'f', EPH_RAD},
+        {"angl", 'f', EPH_RAD},
         {"morp", 's', .size=32},
         {"ids",  's', .size=256},
     };
@@ -328,17 +327,16 @@ static int on_file_tile_loaded(const char type[4],
                            &temp_mag, &bmag, &tmp_ra, &tmp_de,
                            &tmp_smax, &tmp_smin, &tmp_angle,
                            morpho, ids);
-        s->ra = tmp_ra * DD2R;
-        s->de = tmp_de * DD2R;
+        s->ra = tmp_ra;
+        s->de = tmp_de;
 
-        s->smax = tmp_smax * DAM2R;
-        s->smin = tmp_smin * DAM2R;
+        s->smax = tmp_smax;
+        s->smin = tmp_smin;
         s->angle = tmp_angle;
         if (!s->smin && s->smax) {
             s->smin = s->smax;
             s->angle = NAN;
         }
-        s->angle *= DD2R;
 
         // Compute the cap containing this DSO
         s->bounding_cap[3] = cosf(max(s->smin, s->smax));
