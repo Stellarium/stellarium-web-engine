@@ -253,8 +253,8 @@ void astrometric_to_apparent(const observer_t *obs, const double in[3],
         eraAb(out, obs->astrom.v, obs->astrom.em, obs->astrom.bm1, out);
         assert(vec3_is_normalized(out));
     } else {
-        eraPpp(out, obs->obs_pvb[0], out);
-        eraPmp(out, obs->earth_pvb[0], out);
+        eraPmp(out, obs->obs_pvb[0], out);
+        eraPpp(out, obs->earth_pvb[0], out);
         double dist = vec3_norm(out);
         vec3_mul(1.0 / dist, out, out);
         eraAb(out, obs->astrom.v, obs->astrom.em, obs->astrom.bm1, out);
