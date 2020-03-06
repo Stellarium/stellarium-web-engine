@@ -105,23 +105,44 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
 /*
  * Precompute values about the star position to make rendering faster.
  * Parameters:
- *   pls    - Parallax (arcseconds).
+ *   ra     - ICRS coordinate J200 (rad).
+ *   de     - ICRS coordinate J200 (rad).
+ *   pra    - Proper motion (rad/year).
+ *   pde    - Proper motion (rad/year).
+ *   plx    - Parallax (arcseconds).
  */
 static void compute_pv(double ra, double de,
                        double pra, double pde, double plx, star_data_t *s)
 {
     int r;
     double pv[2][3];
-    if (isnan(plx)) plx = 0;
     double djm0, djm = 0;
+
+    if (isnan(plx)) plx = 0;
+    if (isnan(pde)) pde = 0;
+    if (isnan(pra)) pra = 0;
+
     eraEpb2jd(1991.25, &djm0, &djm);
     eraPmpx(ra, de, pra / cos(de), pde, plx, 0,
             (core->observer->tt - djm) / ERFA_DJY,
             core->observer->obs_pvb[0], s->pos);
 
+    /* For the moment we ignore the proper motion of stars without parallax,
+     * because that would result in an infinite vector speed. */
+    if (plx <= 0)
+        plx = pde = pra = 0;
+
     // Compute distance
     r = eraStarpv(ra, de, pra / cos(de), pde, plx, 0, pv);
-    if (r & (2 | 4)) LOG_W("Wrong star coordinates");
+    if (r & (2 | 4)) {
+        LOG_W("Wrong star coordinates");
+        if (r & 2) LOG_W("Excessive speed");
+        if (r & 4) LOG_W("Solution didn't converge");
+        LOG_W("ra:%.1f°, de:%.1f°, "
+              "pmra:%.1f mas/year, pmde:%.1f mas/year, plx:%.1f mas",
+              ra * DR2D, de * DR2D, pra * DR2MAS, pde * DR2MAS,
+              plx * 1000);
+    }
     if (r & 1) {
         s->distance = NAN;
     } else {

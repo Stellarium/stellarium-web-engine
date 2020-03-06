@@ -46,3 +46,9 @@
 
 /* Reference epoch (J2000.0), Modified Julian Date */
 #define DJM00 (51544.5)
+
+/* Milliarcseconds to radians */
+#define DMAS2R ERFA_DMAS2R
+
+/* Radians to mas */
+#define DR2MAS (1. / ERFA_DMAS2R)
