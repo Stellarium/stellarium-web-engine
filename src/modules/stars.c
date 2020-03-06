@@ -693,7 +693,7 @@ static int render_visitor(int order, int pix, void *user)
     star_data_t *s;
     double p_win[4], size, luminance;
     double color[3];
-    double pos[3];
+    double pv[2][4];
     double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
     bool selected;
 
@@ -714,13 +714,8 @@ static int render_visitor(int order, int pix, void *user)
         s = &tile->sources[i];
         if (s->vmag > limit_mag) break;
 
-        // Use J2000 position for display for the moment to avoid
-        // discrepancy with the DSS
-        vec3_copy(s->pvo[0], pos);
-        // Move to geocentric to get the astrometric position (apply parallax)
-        vec3_sub(pos, painter.obs->earth_pvb[0], pos);
-        vec3_normalize(pos, pos);
-        if (!painter_project(&painter, FRAME_ASTROM, pos, true, true, p_win))
+        star_data_get_pvo(s, painter.obs, pv);
+        if (!painter_project(&painter, FRAME_ICRF, pv[0], true, true, p_win))
             continue;
 
         (*illuminance) += s->illuminance;
@@ -739,7 +734,7 @@ static int render_visitor(int order, int pix, void *user)
         n++;
         selected = core->selection && s->oid == core->selection->oid;
         if (selected || (stars->hints_visible && !survey->is_gaia))
-            star_render_name(&painter, s, FRAME_ASTROM, pos, size, color);
+            star_render_name(&painter, s, FRAME_ICRF, pv[0], size, color);
     }
     paint_2d_points(&painter, n, points);
     free(points);
