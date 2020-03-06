@@ -110,15 +110,19 @@ def compute_asteroid(name, data, t, precision_radec=15, precision_azalt=120):
         json = dict(model_data=data),
     )
 
-def compute_star(star, name):
+def compute_star(star, name, precision_radec = 1):
     data = dict(
         ra = star.ra._degrees,
         de = star.dec._degrees,
         plx = star.parallax_mas,
         pm_ra = star.ra_mas_per_year,
         pm_de = star.dec_mas_per_year,
+        epoch = star.epoch,
+        rv = star.radial_km_per_s
     )
-    return compute(star, name=name, klass='star', json=dict(model_data=data))
+    return compute(star, name=name, klass='star', json=dict(model_data=data),
+                   planet=0, precision_radec=precision_radec,
+                   precision_azalt = 5 + precision_radec)
 
 
 
@@ -169,8 +173,14 @@ def compute_all():
     with sf.load.open(hipparcos.URL) as f:
         df = hipparcos.load_dataframe(f)
     polaris = sf.Star.from_dataframe(df.loc[11767])
-    # This fails at the moment, not sure why!
-    # yield compute_star(polaris, name='Polaris')
+    yield compute_star(polaris, name='Polaris')
+
+    proxima = sf.Star.from_dataframe(df.loc[70890])
+    yield compute_star(proxima, name='Proxima Centauri')
+
+    barnard = sf.Star.from_dataframe(df.loc[87937])
+    yield compute_star(barnard, name='Barnards Star', precision_radec=6)
+
 
 
 def c_format(v):
