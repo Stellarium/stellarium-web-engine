@@ -57,6 +57,8 @@ enum {
     EPH_VMAG            = 3 << 16,
 
     EPH_RAD_PER_YEAR    = 6 << 16,
+    EPH_YEAR            = 7 << 16,
+    EPH_KM_PER_SEC      = 8 << 16,
 
     // Legacy unit still used in gaia survey.
     EPH_ARCSEC_         = 5 << 16 | 1 | 2 | 4,
