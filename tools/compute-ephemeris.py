@@ -113,7 +113,7 @@ def compute_asteroid(name, data, t, precision_radec=15, precision_azalt=120):
         json = dict(model_data=data),
     )
 
-def compute_star(star, name, precision_radec = 1):
+def compute_star(star, name, precision_radec = 0.1):
     data = dict(
         ra = star.ra._degrees,
         de = star.dec._degrees,
@@ -125,7 +125,7 @@ def compute_star(star, name, precision_radec = 1):
     )
     return compute(star, name=name, klass='star', json=dict(model_data=data),
                    planet=0, precision_radec=precision_radec,
-                   precision_azalt = 5 + precision_radec)
+                   precision_azalt = 5 )
 
 
 
@@ -182,7 +182,7 @@ def compute_all():
     yield compute_star(proxima, name='Proxima Centauri')
 
     barnard = sf.Star.from_dataframe(df.loc[87937])
-    yield compute_star(barnard, name='Barnards Star', precision_radec=6)
+    yield compute_star(barnard, name='Barnards Star')
 
 
 
