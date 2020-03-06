@@ -257,39 +257,27 @@ static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
 
 /*
  * Function: planet_get_pvo
- * Return observed position of a planet (ICRF, centered on observer).
+ * Return observed apparent position of a planet (ICRF, centered on observer).
  *
- * Parameters:
- *   adjust_ligth_speed - if set to false, compute the observed position
- *   without light speed adjustement (that is the position if the speed of
- *   light was infinite).
+ * The returned apparent position includes light speed effect applied on the
+ * planet's position and observer position (i.e. aberrations).
+ *
+ * Relativity effects and light deflection by the Sun are not simulated for the
+ * moment.
  */
 static void planet_get_pvo(const planet_t *planet, const observer_t *obs,
-                           double pvo[2][3], bool adjust_light_speed)
+                           double pvo[2][3])
 {
     double pvh[2][3];
-    double ldt;
 
     // Use cached value if possible.
-    if (adjust_light_speed && obs->hash == planet->pvo_obs_hash) {
+    if (obs->hash == planet->pvo_obs_hash) {
         eraCpv(planet->pvo, pvo);
         return;
     }
 
     planet_get_pvh(planet, obs, pvh);
-    eraCpv(pvh, pvo);
-    eraPvppv(pvo, obs->sun_pvb, pvo);
-    eraPvmpv(pvo, obs->obs_pvb, pvo);
-    if (!adjust_light_speed) return;
-
-    // Apply light speed adjustment.
-    ldt = vec3_norm(pvo[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
-    observer_t obs2 = *obs;
-    obs2.tt -= ldt;
-    planet_get_pvh(planet, &obs2, pvh);
-    eraCpv(pvh, pvo);
-    eraPvppv(pvo, obs->sun_pvb, pvo);
-    eraPvmpv(pvo, obs->obs_pvb, pvo);
+    position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
 
     // Copy value into cache to speed up next access.
     ((planet_t*)planet)->pvo_obs_hash = obs->hash;
@@ -301,7 +289,7 @@ static void planet_get_pvo4(const planet_t *planet, const observer_t *obs,
                             double pvo4[2][4])
 {
     double pvo[2][3];
-    planet_get_pvo(planet, obs, pvo, true);
+    planet_get_pvo(planet, obs, pvo);
     vec3_copy(pvo[0], pvo4[0]);
     vec3_copy(pvo[1], pvo4[1]);
     pvo4[0][3] = 1;
@@ -325,7 +313,7 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
 
     PLANETS_ITER(sun->obj.parent, p) {
         if (p->id != MOON) continue; // Only consider the Moon.
-        planet_get_pvo(p, obs, pvo, true);
+        planet_get_pvo(p, obs, pvo);
         sph_r = 2.0 * p->radius_m / DAU / vec3_norm(pvo[0]);
         sep = eraSepp(obs->sun_pvo[0], pvo[0]);
         // Compute shadow factor.
@@ -353,7 +341,7 @@ static double planet_get_phase(const planet_t *planet, const observer_t *obs)
     if (planet->id == EARTH || planet->id == SUN)
         return NAN;
     planet_get_pvh(planet, obs, pvh);
-    planet_get_pvo(planet, obs, pvo, true);
+    planet_get_pvo(planet, obs, pvo);
     i = eraSepp(pvh[0], pvo[0]);
     return 0.5 * cos(i) + 0.5;
 }
@@ -377,7 +365,7 @@ static double moon_get_vmag(const planet_t *moon, const observer_t *obs)
     // This is based on the algo of pyephem.
     // XXX: move into 'algos'.
     planet_get_pvh(moon, obs, pvh);
-    planet_get_pvo(moon, obs, pvo, true);
+    planet_get_pvo(moon, obs, pvo);
     dist = vec3_norm(pvo[0]);
     el = eraSepp(pvo[0], obs->sun_pvo[0]); // Elongation.
     return -12.7 +
@@ -435,7 +423,7 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
     case URANUS:
     case NEPTUNE:
         planet_get_pvh(planet, obs, pvh);
-        planet_get_pvo(planet, obs, pvo, true);
+        planet_get_pvo(planet, obs, pvo);
         n = (planet->id - MERCURY) / 100 + 1;
         i = eraSepp(pvh[0], pvo[0]);
         // Compute visual magnitude.
@@ -450,7 +438,7 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
     default:
         // http://www.physics.sfasu.edu/astro/asteroids/sizemagnitude.html
         planet_get_pvh(planet, obs, pvh);
-        planet_get_pvo(planet, obs, pvo, true);
+        planet_get_pvo(planet, obs, pvo);
         rho = vec3_norm(pvh[0]);
         rp = vec3_norm(pvo[0]);
         assert(planet->albedo);
@@ -477,7 +465,7 @@ static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = planet_get_phase(planet, obs);
         return 0;
     case INFO_RADIUS:
-        planet_get_pvo(planet, obs, pvo, true);
+        planet_get_pvo(planet, obs, pvo);
         *(double*)out = planet->radius_m / DAU / vec3_norm(pvo[0]);
         return 0;
     default:
@@ -569,7 +557,7 @@ static void render_rings(const planet_t *planet,
 
     // Add the planet in the painter shadow candidates.
     if (painter.planet.shadow_spheres_nb < 4) {
-        planet_get_pvo(planet, painter.obs, pvo, true);
+        planet_get_pvo(planet, painter.obs, pvo);
         vec3_copy(pvo[0],
                   painter.planet.shadow_spheres[
                                     painter.planet.shadow_spheres_nb]);
@@ -656,7 +644,7 @@ static int get_shadow_candidates(const planet_t *planet,
                     continue;
                 nb--; // Remove the last one.
             }
-            planet_get_pvo(other, obs, pvo, true);
+            planet_get_pvo(other, obs, pvo);
             vec3_copy(pvo[0], spheres[nb]);
             spheres[nb][3] = other->radius_m / DAU;
             nb++;
@@ -708,7 +696,7 @@ static void planet_render_hips(const planet_t *planet,
     if (!hips) hips = planet->hips;
     assert(hips);
 
-    planet_get_pvo(planet, painter.obs, pvo, true);
+    planet_get_pvo(planet, painter.obs, pvo);
     angle = 2 * radius * r_scale / vec2_norm(pvo[0]);
 
     memset(&painter.planet, 0, sizeof(painter.planet));
@@ -816,7 +804,7 @@ static void planet_render_orbit(const planet_t *planet,
                                   &ec, &ma);
 
     // Center the rendering on the parent planet.
-    planet_get_pvo(planet->parent, painter.obs, parent_pvo, true);
+    planet_get_pvo(planet->parent, painter.obs, parent_pvo);
     mat4_itranslate(mat, parent_pvo[0][0], parent_pvo[0][1], parent_pvo[0][2]);
 
     // Set the depth range same as the parent!!!!
@@ -844,7 +832,7 @@ static void planet_render_label(
 
     name = sys_translate("skyculture", planet->name);
 
-    planet_get_pvo(planet, painter->obs, pvo, true);
+    planet_get_pvo(planet, painter->obs, pvo);
     vec3_copy(pvo[0], pos);
     vec3_normalize(pos, pos);
 
@@ -905,7 +893,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     radius_m = max(planet->radius_m, planet->rings.outer_radius) * r_scale;
 
     // Compute planet's pos and bounding cap in ICRF
-    planet_get_pvo(planet, painter.obs, pvo, true);
+    planet_get_pvo(planet, painter.obs, pvo);
     vec3_copy(pvo[0], pos);
     vec3_normalize(pos, pos);
     vec3_copy(pos, cap);
@@ -996,8 +984,8 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     const planet_t *pb = (const planet_t*)b;
     double apvo[2][3], bpvo[2][3];
     observer_t *obs = core->observer;
-    planet_get_pvo(pa, obs, apvo, true);
-    planet_get_pvo(pb, obs, bpvo, true);
+    planet_get_pvo(pa, obs, apvo);
+    planet_get_pvo(pb, obs, bpvo);
     return cmp(eraPm(bpvo[0]), eraPm(apvo[0]));
 }
 
@@ -1006,7 +994,7 @@ static double planet_get_pixel_radius(const planet_t *p,
 {
     double vmag, angle, pvo[2][3], radius_physical, radius_vmag;
 
-    planet_get_pvo(p, painter->obs, pvo, true);
+    planet_get_pvo(p, painter->obs, pvo);
     angle = p->radius_m / DAU / vec3_norm(pvo[0]);
     radius_physical = core_get_point_for_apparent_angle(painter->proj, angle);
     vmag = planet_get_vmag(p, painter->obs);
