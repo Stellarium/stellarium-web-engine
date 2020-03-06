@@ -489,7 +489,7 @@ static int on_file_tile_loaded(const char type[4],
 {
     int version, nb, data_ofs = 0, row_size, flags, i, j, order, pix;
     int children_mask;
-    double vmag, gmag, ra, de, pra, pde, plx, bv;
+    double vmag, gmag, ra, de, pra, pde, plx, bv, epoch;
     char ids[256] = {};
     char sp_type[32] = {};
     survey_t *survey = USER_GET(user, 0);
@@ -511,6 +511,7 @@ static int on_file_tile_loaded(const char type[4],
         {"plx",  'f', EPH_ARCSEC},
         {"pra",  'f', EPH_RAD_PER_YEAR},
         {"pde",  'f', EPH_RAD_PER_YEAR},
+        {"epoc", 'f', EPH_YEAR},
         {"bv",   'f'},
         {"ids",  's', .size=256},
         {"spec", 's', .size=32},
@@ -549,7 +550,7 @@ static int on_file_tile_loaded(const char type[4],
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
                 s->type, &s->gaia, &s->hip, &vmag, &gmag,
-                &ra, &de, &plx, &pra, &pde, &bv, ids, sp_type);
+                &ra, &de, &plx, &pra, &pde, &epoch, &bv, ids, sp_type);
         assert(!isnan(ra));
         assert(!isnan(de));
         if (isnan(vmag)) vmag = gmag;
@@ -557,6 +558,7 @@ static int on_file_tile_loaded(const char type[4],
 
         if (vmag < survey->min_vmag) continue;
         if (!*s->type) strncpy(s->type, "*", 4); // Default type.
+        epoch = epoch ?: 2000; // Default epoch.
         s->vmag = vmag;
         s->ra = ra;
         s->de = de;
