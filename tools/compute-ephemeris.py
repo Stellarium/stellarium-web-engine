@@ -25,6 +25,9 @@ jup310 = loader('jup310.bsp')
 mar097 = loader('https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/'
                 'satellites/mar097.bsp')
 
+def JD_to_besselian_epoch(jd):
+  return 2000.0 + (jd - 2451545.0 ) / 365.25
+
 # Compute target using skyfield.
 def compute(target, kernel=de421, name=None, topo=None, t=None, planet=None,
             precision_radec=3, precision_azalt=5, klass=None, json=None):
@@ -117,7 +120,7 @@ def compute_star(star, name, precision_radec = 1):
         plx = star.parallax_mas,
         pm_ra = star.ra_mas_per_year,
         pm_de = star.dec_mas_per_year,
-        epoch = star.epoch,
+        epoch = JD_to_besselian_epoch(star.epoch),
         rv = star.radial_km_per_s
     )
     return compute(star, name=name, klass='star', json=dict(model_data=data),

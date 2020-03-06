@@ -179,7 +179,7 @@
     .precision_radec = 1,
     .precision_azalt = 6,
     .klass = "star",
-    .json = "{\"model_data\": {\"ra\": 37.94614689, \"de\": 89.26413805, \"plx\": 7.56, \"pm_ra\": 44.22, \"pm_de\": -11.74, \"epoch\": 2448349.0625, \"rv\": 0.0}}"
+    .json = "{\"model_data\": {\"ra\": 37.94614689, \"de\": 89.26413805, \"plx\": 7.56, \"pm_ra\": 44.22, \"pm_de\": -11.74, \"epoch\": 1991.25, \"rv\": 0.0}}"
 },
 {
     .name = "Proxima Centauri",
@@ -197,7 +197,7 @@
     .precision_radec = 1,
     .precision_azalt = 6,
     .klass = "star",
-    .json = "{\"model_data\": {\"ra\": 217.44894751, \"de\": -62.68135207, \"plx\": 772.33, \"pm_ra\": -3775.64, \"pm_de\": 768.16, \"epoch\": 2448349.0625, \"rv\": 0.0}}"
+    .json = "{\"model_data\": {\"ra\": 217.44894751, \"de\": -62.68135207, \"plx\": 772.33, \"pm_ra\": -3775.64, \"pm_de\": 768.16, \"epoch\": 1991.25, \"rv\": 0.0}}"
 },
 {
     .name = "Barnards Star",
@@ -215,5 +215,5 @@
     .precision_radec = 6,
     .precision_azalt = 11,
     .klass = "star",
-    .json = "{\"model_data\": {\"ra\": 269.45402305, \"de\": 4.66828815, \"plx\": 549.01, \"pm_ra\": -797.84, \"pm_de\": 10326.93, \"epoch\": 2448349.0625, \"rv\": 0.0}}"
+    .json = "{\"model_data\": {\"ra\": 269.45402305, \"de\": 4.66828815, \"plx\": 549.01, \"pm_ra\": -797.84, \"pm_de\": 10326.93, \"epoch\": 1991.25, \"rv\": 0.0}}"
 },
