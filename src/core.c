@@ -28,7 +28,8 @@ static void core_on_utcoffset_changed(obj_t *obj, const attribute_t *attr)
 }
 
 static void add_progressbar(void *user, const char *id, const char *label,
-                            int v, int total)
+                            int v, int total,
+                            int error, const char *error_msg)
 {
     json_value *array = user, *val;
     val = json_object_new(0);
@@ -36,6 +37,10 @@ static void add_progressbar(void *user, const char *id, const char *label,
     json_object_push(val, "label", json_string_new(label));
     json_object_push(val, "total", json_integer_new(total));
     json_object_push(val, "value", json_integer_new(v));
+    if (error) {
+        json_object_push(val, "error", json_integer_new(error));
+        json_object_push(val, "error_msg", json_string_new(error_msg));
+    }
     json_array_push(array, val);
 }
 

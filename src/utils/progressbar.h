@@ -31,6 +31,9 @@
 void progressbar_report(const char *id, const char *label, int v, int total,
                         int keepalive);
 
+void progressbar_report_error(const char *id, const char *label,
+                              int code, const char *msg);
+
 /*
  * Function: progressbar_update
  * Update all the progressbars and remove the one that are inactives
@@ -43,7 +46,8 @@ void progressbar_update(void);
  */
 int progressbar_list(void *user, void (*callback)(void *user,
                                       const char *id, const char *label,
-                                      int v, int total));
+                                      int v, int total,
+                                      int error, const char *error_msg));
 
 // Callback called each time a progressbar changed.
 void progressbar_add_listener(void (*f)(const char *id));

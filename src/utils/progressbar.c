@@ -21,6 +21,8 @@ struct bar {
     char            *label;
     int             v;
     int             total;
+    int             error;
+    char            *error_msg;
 
     int             last_update;
     int             keepalive;
@@ -78,6 +80,30 @@ void progressbar_report(const char *id, const char *label, int v, int total,
     if (changed && g_listener) g_listener(id);
 }
 
+void progressbar_report_error(const char *id, const char *label,
+                              int code, const char *msg)
+{
+    bar_t *bar;
+
+    HASH_FIND_STR(g_bars, id, bar);
+
+    if (!bar) {
+        bar = calloc(1, sizeof(*bar));
+        bar->id = strdup(id);
+        HASH_ADD_KEYPTR(hh, g_bars, bar->id, strlen(bar->id), bar);
+    }
+
+    if (label && (!bar->label || strcmp(bar->label, label) != 0)) {
+        free(bar->label);
+        bar->label = strdup(label);
+    }
+
+    bar->error = code;
+    free(bar->error_msg);
+    bar->error_msg = strdup(msg);
+    if (g_listener) g_listener(id);
+}
+
 void progressbar_update(void)
 {
     bar_t *bar, *tmp;
@@ -87,10 +113,13 @@ void progressbar_update(void)
             continue;
         if (bar->keepalive > 0 && g_tick <= bar->last_update + bar->keepalive)
             continue;
+        if (bar->error)
+            continue;
         HASH_DEL(g_bars, bar);
         g_listener(bar->id);
         free(bar->id);
         free(bar->label);
+        free(bar->error_msg);
         free(bar);
     }
     g_tick++;
@@ -98,12 +127,14 @@ void progressbar_update(void)
 
 int progressbar_list(void *user, void (*callback)(void *user,
                                       const char *id, const char *label,
-                                      int v, int total))
+                                      int v, int total,
+                                      int error, const char *error_msg))
 {
     bar_t *bar;
     int n;
     for (n = 0, bar = g_bars; bar; bar = bar->hh.next, n++)
-        callback(user, bar->id, bar->label, bar->v, bar->total);
+        callback(user, bar->id, bar->label, bar->v, bar->total, bar->error,
+                 bar->error_msg);
     return n;
 }
 
