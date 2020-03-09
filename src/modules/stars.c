@@ -202,18 +202,17 @@ static int star_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void star_data_get_pvo(const star_data_t *s, const observer_t *obs,
-                        double pvo[2][4])
+// Return the star astrometric position, that is as seen from earth center
+// after applying proper motion and parallax.
+static void star_get_astrom(const star_data_t *s, const observer_t *obs,
+                        double v[3])
 {
     // Apply proper motion
     double dt = obs->tt - ERFA_DJM00;
-    vec3_addk(s->pvo[0], s->pvo[1], dt, pvo[0]);
+    vec3_addk(s->pvo[0], s->pvo[1], dt, v);
     // Move to geocentric to get the astrometric position (apply parallax)
-    vec3_sub(pvo[0], obs->earth_pvb[0], pvo[0]);
-    vec3_normalize(pvo[0], pvo[0]);
-    convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, pvo[0], pvo[0]);
-    pvo[0][3] = 0.0;
-    pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0.0;
+    vec3_sub(v, obs->earth_pvb[0], v);
+    vec3_normalize(v, v);
 }
 
 // Return position and velocity in ICRF with origin on observer (AU).
@@ -221,7 +220,10 @@ static int star_get_pvo(const obj_t *obj, const observer_t *obs,
                         double pvo[2][4])
 {
     star_data_t *s = &((star_t*)obj)->data;
-    star_data_get_pvo(s, obs, pvo);
+    star_get_astrom(s, obs, pvo[0]);
+    convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, pvo[0], pvo[0]);
+    pvo[0][3] = 0.0;
+    pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0.0;
     return 0;
 }
 
@@ -693,7 +695,7 @@ static int render_visitor(int order, int pix, void *user)
     star_data_t *s;
     double p_win[4], size, luminance;
     double color[3];
-    double pv[2][4];
+    double v[3];
     double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
     bool selected;
 
@@ -714,8 +716,8 @@ static int render_visitor(int order, int pix, void *user)
         s = &tile->sources[i];
         if (s->vmag > limit_mag) break;
 
-        star_data_get_pvo(s, painter.obs, pv);
-        if (!painter_project(&painter, FRAME_ICRF, pv[0], true, true, p_win))
+        star_get_astrom(s, painter.obs, v);
+        if (!painter_project(&painter, FRAME_ASTROM, v, true, true, p_win))
             continue;
 
         (*illuminance) += s->illuminance;
@@ -734,7 +736,7 @@ static int render_visitor(int order, int pix, void *user)
         n++;
         selected = core->selection && s->oid == core->selection->oid;
         if (selected || (stars->hints_visible && !survey->is_gaia))
-            star_render_name(&painter, s, FRAME_ICRF, pv[0], size, color);
+            star_render_name(&painter, s, FRAME_ASTROM, v, size, color);
     }
     paint_2d_points(&painter, n, points);
     free(points);
