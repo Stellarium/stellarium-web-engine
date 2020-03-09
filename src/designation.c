@@ -160,8 +160,13 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
     if (!dsgn) return false;
     // Parse the '* '
     if (strlen(dsgn) < 4) return false;
-    if (strncmp(dsgn, "* ", 2) != 0) return false;
-    dsgn += 2;
+    if (strncmp(dsgn, "* ", 2) == 0) {
+        dsgn += 2;
+    } else if (strncmp(dsgn, "V* ", 3) == 0) {
+        dsgn += 3;
+    } else {
+        return false;
+    }
 
     // Parse greek letter.
     for (i = 0; i < 25; i++) {
@@ -227,8 +232,13 @@ static bool designation_parse_flamsteed(const char *dsgn, int *cst,
     if (!dsgn) return false;
     // Parse the '* '
     if (strlen(dsgn) < 4) return false;
-    if (strncmp(dsgn, "* ", 2) != 0) return false;
-    dsgn += 2;
+    if (strncmp(dsgn, "* ", 2) == 0) {
+        dsgn += 2;
+    } else if (strncmp(dsgn, "V* ", 3) == 0) {
+        dsgn += 3;
+    } else {
+        return false;
+    }
 
     *flamsteed = strtol(dsgn, &endptr, 10);
     if (*flamsteed == 0) return false;
