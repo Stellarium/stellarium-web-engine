@@ -65,6 +65,12 @@ hips_t *hips_create(const char *url, double release_date,
                     const hips_settings_t *settings);
 
 /*
+ * Function: hips_delete
+ * Delete a hips and all associated memory
+ */
+void hips_delete(hips_t *hips);
+
+/*
  * Function: hips_get_tile
  * Get a given tile of a hips survey.
  *

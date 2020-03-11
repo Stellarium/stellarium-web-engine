@@ -109,6 +109,7 @@ struct hips {
 
     // The settings as passed in the create function.
     hips_settings_t settings;
+    int ref; // Ref counting of hips survey.
 };
 
 
@@ -127,6 +128,7 @@ hips_t *hips_create(const char *url, double release_date,
     hips_t *hips = calloc(1, sizeof(*hips));
     if (!settings) settings = &default_settings;
 
+    hips->ref = 1;
     hips->settings = *settings;
     hips->url = strdup(url);
     hips->service_url = strdup(url);
@@ -136,6 +138,21 @@ hips_t *hips_create(const char *url, double release_date,
     hips->frame = FRAME_ASTROM;
     hips->hash = crc32(0, (void*)url, strlen(url));
     return hips;
+}
+
+void hips_delete(hips_t *hips)
+{
+    int i;
+    if (!hips) return;
+    hips->ref--;
+    assert(hips->ref >= 0);
+    if (hips->ref > 0) return;
+    free(hips->url);
+    free(hips->service_url);
+    for (i = 0; i < 12; i++)
+        texture_release(hips->allsky.textures[i]);
+    json_builder_free(hips->properties);
+    free(hips);
 }
 
 void hips_set_frame(hips_t *hips, int frame)
@@ -247,6 +264,7 @@ static int del_tile(void *data)
         if (tile->hips->settings.delete_tile(tile->data) == CACHE_KEEP)
             return CACHE_KEEP;
     }
+    hips_delete(tile->hips);
     free(tile);
     return 0;
 }
@@ -558,6 +576,7 @@ static bool hips_update(hips_t *hips)
         if (!data) hips->allsky.not_available = true;
         if (data) {
             worker_init(&hips->allsky.worker, load_allsky_worker);
+            hips->ref++;
             hips->allsky.src_data = malloc(size);
             hips->allsky.size = size;
             memcpy(hips->allsky.src_data, data, size);
@@ -567,6 +586,7 @@ static bool hips_update(hips_t *hips)
     // If the allsky image is loading wait for it to finish.
     if (hips->allsky.worker.fn) {
         if (!worker_iter(&hips->allsky.worker)) return false;
+        hips_delete(hips); // Release ref from worker.
         if (!hips->allsky.data) hips->allsky.not_available = true;
         hips->allsky.worker.fn = NULL;
     }
@@ -781,6 +801,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     tile->pos.order = order;
     tile->pos.pix = pix;
     tile->hips = hips;
+    hips->ref++;
     cache_add(g_cache, &key, sizeof(key), tile, sizeof(*tile) + cost,
               del_tile);
 
