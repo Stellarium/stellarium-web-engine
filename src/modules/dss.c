@@ -96,7 +96,7 @@ static int dss_update(obj_t *obj, double dt)
 static int dss_add_data_source(obj_t *obj, const char *url, const char *key)
 {
     dss_t *dss = (dss_t*)obj;
-    if (dss->hips) return -1;
+    hips_delete(dss->hips);
     dss->hips = hips_create(url, 0, NULL);
     return 0;
 }

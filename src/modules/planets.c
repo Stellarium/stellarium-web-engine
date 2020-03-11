@@ -1298,6 +1298,7 @@ static int planets_add_data_source(
     planet_t *p;
 
     if (strcmp(key, "default") == 0) {
+        hips_delete(planets->default_hips);
         planets->default_hips = hips_create(url, 0, NULL);
         hips_set_frame(planets->default_hips, FRAME_ICRF);
         return 0;
@@ -1305,6 +1306,7 @@ static int planets_add_data_source(
 
     if (strcmp(key, "moon-normal") == 0) {
         p = planet_get_by_name(planets, "moon");
+        hips_delete(p->hips_normalmap);
         p->hips_normalmap = hips_create(url, 0, NULL);
         hips_set_frame(p->hips_normalmap, FRAME_ICRF);
         return 0;
@@ -1312,6 +1314,7 @@ static int planets_add_data_source(
 
     p = planet_get_by_name(planets, key);
     if (!p) return -1;
+    hips_delete(p->hips);
     p->hips = hips_create(url, 0, NULL);
     hips_set_frame(p->hips, FRAME_ICRF);
     return 0;
