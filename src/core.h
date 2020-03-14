@@ -232,8 +232,8 @@ void core_on_char(uint32_t c);
 void core_on_zoom(double zoom, double x, double y);
 
 /*
- * Function: core_on_pan
- * Called from the cliend to perform a panning gesture.
+ * Function: core_on_pinch
+ * Called from the cliend to perform a pinch/panning gesture.
  *
  * Parameters:
  *   state  - State of the panning gesture:
@@ -242,8 +242,9 @@ void core_on_zoom(double zoom, double x, double y);
  *              2 - Panning ended.
  *   x      - X position in windows coordinates.
  *   y      - Y position in windows coordinates.
+ *   scale  - Pinch scale (starts at 1).
  */
-void core_on_pan(int state, double x, double y);
+void core_on_pinch(int state, double x, double y, double scale);
 
 /*
  * Function: core_get_proj

@@ -752,12 +752,12 @@ void core_on_mouse(int id, int state, double x, double y)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_on_pan(int state, double x, double y)
+void core_on_pinch(int state, double x, double y, double scale)
 {
     obj_t *module;
     DL_FOREACH(core->obj.children, module) {
-        if (module->klass->on_pan) {
-            module->klass->on_pan(module, state, x, y);
+        if (module->klass->on_pinch) {
+            module->klass->on_pinch(module, state, x, y, scale);
         };
     }
 }

@@ -121,7 +121,7 @@ struct obj_klass
 
     // For modules objects.
     int (*on_mouse)(obj_t *obj, int id, int state, double x, double y);
-    int (*on_pan)(obj_t *obj, int state, double x, double y);
+    int (*on_pinch)(obj_t *obj, int state, double x, double y, double scale);
 
     int (*update)(obj_t *module, double dt);
     // Find a sky object given an id.
