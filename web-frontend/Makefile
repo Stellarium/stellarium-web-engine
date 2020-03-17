@@ -48,6 +48,9 @@ setup: Dockerfile Dockerfile.jsbuild
 dev:
 	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn run dev
 
+lint:
+	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn run lint
+
 build:
 	docker run -it -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn run build
 
