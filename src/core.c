@@ -819,6 +819,7 @@ void core_on_char(uint32_t c)
 }
 
 EMSCRIPTEN_KEEPALIVE
+void core_on_zoom(double k, double x, double y) __attribute__((weak));
 void core_on_zoom(double k, double x, double y)
 {
     double fov, pos_start[3], pos_end[3];
