@@ -127,6 +127,8 @@ DEF void vec2_rotate(double angle, const double a[S 2], double out[S 2]);
 DEF bool vec3_is_normalized(const double v[S 3]);
 void vec3_get_ortho(const double v[S 3], double out[S 3]);
 
+DEF bool mat2_invert(const double mat[S 2][2], double out[S 2][2]);
+
 DEF void mat3_copy(const double src[S 3][3], double out[S 3][3]);
 DEF void mat3_set_identity(double mat[S 3][3]);
 DEF void mat3_mul(const double a[3][3], const double b[S 3][3],
@@ -482,6 +484,19 @@ DEF void mat4_mul_vec3_dir(const double mat[S 4][4], const double v[S 3],
     return mat4_mul_vec3(mat, v, true, out);
 }
 
+DEF bool mat2_invert(const double mat[S 2][2], double out[S 2][2])
+{
+    double det, inv[2][2];
+    det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+    if (det == 0)
+        return false;
+    inv[0][0] =  mat[1][1] / det;
+    inv[0][1] = -mat[0][1] / det;
+    inv[1][0] = -mat[1][0] / det;
+    inv[1][1] =  mat[0][0] / det;
+    memcpy(out, inv, sizeof(inv));
+    return true;
+}
 
 DEF void mat3_copy(const double src[S 3][3], double out[S 3][3])
 {
