@@ -85,7 +85,7 @@ export default {
     // The MomentJS time in local time
     localTime: {
       get: function () {
-        let m = Moment(this.value)
+        const m = Moment(this.value)
         m.local()
         return m
       },
@@ -106,7 +106,7 @@ export default {
     timeMinute: {
       get: function () {
         // 0 means 12:00, 720 means midnight, 1440 (=24*60) means 12:00 the day after
-        let t = this.localTime
+        const t = this.localTime
         return t.hours() < 12 ? (t.hours() + 12) * 60 + t.minutes() : (t.hours() - 12) * 60 + t.minutes()
       },
       set: function (newValue) {
@@ -116,7 +116,7 @@ export default {
       }
     },
     sliderStartTime: function () {
-      let t = this.localTime.clone()
+      const t = this.localTime.clone()
       if (t.hours() < 12) {
         t.subtract(1, 'days')
       }
@@ -127,8 +127,8 @@ export default {
       return t
     },
     sliderHint: function () {
-      let tm = this.timeMinute
-      let stop = this.stops[Math.floor(tm * this.stops.length / 1440)]
+      const tm = this.timeMinute
+      const stop = this.stops[Math.floor(tm * this.stops.length / 1440)]
       if (!stop) return ''
       if (stop.sunAlt > 0) {
         return this.$t('Daylight')
@@ -147,7 +147,7 @@ export default {
   },
   methods: {
     resetTime: function () {
-      let m = Moment()
+      const m = Moment()
       m.local()
       this.$emit('input', m.format())
     },
@@ -161,9 +161,9 @@ export default {
       this.startIncTime(-1, unit)
     },
     startIncTime: function (v, unit) {
-      let that = this
+      const that = this
       clickTimeout = setTimeout(_ => {
-        let t = this.localTime.clone()
+        const t = this.localTime.clone()
         t.add(v, unit)
         this.$emit('input', t.format())
         nbClickRepeat++
@@ -185,23 +185,23 @@ export default {
       if (this.stopCacheKey.sliderStartTime === this.sliderStartTime.format() && this.stopCacheKey.location === JSON.stringify(this.location)) {
         return
       }
-      let res = []
-      let nbStop = 49
-      let obs = this.$stel.core.observer.clone()
-      let sun = this.$stel.getObj('Sun')
-      let moon = this.$stel.getObj('Moon')
+      const res = []
+      const nbStop = 49
+      const obs = this.$stel.core.observer.clone()
+      const sun = this.$stel.getObj('Sun')
+      const moon = this.$stel.getObj('Moon')
       for (let i = 0; i <= nbStop; ++i) {
         obs.utc = this.timeMinuteRangeToUTC(1440 * i / nbStop)
-        let sunAlt = this.$stel.anpm(this.$stel.c2s(this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', sun.getInfo('radec', obs)))[1]) * 180.0 / Math.PI
-        let moonAlt = this.$stel.anpm(this.$stel.c2s(this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', moon.getInfo('radec', obs)))[1]) * 180.0 / Math.PI
-        let brightnessForAltitude = function (sunAlt, moonAlt) {
-          let moonBrightness = moonAlt < 0 ? 0 : 2 / 35 * Math.min(20, moonAlt) / 20
+        const sunAlt = this.$stel.anpm(this.$stel.c2s(this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', sun.getInfo('radec', obs)))[1]) * 180.0 / Math.PI
+        const moonAlt = this.$stel.anpm(this.$stel.c2s(this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', moon.getInfo('radec', obs)))[1]) * 180.0 / Math.PI
+        const brightnessForAltitude = function (sunAlt, moonAlt) {
+          const moonBrightness = moonAlt < 0 ? 0 : 2 / 35 * Math.min(20, moonAlt) / 20
           if (sunAlt > 0) return Math.min(10, 1 + sunAlt) + moonBrightness
           if (sunAlt < -16) return moonBrightness
           if (sunAlt < -10) return 1 / 35 * (16 + sunAlt) / 6 + moonBrightness
           return (1 - 1 / 35) * (10 + sunAlt) / 10 + 1 / 35 + moonBrightness
         }
-        let brightness = Math.log10(1 + brightnessForAltitude(sunAlt, moonAlt) * 10) / 2
+        const brightness = Math.log10(1 + brightnessForAltitude(sunAlt, moonAlt) * 10) / 2
         res.push({
           percent: i / nbStop,
           style: 'stop-color:rgb(64,209,255);stop-opacity:' + brightness,
@@ -217,7 +217,7 @@ export default {
   },
   mounted: function () {
     this.refreshStops()
-    let that = this
+    const that = this
     window.addEventListener('mouseup', function (event) {
       that.stopIncTime()
     })

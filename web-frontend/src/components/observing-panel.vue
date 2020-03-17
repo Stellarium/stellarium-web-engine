@@ -30,12 +30,12 @@ export default {
       return this.$store.state.showSidePanel
     },
     tabs: function () {
-      let res = []
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
+      const res = []
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
         if (plugin.panelRoutes) {
-          for (let j in plugin.panelRoutes) {
-            let r = plugin.panelRoutes[j]
+          for (const j in plugin.panelRoutes) {
+            const r = plugin.panelRoutes[j]
             if (r.meta && r.meta.tabName) {
               res.push({ tabName: r.meta.tabName, url: r.path })
             }

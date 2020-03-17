@@ -8,7 +8,7 @@
 
 import Calendar from './components/calendar.vue'
 
-let t = function (s) {
+const t = function (s) {
   return s
 }
 

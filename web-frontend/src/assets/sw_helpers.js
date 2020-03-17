@@ -30,7 +30,7 @@ DDDate.prototype.setMJD = function (mjd) {
 
 const swh = {
   initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone, onBeforeRendering) {
-    let lstel = StelWebEngine({
+    const lstel = StelWebEngine({
       wasmFile: wasmFile,
       canvas: canvasElem,
       translateFn: function (domain, str) {
@@ -42,7 +42,7 @@ const swh = {
 
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
-          let tree = store.state.stel
+          const tree = store.state.stel
           _.set(tree, path, value)
           store.commit('replaceStelWebEngine', tree)
         })
@@ -89,47 +89,47 @@ const swh = {
       'G?': 'galaxy',
 
       // Multiple objects
-      'reg': 'region_defined_in_the_sky',
-      'SCG': 'group_of_galaxies',
-      'ClG': 'group_of_galaxies',
-      'GrG': 'group_of_galaxies',
-      'IG': 'interacting_galaxy',
-      'PaG': 'pair_of_galaxies',
+      reg: 'region_defined_in_the_sky',
+      SCG: 'group_of_galaxies',
+      ClG: 'group_of_galaxies',
+      GrG: 'group_of_galaxies',
+      IG: 'interacting_galaxy',
+      PaG: 'pair_of_galaxies',
       'C?*': 'open_galactic_cluster',
       'Gl?': 'globular_cluster',
-      'GlC': 'globular_cluster',
-      'OpC': 'open_galactic_cluster',
+      GlC: 'globular_cluster',
+      OpC: 'open_galactic_cluster',
       'Cl*': 'open_galactic_cluster',
       'As*': 'group_of_stars',
-      'mul': 'multiple_objects',
+      mul: 'multiple_objects',
 
       // Interstellar matter
       'PN?': 'planetary_nebula',
-      'PN': 'planetary_nebula',
-      'SNR': 'planetary_nebula',
+      PN: 'planetary_nebula',
+      SNR: 'planetary_nebula',
       'SR?': 'planetary_nebula',
-      'ISM': 'interstellar_matter',
+      ISM: 'interstellar_matter',
 
       // Galaxies
-      'PoG': 'part_of_galaxy',
-      'QSO': 'quasar',
-      'G': 'galaxy',
+      PoG: 'part_of_galaxy',
+      QSO: 'quasar',
+      G: 'galaxy',
 
-      'dso': 'deep_sky',
+      dso: 'deep_sky',
 
       // Solar System
-      'Asa': 'artificial_satellite',
-      'Moo': 'moon',
-      'Sun': 'sun',
-      'Pla': 'planet',
-      'DPl': 'planet',
-      'Com': 'comet',
-      'MPl': 'minor_planet',
-      'SSO': 'minor_planet',
+      Asa: 'artificial_satellite',
+      Moo: 'moon',
+      Sun: 'sun',
+      Pla: 'planet',
+      DPl: 'planet',
+      Com: 'comet',
+      MPl: 'minor_planet',
+      SSO: 'minor_planet',
 
-      'Con': 'constellation'
+      Con: 'constellation'
     }
-    for (let i in skySourceTypes) {
+    for (const i in skySourceTypes) {
       if (skySourceTypes[i] in iconForType) {
         return process.env.BASE_URL + 'images/svg/target_types/' + iconForType[skySourceTypes[i]] + '.svg'
       }
@@ -151,38 +151,38 @@ const swh = {
 
   cleanupOneSkySourceName: function (name) {
     const greek = {
-      'alf': 'α',
-      'bet': 'β',
-      'gam': 'γ',
-      'del': 'δ',
-      'eps': 'ε',
-      'zet': 'ζ',
-      'eta': 'η',
-      'tet': 'θ',
-      'iot': 'ι',
-      'kap': 'κ',
-      'lam': 'λ',
-      'mu': 'μ',
+      alf: 'α',
+      bet: 'β',
+      gam: 'γ',
+      del: 'δ',
+      eps: 'ε',
+      zet: 'ζ',
+      eta: 'η',
+      tet: 'θ',
+      iot: 'ι',
+      kap: 'κ',
+      lam: 'λ',
+      mu: 'μ',
       'mu.': 'μ',
-      'nu': 'ν',
+      nu: 'ν',
       'nu.': 'ν',
-      'xi': 'ξ',
+      xi: 'ξ',
       'xi.': 'ξ',
-      'omi': 'ο',
-      'pi': 'π',
+      omi: 'ο',
+      pi: 'π',
       'pi.': 'π',
-      'rho': 'ρ',
-      'sig': 'σ',
-      'tau': 'τ',
-      'ups': 'υ',
-      'phi': 'φ',
-      'chi': 'χ',
-      'psi': 'ψ',
-      'ome': 'ω'
+      rho: 'ρ',
+      sig: 'σ',
+      tau: 'τ',
+      ups: 'υ',
+      phi: 'φ',
+      chi: 'χ',
+      psi: 'ψ',
+      ome: 'ω'
     }
 
     if (name.startsWith('* ')) {
-      let ll = name.substring(2, 5).trim()
+      const ll = name.substring(2, 5).trim()
       if (ll in greek) {
         name = greek[ll] + name.substring(name[5] === '0' ? 6 : 5)
       } else {
@@ -191,7 +191,7 @@ const swh = {
     }
 
     if (name.startsWith('V* ')) {
-      let ll = name.substring(3, 6).trim().toLowerCase()
+      const ll = name.substring(3, 6).trim().toLowerCase()
       if (ll in greek) {
         name = greek[ll] + ' ' + name.substring(name[6] === '0' ? 7 : 6)
       } else {
@@ -221,24 +221,24 @@ const swh = {
   },
 
   nameForSkySourceType: function (otype) {
-    let $stel = Vue.prototype.$stel
-    let res = $stel.otypeToStr(otype)
+    const $stel = Vue.prototype.$stel
+    const res = $stel.otypeToStr(otype)
     return res || 'Unknown Type'
   },
 
   nameForGalaxyMorpho: function (morpho) {
     const galTab = {
-      'E': 'Elliptical',
-      'SB': 'Barred Spiral',
-      'SAB': 'Intermediate Spiral',
-      'SA': 'Spiral',
-      'S0': 'Lenticular',
-      'S': 'Spiral',
-      'Im': 'Irregular',
-      'dSph': 'Dwarf Spheroidal',
-      'dE': 'Dwarf Elliptical'
+      E: 'Elliptical',
+      SB: 'Barred Spiral',
+      SAB: 'Intermediate Spiral',
+      SA: 'Spiral',
+      S0: 'Lenticular',
+      S: 'Spiral',
+      Im: 'Irregular',
+      dSph: 'Dwarf Spheroidal',
+      dE: 'Dwarf Elliptical'
     }
-    for (let morp in galTab) {
+    for (const morp in galTab) {
       if (morpho.startsWith(morp)) {
         return galTab[morp]
       }
@@ -253,7 +253,7 @@ const swh = {
     }
     link += '?'
     link += 'fov=' + (context.$store.state.stel.fov * 180 / Math.PI).toPrecision(5)
-    let d = new Date()
+    const d = new Date()
     d.setMJD(context.$stel.core.observer.utc)
     link += '&date=' + new Moment(d).utc().format()
     link += '&lat=' + (context.$stel.core.observer.latitude * 180 / Math.PI).toFixed(2)
@@ -271,26 +271,26 @@ const swh = {
     if (!ss || !ss.model) {
       return undefined
     }
-    let $stel = Vue.prototype.$stel
+    const $stel = Vue.prototype.$stel
     let obj
     if (ss.model === 'tle_satellite') {
-      let id = 'NORAD ' + ss.model_data.norad_number
+      const id = 'NORAD ' + ss.model_data.norad_number
       obj = $stel.getObj(id)
     } else if (ss.model === 'constellation' && ss.model_data.iau_abbreviation) {
-      let id = 'CST ' + ss.model_data.iau_abbreviation
+      const id = 'CST ' + ss.model_data.iau_abbreviation
       obj = $stel.getObj(id)
     } else if (ss.model === 'mpc_comet') {
-      let id = ss.short_name
+      const id = ss.short_name
       obj = $stel.getObj(id)
     } else if (ss.model === 'jpl_sso') {
-      let id = ss.short_name
+      const id = ss.short_name
       obj = $stel.getObj(id)
     }
     if (!obj) {
       obj = $stel.getObj(ss.names[0])
     }
     if (!obj && ss.names[0].startsWith('Gaia DR2 ')) {
-      let gname = ss.names[0].replace(/^Gaia DR2 /, 'GAIA ')
+      const gname = ss.names[0].replace(/^Gaia DR2 /, 'GAIA ')
       obj = $stel.getObj(gname)
     }
     if (obj === null) return undefined
@@ -325,9 +325,9 @@ const swh = {
   },
 
   sweObj2SkySource: function (obj) {
-    let $stel = Vue.prototype.$stel
-    let names = obj.designations()
-    let that = this
+    const $stel = Vue.prototype.$stel
+    const names = obj.designations()
+    const that = this
 
     if (!names || !names.length) {
       throw new Error("Can't find object without names")
@@ -335,27 +335,27 @@ const swh = {
 
     // Several artifical satellites share the same common name, so we use
     // the unambiguous NORAD number instead
-    for (let j in names) {
+    for (const j in names) {
       if (names[j].startsWith('NORAD ')) {
-        let tmpName = names[0]
+        const tmpName = names[0]
         names[0] = names[j]
         names[j] = tmpName
       }
     }
 
-    let printErr = function (err, n) {
+    const printErr = function (err, n) {
       let gaiaName
-      for (let i in names) {
+      for (const i in names) {
         if (names[i].startsWith('GAIA')) {
           gaiaName = names[i]
         }
       }
       if (gaiaName) {
         console.log('Generate Gaia object info from StelWebEngine object')
-        let radecICRS = $stel.c2s(obj.getInfo('radec'))
-        let raICRS = $stel.anp(radecICRS[0])
-        let decICRS = $stel.anpm(radecICRS[1])
-        let ss = {
+        const radecICRS = $stel.c2s(obj.getInfo('radec'))
+        const raICRS = $stel.anp(radecICRS[0])
+        const decICRS = $stel.anpm(radecICRS[1])
+        const ss = {
           model: 'star',
           types: ['*'],
           names: [obj.designations()[0].replace(/^GAIA /, 'Gaia DR2 ')],
@@ -390,7 +390,7 @@ const swh = {
   },
 
   setSweObjAsSelection: function (obj) {
-    let $stel = Vue.prototype.$stel
+    const $stel = Vue.prototype.$stel
     $stel.core.selection = obj
     $stel.pointAndLock(obj)
   },
@@ -414,7 +414,7 @@ const swh = {
       title = ss.short_name + '_(constellation)'
     }
     if (ss.model === 'dso') {
-      for (let i in ss.names) {
+      for (const i in ss.names) {
         if (ss.names[i].startsWith('M ')) {
           title = 'Messier_' + ss.names[i].substr(2)
           break
@@ -430,7 +430,7 @@ const swh = {
       }
     }
     if (ss.model === 'star') {
-      for (let i in ss.names) {
+      for (const i in ss.names) {
         if (ss.names[i].startsWith('* ')) {
           title = this.cleanupOneSkySourceName(ss.names[i])
         }
@@ -492,7 +492,7 @@ const swh = {
 
   geoCodePosition: function (pos, ctx) {
     console.log('Geocoding position... ')
-    let ll = ctx.$t('Lat {0}° Lon {1}°', [pos.lat.toFixed(3), pos.lng.toFixed(3)])
+    const ll = ctx.$t('Lat {0}° Lon {1}°', [pos.lat.toFixed(3), pos.lng.toFixed(3)])
     var loc = {
       short_name: pos.accuracy > 500 ? ctx.$t('Near {0}', [ll]) : ll,
       country: 'Unknown',
@@ -506,7 +506,7 @@ const swh = {
       { headers: { 'Content-Type': 'application/json; charset=UTF-8' } }).then(response => {
       if (response.ok) {
         return response.json().then(res => {
-          let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
+          const city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
           loc.short_name = pos.accuracy > 500 ? ctx.$t('Near {0}', [city]) : city
           loc.country = res.address.country
           if (pos.accuracy < 50) {
@@ -541,15 +541,15 @@ const swh = {
   // If no such time was found (e.g. in a northern country in summer),
   // we default to current time.
   getTimeAfterSunset: function (stel) {
-    let sun = stel.getObj('Sun')
-    let obs = stel.observer.clone()
-    let utc = Math.floor(obs.utc * 24 * 60 / 5) / (24 * 60 / 5)
+    const sun = stel.getObj('Sun')
+    const obs = stel.observer.clone()
+    const utc = Math.floor(obs.utc * 24 * 60 / 5) / (24 * 60 / 5)
     let i
     for (i = 0; i < 24 * 60 / 5 + 1; i++) {
       obs.utc = utc + 1.0 / (24 * 60) * (i * 5)
-      let sunRadec = sun.getInfo('RADEC', obs)
-      let azalt = stel.convertFrame(obs, 'ICRF', 'OBSERVED', sunRadec)
-      let alt = stel.anpm(stel.c2s(azalt)[1])
+      const sunRadec = sun.getInfo('RADEC', obs)
+      const azalt = stel.convertFrame(obs, 'ICRF', 'OBSERVED', sunRadec)
+      const alt = stel.anpm(stel.c2s(azalt)[1])
       if (alt < -13 * Math.PI / 180) {
         break
       }
@@ -581,14 +581,14 @@ const swh = {
   //   // Destroy the objects (don't forget this line!)
   //   res.map(e => e.destroy())
   getCircumpolarStars: function (obs, minMag, maxMag) {
-    let $stel = Vue.prototype.$stel
-    let filter = function (obj) {
+    const $stel = Vue.prototype.$stel
+    const filter = function (obj) {
       if (obj.getInfo('vmag', obs) <= minMag) {
         return false
       }
-      let posJNOW = $stel.convertFrame(obs, 'ICRF', 'JNOW', obj.getInfo('radec'))
-      let radecJNOW = $stel.c2s(posJNOW)
-      let decJNOW = $stel.anpm(radecJNOW[1])
+      const posJNOW = $stel.convertFrame(obs, 'ICRF', 'JNOW', obj.getInfo('radec'))
+      const radecJNOW = $stel.c2s(posJNOW)
+      const decJNOW = $stel.anpm(radecJNOW[1])
       if (obs.latitude >= 0) {
         return decJNOW >= Math.PI / 2 - obs.latitude
       } else {
@@ -603,15 +603,15 @@ const swh = {
     if (show === undefined) {
       show = true
     }
-    let layer = Vue.prototype.$skyHintsLayer
-    let $stel = Vue.prototype.$stel
+    const layer = Vue.prototype.$skyHintsLayer
+    const $stel = Vue.prototype.$stel
     if (this.circumpolarMask) {
       layer.remove(this.circumpolarMask)
       this.circumpolarMask = undefined
     }
     if (show) {
-      let diam = 2.0 * Math.PI - Math.abs(obs.latitude) * 2
-      let shapeParams = {
+      const diam = 2.0 * Math.PI - Math.abs(obs.latitude) * 2
+      const shapeParams = {
         pos: [0, 0, obs.latitude > 0 ? -1 : 1, 0],
         frame: $stel.FRAME_JNOW,
         size: [diam, diam],

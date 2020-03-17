@@ -81,8 +81,8 @@ export default {
       }, err => { console.log(err) })
     }, 200),
     nameForSkySource: function (s) {
-      let cn = swh.cleanupOneSkySourceName(s.match)
-      let n = swh.nameForSkySource(s)
+      const cn = swh.cleanupOneSkySourceName(s.match)
+      const n = swh.nameForSkySource(s)
       if (cn === n) {
         return n
       } else {

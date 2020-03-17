@@ -14,8 +14,8 @@ Vue.use(Vuex)
 
 const createStore = () => {
   var pluginsModules = {}
-  for (let i in Vue.SWPlugins) {
-    let plugin = Vue.SWPlugins[i]
+  for (const i in Vue.SWPlugins) {
+    const plugin = Vue.SWPlugins[i]
     if (plugin.storeModule) {
       console.log('Register store module for plugin: ' + plugin.name)
       pluginsModules[plugin.name] = plugin.storeModule

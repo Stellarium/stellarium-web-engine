@@ -117,12 +117,12 @@ export default {
     },
     pickerDate: {
       get: function () {
-        let t = this.getLocalTime()
+        const t = this.getLocalTime()
         t.milliseconds(0)
         return t.format()
       },
       set: function (v) {
-        let m = Moment(v)
+        const m = Moment(v)
         m.local()
         m.milliseconds(this.getLocalTime().milliseconds())
         this.$stel.core.observer.utc = m.toDate().getMJD()
@@ -134,7 +134,7 @@ export default {
     getLocalTime: function () {
       var d = new Date()
       d.setMJD(this.$store.state.stel.observer.utc)
-      let m = Moment(d)
+      const m = Moment(d)
       m.local()
       return m
     },

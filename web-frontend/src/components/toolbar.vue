@@ -34,7 +34,7 @@ export default {
   computed: {
     fov: function () {
       if (!this.$store.state.stel) return '-'
-      let fov = this.$store.state.stel.fov * 180 / Math.PI
+      const fov = this.$store.state.stel.fov * 180 / Math.PI
       return fov.toPrecision(3) + '°'
     }
   },

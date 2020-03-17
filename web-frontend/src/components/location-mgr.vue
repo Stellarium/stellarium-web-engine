@@ -84,7 +84,7 @@ export default {
       mode: 'pick',
       pickLocation: undefined,
       selectedKnownLocation: undefined,
-      mapCenter: [ 43.6, 1.4333 ],
+      mapCenter: [43.6, 1.4333],
       url: 'https://{s}.tile.osm.org/{z}/{x}/{y}.png'
     }
   },
@@ -112,19 +112,19 @@ export default {
     }
   },
   mounted: function () {
-    let that = this
+    const that = this
     this.setPickLocation(this.startLocation)
     this.$nextTick(() => {
-      let map = this.$refs.myMap.mapObject
+      const map = this.$refs.myMap.mapObject
       var geocoder = new L.Control.Geocoder({
         defaultMarkGeocode: false,
         position: 'topleft',
         collapsed: false
       }).on('markgeocode', function (e) {
         var pos = { lat: e.geocode.center.lat, lng: e.geocode.center.lng }
-        that.mapCenter = [ pos.lat, pos.lng ]
+        that.mapCenter = [pos.lat, pos.lng]
         pos.accuracy = 100
-        let ll = that.$t('Lat {0}° Lon {1}°', [pos.lat.toFixed(3), pos.lng.toFixed(3)])
+        const ll = that.$t('Lat {0}° Lon {1}°', [pos.lat.toFixed(3), pos.lng.toFixed(3)])
         var loc = {
           short_name: pos.accuracy > 500 ? that.$t('Near {0}', [ll]) : ll,
           country: that.$t('Unknown'),
@@ -134,8 +134,8 @@ export default {
           accuracy: pos.accuracy,
           street_address: ''
         }
-        let res = e.geocode.properties
-        let city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
+        const res = e.geocode.properties
+        const city = res.address.city ? res.address.city : (res.address.village ? res.address.village : res.name)
         loc.short_name = pos.accuracy > 500 ? that.$t('Near {0}', [city]) : city
         loc.country = res.address.country
         if (pos.accuracy < 50) {
@@ -152,7 +152,7 @@ export default {
     selectKnownLocation: function (loc) {
       this.selectedKnownLocation = loc
       this.setKnownLocationMode()
-      this.mapCenter = [ loc.lat, loc.lng ]
+      this.mapCenter = [loc.lat, loc.lng]
     },
     useLocation: function () {
       this.$emit('locationSelected', this.locationForDetail)
@@ -165,8 +165,8 @@ export default {
     },
     setPickLocation: function (loc) {
       if (loc.accuracy < 100) {
-        for (let l of this.knownLocations) {
-          let d = swh.getDistanceFromLatLonInM(l.lat, l.lng, loc.lat, loc.lng)
+        for (const l of this.knownLocations) {
+          const d = swh.getDistanceFromLatLonInM(l.lat, l.lng, loc.lat, loc.lng)
           if (d < 100) {
             this.selectKnownLocation(l)
             return
@@ -174,7 +174,7 @@ export default {
         }
       }
       var pos = { lat: loc.lat, lng: loc.lng }
-      this.mapCenter = [ pos.lat, pos.lng ]
+      this.mapCenter = [pos.lat, pos.lng]
       this.pickLocation = loc
       this.setPickLocationMode()
     },

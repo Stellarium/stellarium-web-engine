@@ -97,8 +97,8 @@ export default {
   methods: {
     getPluginsMenuItems: function () {
       let res = []
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
         if (plugin.menuItems) {
           res = res.concat(plugin.menuItems)
         }
@@ -107,8 +107,8 @@ export default {
     },
     getPluginsMenuComponents: function () {
       let res = []
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
         if (plugin.menuComponents) {
           res = res.concat(plugin.menuComponents)
         }
@@ -123,7 +123,7 @@ export default {
     },
     onBeforeRendering: function (timestamp) {
       if (!this.timeRef) this.timeRef = new Date().getMJD()
-      let d = new Date().getMJD()
+      const d = new Date().getMJD()
       this.$stel.observer.utc += this.$store.state.timeSpeed * (d - this.timeRef)
       this.timeRef = d
     },
@@ -144,7 +144,7 @@ export default {
         }
 
         if (this.$route.query.lng && this.$route.query.lat) {
-          let pos = { lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1 }
+          const pos = { lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng), alt: this.$route.query.elev ? Number(this.$route.query.elev) : 0, accuracy: 1 }
           swh.geoCodePosition(pos, that).then((loc) => {
             that.$store.commit('setCurrentLocation', loc)
           }, (error) => { console.log(error) })
@@ -158,7 +158,7 @@ export default {
       }
 
       if (this.$route.path.startsWith('/skysource/')) {
-        let name = decodeURIComponent(this.$route.path.substring(11))
+        const name = decodeURIComponent(this.$route.path.substring(11))
         console.log('Will select object: ' + name)
         return swh.lookupSkySourceByName(name).then(ss => {
           if (!ss) {
@@ -211,7 +211,7 @@ export default {
       // Init of time and date is complete
       this.$store.commit('setValue', { varName: 'initComplete', newValue: true })
     },
-    '$route': function () {
+    $route: function () {
       // react to route changes...
       this.setStateFromQueryArgs()
     }
@@ -219,8 +219,8 @@ export default {
   mounted: function () {
     var that = this
 
-    for (let i in this.$stellariumWebPlugins()) {
-      let plugin = this.$stellariumWebPlugins()[i]
+    for (const i in this.$stellariumWebPlugins()) {
+      const plugin = this.$stellariumWebPlugins()[i]
       if (plugin.onAppMounted) {
         plugin.onAppMounted(that)
       }
@@ -243,8 +243,8 @@ export default {
 
           that.setStateFromQueryArgs()
           that.guiComponent = 'Gui'
-          for (let i in that.$stellariumWebPlugins()) {
-            let plugin = that.$stellariumWebPlugins()[i]
+          for (const i in that.$stellariumWebPlugins()) {
+            const plugin = that.$stellariumWebPlugins()[i]
             if (plugin.onEngineReady) {
               plugin.onEngineReady(that)
             }
@@ -252,7 +252,7 @@ export default {
 
           if (!that.dataSourceInitDone) {
             // Set all default data sources
-            let core = that.$stel.core
+            const core = that.$stel.core
             core.stars.addDataSource({ url: process.env.BASE_URL + 'skydata/stars' })
             core.skycultures.addDataSource({ url: process.env.BASE_URL + 'skydata/skycultures/western', key: 'western' })
             core.dsos.addDataSource({ url: process.env.BASE_URL + 'skydata/dso' })

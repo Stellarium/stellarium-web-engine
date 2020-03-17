@@ -113,13 +113,13 @@ export default {
     },
     wikipediaSummary: function () {
       if (!this.wikipediaData) return ''
-      let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
+      const page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
       if (!page || !page.extract) return ''
-      let wl = '<b><a style="color: #62d1df;" target="_blank" rel="noopener" href="' + this.wikipediaLink + '">wikipedia</a></b></i>'
+      const wl = '<b><a style="color: #62d1df;" target="_blank" rel="noopener" href="' + this.wikipediaLink + '">wikipedia</a></b></i>'
       return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; ' + this.$t('more on {0}', [wl]) + '</span>'
     },
     wikipediaLink: function () {
-      let page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
+      const page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
       if (!page || !page.extract) return ''
       return 'https://en.wikipedia.org/wiki/' + page.title
     },
@@ -138,14 +138,14 @@ export default {
       return swh.iconForSkySource(this.selectedObject)
     },
     items: function () {
-      let obj = this.$stel.core.selection
+      const obj = this.$stel.core.selection
       if (!obj) return []
-      let that = this
+      const that = this
 
-      let ret = []
+      const ret = []
 
-      let addAttr = (key, attr, format) => {
-        let v = obj.getInfo(attr)
+      const addAttr = (key, attr, format) => {
+        const v = obj.getInfo(attr)
         if (v && !isNaN(v)) {
           ret.push({
             key: key,
@@ -170,46 +170,46 @@ export default {
           })
         }
         if (this.selectedObject.model_data.dimx) {
-          let dimy = this.selectedObject.model_data.dimy ? this.selectedObject.model_data.dimy : this.selectedObject.model_data.dimx
+          const dimy = this.selectedObject.model_data.dimy ? this.selectedObject.model_data.dimy : this.selectedObject.model_data.dimx
           ret.push({
             key: that.$t('Size'),
             value: this.selectedObject.model_data.dimx.toString() + "' x " + dimy.toString() + "'"
           })
         }
       }
-      let formatInt = function (num, padLen) {
-        let pad = new Array(1 + padLen).join('0')
+      const formatInt = function (num, padLen) {
+        const pad = new Array(1 + padLen).join('0')
         return (pad + num).slice(-pad.length)
       }
       const formatRA = function (a) {
-        let raf = that.$stel.a2tf(a, 1)
+        const raf = that.$stel.a2tf(a, 1)
         return '<div class="radecVal">' + formatInt(raf.hours, 2) + '<span class="radecUnit">h</span>&nbsp;</div><div class="radecVal">' + formatInt(raf.minutes, 2) + '<span class="radecUnit">m</span></div><div class="radecVal">' + formatInt(raf.seconds, 2) + '.' + raf.fraction + '<span class="radecUnit">s</span></div>'
       }
       const formatAz = function (a) {
-        let raf = that.$stel.a2af(a, 1)
+        const raf = that.$stel.a2af(a, 1)
         return '<div class="radecVal">' + formatInt(raf.degrees < 0 ? raf.degrees + 180 : raf.degrees, 3) + '<span class="radecUnit">°</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
       }
       const formatDec = function (a) {
-        let raf = that.$stel.a2af(a, 1)
+        const raf = that.$stel.a2af(a, 1)
         return '<div class="radecVal">' + raf.sign + formatInt(raf.degrees, 2) + '<span class="radecUnit">°</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
       }
-      let posCIRS = this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'JNOW', obj.getInfo('radec'))
-      let radecCIRS = this.$stel.c2s(posCIRS)
-      let raCIRS = this.$stel.anp(radecCIRS[0])
-      let decCIRS = this.$stel.anpm(radecCIRS[1])
+      const posCIRS = this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'JNOW', obj.getInfo('radec'))
+      const radecCIRS = this.$stel.c2s(posCIRS)
+      const raCIRS = this.$stel.anp(radecCIRS[0])
+      const decCIRS = this.$stel.anpm(radecCIRS[1])
       ret.push({
         key: that.$t('Ra/Dec'),
         value: formatRA(raCIRS) + '&nbsp;&nbsp;&nbsp;' + formatDec(decCIRS)
       })
-      let azalt = this.$stel.c2s(this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'OBSERVED', obj.getInfo('radec')))
-      let az = this.$stel.anp(azalt[0])
-      let alt = this.$stel.anpm(azalt[1])
+      const azalt = this.$stel.c2s(this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'OBSERVED', obj.getInfo('radec')))
+      const az = this.$stel.anp(azalt[0])
+      const alt = this.$stel.anpm(azalt[1])
       ret.push({
         key: that.$t('Az/Alt'),
         value: formatAz(az) + '&nbsp;&nbsp;&nbsp;' + formatDec(alt)
       })
       addAttr(that.$t('Phase'), 'phase', this.formatPhase)
-      let vis = obj.computeVisibility()
+      const vis = obj.computeVisibility()
       let str = ''
       if (vis.length === 0) {
         str = that.$t('Not visible tonight')
@@ -242,8 +242,8 @@ export default {
     },
     pluginsSelectedInfoExtraGuiComponents: function () {
       let res = []
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
         if (plugin.selectedInfoExtraGuiComponents) {
           res = res.concat(plugin.selectedInfoExtraGuiComponents)
         }
@@ -292,14 +292,14 @@ export default {
       if (!d) {
         return 'NAN'
       }
-      let ly = d * swh.astroConstants.ERFA_AULT / swh.astroConstants.ERFA_DAYSEC / swh.astroConstants.ERFA_DJY
+      const ly = d * swh.astroConstants.ERFA_AULT / swh.astroConstants.ERFA_DAYSEC / swh.astroConstants.ERFA_DJY
       if (ly >= 0.1) {
         return ly.toFixed(2) + '<span class="radecUnit"> light years</span>'
       }
       if (d >= 0.1) {
         return d.toFixed(2) + '<span class="radecUnit"> AU</span>'
       }
-      let meter = d * swh.astroConstants.ERFA_DAU
+      const meter = d * swh.astroConstants.ERFA_DAU
       if (meter >= 1000) {
         return (meter / 1000).toFixed(2) + '<span class="radecUnit"> km</span>'
       }
@@ -308,7 +308,7 @@ export default {
     formatTime: function (jdm) {
       var d = new Date()
       d.setMJD(jdm)
-      let utc = new Moment(d)
+      const utc = new Moment(d)
       utc.utcOffset(this.$store.state.stel.utcoffset)
       return utc.format('HH:mm')
     },
@@ -321,15 +321,15 @@ export default {
       }
     },
     zoomInButtonClicked: function () {
-      let currentFov = this.$store.state.stel.fov * 180 / Math.PI
+      const currentFov = this.$store.state.stel.fov * 180 / Math.PI
       this.$stel.zoomTo(currentFov * 0.3 * Math.PI / 180, 0.4)
-      let that = this
+      const that = this
       this.zoomTimeout = setTimeout(_ => { that.zoomInButtonClicked() }, 300)
     },
     zoomOutButtonClicked: function () {
-      let currentFov = this.$store.state.stel.fov * 180 / Math.PI
+      const currentFov = this.$store.state.stel.fov * 180 / Math.PI
       this.$stel.zoomTo(currentFov * 3 * Math.PI / 180, 0.6)
-      let that = this
+      const that = this
       this.zoomTimeout = setTimeout(_ => { that.zoomOutButtonClicked() }, 200)
     },
     stopZoom: function () {
@@ -351,7 +351,7 @@ export default {
     }
   },
   mounted: function () {
-    let that = this
+    const that = this
     window.addEventListener('mouseup', function (event) {
       that.stopZoom()
     })

@@ -64,9 +64,9 @@ export default {
   },
   methods: {
     formatTime: function (jdm) {
-      let d = new Date()
+      const d = new Date()
       d.setMJD(jdm)
-      let utc = Moment.utc(d)
+      const utc = Moment.utc(d)
       utc.local()
       return utc.format('HH:mm')
     },
@@ -74,20 +74,20 @@ export default {
       return swh.cleanupOneSkySourceName(obj.designations()[0])
     },
     planetBackgroundStr: function (obj) {
-      let d = new Date()
+      const d = new Date()
       d.setMJD(obj.computeVisibility()[0].rise)
-      let rise = Moment.utc(d)
+      const rise = Moment.utc(d)
       rise.local()
       d.setMJD(obj.computeVisibility()[0].set)
-      let set = Moment.utc(d)
+      const set = Moment.utc(d)
       set.local()
 
       var hourToPercent = function (h) {
         return (h >= 12) ? Math.round((h - 12) / 24 * 100) : Math.round((h + 12) / 24 * 100)
       }
 
-      let riseP = hourToPercent(rise.hours())
-      let setP = hourToPercent(set.hours())
+      const riseP = hourToPercent(rise.hours())
+      const setP = hourToPercent(set.hours())
       if (setP > riseP) {
         return "<div style='z-index: 100; position: absolute; background-color: rgb(200, 200, 50); left: " + riseP + '%; min-width: ' + (setP - riseP) + "%; top: 7px; height: 8px;'></div>"
       } else {
@@ -100,15 +100,15 @@ export default {
   computed: {
     sunBackgroundStr: function () {
       var sun = this.$stel.getObj('Sun')
-      let brightness = []
-      let d = new Moment(this.startDate)
+      const brightness = []
+      const d = new Moment(this.startDate)
 
-      let obs = this.$stel.core.observer.clone()
+      const obs = this.$stel.core.observer.clone()
       for (let i = 0; i < 25; i++) {
         obs.utc = d.toDate().getMJD()
         d.local()
-        let azalt = this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', sun.getInfo('radec', obs))
-        let alt = this.$stel.anpm(this.$stel.c2s(azalt)[1]) * 180.0 / Math.PI
+        const azalt = this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', sun.getInfo('radec', obs))
+        const alt = this.$stel.anpm(this.$stel.c2s(azalt)[1]) * 180.0 / Math.PI
         brightness.push(alt / (Math.PI / 2))
         d.add(1, 'hours')
       }
@@ -144,7 +144,7 @@ export default {
       return d
     },
     endDate: function () {
-      let d = new Moment(this.startDate)
+      const d = new Moment(this.startDate)
       d.add(1, 'd')
       return d
     }

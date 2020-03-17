@@ -49,7 +49,7 @@ import Moment from 'moment'
 
 export default {
   data: function () {
-    let d = new Date()
+    const d = new Date()
     d.setMJD(this.$store.state.stel.observer.utc)
     return {
       year: Moment(d).format('YYYY'),
@@ -74,10 +74,10 @@ export default {
         return []
       }
       console.log('Compute Sky This Month Events')
-      let start = Moment(this.year + '-' + this.month + '-01', 'YYYY-MMMM-DD')
+      const start = Moment(this.year + '-' + this.month + '-01', 'YYYY-MMMM-DD')
       console.log('Recomputing ephemeris for', start.format('MMMM YYYY'))
-      let ret = []
-      let end = start.clone()
+      const ret = []
+      const end = start.clone()
       end.endOf('month')
       this.$stel.calendar({
         start: start.toDate(),
@@ -86,7 +86,8 @@ export default {
           ev.id = ev.time + ev.type + ev.desc
           ev.time = new Moment(ev.time)
           ret.push(ev)
-        } })
+        }
+      })
       return ret
     },
     showProgress: function () {

@@ -46,8 +46,8 @@ export default {
   computed: {
     pluginsGuiComponents: function () {
       let res = []
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
         if (plugin.guiComponents) {
           res = res.concat(plugin.guiComponents)
         }
@@ -61,8 +61,8 @@ export default {
         'planets-visibility',
         'location-dialog'
       ]
-      for (let i in this.$stellariumWebPlugins()) {
-        let plugin = this.$stellariumWebPlugins()[i]
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
         if (plugin.dialogs) {
           res = res.concat(plugin.dialogs.map(d => d.name))
         }

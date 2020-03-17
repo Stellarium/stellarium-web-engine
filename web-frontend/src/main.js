@@ -44,11 +44,11 @@ Vue.use(VueI18n)
 
 // Load all plugins JS modules found in the plugins directory
 var plugins = []
-let ctx = require.context('./plugins/', true, /\.\/\w+\/index\.js$/)
-for (let i in ctx.keys()) {
-  let key = ctx.keys()[i]
+const ctx = require.context('./plugins/', true, /\.\/\w+\/index\.js$/)
+for (const i in ctx.keys()) {
+  const key = ctx.keys()[i]
   console.log('Loading plugin: ' + key)
-  let mod = ctx(key)
+  const mod = ctx(key)
   plugins.push(mod.default)
 }
 Vue.SWPlugins = plugins
@@ -113,15 +113,15 @@ let defaultObservingRoute = {
   path: '/p/calendar',
   meta: { prio: 2 }
 }
-for (let i in Vue.SWPlugins) {
-  let plugin = Vue.SWPlugins[i]
+for (const i in Vue.SWPlugins) {
+  const plugin = Vue.SWPlugins[i]
   if (plugin.routes) {
     routes = routes.concat(plugin.routes)
   }
   if (plugin.panelRoutes) {
     routes[0].children = routes[0].children.concat(plugin.panelRoutes)
-    for (let j in plugin.panelRoutes) {
-      let r = plugin.panelRoutes[j]
+    for (const j in plugin.panelRoutes) {
+      const r = plugin.panelRoutes[j]
       if (r.meta && r.meta.prio && r.meta.prio < defaultObservingRoute.meta.prio) {
         defaultObservingRoute = r
       }
