@@ -421,15 +421,14 @@ static int render_bounds(const constellation_t *con,
         .map = spherical_project,
     };
 
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
-        return 0;
-
     if (!selected) {
         painter.color[3] *= cons->visible.value *
                             cons->bounds_visible.value *
                             con->lines_in_view.value;
     }
     if (!painter.color[3]) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
 
     if (selected)
         vec4_set(painter.color, 1.0, 0.84, 0.84, 0.5 * painter.color[3]);
@@ -551,19 +550,15 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
-        return 0;
-
-    if (!selected) {
-        visible = cons->visible.value *
-                  cons->lines_visible.value *
-                  con->lines_in_view.value;
-    } else {
+    visible = cons->visible.value * cons->lines_visible.value *
+              con->lines_in_view.value;
+    if (selected) {
         visible = 1;
         painter.lines.width *= 2;
     }
-
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
 
     vec4_set(lines_color, 0.65, 1.0, 1.0, 0.4);
     vec4_emul(lines_color, painter.color, painter.color);
@@ -616,19 +611,18 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     painter_t painter = *painter_;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
-    // Skip if not ready yet.
-    if (!con->img.tex || !texture_load(con->img.tex, NULL)) return 0;
-    if (!con->img.mat[2][2]) return 0;
-
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->img.cap))
-        return 0;
-
     if (!selected) {
         painter.color[3] *= cons->visible.value *
                             cons->images_visible.value *
                             con->image_in_view.value;
     }
     if (!painter.color[3]) return 0;
+    // Skip if not ready yet.
+    if (!con->img.tex || !texture_load(con->img.tex, NULL)) return 0;
+    if (!con->img.mat[2][2]) return 0;
+
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->img.cap))
+        return 0;
 
     con->image_loaded_fader.target = true;
 
@@ -652,15 +646,14 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     const char *label;
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
-        return 0;
-
     if (!selected) {
         painter.color[3] *= cons->visible.value *
                             cons->labels_visible.value *
                             con->lines_in_view.value;
     }
     if (painter.color[3] == 0.0) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
 
     // Render label only if its center is visible
     if (painter_is_point_clipped_fast(&painter, FRAME_ICRF, con->lines_cap,
