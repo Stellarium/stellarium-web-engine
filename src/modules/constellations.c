@@ -41,6 +41,7 @@ typedef struct constellation {
     fader_t     lines_in_view;  // When the constellation is actually visible.
     fader_t     image_in_view;  // When the image is actually visible.
     fader_t     image_loaded_fader;
+    fader_t     pointed_fader;
     obj_t       **stars;
 
     // Texture and associated transformation matrix.
@@ -71,6 +72,7 @@ typedef struct constellations {
     fader_t     labels_visible;
     int         labels_display_style;
     bool        lines_animation;
+    bool        show_only_pointed;
 } constellations_t;
 
 static int constellation_update(constellation_t *con, const observer_t *obs);
@@ -124,6 +126,7 @@ static int constellation_init(obj_t *obj, json_value *args)
     fader_init2(&cons->lines_in_view, false, 1);
     fader_init2(&cons->image_in_view, false, 1);
     fader_init2(&cons->image_loaded_fader, false, 1);
+    fader_init2(&cons->pointed_fader, false, 0.5);
 
     // For the moment, since we create the constellation from within C
     // only, we pass the info as a pointer to the structure!
@@ -646,7 +649,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         return 0;
 
     if (!selected)
-        vec4_set(names_color, 0.65, 1.0, 1.0, 0.6);
+        vec4_set(names_color, 0.65, 1.0, 1.0, 0.6 * painter.color[3]);
     else
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
     // Estimate the label bouding cap
@@ -680,6 +683,7 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
     constellation_t *con = (const constellation_t*)obj;
     painter_t painter = *_painter;
     const bool selected = core->selection && obj->oid == core->selection->oid;
+    bool pointed = true;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
     assert(cons);
 
@@ -695,6 +699,13 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
             && cons->images_visible.value == 0.0
             && cons->bounds_visible.value == 0.0)
         return 0;
+
+    if (con->info.iau[0] && !selected)
+        pointed = strcasecmp(con->info.iau, painter.obs->cst) == 0;
+    con->pointed_fader.target = pointed;
+    // Note: change the '0.0' to show the non pointed constellations.
+    painter.color[3] *= mix(0.0, 1.0, con->pointed_fader.value);
+    if (painter.color[3] == 0) return 0;
 
     con->lines_in_view.target = constellation_lines_in_view(con, &painter);
     con->image_in_view.target = constellation_image_in_view(con, &painter);
@@ -761,6 +772,7 @@ static int constellations_init(obj_t *obj, json_value *args)
 {
     constellations_t *conss = (void*)obj;
     conss->lines_animation = true;
+    conss->show_only_pointed = true;
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->labels_visible, false);
     fader_init(&conss->images_visible, false);
@@ -801,6 +813,7 @@ static int constellations_update(obj_t *obj, double dt)
         fader_update(&con->image_loaded_fader, dt);
         fader_update(&con->lines_in_view, dt);
         fader_update(&con->image_in_view, dt);
+        fader_update(&con->pointed_fader, dt);
     }
     return 0;
 }
@@ -879,6 +892,8 @@ static obj_klass_t constellations_klass = {
                  MEMBER(constellations_t, labels_display_style)),
         PROPERTY(lines_animation, TYPE_BOOL,
                  MEMBER(constellations_t, lines_animation)),
+        PROPERTY(show_only_pointed, TYPE_BOOL,
+                 MEMBER(constellations_t, show_only_pointed)),
         {}
     },
 };
