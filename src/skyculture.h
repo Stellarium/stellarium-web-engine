@@ -39,6 +39,7 @@ typedef struct constellation_infos
     double edges[64][2][2]; // Ra/dec B1875 boundaries polygon.
     int nb_edges;
     char *description;
+    char iau[8]; // IAU abbreviation. Zero padded.
 } constellation_infos_t;
 
 /*

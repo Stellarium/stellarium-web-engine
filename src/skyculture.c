@@ -111,12 +111,13 @@ static int parse_lines_json(const json_value *v, int lines[64][2])
 int skyculture_parse_feature_json(const json_value *v,
                                   constellation_infos_t *feature)
 {
-    const char *id, *name = NULL;
+    const char *id, *name = NULL, *iau = NULL;
     int r;
     const json_value *lines = NULL, *description = NULL;
 
     r = jcon_parse(v, "{",
         "id", JCON_STR(id),
+        "?iau", JCON_STR(iau),
         "?name", JCON_STR(name),
         "?lines", JCON_VAL(lines),
         "?description", JCON_VAL(description),
@@ -128,6 +129,8 @@ int skyculture_parse_feature_json(const json_value *v,
         snprintf(feature->name, sizeof(feature->name), "%s", name);
     if (description)
         feature->description = json_to_string(description);
+    if (iau)
+        snprintf(feature->iau, sizeof(feature->iau), "%s", iau);
 
     if (lines) {
         feature->nb_lines = parse_lines_json(lines, feature->lines);
