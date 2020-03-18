@@ -137,8 +137,6 @@ static int constellation_init(obj_t *obj, json_value *args)
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
     cons->description = info->description ? strdup(info->description) : NULL;
-    // XXX: remove that.
-    constellation_update(cons, core->observer);
     return 0;
 }
 
