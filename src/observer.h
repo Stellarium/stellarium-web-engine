@@ -90,7 +90,7 @@ struct observer
     double obs_pvb[2][3];
     double obs_pvg[2][3];
 
-    // The pointed constellation.
+    // The pointed IAU constellation.
     char cst[5];
 
     // Frame rotation matrices.
