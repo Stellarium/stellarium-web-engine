@@ -66,7 +66,6 @@ typedef struct constellation {
  */
 typedef struct constellations {
     obj_t       obj;
-    fader_t     visible;
     fader_t     images_visible;
     fader_t     lines_visible;
     fader_t     bounds_visible;
@@ -422,8 +421,7 @@ static int render_bounds(const constellation_t *con,
     };
 
     if (!selected) {
-        painter.color[3] *= cons->visible.value *
-                            cons->bounds_visible.value *
+        painter.color[3] *= cons->bounds_visible.value *
                             con->lines_in_view.value;
     }
     if (!painter.color[3]) return 0;
@@ -550,8 +548,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
-    visible = cons->visible.value * cons->lines_visible.value *
-              con->lines_in_view.value;
+    visible = cons->lines_visible.value * con->lines_in_view.value;
     if (selected) {
         visible = 1;
         painter.lines.width *= 2;
@@ -612,8 +609,7 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
     if (!selected) {
-        painter.color[3] *= cons->visible.value *
-                            cons->images_visible.value *
+        painter.color[3] *= cons->images_visible.value *
                             con->image_in_view.value;
     }
     if (!painter.color[3]) return 0;
@@ -647,8 +643,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (!selected) {
-        painter.color[3] *= cons->visible.value *
-                            cons->labels_visible.value *
+        painter.color[3] *= cons->labels_visible.value *
                             con->lines_in_view.value;
     }
     if (painter.color[3] == 0.0) return 0;
@@ -769,7 +764,6 @@ static int constellations_init(obj_t *obj, json_value *args)
     constellations_t *conss = (void*)obj;
     conss->show_all = true;
     conss->lines_animation = true;
-    fader_init(&conss->visible, true);
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->labels_visible, false);
     fader_init(&conss->images_visible, false);
@@ -794,14 +788,12 @@ static int constellations_update(obj_t *obj, double dt)
     constellation_t *con;
     constellations_t *cons = (constellations_t*)obj;
 
-    fader_update(&cons->visible, dt);
     fader_update(&cons->images_visible, dt);
     fader_update(&cons->lines_visible, dt);
     fader_update(&cons->labels_visible, dt);
     fader_update(&cons->bounds_visible, dt);
 
     // Skip update if not visible.
-    if (cons->visible.value == 0.0) return 0;
     if (cons->lines_visible.value == 0.0 &&
         cons->images_visible.value == 0.0 &&
         cons->bounds_visible.value == 0.0 &&
@@ -820,7 +812,6 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
 {
     constellations_t *cons = (constellations_t*)obj;
     constellation_t *con;
-    if (cons->visible.value == 0.0) return 0;
     if (cons->lines_visible.value == 0.0 &&
         cons->labels_visible.value == 0.0 &&
         cons->images_visible.value == 0.0 &&
