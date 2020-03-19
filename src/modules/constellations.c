@@ -694,8 +694,19 @@ static bool constellation_is_pointed(const constellation_t *con,
     }
 
     for (i = 0; i < 4; i++) {
-        if (strcasecmp(con->info.iau, cst[i]) == 0)
+        if (strncasecmp(con->info.iau, cst[i], 3) == 0)
             return true;
+
+        // Special quick fix for some constellations that share an image
+        // with an other (Puppis, Vela => Carina, and Serpens => Ophiuchus.
+        if (strcmp(con->info.iau, "Car") == 0) {
+            if (strncasecmp(cst[i], "Pup", 3) == 0) return true;
+            if (strncasecmp(cst[i], "Vel", 3) == 0) return true;
+        }
+        if (strcmp(con->info.iau, "Oph") == 0) {
+            if (strncasecmp(cst[i], "Ser", 3) == 0) return true;
+        }
+
     }
     return false;
 }
