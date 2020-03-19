@@ -619,57 +619,6 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     return 0;
 }
 
-
-static int render_label(constellation_t *con, const painter_t *painter_,
-                        bool selected)
-{
-    painter_t painter = *painter_;
-    double label_pixel_length, pixel_angular_resolution;
-    double win_pos[2], p[3], label_cap[4], names_color[4];
-    const char *label;
-    constellations_t *cons = (constellations_t*)con->obj.parent;
-
-    if (!selected) {
-        painter.color[3] *= cons->labels_visible.value * con->visible.value;
-    }
-    if (painter.color[3] == 0.0) return 0;
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
-        return 0;
-
-    // Render label only if its center is visible
-    if (painter_is_point_clipped_fast(&painter, FRAME_ICRF, con->lines_cap,
-                                      true))
-        return 0;
-
-    if (!selected)
-        vec4_set(names_color, 0.65, 1.0, 1.0, 0.6 * painter.color[3]);
-    else
-        vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
-    // Estimate the label bouding cap
-    painter_project(&painter, FRAME_ICRF, con->lines_cap, true, false,
-                    win_pos);
-    win_pos[0] += 1;
-    painter_unproject(&painter, FRAME_ICRF, win_pos, p);
-    pixel_angular_resolution = acos(vec3_dot(con->lines_cap, p));
-
-    label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
-                con->name : con->name_translated;
-    label_pixel_length = 0.5 * FONT_SIZE_BASE * 1.4 * strlen(label);
-    vec3_copy(con->lines_cap, label_cap);
-    label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
-
-    if (!cap_contains_cap(con->lines_cap, label_cap))
-        return 0;
-
-    labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
-                  con->lines_cap, true, 0, FONT_SIZE_BASE,
-                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
-                  TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
-                  0, con->obj.oid);
-
-    return 0;
-}
-
 static bool constellation_is_pointed(const constellation_t *con,
                                      const painter_t *painter)
 {
@@ -709,6 +658,77 @@ static bool constellation_is_pointed(const constellation_t *con,
 
     }
     return false;
+}
+
+
+// Extra tests to avoid rendering too many labels.
+static bool should_render_label(
+        const constellation_t *con, const char *label,
+        const painter_t *painter, bool selected)
+{
+    const constellations_t *cons = (constellations_t*)con->obj.parent;
+    double label_pixel_length, pixel_angular_resolution;
+    double win_pos[2], p[3], label_cap[4];
+
+    if (selected) return true;
+
+    if (cons->show_only_pointed && constellation_is_pointed(con, painter))
+        return true;
+
+    // Don't render the label if its center is not visible.
+    if (painter_is_point_clipped_fast(
+                painter, FRAME_ICRF, con->lines_cap, true)) {
+        return false;
+    }
+
+    // Estimate the label bouding cap
+    painter_project(painter, FRAME_ICRF, con->lines_cap, true, false, win_pos);
+    win_pos[0] += 1;
+    painter_unproject(painter, FRAME_ICRF, win_pos, p);
+    pixel_angular_resolution = acos(vec3_dot(con->lines_cap, p));
+    label_pixel_length = 0.5 * FONT_SIZE_BASE * 1.4 * strlen(label);
+    vec3_copy(con->lines_cap, label_cap);
+    label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
+
+    if (!cap_contains_cap(con->lines_cap, label_cap))
+        return false;
+
+    return true;
+}
+
+static int render_label(constellation_t *con, const painter_t *painter_,
+                        bool selected)
+{
+    painter_t painter = *painter_;
+    double names_color[4];
+    const char *label;
+    constellations_t *cons = (constellations_t*)con->obj.parent;
+
+    if (!selected) {
+        painter.color[3] *= cons->labels_visible.value * con->visible.value;
+    }
+    if (painter.color[3] == 0.0) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+        return 0;
+
+    label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
+                con->name : con->name_translated;
+
+    if (!should_render_label(con, label, &painter, selected))
+        return 0;
+
+    if (!selected)
+        vec4_set(names_color, 0.65, 1.0, 1.0, 0.6 * painter.color[3]);
+    else
+        vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
+
+    labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
+                  con->lines_cap, true, 0, FONT_SIZE_BASE,
+                  names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
+                  TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
+                  0, con->obj.oid);
+
+    return 0;
 }
 
 static bool constellation_is_visible(const constellation_t *con,
