@@ -38,10 +38,8 @@ typedef struct constellation {
     char        *name_translated;
     char        *description;
     int         count;
-    fader_t     lines_in_view;  // When the constellation is actually visible.
-    fader_t     image_in_view;  // When the image is actually visible.
+    fader_t     visible;
     fader_t     image_loaded_fader;
-    fader_t     pointed_fader;
     obj_t       **stars;
 
     // Texture and associated transformation matrix.
@@ -123,10 +121,8 @@ static int constellation_init(obj_t *obj, json_value *args)
     constellation_t *cons = (constellation_t *)obj;
     constellation_infos_t *info;
 
-    fader_init2(&cons->lines_in_view, false, 1);
-    fader_init2(&cons->image_in_view, false, 1);
     fader_init2(&cons->image_loaded_fader, false, 1);
-    fader_init2(&cons->pointed_fader, false, 0.5);
+    fader_init2(&cons->visible, false, 0.5);
 
     // For the moment, since we create the constellation from within C
     // only, we pass the info as a pointer to the structure!
@@ -414,8 +410,7 @@ static int render_bounds(const constellation_t *con,
     };
 
     if (!selected) {
-        painter.color[3] *= cons->bounds_visible.value *
-                            con->lines_in_view.value;
+        painter.color[3] *= cons->bounds_visible.value * con->visible.value;
     }
     if (!painter.color[3]) return 0;
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
@@ -541,7 +536,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
-    visible = cons->lines_visible.value * con->lines_in_view.value;
+    visible = cons->lines_visible.value * con->visible.value;
     if (selected) {
         visible = 1;
         painter.lines.width *= 2;
@@ -602,8 +597,7 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
     if (!selected) {
-        painter.color[3] *= cons->images_visible.value *
-                            con->image_in_view.value;
+        painter.color[3] *= cons->images_visible.value * con->visible.value;
     }
     if (!painter.color[3]) return 0;
     // Skip if not ready yet.
@@ -636,8 +630,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (!selected) {
-        painter.color[3] *= cons->labels_visible.value *
-                            con->lines_in_view.value;
+        painter.color[3] *= cons->labels_visible.value * con->visible.value;
     }
     if (painter.color[3] == 0.0) return 0;
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
@@ -677,13 +670,62 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     return 0;
 }
 
+static bool constellation_is_pointed(const constellation_t *con,
+                                     const painter_t *painter)
+{
+    // Cache the last computation of the center IAU csts.
+    static uint64_t hash = 0;
+    static char cst[4][8] = {};
+    const observer_t *obs = painter->obs;
+    const projection_t *proj = painter->proj;
+    double p[4];
+    int i;
+    const double d = 10;
+
+    if (hash != obs->hash) {
+        hash = obs->hash;
+        for (i = 0; i < 4; i++) {
+            vec4_set(p, proj->window_size[0] / 2 + (i % 2 - 0.5) * d,
+                        proj->window_size[1] / 2 + (i / 2 - 0.5) * d, 0, 0);
+            project(proj, PROJ_BACKWARD | PROJ_FROM_WINDOW_SPACE, p, p);
+            convert_frame(obs, FRAME_VIEW, FRAME_ICRF, true, p, p);
+            find_constellation_at(p, cst[i]);
+        }
+    }
+
+    for (i = 0; i < 4; i++) {
+        if (strcasecmp(con->info.iau, cst[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
+static bool constellation_is_visible(const constellation_t *con,
+                                     const painter_t *painter)
+{
+    const constellations_t *cons = (const constellations_t*)con->obj.parent;
+
+    // Show selected constellation no matter what.
+    if (core->selection && con->obj.oid == core->selection->oid)
+        return true;
+
+    // Only show non centered constellations if 'show_only_pointed' is set.
+    if (cons->show_only_pointed && con->info.iau[0]) {
+        return constellation_is_pointed(con, painter);
+    }
+
+    // Test either the image or the line.
+    if (constellation_lines_in_view(con, painter)) return true;
+    if (constellation_image_in_view(con, painter)) return true;
+    return false;
+}
+
 
 static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
     constellation_t *con = (const constellation_t*)obj;
     painter_t painter = *_painter;
     const bool selected = core->selection && obj->oid == core->selection->oid;
-    bool pointed = true;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
     assert(cons);
 
@@ -700,15 +742,8 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
             && cons->bounds_visible.value == 0.0)
         return 0;
 
-    if (con->info.iau[0] && !selected)
-        pointed = strcasecmp(con->info.iau, painter.obs->cst) == 0;
-    con->pointed_fader.target = pointed;
-    // Note: change the '0.0' to show the non pointed constellations.
-    painter.color[3] *= mix(0.0, 1.0, con->pointed_fader.value);
-    if (painter.color[3] == 0) return 0;
-
-    con->lines_in_view.target = constellation_lines_in_view(con, &painter);
-    con->image_in_view.target = constellation_image_in_view(con, &painter);
+    con->visible.target = constellation_is_visible(con, &painter);
+    if (con->visible.value == 0.0) return 0;
 
     render_lines(con, &painter, selected);
     render_label(con, &painter, selected);
@@ -811,9 +846,7 @@ static int constellations_update(obj_t *obj, double dt)
 
     MODULE_ITER(obj, con, "constellation") {
         fader_update(&con->image_loaded_fader, dt);
-        fader_update(&con->lines_in_view, dt);
-        fader_update(&con->image_in_view, dt);
-        fader_update(&con->pointed_fader, dt);
+        fader_update(&con->visible, dt);
     }
     return 0;
 }
