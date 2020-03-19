@@ -15,6 +15,11 @@ static constellation_infos_t *get_constellation(
         constellation_infos_t *csts, int size, const char *id)
 {
     int i;
+
+    // Small fix for SER1 and SER2!
+    if (strcasecmp(id, "SER1") == 0 || strcasecmp(id, "SER2") == 0)
+        id = "SER";
+
     for (i = 0; i < size; i++) {
         if (strcasecmp(csts[i].id, id) == 0)
             return &csts[i];
