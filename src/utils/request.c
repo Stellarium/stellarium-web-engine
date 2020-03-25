@@ -387,4 +387,37 @@ void request_make_fresh(request_t *req)
     req->etag = NULL;
 }
 
+#else // NO_LIBCURL
+
+#ifdef REQUEST_DUMMY
+
+#include "request.h"
+#include <stdlib.h>
+
+struct request
+{
+};
+
+void request_init(const char *cache_dir)
+{
+}
+
+request_t *request_create(const char *url)
+{
+    return calloc(1, sizeof(request_t));
+}
+
+void request_delete(request_t *req)
+{
+    free(req);
+}
+const void *request_get_data(request_t *req, int *size, int *status_code)
+{
+    *size = 0;
+    *status_code = 598;
+    return NULL;
+}
+
+#endif // REQUEST_DUMMY
+
 #endif // NO_LIBCURL
