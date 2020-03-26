@@ -380,11 +380,10 @@ static const double (*get_grid(renderer_gl_t *rend,
         int order;
         int pix;
         int split;
-        int pad_;
-    } key = { map->order, map->pix, split };
+        int swapped;
+    } key = { map->order, map->pix, split, map->swapped };
     _Static_assert(sizeof(key) == 16, "");
-    bool can_cache = map->type == UV_MAP_HEALPIX &&
-                     map->at_infinity && map->swapped;
+    bool can_cache = map->type == UV_MAP_HEALPIX && map->at_infinity;
 
     *should_delete = !can_cache;
     if (can_cache) {
@@ -395,7 +394,7 @@ static const double (*get_grid(renderer_gl_t *rend,
             return grid;
     }
 
-    grid = calloc(n * n, sizeof(*grid));
+    grid = malloc(n * n * sizeof(*grid));
     uv_map_grid(map, split, grid, NULL);
 
     if (can_cache) {
