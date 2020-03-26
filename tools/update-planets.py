@@ -95,6 +95,12 @@ config.read('./data/planets.ini')
 
 all_bodies = get_all()
 
+now = time.time() / 86400.0 + 2440587.5 - 2400000.5
+# Truncate to the day, so that we can run the script several times
+# and the values won't change.
+now = math.floor(now)
+print 'now', now
+
 for id, name in all_bodies:
     if id == 10: continue # skip sun.
     if id / 100 == 3: continue  # skip Moon, L1, L2, L4, L4, L5, Earth
@@ -106,10 +112,6 @@ for id, name in all_bodies:
 
     try:
         center = '500@%d' % parent # Center of parent body.
-        now = time.time() / 86400.0 + 2440587.5 - 2400000.5
-        # Truncate to the day, so that we can run the script several times
-        # and the values won't change.
-        now = math.floor(now)
 
         res = requests.get('https://ssd.jpl.nasa.gov/horizons_batch.cgi',
                 params=dict(
@@ -127,11 +129,11 @@ for id, name in all_bodies:
                 config.get(section, 'orbit').startswith('horizons:'):
             data.update(parse_orbital_data(res.text))
         data['parent'] = [x for x in all_bodies if x[0] == parent][0][1].lower()
-        data['type'] = 'Pla'
+        data['type'] = 'Pla' if parent == 10 else 'Moo'
 
         print ', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
                         for k, v in data.items())
-        if not 'albedo' in data or not 'radius' in data: continue
+        # if not 'albedo' in data or not 'radius' in data: continue
         if not config.has_section(section): config.add_section(section)
 
         for key, value in data.items():
