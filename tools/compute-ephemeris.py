@@ -142,6 +142,8 @@ def compute_all():
                   precision_azalt=10)
     yield compute('Deimos', kernel=mar097, precision_radec=5,
                   precision_azalt=10)
+    yield compute('Pluto barycenter', planet=999, t=[2020, 3, 26, 21, 0, 0],
+                  precision_radec=500, precision_azalt=500)
 
     # ISS, using TLE as of 2019-08-04.
     tle = [
