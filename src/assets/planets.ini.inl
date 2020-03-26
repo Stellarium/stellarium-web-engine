@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[25733] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[25735] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -116,9 +116,9 @@ static const unsigned char DATA_planets_ini[25733] __attribute__((aligned(4))) =
     "\n"
     "[pluto]\n"
     "horizons_id = 999\n"
-    "radius = 1195 km\n"
+    "radius = 1188.3 km\n"
     "albedo = 0.3\n"
-    "orbit = horizons:2458310.500000000, A.D. 2018-Jul-11 00:00:00.0000,  2.551533849350632E-01,  4.428405097535323E+09,  1.731754769072469E+01,  1.102906097355859E+02,  1.139473143293556E+02,  2.447868046475323E+06,  4.553105469924089E-08,  4.107939171491531E+01,  6.549212880988145E+01,  5.945391988052800E+09,  7.462378878570277E+09,  7.906691430233925E+09,\n"
+    "orbit = horizons:2458934.500000000, A.D. 2020-Mar-26 00:00:00.0000,  2.566925068268798E-01,  4.480307258940932E+09,  2.344207759983898E+01,  4.393505141940233E+01,  1.869747706822909E+02,  2.448322313586458E+06,  4.460355958123121E-08,  4.089668736818066E+01,  6.542540942976041E+01,  6.027528714684226E+09,  7.574750170427520E+09,  8.071104714061540E+09,\n"
     "parent = sun\n"
     "type = Pla\n"
     "\n"
