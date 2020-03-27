@@ -22,7 +22,6 @@
 typedef struct satellite {
     obj_t obj;
     char name[26];
-    char name2[26]; // Extra name.
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag;
@@ -263,7 +262,7 @@ static int satellite_init(obj_t *obj, json_value *args)
                 "?mag", JCON_DOUBLE(sat->stdmag, SATELLITE_DEFAULT_MAG),
                 "tle", "[", JCON_STR(tle1), JCON_STR(tle2), "]",
             "}",
-            "?short_name", JCON_STR(name),
+            "?names", "[", JCON_STR(name), "]",
         "}");
         if (r) {
             LOG_E("Cannot parse satellite json data");
@@ -273,8 +272,8 @@ static int satellite_init(obj_t *obj, json_value *args)
         sat->obj.oid = oid_create("NORA", sat->number);
         sat->elsetrec = sgp4_twoline2rv(tle1, tle2, 'c', 'm', 'i',
                                         &startmfe, &stopmfe, &deltamin);
-        if (name)
-            snprintf(sat->name, sizeof(sat->name), "%s", name);
+        if (name && strncmp(name, "NAME ", 5) == 0)
+            snprintf(sat->name, sizeof(sat->name), "%s", name + 5);
         strncpy(sat->obj.type, type ?: "Asa", 4);
 
         sat->data = json_copy(args);
@@ -432,8 +431,6 @@ static void satellite_get_designations(
         snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
         if (*sat->name)
             f(obj, user, "NAME", sat->name);
-        if (*sat->name2)
-            f(obj, user, "NAME", sat->name2);
         f(obj, user, "NORAD", buf);
     }
 }
