@@ -418,7 +418,6 @@ void star_get_designations(
     const char *names = s->names;
     const char *name;
     char buf[128];
-    char cat[128] = {};
     obj_t *skycultures;
 
     /*
@@ -437,13 +436,7 @@ void star_get_designations(
     }
 
     while (names && *names) {
-        strncpy(cat, names, sizeof(cat));
-        if (!strchr(cat, ' ')) { // No catalog.
-            f(obj, user, "", cat);
-        } else {
-            *strchr(cat, ' ') = '\0';
-            f(obj, user, cat, names + strlen(cat) + 1);
-        }
+        f(obj, user, NULL, names);
         names += strlen(names) + 1;
     }
     if (s->gaia) {

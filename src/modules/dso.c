@@ -622,15 +622,8 @@ void dso_get_designations(
     const dso_data_t *s = &dso->data;
 
     const char *names = s->names;
-    char cat[128] = {};
     while (names && *names) {
-        strncpy(cat, names, sizeof(cat) - 1);
-        if (!strchr(cat, ' ')) { // No catalog.
-            f(obj, user, "", cat);
-        } else {
-            *strchr(cat, ' ') = '\0';
-            f(obj, user, cat, names + strlen(cat) + 1);
-        }
+        f(obj, user, NULL, names);
         names += strlen(names) + 1;
     }
 }

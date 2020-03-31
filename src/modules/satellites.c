@@ -421,11 +421,7 @@ static void satellite_get_designations(
         names = json_get_attr(sat->data, "names", json_array);
         for (i = 0; i < names->u.array.length; ++i) {
             name = names->u.array.values[i]->u.string.ptr;
-            if (strstr(name, "NAME "))
-                f(obj, user, "NAME", name + 5);
-            else {
-                f(obj, user, "", name);
-            }
+            f(obj, user, NULL, name);
         }
     } else {
         snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
