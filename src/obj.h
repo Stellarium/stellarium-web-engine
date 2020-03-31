@@ -399,8 +399,7 @@ const char *obj_get_name(const obj_t *obj, char out[S 128]);
  *   The number of designations processed.
  */
 int obj_get_designations(const obj_t *obj, void *user,
-                         void (*f)(const obj_t *obj, void *user,
-                                   const char *cat, const char *value));
+                void (*f)(const obj_t *obj, void *user, const char *dsgn));
 
 /*
  * Section: attributes manipulation.

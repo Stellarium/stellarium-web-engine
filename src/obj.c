@@ -121,19 +121,18 @@ obj_t *obj_clone(const obj_t *obj)
     return obj->klass->clone(obj);
 }
 
-static void name_on_designation(const obj_t *obj, void *user,
-                                const char *cat, const char *value)
+static void name_on_designation(const obj_t *obj, void *user, const char *dsgn)
 {
-    int current_score;
+    int current_score = 1;
     int *score = USER_GET(user, 0);
     char *out = USER_GET(user, 1);
-    current_score = (strcmp(cat, "NAME") == 0) ? 2 : 1;
+    if (strncmp(dsgn, "NAME ", 5) == 0) {
+        dsgn += 5;
+        current_score = 2;
+    }
     if (current_score <= *score) return;
     *score = current_score;
-    if (*cat && strcmp(cat, "NAME") != 0)
-        snprintf(out, 128, "%s %s", cat, value);
-    else
-        snprintf(out, 128, "%s", value);
+    snprintf(out, 128, "%s", dsgn);
 }
 
 /*
@@ -319,22 +318,26 @@ const char *obj_get_id(const obj_t *obj)
 static int on_name(const obj_t *obj, void *user,
                    const char *cat, const char *value)
 {
-    void (*f)(const obj_t *obj, void *user,
-              const char *cat, const char *value);
+    void (*f)(const obj_t *obj, void *user, const char *value);
     void *u;
     int *nb;
+    char buf[1024];
     f = USER_GET(user, 0);
     u = USER_GET(user, 1);
     nb = USER_GET(user, 2);
-    f(obj, u, cat, value);
+    if (cat && *cat) {
+        snprintf(buf, sizeof(buf), "%s %s", cat, value);
+        f(obj, u, buf);
+    } else {
+        f(obj, u, value);
+    }
     nb++;
     return 0;
 }
 
 EMSCRIPTEN_KEEPALIVE
 int obj_get_designations(const obj_t *obj, void *user,
-                  void (*f)(const obj_t *obj, void *user,
-                            const char *cat, const char *value))
+                  void (*f)(const obj_t *obj, void *user, const char *dsgn))
 {
     int nb = 0;
     if (obj->klass->get_designations)

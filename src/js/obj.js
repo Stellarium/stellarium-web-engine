@@ -148,12 +148,10 @@ Module.afterInit(function() {
 
   SweObj.prototype.designations = function() {
     var ret = [];
-    var callback = Module.addFunction(function(o, u, cat, v) {
-      cat = Module.UTF8ToString(cat);
+    var callback = Module.addFunction(function(o, u, v) {
       v = Module.UTF8ToString(v);
-      if (cat) ret.push(cat + ' ' + v);
-      else ret.push(v);
-    }, 'viiii');
+      ret.push(v);
+    }, 'viii');
     Module._obj_get_designations(this.v, 0, callback);
     Module.removeFunction(callback);
     // Remove duplicates.
