@@ -727,6 +727,9 @@ int core_render(double win_w, double win_h, double pixel_scale)
     paint_finish(&painter);
 
     assert(bck.obs.tt == core->observer->tt);
+    assert(bck.obs.yaw == core->observer->yaw);
+    assert(bck.obs.pitch == core->observer->pitch);
+    assert(bck.fov == core->fov);
 
     // Do post render (e.g. for GUI)
     DL_FOREACH(core->obj.children, module) {
@@ -734,9 +737,6 @@ int core_render(double win_w, double win_h, double pixel_scale)
             module->klass->post_render(module, &painter);
     }
 
-    assert(bck.obs.yaw == core->observer->yaw);
-    assert(bck.obs.pitch == core->observer->pitch);
-    assert(bck.fov == core->fov);
     return 0;
 }
 
