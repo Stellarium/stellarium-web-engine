@@ -497,8 +497,8 @@ static bool constellation_image_in_view(const constellation_t *con,
     const double m = 100; // Border margins (windows unit).
     const observer_t *obs = painter->obs;
 
-    // Check that the image is loaded and the mat computed.
-    if (!con->img.tex || !texture_load(con->img.tex, NULL)) return false;
+    // Check that the texture matrix is computed.
+    if (!con->img.tex) return false;
     if (!con->img.mat[2][2]) return false;
 
     // First fast tests for the case when the constellation is not in the
