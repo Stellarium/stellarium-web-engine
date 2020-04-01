@@ -354,6 +354,28 @@ static json_value *skycultures_current_id_fn(
     return args_value_new(TYPE_STRING, cults->current->obj.id);
 }
 
+static int skycultures_list(const obj_t *obj, observer_t *obs,
+                            double max_mag, uint64_t hint, const char *source,
+                            void *user, int (*f)(void *user, obj_t *obj))
+{
+    const skycultures_t *cults = (void*)obj;
+    const skyculture_t *cult = cults->current;
+    obj_t *star;
+    int code;
+    skyculture_name_t *entry, *tmp;
+    if (!cult) return 0;
+
+    HASH_ITER(hh, cult->names, entry, tmp) {
+        star = obj_get_by_hip(entry->hip, &code);
+        if (code == 0) return MODULE_AGAIN;
+        if (!star) continue;
+        f(user, star);
+        obj_release(star);
+    }
+
+    return 0;
+}
+
 /*
  * Meta class declarations.
  */
@@ -383,6 +405,7 @@ static obj_klass_t skycultures_klass = {
     .update         = skycultures_update,
     .add_data_source    = skycultures_add_data_source,
     .create_order   = 30, // After constellations.
+    .list           = skycultures_list,
     .attributes = (attribute_t[]) {
         PROPERTY(current, TYPE_OBJ, MEMBER(skycultures_t, current)),
         PROPERTY(current_id, TYPE_STRING, .fn = skycultures_current_id_fn),
