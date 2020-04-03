@@ -27,11 +27,7 @@ typedef struct {
     char    type[4];
     int     hip;    // HIP number.
     float   vmag;
-    float   ra;     // ICRS RA  J2000.0 (rad)
-    float   de;     // ICRS Dec J2000.0 (rad)
-    float   pra;    // RA proper motion (rad/year)
-    float   pde;    // Dec proper motion (rad/year)
-    float   plx;    // Parallax (arcsec)
+    float   plx;    // Parallax (arcsec) (Note: could be computed from pvo).
     float   bv;
     float   illuminance; // (lux)
     // Normalized Astrometric direction + movement.
@@ -179,21 +175,21 @@ static int star_init(obj_t *obj, json_value *args)
     star_t *star = (star_t*)obj;
     json_value *model, *names;
     star_data_t *d = &star->data;
-    double epoch;
+    double epoch, ra, de, pra, pde;
 
     model= json_get_attr(args, "model_data", json_object);
     if (model) {
-        d->ra = json_get_attr_f(model, "ra", 0) * DD2R;
-        d->de = json_get_attr_f(model, "de", 0) * DD2R;
+        ra = json_get_attr_f(model, "ra", 0) * DD2R;
+        de = json_get_attr_f(model, "de", 0) * DD2R;
         d->plx = json_get_attr_f(model, "plx", 0) / 1000.0;
-        d->pra = json_get_attr_f(model, "pm_ra", 0) * ERFA_DMAS2R;
-        d->pde = json_get_attr_f(model, "pm_de", 0) * ERFA_DMAS2R;
+        pra = json_get_attr_f(model, "pm_ra", 0) * ERFA_DMAS2R;
+        pde = json_get_attr_f(model, "pm_de", 0) * ERFA_DMAS2R;
         d->vmag = json_get_attr_f(model, "Vmag", NAN);
         epoch = json_get_attr_f(model, "epoch", 2000);
         if (isnan(d->vmag))
             d->vmag = json_get_attr_f(model, "Bmag", NAN);
         d->illuminance = core_mag_to_illuminance(d->vmag);
-        compute_pv(d->ra, d->de, d->pra, d->pde, d->plx, epoch, d);
+        compute_pv(ra, de, pra, pde, d->plx, epoch, d);
     }
 
     names = json_get_attr(args, "names", json_array);
@@ -578,10 +574,6 @@ static int on_file_tile_loaded(const char type[4],
         if (!*s->type) strncpy(s->type, "*", 4); // Default type.
         epoch = epoch ?: 2000; // Default epoch.
         s->vmag = vmag;
-        s->ra = ra;
-        s->de = de;
-        s->pra = pra;
-        s->pde = pde;
         s->plx = plx;
         s->bv = bv;
 
