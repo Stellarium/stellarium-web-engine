@@ -135,6 +135,8 @@ DEF void mat3_mul(const double a[3][3], const double b[S 3][3],
                   double out[S 3][3]);
 DEF void mat3_mul_vec3(const double mat[S 3][3], const double v[S 3],
                        double out[S 3]);
+DEF void mat3_mul_vec3_transposed(const double mat[S 3][3], const double v[S 3],
+                                  double out[S 3]);
 DEF void mat3_mul_vec2(const double mat[S 3][3], const double v[S 2],
                        double out[S 2]);
 DEF void mat3_rx(double a, const double mat[S 3][3], double out[S 3][3]);
@@ -445,6 +447,17 @@ DEF void mat3_mul_vec3(const double mat[S 3][3], const double v[S 3],
     out[0] = x * mat[0][0] + y * mat[1][0] + z * mat[2][0];
     out[1] = x * mat[0][1] + y * mat[1][1] + z * mat[2][1];
     out[2] = x * mat[0][2] + y * mat[1][2] + z * mat[2][2];
+}
+
+DEF void mat3_mul_vec3_transposed(const double mat[S 3][3], const double v[S 3],
+                                  double out[S 3])
+{
+    double x = v[0];
+    double y = v[1];
+    double z = v[2];
+    out[0] = x * mat[0][0] + y * mat[0][1] + z * mat[0][2];
+    out[1] = x * mat[1][0] + y * mat[1][1] + z * mat[1][2];
+    out[2] = x * mat[2][0] + y * mat[2][1] + z * mat[2][2];
 }
 
 DEF void mat3_mul_vec2(const double mat[S 3][3], const double v[S 2],

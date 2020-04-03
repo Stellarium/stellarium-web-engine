@@ -63,7 +63,7 @@ static void convert_frame_forward(const observer_t *obs,
     // ICRS to CIRS
     if (origin < FRAME_CIRS && dest >= FRAME_CIRS) {
         // Bias-precession-nutation, giving CIRS proper direction.
-        eraRxp(astrom->bpn, p, p);
+        mat3_mul_vec3_transposed(astrom->bpn, p, p);
     }
 
     if (dest == FRAME_JNOW) {
