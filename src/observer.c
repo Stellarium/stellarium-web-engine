@@ -141,7 +141,6 @@ void observer_update(observer_t *obs, bool fast)
 {
     double utc1, utc2, ut11, ut12, tai1, tai2;
     double dt, dut1 = 0;
-    double p[3] = {0};
 
     uint64_t hash, hash_partial;
     observer_compute_hash(obs, &hash_partial, &hash);
@@ -225,11 +224,6 @@ void observer_update(observer_t *obs, bool fast)
         obs->hash_accurate = hash;
         obs->last_accurate_update = obs->tt;
     }
-
-    // Compute pointed at constellation.
-    eraS2c(obs->yaw, obs->pitch, p);
-    mat3_mul_vec3(obs->rh2i, p, p);
-    find_constellation_at(p, obs->cst);
 }
 
 static int observer_init(obj_t *obj, json_value *args)

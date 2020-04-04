@@ -90,9 +90,6 @@ struct observer
     double obs_pvb[2][3];
     double obs_pvg[2][3];
 
-    // The pointed IAU constellation.
-    char cst[5];
-
     // Frame rotation matrices.
     // h: Horizontal (Alt/Az, left handed, X->N, Y->E, Z->up).
     // o: Observed: horizontal with refraction (Alt/Az, left handed).
