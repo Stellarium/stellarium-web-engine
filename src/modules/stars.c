@@ -687,7 +687,7 @@ static int render_visitor(int order, int pix, void *user)
     tile_t *tile;
     int i, n = 0, code;
     star_data_t *s;
-    double p_win[4], size, luminance;
+    double p_win[4], size, luminance, vmag = NAN;
     double color[3];
     double v[3];
     double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
@@ -715,8 +715,16 @@ static int render_visitor(int order, int pix, void *user)
             continue;
 
         (*illuminance) += s->illuminance;
-        if (!core_get_point_for_mag(s->vmag, &size, &luminance))
+
+        // No need to recompute the point size and luminance if the last
+        // star had the same vmag (often the case since we sort by vmag).
+        if (s->vmag != vmag) {
+            vmag = s->vmag;
+            core_get_point_for_mag(vmag, &size, &luminance);
+        }
+        if (size == 0.0 || luminance == 0.0)
             continue;
+
         bv_to_rgb(isnan(s->bv) ? 0 : s->bv, color);
         points[n] = (point_t) {
             .pos = {p_win[0], p_win[1]},
