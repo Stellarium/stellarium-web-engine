@@ -25,10 +25,12 @@ typedef struct orbit_t {
 } orbit_t;
 
 /*
- * Type: mplanet_data_t
- * Extra data of minor planet separated for memory caching performances.
+ * Type: mplanet_t
+ * Object that represents a single minor planet.
  */
-typedef struct {
+typedef struct mplanet mplanet_t;
+struct mplanet {
+    obj_t       obj;
     orbit_t     orbit;
     float       h;      // Absolute magnitude.
     float       g;      // Slope parameter.
@@ -39,17 +41,10 @@ typedef struct {
     // Cached values.
     float       vmag;
     double      pvo[2][4];
-} mplanet_data_t;
 
-/*
- * Type: mplanet_t
- * Object that represents a single minor planet.
- */
-typedef struct {
-    obj_t          obj;
-    mplanet_data_t *data;
-    bool           on_screen;  // Set once the object has been visible.
-} mplanet_t;
+    // Linked list of currently visible.
+    mplanet_t   *visible_next, *visible_prev;
+};
 
 /*
  * Type: mplanets_t
@@ -59,10 +54,12 @@ typedef struct mplanets {
     obj_t   obj;
     char    *source_url;
     bool    parsed; // Set to true once the data has been parsed.
-    int     update_pos; // Index of the position for iterative update.
     bool    visible;
     double hints_mag_offset; // Hints/labels magnitude offset
     bool   hints_visible;
+
+    mplanet_t *render_current;
+    mplanet_t *visibles; // Linked list of currently visible minor planets.
 } mplanets_t;
 
 // Static instance.
@@ -136,28 +133,28 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
             continue;
         }
         mplanet = (void*)module_add_new(&mplanets->obj, "asteroid", NULL, NULL);
-        mplanet->data->orbit.d = epoch;
-        mplanet->data->orbit.m = m * DD2R;
-        mplanet->data->orbit.w = w * DD2R;
-        mplanet->data->orbit.o = o * DD2R;
-        mplanet->data->orbit.i = i * DD2R;
-        mplanet->data->orbit.e = e;
-        mplanet->data->orbit.n = n * DD2R;
-        mplanet->data->orbit.a = a;
-        mplanet->data->h = h;
-        mplanet->data->g = g;
+        mplanet->orbit.d = epoch;
+        mplanet->orbit.m = m * DD2R;
+        mplanet->orbit.w = w * DD2R;
+        mplanet->orbit.o = o * DD2R;
+        mplanet->orbit.i = i * DD2R;
+        mplanet->orbit.e = e;
+        mplanet->orbit.n = n * DD2R;
+        mplanet->orbit.a = a;
+        mplanet->h = h;
+        mplanet->g = g;
 
         orbit_type = flags & 0x3f;
         strncpy(mplanet->obj.type, ORBIT_TYPES[orbit_type], 4);
-        mplanet->data->mpl_number = number;
+        mplanet->mpl_number = number;
         mplanet->obj.oid = compute_oid(number, desig);
         if (name[0]) {
-            _Static_assert(sizeof(name) == sizeof(mplanet->data->name), "");
-            memcpy(mplanet->data->name, name, sizeof(name));
+            _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
+            memcpy(mplanet->name, name, sizeof(name));
         }
         if (desig[0]) {
-            _Static_assert(sizeof(desig) == sizeof(mplanet->data->desig), "");
-            memcpy(mplanet->data->desig, desig, sizeof(desig));
+            _Static_assert(sizeof(desig) == sizeof(mplanet->desig), "");
+            memcpy(mplanet->desig, desig, sizeof(desig));
         }
     }
     if (nb_err) {
@@ -180,16 +177,14 @@ static int mplanet_init(obj_t *obj, json_value *args)
 {
     // Support creating a minor planet using noctuasky model data json values.
     mplanet_t *mp = (mplanet_t*)obj;
-    orbit_t *orbit;
+    orbit_t *orbit = &mp->orbit;
     json_value *model;
     const char *name;
     int num;
-    mp->data = calloc(1, sizeof(*mp->data));
-    orbit = &mp->data->orbit;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
-        mp->data->h = json_get_attr_f(model, "H", 0);
-        mp->data->g = json_get_attr_f(model, "G", 0);
+        mp->h = json_get_attr_f(model, "H", 0);
+        mp->g = json_get_attr_f(model, "G", 0);
         orbit->d = json_get_attr_f(model, "Epoch", DJM0) - DJM0;
         orbit->i = json_get_attr_f(model, "i", 0) * DD2R;
         orbit->o = json_get_attr_f(model, "Node", 0) * DD2R;
@@ -201,10 +196,10 @@ static int mplanet_init(obj_t *obj, json_value *args)
     }
     name = json_get_attr_s(args, "short_name");
     if (name) {
-        strncpy(mp->data->name, name, sizeof(mp->data->name));
+        strncpy(mp->name, name, sizeof(mp->name));
         if (sscanf(name, "(%d)", &num) == 1) {
             mp->obj.oid = oid_create("MPl", num);
-            mp->data->mpl_number = num;
+            mp->mpl_number = num;
         }
     }
     // XXX: use proper type.
@@ -212,34 +207,26 @@ static int mplanet_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void mplanet_del(obj_t *obj)
-{
-    mplanet_t *mp = (mplanet_t*)obj;
-    free(mp->data);
-}
-
 static int mplanet_update(mplanet_t *mp, const observer_t *obs)
 {
     double pvh[2][3], pvo[2][3];
-    orbit_t *orbit = &mp->data->orbit;
 
     orbit_compute_pv(0, obs->ut1, pvh[0], pvh[1],
-            orbit->d, orbit->i, orbit->o, orbit->w,
-            orbit->a, orbit->n, orbit->e, orbit->m,
+            mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
+            mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
             0, 0);
 
     mat3_mul_vec3(obs->re2i, pvh[0], pvh[0]);
     mat3_mul_vec3(obs->re2i, pvh[1], pvh[1]);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
-    vec3_copy(pvo[0], mp->data->pvo[0]);
-    vec3_copy(pvo[1], mp->data->pvo[1]);
-    mp->data->pvo[0][3] = 1.0; // AU unit.
-    mp->data->pvo[1][3] = 1.0;
+    vec3_copy(pvo[0], mp->pvo[0]);
+    vec3_copy(pvo[1], mp->pvo[1]);
+    mp->pvo[0][3] = 1.0; // AU unit.
+    mp->pvo[1][3] = 1.0;
 
     // Compute vmag using algo from
     // http://www.britastro.org/asteroids/dymock4.pdf
-    mp->data->vmag = compute_magnitude(mp->data->h, mp->data->g,
-                                       pvh[0], pvo[0]);
+    mp->vmag = compute_magnitude(mp->h, mp->g, pvh[0], pvo[0]);
     return 0;
 }
 
@@ -250,15 +237,16 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
     mplanet_update(mp, obs);
     switch (info) {
     case INFO_PVO:
-        memcpy(out, mp->data->pvo, sizeof(mp->data->pvo));
+        memcpy(out, mp->pvo, sizeof(mp->pvo));
         return 0;
     case INFO_VMAG:
-        *(double*)out = mp->data->vmag;
+        *(double*)out = mp->vmag;
         return 0;
     }
     return 1;
 }
 
+// Note: return 1 if the planet is actually visible on screen.
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
     double pvo[2][4], win_pos[2], vmag, size, luminance;
@@ -269,7 +257,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     double hints_mag_offset = g_mplanets->hints_mag_offset;
 
     mplanet_update(mplanet, painter->obs);
-    vmag = mplanet->data->vmag;
+    vmag = mplanet->vmag;
 
     if (!selected && vmag > painter->stars_limit_mag + 1.4 + hints_mag_offset)
         return 0;
@@ -277,7 +265,6 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
         return 0;
 
-    mplanet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
@@ -289,17 +276,17 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     paint_2d_points(painter, 1, &point);
 
     // Render name if needed.
-    if (*mplanet->data->name && (selected || (g_mplanets->hints_visible &&
+    if (*mplanet->name && (selected || (g_mplanets->hints_visible &&
                                         vmag <= painter->hints_limit_mag +
                                         1.4 + hints_mag_offset))) {
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
-        labels_add_3d(mplanet->data->name, FRAME_ICRF, pvo[0], false, size + 4,
+        labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,
               FONT_SIZE_BASE - 1, label_color, 0, 0,
               TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
               0, obj->oid);
     }
-    return 0;
+    return 1;
 }
 
 void mplanet_get_designations(
@@ -308,18 +295,18 @@ void mplanet_get_designations(
 {
     mplanet_t *mplanet = (mplanet_t*)obj;
     char buf[32];
-    if (mplanet->data->mpl_number) {
+    if (mplanet->mpl_number) {
         // Workaround so that we don't break stellarium web, that expect
         // to the an id that is simply the MPC object number!
         // Remove when we can.
-        snprintf(buf, sizeof(buf), "%d", mplanet->data->mpl_number);
+        snprintf(buf, sizeof(buf), "%d", mplanet->mpl_number);
         f(obj, user, "", buf);
 
-        snprintf(buf, sizeof(buf), "(%d)", mplanet->data->mpl_number);
+        snprintf(buf, sizeof(buf), "(%d)", mplanet->mpl_number);
         f(obj, user, "MPC", buf);
     }
-    if (*mplanet->data->name)  f(obj, user, "NAME", mplanet->data->name);
-    if (*mplanet->data->desig) f(obj, user, "NAME", mplanet->data->desig);
+    if (*mplanet->name)  f(obj, user, "NAME", mplanet->name);
+    if (*mplanet->desig) f(obj, user, "NAME", mplanet->desig);
 }
 
 static int mplanets_init(obj_t *obj, json_value *args)
@@ -330,12 +317,6 @@ static int mplanets_init(obj_t *obj, json_value *args)
     mps->visible = true;
     mps->hints_visible = true;
     return 0;
-}
-
-static bool range_contains(int range_start, int range_size, int nb, int i)
-{
-    if (i < range_start) i += nb;
-    return i >= range_start && i < range_start + range_size;
 }
 
 static int mplanets_update(obj_t *obj, double dt)
@@ -358,33 +339,49 @@ static int mplanets_update(obj_t *obj, double dt)
     return 0;
 }
 
+static void add_to_visible(mplanets_t *mps, mplanet_t *mplanet)
+{
+    if (mplanet->visible_prev) return;
+    DL_APPEND2(mps->visibles, mplanet, visible_prev, visible_next);
+}
+
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(mplanets_render, 0);
 
     mplanets_t *mps = (void*)obj;
-    int i, nb;
+    int i, r;
     const int update_nb = 32;
-    mplanet_t *child;
-    obj_t *tmp;
-    uint64_t selection_oid = core->selection ? core->selection->oid : 0;
+    mplanet_t *child, *tmp;
 
     if (!mps->visible) return 0;
-    DL_COUNT(obj->children, tmp, nb);
 
-    /* To prevent spending too much time computing position of asteroids that
-     * are not visible, we only update a small number of them at each
-     * frame, using a moving range.  The asteroids who have been flagged as
-     * on screen get updated no matter what.  */
-    i = 0;
-    for (child = (void*)obj->children; child; child = (void*)child->obj.next) {
-        if (    !child->on_screen &&
-                child->obj.oid != selection_oid &&
-                !range_contains(mps->update_pos, update_nb, nb, i))
-            continue;
-        mplanet_render((obj_t*)child, painter);
+    // If the current selection is a minor planet, make sure it is flagged
+    // as visible.
+    if (core->selection && core->selection->parent == obj) {
+        add_to_visible(mps, (void*)core->selection);
     }
-    mps->update_pos = nb ? (mps->update_pos + update_nb) % nb : 0;
+
+    // Render all the flagged visible minor planets, remove those that are
+    // no longer visible.
+    DL_FOREACH_SAFE2(mps->visibles, child, tmp, visible_next) {
+        r = mplanet_render(&child->obj, painter);
+        if (r == 0 && &child->obj != core->selection) {
+            DL_DELETE2(mps->visibles, child, visible_prev, visible_next);
+            child->visible_prev = NULL;
+        }
+    }
+
+    // Then iter part of the full list as well.
+    for (   i = 0, child = mps->render_current ?: (void*)mps->obj.children;
+            child && i < update_nb;
+            i++, child = (void*)child->obj.next) {
+        if (child->visible_prev) continue; // Was already rendered.
+        r = mplanet_render(&child->obj, painter);
+        if (r == 1) add_to_visible(mps, child);
+    }
+    mps->render_current = child;
+
     return 0;
 }
 
@@ -412,7 +409,6 @@ static obj_klass_t mplanet_klass = {
     .model      = "mpc_asteroid",
     .size       = sizeof(mplanet_t),
     .init       = mplanet_init,
-    .del        = mplanet_del,
     .get_info   = mplanet_get_info,
     .render     = mplanet_render,
     .get_designations = mplanet_get_designations,
