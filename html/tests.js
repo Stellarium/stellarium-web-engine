@@ -117,6 +117,7 @@ var testListener = function(stel) {
 };
 
 var testCalendar = function(stel) {
+  if (!stel._calendar_create) return;
   var gotMoonMars = false;
   var onEvent = function(ev) {
     if (ev.o2 && ev.o1.designations().includes('NAME Moon') &&
