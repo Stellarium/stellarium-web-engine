@@ -39,7 +39,8 @@ static void cleanup(cache_t *cache)
 {
     item_t *item, *tmp;
     HASH_ITER(hh, cache->items, item, tmp) {
-        if (item->delfunc(item->data) == CACHE_KEEP) continue;
+        if (item->delfunc && item->delfunc(item->data) == CACHE_KEEP)
+            continue;
         HASH_DEL(cache->items, item);
         assert(item != cache->items);
         cache->size -= item->cost;
