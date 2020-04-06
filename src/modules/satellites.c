@@ -19,7 +19,8 @@
  * Type: satellite_t
  * Represents an individual satellite.
  */
-typedef struct satellite {
+typedef struct satellite satellite_t;
+struct satellite {
     obj_t obj;
     char name[26];
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
@@ -29,9 +30,11 @@ typedef struct satellite {
     double pvo[2][4];
     double vmag;
     bool error; // Set if we got an error computing the position.
-    bool on_screen;  // Set once the object has been visible.
     json_value *data; // Data passed in the constructor.
-} satellite_t;
+
+    // Linked list of currently visible on screen.
+    satellite_t *visible_next, *visible_prev;
+};
 
 // Module class.
 typedef struct satellites {
@@ -43,6 +46,9 @@ typedef struct satellites {
     bool    visible;
     double  hints_mag_offset;
     bool    hints_visible;
+
+    satellite_t *render_current;
+    satellite_t *visibles; // Linked list of currently visible satellites.
 } satellites_t;
 
 // Static instance.
@@ -133,39 +139,50 @@ static int satellites_update(obj_t *obj, double dt)
     return 0;
 }
 
-static bool range_contains(int range_start, int range_size, int nb, int i)
+static void add_to_visible(satellites_t *sats, satellite_t *sat)
 {
-    if (i < range_start) i += nb;
-    return i >= range_start && i < range_start + range_size;
+    if (sat->visible_prev) return;
+    DL_APPEND2(sats->visibles, sat, visible_prev, visible_next);
 }
+
+static int satellite_render(const obj_t *obj, const painter_t *painter);
 
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(satellites_render, 0);
 
     satellites_t *sats = (void*)obj;
-    int i, nb;
+    int i, r;
     const int update_nb = 32;
-    uint64_t selection_oid = core->selection ? core->selection->oid : 0;
-    satellite_t *child;
-    obj_t *tmp;
+    satellite_t *child, *tmp;
 
     if (!sats->visible) return false;
-    DL_COUNT(obj->children, tmp, nb);
 
-    /* To prevent spending too much time computing position of asteroids that
-     * are not visible, we only update a small number of them at each
-     * frame, using a moving range.  The asteroids who have been flagged as
-     * on screen get updated no matter what.  */
-    i = 0;
-    MODULE_ITER(obj, child, "tle_satellite") {
-        if (    !child->on_screen &&
-                child->obj.oid != selection_oid &&
-                !range_contains(sats->update_pos, update_nb, nb, i))
-            continue;
-        obj_render((obj_t*)child, painter);
+    // If the current selection is a satellite, make sure it is flagged
+    // as visible.
+    if (core->selection && core->selection->parent == obj) {
+        add_to_visible(sats, (void*)core->selection);
     }
-    sats->update_pos = nb ? (sats->update_pos + update_nb) % nb : 0;
+
+    // Render all the flagged visible satellites, remove those that are
+    // no longer visible.
+    DL_FOREACH_SAFE2(sats->visibles, child, tmp, visible_next) {
+        r = satellite_render(&child->obj, painter);
+        if (r == 0 && &child->obj != core->selection) {
+            DL_DELETE2(sats->visibles, child, visible_prev, visible_next);
+            child->visible_prev = NULL;
+        }
+    }
+
+    // Then iter part of the full list as well.
+    for (   i = 0, child = sats->render_current ?: (void*)sats->obj.children;
+            child && i < update_nb;
+            i++, child = (void*)child->obj.next) {
+        if (child->visible_prev) continue; // Was already rendered.
+        r = satellite_render(&child->obj, painter);
+        if (r == 1) add_to_visible(sats, child);
+    }
+    sats->render_current = child;
     return 0;
 }
 
@@ -354,6 +371,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
 
 /*
  * Render an individual satellite.
+ * Note: return 1 if the satellite is actually visible on screen.
  */
 static int satellite_render(const obj_t *obj, const painter_t *painter_)
 {
@@ -377,7 +395,6 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return 0;
 
-    sat->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render symbol if needed.
@@ -404,7 +421,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
                       0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
     }
 
-    return 0;
+    return 1;
 }
 
 static void satellite_get_designations(
