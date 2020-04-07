@@ -687,7 +687,7 @@ static int render_visitor(int order, int pix, void *user)
     tile_t *tile;
     int i, n = 0, code;
     star_data_t *s;
-    double p_win[4], size, luminance, vmag = -DBL_MAX;
+    double p_win[4], size = 0, luminance = 0, vmag = -DBL_MAX;
     double color[3];
     double v[3];
     double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
