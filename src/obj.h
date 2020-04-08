@@ -402,6 +402,12 @@ int obj_get_designations(const obj_t *obj, void *user,
                 void (*f)(const obj_t *obj, void *user, const char *dsgn));
 
 /*
+ * Function: obj_is_visible
+ * Conveniance function that checks if an object is currently visible
+ */
+bool obj_is_visible(const obj_t *obj, const observer_t *obs);
+
+/*
  * Section: attributes manipulation.
  */
 
