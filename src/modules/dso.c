@@ -407,15 +407,18 @@ static int dsos_init(obj_t *obj, json_value *args)
 }
 
 // Exactly the same that stars.c get_tile function...
-static tile_t *get_tile(dsos_t *dsos, survey_t *survey,
-                        int order, int pix, bool load,
-                        bool *loading_complete)
+static tile_t *get_tile(dsos_t *dsos, survey_t *survey, int order, int pix,
+                        bool sync, int *code)
 {
-    int code, flags = 0;
+    int flags = 0;
     tile_t *tile;
-    if (!load) flags |= HIPS_CACHED_ONLY;
-    tile = hips_get_tile(survey->hips, order, pix, flags, &code);
-    if (loading_complete) *loading_complete = (code != 0);
+    assert(code);
+    if (!sync) flags |= HIPS_LOAD_IN_THREAD;
+    if (!survey->hips) {
+        *code = 0;
+        return NULL;
+    }
+    tile = hips_get_tile(survey->hips, order, pix, flags, code);
     return tile;
 }
 
@@ -636,8 +639,7 @@ static int render_visitor(int order, int pix, void *user)
     int *nb_loaded = USER_GET(user, 3);
     survey_t *survey = USER_GET(user, 4);
     tile_t *tile;
-    int i, ret;
-    bool loaded;
+    int i, ret, code;
     uint64_t hint;
 
     // Early exit if the tile is clipped.
@@ -645,8 +647,8 @@ static int render_visitor(int order, int pix, void *user)
         return 0;
 
     (*nb_tot)++;
-    tile = get_tile(dsos, survey, order, pix, true, &loaded);
-    if (loaded) (*nb_loaded)++;
+    tile = get_tile(dsos, survey, order, pix, false, &code);
+    if (code) (*nb_loaded)++;
 
     if (!tile) return 0;
     if (tile->mag_min > painter.stars_limit_mag + 1.5) return 0;
@@ -687,7 +689,7 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
 
 static int dsos_get_visitor(int order, int pix, void *user)
 {
-    int i;
+    int i, code;
     struct {
         dsos_t      *dsos;
         obj_t       *ret;
@@ -698,7 +700,7 @@ static int dsos_get_visitor(int order, int pix, void *user)
     survey_t *survey;
 
     DL_FOREACH(d->dsos->surveys, survey) {
-        tile = get_tile(d->dsos, survey, order, pix, false, NULL);
+        tile = get_tile(d->dsos, survey, order, pix, true, &code);
         if (!tile) continue;
         for (i = 0; i < tile->nb; i++) {
             if (d->cat == 4 && tile->sources[i].oid == d->n) {
@@ -736,7 +738,7 @@ static obj_t *dsos_get(const obj_t *obj, const char *id, int flags)
 
 static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
-    int order, pix, i;
+    int order, pix, i, code;
     dsos_t *dsos = (void*)obj;
     tile_t *tile = NULL;
     survey_t *survey = NULL;
@@ -762,7 +764,7 @@ static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 
     // Try all surveys.
     DL_FOREACH(dsos->surveys, survey) {
-        tile = get_tile(dsos, survey, order, pix, false, NULL);
+        tile = get_tile(dsos, survey, order, pix, false, &code);
         if (!tile) continue;
         for (i = 0; i < tile->nb; i++) {
             if (tile->sources[i].oid == oid) {
@@ -777,30 +779,58 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
                      double max_mag, uint64_t hint, const char *source,
                      void *user, int (*f)(void *user, obj_t *obj))
 {
-    int order, pix, i, r, nb = 0;
+    int order, pix, i, r, code;
     dsos_t *dsos = (dsos_t*)obj;
     dso_t *dso;
     tile_t *tile;
-    survey_t *survey;
-    // Don't support listing without hint for the moment.
-    if (!hint) return 0;
-    // Get tile from hint (as nuniq).
-    order = log2(hint / 4) / 2;
-    pix = hint - 4 * (1 << (2 * (order)));
+    hips_iterator_t iter;
+    survey_t *survey = NULL;
 
-    DL_FOREACH(dsos->surveys, survey) {
-        tile = get_tile(dsos, survey, order, pix, true, NULL);
-        if (!tile) continue;
-        for (i = 0; i < tile->nb; i++) {
-            if (!f) continue;
-            nb++;
-            dso = dso_create(&tile->sources[i]);
-            r = f(user, (obj_t*)dso);
-            obj_release((obj_t*)dso);
-            if (r) break;
+    // Find the survey corresponding to the source.  If we don't find it,
+    // default to the first survey.
+    if (source) {
+        DL_FOREACH(dsos->surveys, survey) {
+            if (strcmp(survey->key, source) == 0)
+                break;
         }
     }
-    return nb;
+    if (!survey) survey = dsos->surveys;
+
+    // Without hint, we have to iter all the tiles.
+    if (!hint) {
+        hips_iter_init(&iter);
+        while (hips_iter_next(&iter, &order, &pix)) {
+            tile = get_tile(dsos, survey, order, pix, false, &code);
+            if (!tile || tile->mag_min >= max_mag) continue;
+            for (i = 0; i < tile->nb; i++) {
+                if (tile->sources[i].vmag > max_mag) continue;
+                if (!f) continue;
+                dso = dso_create(&tile->sources[i]);
+                r = f(user, (obj_t*)dso);
+                obj_release((obj_t*)dso);
+                if (r) break;
+            }
+            if (i < tile->nb) break;
+            hips_iter_push_children(&iter, order, pix);
+        }
+        return 0;
+    }
+
+    // Get tile from hint (as nuniq).
+    nuniq_to_pix(hint, &order, &pix);
+    tile = get_tile(dsos, survey, order, pix, false, &code);
+    if (!tile) {
+        if (!code) return MODULE_AGAIN; // Try again later.
+        return -1;
+    }
+    for (i = 0; i < tile->nb; i++) {
+        if (!f) continue;
+        dso = dso_create(&tile->sources[i]);
+        r = f(user, (obj_t*)dso);
+        obj_release((obj_t*)dso);
+        if (r) break;
+    }
+    return 0;
 }
 
 static int dsos_add_data_source(obj_t *obj, const char *url, const char *key)
