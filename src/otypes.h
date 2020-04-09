@@ -42,17 +42,6 @@ const char *otype_get_str(const char *otype);
 const char *otype_get_parent(const char *otype);
 
 /*
- * Function otype_get_digits
- * Return the otype four numbers form.
- *
- * Parameters:
- *   otype  - An otype condensed id string (e.g '**').  Can be shorter than
- *            4 bytes.  Doesn't have to be NULL terminated if exactly 4 bytes.
- *   out    - 4 bytes buffer that get the otype digits.
- */
-void otype_get_digits(const char *otype, uint8_t out[4]);
-
-/*
  * Function: otype_match
  * Test if an otype matches an other otype
  *

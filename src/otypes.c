@@ -76,12 +76,13 @@ const char *otype_get_parent(const char *id)
     return NULL;
 }
 
-void otype_get_digits(const char *id, uint8_t out[4])
+static bool otype_get_digits(const char *id, uint8_t out[4])
 {
     const entry_t *e;
     e = otype_get(id);
-    assert(e);
+    if (!e) return false;
     memcpy(out, e->n, 4);
+    return true;
 }
 
 /*
@@ -95,8 +96,8 @@ bool otype_match(const char *otype, const char *match)
     uint8_t o[4], m[4];
     int i;
     if (strcmp(otype, match) == 0) return true;
-    otype_get_digits(otype, o);
-    otype_get_digits(match, m);
+    if (!otype_get_digits(otype, o)) return false;
+    if (!otype_get_digits(match, m)) return false;
     for (i = 0; i < 4; i++) {
         if (m[i] == 0) return true;
         if (o[i] != m[i]) return false;
