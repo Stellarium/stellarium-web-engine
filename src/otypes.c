@@ -95,7 +95,7 @@ bool otype_match(const char *otype, const char *match)
 {
     uint8_t o[4], m[4];
     int i;
-    if (strcmp(otype, match) == 0) return true;
+    if (strncmp(otype, match, 4) == 0) return true;
     if (!otype_get_digits(otype, o)) return false;
     if (!otype_get_digits(match, m)) return false;
     for (i = 0; i < 4; i++) {
