@@ -367,7 +367,7 @@ static const unsigned char DATA_shaders_mesh_glsl[1455] __attribute__((aligned(4
 
 ASSET_REGISTER(shaders_mesh_glsl, "shaders/mesh.glsl", DATA_shaders_mesh_glsl, false)
 
-static const unsigned char DATA_shaders_planet_glsl[7280] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_glsl[7286] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -513,7 +513,7 @@ static const unsigned char DATA_shaders_planet_glsl[7280] __attribute__((aligned
     " * Parameters:\n"
     " *   p       - The surface point where we compute the illumination.\n"
     " */\n"
-    "float illumination(vec3 p)\n"
+    "float illumination(highp vec3 p)\n"
     "{\n"
     "#ifndef HAS_SHADOW\n"
     "    return 1.0;\n"

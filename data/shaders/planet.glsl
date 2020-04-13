@@ -143,7 +143,7 @@ float illumination_sphere(highp vec3 p, highp vec4 sphere,
  * Parameters:
  *   p       - The surface point where we compute the illumination.
  */
-float illumination(vec3 p)
+float illumination(highp vec3 p)
 {
 #ifndef HAS_SHADOW
     return 1.0;
