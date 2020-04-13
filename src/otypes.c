@@ -17,6 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "otypes.inl"
+
 // N_ macro for gettext parsing.
 #ifndef N_
 #define N_(s) s
@@ -33,16 +35,9 @@ static const entry_t ENTRIES[];
 
 static const entry_t *otype_get(const char *id)
 {
-    char t[4];
-    int i;
-    const entry_t *e;
-    strncpy(t, id, 4);
-    // Remove the spaces so that we can search for both '** ' and '**'.
-    for (i = 0; i < 4; i++) if (t[i] == ' ') t[i] = '\0';
-    for (e = &ENTRIES[0]; e->id[0]; e++) {
-        if (memcmp(t, e->id, 4) == 0) return e;
-    }
-    return NULL;
+    int idx;
+    idx = otypes_hash_search(id, strnlen(id, 4));
+    return idx != -1 ? &ENTRIES[idx] : NULL;
 }
 
 // Return informations about a type.
@@ -107,7 +102,6 @@ bool otype_match(const char *otype, const char *match)
 
 // STYLE-CHECK OFF
 
-// The actual database.  See 'tools/makeotype.py'.
 static const entry_t ENTRIES[] = {
 #define T(n0, n1, n2, n3, id, str) {{n0, n1, n2, n3}, id, str},
 T( 0, 0, 0, 0, "?"  , N_("Object of unknown nature"))
@@ -386,3 +380,20 @@ T(18, 0, 0, 0, "Coo", N_("Coordinates"))
 
 {}
 };
+
+#if COMPILE_TESTS
+
+#include "tests.h"
+
+static void test_otypes_hash(void)
+{
+    int i;
+    const entry_t *e;
+    for (i = 0, e = &ENTRIES[0]; e->id[0]; e++, i++) {
+        assert(otypes_hash_search(e->id, strnlen(e->id, 4)) == i);
+    }
+}
+
+TEST_REGISTER(NULL, test_otypes_hash, TEST_AUTO);
+
+#endif
