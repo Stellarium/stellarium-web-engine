@@ -911,6 +911,7 @@ static int stars_list(const obj_t *obj, observer_t *obs,
     hips_iterator_t iter;
     survey_t *survey = NULL;
 
+    if (isnan(max_mag)) max_mag = DBL_MAX;
     // Find the survey corresponding to the source.  If we don't find it,
     // default to the first survey.
     if (source) {

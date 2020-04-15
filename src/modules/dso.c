@@ -785,7 +785,9 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
     tile_t *tile;
     hips_iterator_t iter;
     survey_t *survey = NULL;
+    double vmag;
 
+    if (isnan(max_mag)) max_mag = DBL_MAX;
     // Find the survey corresponding to the source.  If we don't find it,
     // default to the first survey.
     if (source) {
@@ -803,7 +805,8 @@ static int dsos_list(const obj_t *obj, observer_t *obs,
             tile = get_tile(dsos, survey, order, pix, false, &code);
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
-                if (tile->sources[i].vmag > max_mag) continue;
+                vmag = tile->sources[i].vmag;
+                if (!isnan(vmag) && vmag > max_mag) continue;
                 if (!f) continue;
                 dso = dso_create(&tile->sources[i]);
                 r = f(user, (obj_t*)dso);
