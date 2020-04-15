@@ -345,21 +345,6 @@ int obj_get_designations(const obj_t *obj, void *user,
     return nb;
 }
 
-bool obj_is_visible(const obj_t *obj, const observer_t *obs)
-{
-    double pos[4], vmag;
-    obj_get_pos(obj, obs, FRAME_OBSERVED, pos);
-    if (pos[2] < 0) return false; // Below horizon.
-
-    // For artificial satellites, we also check the magnitude to filter out
-    // those that are eclipsed.
-    if (otype_match(obj->type, "Asa")) {
-        obj_get_info(obj, obs, INFO_VMAG, &vmag);
-        if (vmag >= 17) return false;
-    }
-
-    return true;
-}
 
 // XXX: cleanup this code.
 static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
