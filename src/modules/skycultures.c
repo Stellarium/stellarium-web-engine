@@ -37,7 +37,11 @@ typedef struct skyculture {
     constellation_infos_t *constellations;
     json_value      *imgs;
     int             parsed; // union of SK_ enum for each parsed file.
-    char            *description;  // html description if any.
+    char            *introduction; // introduction (html)
+    char            *description;  // description if any (html)
+    char            *references;   // references if any (html)
+    char            *authors;      // authors (html)
+    char            *licence;      // licence (html)
     json_value      *tour;
 } skyculture_t;
 
@@ -168,8 +172,10 @@ static int skyculture_update(obj_t *obj, double dt)
     char path[1024], *name;
     int code, r, i, arts_nb;
     json_value *doc;
-    const json_value *names = NULL, *features = NULL, *description = NULL,
+    const json_value *names = NULL, *features = NULL,
                      *tour = NULL, *edges = NULL;
+    const json_value *description = NULL, *introduction = NULL,
+                     *references = NULL, *authors = NULL, *licence = NULL;
     constellation_art_t *arts;
     bool active = (cult == cults->current);
 
@@ -196,7 +202,11 @@ static int skyculture_update(obj_t *obj, double dt)
         "name", JCON_STR(name),
         "?common_names", JCON_VAL(names),
         "?constellations", JCON_VAL(features),
-        "description", JCON_VAL(description),
+        "introduction", JCON_VAL(introduction),
+        "?description", JCON_VAL(description),
+        "?references", JCON_VAL(references),
+        "?authors", JCON_VAL(authors),
+        "?licence", JCON_VAL(licence),
         "?edges", JCON_VAL(edges),
         "?tour", JCON_VAL(tour),
     "}");
@@ -207,7 +217,13 @@ static int skyculture_update(obj_t *obj, double dt)
     }
 
     cult->info.name = strdup(name);
-    cult->description = json_to_string(description);
+    cult->introduction = json_to_string(introduction);
+    if (description)
+        cult->description = json_to_string(description);
+    if (references)
+        cult->references = json_to_string(references);
+    cult->authors = json_to_string(authors);
+    cult->licence = json_to_string(licence);
     if (names) cult->names = skyculture_parse_names_json(names);
     if (tour) cult->tour = json_copy(tour);
 
@@ -380,7 +396,6 @@ static int skycultures_list(const obj_t *obj, observer_t *obs,
 /*
  * Meta class declarations.
  */
-
 static obj_klass_t skyculture_klass = {
     .id     = "skyculture",
     .size   = sizeof(skyculture_t),
@@ -388,8 +403,13 @@ static obj_klass_t skyculture_klass = {
     .update = skyculture_update,
     .attributes = (attribute_t[]) {
         PROPERTY(name, TYPE_STRING_PTR, MEMBER(skyculture_t, info.name)),
+        PROPERTY(introduction, TYPE_STRING_PTR,
+                 MEMBER(skyculture_t, introduction)),
         PROPERTY(description, TYPE_STRING_PTR,
                  MEMBER(skyculture_t, description)),
+        PROPERTY(references, TYPE_STRING_PTR, MEMBER(skyculture_t, references)),
+        PROPERTY(authors, TYPE_STRING_PTR, MEMBER(skyculture_t, authors)),
+        PROPERTY(licence, TYPE_STRING_PTR, MEMBER(skyculture_t, licence)),
         PROPERTY(url, TYPE_STRING_PTR, MEMBER(skyculture_t, uri)),
         PROPERTY(tour, TYPE_JSON, MEMBER(skyculture_t, tour)),
         {}
