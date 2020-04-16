@@ -34,8 +34,9 @@ typedef struct {
 typedef struct constellation {
     obj_t       obj;
     constellation_infos_t info;
-    char        *name;
-    char        *name_translated;
+    char        *name_english;
+    char        *name_pronounce;
+    char        *name_native;
     char        *description;
     int         count;
     fader_t     visible;
@@ -129,9 +130,12 @@ static int constellation_init(obj_t *obj, json_value *args)
     info = (void*)(intptr_t)json_get_attr_i(args, "info_ptr", 0);
     if (!info) return 0;
     cons->info = *info;
-    cons->name = strdup(info->name);
-    cons->name_translated = *info->name_translated ?
-        strdup(info->name_translated) : strdup(info->name);
+    if (*info->name_english)
+        cons->name_english = strdup(info->name_english);
+    if (*info->name_pronounce)
+        cons->name_pronounce = strdup(info->name_pronounce);
+    if (*info->name_native)
+        cons->name_native = strdup(info->name_native);
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
@@ -171,7 +175,7 @@ static int constellation_create_stars(constellation_t *cons)
     cons->stars_pos = calloc(cons->count, sizeof(*cons->stars_pos));
     if (nb_err) {
         LOG_W("%d stars not found in constellation %s (%s)",
-              nb_err, cons->info.name, cons->info.id);
+              nb_err, cons->info.name_english, cons->info.id);
     }
     return 0;
 
@@ -244,7 +248,7 @@ static void update_image_mat(constellation_t *cons)
     return;
 
 error:
-    LOG_W("Cannot compute image for constellation %s", cons->name);
+    LOG_W("Cannot compute image for constellation %s", cons->name_english);
     texture_release(cons->img.tex);
     cons->img.tex = NULL;
 }
@@ -715,8 +719,16 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
         return 0;
 
-    label = cons->labels_display_style == LABEL_DISPLAY_NATIVE ?
-                con->name : con->name_translated;
+    label = NULL;
+    if (cons->labels_display_style == LABEL_DISPLAY_NATIVE) {
+        if (con->name_native)
+            label = con->name_native;
+        else if (con->name_pronounce)
+            label = con->name_pronounce;
+    }
+    if (!label) {
+        label = sys_translate("skyculture", con->name_english);
+    }
 
     if (!should_render_label(con, label, &painter, selected))
         return 0;
@@ -726,7 +738,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     else
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
 
-    labels_add_3d(sys_translate("skyculture", label), FRAME_ICRF,
+    labels_add_3d(label, FRAME_ICRF,
                   con->lines_cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
                   TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
@@ -806,8 +818,9 @@ static void constellation_del(obj_t *obj)
     }
     free(con->stars);
     free(con->stars_pos);
-    free(con->name);
-    free(con->name_translated);
+    free(con->name_english);
+    free(con->name_native);
+    free(con->name_pronounce);
 }
 
 static void constellation_get_2d_ellipse(const obj_t *obj,
@@ -835,7 +848,7 @@ static void constellation_get_designations(
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     constellation_t *cst = (void*)obj;
-    f(obj, user, "NAME", cst->name);
+    f(obj, user, "NAME", cst->name_english);
 }
 
 static int constellations_init(obj_t *obj, json_value *args)

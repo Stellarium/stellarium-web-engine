@@ -71,7 +71,7 @@ int constellation_set_image(obj_t *obj, const json_value *args);
 
 static void skyculture_activate(skyculture_t *cult)
 {
-    char id[32];
+    char id[256];
     int i;
     json_value *args;
     constellation_infos_t *cst;
@@ -194,8 +194,8 @@ static int skyculture_update(obj_t *obj, double dt)
 
     r = jcon_parse(doc, "{",
         "name", JCON_STR(name),
-        "?names", JCON_VAL(names),
-        "?features", JCON_VAL(features),
+        "?common_names", JCON_VAL(names),
+        "?constellations", JCON_VAL(features),
         "description", JCON_VAL(description),
         "?edges", JCON_VAL(edges),
         "?tour", JCON_VAL(tour),
@@ -212,11 +212,11 @@ static int skyculture_update(obj_t *obj, double dt)
     if (tour) cult->tour = json_copy(tour);
 
     if (!features) goto end;
-    cult->constellations = calloc(features->u.object.length,
+    cult->constellations = calloc(features->u.array.length,
                                   sizeof(*cult->constellations));
-    for (i = 0; i < features->u.object.length; i++) {
+    for (i = 0; i < features->u.array.length; i++) {
         r = skyculture_parse_feature_json(
-                features->u.object.values[i].value,
+                features->u.array.values[i],
                 &cult->constellations[cult->nb_constellations]);
         if (r) continue;
         cult->nb_constellations++;
@@ -224,11 +224,11 @@ static int skyculture_update(obj_t *obj, double dt)
 
     // For the moment we parse the art separatly, it should all be merged
     // int a 'feature'.
-    arts = calloc(features->u.object.length + 1, sizeof(*arts));
+    arts = calloc(features->u.array.length + 1, sizeof(*arts));
     arts_nb = 0;
-    for (i = 0; i < features->u.object.length; i++) {
+    for (i = 0; i < features->u.array.length; i++) {
         r = skyculture_parse_feature_art_json(
-                features->u.object.values[i].value, &arts[arts_nb]);
+                features->u.array.values[i], &arts[arts_nb]);
         if (r) continue;
         arts_nb++;
     }
@@ -323,7 +323,7 @@ const char *skycultures_get_name(obj_t *skycultures, int hip, char buf[128])
     if (!cult) return NULL;
     HASH_FIND(hh, cult->names, &hip, sizeof(hip), entry);
     if (!entry) return NULL;
-    strcpy(buf, entry->name);
+    strcpy(buf, entry->name_english);
     return buf;
 }
 

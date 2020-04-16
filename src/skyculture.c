@@ -116,22 +116,38 @@ static int parse_lines_json(const json_value *v, int lines[64][2])
 int skyculture_parse_feature_json(const json_value *v,
                                   constellation_infos_t *feature)
 {
-    const char *id, *name = NULL, *iau = NULL;
+    const char *id, *iau = NULL;
+    const char *english = NULL, *native = NULL, *pronounce = NULL;
     int r;
-    const json_value *lines = NULL, *description = NULL;
+    const json_value *lines = NULL, *description = NULL, *common_name = NULL;
 
     r = jcon_parse(v, "{",
         "id", JCON_STR(id),
         "?iau", JCON_STR(iau),
-        "?name", JCON_STR(name),
+        "?common_name", JCON_VAL(common_name),
         "?lines", JCON_VAL(lines),
         "?description", JCON_VAL(description),
     "}");
     if (r) goto error;
 
     snprintf(feature->id, sizeof(feature->id), "%s", id);
-    if (name)
-        snprintf(feature->name, sizeof(feature->name), "%s", name);
+    if (common_name) {
+        r = jcon_parse(common_name, "{",
+            "?english", JCON_STR(english),
+            "?native", JCON_STR(native),
+            "?pronounce", JCON_STR(pronounce),
+        "}");
+        if (r) goto error;
+        if (english)
+            snprintf(feature->name_english, sizeof(feature->name_english),
+                     "%s", english);
+        if (native)
+            snprintf(feature->name_native, sizeof(feature->name_native),
+                     "%s", native);
+        if (pronounce)
+            snprintf(feature->name_pronounce, sizeof(feature->name_pronounce),
+                     "%s", pronounce);
+    }
     if (description)
         feature->description = json_to_string(description);
     if (iau)
@@ -141,7 +157,6 @@ int skyculture_parse_feature_json(const json_value *v,
         feature->nb_lines = parse_lines_json(lines, feature->lines);
         if (feature->nb_lines < 0) goto error;
     }
-
     return 0;
 
 error:
@@ -195,9 +210,11 @@ error:
 
 skyculture_name_t *skyculture_parse_names_json(const json_value *v)
 {
-    int i, j, hip;
-    const char *key, *name;
+    int i, j, r, hip;
+    const char *key;
     skyculture_name_t *ret = NULL, *entry;
+    const json_value *names_obj;
+    const char *english = NULL, *native = NULL, *pronounce = NULL;
 
     if (v->type != json_object) goto error;
     for (i = 0; i < v->u.object.length; i++) {
@@ -211,10 +228,24 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
             goto error;
 
         for (j = 0; j < v->u.object.values[i].value->u.array.length; j++) {
-            name = v->u.object.values[i].value->u.array.values[j]->u.string.ptr;
+            names_obj = v->u.object.values[i].value->u.array.values[j];
+            r = jcon_parse(names_obj, "{",
+                "?english", JCON_STR(english),
+                "?native", JCON_STR(native),
+                "?pronounce", JCON_STR(pronounce),
+            "}");
+            if (r) goto error;
             entry = calloc(1, sizeof(*entry));
             entry->hip = hip;
-            snprintf(entry->name, sizeof(entry->name), "%s", name);
+            if (english)
+                snprintf(entry->name_english, sizeof(entry->name_english),
+                         "%s", english);
+            if (native)
+                snprintf(entry->name_native, sizeof(entry->name_native),
+                         "%s", native);
+            if (pronounce)
+                snprintf(entry->name_pronounce, sizeof(entry->name_pronounce),
+                         "%s", pronounce);
             HASH_ADD(hh, ret, hip, sizeof(entry->hip), entry);
 
             // Ignore alternative names for the moment!

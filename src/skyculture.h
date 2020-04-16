@@ -31,9 +31,10 @@
  */
 typedef struct constellation_infos
 {
-    char id[8];
-    char name[128];
-    char name_translated[128];
+    char id[128];
+    char name_english[128];
+    char name_native[128];
+    char name_pronounce[128];
     int  lines[64][2]; // star HIP number.
     int  nb_lines;
     double edges[64][2][2]; // Ra/dec B1875 boundaries polygon.
@@ -48,7 +49,7 @@ typedef struct constellation_infos
  */
 typedef struct constellation_art
 {
-    char cst[8];    // Id of the constellation.
+    char cst[128];  // Id of the constellation.
     char img[128];  // Name of the image file.
     struct {
         double  uv[2]; // Texture UV position.
@@ -66,7 +67,9 @@ typedef struct skyculture_name
 {
     UT_hash_handle  hh;
     int             hip;
-    char            name[128];
+    char            name_english[128];
+    char            name_native[128];
+    char            name_pronounce[128];
 } skyculture_name_t;
 
 
