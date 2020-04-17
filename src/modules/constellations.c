@@ -54,7 +54,7 @@ typedef struct constellation {
 
     double last_update; // Last update time in TT
     double (*stars_pos)[3]; // ICRF/observer pos for all stars.
-    double lines_cap[4]; // Bounding cap of the lines (ICRF)
+    double lines_cap[4]; // Bounding cap of the lines (ICRF). zero if no stars.
     double pvo[2][4];
 } constellation_t;
 
@@ -413,6 +413,7 @@ static int render_bounds(const constellation_t *con,
         painter.color[3] *= cons->bounds_visible.value * con->visible.value;
     }
     if (!painter.color[3]) return 0;
+    if (vec3_norm2(con->lines_cap) == 0) return 0;
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
         return 0;
 
@@ -454,6 +455,7 @@ static bool constellation_lines_in_view(const constellation_t *con,
 
     // First fast tests for the case when the constellation is not in the
     // screen at all.
+    if (vec3_norm2(con->lines_cap) == 0) return false;
     if (painter_is_cap_clipped(painter, FRAME_ICRF, con->lines_cap))
         return false;
 
@@ -542,6 +544,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
         painter.lines.width *= 2;
     }
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
+    if (vec3_norm2(con->lines_cap) == 0) return 0;
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
         return 0;
 
@@ -708,6 +711,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         painter.color[3] *= cons->labels_visible.value * con->visible.value;
     }
     if (painter.color[3] == 0.0) return 0;
+    if (vec3_norm2(con->lines_cap) == 0) return 0;
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
         return 0;
 
