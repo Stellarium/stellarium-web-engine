@@ -126,27 +126,30 @@ static void name_on_designation(const obj_t *obj, void *user, const char *dsgn)
     int current_score = 1;
     int *score = USER_GET(user, 0);
     char *out = USER_GET(user, 1);
+    int len = *(int*)USER_GET(user, 2);
     if (strncmp(dsgn, "NAME ", 5) == 0) {
         dsgn += 5;
         current_score = 2;
     }
     if (current_score <= *score) return;
     *score = current_score;
-    snprintf(out, 128, "%s", dsgn);
+    snprintf(out, len, "%s", dsgn);
 }
 
 /*
  * Function: obj_get_name
  * Return the given name for an object or its first designation.
  */
-const char *obj_get_name(const obj_t *obj, char buf[static 128])
+const char *obj_get_name(const obj_t *obj, char *buf, int len)
 {
     int score = 0;
+    assert(len > 0);
     buf[0] = '\0';
-    obj_get_designations(obj, USER_PASS(&score, buf), name_on_designation);
+    obj_get_designations(obj, USER_PASS(&score, buf, &len),
+                         name_on_designation);
     // If no designation is found, use the oid.
     if (!buf[0])
-        oid_to_str(obj->oid, buf);
+        oid_to_str(obj->oid, buf, len);
     return buf;
 }
 

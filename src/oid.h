@@ -48,4 +48,4 @@ uint64_t oid_get_index(uint64_t oid);
  *
  * Useful for debugging.
  */
-const char *oid_to_str(uint64_t oid, char buf[128]);
+const char *oid_to_str(uint64_t oid, char *buf, int len);

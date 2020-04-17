@@ -800,7 +800,7 @@ void core_on_key(int key, int action)
         }
     }
     if (key == ' ' && core->selection) {
-        LOG_D("lock to %s", obj_get_name(core->selection, buf));
+        LOG_D("lock to %s", obj_get_name(core->selection, buf, sizeof(buf)));
         obj_set_attr(&core->obj, "lock", core->selection);
     }
 }

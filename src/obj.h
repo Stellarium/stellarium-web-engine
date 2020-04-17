@@ -384,7 +384,7 @@ void obj_get_2d_ellipse(obj_t *obj, const observer_t *obs,
  * Function: obj_get_name
  * Return the given name for an object or its first designation.
  */
-const char *obj_get_name(const obj_t *obj, char out[S 128]);
+const char *obj_get_name(const obj_t *obj, char *buf, int len);
 
 /*
  * Function: obj_get_designations

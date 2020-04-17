@@ -65,13 +65,13 @@ uint64_t oid_get_index(uint64_t oid)
     return (uint32_t)oid;
 }
 
-const char *oid_to_str(uint64_t oid, char buf[128])
+const char *oid_to_str(uint64_t oid, char *buf, int len)
 {
     char cat[4];
     if (oid_is_gaia(oid)) {
-        snprintf(buf, 128, "Gaia DR2 %" PRIx64, oid);
+        snprintf(buf, len, "Gaia DR2 %" PRIx64, oid);
     } else {
-        snprintf(buf, 128, "%.4s %u",
+        snprintf(buf, len, "%.4s %u",
                  oid_get_catalog(oid, cat), (uint32_t)oid);
     }
     return buf;
