@@ -1077,7 +1077,7 @@ obj_t *obj_get_by_hip(int hip, int *code)
 {
     int order, pix, i;
     stars_t *stars = g_stars;
-    survey_t *survey = stars->surveys;
+    survey_t *survey;
     tile_t *tile;
 
     for (order = 0; order < 2; order++) {
@@ -1086,12 +1086,15 @@ obj_t *obj_get_by_hip(int hip, int *code)
             *code = 404;
             return NULL;
         }
-        tile = get_tile(stars, survey, order, pix, true, code);
-        if (code == 0) return NULL; // Still loading.
-        if (!tile) return NULL;
-        for (i = 0; i < tile->nb; i++) {
-            if (tile->sources[i].hip == hip) {
-                return (obj_t*)star_create(&tile->sources[i]);
+        for (survey = stars->surveys; survey; survey = survey->next) {
+            if (survey->is_gaia) continue;
+            tile = get_tile(stars, survey, order, pix, true, code);
+            if (code == 0) return NULL; // Still loading.
+            if (!tile) return NULL;
+            for (i = 0; i < tile->nb; i++) {
+                if (tile->sources[i].hip == hip) {
+                    return (obj_t*)star_create(&tile->sources[i]);
+                }
             }
         }
     }
