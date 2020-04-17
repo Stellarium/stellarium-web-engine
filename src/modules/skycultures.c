@@ -46,13 +46,33 @@ typedef struct skyculture {
 } skyculture_t;
 
 /*
+ * Enum: NAME_FORMAT_STYLE
+ * Flags that specify how to format a sky culture common name.
+ *
+ * Values:
+ *   NAME_AUTO          - Return the localized version of the english common
+ *                        name, fallback to pronounciation if not available,
+ *                        and native if not available.
+ *   NAME_NATIVE        - Return the native name if available, e.g. the chinese
+ *                        character version of the name, fallback to
+ *                        pronounciation if not available.
+ *   NAME_NATIVE_AND_PRONOUNCE - Return native name + pronounciation if
+ *                        available.
+ */
+enum {
+    NAME_AUTO                  = 0,
+    NAME_NATIVE                = 1 << 0,
+    NAME_NATIVE_AND_PRONOUNCE  = 1 << 1
+};
+
+/*
  * Type: skycultures_t
  * The module, that maintains the list of skycultures.
  */
 typedef struct skycultures_t {
     obj_t   obj;
     skyculture_t *current; // The current skyculture.
-    int     labels_display_style;
+    int     name_format_style;
 } skycultures_t;
 
 // Static instance.
@@ -343,11 +363,45 @@ const char *skycultures_get_name(const char* main_id, char *out, int out_size)
     skyculture_name_t *entry;
     assert(main_id);
     cult = g_skycultures->current;
+    const char* tr_name;
+
     if (!cult) return NULL;
     HASH_FIND_STR(cult->names, main_id, entry);
     if (!entry) return NULL;
-    snprintf(out, out_size, "%s", entry->name_english);
-    return out;
+    switch (g_skycultures->name_format_style) {
+    case NAME_AUTO:
+        if (*entry->name_english) {
+            tr_name = sys_translate("skyculture", entry->name_english);
+            snprintf(out, out_size, "%s", tr_name);
+            return out;
+        }
+        if (*entry->name_pronounce) {
+            snprintf(out, out_size, "%s", entry->name_pronounce);
+            return out;
+        }
+        if (*entry->name_native) {
+            snprintf(out, out_size, "%s", entry->name_native);
+            return out;
+        }
+        return NULL;
+    case NAME_NATIVE_AND_PRONOUNCE:
+        if (*entry->name_native && *entry->name_pronounce) {
+            snprintf(out, out_size, "%s (%s)", entry->name_native,
+                     entry->name_pronounce);
+            return out;
+        }
+        // If not both are present fallback to NAME_NATIVE
+    case NAME_NATIVE:
+        if (*entry->name_native) {
+            snprintf(out, out_size, "%s", entry->name_native);
+            return out;
+        }
+        if (*entry->name_pronounce) {
+            snprintf(out, out_size, "%s", entry->name_pronounce);
+            return out;
+        }
+    }
+    return NULL;
 }
 
 // Set/Get the current skyculture by id.
@@ -449,6 +503,8 @@ static obj_klass_t skycultures_klass = {
     .attributes = (attribute_t[]) {
         PROPERTY(current, TYPE_OBJ, MEMBER(skycultures_t, current)),
         PROPERTY(current_id, TYPE_STRING, .fn = skycultures_current_id_fn),
+        PROPERTY(name_format_style, TYPE_INT,
+                 MEMBER(skycultures_t, name_format_style)),
         {}
     },
 };

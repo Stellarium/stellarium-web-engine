@@ -463,7 +463,8 @@ obj_t *city_create(const char *name, const char *country_code,
 
 /*
  * Function: skyculture_get_name
- * Get the common name of a sky object in the current skyculture.
+ * Get the common name of a sky object in the current skyculture, translated
+ * for the current language.
  *
  * Parameters:
  *   main_id        - "HIP XXX" for bright stars, anything else for other types.
