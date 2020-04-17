@@ -28,21 +28,21 @@ enum {
 typedef struct skyculture {
     obj_t           obj;
     char            *uri;
-    struct  {
-        char        *name;
-        char        *author;
-    } info;
     int             nb_constellations;
     skyculture_name_t *names; // Hash table of oid -> names.
     constellation_infos_t *constellations;
     json_value      *imgs;
     int             parsed; // union of SK_ enum for each parsed file.
+    json_value      *tour;
+
+    // The following strings are all english text, with a matching translation
+    // in the associated sky culture translations files.
+    char            *name;         // name
     char            *introduction; // introduction (html)
     char            *description;  // description if any (html)
     char            *references;   // references if any (html)
     char            *authors;      // authors (html)
     char            *licence;      // licence (html)
-    json_value      *tour;
 } skyculture_t;
 
 /*
@@ -216,7 +216,7 @@ static int skyculture_update(obj_t *obj, double dt)
         return -1;
     }
 
-    cult->info.name = strdup(name);
+    cult->name = strdup(name);
     cult->introduction = json_to_string(introduction);
     if (description)
         cult->description = json_to_string(description);
@@ -274,13 +274,13 @@ static void skycultures_gui(obj_t *obj, int location)
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Skycultures")) {
         MODULE_ITER(obj, cult, "skyculture") {
-            if (!cult->info.name) continue;
-            if (strcmp(cult->info.name, cults->current->info.name) == 0) {
+            if (!cult->name) continue;
+            if (strcmp(cult->name, cults->current->name) == 0) {
                 active = true;
             } else {
                 active = false;
             }
-            res = gui_toggle(cult->info.name, &active);
+            res = gui_toggle(cult->name, &active);
             if (res) {
                 obj_set_attr((obj_t*)cults, "current_id", cult->obj.id);
             }
@@ -402,7 +402,7 @@ static obj_klass_t skyculture_klass = {
     .flags  = 0,
     .update = skyculture_update,
     .attributes = (attribute_t[]) {
-        PROPERTY(name, TYPE_STRING_PTR, MEMBER(skyculture_t, info.name)),
+        PROPERTY(name, TYPE_STRING_PTR, MEMBER(skyculture_t, name)),
         PROPERTY(introduction, TYPE_STRING_PTR,
                  MEMBER(skyculture_t, introduction)),
         PROPERTY(description, TYPE_STRING_PTR,
