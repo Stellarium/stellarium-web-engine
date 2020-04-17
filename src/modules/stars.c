@@ -271,14 +271,13 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
 static bool star_get_common_name(const star_data_t *s, char *out, int size)
 {
     const char *name;
-    char buf[128];
-    const obj_t * skycultures = core_get_module("skycultures");
-    name = skycultures_get_name(skycultures, s->hip, buf);
-    if (name) {
-        snprintf(out, size, "%s", sys_translate("skyculture", name));
-        return true;
-    }
-    return false;
+    char hip_buf[128];
+
+    if (s->hip == 0)
+        return false;
+    snprintf(hip_buf, sizeof(hip_buf), "HIP %d", s->hip);
+    name = skycultures_get_name(hip_buf, out, size);
+    return name != NULL;
 }
 
 

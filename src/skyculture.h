@@ -66,7 +66,8 @@ typedef struct constellation_art
 typedef struct skyculture_name
 {
     UT_hash_handle  hh;
-    int             hip;
+    // For bright stars use "HIP XXXX", anything else for other types.
+    char            main_id[128];
     char            name_english[128];
     char            name_native[128];
     char            name_pronounce[128];

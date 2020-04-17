@@ -210,7 +210,7 @@ error:
 
 skyculture_name_t *skyculture_parse_names_json(const json_value *v)
 {
-    int i, j, r, hip;
+    int i, j, r;
     const char *key;
     skyculture_name_t *ret = NULL, *entry;
     const json_value *names_obj;
@@ -218,11 +218,7 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
 
     if (v->type != json_object) goto error;
     for (i = 0; i < v->u.object.length; i++) {
-        hip = 0;
         key = v->u.object.values[i].name;
-        if (strncmp(key, "HIP ", 4) == 0)
-            hip = atoi(key + 4);
-        if (!hip) goto error;
 
         if (v->u.object.values[i].value->type != json_array)
             goto error;
@@ -236,7 +232,7 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
             "}");
             if (r) goto error;
             entry = calloc(1, sizeof(*entry));
-            entry->hip = hip;
+            snprintf(entry->main_id, sizeof(entry->main_id), "%s", key);
             if (english)
                 snprintf(entry->name_english, sizeof(entry->name_english),
                          "%s", english);
@@ -246,7 +242,7 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
             if (pronounce)
                 snprintf(entry->name_pronounce, sizeof(entry->name_pronounce),
                          "%s", pronounce);
-            HASH_ADD(hh, ret, hip, sizeof(entry->hip), entry);
+            HASH_ADD_STR(ret, main_id, entry);
 
             // Ignore alternative names for the moment!
             break;

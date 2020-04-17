@@ -29,7 +29,7 @@ typedef struct skyculture {
     obj_t           obj;
     char            *uri;
     int             nb_constellations;
-    skyculture_name_t *names; // Hash table of oid -> names.
+    skyculture_name_t *names; // Hash table of identifier -> common names.
     constellation_infos_t *constellations;
     json_value      *imgs;
     int             parsed; // union of SK_ enum for each parsed file.
@@ -55,7 +55,8 @@ typedef struct skycultures_t {
     int     labels_display_style;
 } skycultures_t;
 
-
+// Static instance.
+static skycultures_t *g_skycultures = NULL;
 
 static void skyculture_deactivate(skyculture_t *cult)
 {
@@ -298,6 +299,14 @@ static int skycultures_update(obj_t *obj, double dt)
     return 0;
 }
 
+static int skycultures_init(obj_t *obj, json_value *args)
+{
+    skycultures_t *scs = (skycultures_t*)obj;
+    assert(!g_skycultures);
+    g_skycultures = scs;
+    return 0;
+}
+
 static int skycultures_add_data_source(
         obj_t *obj, const char *url, const char *key)
 {
@@ -318,29 +327,27 @@ static int skycultures_add_data_source(
 
 /*
  * Function: skyculture_get_name
- * Get the name of a star in the current skyculture.
+ * Get the common name of a sky object in the current skyculture.
  *
  * Parameters:
- *   skycultures    - A skyculture module.
- *   hip            - HIP number.
- *   buf            - A text buffer that get filled with the name.
+ *   main_id        - "HIP XXX" for bright stars, anything else for other types.
+ *   out            - A text buffer that get filled with the name.
+ *   out_size       - size of the out buffer.
  *
  * Return:
  *   NULL if no name was found.  A pointer to the passed buffer otherwise.
  */
-const char *skycultures_get_name(obj_t *skycultures, int hip, char buf[128])
+const char *skycultures_get_name(const char* main_id, char *out, int out_size)
 {
     skyculture_t *cult;
     skyculture_name_t *entry;
-    if (!skycultures) return NULL;
-    if (!hip) return NULL;
-    assert(strcmp(skycultures->klass->id, "skycultures") == 0);
-    cult = ((skycultures_t*)skycultures)->current;
+    assert(main_id);
+    cult = g_skycultures->current;
     if (!cult) return NULL;
-    HASH_FIND(hh, cult->names, &hip, sizeof(hip), entry);
+    HASH_FIND_STR(cult->names, main_id, entry);
     if (!entry) return NULL;
-    strcpy(buf, entry->name_english);
-    return buf;
+    snprintf(out, out_size, "%s", entry->name_english);
+    return out;
 }
 
 // Set/Get the current skyculture by id.
@@ -380,11 +387,22 @@ static int skycultures_list(const obj_t *obj, observer_t *obs,
     obj_t *star;
     int code;
     skyculture_name_t *entry, *tmp;
+    int hip;
     if (!cult) return 0;
 
     HASH_ITER(hh, cult->names, entry, tmp) {
-        star = obj_get_by_hip(entry->hip, &code);
-        if (code == 0) return MODULE_AGAIN;
+        hip = 0;
+        // Special case for HIP stars (most common case)
+        if (strncmp(entry->main_id, "HIP ", 4) == 0) {
+            hip = atoi(entry->main_id + 4);
+            if (hip) {
+                star = obj_get_by_hip(hip, &code);
+                if (code == 0) return MODULE_AGAIN;
+            }
+        }
+        if (hip == 0) {
+            star = obj_get(NULL, entry->main_id, 0);
+        }
         if (!star) continue;
         f(user, star);
         obj_release(star);
@@ -423,6 +441,7 @@ static obj_klass_t skycultures_klass = {
     .size           = sizeof(skycultures_t),
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .gui            = skycultures_gui,
+    .init           = skycultures_init,
     .update         = skycultures_update,
     .add_data_source    = skycultures_add_data_source,
     .create_order   = 30, // After constellations.

@@ -463,17 +463,17 @@ obj_t *city_create(const char *name, const char *country_code,
 
 /*
  * Function: skyculture_get_name
- * Get the name of a star in the current skyculture.
+ * Get the common name of a sky object in the current skyculture.
  *
  * Parameters:
- *   skycultures    - A skyculture module.
- *   hip            - HIP number.
- *   buf            - A text buffer that get filled with the name.
+ *   main_id        - "HIP XXX" for bright stars, anything else for other types.
+ *   out            - A text buffer that get filled with the name.
+ *   out_size       - size of the out buffer.
  *
  * Return:
  *   NULL if no name was found.  A pointer to the passed buffer otherwise.
  */
-const char *skycultures_get_name(obj_t *skycultures, int hip, char buf[128]);
+const char *skycultures_get_name(const char *main_id, char *out, int out_size);
 
 /*
  * Function: core_add_task
