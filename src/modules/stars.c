@@ -290,7 +290,7 @@ static bool star_get_common_name(const star_data_t *s, char *out, int size)
  *   s      - A star_data_t struct instance.
  *   out    - Output buffer.
  *   size   - Output buffer size.
- *   flag   - Combination of BAYER_FLAGS
+ *   flags  - Combination of BAYER_FLAGS
  *
  * Return:
  *   true if a label was found, false otherwise.
