@@ -35,9 +35,14 @@ typedef struct skyculture {
     int             parsed; // union of SK_ enum for each parsed file.
     json_value      *tour;
 
+    // True if the common names for this sky culture should fallback to the
+    // international names. Useful for cultures based on the western family.
+    bool fallback_to_international_names;
+
     // The following strings are all english text, with a matching translation
     // in the associated sky culture translations files.
-    char            *name;         // name
+    char            *name;         // name (plain text)
+    char            *region;       // region (plain text)
     char            *introduction; // introduction (html)
     char            *description;  // description if any (html)
     char            *references;   // references if any (html)
@@ -190,7 +195,7 @@ static int skyculture_update(obj_t *obj, double dt)
     const char *json;
     skyculture_t *cult = (skyculture_t*)obj;
     skycultures_t *cults = (skycultures_t*)obj->parent;
-    char path[1024], *name;
+    char path[1024], *name, *region;
     int code, r, i, arts_nb;
     json_value *doc;
     const json_value *names = NULL, *features = NULL,
@@ -221,6 +226,9 @@ static int skyculture_update(obj_t *obj, double dt)
 
     r = jcon_parse(doc, "{",
         "name", JCON_STR(name),
+        "region", JCON_STR(region),
+        "?fallback_to_international_names",
+                   JCON_BOOL(cult->fallback_to_international_names, 0),
         "?common_names", JCON_VAL(names),
         "?constellations", JCON_VAL(features),
         "introduction", JCON_VAL(introduction),
@@ -238,6 +246,7 @@ static int skyculture_update(obj_t *obj, double dt)
     }
 
     cult->name = strdup(name);
+    cult->region = strdup(region);
     cult->introduction = json_to_string(introduction);
     if (description)
         cult->description = json_to_string(description);
@@ -475,6 +484,9 @@ static obj_klass_t skyculture_klass = {
     .update = skyculture_update,
     .attributes = (attribute_t[]) {
         PROPERTY(name, TYPE_STRING_PTR, MEMBER(skyculture_t, name)),
+        PROPERTY(region, TYPE_STRING_PTR, MEMBER(skyculture_t, region)),
+        PROPERTY(fallback_to_international_names, TYPE_BOOL,
+                 MEMBER(skyculture_t, fallback_to_international_names)),
         PROPERTY(introduction, TYPE_STRING_PTR,
                  MEMBER(skyculture_t, introduction)),
         PROPERTY(description, TYPE_STRING_PTR,
