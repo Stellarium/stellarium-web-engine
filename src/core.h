@@ -477,6 +477,16 @@ obj_t *city_create(const char *name, const char *country_code,
 const char *skycultures_get_name(const char *main_id, char *out, int out_size);
 
 /*
+ * Function: skycultures_fallback_to_international_names
+ * Return whether a sky culture includes the international sky objects names as
+ * as fallback when no common names is explicitly specified for a given object.
+ *
+ * Return:
+ *   True or false.
+ */
+bool skycultures_fallback_to_international_names();
+
+/*
  * Function: core_add_task
  * Add a function that will be executed at each frame.
  *

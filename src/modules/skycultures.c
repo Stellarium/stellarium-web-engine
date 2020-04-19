@@ -413,6 +413,20 @@ const char *skycultures_get_name(const char* main_id, char *out, int out_size)
     return NULL;
 }
 
+/*
+ * Function: skycultures_fallback_to_international_names
+ * Return whether a sky culture includes the international sky objects names as
+ * as fallback when no common names is explicitly specified for a given object.
+ *
+ * Return:
+ *   True or false.
+ */
+bool skycultures_fallback_to_international_names() {
+    if (!g_skycultures->current)
+        return false;
+    return g_skycultures->current->fallback_to_international_names;
+}
+
 // Set/Get the current skyculture by id.
 static json_value *skycultures_current_id_fn(
         obj_t *obj, const attribute_t *attr, const json_value *args)
