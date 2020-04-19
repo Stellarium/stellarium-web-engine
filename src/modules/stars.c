@@ -256,9 +256,9 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
 }
 
 /*
- * Function: star_get_common_name
- * Return the common name for a given star. The name can come from the sky
- * culture if available and is translated in the current locale.
+ * Function: star_get_skycultural_name
+ * Return the common name for a given star in the current sky culture and
+ * translated in the current locale.
  *
  * Parameters:
  *   s      - A star_data_t struct instance.
@@ -268,11 +268,12 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
  * Return:
  *   true if a label was found, false otherwise.
  */
-static bool star_get_common_name(const star_data_t *s, char *out, int size)
+static bool star_get_skycultural_name(const star_data_t *s, char *out, int size)
 {
     const char *name;
     char hip_buf[128];
 
+    // Only hipparcos stars have names in sky cultures
     if (s->hip == 0)
         return false;
     snprintf(hip_buf, sizeof(hip_buf), "HIP %d", s->hip);
@@ -280,6 +281,10 @@ static bool star_get_common_name(const star_data_t *s, char *out, int size)
     return name != NULL;
 }
 
+
+static bool name_is_bayer(const char* name) {
+    return strncmp(name, "* ", 2) == 0 || strncmp(name, "V* ", 3) == 0;
+}
 
 /*
  * Function: star_get_bayer_name
@@ -302,7 +307,7 @@ static bool star_get_bayer_name(const star_data_t *s, char *out, int size,
         return false;
 
     while (*names) {
-        if (strncmp(names, "* ", 2) != 0)
+        if (!name_is_bayer(names))
             names += strlen(names) + 1;
         else
             break;
@@ -325,6 +330,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     int effects = TEXT_FLOAT;
     char buf[128];
     const double hints_mag_offset = g_stars->hints_mag_offset;
+    const int long_flag = DSGN_TRANSLATE | BAYER_LATIN_LONG | BAYER_CONST_LONG;
 
     double lim_mag = painter->hints_limit_mag - 5 + hints_mag_offset;
     double lim_mag2 = painter->hints_limit_mag - 7.5 + hints_mag_offset;
@@ -346,21 +352,32 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     // Names for fainter stars tend to be suspiscious, and just
     // pollute the screen space.
     if (s->vmag < max(3, lim_mag3))
-        star_get_common_name(s, buf, sizeof(buf));
+        star_get_skycultural_name(s, buf, sizeof(buf));
+
+    // Without international fallback, just stop here if we didn't find a name
+    if (!buf[0] && !skycultures_fallback_to_international_names())
+        return;
+
+    // Fallback to international names
+    if (!buf[0] && s->vmag < max(3, lim_mag3)) {
+        if (s->names && s->names[0] && (strncmp(s->names, "NAME ", 5) == 0
+                                        || name_is_bayer(s->names)))
+            designation_cleanup(s->names, buf, sizeof(buf), long_flag);
+    }
 
     // If the star is selected, display longer Bayer name
     // Otherwise, only the letter/number to save space.
     if (!buf[0]) {
-        star_get_bayer_name(s, buf, sizeof(buf), selected ?
-                                BAYER_LATIN_LONG | BAYER_CONST_LONG : 0);
+        star_get_bayer_name(s, buf, sizeof(buf),
+                            selected ? long_flag : DSGN_TRANSLATE);
     }
 
     // If there is no bayer name, fallback to default name, but only for
     // stars a bit brighter to avoid crowding the field.
     if (!buf[0] && (s->vmag <= lim_mag2 || selected)) {
         if (s->names && s->names[0])
-            designation_cleanup(s->names, buf, sizeof(buf), selected ?
-                                    BAYER_LATIN_LONG | BAYER_CONST_LONG : 0);
+            designation_cleanup(s->names, buf, sizeof(buf),
+                                selected ? long_flag : DSGN_TRANSLATE);
     }
 
     if (!buf[0]) return;
@@ -424,7 +441,7 @@ void star_get_designations(
 
     // Localized common name if available.
     // Note: should this be on top of the list?
-    if (star_get_common_name(s, buf, sizeof(buf)))
+    if (star_get_skycultural_name(s, buf, sizeof(buf)))
         f(obj, user, "NAME", buf);
 }
 
