@@ -134,6 +134,7 @@ static int jcon_parse_(json_value *v, va_list *ap)
     union {
         float *f;
         int *i;
+        bool *b;
         double *d;
         const char **s;
         json_value **v;
@@ -170,6 +171,15 @@ static int jcon_parse_(json_value *v, va_list *ap)
         if (!v) return 0;
         if (v->type != json_integer) return -1;
         *ptr.i = v->u.integer;
+        return 0;
+    }
+
+    if (token[0] == 'b') {
+        ptr.b = va_arg(*ap, bool*);
+        *ptr.b = va_arg(*ap, int);
+        if (!v) return 0;
+        if (v->type != json_boolean) return -1;
+        *ptr.b = v->u.boolean;
         return 0;
     }
 

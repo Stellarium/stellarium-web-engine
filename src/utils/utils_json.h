@@ -81,6 +81,7 @@ json_value *json_copy(json_value *val);
 
 #define JCON_NEW(...) jcon_new(0, __VA_ARGS__)
 #define JCON_INT(v, d) "i", &(v), ((int)d)
+#define JCON_BOOL(v, d) "b", &(v), ((bool)d)
 #define JCON_FLOAT(v, d) "f", &(v), ((double)d)
 #define JCON_DOUBLE(v, d) "d", &(v), ((double)d)
 #define JCON_STR(v) "s", &(v)
