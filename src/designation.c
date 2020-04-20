@@ -402,7 +402,7 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 
     // NAME designation with translation.
     if ((flags & DSGN_TRANSLATE) && strncmp(dsgn, "NAME ", 5) == 0) {
-        snprintf(out, size, "%s", sys_translate("skyculture", dsgn + 5));
+        snprintf(out, size, "%s", sys_translate("sky", dsgn + 5));
         return;
     }
 
