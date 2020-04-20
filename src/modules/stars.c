@@ -412,24 +412,7 @@ void star_get_designations(
     star_t *star = (star_t*)obj;
     const star_data_t *s = &star->data;
     const char *names = s->names;
-    const char *name;
     char buf[128];
-    obj_t *skycultures;
-
-    /*
-     * Now the stars designation are supposed to be all the in 'names'
-     * attributes.  For the bundled survey that doesn't have it, we still
-     * do it manually.
-     */
-    if (!names) {
-        skycultures = core_get_module("skycultures");
-        name = skycultures_get_name(skycultures, s->hip, buf);
-        if (name) f(obj, user, "NAME", name);
-        if (s->hip) {
-            snprintf(buf, sizeof(buf), "%d", s->hip);
-            f(obj, user, "HIP", buf);
-        }
-    }
 
     while (names && *names) {
         f(obj, user, NULL, names);
