@@ -330,7 +330,8 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     int effects = TEXT_FLOAT;
     char buf[128];
     const double hints_mag_offset = g_stars->hints_mag_offset;
-    const int long_flag = DSGN_TRANSLATE | BAYER_LATIN_LONG | BAYER_CONST_LONG;
+    int flags = DSGN_TRANSLATE;
+    const char *first_name = NULL;
 
     double lim_mag = painter->hints_limit_mag - 5 + hints_mag_offset;
     double lim_mag2 = painter->hints_limit_mag - 7.5 + hints_mag_offset;
@@ -340,47 +341,40 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
     if (!selected && s->vmag > lim_mag)
         return;
 
-    if (selected) {
-        vec4_copy(white, label_color);
-        effects = TEXT_BOLD;
-    }
-    radius += LABEL_SPACING;
-
     buf[0] = 0;
-    // Display the current skyculture's star name, but only
-    // for bright stars (mag < 3) or when very zoomed.
-    // Names for fainter stars tend to be suspiscious, and just
-    // pollute the screen space.
-    if (s->vmag < max(3, lim_mag3))
-        star_get_skycultural_name(s, buf, sizeof(buf));
+
+    // Display the current skyculture's star name
+    star_get_skycultural_name(s, buf, sizeof(buf));
 
     // Without international fallback, just stop here if we didn't find a name
     if (!buf[0] && !skycultures_fallback_to_international_names())
         return;
 
-    // Fallback to international names
-    if (!buf[0] && s->vmag < max(3, lim_mag3)) {
-        if (s->names && s->names[0] && (strncmp(s->names, "NAME ", 5) == 0
-                                        || name_is_bayer(s->names)))
-            designation_cleanup(s->names, buf, sizeof(buf), long_flag);
-    }
+    first_name = s->names && s->names[0] ? s->names : NULL;
 
-    // If the star is selected, display longer Bayer name
-    // Otherwise, only the letter/number to save space.
-    if (!buf[0]) {
-        star_get_bayer_name(s, buf, sizeof(buf),
-                            selected ? long_flag : DSGN_TRANSLATE);
-    }
-
-    // If there is no bayer name, fallback to default name, but only for
-    // stars a bit brighter to avoid crowding the field.
-    if (!buf[0] && (s->vmag <= lim_mag2 || selected)) {
-        if (s->names && s->names[0])
-            designation_cleanup(s->names, buf, sizeof(buf),
-                                selected ? long_flag : DSGN_TRANSLATE);
+    // Fallback to international common names/bayer names
+    if (first_name && !buf[0]) {
+        if (selected || s->vmag < max(3, lim_mag2)) {
+            // The star is quite bright or selected, displat a name
+            if (selected || s->vmag < max(3, lim_mag3)) {
+                // Use long version of bayer name for very bright stars
+                flags |= BAYER_LATIN_LONG | BAYER_CONST_LONG;
+            }
+            designation_cleanup(first_name, buf, sizeof(buf), flags);
+        } else {
+            // From here we know the star is not selected and not very bright
+            // just display the small form of bayer name to save space.
+            star_get_bayer_name(s, buf, sizeof(buf), flags);
+        }
     }
 
     if (!buf[0]) return;
+
+    if (selected) {
+        vec4_copy(white, label_color);
+        effects = TEXT_BOLD;
+    }
+    radius += LABEL_SPACING;
 
     labels_add_3d(buf, frame, pos, true,
                  radius, FONT_SIZE_BASE, label_color, 0, 0,
