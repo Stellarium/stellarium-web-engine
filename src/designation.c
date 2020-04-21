@@ -148,7 +148,7 @@ static const char *CSTS[88][2] = {
  *   False if the designation doesn't match a bayer name.
  */
 static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
-                                    int *nb, char** suffix)
+                                    int *nb, const char **suffix)
 {
     int i;
     char *endptr;
@@ -221,7 +221,7 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
  *   False if the designation doesn't match a flamsteed name
  */
 static bool designation_parse_flamsteed(const char *dsgn, int *cst,
-                                        int *flamsteed, char** suffix)
+                                        int *flamsteed, const char **suffix)
 {
     int i;
     char *endptr;
@@ -275,7 +275,7 @@ static bool designation_parse_flamsteed(const char *dsgn, int *cst,
  *   False if the designation doesn't match a variable star.
  */
 static bool designation_parse_variable_star(
-        const char *dsgn, int *cst, char var[8], char **suffix)
+        const char *dsgn, int *cst, char var[8], const char **suffix)
 {
     int i;
 
@@ -348,15 +348,13 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     const char *remove[] = {"NAME ", "* ", "Cl ", "Cl* ", "** ", "MPC "};
     const char *greek;
     const char *cstname;
-    char *suffix;
+    const char *suffix;
     char tmp[64], tmp_letter[32];
     char exponent[256], var[8];
 
     if (designation_parse_bayer(dsgn, &cst, &g, &nb, &suffix)) {
         exponent[0] = 0;
         tmp[0] = 0;
-        if (!suffix)
-            suffix = "";
         if (g >= 'a' && g <= 'z') {
             snprintf(tmp_letter, sizeof(tmp_letter), "%c", g);
             greek = tmp_letter;
@@ -379,8 +377,6 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
         return;
     }
     if (designation_parse_flamsteed(dsgn, &cst, &g, &suffix)) {
-        if (!suffix)
-            suffix = "";
         if (flags & BAYER_CONST_SHORT || flags & BAYER_CONST_LONG) {
             cstname = (flags & BAYER_CONST_SHORT) ? CSTS[cst][0] : CSTS[cst][1];
             snprintf(out, size, "%d %s%s", g, cstname, suffix);
@@ -442,7 +438,7 @@ bool designations_get_tyc(const char *dsgns, int *tyc1, int *tyc2, int *tyc3)
 static void test_designations(void)
 {
     char buf[128];
-    char *suffix;
+    const char *suffix;
     int n, cst, nb;
     int tyc1, tyc2, tyc3;
     bool r;
