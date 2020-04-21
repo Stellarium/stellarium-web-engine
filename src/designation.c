@@ -140,7 +140,8 @@ static const char *CSTS[88][2] = {
  * Params:
  *   dsgn   - A designation (eg: '* alf Aqr')
  *   cst    - Output constellation id
- *   bayer  - Output bayer number (1 -> α, 2 -> β, etc.)
+ *   bayer  - Output bayer number (1 -> α, 2 -> β, etc.)  Can also be set
+ *            to a single ASCII value of a letter.
  *   nb     - Output extra number to use as exponent. 0 means no exponent.
  *   suffix - Output extra suffix to append after the bayer name.
  *
@@ -175,7 +176,7 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
     }
     if (i == 25) {
         // No greek letter were found, try a letter
-        if (*dsgn >= 'a' && *dsgn <= 'z') {
+        if ((*dsgn >= 'a' && *dsgn <= 'z') || (*dsgn >= 'A' && *dsgn <= 'Z')) {
             *bayer = *dsgn;
             dsgn++;
         } else {
@@ -355,7 +356,7 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     if (designation_parse_bayer(dsgn, &cst, &g, &nb, &suffix)) {
         exponent[0] = 0;
         tmp[0] = 0;
-        if (g >= 'a' && g <= 'z') {
+        if (g >= 'A' && g <= 'z') {
             snprintf(tmp_letter, sizeof(tmp_letter), "%c", g);
             greek = tmp_letter;
         } else {
@@ -495,6 +496,10 @@ static void test_designations(void)
     assert(strcmp(buf, "α Aqr") == 0);
     designation_cleanup("V* alf Aqr", buf, sizeof(buf), BAYER_CONST_SHORT);
     assert(strcmp(buf, "α Aqr") == 0);
+    designation_cleanup("* A Pup", buf, sizeof(buf), BAYER_CONST_LONG);
+    assert(strcmp(buf, "A Puppis") == 0);
+    designation_cleanup("* K Vel", buf, sizeof(buf), BAYER_CONST_LONG);
+    assert(strcmp(buf, "K Velorum") == 0);
 
     r = designations_get_tyc("TYC 8841-489-2\0", &tyc1, &tyc2, &tyc3);
     assert(r && tyc1 == 8841 && tyc2 == 489 && tyc3 == 2);
