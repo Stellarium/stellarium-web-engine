@@ -119,7 +119,7 @@ static double lookup_score(const item_t *item, const double pos[static 2],
     // XXX: probably need to change this algo.
     if (dist > max_dist) return 0.0;
     ret = max_dist - fabs(dist);
-    ret += min(area, 10); // Up to 10 pixels advantage for larger objects.
+    ret += min(area, 20); // Up to 20 pixels advantage for larger objects.
     return ret;
 
 }
