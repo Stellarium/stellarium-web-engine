@@ -32,9 +32,6 @@
 typedef struct constellation_infos
 {
     char id[128];
-    char name_english[128];
-    char name_native[128];
-    char name_pronounce[128];
     int  lines[64][2]; // star HIP number.
     int  nb_lines;
     double edges[64][2][2]; // Ra/dec B1875 boundaries polygon.
@@ -92,7 +89,8 @@ int skyculture_parse_edges(const json_value *edges,
 
 // Experimental parsing functions for the new json format.
 
-int skyculture_parse_feature_json(const json_value *v,
+int skyculture_parse_feature_json(skyculture_name_t **names_hash,
+                                  const json_value *v,
                                   constellation_infos_t *feature);
 
 int skyculture_parse_feature_art_json(const json_value *v,

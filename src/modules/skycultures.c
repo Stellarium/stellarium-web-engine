@@ -262,6 +262,7 @@ static int skyculture_update(obj_t *obj, double dt)
                                   sizeof(*cult->constellations));
     for (i = 0; i < features->u.array.length; i++) {
         r = skyculture_parse_feature_json(
+                &cult->names,
                 features->u.array.values[i],
                 &cult->constellations[cult->nb_constellations]);
         if (r) continue;

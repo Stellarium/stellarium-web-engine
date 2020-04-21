@@ -113,13 +113,15 @@ static int parse_lines_json(const json_value *v, int lines[64][2])
     return nb;
 }
 
-int skyculture_parse_feature_json(const json_value *v,
+int skyculture_parse_feature_json(skyculture_name_t** names_hash,
+                                  const json_value *v,
                                   constellation_infos_t *feature)
 {
     const char *id, *iau = NULL;
     const char *english = NULL, *native = NULL, *pronounce = NULL;
     int r;
     const json_value *lines = NULL, *description = NULL, *common_name = NULL;
+    skyculture_name_t *entry;
 
     r = jcon_parse(v, "{",
         "id", JCON_STR(id),
@@ -131,6 +133,8 @@ int skyculture_parse_feature_json(const json_value *v,
     if (r) goto error;
 
     snprintf(feature->id, sizeof(feature->id), "%s", id);
+
+    // Loads common name directly in the names hash
     if (common_name) {
         r = jcon_parse(common_name, "{",
             "?english", JCON_STR(english),
@@ -138,15 +142,18 @@ int skyculture_parse_feature_json(const json_value *v,
             "?pronounce", JCON_STR(pronounce),
         "}");
         if (r) goto error;
+        entry = calloc(1, sizeof(*entry));
+        snprintf(entry->main_id, sizeof(entry->main_id), "%s", id);
         if (english)
-            snprintf(feature->name_english, sizeof(feature->name_english),
+            snprintf(entry->name_english, sizeof(entry->name_english),
                      "%s", english);
         if (native)
-            snprintf(feature->name_native, sizeof(feature->name_native),
+            snprintf(entry->name_native, sizeof(entry->name_native),
                      "%s", native);
         if (pronounce)
-            snprintf(feature->name_pronounce, sizeof(feature->name_pronounce),
+            snprintf(entry->name_pronounce, sizeof(entry->name_pronounce),
                      "%s", pronounce);
+        HASH_ADD_STR(*names_hash, main_id, entry);
     }
     if (description)
         feature->description = json_to_string(description);

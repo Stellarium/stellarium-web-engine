@@ -34,9 +34,6 @@ typedef struct {
 typedef struct constellation {
     obj_t       obj;
     constellation_infos_t info;
-    char        *name_english;
-    char        *name_pronounce;
-    char        *name_native;
     char        *description;
     int         count;
     fader_t     visible;
@@ -69,7 +66,6 @@ typedef struct constellations {
     fader_t     lines_visible;
     fader_t     bounds_visible;
     fader_t     labels_visible;
-    int         labels_display_style;
     bool        lines_animation;
     bool        show_only_pointed;
 } constellations_t;
@@ -130,12 +126,6 @@ static int constellation_init(obj_t *obj, json_value *args)
     info = (void*)(intptr_t)json_get_attr_i(args, "info_ptr", 0);
     if (!info) return 0;
     cons->info = *info;
-    if (*info->name_english)
-        cons->name_english = strdup(info->name_english);
-    if (*info->name_pronounce)
-        cons->name_pronounce = strdup(info->name_pronounce);
-    if (*info->name_native)
-        cons->name_native = strdup(info->name_native);
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
@@ -174,8 +164,8 @@ static int constellation_create_stars(constellation_t *cons)
     }
     cons->stars_pos = calloc(cons->count, sizeof(*cons->stars_pos));
     if (nb_err) {
-        LOG_W("%d stars not found in constellation %s (%s)",
-              nb_err, cons->info.name_english, cons->info.id);
+        LOG_W("%d stars not found in constellation %s",
+              nb_err, cons->info.id);
     }
     return 0;
 
@@ -248,7 +238,7 @@ static void update_image_mat(constellation_t *cons)
     return;
 
 error:
-    LOG_W("Cannot compute image for constellation %s", cons->name_english);
+    LOG_W("Cannot compute image for constellation %s", cons->info.id);
     texture_release(cons->img.tex);
     cons->img.tex = NULL;
 }
@@ -708,7 +698,8 @@ static int render_label(constellation_t *con, const painter_t *painter_,
 {
     painter_t painter = *painter_;
     double names_color[4];
-    const char *label;
+    char label[256];
+    const char* res;
     constellations_t *cons = (constellations_t*)con->obj.parent;
 
     if (!selected) {
@@ -719,15 +710,9 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
         return 0;
 
-    label = NULL;
-    if (cons->labels_display_style == LABEL_DISPLAY_NATIVE) {
-        if (con->name_native)
-            label = con->name_native;
-        else if (con->name_pronounce)
-            label = con->name_pronounce;
-    }
-    if (!label) {
-        label = sys_translate("skyculture", con->name_english);
+    res = skycultures_get_name(con->info.id, label, sizeof(label));
+    if (!res) {
+        snprintf(label, sizeof(label), "%s", con->info.id);
     }
 
     if (!should_render_label(con, label, &painter, selected))
@@ -818,9 +803,6 @@ static void constellation_del(obj_t *obj)
     }
     free(con->stars);
     free(con->stars_pos);
-    free(con->name_english);
-    free(con->name_native);
-    free(con->name_pronounce);
 }
 
 static void constellation_get_2d_ellipse(const obj_t *obj,
@@ -848,7 +830,14 @@ static void constellation_get_designations(
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     constellation_t *cst = (void*)obj;
-    f(obj, user, "NAME", cst->name_english);
+    char name[256];
+    const char *res;
+
+    res = skycultures_get_name(cst->info.id, name, sizeof(name));
+    if (res) {
+        f(obj, user, "NAME", name);
+    }
+    f(obj, user, "CON", ((const char *)cst->info.id) + 4);
 }
 
 static int constellations_init(obj_t *obj, json_value *args)
@@ -969,8 +958,6 @@ static obj_klass_t constellations_klass = {
                  MEMBER(constellations_t, images_visible.target)),
         PROPERTY(bounds_visible, TYPE_BOOL,
                  MEMBER(constellations_t, bounds_visible.target)),
-        PROPERTY(labels_display_style, TYPE_ENUM,
-                 MEMBER(constellations_t, labels_display_style)),
         PROPERTY(lines_animation, TYPE_BOOL,
                  MEMBER(constellations_t, lines_animation)),
         PROPERTY(show_only_pointed, TYPE_BOOL,
