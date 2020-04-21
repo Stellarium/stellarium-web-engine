@@ -570,7 +570,9 @@ static int on_file_tile_loaded(const char type[4],
         // current data has some wrong values.
         if (!isnan(plx) && (plx < 2.0 / 1000)) plx = 0.0;
 
-        if (vmag < survey->min_vmag) continue;
+        // Avoid overlapping stars from Gaia survey.
+        if (survey->is_gaia && vmag < survey->min_vmag) continue;
+
         if (!*s->type) strncpy(s->type, "*", 4); // Default type.
         epoch = epoch ?: 2000; // Default epoch.
         s->vmag = vmag;
