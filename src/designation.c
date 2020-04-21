@@ -258,6 +258,57 @@ static bool designation_parse_flamsteed(const char *dsgn, int *cst,
     return true;
 }
 
+/*
+ * Function: designation_parse_variable_star
+ * Parse 'V*' designations, like 'V* VX Sgr'.
+ *
+ * https://en.wikipedia.org/wiki/Variable_star_designation
+ * We match any string of the form 'V* <ANY> <CST>'
+ *
+ * Parameters:
+ *   dsgn   - A designation (eg: 'V* VX Sgr')
+ *   cst    - Output constellation id
+ *   var    - Variable star id (eg: 'VX')
+ *   suffix - Point to the end of the input dsgn.
+ *
+ * Return:
+ *   False if the designation doesn't match a variable star.
+ */
+static bool designation_parse_variable_star(
+        const char *dsgn, int *cst, char var[8], char **suffix)
+{
+    int i;
+
+    if (!dsgn) return false;
+    if (strncmp(dsgn, "V* ", 3) != 0) return false;
+    dsgn += 3;
+
+    // Parse letters.
+    for (i = 0; i < 7; i++) {
+        if (*dsgn == ' ') break;
+        if (!((*dsgn >= 'A' && *dsgn <= 'Z') ||
+              (*dsgn >= '0' && *dsgn <= '9'))) {
+            return false;
+        }
+        var[i] = *dsgn++;
+    }
+    if (i == 7) return false;
+    var[i] = '\0';
+    dsgn++;
+
+    // Parse constellation.
+    for (i = 0; i < 88; i++) {
+        if (strncasecmp(CSTS[i][0], dsgn, strlen(CSTS[i][0])) == 0)
+            break;
+    }
+    if (i == 88) return false;
+    *cst = i;
+
+    dsgn += strlen(CSTS[i][0]);
+    *suffix = dsgn;
+    return true;
+}
+
 static const char * to_exponent(char c) {
     switch (c) {
     case 48:
@@ -299,10 +350,7 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
     const char *cstname;
     char *suffix;
     char tmp[64], tmp_letter[32];
-    char exponent[256];
-
-    if (strncmp(dsgn, "V* ", 3) == 0)
-        dsgn++;
+    char exponent[256], var[8];
 
     if (designation_parse_bayer(dsgn, &cst, &g, &nb, &suffix)) {
         exponent[0] = 0;
@@ -339,6 +387,16 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
         } else
             snprintf(out, size, "%d%s", g, suffix);
         return;
+    }
+    if (designation_parse_variable_star(dsgn, &cst, var, &suffix)) {
+        cstname = (flags & BAYER_CONST_LONG) ? CSTS[cst][1] : CSTS[cst][0];
+        snprintf(out, size, "%s %s%s", var, cstname, suffix);
+        return;
+    }
+
+    // At this point we shouldn't have any "*" or "V*" designations.
+    if (strncmp(dsgn, "V* ", 3) == 0 || strncmp(dsgn, "* ", 2) == 0) {
+        LOG_E("Unmatched star designation: '%s'", dsgn);
     }
 
     // NAME designation with translation.
@@ -393,6 +451,18 @@ static void test_designations(void)
     assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 1);
     r = designation_parse_flamsteed("* 10 Aqr", &cst, &n, &suffix);
     assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 10);
+
+    r = designation_parse_variable_star("V* VZ Sgr", &cst, buf, &suffix);
+    assert(r);
+    assert(strcmp(CSTS[cst][0], "Sgr") == 0);
+    assert(strcmp(buf, "VZ") == 0);
+    assert(strcmp(suffix, "") == 0);
+
+    r = designation_parse_variable_star("V* YZ Cet X", &cst, buf, &suffix);
+    assert(r);
+    assert(strcmp(CSTS[cst][0], "Cet") == 0);
+    assert(strcmp(buf, "YZ") == 0);
+    assert(strcmp(suffix, " X") == 0);
 
     designation_cleanup("NAME Polaris", buf, sizeof(buf), 0);
     assert(strcmp(buf, "Polaris") == 0);
