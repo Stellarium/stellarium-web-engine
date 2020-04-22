@@ -9,6 +9,7 @@
 
 #include "swe.h"
 #include "ini.h"
+#include <regex.h>
 
 /*
  * Module that handles the skycultures list.
@@ -28,6 +29,7 @@ enum {
 typedef struct skyculture {
     obj_t           obj;
     char            *uri;
+    char            *id;
     int             nb_constellations;
     skyculture_name_t *names; // Hash table of identifier -> common names.
     constellation_infos_t *constellations;
@@ -38,6 +40,8 @@ typedef struct skyculture {
     // True if the common names for this sky culture should fallback to the
     // international names. Useful for cultures based on the western family.
     bool fallback_to_international_names;
+    bool has_chinese_star_names;
+
 
     // The following strings are all english text, with a matching translation
     // in the associated sky culture translations files.
@@ -78,6 +82,7 @@ typedef struct skycultures_t {
     obj_t   obj;
     skyculture_t *current; // The current skyculture.
     int     name_format_style;
+    regex_t chinese_re;
 } skycultures_t;
 
 // Static instance.
@@ -195,7 +200,7 @@ static int skyculture_update(obj_t *obj, double dt)
     const char *json;
     skyculture_t *cult = (skyculture_t*)obj;
     skycultures_t *cults = (skycultures_t*)obj->parent;
-    char path[1024], *name, *region;
+    char path[1024], *name, *region, *id;
     int code, r, i, arts_nb;
     json_value *doc;
     const json_value *names = NULL, *features = NULL,
@@ -225,6 +230,7 @@ static int skyculture_update(obj_t *obj, double dt)
     }
 
     r = jcon_parse(doc, "{",
+        "id", JCON_STR(id),
         "name", JCON_STR(name),
         "region", JCON_STR(region),
         "?fallback_to_international_names",
@@ -245,6 +251,8 @@ static int skyculture_update(obj_t *obj, double dt)
         return -1;
     }
 
+    cult->id = strdup(id);
+    cult->has_chinese_star_names = strncmp(id, "chinese", 7) == 0;
     cult->name = strdup(name);
     cult->region = strdup(region);
     cult->introduction = json_to_string(introduction);
@@ -332,6 +340,7 @@ static int skycultures_update(obj_t *obj, double dt)
 static int skycultures_init(obj_t *obj, json_value *args)
 {
     skycultures_t *scs = (skycultures_t*)obj;
+    regcomp(&scs->chinese_re, " [MDCLXVI]+$", REG_EXTENDED);
     assert(!g_skycultures);
     g_skycultures = scs;
     return 0;
@@ -369,11 +378,15 @@ static int skycultures_add_data_source(
  */
 const char *skycultures_get_name(const char* main_id, char *out, int out_size)
 {
-    skyculture_t *cult;
-    skyculture_name_t *entry;
+    const skyculture_t *cult;
+    const skyculture_name_t *entry;
     assert(main_id);
     cult = g_skycultures->current;
     const char* tr_name;
+    const char *s, *number = NULL;
+    char tmp[256];
+    const int tmp_size = sizeof (tmp);
+    regmatch_t m;
 
     if (!cult) return NULL;
     HASH_FIND_STR(cult->names, main_id, entry);
@@ -381,6 +394,33 @@ const char *skycultures_get_name(const char* main_id, char *out, int out_size)
     switch (g_skycultures->name_format_style) {
     case NAME_AUTO:
         if (*entry->name_english) {
+            if (cult->has_chinese_star_names &&
+                strncmp(main_id, "CON ", 4) != 0) {
+                // This is a sky object in a chinese sky culture: needs special
+                // translation function because they have the following format:
+                // "Constellation_name [Added] [number]" and only the first
+                // part (Constellation_name) is stored in the translation DB.
+                if (regexec(&g_skycultures->chinese_re, entry->name_english, 1,
+                            &m, 0) == 0) {
+                    number = entry->name_english + m.rm_so;
+                }
+                s = strstr(entry->name_english, " Added");
+                if (s) {
+                    snprintf(tmp, min(tmp_size, s - entry->name_english + 1),
+                             "%s", entry->name_english);
+                    tr_name = sys_translate("skyculture", tmp);
+                    snprintf(out, out_size, "%s %s%s", tr_name,
+                             sys_translate("skyculture", "Added"),
+                             number ? number : "");
+                    return out;
+                } else if (number) {
+                    snprintf(tmp, min(tmp_size, m.rm_so + 1),
+                             "%s", entry->name_english);
+                    tr_name = sys_translate("skyculture", tmp);
+                    snprintf(out, out_size, "%s%s", tr_name, number);
+                    return out;
+                }
+            }
             tr_name = sys_translate("skyculture", entry->name_english);
             snprintf(out, out_size, "%s", tr_name);
             return out;
