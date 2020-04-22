@@ -202,6 +202,7 @@ static int skyculture_update(obj_t *obj, double dt)
     "}");
     if (r) {
         LOG_E("Cannot parse skyculture json (%s)", path);
+        json_value_free(doc);
         return -1;
     }
 
