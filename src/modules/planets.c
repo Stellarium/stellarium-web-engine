@@ -844,8 +844,11 @@ static void planet_render_label(
     const char *name;
     bool selected = core->selection && planet->obj.oid == core->selection->oid;
     double pvo[2][3];
-
-    name = sys_translate("sky", planet->name);
+    char buf[256];
+    snprintf(buf, sizeof(buf), "NAME %s", planet->name);
+    name = skycultures_get_name(buf, buf, sizeof(buf));
+    if (!name)
+        name = sys_translate("sky", planet->name);
 
     planet_get_pvo(planet, painter->obs, pvo);
     vec3_copy(pvo[0], pos);

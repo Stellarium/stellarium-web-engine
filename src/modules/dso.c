@@ -464,6 +464,14 @@ static bool dso_get_short_name(const dso_data_t *s, char *out, int size)
     int best_name_len = size - 1;
     int len;
 
+    const char* res = skycultures_get_name(names, out, size);
+    if (res)
+        return true;
+
+    // Without international fallback, just stop here if we didn't find a name
+    if (!skycultures_fallback_to_international_names())
+        return false;
+
     best_name[0] = '\0';
     while (*names) {
         designation_cleanup(names, out, size, DSGN_TRANSLATE);
