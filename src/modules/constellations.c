@@ -34,7 +34,6 @@ typedef struct {
 typedef struct constellation {
     obj_t       obj;
     constellation_infos_t info;
-    char        *description;
     int         count;
     fader_t     visible;
     fader_t     image_loaded_fader;
@@ -129,7 +128,6 @@ static int constellation_init(obj_t *obj, json_value *args)
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
-    cons->description = info->description ? strdup(info->description) : NULL;
     return 0;
 }
 
@@ -933,7 +931,7 @@ static obj_klass_t constellation_klass = {
     .get_2d_ellipse = constellation_get_2d_ellipse,
     .attributes = (attribute_t[]) {
         PROPERTY(description, TYPE_STRING_PTR,
-                 MEMBER(constellation_t, description)),
+                 MEMBER(constellation_t, info.description)),
         {}
     }
 };
