@@ -1,1876 +1,1302 @@
 {
-  "name": "Western",
-  "author": "Stellarium's team",
-  "description_source": "http://www.stellarium.org/wiki/index.php/Sky_cultures#Western",
-  "short_description": [
-    "Western sky culture is used internationally by modern astronomers,",
-    "and is the official scheme of The International Astronomical Union.",
-    "It has historical roots in Ancient Greek astronomy, with influences",
-    "from Islamic astronomy."
-  ],
-  "description": "<h2>Western</h2>\n<p>Western sky culture is used internationally by modern astronomers, and is the official scheme of The International Astronomical Union.  It has historical roots in Ancient Greek astronomy, with influences from Islamic astronomy.</p>\n\n<h3>Constellations</h3>\n<p>The Western culture divides the celestial sphere into 88 areas of various sizes called <i>constellations</i>, each with precise boundary, issued by the International Astronomical Union. These constellations have become the standard way to describe the sky, replacing similar sets in other sky cultures exhaustively in daily usage.</p>\n\n<h3>Star names</h3>\n<p>Most of traditional western star names came from Arabic. In astronomy, Bayer/Flamsteed designations and other star catalogues are widely used instead of traditional names except few cases where the traditional names are more famous than the designations.</p>\n\n<h3>Alternative asterism files for Stellarium</h3>\n<p><a href=\"http://wackymorningdj.users.sourceforge.net/ha_rey_stellarium.zip\" class='external text' rel=\"nofollow\">Asterisms by H.A. Rey</a>, from his book \"The Stars: A New Way To See Them\", by <a class='external text' href=\"http://sourceforge.net/users/wackymorningdj/\" rel=\"nofollow\">Mike Richards</a>.</p>\n\n\n<h3>External links</h3>\n<ul><li> <a href=\"http://en.wikipedia.org/wiki/Constellation\" class='external text' title=\"http://en.wikipedia.org/wiki/Constellation\" rel=\"nofollow\">Constellation</a> article at Wikipedia\n</li><li> <a href=\"http://en.wikipedia.org/wiki/Star_catalogue\" class='external text' title=\"http://en.wikipedia.org/wiki/Star catalogue\" rel=\"nofollow\">Star Catalogue</a> article at Wikipedia\n</li><li> <a href=\"http://hubblesource.stsci.edu/sources/illustrations/constellations/\" class='external text' title=\"http://hubblesource.stsci.edu/sources/illustrations/constellations/\" rel=\"nofollow\">Constellation image library</a> of the U.S. Naval Observatory and the Space Telescope Science Institute. Johannes Hevelius Engravings.\n</li></ul>\n",
-  "names": {
-    "HIP 677": ["Alpheratz", "Sirrah"],
-    "HIP 5447": ["Mirach"],
-    "HIP 9640": ["Almach", "Almaak"],
-    "HIP 6411": ["Adhil"],
-    "HIP 7607": ["Nembus"],
-    "HIP 7513": ["Titawin"],
-    "HIP 116076": ["Veritate"],
-    "HIP 6999": ["Thail"],
-    "HIP 109074": ["Sadalmelik"],
-    "HIP 106278": ["Sadalsuud"],
-    "HIP 110395": ["Sadachbia"],
-    "HIP 113136": ["Skat"],
-    "HIP 102618": ["Albali"],
-    "HIP 110003": ["Ancha"],
-    "HIP 111710": ["Situla"],
-    "HIP 110960": ["Sadaltager", "Alsad"],
-    "HIP 112961": ["Hydor"],
-    "HIP 104459": ["Albulan II", "Albulaan"],
-    "HIP 103045": ["Albulan I", "Albulaan"],
-    "HIP 106786": ["Bunda"],
-    "HIP 108874": ["Sadalmulk", "Al Sa'd al Mulk"],
-    "HIP 110672": ["Seat"],
-    "HIP 97649": ["Altair"],
-    "HIP 98036": ["Alshain"],
-    "HIP 97278": ["Tarazed", "Reda"],
-    "HIP 97938": ["Libertas"],
-    "HIP 93805": ["Al Thalimain Prior", "Al Thalimain I"],
-    "HIP 96468": ["Al Thalimain Posterior", "Al Thalimain II"],
-    "HIP 93747": ["Okab", "Deneb al Okab Australis", "Deneb el Okab"],
-    "HIP 93244": ["Deneb al Okab Borealis", "Deneb el Okab"],
-    "HIP 95501": ["Almizan I"],
-    "HIP 97804": ["Almizan II"],
-    "HIP 99473": ["Almizan III"],
-    "HIP 86796": ["Cervantes"],
-    "HIP 9884": ["Hamal"],
-    "HIP 8903": ["Sheratan"],
-    "HIP 8832": ["Mesarthim"],
-    "HIP 14838": ["Botein"],
-    "HIP 12489": ["Barani I"],
-    "HIP 12719": ["Barani II"],
-    "HIP 13061": ["Lilii Borea", "Barani III"],
-    "HIP 13209": ["Bharani", "Nair al Butain"],
-    "HIP 13914": ["Al Butain III"],
-    "HIP 15110": ["Al Butain IV"],
-    "HIP 12640": ["Koleon"],
-    "HIP 13165": ["Al Butain I"],
-    "HIP 13702": ["Al Butain II"],
-    "HIP 24608": ["Capella", "Alhajoth"],
-    "HIP 28360": ["Menkalinan"],
-    "HIP 23015": ["Hassaleh", "Kabalinan"],
-    "HIP 23453": ["Saclateni", "Haedus I", "Haedus", "Sadatoni"],
-    "HIP 23416": ["Almaaz", "Al Ma'az", "Alanz"],
-    "HIP 23767": ["Haedus", "Haedus II"],
-    "HIP 28380": ["Mahasim"],
-    "HIP 24813": ["Alhiba II"],
-    "HIP 24340": ["Alhiba I"],
-    "HIP 25292": ["Alhiba III"],
-    "HIP 30520": ["Dolones I"],
-    "HIP 31832": ["Dolones III"],
-    "HIP 31789": ["Dolones II"],
-    "HIP 32173": ["Dolones IV"],
-    "HIP 32480": ["Dolones V"],
-    "HIP 32562": ["Dolones VI"],
-    "HIP 32844": ["Dolones VII"],
-    "HIP 33133": ["Dolones VIII"],
-    "HIP 33377": ["Dolones IX"],
-    "HIP 26712": ["Andrews' star"],
-    "HIP 69673": ["Arcturus"],
-    "HIP 73555": ["Nekkar"],
-    "HIP 71075": ["Seginus", "Haris", "Ceginus"],
-    "HIP 72105": ["Izar", "Pulcherrima", "Mirak"],
-    "HIP 67927": ["Muphrid"],
-    "HIP 75411": ["Alkalurops", "Inkalunis", "Clava", "Venabulum"],
-    "HIP 72487": ["Merga"],
-    "HIP 70497": ["Asellus Primus"],
-    "HIP 69713": ["Asellus Secundus"],
-    "HIP 69483": ["Asellus Tertius"],
-    "HIP 74666": ["Thiba"],
-    "HIP 69732": ["Xuange", "Aulad Althiba"],
-    "HIP 76534": ["Ceginus"],
-    "HIP 73745": ["Aulad Alnathlat"],
-    "HIP 58952": ["Tonatiuh"],
-    "HIP 44066": ["Acubens", "Sertan"],
-    "HIP 42806": ["Asellus Borealis"],
-    "HIP 42911": ["Asellus Australis"],
-    "HIP 40167": ["Tegmine", "Tegmeni"],
-    "HIP 40526": ["Tarf", "Al Tarf", "Altarf"],
-    "HIP 43587": ["Copernicus"],
-    "HIP 42556": ["Meleph", "Almalaf"],
-    "HIP 43103": ["Zubanah"],
-    "HIP 40881": ["Piautos"],
-    "HIP 44946": ["Nahn"],
-    "HIP 63125": ["Cor Caroli"],
-    "HIP 61317": ["Chara"],
-    "HIP 62223": ["La Superba"],
-    "HIP 32349": ["Sirius", "Canicula", "Aschere"],
-    "HIP 30324": ["Mirzam", "Murzim", "Murzam"],
-    "HIP 34045": ["Muliphein", "Mirza", "Isis"],
-    "HIP 34444": ["Wezen", "Alwazn"],
-    "HIP 33579": ["Adhara"],
-    "HIP 30122": ["Furud"],
-    "HIP 35904": ["Aludra"],
-    "HIP 33345": ["Isis"],
-    "HIP 33152": ["Udra"],
-    "HIP 33977": ["Al Zara"],
-    "HIP 33856": ["Unurgunite"],
-    "HIP 37279": ["Procyon", "Elgomaisa", "Antecanis"],
-    "HIP 36188": ["Gomeisa", "Algomeyla", "Gomelza"],
-    "HIP 36208": ["Luyten's Star"],
-    "HIP 100027": ["Prima Giedi"],
-    "HIP 100064": ["Algedi", "Secunda Giedi"],
-    "HIP 100345": ["Dabih", "Dabih Major"],
-    "HIP 100325": ["Dabih Minor"],
-    "HIP 106985": ["Nashira"],
-    "HIP 107556": ["Deneb Algedi"],
-    "HIP 100310": ["Alshat", "Al Shat"],
-    "HIP 30438": ["Canopus", "Suhel"],
-    "HIP 45238": ["Miaplacidus"],
-    "HIP 41037": ["Avior"],
-    "HIP 45556": ["Aspidiske", "Turais", "Scutulum"],
-    "HIP 55042": ["Innes' Star"],
-    "HIP 3179": ["Shedar", "Shedir"],
-    "HIP 746": ["Caph"],
-    "HIP 6686": ["Ruchbah", "Ksora"],
-    "HIP 3821": ["Achird"],
-    "HIP 8886": ["Segin"],
-    "HIP 5542": ["Marfak", "Marfak-East"],
-    "HIP 5336": ["Marfak", "Marfak-West", "Al Marfak"],
-    "HIP 4427": ["Navi"],
-    "HIP 2920": ["Fulu"],
-    "HIP 4422": ["Castula"],
-    "HIP 71683": ["Rigil Kentaurus", "Toliman", "Bungula"],
-    "HIP 70890": ["Proxima", "Proxima Centauri"],
-    "HIP 68702": ["Hadar", "Agena"],
-    "HIP 61932": ["Muhlifain"],
-    "HIP 68002": ["Alnair", "Baten Kentaurus"],
-    "HIP 68933": ["Menkent"],
-    "HIP 56709": ["Przybylski's Star"],
-    "HIP 105199": ["Alderamin"],
-    "HIP 106032": ["Alfirk"],
-    "HIP 116727": ["Errai"],
-    "HIP 107259": ["The Garnet Star", "Erakis"],
-    "HIP 108917": ["Kurhah", "Al Kurhah"],
-    "HIP 111056": ["Al Kalb al Rai", "Kalbalrai"],
-    "HIP 107418": ["Castula"],
-    "HIP 110893": ["Kruger 60"],
-    "HIP 102422": ["Kabalfird"],
-    "HIP 101093": ["Al Kidr"],
-    "HIP 99255": ["Al Aghnam I"],
-    "HIP 114222": ["Al Aghnam II"],
-    "HIP 14135": ["Menkar"],
-    "HIP 3419": ["Diphda", "Deneb Kaitos"],
-    "HIP 8645": ["Baten Kaitos"],
-    "HIP 10826": ["Mira"],
-    "HIP 12706": ["Kaffaljidhma", "Al Kaff al Jidhmah", "Kafalgidma"],
-    "HIP 5364": ["Dheneb", "Deneb Algenubi"],
-    "HIP 1562": ["Deneb Kaitos Shemali", "Schemali", "Deneb Kaitos"],
-    "HIP 13954": ["Menkar", "Menkab"],
-    "HIP 12387": ["Al Kaff al Jidhmah III"],
-    "HIP 12390": ["Sadr al Kaitos III"],
-    "HIP 6537": ["Al Naymat I"],
-    "HIP 12828": ["Al Kaff al Jidhmah IV"],
-    "HIP 10324": ["Al Kaff al Jidhmah I"],
-    "HIP 11484": ["Al Kaff al Jidhmah II"],
-    "HIP 12770": ["Sadr al Kaitos IV"],
-    "HIP 11345": ["Sadr al Kaitos I"],
-    "HIP 11783": ["Sadr al Kaitos II"],
-    "HIP 8102": ["Al Naymat II"],
-    "HIP 9347": ["Al Naymat III"],
-    "HIP 3455": ["Alnitham I"],
-    "HIP 3909": ["Alnitham II"],
-    "HIP 4371": ["Alnitham III"],
-    "HIP 4587": ["Alnitham IV"],
-    "HIP 26634": ["Phact", "Phaet"],
-    "HIP 27628": ["Wazn", "Wezn"],
-    "HIP 29034": ["Elkurud", "Kurud I"],
-    "HIP 29807": ["Kurud II"],
-    "HIP 62763": ["Polaris Galacticum Borealis"],
-    "HIP 64241": ["Diadem"],
-    "HIP 61071": ["Kissin"],
-    "HIP 60742": ["Al Dafirah"],
-    "HIP 94114": ["Meridiana", "Alfecca Meridiana"],
-    "HIP 76267": ["Alphecca", "Gemma", "Alphekka", "Gnosia", "Ashtaroth"],
-    "HIP 75695": ["Nusakan"],
-    "HIP 77442": ["Variabilis Coronae"],
-    "HIP 78322": ["Blaze Star"],
-    "HIP 59199": ["Alchiba", "Al Chiba"],
-    "HIP 59803": ["Gienah", "Gienah Corvi", "Gienah Ghurab"],
-    "HIP 60965": ["Algorab"],
-    "HIP 61359": ["Kraz"],
-    "HIP 59316": ["Minkar"],
-    "HIP 53740": ["Alkes"],
-    "HIP 54682": ["Al Sharasif", "Al Sharasif II"],
-    "HIP 60718": ["Acrux"],
-    "HIP 62434": ["Mimosa", "Becrux"],
-    "HIP 61084": ["Gacrux"],
-    "HIP 60260": ["Ginan"],
-    "HIP 102098": ["Deneb", "Arided", "Aridif", "Arrioph"],
-    "HIP 95947": ["Albireo"],
-    "HIP 100453": ["Sadr"],
-    "HIP 102488": ["Aljanah", "Gienah Cygni", "Al Janah"],
-    "HIP 107136": ["Azelfafage", "Azelfage"],
-    "HIP 101138": ["Ruchba", "Rucba"],
-    "HIP 104217": ["Bessel's Star", "Piazzi's Flying Star"],
-    "HIP 96295": ["Campbell's Star", "Campbell\u2019s Hydrogen Star"],
-    "HIP 100044": ["Revenant of the Swan", "Permanent nova"],
-    "HIP 97165": ["Fawaris", "Fawaris II"],
-    "HIP 104732": ["Fawaris III"],
-    "HIP 94779": ["Fawaris I"],
-    "HIP 101958": ["Sualocin", "Svalocin"],
-    "HIP 101769": ["Rotanev", "Venator"],
-    "HIP 103527": ["Musica"],
-    "HIP 101421": ["Aldulfin", "Deneb Dulfim"],
-    "HIP 102532": ["Al Salib"],
-    "HIP 102281": ["Al Ukud"],
-    "HIP 68756": ["Thuban", "Adib", "Al Tinnin"],
-    "HIP 85670": ["Rastaban", "Alwaid"],
-    "HIP 87833": ["Eltanin", "Etamin", "Taurt"],
-    "HIP 94376": ["Altais", "Al Tais"],
-    "HIP 75458": ["Edasich", "Ed Asich"],
-    "HIP 56211": ["Giausar", "Giansar", "Nodus Secundus"],
-    "HIP 83608": ["Alrakis", "Arrakis", "Errakis"],
-    "HIP 87585": ["Grumium"],
-    "HIP 85819": ["Kuma"],
-    "HIP 97433": ["Tyl"],
-    "HIP 96100": ["Alsafi"],
-    "HIP 86614": ["Dziban", "Dziban I", "Dsiban"],
-    "HIP 86620": ["Dziban II", "Dsiban"],
-    "HIP 86201": ["Al Dhih", "Adfar Aldib II"],
-    "HIP 86782": ["Alruba"],
-    "HIP 90344": ["Fafnir"],
-    "HIP 83895": ["Aldhibah", "Al Dhibain Posterior", "Dhibah"],
-    "HIP 80331": ["Athebyne", "Al Dhibain Prior", "Dhibain"],
-    "HIP 85805": ["Adfar Aldib I"],
-    "HIP 95081": ["Tais I"],
-    "HIP 98702": ["Tais II"],
-    "HIP 94648": ["Athafi II"],
-    "HIP 92782": ["Athafi I"],
-    "HIP 89908": ["Aldhiba"],
-    "HIP 89937": ["Alahakan"],
-    "HIP 63076": ["Taiyi"],
-    "HIP 62423": ["Tianyi"],
-    "HIP 104987": ["Kitalpha"],
-    "HIP 7588": ["Achernar"],
-    "HIP 23875": ["Cursa", "Dhalim"],
-    "HIP 18543": ["Zaurak"],
-    "HIP 15197": ["Zibal"],
-    "HIP 13701": ["Azha"],
-    "HIP 13847": ["Acamar", "Dalim"],
-    "HIP 19587": ["Beid"],
-    "HIP 19849": ["Keid"],
-    "HIP 21393": ["Theemin"],
-    "HIP 20535": ["Beemim", "Theemim", "Theemin", "Beemim II"],
-    "HIP 13288": ["Angetenar", "Anchat"],
-    "HIP 21248": ["Beemim", "Beemim III"],
-    "HIP 16537": ["Ran"],
-    "HIP 17378": ["Rana"],
-    "HIP 21594": ["Sceptrum"],
-    "HIP 23972": ["Kursi al Jauzah II"],
-    "HIP 14060": ["Aludhi I"],
-    "HIP 14168": ["Aludhi II"],
-    "HIP 14293": ["Aludhi III"],
-    "HIP 20042": ["Beemim I"],
-    "HIP 23364": ["Kursi al Jauzah I"],
-    "HIP 14879": ["Dalim", "Fornacis"],
-    "HIP 36850": ["Castor", "Apollo"],
-    "HIP 37826": ["Pollux", "Hercules"],
-    "HIP 31681": ["Alhena", "Almeisan"],
-    "HIP 35550": ["Wasat"],
-    "HIP 32246": ["Mebsuta", "Melucta", "Meboula"],
-    "HIP 34088": ["Mekbuda"],
-    "HIP 29655": ["Propus", "Tejat Prior", "Praepes"],
-    "HIP 30343": ["Tejat", "Tejat Posterior", "Calx"],
-    "HIP 32362": ["Alzirr", "Al Zirr"],
-    "HIP 30883": ["Nucatai"],
-    "HIP 37265": ["Jishui"],
-    "HIP 109268": ["Alnair", "Al Na'ir"],
-    "HIP 108085": ["Aldhanab", "Al Dhanab", "Deneb Hut"],
-    "HIP 112122": ["Tiaki", "Deneb Alnahr"],
-    "HIP 84345": ["Rasalgethi", "Ras Algethi"],
-    "HIP 80816": ["Kornephoros", "Rutilicus"],
-    "HIP 79043": ["Marsic", "Marfik"],
-    "HIP 85693": ["Maasym", "Masym"],
-    "HIP 80463": ["Cujam"],
-    "HIP 84379": ["Sarin"],
-    "HIP 80838": ["Ogma"],
-    "HIP 80170": ["Nasak Shamiya III"],
-    "HIP 46390": ["Alphard", "Kalbelaphard", "Cor Hydrae"],
-    "HIP 46982": ["Ukdah III"],
-    "HIP 42313": ["Minazal I"],
-    "HIP 43109": ["Ashlesha", "Minazal III"],
-    "HIP 43813": ["Minazal V"],
-    "HIP 42799": ["Minazal II"],
-    "HIP 47431": ["Ukdah", "Ukdah IV"],
-    "HIP 47452": ["Al Sharasif I"],
-    "HIP 43234": ["Minazal IV"],
-    "HIP 42402": ["Minchir", "Minkalshuja", "Al Minliar al Shuja"],
-    "HIP 46509": ["Ukdah I"],
-    "HIP 46776": ["Ukdah II"],
-    "HIP 48356": ["Zhang"],
-    "HIP 48615": ["Felis"],
-    "HIP 101772": ["Persian"],
-    "HIP 112247": ["Babcock's Star"],
-    "HIP 49669": ["Regulus", "Cor Leonis", "Rex", "Kabeleced"],
-    "HIP 57632": ["Denebola", "Deneb Aleet"],
-    "HIP 50583": ["Algieba", "Al Geiba"],
-    "HIP 54872": ["Zosma", "Duhr", "Zubra", "Zozma"],
-    "HIP 50335": ["Adhafera", "Aldhafera"],
-    "HIP 54879": ["Chertan", "Al Haratan", "Coxa", "Chort"],
-    "HIP 46750": ["Alterf"],
-    "HIP 48455": ["Rasalas", "Alshemali", "Ras Elased Borealis"],
-    "HIP 47508": ["Subra"],
-    "HIP 47908": ["Algenubi", "Ras Elased Australis", "Ras Elased"],
-    "HIP 46146": ["Al Minlear al Asad", "Minkarasad"],
-    "HIP 54951": ["Zubrah"],
-    "HIP 49583": ["Al Jabhah"],
-    "HIP 53229": ["Praecipua"],
-    "HIP 25985": ["Arneb", "Arsh"],
-    "HIP 25606": ["Nihal"],
-    "HIP 23203": ["Hind's Crimson Star"],
-    "HIP 27072": ["Kursi al Jabbar"],
-    "HIP 27654": ["Arsh al Jauzah"],
-    "HIP 72603": ["Zubenelgenubi I", "Zubenelgenubi", "Zuben El Genubi"],
-    "HIP 72622": ["Zubenelgenubi II", "Zubenelgenubi"],
-    "HIP 74785": ["Zubeneschamali", "Zuben Eschamali"],
-    "HIP 73714": ["Brachium", "Zuben Acrabi", "Cornu"],
-    "HIP 73473": ["Zuben Elakribi"],
-    "HIP 76333": ["Zubenelhakrabi", "Zuben Elakrab", "Zuben Hakraki"],
-    "HIP 73945": ["Zuben Hakrabi"],
-    "HIP 41075": ["Alsciaukat", "Mabsuthat", "Shaukah"],
-    "HIP 33485": ["Dolones X"],
-    "HIP 91262": ["Vega", "Fidis", "Wega"],
-    "HIP 92420": ["Sheliak"],
-    "HIP 93194": ["Sulafat", "Jugum"],
-    "HIP 94481": ["Aladfar"],
-    "HIP 90191": ["Al Athfar", "Alathfar", "Athfar"],
-    "HIP 91919": ["Double Double I"],
-    "HIP 91926": ["Double Double II"],
-    "HIP 91971": ["Nasr Alwaki I"],
-    "HIP 91973": ["Nasr Alwaki II"],
-    "HIP 31646": ["Plaskett's Star"],
-    "HIP 30089": ["Red Rectangle"],
-    "HIP 104382": ["Polaris Australis"],
-    "HIP 86032": ["Rasalhague"],
-    "HIP 86742": ["Cebalrai"],
-    "HIP 79593": ["Yed Prior", "Yad"],
-    "HIP 79882": ["Yed Posterior"],
-    "HIP 84012": ["Sabik"],
-    "HIP 80883": ["Marfik"],
-    "HIP 87108": ["Muliphen"],
-    "HIP 87937": ["Barnard's Star"],
-    "HIP 81377": ["Saik"],
-    "HIP 84970": ["Garafsa"],
-    "HIP 84893": ["Aggia"],
-    "HIP 27989": ["Betelgeuse", "Al Mankib", "Betelgeux"],
-    "HIP 24436": ["Rigel", "Algebar"],
-    "HIP 25336": ["Bellatrix"],
-    "HIP 25930": ["Mintaka"],
-    "HIP 26311": ["Alnilam"],
-    "HIP 26727": ["Alnitak"],
-    "HIP 27366": ["Saiph"],
-    "HIP 26207": ["Meissa", "Heka"],
-    "HIP 26241": ["Hatysa"],
-    "HIP 25923": ["Thabit"],
-    "HIP 22449": ["Tabit"],
-    "HIP 26237": ["Mizan Batil I"],
-    "HIP 26563": ["Mizan Batil III"],
-    "HIP 22833": ["Manica"],
-    "HIP 25281": ["Saif al Jabbar"],
-    "HIP 26220": ["Trapezium"],
-    "HIP 26235": ["Mizan Batil II"],
-    "HIP 22667": ["Al Kumm I"],
-    "HIP 22957": ["Al Kumm II"],
-    "HIP 22845": ["Al Taj IV"],
-    "HIP 22509": ["Al Taj I"],
-    "HIP 22549": ["Al Taj II"],
-    "HIP 22797": ["Al Taj III"],
-    "HIP 23123": ["Al Taj V"],
-    "HIP 26176": ["Heka"],
-    "HIP 100751": ["Peacock"],
-    "HIP 113963": ["Markab", "Yed Alpheras", "Marchab"],
-    "HIP 113881": ["Scheat", "Seat Alpheras"],
-    "HIP 1067": ["Algenib"],
-    "HIP 107315": ["Enif", "Os Pegasi", "Fom"],
-    "HIP 112029": ["Homam"],
-    "HIP 112158": ["Matar"],
-    "HIP 109427": ["Biham"],
-    "HIP 112748": ["Sadalbari", "Sa'd al Bari'"],
-    "HIP 115250": ["Salm", "Al Karab", "Salma"],
-    "HIP 113357": ["Helvetios"],
-    "HIP 112440": ["Sadalnazi"],
-    "HIP 109068": ["Fum al Faras"],
-    "HIP 112447": ["Suudalnujum"],
-    "HIP 112051": ["Sadalmatar"],
-    "HIP 115623": ["Alkarab"],
-    "HIP 15863": ["Mirfak", "Algenib", "Marfak", "Alchemb"],
-    "HIP 14576": ["Algol", "Gorgonea Prima", "Gorgona"],
-    "HIP 18614": ["Menkib"],
-    "HIP 17448": ["Atik", "Ati", "Alatik"],
-    "HIP 18246": ["Atik"],
-    "HIP 13879": ["Gorgonea Secunda"],
-    "HIP 14354": ["Gorgonea Tertia"],
-    "HIP 14817": ["Gorgonea Quarta"],
-    "HIP 13268": ["Miram"],
-    "HIP 14668": ["Misam"],
-    "HIP 10729": ["Misam al Thurayya I"],
-    "HIP 2081": ["Ankaa", "Nair al Zaurak"],
-    "HIP 5165": ["Alrial III"],
-    "HIP 6867": ["Alrial V"],
-    "HIP 2071": ["Alrial I"],
-    "HIP 3245": ["Alrial II"],
-    "HIP 5862": ["Alrial IV"],
-    "HIP 5348": ["Wurren"],
-    "HIP 24186": ["Kapteyn's Star"],
-    "HIP 9487": ["Alrescha", "Al Rescha", "Alrischa"],
-    "HIP 3829": ["van Maanen's Star", "van Maanen 2"],
-    "HIP 8198": ["Torcular", "Torcularis Septentrionalis"],
-    "HIP 7097": ["Alpherg", "Kullat Nunu"],
-    "HIP 113889": ["Fumalsamakah", "Fum al Samakah"],
-    "HIP 3786": ["Kuton I"],
-    "HIP 5737": ["Revati", "Kuton II"],
-    "HIP 5743": ["Kuton III"],
-    "HIP 113368": ["Fomalhaut", "Thalim", "Os Piscis Meridiani", "Os Piscis Notii"],
-    "HIP 111188": ["Fum al Hui"],
-    "HIP 39429": ["Naos", "Suhail Hadar"],
-    "HIP 39757": ["Tureis"],
-    "HIP 35488": ["Bernes 135"],
-    "HIP 38170": ["Azmidi", "Asmidiske"],
-    "HIP 96757": ["Sham"],
-    "HIP 95347": ["Rukbat", "Alrami"],
-    "HIP 95241": ["Arkab Prior", "Arkab"],
-    "HIP 95294": ["Arkab Posterior"],
-    "HIP 88635": ["Alnasl", "Nushaba", "Al Nasl", "Nash", "El Nasl"],
-    "HIP 89931": ["Kaus Media", "Kaus Meridionalis", "Media"],
-    "HIP 90185": ["Kaus Australis"],
-    "HIP 93506": ["Ascella"],
-    "HIP 90496": ["Kaus Borealis", "Al Thalimain"],
-    "HIP 92855": ["Nunki", "Sadira"],
-    "HIP 89341": ["Polis", "Al Thalimain", "Alnam"],
-    "HIP 94141": ["Albaldah", "Al Baldah"],
-    "HIP 98066": ["Terebellum", "Terebellum I"],
-    "HIP 98162": ["Terebellum II"],
-    "HIP 98353": ["Terebellum III"],
-    "HIP 98688": ["Terebellum IV"],
-    "HIP 89642": ["Hamalwarid", "Arkab"],
-    "HIP 92761": ["Ainalrami", "Ain al Rami I"],
-    "HIP 92845": ["Ain al Rami II"],
-    "HIP 93864": ["Namalsadirah II"],
-    "HIP 92041": ["Namalsadirah I"],
-    "HIP 95477": ["Namalsadirah III"],
-    "HIP 95503": ["Namalsadirah IV"],
-    "HIP 94643": ["Al Kiladah"],
-    "HIP 80763": ["Antares", "Cor Scorpii", "Vespertilio", "Kalb al Akrab"],
-    "HIP 78820": ["Acrab", "Graffias", "Akrab"],
-    "HIP 78401": ["Dschubba", "Iclarkrau"],
-    "HIP 86228": ["Sargas", "Girtab"],
-    "HIP 85927": ["Shaula"],
-    "HIP 80112": ["Alniyat", "Alniyat I", "Al Niyat"],
-    "HIP 81266": ["Alniyat II", "Al Niyat"],
-    "HIP 85696": ["Lesath", "Lesuth"],
-    "HIP 79374": ["Jabbah"],
-    "HIP 78727": ["Grafias", "Grassias"],
-    "HIP 87073": ["Girtab"],
-    "HIP 87294": ["Vanant"],
-    "HIP 86670": ["Mula", "Girtab"],
-    "HIP 82514": ["Xamidimura", "Tali al Shaulah I"],
-    "HIP 82545": ["Pipirima", "Tali al Shaulah II"],
-    "HIP 78265": ["Fang", "Nur"],
-    "HIP 78104": ["Iklil", "Iolil"],
-    "HIP 78933": ["Jabhat Acrabi I"],
-    "HIP 78990": ["Jabhat Acrabi II"],
-    "HIP 87261": ["Fuyue"],
-    "HIP 82396": ["Larawag"],
-    "HIP 77070": ["Unukalhai", "Cor Serpentis", "Unuk Al Hay"],
-    "HIP 92946": ["Alya"],
-    "HIP 77233": ["Nasak Shamiya I"],
-    "HIP 78072": ["Nasak Shamiya II"],
-    "HIP 76276": ["Nasak Yamani I"],
-    "HIP 77622": ["Nasak Yamani II"],
-    "HIP 21421": ["Aldebaran", "Cor Tauri", "Parilicium"],
-    "HIP 25428": ["Elnath", "El Nath"],
-    "HIP 20889": ["Ain", "Oculus Boreus"],
-    "HIP 17702": ["Alcyone"],
-    "HIP 17489": ["Celaeno"],
-    "HIP 17499": ["Electra"],
-    "HIP 17531": ["Taygeta"],
-    "HIP 17573": ["Maia"],
-    "HIP 17579": ["Asterope", "Sterope I"],
-    "HIP 17608": ["Merope"],
-    "HIP 17847": ["Atlas"],
-    "HIP 17851": ["Pleione"],
-    "HIP 20205": ["Prima Hyadum", "Hyadum I"],
-    "HIP 20455": ["Secunda Hyadum", "Hyadum II"],
-    "HIP 25945": ["The Ruby Star"],
-    "HIP 17588": ["Sterope II"],
-    "HIP 20885": ["Hyadum III"],
-    "HIP 20894": ["Chamukuy", "Hyadum IV"],
-    "HIP 20635": ["Alkalbain III"],
-    "HIP 20641": ["Alkalbain IV"],
-    "HIP 20711": ["Alkalbain V"],
-    "HIP 20250": ["Alkalbain I"],
-    "HIP 20430": ["Alkalbain II"],
-    "HIP 26451": ["Tianguan"],
-    "HIP 8796": ["Mothallah", "Caput Trianguli"],
-    "HIP 10064": ["Mizan"],
-    "HIP 82273": ["Atria"],
-    "HIP 54061": ["Dubhe", "Dubb", "Ak", "Dubh"],
-    "HIP 53910": ["Merak", "Mirak"],
-    "HIP 58001": ["Phecda", "Phad"],
-    "HIP 59774": ["Megrez", "Kaffa"],
-    "HIP 62956": ["Alioth"],
-    "HIP 65378": ["Mizar"],
-    "HIP 67301": ["Alkaid", "Benetnasch"],
-    "HIP 44127": ["Talitha", "Talita", "Dnoces"],
-    "HIP 50372": ["Tania Borealis"],
-    "HIP 50801": ["Tania Australis"],
-    "HIP 55219": ["Alula Borealis"],
-    "HIP 55203": ["Alula Australis"],
-    "HIP 41704": ["Muscida"],
-    "HIP 65477": ["Alcor"],
-    "HIP 57939": ["Groombridge 1830", "Flying Star", "Runaway Star"],
-    "HIP 46471": ["Intercrus"],
-    "HIP 53721": ["Chalawan"],
-    "HIP 57399": ["Taiyangshou", "Al Kaphrah", "Alkafzah"],
-    "HIP 14590": ["Althiba I"],
-    "HIP 46977": ["Althiba VII"],
-    "HIP 45493": ["Alhaud III"],
-    "HIP 44901": ["Alhaud I"],
-    "HIP 46733": ["Alhaud IV"],
-    "HIP 46853": ["Alhaud V"],
-    "HIP 44471": ["Alkaphrah", "Kafzatania", "Al Kaprah"],
-    "HIP 42438": ["Althiba II"],
-    "HIP 42527": ["Althiba III"],
-    "HIP 44390": ["Althiba IV"],
-    "HIP 44857": ["Althiba V"],
-    "HIP 45038": ["Althiba VI"],
-    "HIP 45075": ["Alhaud II"],
-    "HIP 48319": ["Alhaud VI"],
-    "HIP 48402": ["Alhaud VII"],
-    "HIP 54035": ["Lalande 21185"],
-    "HIP 11767": ["Polaris", "Alrucaba", "Cinosura", "Tramontana", "Yilduz", "Mismar"],
-    "HIP 72607": ["Kochab"],
-    "HIP 75097": ["Pherkad", "Pherkad Major"],
-    "HIP 74793": ["Pherkad Minor"],
-    "HIP 85822": ["Yildun", "Vildiur"],
-    "HIP 82080": ["Circitores"],
-    "HIP 77055": ["Akfa Farkadain"],
-    "HIP 79822": ["Anwa Farkadain"],
-    "HIP 39953": ["Regor", "Suhail al Muhlif", "Suhail"],
-    "HIP 45941": ["Markeb", "Markab"],
-    "HIP 44816": ["Suhail", "Al Suhail al Wazn"],
-    "HIP 42913": ["Alsephina"],
-    "HIP 65474": ["Spica", "Azimech"],
-    "HIP 57757": ["Zavijava", "Minelauva"],
-    "HIP 61941": ["Porrima", "Antevorta", "Arich"],
-    "HIP 63608": ["Vindemiatrix", "Almuredin"],
-    "HIP 60129": ["Zaniah"],
-    "HIP 69701": ["Syrma"],
-    "HIP 66249": ["Heze"],
-    "HIP 63090": ["Minelauva", "Auva"],
-    "HIP 69974": ["Khambaliya", "Kambalia"],
-    "HIP 71957": ["Rijl al Awwa", "Rigilawwa"],
-    "HIP 69427": ["Kang", "Algafar I"],
-    "HIP 70755": ["Elgafar", "Algafar II"],
-    "HIP 95771": ["Anser"]
-  },
-  "features": {
-    "Aql": {
-      "id": "Aql",
-      "iau": "Aql",
+  "id": "western",
+  "region": "Europe",
+  "fallback_to_international_names": true,
+  "constellations": [
+    {
+      "id": "CON western Aql",
       "lines": [[98036, 97649, 97278], [97649, 95501, 97804], [99473, 97804], [95501, 93747, 93244], [95501, 93805]],
-      "name": "Aquila",
       "image": {
-        "file": "aquila.webp",
+        "file": "illustrations/aquila.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [163, 232], "hip": 97649},
           {"pos": [385, 131], "hip": 93244},
           {"pos": [397, 397], "hip": 93805}
         ]
-      }
+      },
+      "common_name": {"english": "Aquila"},
+      "iau": "Aql"
     },
-    "And": {
-      "id": "And",
-      "iau": "And",
+    {
+      "id": "CON western And",
       "lines": [[677, 3092, 5447], [9640, 5447, 4436, 3881]],
-      "name": "Andromeda",
       "image": {
-        "file": "andromeda.webp",
+        "file": "illustrations/andromeda.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [198, 215], "hip": 3881},
           {"pos": [337, 136], "hip": 3092},
           {"pos": [224, 428], "hip": 9640}
         ]
-      }
+      },
+      "common_name": {"english": "Andromeda"},
+      "iau": "And"
     },
-    "Scl": {
-      "id": "Scl",
-      "iau": "Scl",
+    {
+      "id": "CON western Scl",
       "lines": [[116231, 4577, 115102, 116231]],
-      "name": "Sculptor",
       "image": {
-        "file": "sculptor.webp",
+        "file": "illustrations/sculptor.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [231, 39], "hip": 115102},
           {"pos": [240, 106], "hip": 116231},
           {"pos": [32, 174], "hip": 4577}
         ]
-      }
+      },
+      "common_name": {"english": "Sculptor"},
+      "iau": "Scl"
     },
-    "Ara": {
-      "id": "Ara",
-      "iau": "Ara",
+    {
+      "id": "CON western Ara",
       "lines": [[88714, 85792, 83081, 82363, 85727, 85267, 85258, 88714]],
-      "name": "Ara",
       "image": {
-        "file": "ara.webp",
+        "file": "illustrations/ara.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [98, 70], "hip": 83081},
           {"pos": [191, 93], "hip": 85727},
           {"pos": [107, 249], "hip": 88714}
         ]
-      }
+      },
+      "common_name": {"english": "Ara"},
+      "iau": "Ara"
     },
-    "Lib": {
-      "id": "Lib",
-      "iau": "Lib",
+    {
+      "id": "CON western Lib",
       "lines": [[77853, 76333, 74785, 72622, 73714, 76333]],
-      "name": "Libra",
       "image": {
-        "file": "libra.webp",
+        "file": "illustrations/libra.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [41, 27], "hip": 74785},
           {"pos": [58, 170], "hip": 77853},
           {"pos": [224, 107], "hip": 73714}
         ]
-      }
+      },
+      "common_name": {"english": "Libra"},
+      "iau": "Lib"
     },
-    "Cet": {
-      "id": "Cet",
-      "iau": "Cet",
+    {
+      "id": "CON western Cet",
       "lines": [[10324, 11484], [8102, 3419, 1562], [3419, 5364, 6537, 8645, 11345, 12390, 12770, 11783, 8102], [10826, 12390], [10826, 12387, 12706, 14135, 13954, 12828, 11484, 12093, 12706]],
-      "name": "Cetus",
       "image": {
-        "file": "cetus.webp",
+        "file": "illustrations/cetus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [87, 63], "hip": 14143},
           {"pos": [28, 274], "hip": 12770},
           {"pos": [412, 440], "hip": 1562}
         ]
-      }
+      },
+      "common_name": {"english": "Cetus"},
+      "iau": "Cet"
     },
-    "Ari": {
-      "id": "Ari",
-      "iau": "Ari",
+    {
+      "id": "CON western Ari",
       "lines": [[13209, 9884, 8903, 8832]],
-      "name": "Aries",
       "image": {
-        "file": "aries.webp",
+        "file": "illustrations/aries.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [12, 130], "hip": 13209},
           {"pos": [58, 206], "hip": 13914},
           {"pos": [210, 47], "hip": 8832}
         ]
-      }
+      },
+      "common_name": {"english": "Aries"},
+      "iau": "Ari"
     },
-    "Sct": {
-      "id": "Sct",
-      "iau": "Sct",
+    {
+      "id": "CON western Sct",
       "lines": [[92175, 92202, 92814, 90595, 91117, 92175]],
-      "name": "Scutum",
       "image": {
-        "file": "scutum.webp",
+        "file": "illustrations/scutum.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [52, 17], "hip": 92175},
           {"pos": [224, 124], "hip": 90595},
           {"pos": [139, 206], "hip": 92814}
         ]
-      }
+      },
+      "common_name": {"english": "Scutum"},
+      "iau": "Sct"
     },
-    "Pyx": {
-      "id": "Pyx",
-      "iau": "Pyx",
+    {
+      "id": "CON western Pyx",
       "lines": [[42515, 42828, 43409]],
-      "name": "Pyxis",
       "image": {
-        "file": "pyxis.webp",
+        "file": "illustrations/pyxis.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [152, 220], "hip": 41723},
           {"pos": [94, 159], "hip": 42828},
           {"pos": [44, 202], "hip": 42515}
         ]
-      }
+      },
+      "common_name": {"english": "Pyxis"},
+      "iau": "Pyx"
     },
-    "Boo": {
-      "id": "Boo",
-      "iau": "Boo",
+    {
+      "id": "CON western Boo",
       "lines": [[71795, 69673, 72105, 74666, 73555, 71075, 71053, 69673, 67927, 67459]],
-      "name": "Bootes",
       "image": {
-        "file": "bootes.webp",
+        "file": "illustrations/bootes.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [225, 222], "hip": 72105},
           {"pos": [365, 184], "hip": 71075},
           {"pos": [207, 401], "hip": 67927}
         ]
-      }
+      },
+      "common_name": {"english": "Bootes"},
+      "iau": "Boo"
     },
-    "Cae": {
-      "id": "Cae",
-      "iau": "Cae",
+    {
+      "id": "CON western Cae",
       "lines": [[21060, 21770, 21861]],
-      "name": "Caelum",
       "image": {
-        "file": "caelum.webp",
+        "file": "illustrations/caelum.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [16, 231], "hip": 21060},
           {"pos": [76, 145], "hip": 21770},
           {"pos": [199, 75], "hip": 21861}
         ]
-      }
+      },
+      "common_name": {"english": "Caelum"},
+      "iau": "Cae"
     },
-    "Cha": {
-      "id": "Cha",
-      "iau": "Cha",
+    {
+      "id": "CON western Cha",
       "lines": [[40702, 51839, 60000]],
-      "name": "Chamaeleon",
       "image": {
-        "file": "chamaeleon.webp",
+        "file": "illustrations/chamaeleon.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [29, 214], "hip": 60000},
           {"pos": [73, 123], "hip": 51839},
           {"pos": [184, 33], "hip": 40702}
         ]
-      }
+      },
+      "common_name": {"english": "Chamaeleon"},
+      "iau": "Cha"
     },
-    "Cnc": {
-      "id": "Cnc",
-      "iau": "Cnc",
+    {
+      "id": "CON western Cnc",
       "lines": [[43103, 42806, 40843], [42806, 42911, 40526], [42911, 44066]],
-      "name": "Cancer",
       "image": {
-        "file": "cancer.webp",
+        "file": "illustrations/cancer.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [29, 166], "hip": 44066},
           {"pos": [101, 255], "hip": 40526},
           {"pos": [206, 91], "hip": 40843}
         ]
-      }
+      },
+      "common_name": {"english": "Cancer"},
+      "iau": "Cnc"
     },
-    "Cap": {
-      "id": "Cap",
-      "iau": "Cap",
+    {
+      "id": "CON western Cap",
       "lines": [[100064, 100345, 104139, 105515, 106985, 107556], [105515, 105881, 104139], [100345, 102485], [104139, 102978]],
-      "name": "Capricornus",
       "image": {
-        "file": "capricornus.webp",
+        "file": "illustrations/capricornus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [15, 436], "hip": 107556},
           {"pos": [403, 7], "hip": 100064},
           {"pos": [460, 438], "hip": 102978}
         ]
-      }
+      },
+      "common_name": {"english": "Capricornus"},
+      "iau": "Cap"
     },
-    "Car": {
-      "id": "Car",
-      "iau": "Car",
+    {
+      "id": "CON western Car",
       "lines": [[45238, 50099, 52419, 52468, 54463, 53253, 51232, 50371, 45556], [42568, 41037, 30438], [45080, 45556], [45080, 42568], [30438, 31685], [41037, 39429]],
-      "name": "Carina",
       "image": {
-        "file": "argonavis.webp",
+        "file": "illustrations/argonavis.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [202, 455], "hip": 45238},
           {"pos": [62, 216], "hip": 50191},
           {"pos": [298, 22], "hip": 39757}
         ]
-      }
+      },
+      "common_name": {"english": "Carina"},
+      "iau": "Car"
     },
-    "Cas": {
-      "id": "Cas",
-      "iau": "Cas",
+    {
+      "id": "CON western Cas",
       "lines": [[8886, 6686, 4427, 3179, 746]],
-      "name": "Cassiopeia",
       "image": {
-        "file": "cassiopeia.webp",
+        "file": "illustrations/cassiopeia.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [390, 336], "hip": 8886},
           {"pos": [163, 156], "hip": 3179},
           {"pos": [73, 243], "hip": 746}
         ]
-      }
+      },
+      "common_name": {"english": "Cassiopeia"},
+      "iau": "Cas"
     },
-    "Cen": {
-      "id": "Cen",
-      "iau": "Cen",
+    {
+      "id": "CON western Cen",
       "lines": [[71683, 68702, 66657, 68002, 68282, 67472, 67464, 65936, 65109], [67464, 68933], [67472, 71352, 73334], [68002, 61932, 60823, 59196, 56480, 56561]],
-      "name": "Centaurus",
       "image": {
-        "file": "centaurus.webp",
+        "file": "illustrations/centaurus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [118, 157], "hip": 68933},
           {"pos": [194, 444], "hip": 71683},
           {"pos": [463, 412], "hip": 56561}
         ]
-      }
+      },
+      "common_name": {"english": "Centaurus"},
+      "iau": "Cen"
     },
-    "Cep": {
-      "id": "Cep",
-      "iau": "Cep",
+    {
+      "id": "CON western Cep",
       "lines": [[109492, 112724, 106032, 105199, 109492], [112724, 116727, 106032]],
-      "name": "Cepheus",
       "image": {
-        "file": "cepheus.webp",
+        "file": "illustrations/cepheus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [60, 335], "hip": 116727},
           {"pos": [125, 170], "hip": 106032},
           {"pos": [335, 147], "hip": 109492}
         ]
-      }
+      },
+      "common_name": {"english": "Cepheus"},
+      "iau": "Cep"
     },
-    "Com": {
-      "id": "Com",
-      "iau": "Com",
+    {
+      "id": "CON western Com",
       "lines": [[64241, 64394, 60742]],
-      "name": "Coma Berenices",
       "image": {
-        "file": "coma-berenices.webp",
+        "file": "illustrations/coma-berenices.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [27, 199], "hip": 64241},
           {"pos": [38, 58], "hip": 64394},
           {"pos": [172, 64], "hip": 60742}
         ]
-      }
+      },
+      "common_name": {"english": "Coma Berenices"},
+      "iau": "Com"
     },
-    "Cvn": {
-      "id": "Cvn",
-      "iau": "Cvn",
+    {
+      "id": "CON western Cvn",
       "lines": [[61317, 63125]],
-      "name": "Canes Venatici",
       "image": {
-        "file": "canes-venatici.webp",
+        "file": "illustrations/canes-venatici.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [117, 113], "hip": 63901},
           {"pos": [206, 40], "hip": 61317},
           {"pos": [207, 152], "hip": 61309}
         ]
-      }
+      },
+      "common_name": {"english": "Canes Venatici"},
+      "iau": "Cvn"
     },
-    "Aur": {
-      "id": "Aur",
-      "iau": "Aur",
+    {
+      "id": "CON western Aur",
       "lines": [[28380, 28360, 24608, 23453, 23015], [25428, 23015], [25428, 28380]],
-      "name": "Auriga",
       "image": {
-        "file": "auriga.webp",
+        "file": "illustrations/auriga.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [196, 189], "hip": 28380},
           {"pos": [419, 208], "hip": 24608},
           {"pos": [290, 423], "hip": 23015}
         ]
-      }
+      },
+      "common_name": {"english": "Auriga"},
+      "iau": "Aur"
     },
-    "Col": {
-      "id": "Col",
-      "iau": "Col",
+    {
+      "id": "CON western Col",
       "lines": [[30277, 29807, 28199, 27628, 28328], [27628, 26634, 25859]],
-      "name": "Columba",
       "image": {
-        "file": "columba.webp",
+        "file": "illustrations/columba.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [139, 29], "hip": 30277},
           {"pos": [40, 190], "hip": 28328},
           {"pos": [204, 211], "hip": 25859}
         ]
-      }
+      },
+      "common_name": {"english": "Columba"},
+      "iau": "Col"
     },
-    "Cir": {
-      "id": "Cir",
-      "iau": "Cir",
+    {
+      "id": "CON western Cir",
       "lines": [[71908, 75323], [71908, 74824]],
-      "name": "Circinus",
       "image": {
-        "file": "circinus.webp",
+        "file": "illustrations/circinus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [5, 36], "hip": 75323},
           {"pos": [39, 11], "hip": 74824},
           {"pos": [235, 239], "hip": 71908}
         ]
-      }
+      },
+      "common_name": {"english": "Circinus"},
+      "iau": "Cir"
     },
-    "Crt": {
-      "id": "Crt",
-      "iau": "Crt",
+    {
+      "id": "CON western Crt",
       "lines": [[53740, 54682, 55705, 55282, 53740], [55282, 55687, 56633, 58188, 57283, 55705]],
-      "name": "Crater",
       "image": {
-        "file": "crater.webp",
+        "file": "illustrations/crater.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [45, 41], "hip": 58188},
           {"pos": [160, 149], "hip": 55282},
           {"pos": [55, 242], "hip": 54682}
         ]
-      }
+      },
+      "common_name": {"english": "Crater"},
+      "iau": "Crt"
     },
-    "CrA": {
-      "id": "CrA",
-      "iau": "CrA",
+    {
+      "id": "CON western CrA",
       "lines": [[91875, 92989, 93174, 93825, 94114, 94160, 94005, 93542, 92953], [91875, 90887]],
-      "name": "Corona Australis",
       "image": {
-        "file": "corona-australis.webp",
+        "file": "illustrations/corona-australis.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [14, 142], "hip": 93825},
           {"pos": [218, 34], "hip": 90887},
           {"pos": [195, 208], "hip": 92953}
         ]
-      }
+      },
+      "common_name": {"english": "Corona Australis"},
+      "iau": "CrA"
     },
-    "CrB": {
-      "id": "CrB",
-      "iau": "CrB",
+    {
+      "id": "CON western CrB",
       "lines": [[76127, 75695, 76267, 76952, 77512, 78159, 78493]],
-      "name": "Corona Borealis",
       "image": {
-        "file": "corona-borealis.webp",
+        "file": "illustrations/corona-borealis.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [16, 186], "hip": 78493},
           {"pos": [201, 203], "hip": 76952},
           {"pos": [157, 20], "hip": 76127}
         ]
-      }
+      },
+      "common_name": {"english": "Corona Borealis"},
+      "iau": "CrB"
     },
-    "Crv": {
-      "id": "Crv",
-      "iau": "Crv",
+    {
+      "id": "CON western Crv",
       "lines": [[61174, 60965, 59803, 59316, 59199], [59316, 61359, 60965]],
-      "name": "Corvus",
       "image": {
-        "file": "corvus.webp",
+        "file": "illustrations/corvus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [65, 59], "hip": 60965},
           {"pos": [77, 235], "hip": 61359},
           {"pos": [213, 187], "hip": 59316}
         ]
-      }
+      },
+      "common_name": {"english": "Corvus"},
+      "iau": "Crv"
     },
-    "Cru": {
-      "id": "Cru",
-      "iau": "Cru",
+    {
+      "id": "CON western Cru",
       "lines": [[61084, 60718], [62434, 59747]],
-      "name": "Crux",
       "image": {
-        "file": "crux.webp",
+        "file": "illustrations/crux.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [112, 21], "hip": 61084},
           {"pos": [42, 20], "hip": 62434},
           {"pos": [21, 106], "hip": 60718}
         ]
-      }
+      },
+      "common_name": {"english": "Crux"},
+      "iau": "Cru"
     },
-    "Cyg": {
-      "id": "Cyg",
-      "iau": "Cyg",
+    {
+      "id": "CON western Cyg",
       "lines": [[94779, 95853, 97165, 100453, 102098], [100453, 102488, 104732, 107310], [100453, 98110, 95947]],
-      "name": "Cygnus",
       "image": {
-        "file": "cygnus.webp",
+        "file": "illustrations/cygnus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [7, 382], "hip": 107310},
           {"pos": [474, 46], "hip": 94779},
           {"pos": [467, 453], "hip": 95947}
         ]
-      }
+      },
+      "common_name": {"english": "Cygnus"},
+      "iau": "Cyg"
     },
-    "Del": {
-      "id": "Del",
-      "iau": "Del",
+    {
+      "id": "CON western Del",
       "lines": [[101421, 101769, 101958, 102532, 102281, 101769]],
-      "name": "Delphinus",
       "image": {
-        "file": "delphinus.webp",
+        "file": "illustrations/delphinus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [59, 31], "hip": 102532},
           {"pos": [75, 148], "hip": 102805},
           {"pos": [211, 143], "hip": 101421}
         ]
-      }
+      },
+      "common_name": {"english": "Delphinus"},
+      "iau": "Del"
     },
-    "Dor": {
-      "id": "Dor",
-      "iau": "Dor",
+    {
+      "id": "CON western Dor",
       "lines": [[27100, 27890, 26069, 27100], [26069, 21281, 19893]],
-      "name": "Dorado",
       "image": {
-        "file": "dorado.webp",
+        "file": "illustrations/dorado.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [56, 197], "hip": 27890},
           {"pos": [75, 228], "hip": 27100},
           {"pos": [219, 46], "hip": 19893}
         ]
-      }
+      },
+      "common_name": {"english": "Dorado"},
+      "iau": "Dor"
     },
-    "Dra": {
-      "id": "Dra",
-      "iau": "Dra",
+    {
+      "id": "CON western Dra",
       "lines": [[87585, 87833, 85670, 85829, 87585, 94376, 97433, 94648, 89937, 83895, 80331, 78527, 75458, 68756, 61281, 56211]],
-      "name": "Draco",
       "image": {
-        "file": "draco.webp",
+        "file": "illustrations/draco.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [13, 411], "hip": 56211},
           {"pos": [361, 154], "hip": 85670},
           {"pos": [449, 429], "hip": 97433}
         ]
-      }
+      },
+      "common_name": {"english": "Draco"},
+      "iau": "Dra"
     },
-    "Nor": {
-      "id": "Nor",
-      "iau": "Nor",
+    {
+      "id": "CON western Nor",
       "lines": [[79509, 80000, 80582, 78639, 80000], [78639, 79509]],
-      "name": "Norma",
       "image": {
-        "file": "norma.webp",
+        "file": "illustrations/norma.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [17, 45], "hip": 78639},
           {"pos": [101, 38], "hip": 79509},
           {"pos": [16, 112], "hip": 80582}
         ]
-      }
+      },
+      "common_name": {"english": "Norma"},
+      "iau": "Nor"
     },
-    "Eri": {
-      "id": "Eri",
-      "iau": "Eri",
+    {
+      "id": "CON western Eri",
       "lines": [[7588, 9007, 10602, 11407, 12413, 12486, 13847, 15510, 17797, 17874, 20042, 20535, 21393, 17651, 16611, 15474, 14146, 12843, 13701, 15197, 16537, 17378, 21444, 22109, 22701, 23875, 23972, 21594]],
-      "name": "Eridanus",
       "image": {
-        "file": "eridanus.webp",
+        "file": "illustrations/eridanus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [41, 95], "hip": 22109},
           {"pos": [296, 44], "hip": 13701},
           {"pos": [493, 490], "hip": 7588}
         ]
-      }
+      },
+      "common_name": {"english": "Eridanus"},
+      "iau": "Eri"
     },
-    "Sge": {
-      "id": "Sge",
-      "iau": "Sge",
+    {
+      "id": "CON western Sge",
       "lines": [[96837, 97365, 96757], [97365, 98337, 98920]],
-      "name": "Sagitta",
       "image": {
-        "file": "sagitta.webp",
+        "file": "illustrations/sagitta.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [6, 12], "hip": 98920},
           {"pos": [249, 213], "hip": 96757},
           {"pos": [218, 243], "hip": 96837}
         ]
-      }
+      },
+      "common_name": {"english": "Sagitta"},
+      "iau": "Sge"
     },
-    "For": {
-      "id": "For",
-      "iau": "For",
+    {
+      "id": "CON western For",
       "lines": [[13147, 14879]],
-      "name": "Fornax",
       "image": {
-        "file": "fornax.webp",
+        "file": "illustrations/fornax.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [42, 125], "hip": 14879},
           {"pos": [128, 37], "hip": 13202},
           {"pos": [190, 129], "hip": 13147}
         ]
-      }
+      },
+      "common_name": {"english": "Fornax"},
+      "iau": "For"
     },
-    "Gem": {
-      "id": "Gem",
-      "iau": "Gem",
+    {
+      "id": "CON western Gem",
       "lines": [[31681, 34088, 35550, 35350, 32362], [35550, 36962, 37740], [36962, 37826], [36962, 36046, 34693, 36850], [34693, 33018], [34693, 32246, 30883], [32246, 30343, 29655, 28734]],
-      "name": "Gemini",
       "image": {
-        "file": "gemini.webp",
+        "file": "illustrations/gemini.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [14, 81], "hip": 37740},
           {"pos": [117, 252], "hip": 32362},
           {"pos": [249, 165], "hip": 28734}
         ]
-      }
+      },
+      "common_name": {"english": "Gemini"},
+      "iau": "Gem"
     },
-    "Cam": {
-      "id": "Cam",
-      "iau": "Cam",
+    {
+      "id": "CON western Cam",
       "lines": [[16228, 18505, 22783], [16228, 17959, 22783], [17959, 25110]],
-      "name": "Camelopardalis",
       "image": {
-        "file": "camelopardalis.webp",
+        "file": "illustrations/camelopardalis.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [77, 46], "hip": 25110},
           {"pos": [128, 135], "hip": 22783},
           {"pos": [219, 136], "hip": 16228}
         ]
-      }
+      },
+      "common_name": {"english": "Camelopardalis"},
+      "iau": "Cam"
     },
-    "CMa": {
-      "id": "CMa",
-      "iau": "CMa",
+    {
+      "id": "CON western CMa",
       "lines": [[33160, 34045, 33347, 32349, 33977, 34444, 35037, 35904], [33579, 33856, 34444], [33856, 33152, 31592, 31416], [31592, 30324], [31592, 32349], [33579, 32759], [30122, 33579], [33347, 33160]],
-      "name": "Canis Major",
       "image": {
-        "file": "canis-major.webp",
+        "file": "illustrations/canis-major.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [21, 347], "hip": 35904},
           {"pos": [321, 24], "hip": 33160},
           {"pos": [318, 492], "hip": 30122}
         ]
-      }
+      },
+      "common_name": {"english": "Canis Major"},
+      "iau": "CMa"
     },
-    "UMa": {
-      "id": "UMa",
-      "iau": "UMa",
+    {
+      "id": "CON western UMa",
       "lines": [[67301, 65378, 62956, 59774, 54061, 53910, 58001, 59774], [58001, 57399, 54539, 50372], [54539, 50801], [53910, 48402, 46853, 44471], [46853, 44127], [48402, 48319, 41704, 46733, 54061]],
-      "name": "Ursa Major",
       "image": {
-        "file": "ursa-major.webp",
+        "file": "illustrations/ursa-major.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [26, 75], "hip": 67301},
           {"pos": [452, 272], "hip": 41704},
           {"pos": [258, 394], "hip": 50372}
         ]
-      }
+      },
+      "common_name": {"english": "Ursa Major"},
+      "iau": "UMa"
     },
-    "Gru": {
-      "id": "Gru",
-      "iau": "Gru",
+    {
+      "id": "CON western Gru",
       "lines": [[114131, 110997, 109268, 112122, 114421, 114131], [112122, 113638], [112122, 112623], [109268, 109111, 108085]],
-      "name": "Grus",
       "image": {
-        "file": "grus.webp",
+        "file": "illustrations/grus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [49, 109], "hip": 114131},
           {"pos": [85, 206], "hip": 112623},
           {"pos": [220, 45], "hip": 108085}
         ]
-      }
+      },
+      "common_name": {"english": "Grus"},
+      "iau": "Gru"
     },
-    "Her": {
-      "id": "Her",
-      "iau": "Her",
+    {
+      "id": "CON western Her",
       "lines": [[86414, 87808, 85112, 84606, 84380, 81833, 81126, 79992, 77760], [81833, 81693, 80816, 80170], [81693, 83207, 85693, 84379], [86974, 87933, 88794], [83207, 84380], [86974, 85693]],
-      "name": "Hercules",
       "image": {
-        "file": "hercules.webp",
+        "file": "illustrations/hercules.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [44, 115], "hip": 80170},
           {"pos": [254, 477], "hip": 79992},
           {"pos": [441, 102], "hip": 88794}
         ]
-      }
+      },
+      "common_name": {"english": "Hercules"},
+      "iau": "Her"
     },
-    "Hor": {
-      "id": "Hor",
-      "iau": "Hor",
+    {
+      "id": "CON western Hor",
       "lines": [[19747, 12484, 14240]],
-      "name": "Horologium",
       "image": {
-        "file": "horlogium.webp",
+        "file": "illustrations/horlogium.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [16, 235], "hip": 19747},
           {"pos": [184, 67], "hip": 12484},
           {"pos": [235, 119], "hip": 14240}
         ]
-      }
+      },
+      "common_name": {"english": "Horologium"},
+      "iau": "Hor"
     },
-    "Hya": {
-      "id": "Hya",
-      "iau": "Hya",
+    {
+      "id": "CON western Hya",
       "lines": [[42799, 42402, 42313, 43109, 43234, 42799], [43234, 43813, 45336, 46776, 46509, 46390, 48356, 49841, 51069, 52943, 56343, 57936, 64166, 64962]],
-      "name": "Hydra",
       "image": {
-        "file": "hydra.webp",
+        "file": "illustrations/hydra.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [26, 491], "hip": 64962},
           {"pos": [111, 149], "hip": 55434},
           {"pos": [401, 33], "hip": 43813}
         ]
-      }
+      },
+      "common_name": {"english": "Hydra"},
+      "iau": "Hya"
     },
-    "Hyi": {
-      "id": "Hyi",
-      "iau": "Hyi",
+    {
+      "id": "CON western Hyi",
       "lines": [[2021, 17678, 12394, 11001, 9236]],
-      "name": "Hydrus",
       "image": {
-        "file": "hydrus.webp",
+        "file": "illustrations/hydrus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [14, 204], "hip": 9236},
           {"pos": [201, 43], "hip": 2021},
           {"pos": [241, 215], "hip": 17678}
         ]
-      }
+      },
+      "common_name": {"english": "Hydrus"},
+      "iau": "Hyi"
     },
-    "Ind": {
-      "id": "Ind",
-      "iau": "Ind",
+    {
+      "id": "CON western Ind",
       "lines": [[105319, 101772, 103227, 105319]],
-      "name": "Indus",
       "image": {
-        "file": "indus.webp",
+        "file": "illustrations/indus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [64, 143], "hip": 101772},
           {"pos": [154, 20], "hip": 103227},
           {"pos": [175, 98], "hip": 105319}
         ]
-      }
+      },
+      "common_name": {"english": "Indus"},
+      "iau": "Ind"
     },
-    "Lac": {
-      "id": "Lac",
-      "iau": "Lac",
+    {
+      "id": "CON western Lac",
       "lines": [[109937, 111104, 111022, 110609, 110538, 111169, 111022]],
-      "name": "Lacerta",
       "image": {
-        "file": "lacerta.webp",
+        "file": "illustrations/lacerta.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [249, 42], "hip": 110538},
           {"pos": [108, 123], "hip": 111104},
           {"pos": [67, 215], "hip": 109937}
         ]
-      }
+      },
+      "common_name": {"english": "Lacerta"},
+      "iau": "Lac"
     },
-    "Mon": {
-      "id": "Mon",
-      "iau": "Mon",
+    {
+      "id": "CON western Mon",
       "lines": [[29651, 30867, 34769, 30419, 29151], [34769, 39863, 37447]],
-      "name": "Monoceros",
       "image": {
-        "file": "monoceros.webp",
+        "file": "illustrations/monoceros.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [20, 306], "hip": 39863},
           {"pos": [394, 80], "hip": 31978},
           {"pos": [509, 359], "hip": 29651}
         ]
-      }
+      },
+      "common_name": {"english": "Monoceros"},
+      "iau": "Mon"
     },
-    "Lep": {
-      "id": "Lep",
-      "iau": "Lep",
+    {
+      "id": "CON western Lep",
       "lines": [[28910, 28103, 27288, 25985, 24305], [25985, 27654, 27072, 25606, 23685], [25985, 25606], [24305, 24845], [24305, 24327], [23685, 24305], [24327, 24244], [24845, 24873]],
-      "name": "Lepus",
       "image": {
-        "file": "lepus.webp",
+        "file": "illustrations/lepus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [21, 48], "hip": 28910},
           {"pos": [246, 62], "hip": 24244},
           {"pos": [213, 235], "hip": 23685}
         ]
-      }
+      },
+      "common_name": {"english": "Lepus"},
+      "iau": "Lep"
     },
-    "Leo": {
-      "id": "Leo",
-      "iau": "Leo",
+    {
+      "id": "CON western Leo",
       "lines": [[57632, 54879, 49669, 49583, 50583, 54872, 57632], [50583, 50335, 48455, 47908], [54872, 54879]],
-      "name": "Leo",
       "image": {
-        "file": "leo.webp",
+        "file": "illustrations/leo.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [69, 411], "hip": 57632},
           {"pos": [383, 186], "hip": 49669},
           {"pos": [321, 32], "hip": 47908}
         ]
-      }
+      },
+      "common_name": {"english": "Leo"},
+      "iau": "Leo"
     },
-    "Lup": {
-      "id": "Lup",
-      "iau": "Lup",
+    {
+      "id": "CON western Lup",
       "lines": [[77634, 78970, 78384, 77634], [78384, 76297, 75141, 75177], [75141, 73273], [76297, 76552, 74395, 71860], [74395, 71536], [71860, 70576], [71860, 73273]],
-      "name": "Lupus",
       "image": {
-        "file": "lupus.webp",
+        "file": "illustrations/lupus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [90, 257], "hip": 74395},
           {"pos": [207, 435], "hip": 70576},
           {"pos": [425, 239], "hip": 75177}
         ]
-      }
+      },
+      "common_name": {"english": "Lupus"},
+      "iau": "Lup"
     },
-    "Lyn": {
-      "id": "Lyn",
-      "iau": "Lyn",
+    {
+      "id": "CON western Lyn",
       "lines": [[45860, 45688, 44700, 44248, 41075, 36145, 33449, 30060]],
-      "name": "Lynx",
       "image": {
-        "file": "lynx.webp",
+        "file": "illustrations/lynx.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [100, 216], "hip": 44248},
           {"pos": [337, 212], "hip": 36145},
           {"pos": [472, 119], "hip": 30060}
         ]
-      }
+      },
+      "common_name": {"english": "Lynx"},
+      "iau": "Lyn"
     },
-    "Lyr": {
-      "id": "Lyr",
-      "iau": "Lyr",
+    {
+      "id": "CON western Lyr",
       "lines": [[91262, 91971, 92420, 93194, 92791, 91971]],
-      "name": "Lyra",
       "image": {
-        "file": "lyra.webp",
+        "file": "illustrations/lyra.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [100, 96], "hip": 92791},
           {"pos": [157, 38], "hip": 91262},
           {"pos": [139, 162], "hip": 92420}
         ]
-      }
+      },
+      "common_name": {"english": "Lyra"},
+      "iau": "Lyr"
     },
-    "Ant": {
-      "id": "Ant",
-      "iau": "Ant",
+    {
+      "id": "CON western Ant",
       "lines": [[51172, 48926]],
-      "name": "Antlia",
       "image": {
-        "file": "antlia.webp",
+        "file": "illustrations/antlia.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [4, 84], "hip": 51172},
           {"pos": [72, 69], "hip": 47758},
           {"pos": [42, 120], "hip": 48926}
         ]
-      }
+      },
+      "common_name": {"english": "Antlia"},
+      "iau": "Ant"
     },
-    "Mic": {
-      "id": "Mic",
-      "iau": "Mic",
+    {
+      "id": "CON western Mic",
       "lines": [[105140, 103738, 102831]],
-      "name": "Microscopium",
       "image": {
-        "file": "microscopium.webp",
+        "file": "illustrations/microscopium.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [122, 226], "hip": 105140},
           {"pos": [168, 148], "hip": 103738},
           {"pos": [234, 115], "hip": 102831}
         ]
-      }
+      },
+      "common_name": {"english": "Microscopium"},
+      "iau": "Mic"
     },
-    "Mus": {
-      "id": "Mus",
-      "iau": "Mus",
+    {
+      "id": "CON western Mus",
       "lines": [[62322, 57363, 61199, 61585, 62322]],
-      "name": "Musca",
       "image": {
-        "file": "musca.webp",
+        "file": "illustrations/musca.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [57, 52], "hip": 61199},
           {"pos": [177, 68], "hip": 62322},
           {"pos": [129, 236], "hip": 57363}
         ]
-      }
+      },
+      "common_name": {"english": "Musca"},
+      "iau": "Mus"
     },
-    "Oct": {
-      "id": "Oct",
-      "iau": "Oct",
+    {
+      "id": "CON western Oct",
       "lines": [[107089, 112405, 70638, 107089]],
-      "name": "Octans",
       "image": {
-        "file": "octans.webp",
+        "file": "illustrations/octans.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [15, 16], "hip": 70638},
           {"pos": [236, 239], "hip": 107089},
           {"pos": [247, 140], "hip": 112405}
         ]
-      }
+      },
+      "common_name": {"english": "Octans"},
+      "iau": "Oct"
     },
-    "Aps": {
-      "id": "Aps",
-      "iau": "Aps",
+    {
+      "id": "CON western Aps",
       "lines": [[72370, 81065, 81852]],
-      "name": "Apus",
       "image": {
-        "file": "apus.webp",
+        "file": "illustrations/apus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [66, 60], "hip": 81852},
           {"pos": [76, 87], "hip": 81065},
           {"pos": [163, 110], "hip": 72370}
         ]
-      }
+      },
+      "common_name": {"english": "Apus"},
+      "iau": "Aps"
     },
-    "Oph": {
-      "id": "Oph",
-      "iau": "Oph",
+    {
+      "id": "CON western Oph",
       "lines": [[86032, 86742], [84012, 86742], [86032, 83000, 79882, 81377, 84012, 85755]],
-      "name": "Ophiuchus",
       "image": {
-        "file": "ophiuchus.webp",
+        "file": "illustrations/ophiuchus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [5, 183], "hip": 92946},
           {"pos": [452, 47], "hip": 77233},
           {"pos": [238, 453], "hip": 85755}
         ]
-      }
+      },
+      "common_name": {"english": "Ophiuchus"},
+      "iau": "Oph"
     },
-    "Ori": {
-      "id": "Ori",
-      "iau": "Ori",
+    {
+      "id": "CON western Ori",
       "lines": [[26727, 26311, 25930], [28691, 29426, 29038, 27913], [29426, 28614, 27989, 26727, 27366, 24436, 25930, 25336, 26207, 27989], [25336, 22449, 22549, 22730, 23123], [22449, 22509, 22845], [29038, 28614]],
-      "name": "Orion",
       "image": {
-        "file": "orion.webp",
+        "file": "illustrations/orion.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [59, 11], "hip": 27913},
           {"pos": [329, 477], "hip": 27366},
           {"pos": [421, 91], "hip": 22449}
         ]
-      }
+      },
+      "common_name": {"english": "Orion"},
+      "iau": "Ori"
     },
-    "Pav": {
-      "id": "Pav",
-      "iau": "Pav",
+    {
+      "id": "CON western Pav",
       "lines": [[100751, 105858, 102395, 99240, 100751], [99240, 98495, 91792, 93015, 99240], [93015, 92609, 90098, 88866, 92609], [88866, 86929]],
-      "name": "Pavo",
       "image": {
-        "file": "pavo.webp",
+        "file": "illustrations/pavo.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [55, 60], "hip": 100751},
           {"pos": [110, 208], "hip": 98495},
           {"pos": [235, 146], "hip": 86929}
         ]
-      }
+      },
+      "common_name": {"english": "Pavo"},
+      "iau": "Pav"
     },
-    "Peg": {
-      "id": "Peg",
-      "iau": "Peg",
+    {
+      "id": "CON western Peg",
       "lines": [[1067, 113963], [113881, 112158, 109352], [113881, 112748, 112440, 109176, 107354], [113963, 112447, 112029, 109427, 107315], [677, 113881], [677, 1067], [113881, 113963]],
-      "name": "Pegasus",
       "image": {
-        "file": "pegasus.webp",
+        "file": "illustrations/pegasus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [164, 41], "hip": 107315},
           {"pos": [47, 283], "hip": 109410},
           {"pos": [409, 349], "hip": 1067}
         ]
-      }
+      },
+      "common_name": {"english": "Pegasus"},
+      "iau": "Peg"
     },
-    "Pic": {
-      "id": "Pic",
-      "iau": "Pic",
+    {
+      "id": "CON western Pic",
       "lines": [[32607, 27530, 27321]],
-      "name": "Pictor",
       "image": {
-        "file": "pictor.webp",
+        "file": "illustrations/pictor.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [4, 252], "hip": 32607},
           {"pos": [148, 138], "hip": 27530},
           {"pos": [167, 38], "hip": 27321}
         ]
-      }
+      },
+      "common_name": {"english": "Pictor"},
+      "iau": "Pic"
     },
-    "Per": {
-      "id": "Per",
-      "iau": "Per",
+    {
+      "id": "CON western Per",
       "lines": [[17448, 18246, 18614, 18532, 17358, 15863, 14328, 13268], [15863, 14576, 14354, 13254]],
-      "name": "Perseus",
       "image": {
-        "file": "perseus.webp",
+        "file": "illustrations/perseus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [164, 323], "hip": 18532},
           {"pos": [299, 175], "hip": 15863},
           {"pos": [385, 386], "hip": 13254}
         ]
-      }
+      },
+      "common_name": {"english": "Perseus"},
+      "iau": "Per"
     },
-    "Equ": {
-      "id": "Equ",
-      "iau": "Equ",
+    {
+      "id": "CON western Equ",
       "lines": [[104521, 104858, 105570, 104987, 104521]],
-      "name": "Equuleus",
       "image": {
-        "file": "equuleus.webp",
+        "file": "illustrations/equuleus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [17, 180], "hip": 104521},
           {"pos": [149, 86], "hip": 104987},
           {"pos": [160, 160], "hip": 105570}
         ]
-      }
+      },
+      "common_name": {"english": "Equuleus"},
+      "iau": "Equ"
     },
-    "CMi": {
-      "id": "CMi",
-      "iau": "CMi",
+    {
+      "id": "CON western CMi",
       "lines": [[37279, 36188]],
-      "name": "Canis Minor",
       "image": {
-        "file": "canis-minor.webp",
+        "file": "illustrations/canis-minor.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [96, 43], "hip": 37921},
           {"pos": [101, 171], "hip": 37279},
           {"pos": [184, 124], "hip": 36188}
         ]
-      }
+      },
+      "common_name": {"english": "Canis Minor"},
+      "iau": "CMi"
     },
-    "LMi": {
-      "id": "LMi",
-      "iau": "LMi",
+    {
+      "id": "CON western LMi",
       "lines": [[53229, 51233, 49593, 46952], [49593, 53229]],
-      "name": "Leo Minor",
       "image": {
-        "file": "leo-minor.webp",
+        "file": "illustrations/leo-minor.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [8, 40], "hip": 53229},
           {"pos": [214, 127], "hip": 46952},
           {"pos": [61, 155], "hip": 50303}
         ]
-      }
+      },
+      "common_name": {"english": "Leo Minor"},
+      "iau": "LMi"
     },
-    "Vul": {
-      "id": "Vul",
-      "iau": "Vul",
+    {
+      "id": "CON western Vul",
       "lines": [[95771, 98543]],
-      "name": "Vulpecula",
       "image": {
-        "file": "vulpecula.webp",
+        "file": "illustrations/vulpecula.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [35, 133], "hip": 98543},
           {"pos": [174, 111], "hip": 95771},
           {"pos": [242, 135], "hip": 94703}
         ]
-      }
+      },
+      "common_name": {"english": "Vulpecula"},
+      "iau": "Vul"
     },
-    "UMi": {
-      "id": "UMi",
-      "iau": "UMi",
+    {
+      "id": "CON western UMi",
       "lines": [[11767, 85822, 82080, 77055, 79822, 75097, 72607, 77055]],
-      "name": "Ursa Minor",
       "image": {
-        "file": "ursa-minor.webp",
+        "file": "illustrations/ursa-minor.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [15, 20], "hip": 11767},
           {"pos": [193, 51], "hip": 59504},
           {"pos": [93, 209], "hip": 79822}
         ]
-      }
+      },
+      "common_name": {"english": "Ursa Minor"},
+      "iau": "UMi"
     },
-    "Phe": {
-      "id": "Phe",
-      "iau": "Phe",
+    {
+      "id": "CON western Phe",
       "lines": [[5348, 5165, 2072, 5348], [5165, 7083, 8837, 5165, 6867, 2072, 2081, 765, 2072]],
-      "name": "Phoenix",
       "image": {
-        "file": "phoenix.webp",
+        "file": "illustrations/phoenix.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [55, 243], "hip": 8837},
           {"pos": [209, 15], "hip": 765},
           {"pos": [229, 214], "hip": 5348}
         ]
-      }
+      },
+      "common_name": {"english": "Phoenix"},
+      "iau": "Phe"
     },
-    "Psc": {
-      "id": "Psc",
-      "iau": "Psc",
+    {
+      "id": "CON western Psc",
       "lines": [[4889, 5742], [4889, 6193, 5742, 7097, 8198, 9487, 8833, 7884, 7007, 4906, 3760, 1645, 118268, 116771, 116928, 115738, 114971, 115830, 116771]],
-      "name": "Pisces",
       "image": {
-        "file": "pisces.webp",
+        "file": "illustrations/pisces.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [24, 104], "hip": 4889},
           {"pos": [111, 489], "hip": 9487},
           {"pos": [481, 155], "hip": 114971}
         ]
-      }
+      },
+      "common_name": {"english": "Pisces"},
+      "iau": "Psc"
     },
-    "PsA": {
-      "id": "PsA",
-      "iau": "PsA",
+    {
+      "id": "CON western PsA",
       "lines": [[113368, 111954, 108661, 107608, 109422, 111188, 113246]],
-      "name": "Piscis Austrinus",
       "image": {
-        "file": "piscis-austrinus.webp",
+        "file": "illustrations/piscis-austrinus.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [190, 5], "hip": 113246},
           {"pos": [82, 202], "hip": 107608},
           {"pos": [236, 92], "hip": 111954}
         ]
-      }
+      },
+      "common_name": {"english": "Piscis Austrinus"},
+      "iau": "PsA"
     },
-    "Vol": {
-      "id": "Vol",
-      "iau": "Vol",
+    {
+      "id": "CON western Vol",
       "lines": [[37504, 34481, 39794, 37504], [39794, 35228], [39794, 41312, 44382, 39794]],
-      "name": "Volans",
       "image": {
-        "file": "volans.webp",
+        "file": "illustrations/volans.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [55, 85], "hip": 44382},
           {"pos": [210, 122], "hip": 35228},
           {"pos": [207, 163], "hip": 34481}
         ]
-      }
+      },
+      "common_name": {"english": "Volans"},
+      "iau": "Vol"
     },
-    "Pup": {
-      "id": "Pup",
-      "iau": "Pup",
+    {
+      "id": "CON western Pup",
       "lines": [[39757, 38146, 35264, 31685, 32768, 36377, 39429, 39757]],
-      "name": "Puppis"
+      "common_name": {"english": "Puppis"},
+      "iau": "Pup"
     },
-    "Ret": {
-      "id": "Ret",
-      "iau": "Ret",
+    {
+      "id": "CON western Ret",
       "lines": [[19780, 19921, 18597, 17440, 19780]],
-      "name": "Reticulum",
       "image": {
-        "file": "reticulum.webp",
+        "file": "illustrations/reticulum.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [47, 56], "hip": 18597},
           {"pos": [78, 88], "hip": 19780},
           {"pos": [16, 111], "hip": 19921}
         ]
-      }
+      },
+      "common_name": {"english": "Reticulum"},
+      "iau": "Ret"
     },
-    "Sgr": {
-      "id": "Sgr",
-      "iau": "Sgr",
+    {
+      "id": "CON western Sgr",
       "lines": [[89931, 90496], [89642, 90185, 88635, 87072], [88635, 89931, 90185, 93506, 92041, 89931], [92041, 90496, 89341], [93506, 93864, 92855, 92041], [92855, 93085, 93683, 94820, 95168], [93864, 96406, 98688, 98412, 98032, 95347], [98032, 95294]],
-      "name": "Sagittarius",
       "image": {
-        "file": "sagittarius.webp",
+        "file": "illustrations/sagittarius.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [96, 82], "hip": 95168},
           {"pos": [307, 492], "hip": 95294},
           {"pos": [506, 100], "hip": 87072}
         ]
-      }
+      },
+      "common_name": {"english": "Sagittarius"},
+      "iau": "Sgr"
     },
-    "Sco": {
-      "id": "Sco",
-      "iau": "Sco",
+    {
+      "id": "CON western Sco",
       "lines": [[85927, 86670, 87073, 86228, 84143, 82671, 82514, 82396, 81266, 80763, 78401], [80763, 78265], [80763, 78820]],
-      "name": "Scorpius",
       "image": {
-        "file": "scorpius.webp",
+        "file": "illustrations/scorpius.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [447, 29], "hip": 78820},
           {"pos": [62, 365], "hip": 85927},
           {"pos": [217, 462], "hip": 82729}
         ]
-      }
+      },
+      "common_name": {"english": "Scorpius"},
+      "iau": "Sco"
     },
-    "Ser": {
-      "id": "Ser",
-      "iau": "Ser",
+    {
+      "id": "CON western Ser",
       "lines": [[77516, 77622, 77070, 76276, 77233, 78072, 77450, 77233], [92946, 89962, 86565, 86263, 84880]],
-      "name": "Serpens"
+      "common_name": {"english": "Serpens"},
+      "iau": "Ser"
     },
-    "Sex": {
-      "id": "Sex",
-      "iau": "Sex",
+    {
+      "id": "CON western Sex",
       "lines": [[51437, 49641]],
-      "name": "Sextans",
       "image": {
-        "file": "sextans.webp",
+        "file": "illustrations/sextans.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [26, 54], "hip": 51437},
           {"pos": [68, 36], "hip": 49641},
           {"pos": [118, 84], "hip": 48437}
         ]
-      }
+      },
+      "common_name": {"english": "Sextans"},
+      "iau": "Sex"
     },
-    "Men": {
-      "id": "Men",
-      "iau": "Men",
+    {
+      "id": "CON western Men",
       "lines": [[25918, 21949]],
-      "name": "Mensa",
       "image": {
-        "file": "mensa.webp",
+        "file": "illustrations/mensa.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [100, 67], "hip": 21949},
           {"pos": [179, 136], "hip": 25918},
           {"pos": [54, 183], "hip": 29134}
         ]
-      }
+      },
+      "common_name": {"english": "Mensa"},
+      "iau": "Men"
     },
-    "Tau": {
-      "id": "Tau",
-      "iau": "Tau",
+    {
+      "id": "CON western Tau",
       "lines": [[25428, 21881, 20889], [21421, 26451], [20205, 20455], [20205, 18724, 15900], [21421, 20889], [21421, 20894, 20205], [20889, 20648, 20455, 17847]],
-      "name": "Taurus",
       "image": {
-        "file": "taurus.webp",
+        "file": "illustrations/taurus.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [13, 92], "hip": 26451},
           {"pos": [399, 438], "hip": 15900},
           {"pos": [382, 192], "hip": 17847}
         ]
-      }
+      },
+      "common_name": {"english": "Taurus"},
+      "iau": "Tau"
     },
-    "Tel": {
-      "id": "Tel",
-      "iau": "Tel",
+    {
+      "id": "CON western Tel",
       "lines": [[90568, 90422]],
-      "name": "Telescopium",
       "image": {
-        "file": "telescopium.webp",
+        "file": "illustrations/telescopium.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [30, 66], "hip": 91589},
           {"pos": [101, 40], "hip": 90422},
           {"pos": [106, 92], "hip": 90568}
         ]
-      }
+      },
+      "common_name": {"english": "Telescopium"},
+      "iau": "Tel"
     },
-    "Tuc": {
-      "id": "Tuc",
-      "iau": "Tuc",
+    {
+      "id": "CON western Tuc",
       "lines": [[110130, 114996, 1599], [114996, 2484]],
-      "name": "Tucana",
       "image": {
-        "file": "tucana.webp",
+        "file": "illustrations/tucana.webp",
         "size": [256, 256],
         "anchors": [
           {"pos": [53, 121], "hip": 2484},
           {"pos": [154, 86], "hip": 114996},
           {"pos": [224, 141], "hip": 110130}
         ]
-      }
+      },
+      "common_name": {"english": "Tucana"},
+      "iau": "Tuc"
     },
-    "Tri": {
-      "id": "Tri",
-      "iau": "Tri",
+    {
+      "id": "CON western Tri",
       "lines": [[10670, 10064, 8796, 10670]],
-      "name": "Triangulum",
       "image": {
-        "file": "triangulum.webp",
+        "file": "illustrations/triangulum.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [16, 42], "hip": 10064},
           {"pos": [13, 70], "hip": 10559},
           {"pos": [97, 78], "hip": 8796}
         ]
-      }
+      },
+      "common_name": {"english": "Triangulum"},
+      "iau": "Tri"
     },
-    "Tra": {
-      "id": "Tra",
-      "iau": "Tra",
+    {
+      "id": "CON western Tra",
       "lines": [[82273, 74946, 77952, 82273]],
-      "name": "Triangulum Australe",
       "image": {
-        "file": "triangulum-australe.webp",
+        "file": "illustrations/triangulum-australe.webp",
         "size": [128, 128],
         "anchors": [
           {"pos": [26, 12], "hip": 77952},
           {"pos": [108, 15], "hip": 74946},
           {"pos": [60, 106], "hip": 82273}
         ]
-      }
+      },
+      "common_name": {"english": "Triangulum Australe"},
+      "iau": "Tra"
     },
-    "Aqr": {
-      "id": "Aqr",
-      "iau": "Aqr",
+    {
+      "id": "CON western Aqr",
       "lines": [[106278, 109074, 110395, 110960, 111497, 112961, 114855, 115438], [109074, 110003, 109139], [110003, 111123, 112716, 113136, 114341], [102618, 106278]],
-      "name": "Aquarius",
       "image": {
-        "file": "aquarius.webp",
+        "file": "illustrations/aquarius.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [144, 464], "hip": 115438},
           {"pos": [179, 98], "hip": 109074},
           {"pos": [465, 49], "hip": 102618}
         ]
-      }
+      },
+      "common_name": {"english": "Aquarius"},
+      "iau": "Aqr"
     },
-    "Vir": {
-      "id": "Vir",
-      "iau": "Vir",
+    {
+      "id": "CON western Vir",
       "lines": [[57380, 60030, 61941, 65474, 69427, 69701, 71957], [65474, 66249, 68520, 72220], [66249, 63090, 63608], [63090, 61941]],
-      "name": "Virgo",
       "image": {
-        "file": "virgo.webp",
+        "file": "illustrations/virgo.webp",
         "size": [512, 512],
         "anchors": [
           {"pos": [65, 389], "hip": 72220},
           {"pos": [454, 57], "hip": 57380},
           {"pos": [338, 382], "hip": 65474}
         ]
-      }
+      },
+      "common_name": {"english": "Virgo"},
+      "iau": "Vir"
     },
-    "Vel": {
-      "id": "Vel",
-      "iau": "Vel",
+    {
+      "id": "CON western Vel",
       "lines": [[39953, 42536, 42913, 45941, 48774, 52727, 51986, 50191, 46651, 44816, 39953]],
-      "name": "Vela"
+      "common_name": {"english": "Vela"},
+      "iau": "Vel"
     }
-  },
+  ],
   "edges_source": "http://pbarbier.com/constellations/edges_18.txt",
   "edges": [
     "001:002 M+ 22:52:00 +34:30:00 22:52:00 +52:30:00 AND LAC",
@@ -2654,5 +2080,11 @@
     "412:411 M+ 20:34:00 +19:30:00 20:34:00 +20:30:00 VUL DEL",
     "410:690 M+ 20:15:00 +20:30:00 20:15:00 +21:15:00 VUL SGE",
     "687:686 M+ 19:15:00 +19:10:00 19:15:00 +21:05:00 VUL SGE"
-  ]
+  ],
+  "name": "Western",
+  "introduction": "<p>Western sky culture is used internationally by modern astronomers, and is the official scheme of The International Astronomical Union. It has historical roots in Ancient Greek astronomy, with influences from Islamic astronomy.</p>",
+  "description": "<h3>Constellations</h3>\n<p>The Western culture divides the celestial sphere into 88 areas of various sizes called <em>constellations</em>, each with precise boundary, issued by the International Astronomical Union. These constellations have become the standard way to describe the sky, replacing similar sets in other sky cultures exhaustively in daily usage.</p>\n<h3>Star names</h3>\n<p>Most of traditional western star names came from Arabic. In astronomy, Bayer/Flamsteed designations and other star catalogues are widely used instead of traditional names except few cases where the traditional names are more famous than the designations.</p>",
+  "references": "<ul>\n<li><span id=\"cite_1\">[1]</span>: <a href=\"http://en.wikipedia.org/wiki/Constellation\">Constellation</a> article at Wikipedia</li>\n<li><span id=\"cite_2\">[2]</span>: <a href=\"http://en.wikipedia.org/wiki/Star_catalogue\">Star Catalogue</a> article at Wikipedia</li>\n<li><span id=\"cite_3\">[3]</span>: <a href=\"http://hubblesource.stsci.edu/sources/illustrations/constellations/\">Constellation image library</a> of the U.S. Naval Observatory and the Space Telescope Science Institute. Johannes Hevelius Engravings.</li>\n</ul>",
+  "authors": "<p>Stellarium's team</p>",
+  "licence": "<p>GNU GPL v2.0</p>"
 }
