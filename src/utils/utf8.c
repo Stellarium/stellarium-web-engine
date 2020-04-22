@@ -31,11 +31,13 @@ static const char LEN_TABLE[256] = {
  *   Padding            2 bytes.
  */
 static const char *ACCENTS =
-    "ĀāAa  ÁáAa  ǍǎAa  ÀàAa  ÄäAa  "
-    "ĒēEe  ÉéEe  ĚěEe  ÈèEe  "
-    "ĪīIi  ÍíIi  ǏǐIi  ÌìIi  "
-    "ŌōOo  ÓóOo  ǑǒOo  ÒòOo  "
-    "ŪūUu  ÚúUu  ǓǔUu  ÙùUu  ǕǖUu  ǗǘUu  ǙǚUu  ǛǜUu  ÜüUu  ";
+    "ĀāAa  ÁáAa  ǍǎAa  ÀàAa  ÂâAa  ÄäAa  ÃãAa  "
+    "ĒēEe  ÉéEe  ĚěEe  ÈèEe  ÊêEe  ËëEe  "
+    "ĪīIi  ÍíIi  ǏǐIi  ÌìIi  ÎîIi  ÏïIi  "
+    "ŌōOo  ÓóOo  ǑǒOo  ÒòOo  ÔôOo  ÖöOo  ÕõOo  "
+    "ŪūUu  ÚúUu  ǓǔUu  ÙùUu  ÛûUu  ÜüUu  ǕǖUu  ǗǘUu  ǙǚUu  ǛǜUu  "
+    "ÑñNn  "
+    "ÇçCc  ";
 
 int u8_char_len(const char *c)
 {
