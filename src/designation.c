@@ -386,8 +386,12 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
         return;
     }
     if (designation_parse_variable_star(dsgn, &cst, var, &suffix)) {
-        cstname = (flags & BAYER_CONST_LONG) ? CSTS[cst][1] : CSTS[cst][0];
-        snprintf(out, size, "%s %s%s", var, cstname, suffix);
+        if (flags & (BAYER_CONST_SHORT | BAYER_CONST_LONG)) {
+            cstname = (flags & BAYER_CONST_LONG) ? CSTS[cst][1] : CSTS[cst][0];
+            snprintf(out, size, "%s %s%s", var, cstname, suffix);
+        } else {
+            snprintf(out, size, "%s%s", var, suffix);
+        }
         return;
     }
 
