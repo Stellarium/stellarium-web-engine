@@ -432,11 +432,6 @@ void star_get_designations(
         snprintf(buf, sizeof(buf), "%" PRId64, s->gaia);
         f(obj, user, "GAIA", buf);
     }
-
-    // Localized common name if available.
-    // Note: should this be on top of the list?
-    if (star_get_skycultural_name(s, buf, sizeof(buf)))
-        f(obj, user, "NAME", buf);
 }
 
 static star_t *star_create(const star_data_t *data)
