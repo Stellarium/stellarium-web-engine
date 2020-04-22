@@ -63,11 +63,15 @@ typedef struct constellation_art
 typedef struct skyculture_name
 {
     UT_hash_handle  hh;
-    // For bright stars use "HIP XXXX", anything else for other types.
-    char            main_id[128];
-    char            name_english[128];
-    char            name_native[128];
-    char            name_pronounce[128];
+    // The ID to use when calling sky_cultures_get_name:
+    //   - for bright stars use "HIP XXXX"
+    //   - for constellations use "CON culture_name XXX"
+    //   - for planets use "NAME Planet"
+    //   - for DSO use the first identifier of the names list
+    char           *main_id;
+    char           *name_english;
+    char           *name_native;
+    char           *name_pronounce;
 } skyculture_name_t;
 
 

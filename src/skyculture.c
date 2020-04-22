@@ -143,17 +143,15 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
         "}");
         if (r) goto error;
         entry = calloc(1, sizeof(*entry));
-        snprintf(entry->main_id, sizeof(entry->main_id), "%s", id);
+        entry->main_id = strdup(id);
         if (english)
-            snprintf(entry->name_english, sizeof(entry->name_english),
-                     "%s", english);
+            entry->name_english = strdup(english);
         if (native)
-            snprintf(entry->name_native, sizeof(entry->name_native),
-                     "%s", native);
+            entry->name_native = strdup(native);
         if (pronounce)
-            snprintf(entry->name_pronounce, sizeof(entry->name_pronounce),
-                     "%s", pronounce);
-        HASH_ADD_STR(*names_hash, main_id, entry);
+            entry->name_pronounce = strdup(pronounce);
+        HASH_ADD_KEYPTR(hh, *names_hash, entry->main_id,
+                        strlen(entry->main_id), entry);
     }
     if (description)
         feature->description = json_to_string(description);
@@ -232,6 +230,7 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
 
         for (j = 0; j < v->u.object.values[i].value->u.array.length; j++) {
             names_obj = v->u.object.values[i].value->u.array.values[j];
+
             r = jcon_parse(names_obj, "{",
                 "?english", JCON_STR(english),
                 "?native", JCON_STR(native),
@@ -239,17 +238,15 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
             "}");
             if (r) goto error;
             entry = calloc(1, sizeof(*entry));
-            snprintf(entry->main_id, sizeof(entry->main_id), "%s", key);
+            entry->main_id = strdup(key);
             if (english)
-                snprintf(entry->name_english, sizeof(entry->name_english),
-                         "%s", english);
+                entry->name_english = strdup(english);
             if (native)
-                snprintf(entry->name_native, sizeof(entry->name_native),
-                         "%s", native);
+                entry->name_native = strdup(native);
             if (pronounce)
-                snprintf(entry->name_pronounce, sizeof(entry->name_pronounce),
-                         "%s", pronounce);
-            HASH_ADD_STR(ret, main_id, entry);
+                entry->name_pronounce = strdup(pronounce);
+            HASH_ADD_KEYPTR(hh, ret, entry->main_id,
+                            strlen(entry->main_id), entry);
 
             // Ignore alternative names for the moment!
             break;

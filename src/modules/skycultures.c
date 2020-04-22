@@ -393,7 +393,7 @@ const char *skycultures_get_name(const char* main_id, char *out, int out_size)
     if (!entry) return NULL;
     switch (g_skycultures->name_format_style) {
     case NAME_AUTO:
-        if (*entry->name_english) {
+        if (entry->name_english) {
             if (cult->has_chinese_star_names &&
                 strncmp(main_id, "CON ", 4) != 0) {
                 // This is a sky object in a chinese sky culture: needs special
@@ -425,28 +425,28 @@ const char *skycultures_get_name(const char* main_id, char *out, int out_size)
             snprintf(out, out_size, "%s", tr_name);
             return out;
         }
-        if (*entry->name_pronounce) {
+        if (entry->name_pronounce) {
             snprintf(out, out_size, "%s", entry->name_pronounce);
             return out;
         }
-        if (*entry->name_native) {
+        if (entry->name_native) {
             snprintf(out, out_size, "%s", entry->name_native);
             return out;
         }
         return NULL;
     case NAME_NATIVE_AND_PRONOUNCE:
-        if (*entry->name_native && *entry->name_pronounce) {
+        if (entry->name_native && entry->name_pronounce) {
             snprintf(out, out_size, "%s (%s)", entry->name_native,
                      entry->name_pronounce);
             return out;
         }
         // If not both are present fallback to NAME_NATIVE
     case NAME_NATIVE:
-        if (*entry->name_native) {
+        if (entry->name_native) {
             snprintf(out, out_size, "%s", entry->name_native);
             return out;
         }
-        if (*entry->name_pronounce) {
+        if (entry->name_pronounce) {
             snprintf(out, out_size, "%s", entry->name_pronounce);
             return out;
         }
