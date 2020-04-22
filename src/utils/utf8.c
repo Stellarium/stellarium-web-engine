@@ -31,7 +31,7 @@ static const char LEN_TABLE[256] = {
  *   Padding            2 bytes.
  */
 static const char *ACCENTS =
-    "ĀāAa  ÁáAa  ǍǎAa  ÀàAa  "
+    "ĀāAa  ÁáAa  ǍǎAa  ÀàAa  ÄäAa  "
     "ĒēEe  ÉéEe  ĚěEe  ÈèEe  "
     "ĪīIi  ÍíIi  ǏǐIi  ÌìIi  "
     "ŌōOo  ÓóOo  ǑǒOo  ÒòOo  "
