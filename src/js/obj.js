@@ -295,10 +295,9 @@ Module.afterInit(function() {
   // Return a child object by identifier.
   //
   // Inputs:
-  //  name      String or list of string.  If this is a list swe
-  //            search for the first object matching any of those names.
+  //  name      String
   Module['getObj'] = function(name) {
-    if (name instanceof Array) name = name.join('|');
+    assert(typeof(name) == 'string')
     var obj = obj_get(0, name, 0);
     return obj ? new SweObj(obj) : null;
   };

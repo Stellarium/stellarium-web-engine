@@ -125,19 +125,7 @@ EMSCRIPTEN_KEEPALIVE
 obj_t *obj_get(const obj_t *obj, const char *query, int flags)
 {
     obj_t *child;
-    char *sep;
-    char tmp[128];
-
     assert(flags == 0);
-
-    // If the query contains '|' we split into several queries.
-    while ((sep = strchr(query, '|'))) {
-        strncpy(tmp, query, sep - query);
-        tmp[sep - query] = '\0';
-        child = obj_get(obj, tmp, flags);
-        if (child) return child;
-        query = sep + 1;
-    }
 
     // Default to core if we passed NULL.
     obj = obj ?: &core->obj;

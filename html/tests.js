@@ -95,9 +95,6 @@ var testSearch = function(stel) {
   // Simple object search.
   obj = stel.getObj('jupiter');
   assert(obj);
-  // Search from multiple idents.
-  obj = stel.getObj(['NO RESULT', 'jupiter']);
-  assert(obj);
 }
 
 var testCloneObserver = function(stel) {

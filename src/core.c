@@ -1193,8 +1193,8 @@ static void test_core(void)
 static void test_basic(void)
 {
     obj_t *obj;
-    // Test obj_get with '|'
-    obj = obj_get(NULL, "No result|Sun", 0);
+    // Test obj_get.
+    obj = obj_get(NULL, "Sun", 0);
     assert(obj);
     obj_release(obj);
 }
