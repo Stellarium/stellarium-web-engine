@@ -101,9 +101,6 @@ static void skyculture_deactivate(skyculture_t *cult)
     }
 }
 
-// Defined in constellations.c
-int constellation_set_image(obj_t *obj, const json_value *args);
-
 static void skyculture_activate(skyculture_t *cult)
 {
     char id[256];
@@ -130,18 +127,6 @@ static void skyculture_activate(skyculture_t *cult)
         json_builder_free(args);
     }
 
-    // Add the images.
-    if (cult->imgs) {
-        for (i = 0; i < cult->imgs->u.array.length; i++) {
-            args = cult->imgs->u.array.values[i];
-            snprintf(id, sizeof(id), "CST %s", json_get_attr_s(args, "id"));
-            cons = module_get_child(constellations, id);
-            if (!cons) continue;
-            constellation_set_image(cons, args);
-            obj_release(cons);
-        }
-    }
-
     // Set the current attribute of the skycultures manager object.
     obj_set_attr(cult->obj.parent, "current", cult);
     module_changed(cult->obj.parent, "current_id");
@@ -158,57 +143,21 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
     return cult;
 }
 
-/*
- * Convert an array of constellation_art_t values into a json in the same
- * format as recognised by the constellation module, that is an array of
- * dict similar to this one:
- *
- * {
- *   "anchors": "198 215 3881 337 136 3092 224 428 9640",
- *   "id": "And",
- *   "img": "And.webp",
- *   "type": "constellation"
- *   "base_path": "asset://skycultures/western/img"
- *  }
- *
- */
-static json_value *make_imgs_json(
-        const constellation_art_t *imgs, const char *uri)
-{
-    json_value *values, *v;
-    constellation_art_t *a;
-    char anchors[1024];
-    values = json_array_new(0);
-    for (a = imgs; *a->cst; a++) {
-        v = json_object_new(0);
-        json_object_push(v, "id", json_string_new(a->cst));
-        json_object_push(v, "img", json_string_new(a->img));
-        json_object_push(v, "type", json_string_new("constellation"));
-        json_object_push(v, "base_path", json_string_new(uri));
-        snprintf(anchors, sizeof(anchors), "%f %f %d %f %f %d %f %f %d",
-            a->anchors[0].uv[0], a->anchors[0].uv[1], a->anchors[0].hip,
-            a->anchors[1].uv[0], a->anchors[1].uv[1], a->anchors[1].hip,
-            a->anchors[2].uv[0], a->anchors[2].uv[1], a->anchors[2].hip);
-        json_object_push(v, "anchors", json_string_new(anchors));
-        json_array_push(values, v);
-    }
-    return values;
-}
-
 static int skyculture_update(obj_t *obj, double dt)
 {
     const char *json;
     skyculture_t *cult = (skyculture_t*)obj;
     skycultures_t *cults = (skycultures_t*)obj->parent;
     char path[1024], *name, *region, *id;
-    int code, r, i, arts_nb;
+    int code, r;
+    unsigned int i;
     json_value *doc;
     const json_value *names = NULL, *features = NULL,
                      *tour = NULL, *edges = NULL;
     const char *description = NULL, *introduction = NULL,
                *references = NULL, *authors = NULL, *licence = NULL;
-    constellation_art_t *arts;
     bool active = (cult == cults->current);
+    constellation_infos_t *cst_info;
 
     if (cult->parsed & SK_JSON)
         return 0;
@@ -269,27 +218,15 @@ static int skyculture_update(obj_t *obj, double dt)
     cult->constellations = calloc(features->u.array.length,
                                   sizeof(*cult->constellations));
     for (i = 0; i < features->u.array.length; i++) {
+        cst_info = &cult->constellations[cult->nb_constellations];
         r = skyculture_parse_feature_json(
                 &cult->names,
                 features->u.array.values[i],
-                &cult->constellations[cult->nb_constellations]);
+                cst_info);
+        cst_info->base_path = cult->uri;
         if (r) continue;
         cult->nb_constellations++;
     }
-
-    // For the moment we parse the art separatly, it should all be merged
-    // int a 'feature'.
-    arts = calloc(features->u.array.length + 1, sizeof(*arts));
-    arts_nb = 0;
-    for (i = 0; i < features->u.array.length; i++) {
-        r = skyculture_parse_feature_art_json(
-                features->u.array.values[i], &arts[arts_nb]);
-        if (r) continue;
-        arts_nb++;
-    }
-    memset(&arts[arts_nb], 0, sizeof(arts[arts_nb]));
-    if (arts_nb) cult->imgs = make_imgs_json(arts, cult->uri);
-    free(arts);
 
     if (edges) {
         skyculture_parse_edges(edges, cult->constellations,

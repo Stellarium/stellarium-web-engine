@@ -119,10 +119,11 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
 {
     const char *id, *iau = NULL;
     const char *english = NULL, *native = NULL, *pronounce = NULL;
-    const char *name_description = NULL, *description = NULL;
-    int r;
-    const json_value *lines = NULL, *common_name = NULL;
+    const char *name_description = NULL, *description = NULL, *img;
+    int r, i, w, h, x, y, hip;
+    const json_value *lines = NULL, *common_name = NULL, *image = NULL;
     skyculture_name_t *entry;
+    json_value *anchors[3];
 
     r = jcon_parse(v, "{",
         "id", JCON_STR(id),
@@ -130,6 +131,7 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
         "?common_name", JCON_VAL(common_name),
         "?lines", JCON_VAL(lines),
         "?description", JCON_STR(description),
+        "?image", JCON_VAL(image),
     "}");
     if (r) goto error;
 
@@ -166,49 +168,30 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
         feature->nb_lines = parse_lines_json(lines, feature->lines);
         if (feature->nb_lines < 0) goto error;
     }
-    return 0;
 
-error:
-    LOG_E("Cannot parse json feature");
-    return -1;
-}
-
-// Eventually to be merged with skyculture_parse_feature_json.
-int skyculture_parse_feature_art_json(const json_value *v,
-                                      constellation_art_t *art)
-{
-    int i, r, w, h, x, y, hip;
-    json_value *anchors[3];
-    const char *id, *img;
-
-    id = json_get_attr_s(v, "id");
-    if (!id) goto error;
-    snprintf(art->cst, sizeof(art->cst), "%s", id);
-
-    v = json_get_attr(v, "image", json_object);
-    if (!v) return -1;
-
-    r = jcon_parse(v, "{",
-        "file", JCON_STR(img),
-        "size", "[", JCON_INT(w, 0), JCON_INT(h, 0), "]",
-        "anchors", "[",
-            JCON_VAL(anchors[0]),
-            JCON_VAL(anchors[1]),
-            JCON_VAL(anchors[2]),
-        "]",
-    "}");
-    if (r) goto error;
-
-    snprintf(art->img, sizeof(art->img), "%s", img);
-    for (i = 0; i < 3; i++) {
-        r = jcon_parse(anchors[i], "{",
-            "pos", "[", JCON_INT(x, 0), JCON_INT(y, 0), "]",
-            "hip", JCON_INT(hip, 0),
+    if (image) {
+        r = jcon_parse(image, "{",
+            "file", JCON_STR(img),
+            "size", "[", JCON_INT(w, 0), JCON_INT(h, 0), "]",
+            "anchors", "[",
+                JCON_VAL(anchors[0]),
+                JCON_VAL(anchors[1]),
+                JCON_VAL(anchors[2]),
+            "]",
         "}");
         if (r) goto error;
-        art->anchors[i].hip = hip;
-        art->anchors[i].uv[0] = (double)x / w;
-        art->anchors[i].uv[1] = (double)y / h;
+
+        snprintf(feature->img, sizeof(feature->img), "%s", img);
+        for (i = 0; i < 3; i++) {
+            r = jcon_parse(anchors[i], "{",
+                "pos", "[", JCON_INT(x, 0), JCON_INT(y, 0), "]",
+                "hip", JCON_INT(hip, 0),
+            "}");
+            if (r) goto error;
+            feature->anchors[i].hip = hip;
+            feature->anchors[i].uv[0] = (double)x / w;
+            feature->anchors[i].uv[1] = (double)y / h;
+        }
     }
     return 0;
 

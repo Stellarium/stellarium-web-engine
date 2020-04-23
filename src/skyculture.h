@@ -38,21 +38,13 @@ typedef struct constellation_infos
     int nb_edges;
     char *description;
     char iau[8]; // IAU abbreviation. Zero padded.
-} constellation_infos_t;
-
-/*
- * Type: constellation_art_t
- * Information about a constellation image.
- */
-typedef struct constellation_art
-{
-    char cst[128];  // Id of the constellation.
     char img[128];  // Name of the image file.
     struct {
         double  uv[2]; // Texture UV position.
         int     hip;   // Star HIP.
     } anchors[3];
-} constellation_art_t;
+    const char *base_path;
+} constellation_infos_t;
 
 /*
  * Type: skyculture_name
@@ -97,9 +89,6 @@ int skyculture_parse_edges(const json_value *edges,
 int skyculture_parse_feature_json(skyculture_name_t **names_hash,
                                   const json_value *v,
                                   constellation_infos_t *feature);
-
-int skyculture_parse_feature_art_json(const json_value *v,
-                                      constellation_art_t *art);
 
 skyculture_name_t *skyculture_parse_names_json(const json_value *v);
 

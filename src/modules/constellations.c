@@ -112,6 +112,30 @@ const char *join_path(const char *base, const char *path, char *buf, int len)
     return buf;
 }
 
+static void constellation_set_image(obj_t *obj)
+{
+    constellation_t *cons = (void*)obj;
+    char path[1024];
+    const constellation_infos_t *a = &cons->info;
+
+    if (cons->img.tex) return; // Already set.
+    if (!*a->img) return;
+
+    vec2_copy(a->anchors[0].uv, cons->img.anchors[0].uv);
+    vec2_copy(a->anchors[1].uv, cons->img.anchors[1].uv);
+    vec2_copy(a->anchors[2].uv, cons->img.anchors[2].uv);
+    cons->img.anchors[0].hip = a->anchors[0].hip;
+    cons->img.anchors[1].hip = a->anchors[1].hip;
+    cons->img.anchors[2].hip = a->anchors[2].hip;
+
+    join_path(cons->info.base_path, cons->info.img, path, sizeof(path));
+    cons->img.tex = texture_from_url(path, TF_LAZY_LOAD);
+    assert(cons->img.tex);
+
+    cons->image_loaded_fader.target = false;
+    cons->image_loaded_fader.value = 0;
+}
+
 static int constellation_init(obj_t *obj, json_value *args)
 {
     constellation_t *cons = (constellation_t *)obj;
@@ -128,6 +152,9 @@ static int constellation_init(obj_t *obj, json_value *args)
     strcpy(cons->obj.type, "Con");
     cons->obj.oid = oid_create("CST",
                             crc32(0, (void*)info->id, strlen(info->id)));
+
+    constellation_set_image(obj);
+
     return 0;
 }
 
@@ -240,48 +267,6 @@ error:
     texture_release(cons->img.tex);
     cons->img.tex = NULL;
 }
-
-// Still experimental.
-static int parse_anchors(const char *str, anchor_t anchors[static 3])
-{
-    if (sscanf(str, "%lf %lf %d %lf %lf %d %lf %lf %d",
-            &anchors[0].uv[0], &anchors[0].uv[1], &anchors[0].hip,
-            &anchors[1].uv[0], &anchors[1].uv[1], &anchors[1].hip,
-            &anchors[2].uv[0], &anchors[2].uv[1], &anchors[2].hip) != 9) {
-        LOG_E("Cannot parse constellation anchors: %s", str);
-        return -1;
-    }
-    return 0;
-}
-
-// Called by skyculture after we enable a new culture.
-int constellation_set_image(obj_t *obj, const json_value *args)
-{
-    const char *img, *anchors_str, *base_path;
-    constellation_t *cons = (void*)obj;
-    char path[1024];
-
-    if (cons->img.tex) return 0; // Already set.
-    img = json_get_attr_s(args, "img");
-    anchors_str = json_get_attr_s(args, "anchors");
-    base_path = json_get_attr_s(args, "base_path");
-
-    if (parse_anchors(anchors_str, cons->img.anchors) != 0) goto error;
-    join_path(base_path, img, path, sizeof(path));
-    cons->img.tex = texture_from_url(path, TF_LAZY_LOAD);
-    assert(cons->img.tex);
-
-    cons->image_loaded_fader.target = false;
-    cons->image_loaded_fader.value = 0;
-    return 0;
-
-error:
-    LOG_W("Cannot add img to constellation %s", cons->obj.id);
-    texture_release(cons->img.tex);
-    cons->img.tex = NULL;
-    return -1;
-}
-
 
 // Make a line shorter so that we don't hide the star.
 static void line_truncate(double pos[2][4], double a0, double a1)
