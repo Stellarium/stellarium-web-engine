@@ -21,7 +21,7 @@ static constellation_infos_t *get_constellation(
         id = "SER";
 
     for (i = 0; i < size; i++) {
-        if (strcasecmp(csts[i].id, id) == 0)
+        if (strcasecmp(csts[i].iau, id) == 0)
             return &csts[i];
     }
     return NULL;
