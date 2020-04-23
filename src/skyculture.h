@@ -72,6 +72,7 @@ typedef struct skyculture_name
     char           *name_english;
     char           *name_native;
     char           *name_pronounce;
+    char           *name_description;
 } skyculture_name_t;
 
 

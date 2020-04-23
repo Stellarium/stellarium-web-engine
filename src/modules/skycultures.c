@@ -205,8 +205,8 @@ static int skyculture_update(obj_t *obj, double dt)
     json_value *doc;
     const json_value *names = NULL, *features = NULL,
                      *tour = NULL, *edges = NULL;
-    const json_value *description = NULL, *introduction = NULL,
-                     *references = NULL, *authors = NULL, *licence = NULL;
+    const char *description = NULL, *introduction = NULL,
+               *references = NULL, *authors = NULL, *licence = NULL;
     constellation_art_t *arts;
     bool active = (cult == cults->current);
 
@@ -237,11 +237,11 @@ static int skyculture_update(obj_t *obj, double dt)
                    JCON_BOOL(cult->fallback_to_international_names, 0),
         "?common_names", JCON_VAL(names),
         "?constellations", JCON_VAL(features),
-        "introduction", JCON_VAL(introduction),
-        "?description", JCON_VAL(description),
-        "?references", JCON_VAL(references),
-        "?authors", JCON_VAL(authors),
-        "?licence", JCON_VAL(licence),
+        "introduction", JCON_STR(introduction),
+        "?description", JCON_STR(description),
+        "?references", JCON_STR(references),
+        "?authors", JCON_STR(authors),
+        "?licence", JCON_STR(licence),
         "?edges", JCON_VAL(edges),
         "?tour", JCON_VAL(tour),
     "}");
@@ -255,13 +255,13 @@ static int skyculture_update(obj_t *obj, double dt)
     cult->has_chinese_star_names = strncmp(id, "chinese", 7) == 0;
     cult->name = strdup(name);
     cult->region = strdup(region);
-    cult->introduction = json_to_string(introduction);
+    cult->introduction = strdup(introduction);
     if (description)
-        cult->description = json_to_string(description);
+        cult->description = strdup(description);
     if (references)
-        cult->references = json_to_string(references);
-    cult->authors = json_to_string(authors);
-    cult->licence = json_to_string(licence);
+        cult->references = strdup(references);
+    cult->authors = strdup(authors);
+    cult->licence = strdup(licence);
     if (names) cult->names = skyculture_parse_names_json(names);
     if (tour) cult->tour = json_copy(tour);
 

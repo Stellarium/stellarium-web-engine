@@ -119,8 +119,9 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
 {
     const char *id, *iau = NULL;
     const char *english = NULL, *native = NULL, *pronounce = NULL;
+    const char *name_description = NULL, *description = NULL;
     int r;
-    const json_value *lines = NULL, *description = NULL, *common_name = NULL;
+    const json_value *lines = NULL, *common_name = NULL;
     skyculture_name_t *entry;
 
     r = jcon_parse(v, "{",
@@ -128,7 +129,7 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
         "?iau", JCON_STR(iau),
         "?common_name", JCON_VAL(common_name),
         "?lines", JCON_VAL(lines),
-        "?description", JCON_VAL(description),
+        "?description", JCON_STR(description),
     "}");
     if (r) goto error;
 
@@ -140,6 +141,7 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
             "?english", JCON_STR(english),
             "?native", JCON_STR(native),
             "?pronounce", JCON_STR(pronounce),
+            "?description", JCON_STR(name_description),
         "}");
         if (r) goto error;
         entry = calloc(1, sizeof(*entry));
@@ -150,11 +152,13 @@ int skyculture_parse_feature_json(skyculture_name_t** names_hash,
             entry->name_native = strdup(native);
         if (pronounce)
             entry->name_pronounce = strdup(pronounce);
+        if (name_description)
+            entry->name_description = strdup(name_description);
         HASH_ADD_KEYPTR(hh, *names_hash, entry->main_id,
                         strlen(entry->main_id), entry);
     }
     if (description)
-        feature->description = json_to_string(description);
+        feature->description = strdup(description);
     if (iau)
         snprintf(feature->iau, sizeof(feature->iau), "%s", iau);
 
