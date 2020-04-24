@@ -464,7 +464,7 @@ static bool dso_get_short_name(const dso_data_t *s, char *out, int size)
     int best_name_len = size - 1;
     int len;
 
-    const char* res = skycultures_get_name(names, out, size);
+    const char* res = skycultures_get_label(names, out, size);
     if (res)
         return true;
 

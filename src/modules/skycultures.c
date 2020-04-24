@@ -302,18 +302,23 @@ static int skycultures_add_data_source(
 }
 
 /*
- * Function: skyculture_get_name
- * Get the common name of a sky object in the current skyculture.
+ * Function: skycultures_get_label
+ * Get the label of a sky object in the current skyculture, translated
+ * for the current language.
  *
  * Parameters:
- *   main_id        - "HIP XXX" for bright stars, anything else for other types.
+ *   main_id        - the main ID of the sky object:
+ *                     - for bright stars use "HIP XXXX"
+ *                     - for constellations use "CON culture_name XXX"
+ *                     - for planets use "NAME Planet"
+ *                     - for DSO use the first identifier of the names list
  *   out            - A text buffer that get filled with the name.
  *   out_size       - size of the out buffer.
  *
  * Return:
  *   NULL if no name was found.  A pointer to the passed buffer otherwise.
  */
-const char *skycultures_get_name(const char* main_id, char *out, int out_size)
+const char *skycultures_get_label(const char* main_id, char *out, int out_size)
 {
     const skyculture_t *cult;
     const skyculture_name_t *entry;

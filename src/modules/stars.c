@@ -277,7 +277,7 @@ static bool star_get_skycultural_name(const star_data_t *s, char *out, int size)
     if (s->hip == 0)
         return false;
     snprintf(hip_buf, sizeof(hip_buf), "HIP %d", s->hip);
-    name = skycultures_get_name(hip_buf, out, size);
+    name = skycultures_get_label(hip_buf, out, size);
     return name != NULL;
 }
 

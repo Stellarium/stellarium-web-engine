@@ -846,7 +846,7 @@ static void planet_render_label(
     double pvo[2][3];
     char buf[256];
     snprintf(buf, sizeof(buf), "NAME %s", planet->name);
-    name = skycultures_get_name(buf, buf, sizeof(buf));
+    name = skycultures_get_label(buf, buf, sizeof(buf));
     if (!name)
         name = sys_translate("sky", planet->name);
 

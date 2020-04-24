@@ -693,7 +693,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
         return 0;
 
-    res = skycultures_get_name(con->info.id, label, sizeof(label));
+    res = skycultures_get_label(con->info.id, label, sizeof(label));
     if (!res) {
         snprintf(label, sizeof(label), "%s", con->info.id);
     }
@@ -816,7 +816,7 @@ static void constellation_get_designations(
     char name[256];
     const char *res;
 
-    res = skycultures_get_name(cst->info.id, name, sizeof(name));
+    res = skycultures_get_label(cst->info.id, name, sizeof(name));
     if (res) {
         f(obj, user, "NAME", name);
     }
