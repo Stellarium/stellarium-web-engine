@@ -302,6 +302,55 @@ static int skycultures_add_data_source(
 }
 
 /*
+ * Function: skycultures_translate_english_name
+ * Translate a sky object cultural english name in the current locale.
+ *
+ * Sky object in a chinese sky culture need a special translation function
+ * because they have the following format:
+ * "Constellation_name [Added] [number]" and only the first part
+ * (Constellation_name) is stored in the translation DB.
+ *
+ * Parameters:
+ *   name           - the english name as stored in a skyculture_name_t
+ *   out            - A text buffer that get filled with the name.
+ *   out_size       - size of the out buffer.
+ */
+void skycultures_translate_english_name(const char* name, char *out,
+                                        int out_size)
+{
+    const skyculture_t *cult = g_skycultures->current;
+    regmatch_t m;
+    const char *tr_name;
+    const char *s, *number = NULL;
+    char tmp[256];
+    const int tmp_size = sizeof(tmp);
+
+    assert(name);
+
+    if (cult && cult->has_chinese_star_names) {
+        if (regexec(&g_skycultures->chinese_re, name, 1, &m, 0) == 0) {
+            number = name + m.rm_so;
+        }
+        s = strstr(name, " Added");
+        if (s) {
+            snprintf(tmp, min(tmp_size, s - name + 1), "%s", name);
+            tr_name = sys_translate("skyculture", tmp);
+            snprintf(out, out_size, "%s %s%s", tr_name,
+                     sys_translate("skyculture", "Added"),
+                     number ? number : "");
+            return;
+        } else if (number) {
+            snprintf(tmp, min(tmp_size, m.rm_so + 1), "%s", name);
+            tr_name = sys_translate("skyculture", tmp);
+            snprintf(out, out_size, "%s%s", tr_name, number);
+            return;
+        }
+    }
+    tr_name = sys_translate("skyculture", name);
+    snprintf(out, out_size, "%s", tr_name);
+}
+
+/*
  * Function: skycultures_get_label
  * Get the label of a sky object in the current skyculture, translated
  * for the current language.
@@ -320,48 +369,26 @@ static int skycultures_add_data_source(
  */
 const char *skycultures_get_label(const char* main_id, char *out, int out_size)
 {
-    const skyculture_t *cult;
+    const skyculture_t *cult = g_skycultures->current;
     const skyculture_name_t *entry;
+    const char *tr_name;
+
     assert(main_id);
-    cult = g_skycultures->current;
-    const char* tr_name;
-    const char *s, *number = NULL;
-    char tmp[256];
-    const int tmp_size = sizeof (tmp);
-    regmatch_t m;
 
     if (!cult) return NULL;
+
     HASH_FIND_STR(cult->names, main_id, entry);
     if (!entry) return NULL;
+
     switch (g_skycultures->name_format_style) {
     case NAME_AUTO:
         if (entry->name_english) {
             if (cult->has_chinese_star_names &&
                 strncmp(main_id, "CON ", 4) != 0) {
-                // This is a sky object in a chinese sky culture: needs special
-                // translation function because they have the following format:
-                // "Constellation_name [Added] [number]" and only the first
-                // part (Constellation_name) is stored in the translation DB.
-                if (regexec(&g_skycultures->chinese_re, entry->name_english, 1,
-                            &m, 0) == 0) {
-                    number = entry->name_english + m.rm_so;
-                }
-                s = strstr(entry->name_english, " Added");
-                if (s) {
-                    snprintf(tmp, min(tmp_size, s - entry->name_english + 1),
-                             "%s", entry->name_english);
-                    tr_name = sys_translate("skyculture", tmp);
-                    snprintf(out, out_size, "%s %s%s", tr_name,
-                             sys_translate("skyculture", "Added"),
-                             number ? number : "");
-                    return out;
-                } else if (number) {
-                    snprintf(tmp, min(tmp_size, m.rm_so + 1),
-                             "%s", entry->name_english);
-                    tr_name = sys_translate("skyculture", tmp);
-                    snprintf(out, out_size, "%s%s", tr_name, number);
-                    return out;
-                }
+                // This is a sky object in a chinese sky culture
+                skycultures_translate_english_name(entry->name_english, out,
+                                                   out_size);
+                return out;
             }
             tr_name = sys_translate("skyculture", entry->name_english);
             snprintf(out, out_size, "%s", tr_name);
