@@ -166,7 +166,7 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
     switch (info) {
     case INFO_PVO:
         memcpy(out, con->pvo, sizeof(con->pvo));
-        return 0;
+        return vec3_norm2(con->pvo[0]) ? 0 : 1;
     default:
         return 1;
     }
