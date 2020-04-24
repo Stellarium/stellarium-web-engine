@@ -170,10 +170,10 @@ int obj_render(const obj_t *obj, const painter_t *painter)
  *   obs    - An observer.
  *   pvo    - Output ICRF position with origin on the observer.
  */
-void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
+int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 {
     assert(obj && obj->klass->get_info);
-    obj->klass->get_info(obj, obs, INFO_PVO, pvo);
+    return obj->klass->get_info(obj, obs, INFO_PVO, pvo);
 }
 
 /*
@@ -188,12 +188,18 @@ void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
  *   frame  - One of the <FRAME> enum values.
  *   pos    - Output position in the given frame, using homogenous coordinates.
  */
-void obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[4])
+int obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[4])
 {
+    int r;
     double pvo[2][4];
     assert(obj);
-    obj_get_pvo(obj, obs, pvo);
+    r = obj_get_pvo(obj, obs, pvo);
+    if (r) {
+        memset(pos, 0, 4 * sizeof(double));
+        return r;
+    }
     convert_framev4(obs, FRAME_ICRF, frame, pvo[0], pos);
+    return 0;
 }
 
 int obj_get_info(obj_t *obj, observer_t *obs, int info,

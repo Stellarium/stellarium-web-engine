@@ -314,8 +314,11 @@ int obj_render(const obj_t *obj, const painter_t *painter);
  *   obj    - A sky object.
  *   obs    - An observer.
  *   pvo    - Output ICRF position with origin on the observer.
+ *
+ * Return:
+ *   0 for success.
  */
-void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
+int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
 
 /*
  * Function: obj_get_pos
@@ -328,8 +331,11 @@ void obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
  *   obs    - An observer.
  *   frame  - One of the <FRAME> enum values.
  *   pos    - Output position in the given frame, using homogenous coordinates.
+ *
+ * Return:
+ *   0 for success.
  */
-void obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
+int obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
 
 /*
  * Function: obj_get_info
