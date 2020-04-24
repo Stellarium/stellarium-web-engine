@@ -524,11 +524,11 @@ OBJ_REGISTER(satellites_klass)
 
 #ifdef COMPILE_TESTS
 
-static void check_sat(int norad_number, const char *tle1, const char *tle2,
-                      double stdmag,
-                      int iy, int im, int id, int h, int m, double s,
-                      double ha_alt, double ha_az, double ha_dist,
-                      double ha_vmag)
+static void check_sat(
+        int norad_number, const char *tle1, const char *tle2, double stdmag,
+        int iy, int im, int id, int h, int m, double s,
+        double ha_alt, double ha_az, double ha_dist, double ha_vmag,
+        double alt_err, double az_err, double dist_err, double vmag_err)
 {
     observer_t obs;
     char json[1204];
@@ -546,8 +546,8 @@ static void check_sat(int norad_number, const char *tle1, const char *tle2,
     obs = *core->observer;
     obs.elong = 121.5654 * DD2R;
     obs.phi = 25.0330 * DD2R;
-    eraDtf2d("UTC", iy, im, id, h - 8, m, s, &d1, &d2);
-    obj_set_attr((obj_t*)&obs, "utc", d1 - DJM0 + d2);
+    eraDtf2d("UTC", iy, im, id, h, m, s, &d1, &d2);
+    obj_set_attr((obj_t*)&obs, "utc", d1 - DJM0 + d2 - 8. / 24);
     observer_update(&obs, false);
 
     obj_get_pos(obj, &obs, FRAME_OBSERVED, pos);
@@ -555,10 +555,12 @@ static void check_sat(int norad_number, const char *tle1, const char *tle2,
     az = eraAnp(az);
     obj_get_info(obj, &obs, INFO_DISTANCE, &dist);
     obj_get_info(obj, &obs, INFO_VMAG, &vmag);
-    assert(fabs(alt * DR2D - ha_alt) < 1);
-    assert(fabs(az * DR2D - ha_az) < 2);
-    assert(fabs(dist * DAU / 1000 - ha_dist) < 1);
-    assert(fabs(ha_vmag - vmag) < 1);
+    assert(fabs(alt * DR2D - ha_alt) < alt_err);
+    assert(fabs(az * DR2D - ha_az) < az_err);
+    assert(fabs(dist * DAU / 1000 - ha_dist) < dist_err);
+    assert(fabs(ha_vmag - vmag) < vmag_err);
+
+    obj_release(obj);
 }
 
 static void test_satellites(void)
@@ -570,21 +572,58 @@ static void test_satellites(void)
         "2 20625  70.9963 124.1539 0015477 319.2677  40.7287 14.14651825545059",
         2.7,
         2020, 4, 23, 19, 59, 39,
-        14, 298, 2167, 5.4);
+        14, 298, 2167, 5.4,
+        1, 1, 1, 1);
 
     check_sat(13552, // Cosmos 1408
         "1 13552U 82092A   20113.74575265  .00000921  00000-0  32526-4 0  9999",
         "2 13552  82.5670 333.7928 0017326 336.3418  23.7022 15.27738669 55547",
         4.2,
         2020, 4, 24, 19, 26, 37,
-        62, 84, 557, 2.5);
+        62, 84, 557, 2.5,
+        1, 1, 1, 1);
 
     check_sat(43563, // FALCON 9 R/B
         "1 43563U 18059B   20113.32331434  .00030378  00000-0  12213-2 0  9996",
         "2 43563  27.0685   0.0377 5648508  60.6275 343.9164  4.65462966 29379",
         2.4,
         2020, 4, 23, 17, 59, 13,
-        80, 193, 1601, 3.5);
+        80, 193, 1601, 3.5,
+        1, 2, 1, 1);
+
+    check_sat(25544, // ISS
+        "1 25544U 98067A   20115.55025390  .00016717  00000-0  10270-3 0  9027",
+        "2 25544  51.6412 253.9367 0001868 190.8144 169.2966 15.49324997 23698",
+        -1.8,
+        2020, 4, 24, 4, 18, 58,
+        86, 130, 422, -3.8,
+        1, 12, 1, 1); // Huge azimuth error here!
+
+    /*
+    check_sat(24773, // Cosmos 2341
+        "1 24773U 97017B   20114.54830681 +.00000118 +00000-0 +10994-3 0  9996",
+        "2 24773 082.9195 321.7152 0023111 287.2537 130.1372 13.73646213153587",
+        4.2,
+        2020, 4, 24, 18, 27, 41,
+        0, 359, 3727, 7.3,
+        1, 1, 2, 1);
+    */
+
+    check_sat(21903, // Cosmos 21903
+        "1 21903U 92012B   20114.59131381 +.00000135 +00000-0 +12504-3 0  9992",
+        "2 21903 082.9337 132.3220 0044214 070.4659 060.4640 13.74510053410361",
+        4.2,
+        2020, 4, 24, 18, 38, 40,
+        84, 93, 967, 4.0,
+        1, 5, 1, 1);
+
+    check_sat(44729, // STARLINK-1024
+        "1 44729C 19074S   20115.19248806  .00009322  00000-0  63846-3 0  1150",
+        "2 44729  52.9955 118.1239 0001220  90.6225 328.8155 15.05572044    13",
+        4.0,
+        2020, 4, 24, 18, 48, 8,
+        10, 219, 1810, 5.5,
+        1, 1, 3, 1);
 }
 
 TEST_REGISTER(NULL, test_satellites, TEST_AUTO);
