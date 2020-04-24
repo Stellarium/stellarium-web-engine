@@ -232,8 +232,9 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
 static double satellite_compute_vmag(const satellite_t *sat,
                                      const observer_t *obs)
 {
-    double illumination, fracil, elong, range;
+    double illumination, fracil, phase_angle, range;
     double observed[3];
+    double ph[3];
 
     convert_frame(obs, FRAME_ICRF, FRAME_OBSERVED, false,
                         sat->pvo[0], observed);
@@ -245,6 +246,11 @@ static double satellite_compute_vmag(const satellite_t *sat,
     }
     if (isnan(sat->stdmag)) return SATELLITE_DEFAULT_MAG;
 
+    vec3_sub(sat->pvo[0], obs->sun_pvo[0], ph);
+    phase_angle = eraSepp(sat->pvo[0], ph);
+    fracil = 0.5 * cos(phase_angle) + 0.5;
+    range = vec3_norm(sat->pvo[0]) * DAU / 1000; // Distance in km.
+
     // If we have a std mag value,
     // We use the formula:
     // mag = stdmag - 15.75 + 2.5 * log10 (range * range / fracil)
@@ -254,9 +260,6 @@ static double satellite_compute_vmag(const satellite_t *sat,
     //                  [ 0 <= fracil <= 1 ]
     // (https://www.prismnet.com/~mmccants/tles/mccdesc.html)
 
-    range = vec3_norm(sat->pvo[0]) * DAU / 1000; // Distance in km.
-    elong = eraSepp(obs->sun_pvo[0], sat->pvo[0]);
-    fracil = 0.5 * (1. + cos(elong));
     return sat->stdmag - 15.75 + 2.5 * log10(range * range / fracil);
 }
 
@@ -518,3 +521,72 @@ static obj_klass_t satellites_klass = {
     }
 };
 OBJ_REGISTER(satellites_klass)
+
+#ifdef COMPILE_TESTS
+
+static void check_sat(int norad_number, const char *tle1, const char *tle2,
+                      double stdmag,
+                      int iy, int im, int id, int h, int m, double s,
+                      double ha_alt, double ha_az, double ha_dist,
+                      double ha_vmag)
+{
+    observer_t obs;
+    char json[1204];
+    obj_t *obj;
+    double d1, d2, vmag, dist, pos[4], alt, az;
+
+    snprintf(json, sizeof(json),
+             "{\"model_data\":{\"mag\": %f,"
+             "\"norad_number\": %d,"
+             "\"tle\": [\"%s\",\"%s\"]}}",
+             stdmag, norad_number, tle1, tle2);
+    obj = obj_create_str("tle_satellite", NULL, json);
+    assert(obj);
+
+    obs = *core->observer;
+    obs.elong = 121.5654 * DD2R;
+    obs.phi = 25.0330 * DD2R;
+    eraDtf2d("UTC", iy, im, id, h - 8, m, s, &d1, &d2);
+    obj_set_attr((obj_t*)&obs, "utc", d1 - DJM0 + d2);
+    observer_update(&obs, false);
+
+    obj_get_pos(obj, &obs, FRAME_OBSERVED, pos);
+    eraC2s(pos, &az, &alt);
+    az = eraAnp(az);
+    obj_get_info(obj, &obs, INFO_DISTANCE, &dist);
+    obj_get_info(obj, &obs, INFO_VMAG, &vmag);
+    assert(fabs(alt * DR2D - ha_alt) < 1);
+    assert(fabs(az * DR2D - ha_az) < 2);
+    assert(fabs(dist * DAU / 1000 - ha_dist) < 1);
+    assert(fabs(ha_vmag - vmag) < 1);
+}
+
+static void test_satellites(void)
+{
+    // Compare some position/vmag with values from heavens above.
+
+    check_sat(20625,
+        "1 20625U 90046B   20114.21029927  .00000256  00000-0  15749-3 0  9996",
+        "2 20625  70.9963 124.1539 0015477 319.2677  40.7287 14.14651825545059",
+        2.7,
+        2020, 4, 23, 19, 59, 39,
+        14, 298, 2167, 5.4);
+
+    check_sat(13552, // Cosmos 1408
+        "1 13552U 82092A   20113.74575265  .00000921  00000-0  32526-4 0  9999",
+        "2 13552  82.5670 333.7928 0017326 336.3418  23.7022 15.27738669 55547",
+        4.2,
+        2020, 4, 24, 19, 26, 37,
+        62, 84, 557, 2.5);
+
+    check_sat(43563, // FALCON 9 R/B
+        "1 43563U 18059B   20113.32331434  .00030378  00000-0  12213-2 0  9996",
+        "2 43563  27.0685   0.0377 5648508  60.6275 343.9164  4.65462966 29379",
+        2.4,
+        2020, 4, 23, 17, 59, 13,
+        80, 193, 1601, 3.5);
+}
+
+TEST_REGISTER(NULL, test_satellites, TEST_AUTO);
+
+#endif // COMPILE_TESTS
