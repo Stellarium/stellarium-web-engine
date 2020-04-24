@@ -14,7 +14,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-json_value *json_get_attr(json_value *val, const char *attr, int type)
+json_value *json_get_attr(const json_value *val, const char *attr, int type)
 {
     int i;
     if (!val || val->type != json_object) return NULL;
@@ -28,7 +28,7 @@ json_value *json_get_attr(json_value *val, const char *attr, int type)
     return NULL;
 }
 
-const char *json_get_attr_s(json_value *val, const char *attr)
+const char *json_get_attr_s(const json_value *val, const char *attr)
 {
     json_value *v;
     v = json_get_attr(val, attr, json_string);
@@ -36,7 +36,8 @@ const char *json_get_attr_s(json_value *val, const char *attr)
     return NULL;
 }
 
-double json_get_attr_f(json_value *val, const char *attr, double default_value)
+double json_get_attr_f(const json_value *val, const char *attr,
+                       double default_value)
 {
     json_value *v;
     v = json_get_attr(val, attr, json_double);
@@ -46,7 +47,7 @@ double json_get_attr_f(json_value *val, const char *attr, double default_value)
     return default_value;
 }
 
-int64_t json_get_attr_i(json_value *val, const char *attr,
+int64_t json_get_attr_i(const json_value *val, const char *attr,
                         int64_t default_value)
 {
     json_value *v;
@@ -55,7 +56,8 @@ int64_t json_get_attr_i(json_value *val, const char *attr,
     return default_value;
 }
 
-bool json_get_attr_b(json_value *val, const char *attr, bool default_value)
+bool json_get_attr_b(const json_value *val, const char *attr,
+                     bool default_value)
 {
     json_value *v;
     v = json_get_attr(val, attr, json_boolean);
@@ -63,7 +65,7 @@ bool json_get_attr_b(json_value *val, const char *attr, bool default_value)
     return default_value;
 }
 
-char *json_to_string(json_value *val)
+char *json_to_string(const json_value *val)
 {
     int i;
     json_value *jstr;
@@ -84,7 +86,7 @@ char *json_to_string(json_value *val)
     return utstring_body(&ret);
 }
 
-json_value *json_copy(json_value *val)
+json_value *json_copy(const json_value *val)
 {
     json_value *ret;
     int i;
