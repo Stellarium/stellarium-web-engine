@@ -302,6 +302,33 @@ static int skycultures_add_data_source(
 }
 
 /*
+ * Function: skycultures_get_name_info
+ * Get the names of a sky object in the current skyculture.
+ *
+ * Parameters:
+ *   main_id        - the main ID of the sky object:
+ *                     - for bright stars use "HIP XXXX"
+ *                     - for constellations use "CON culture_name XXX"
+ *                     - for planets use "NAME Planet"
+ *                     - for DSO use the first identifier of the names list
+ *
+ * Return:
+ *   NULL if no name was found, else a pointer to a skyculture_name_t struct.
+ */
+const skyculture_name_t *skycultures_get_name_info(const char* main_id)
+{
+    const skyculture_t *cult = g_skycultures->current;
+    const skyculture_name_t *entry;
+
+    assert(main_id);
+
+    if (!cult) return NULL;
+
+    HASH_FIND_STR(cult->names, main_id, entry);
+    return entry;
+}
+
+/*
  * Function: skycultures_translate_english_name
  * Translate a sky object cultural english name in the current locale.
  *
@@ -369,29 +396,15 @@ void skycultures_translate_english_name(const char* name, char *out,
  */
 const char *skycultures_get_label(const char* main_id, char *out, int out_size)
 {
-    const skyculture_t *cult = g_skycultures->current;
-    const skyculture_name_t *entry;
-    const char *tr_name;
+    const skyculture_name_t *entry = skycultures_get_name_info(main_id);
 
-    assert(main_id);
-
-    if (!cult) return NULL;
-
-    HASH_FIND_STR(cult->names, main_id, entry);
     if (!entry) return NULL;
 
     switch (g_skycultures->name_format_style) {
     case NAME_AUTO:
         if (entry->name_english) {
-            if (cult->has_chinese_star_names &&
-                strncmp(main_id, "CON ", 4) != 0) {
-                // This is a sky object in a chinese sky culture
-                skycultures_translate_english_name(entry->name_english, out,
-                                                   out_size);
-                return out;
-            }
-            tr_name = sys_translate("skyculture", entry->name_english);
-            snprintf(out, out_size, "%s", tr_name);
+            skycultures_translate_english_name(entry->name_english, out,
+                                               out_size);
             return out;
         }
         if (entry->name_pronounce) {
