@@ -65,6 +65,8 @@ typedef struct skyculture_name
     char           *name_native;
     char           *name_pronounce;
     char           *name_description;
+    // Pointer to a secondary name, or NULL
+    struct skyculture_name* alternative;
 } skyculture_name_t;
 
 

@@ -204,7 +204,7 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
 {
     int i, j, r;
     const char *key;
-    skyculture_name_t *ret = NULL, *entry;
+    skyculture_name_t *ret = NULL, *entry, *prev_entry;
     const json_value *names_obj;
     const char *english = NULL, *native = NULL, *pronounce = NULL;
 
@@ -232,11 +232,14 @@ skyculture_name_t *skyculture_parse_names_json(const json_value *v)
                 entry->name_native = strdup(native);
             if (pronounce)
                 entry->name_pronounce = strdup(pronounce);
-            HASH_ADD_KEYPTR(hh, ret, entry->main_id,
-                            strlen(entry->main_id), entry);
 
-            // Ignore alternative names for the moment!
-            break;
+            if (j > 0) {
+                prev_entry->alternative = entry;
+            } else {
+                HASH_ADD_KEYPTR(hh, ret, entry->main_id,
+                                strlen(entry->main_id), entry);
+            }
+            prev_entry = entry;
         }
     }
 
