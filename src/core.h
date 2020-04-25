@@ -481,6 +481,39 @@ obj_t *city_create(const char *name, const char *country_code,
 const char *skycultures_get_label(const char *main_id, char *out, int out_size);
 
 /*
+ * Function: skycultures_get_name_info
+ * Get the names of a sky object in the current skyculture.
+ *
+ * Parameters:
+ *   main_id        - the main ID of the sky object:
+ *                     - for bright stars use "HIP XXXX"
+ *                     - for constellations use "CON culture_name XXX"
+ *                     - for planets use "NAME Planet"
+ *                     - for DSO use the first identifier of the names list
+ *
+ * Return:
+ *   NULL if no name was found, else a pointer to a skyculture_name_t struct.
+ */
+const skyculture_name_t *skycultures_get_name_info(const char* main_id);
+
+/*
+ * Function: skycultures_translate_english_name
+ * Translate a sky object cultural english name in the current locale.
+ *
+ * Sky object in a chinese sky culture need a special translation function
+ * because they have the following format:
+ * "Constellation_name [Added] [number]" and only the first part
+ * (Constellation_name) is stored in the translation DB.
+ *
+ * Parameters:
+ *   name           - the english name as stored in a skyculture_name_t
+ *   out            - A text buffer that get filled with the name.
+ *   out_size       - size of the out buffer.
+ */
+void skycultures_translate_english_name(const char* name, char *out,
+                                        int out_size);
+
+/*
  * Function: skycultures_fallback_to_international_names
  * Return whether a sky culture includes the international sky objects names as
  * as fallback when no common names is explicitly specified for a given object.
