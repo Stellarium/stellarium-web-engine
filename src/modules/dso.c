@@ -783,7 +783,7 @@ static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     return NULL;
 }
 
-static int dsos_list(const obj_t *obj, observer_t *obs,
+static int dsos_list(const obj_t *obj,
                      double max_mag, uint64_t hint, const char *source,
                      void *user, int (*f)(void *user, obj_t *obj))
 {

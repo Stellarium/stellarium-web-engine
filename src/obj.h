@@ -138,7 +138,7 @@ struct obj_klass
 
     obj_t* (*clone)(const obj_t *obj);
     // List all the sky objects children from this module.
-    int (*list)(const obj_t *obj, observer_t *obs, double max_mag,
+    int (*list)(const obj_t *obj, double max_mag,
                 uint64_t hint, const char *source, void *user,
                 int (*f)(void *user, obj_t *obj));
 

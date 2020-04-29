@@ -30,9 +30,10 @@ int module_update(obj_t *module, double dt);
  *
  * Parameters:
  *   module   - The module (core for all objects).
- *   obs      - The observer used to compute the object vmag.
- *   max_mag  - Only consider objects below this magnitude.  Can be set to
- *              NAN to ignore.
+ *   max_mag  - If set to a value different than NAN, filter out the objects
+ *              that we know can never have a magnitude lower than this
+ *              value.  This is just a hint given to the modules, and the
+ *              caller should still check the magnitude if needed.
  *   source   - Only consider objects from the given data source.  Can be
  *              set to NULL to ignore.
  *   user     - Data passed to the callback.
@@ -44,7 +45,7 @@ int module_update(obj_t *module, double dt);
  *   MODULE_AGAIN - Some resources are still loading and so calling the
  *                  function again later might return more values.
  */
-int module_list_objs(const obj_t *module, observer_t *obs,
+int module_list_objs(const obj_t *module,
                      double max_mag, uint64_t hint, const char *source,
                      void *user, int (*f)(void *user, obj_t *obj));
 

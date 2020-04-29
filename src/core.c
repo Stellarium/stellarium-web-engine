@@ -104,7 +104,7 @@ static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     return NULL;
 }
 
-static int core_list(const obj_t *obj, observer_t *obs,
+static int core_list(const obj_t *obj,
                      double max_mag, uint64_t hint, const char *source,
                      void *user, int (*f)(void *user, obj_t *obj))
 {
@@ -112,7 +112,7 @@ static int core_list(const obj_t *obj, observer_t *obs,
     obj_t *module;
     int nb = 0;
     DL_FOREACH(core->obj.children, module) {
-        nb += module_list_objs(module, obs, max_mag, hint, source, user, f);
+        nb += module_list_objs(module, max_mag, hint, source, user, f);
     }
     return nb;
 }

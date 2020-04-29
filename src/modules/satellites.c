@@ -459,22 +459,17 @@ static json_value *satellite_data_fn(obj_t *obj, const attribute_t *attr,
     return NULL;
 }
 
-static int satellites_list(const obj_t *obj, observer_t *obs,
+static int satellites_list(const obj_t *obj,
                            double max_mag, uint64_t hint,
                            const char *sources, void *user,
                            int (*f)(void *user, obj_t *obj))
 {
     obj_t *child;
     satellite_t *sat;
-    double vmag;
-    bool test_vmag = !isnan(max_mag);
 
     DL_FOREACH(obj->children, child) {
         sat = (void*)child;
         if (sat->error) continue;
-        if (test_vmag && obj_get_info(child, obs, INFO_VMAG, &vmag) == 0 &&
-                vmag > max_mag)
-            continue;
         if (f && f(user, child)) break;
     }
     return 0;
