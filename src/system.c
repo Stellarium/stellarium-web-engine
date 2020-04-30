@@ -97,6 +97,12 @@ const char *sys_translate(const char *domain, const char *str)
     return sys_callbacks.translate(sys_callbacks.user, domain, str);
 }
 
+const char *sys_get_lang()
+{
+    if (!sys_callbacks.get_lang) return "en";
+    return sys_callbacks.get_lang();
+}
+
 int sys_list_dir(const char *dirpath, void *user,
                  int (*f)(void *user, const char *path, int is_dir))
 {

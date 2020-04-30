@@ -88,6 +88,16 @@ int sys_get_position(double *lat, double *lon, double *alt, double *accuracy);
 const char *sys_translate(const char *domain, const char *str);
 
 /*
+ * Function: sys_get_lang
+ * Get the code of the best supported language to use.
+ *
+ * Return:
+ *   The code for the best supported language for the user, e.g. "fr" or
+ *   "zh_Hans" or "" if unknown.
+ */
+const char *sys_get_lang();
+
+/*
  * Function: sys_list_dir
  * List all the files and directories in a local directory.
  *
@@ -131,6 +141,7 @@ typedef struct {
     int (*get_position)(void *user, double *lat, double *lon,
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
+    const char *(*get_lang)();
     char *(*render_text)(void *user, const char *txt, float height, int flags,
                          int *w, int *h, int *xoffset, int *yoffset);
     int (*list_dir)(void *user, const char *dir, void *cuser,
