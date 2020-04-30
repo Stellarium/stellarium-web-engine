@@ -813,14 +813,9 @@ static void constellation_get_designations(
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     constellation_t *cst = (void*)obj;
-    char name[256];
-    const char *res;
-
-    res = skycultures_get_label(cst->info.id, name, sizeof(name));
-    if (res) {
-        f(obj, user, "NAME", name);
-    }
     f(obj, user, "CON", ((const char *)cst->info.id) + 4);
+    if (cst->info.iau[0])
+        f(obj, user, "NAME", (const char *)cst->info.iau);
 }
 
 static int constellations_init(obj_t *obj, json_value *args)
