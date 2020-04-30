@@ -2,6 +2,7 @@
   "id": "western",
   "region": "Europe",
   "fallback_to_international_names": true,
+  "langs_use_native_names": ["en", "pt", "es"],
   "constellations": [
     {
       "id": "CON western Aql",
@@ -15,7 +16,7 @@
           {"pos": [397, 397], "hip": 93805}
         ]
       },
-      "common_name": {"english": "Aquila"},
+      "common_name": {"english": "Eagle", "native": "Aquila"},
       "iau": "Aql"
     },
     {
@@ -30,7 +31,7 @@
           {"pos": [224, 428], "hip": 9640}
         ]
       },
-      "common_name": {"english": "Andromeda"},
+      "common_name": {"english": "Chained Maiden", "native": "Andromeda"},
       "iau": "And"
     },
     {
@@ -45,7 +46,7 @@
           {"pos": [32, 174], "hip": 4577}
         ]
       },
-      "common_name": {"english": "Sculptor"},
+      "common_name": {"english": "Sculptor", "native": "Sculptor"},
       "iau": "Scl"
     },
     {
@@ -60,7 +61,7 @@
           {"pos": [107, 249], "hip": 88714}
         ]
       },
-      "common_name": {"english": "Ara"},
+      "common_name": {"english": "Altar", "native": "Ara"},
       "iau": "Ara"
     },
     {
@@ -75,7 +76,7 @@
           {"pos": [224, 107], "hip": 73714}
         ]
       },
-      "common_name": {"english": "Libra"},
+      "common_name": {"english": "Scales", "native": "Libra"},
       "iau": "Lib"
     },
     {
@@ -90,7 +91,7 @@
           {"pos": [412, 440], "hip": 1562}
         ]
       },
-      "common_name": {"english": "Cetus"},
+      "common_name": {"english": "Sea Monster", "native": "Cetus"},
       "iau": "Cet"
     },
     {
@@ -105,7 +106,7 @@
           {"pos": [210, 47], "hip": 8832}
         ]
       },
-      "common_name": {"english": "Aries"},
+      "common_name": {"english": "Ram", "native": "Aries"},
       "iau": "Ari"
     },
     {
@@ -120,7 +121,7 @@
           {"pos": [139, 206], "hip": 92814}
         ]
       },
-      "common_name": {"english": "Scutum"},
+      "common_name": {"english": "Shield", "native": "Scutum"},
       "iau": "Sct"
     },
     {
@@ -135,7 +136,7 @@
           {"pos": [44, 202], "hip": 42515}
         ]
       },
-      "common_name": {"english": "Pyxis"},
+      "common_name": {"english": "Compass", "native": "Pyxis"},
       "iau": "Pyx"
     },
     {
@@ -150,7 +151,7 @@
           {"pos": [207, 401], "hip": 67927}
         ]
       },
-      "common_name": {"english": "Bootes"},
+      "common_name": {"english": "Herdsman", "native": "Bootes"},
       "iau": "Boo"
     },
     {
@@ -165,7 +166,7 @@
           {"pos": [199, 75], "hip": 21861}
         ]
       },
-      "common_name": {"english": "Caelum"},
+      "common_name": {"english": "Engraving Tool", "native": "Caelum"},
       "iau": "Cae"
     },
     {
@@ -180,7 +181,7 @@
           {"pos": [184, 33], "hip": 40702}
         ]
       },
-      "common_name": {"english": "Chamaeleon"},
+      "common_name": {"english": "Chameleon", "native": "Chamaeleon"},
       "iau": "Cha"
     },
     {
@@ -195,7 +196,7 @@
           {"pos": [206, 91], "hip": 40843}
         ]
       },
-      "common_name": {"english": "Cancer"},
+      "common_name": {"english": "Crab", "native": "Cancer"},
       "iau": "Cnc"
     },
     {
@@ -210,7 +211,7 @@
           {"pos": [460, 438], "hip": 102978}
         ]
       },
-      "common_name": {"english": "Capricornus"},
+      "common_name": {"english": "Sea Goat", "native": "Capricornus"},
       "iau": "Cap"
     },
     {
@@ -225,7 +226,7 @@
           {"pos": [298, 22], "hip": 39757}
         ]
       },
-      "common_name": {"english": "Carina"},
+      "common_name": {"english": "Keel", "native": "Carina"},
       "iau": "Car"
     },
     {
@@ -240,7 +241,7 @@
           {"pos": [73, 243], "hip": 746}
         ]
       },
-      "common_name": {"english": "Cassiopeia"},
+      "common_name": {"english": "Seated Queen", "native": "Cassiopeia"},
       "iau": "Cas"
     },
     {
@@ -255,7 +256,7 @@
           {"pos": [463, 412], "hip": 56561}
         ]
       },
-      "common_name": {"english": "Centaurus"},
+      "common_name": {"english": "Centaur", "native": "Centaurus"},
       "iau": "Cen"
     },
     {
@@ -270,7 +271,7 @@
           {"pos": [335, 147], "hip": 109492}
         ]
       },
-      "common_name": {"english": "Cepheus"},
+      "common_name": {"english": "King", "native": "Cepheus"},
       "iau": "Cep"
     },
     {
@@ -285,7 +286,7 @@
           {"pos": [172, 64], "hip": 60742}
         ]
       },
-      "common_name": {"english": "Coma Berenices"},
+      "common_name": {"english": "Bernice's Hair", "native": "Coma Berenices"},
       "iau": "Com"
     },
     {
@@ -300,7 +301,7 @@
           {"pos": [207, 152], "hip": 61309}
         ]
       },
-      "common_name": {"english": "Canes Venatici"},
+      "common_name": {"english": "Hunting Dogs", "native": "Canes Venatici"},
       "iau": "Cvn"
     },
     {
@@ -315,7 +316,7 @@
           {"pos": [290, 423], "hip": 23015}
         ]
       },
-      "common_name": {"english": "Auriga"},
+      "common_name": {"english": "Charioteer", "native": "Auriga"},
       "iau": "Aur"
     },
     {
@@ -330,7 +331,7 @@
           {"pos": [204, 211], "hip": 25859}
         ]
       },
-      "common_name": {"english": "Columba"},
+      "common_name": {"english": "Dove", "native": "Columba"},
       "iau": "Col"
     },
     {
@@ -345,7 +346,7 @@
           {"pos": [235, 239], "hip": 71908}
         ]
       },
-      "common_name": {"english": "Circinus"},
+      "common_name": {"english": "Compass", "native": "Circinus"},
       "iau": "Cir"
     },
     {
@@ -360,7 +361,7 @@
           {"pos": [55, 242], "hip": 54682}
         ]
       },
-      "common_name": {"english": "Crater"},
+      "common_name": {"english": "Cup", "native": "Crater"},
       "iau": "Crt"
     },
     {
@@ -375,7 +376,7 @@
           {"pos": [195, 208], "hip": 92953}
         ]
       },
-      "common_name": {"english": "Corona Australis"},
+      "common_name": {"english": "Southern Crown", "native": "Corona Australis"},
       "iau": "CrA"
     },
     {
@@ -390,7 +391,7 @@
           {"pos": [157, 20], "hip": 76127}
         ]
       },
-      "common_name": {"english": "Corona Borealis"},
+      "common_name": {"english": "Northern Crown", "native": "Corona Borealis"},
       "iau": "CrB"
     },
     {
@@ -405,7 +406,7 @@
           {"pos": [213, 187], "hip": 59316}
         ]
       },
-      "common_name": {"english": "Corvus"},
+      "common_name": {"english": "Crow", "native": "Corvus"},
       "iau": "Crv"
     },
     {
@@ -420,7 +421,7 @@
           {"pos": [21, 106], "hip": 60718}
         ]
       },
-      "common_name": {"english": "Crux"},
+      "common_name": {"english": "Southern Cross", "native": "Crux"},
       "iau": "Cru"
     },
     {
@@ -435,7 +436,7 @@
           {"pos": [467, 453], "hip": 95947}
         ]
       },
-      "common_name": {"english": "Cygnus"},
+      "common_name": {"english": "Swan", "native": "Cygnus"},
       "iau": "Cyg"
     },
     {
@@ -450,7 +451,7 @@
           {"pos": [211, 143], "hip": 101421}
         ]
       },
-      "common_name": {"english": "Delphinus"},
+      "common_name": {"english": "Dolphin", "native": "Delphinus"},
       "iau": "Del"
     },
     {
@@ -465,7 +466,7 @@
           {"pos": [219, 46], "hip": 19893}
         ]
       },
-      "common_name": {"english": "Dorado"},
+      "common_name": {"english": "Swordfish", "native": "Dorado"},
       "iau": "Dor"
     },
     {
@@ -480,7 +481,7 @@
           {"pos": [449, 429], "hip": 97433}
         ]
       },
-      "common_name": {"english": "Draco"},
+      "common_name": {"english": "Dragon", "native": "Draco"},
       "iau": "Dra"
     },
     {
@@ -495,7 +496,7 @@
           {"pos": [16, 112], "hip": 80582}
         ]
       },
-      "common_name": {"english": "Norma"},
+      "common_name": {"english": "Carpenter's Square", "native": "Norma"},
       "iau": "Nor"
     },
     {
@@ -510,7 +511,7 @@
           {"pos": [493, 490], "hip": 7588}
         ]
       },
-      "common_name": {"english": "Eridanus"},
+      "common_name": {"english": "River", "native": "Eridanus"},
       "iau": "Eri"
     },
     {
@@ -525,7 +526,7 @@
           {"pos": [218, 243], "hip": 96837}
         ]
       },
-      "common_name": {"english": "Sagitta"},
+      "common_name": {"english": "Arrow", "native": "Sagitta"},
       "iau": "Sge"
     },
     {
@@ -540,7 +541,7 @@
           {"pos": [190, 129], "hip": 13147}
         ]
       },
-      "common_name": {"english": "Fornax"},
+      "common_name": {"english": "Furnace", "native": "Fornax"},
       "iau": "For"
     },
     {
@@ -555,7 +556,7 @@
           {"pos": [249, 165], "hip": 28734}
         ]
       },
-      "common_name": {"english": "Gemini"},
+      "common_name": {"english": "Twins", "native": "Gemini"},
       "iau": "Gem"
     },
     {
@@ -570,7 +571,7 @@
           {"pos": [219, 136], "hip": 16228}
         ]
       },
-      "common_name": {"english": "Camelopardalis"},
+      "common_name": {"english": "Giraffe", "native": "Camelopardalis"},
       "iau": "Cam"
     },
     {
@@ -585,7 +586,7 @@
           {"pos": [318, 492], "hip": 30122}
         ]
       },
-      "common_name": {"english": "Canis Major"},
+      "common_name": {"english": "Great Dog", "native": "Canis Major"},
       "iau": "CMa"
     },
     {
@@ -600,7 +601,7 @@
           {"pos": [258, 394], "hip": 50372}
         ]
       },
-      "common_name": {"english": "Ursa Major"},
+      "common_name": {"english": "Great Bear", "native": "Ursa Major"},
       "iau": "UMa"
     },
     {
@@ -615,7 +616,7 @@
           {"pos": [220, 45], "hip": 108085}
         ]
       },
-      "common_name": {"english": "Grus"},
+      "common_name": {"english": "Crane", "native": "Grus"},
       "iau": "Gru"
     },
     {
@@ -630,7 +631,7 @@
           {"pos": [441, 102], "hip": 88794}
         ]
       },
-      "common_name": {"english": "Hercules"},
+      "common_name": {"english": "Hercules", "native": "Hercules"},
       "iau": "Her"
     },
     {
@@ -645,7 +646,7 @@
           {"pos": [235, 119], "hip": 14240}
         ]
       },
-      "common_name": {"english": "Horologium"},
+      "common_name": {"english": "Clock", "native": "Horologium"},
       "iau": "Hor"
     },
     {
@@ -660,7 +661,7 @@
           {"pos": [401, 33], "hip": 43813}
         ]
       },
-      "common_name": {"english": "Hydra"},
+      "common_name": {"english": "Female Water Snake", "native": "Hydra"},
       "iau": "Hya"
     },
     {
@@ -675,7 +676,7 @@
           {"pos": [241, 215], "hip": 17678}
         ]
       },
-      "common_name": {"english": "Hydrus"},
+      "common_name": {"english": "Male Water Snake", "native": "Hydrus"},
       "iau": "Hyi"
     },
     {
@@ -690,7 +691,7 @@
           {"pos": [175, 98], "hip": 105319}
         ]
       },
-      "common_name": {"english": "Indus"},
+      "common_name": {"english": "Indian", "native": "Indus"},
       "iau": "Ind"
     },
     {
@@ -705,7 +706,7 @@
           {"pos": [67, 215], "hip": 109937}
         ]
       },
-      "common_name": {"english": "Lacerta"},
+      "common_name": {"english": "Lizard", "native": "Lacerta"},
       "iau": "Lac"
     },
     {
@@ -720,7 +721,7 @@
           {"pos": [509, 359], "hip": 29651}
         ]
       },
-      "common_name": {"english": "Monoceros"},
+      "common_name": {"english": "Unicorn", "native": "Monoceros"},
       "iau": "Mon"
     },
     {
@@ -735,7 +736,7 @@
           {"pos": [213, 235], "hip": 23685}
         ]
       },
-      "common_name": {"english": "Lepus"},
+      "common_name": {"english": "Hare", "native": "Lepus"},
       "iau": "Lep"
     },
     {
@@ -750,7 +751,7 @@
           {"pos": [321, 32], "hip": 47908}
         ]
       },
-      "common_name": {"english": "Leo"},
+      "common_name": {"english": "Lion", "native": "Leo"},
       "iau": "Leo"
     },
     {
@@ -765,7 +766,7 @@
           {"pos": [425, 239], "hip": 75177}
         ]
       },
-      "common_name": {"english": "Lupus"},
+      "common_name": {"english": "Wolf", "native": "Lupus"},
       "iau": "Lup"
     },
     {
@@ -780,7 +781,7 @@
           {"pos": [472, 119], "hip": 30060}
         ]
       },
-      "common_name": {"english": "Lynx"},
+      "common_name": {"english": "Lynx", "native": "Lynx"},
       "iau": "Lyn"
     },
     {
@@ -795,7 +796,7 @@
           {"pos": [139, 162], "hip": 92420}
         ]
       },
-      "common_name": {"english": "Lyra"},
+      "common_name": {"english": "Lyre", "native": "Lyra"},
       "iau": "Lyr"
     },
     {
@@ -810,7 +811,7 @@
           {"pos": [42, 120], "hip": 48926}
         ]
       },
-      "common_name": {"english": "Antlia"},
+      "common_name": {"english": "Air Pump", "native": "Antlia"},
       "iau": "Ant"
     },
     {
@@ -825,7 +826,7 @@
           {"pos": [234, 115], "hip": 102831}
         ]
       },
-      "common_name": {"english": "Microscopium"},
+      "common_name": {"english": "Microscope", "native": "Microscopium"},
       "iau": "Mic"
     },
     {
@@ -840,7 +841,7 @@
           {"pos": [129, 236], "hip": 57363}
         ]
       },
-      "common_name": {"english": "Musca"},
+      "common_name": {"english": "Fly", "native": "Musca"},
       "iau": "Mus"
     },
     {
@@ -855,7 +856,7 @@
           {"pos": [247, 140], "hip": 112405}
         ]
       },
-      "common_name": {"english": "Octans"},
+      "common_name": {"english": "Octant", "native": "Octans"},
       "iau": "Oct"
     },
     {
@@ -870,7 +871,7 @@
           {"pos": [163, 110], "hip": 72370}
         ]
       },
-      "common_name": {"english": "Apus"},
+      "common_name": {"english": "Bird of Paradise", "native": "Apus"},
       "iau": "Aps"
     },
     {
@@ -885,7 +886,7 @@
           {"pos": [238, 453], "hip": 85755}
         ]
       },
-      "common_name": {"english": "Ophiuchus"},
+      "common_name": {"english": "Serpent Bearer", "native": "Ophiuchus"},
       "iau": "Oph"
     },
     {
@@ -900,7 +901,7 @@
           {"pos": [421, 91], "hip": 22449}
         ]
       },
-      "common_name": {"english": "Orion"},
+      "common_name": {"english": "Hunter", "native": "Orion"},
       "iau": "Ori"
     },
     {
@@ -915,7 +916,7 @@
           {"pos": [235, 146], "hip": 86929}
         ]
       },
-      "common_name": {"english": "Pavo"},
+      "common_name": {"english": "Peacock", "native": "Pavo"},
       "iau": "Pav"
     },
     {
@@ -930,7 +931,7 @@
           {"pos": [409, 349], "hip": 1067}
         ]
       },
-      "common_name": {"english": "Pegasus"},
+      "common_name": {"english": "Winged Horse", "native": "Pegasus"},
       "iau": "Peg"
     },
     {
@@ -945,7 +946,7 @@
           {"pos": [167, 38], "hip": 27321}
         ]
       },
-      "common_name": {"english": "Pictor"},
+      "common_name": {"english": "Painter's Easel", "native": "Pictor"},
       "iau": "Pic"
     },
     {
@@ -960,7 +961,7 @@
           {"pos": [385, 386], "hip": 13254}
         ]
       },
-      "common_name": {"english": "Perseus"},
+      "common_name": {"english": "Hero", "native": "Perseus"},
       "iau": "Per"
     },
     {
@@ -975,7 +976,7 @@
           {"pos": [160, 160], "hip": 105570}
         ]
       },
-      "common_name": {"english": "Equuleus"},
+      "common_name": {"english": "Little Horse", "native": "Equuleus"},
       "iau": "Equ"
     },
     {
@@ -990,7 +991,7 @@
           {"pos": [184, 124], "hip": 36188}
         ]
       },
-      "common_name": {"english": "Canis Minor"},
+      "common_name": {"english": "Lesser Dog", "native": "Canis Minor"},
       "iau": "CMi"
     },
     {
@@ -1005,7 +1006,7 @@
           {"pos": [61, 155], "hip": 50303}
         ]
       },
-      "common_name": {"english": "Leo Minor"},
+      "common_name": {"english": "Lesser Lion", "native": "Leo Minor"},
       "iau": "LMi"
     },
     {
@@ -1020,7 +1021,7 @@
           {"pos": [242, 135], "hip": 94703}
         ]
       },
-      "common_name": {"english": "Vulpecula"},
+      "common_name": {"english": "Fox", "native": "Vulpecula"},
       "iau": "Vul"
     },
     {
@@ -1035,7 +1036,7 @@
           {"pos": [93, 209], "hip": 79822}
         ]
       },
-      "common_name": {"english": "Ursa Minor"},
+      "common_name": {"english": "Little Bear", "native": "Ursa Minor"},
       "iau": "UMi"
     },
     {
@@ -1050,7 +1051,7 @@
           {"pos": [229, 214], "hip": 5348}
         ]
       },
-      "common_name": {"english": "Phoenix"},
+      "common_name": {"english": "Phoenix", "native": "Phoenix"},
       "iau": "Phe"
     },
     {
@@ -1065,7 +1066,7 @@
           {"pos": [481, 155], "hip": 114971}
         ]
       },
-      "common_name": {"english": "Pisces"},
+      "common_name": {"english": "Fishes", "native": "Pisces"},
       "iau": "Psc"
     },
     {
@@ -1080,7 +1081,7 @@
           {"pos": [236, 92], "hip": 111954}
         ]
       },
-      "common_name": {"english": "Piscis Austrinus"},
+      "common_name": {"english": "Southern Fish", "native": "Piscis Austrinus"},
       "iau": "PsA"
     },
     {
@@ -1095,13 +1096,13 @@
           {"pos": [207, 163], "hip": 34481}
         ]
       },
-      "common_name": {"english": "Volans"},
+      "common_name": {"english": "Flying Fish", "native": "Volans"},
       "iau": "Vol"
     },
     {
       "id": "CON western Pup",
       "lines": [[39757, 38146, 35264, 31685, 32768, 36377, 39429, 39757]],
-      "common_name": {"english": "Puppis"},
+      "common_name": {"english": "Stern", "native": "Puppis"},
       "iau": "Pup"
     },
     {
@@ -1116,7 +1117,7 @@
           {"pos": [16, 111], "hip": 19921}
         ]
       },
-      "common_name": {"english": "Reticulum"},
+      "common_name": {"english": "Reticle", "native": "Reticulum"},
       "iau": "Ret"
     },
     {
@@ -1131,7 +1132,7 @@
           {"pos": [506, 100], "hip": 87072}
         ]
       },
-      "common_name": {"english": "Sagittarius"},
+      "common_name": {"english": "Archer", "native": "Sagittarius"},
       "iau": "Sgr"
     },
     {
@@ -1146,13 +1147,13 @@
           {"pos": [217, 462], "hip": 82729}
         ]
       },
-      "common_name": {"english": "Scorpius"},
+      "common_name": {"english": "Scorpion", "native": "Scorpius"},
       "iau": "Sco"
     },
     {
       "id": "CON western Ser",
       "lines": [[77516, 77622, 77070, 76276, 77233, 78072, 77450, 77233], [92946, 89962, 86565, 86263, 84880]],
-      "common_name": {"english": "Serpens"},
+      "common_name": {"english": "Serpent", "native": "Serpens"},
       "iau": "Ser"
     },
     {
@@ -1167,7 +1168,7 @@
           {"pos": [118, 84], "hip": 48437}
         ]
       },
-      "common_name": {"english": "Sextans"},
+      "common_name": {"english": "Sextant", "native": "Sextans"},
       "iau": "Sex"
     },
     {
@@ -1182,7 +1183,7 @@
           {"pos": [54, 183], "hip": 29134}
         ]
       },
-      "common_name": {"english": "Mensa"},
+      "common_name": {"english": "Table Mountain", "native": "Mensa"},
       "iau": "Men"
     },
     {
@@ -1197,7 +1198,7 @@
           {"pos": [382, 192], "hip": 17847}
         ]
       },
-      "common_name": {"english": "Taurus"},
+      "common_name": {"english": "Bull", "native": "Taurus"},
       "iau": "Tau"
     },
     {
@@ -1212,7 +1213,7 @@
           {"pos": [106, 92], "hip": 90568}
         ]
       },
-      "common_name": {"english": "Telescopium"},
+      "common_name": {"english": "Telescope", "native": "Telescopium"},
       "iau": "Tel"
     },
     {
@@ -1227,7 +1228,7 @@
           {"pos": [224, 141], "hip": 110130}
         ]
       },
-      "common_name": {"english": "Tucana"},
+      "common_name": {"english": "Toucan", "native": "Tucana"},
       "iau": "Tuc"
     },
     {
@@ -1242,7 +1243,7 @@
           {"pos": [97, 78], "hip": 8796}
         ]
       },
-      "common_name": {"english": "Triangulum"},
+      "common_name": {"english": "Triangle", "native": "Triangulum"},
       "iau": "Tri"
     },
     {
@@ -1257,7 +1258,7 @@
           {"pos": [60, 106], "hip": 82273}
         ]
       },
-      "common_name": {"english": "Triangulum Australe"},
+      "common_name": {"english": "Southern Triangle", "native": "Triangulum Australe"},
       "iau": "Tra"
     },
     {
@@ -1272,7 +1273,7 @@
           {"pos": [465, 49], "hip": 102618}
         ]
       },
-      "common_name": {"english": "Aquarius"},
+      "common_name": {"english": "Water Bearer", "native": "Aquarius"},
       "iau": "Aqr"
     },
     {
@@ -1287,13 +1288,13 @@
           {"pos": [338, 382], "hip": 65474}
         ]
       },
-      "common_name": {"english": "Virgo"},
+      "common_name": {"english": "Maiden", "native": "Virgo"},
       "iau": "Vir"
     },
     {
       "id": "CON western Vel",
       "lines": [[39953, 42536, 42913, 45941, 48774, 52727, 51986, 50191, 46651, 44816, 39953]],
-      "common_name": {"english": "Vela"},
+      "common_name": {"english": "Sails", "native": "Vela"},
       "iau": "Vel"
     }
   ],
