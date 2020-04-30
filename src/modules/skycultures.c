@@ -40,7 +40,13 @@ typedef struct skyculture {
     // True if the common names for this sky culture should fallback to the
     // international names. Useful for cultures based on the western family.
     bool fallback_to_international_names;
+    // True if this sky culture contains chinese bayer-like star names
     bool has_chinese_star_names;
+    // True if the english reference name for translation should be the native
+    // name.
+    bool english_use_native_names;
+    // True if we should display native names first for the current language.
+    bool prefer_native_names;
 
 
     // The following strings are all english text, with a matching translation
@@ -59,9 +65,14 @@ typedef struct skyculture {
  * Flags that specify how to format a sky culture common name.
  *
  * Values:
- *   NAME_AUTO          - Return the localized version of the english common
+ *   NAME_AUTO          - Return the translated version of the english common
  *                        name, fallback to pronounciation if not available,
  *                        and native if not available.
+ *                        In the case where the current language prefer to see
+ *                        the native names, return the untranslated native name.
+ *                        In the special case where english is the native
+ *                        language, return the translated native name first.
+ *
  *   NAME_NATIVE        - Return the native name if available, e.g. the chinese
  *                        character version of the name, fallback to
  *                        pronounciation if not available.
@@ -153,9 +164,11 @@ static int skyculture_update(obj_t *obj, double dt)
     unsigned int i;
     json_value *doc;
     const json_value *names = NULL, *features = NULL,
-                     *tour = NULL, *edges = NULL;
+                     *tour = NULL, *edges = NULL,
+                     *langs_use_native_names = NULL;
     const char *description = NULL, *introduction = NULL,
                *references = NULL, *authors = NULL, *licence = NULL;
+    const char* langname;
     bool active = (cult == cults->current);
     constellation_infos_t *cst_info;
 
@@ -184,6 +197,7 @@ static int skyculture_update(obj_t *obj, double dt)
         "region", JCON_STR(region),
         "?fallback_to_international_names",
                    JCON_BOOL(cult->fallback_to_international_names, 0),
+        "?langs_use_native_names", JCON_VAL(langs_use_native_names),
         "?common_names", JCON_VAL(names),
         "?constellations", JCON_VAL(features),
         "introduction", JCON_STR(introduction),
@@ -213,6 +227,16 @@ static int skyculture_update(obj_t *obj, double dt)
     cult->licence = strdup(licence);
     if (names) cult->names = skyculture_parse_names_json(names);
     if (tour) cult->tour = json_copy(tour);
+
+    if (langs_use_native_names) {
+        for (i = 0; i < langs_use_native_names->u.array.length; i++) {
+            langname = langs_use_native_names->u.array.values[i]->u.string.ptr;
+            if (strcmp(langname, "en") == 0)
+                cult->english_use_native_names = true;
+            if (strcmp(sys_get_lang(), langname) == 0)
+                cult->prefer_native_names = true;
+        }
+    }
 
     if (!features) goto end;
     cult->constellations = calloc(features->u.array.length,
@@ -315,7 +339,7 @@ static int skycultures_add_data_source(
  * Return:
  *   NULL if no name was found, else a pointer to a skyculture_name_t struct.
  */
-const skyculture_name_t *skycultures_get_name_info(const char* main_id)
+static const skyculture_name_t *skycultures_get_name_info(const char* main_id)
 {
     const skyculture_t *cult = g_skycultures->current;
     const skyculture_name_t *entry;
@@ -342,7 +366,7 @@ const skyculture_name_t *skycultures_get_name_info(const char* main_id)
  *   out            - A text buffer that get filled with the name.
  *   out_size       - size of the out buffer.
  */
-void skycultures_translate_english_name(const char* name, char *out,
+static void skycultures_translate_english_name(const char* name, char *out,
                                         int out_size)
 {
     const skyculture_t *cult = g_skycultures->current;
@@ -373,6 +397,7 @@ void skycultures_translate_english_name(const char* name, char *out,
             return;
         }
     }
+
     tr_name = sys_translate("skyculture", name);
     snprintf(out, out_size, "%s", tr_name);
 }
@@ -396,12 +421,23 @@ void skycultures_translate_english_name(const char* name, char *out,
  */
 const char *skycultures_get_label(const char* main_id, char *out, int out_size)
 {
+    const skyculture_t *cult = g_skycultures->current;
     const skyculture_name_t *entry = skycultures_get_name_info(main_id);
 
-    if (!entry) return NULL;
+    if (!cult || !entry) return NULL;
 
     switch (g_skycultures->name_format_style) {
     case NAME_AUTO:
+        if (cult->prefer_native_names) {
+            if (entry->name_native) {
+                snprintf(out, out_size, "%s", entry->name_native);
+                return out;
+            }
+        } else if (cult->english_use_native_names && entry->name_native) {
+            skycultures_translate_english_name(entry->name_native, out,
+                                               out_size);
+            return out;
+        }
         if (entry->name_english) {
             skycultures_translate_english_name(entry->name_english, out,
                                                out_size);
@@ -436,6 +472,106 @@ const char *skycultures_get_label(const char* main_id, char *out, int out_size)
     return NULL;
 }
 
+static void add_one_sc_names_(const skyculture_name_t *entry, const obj_t *obj,
+                             void *user, void (*f)(const obj_t *obj, void *user,
+                                                   const char *dsgn))
+{
+    char tmp[256];
+    const skyculture_t *cult = g_skycultures->current;
+
+    if (!cult) return;
+    if (cult->prefer_native_names) {
+        if (entry->name_native) {
+            f(obj, user, entry->name_native);
+        }
+        if (entry->name_english) {
+            skycultures_translate_english_name(entry->name_english, tmp,
+                                               sizeof(tmp));
+            f(obj, user, tmp);
+        }
+        if (entry->name_pronounce) {
+            f(obj, user, entry->name_pronounce);
+        }
+        if (entry->alternative) {
+            add_one_sc_names_(entry->alternative, obj, user, f);
+        }
+        return;
+    }
+
+    if (cult->english_use_native_names) {
+        if (entry->name_native) {
+            skycultures_translate_english_name(entry->name_native, tmp,
+                                               sizeof(tmp));
+            f(obj, user, tmp);
+            if (strcmp(tmp, entry->name_native) != 0)
+                f(obj, user, entry->name_native);
+        }
+        if (entry->name_pronounce) {
+            f(obj, user, entry->name_pronounce);
+        }
+        if (entry->alternative) {
+            add_one_sc_names_(entry->alternative, obj, user, f);
+        }
+        return;
+    }
+
+    if (entry->name_english) {
+        skycultures_translate_english_name(entry->name_english, tmp,
+                                           sizeof(tmp));
+        f(obj, user, tmp);
+    }
+    if (entry->name_pronounce) {
+        f(obj, user, entry->name_pronounce);
+    }
+    if (entry->name_native) {
+        f(obj, user, entry->name_native);
+    }
+    if (entry->alternative) {
+        add_one_sc_names_(entry->alternative, obj, user, f);
+    }
+}
+
+static void on_designation_(const obj_t *obj, void *user2, const char *dsgn)
+{
+    void *user = USER_GET(user2, 0);
+    void (*f)(const obj_t *obj, void *user, const char *dsgn) =
+            USER_GET(user2, 1);
+
+    // Check if we get cultural names for this object.
+    const skyculture_name_t *entry = skycultures_get_name_info(dsgn);
+    if (entry)
+        add_one_sc_names_(entry, obj, user, f);
+}
+
+static void on_designation_sky_(const obj_t *obj, void *user2, const char *dsgn)
+{
+    void *user = USER_GET(user2, 0);
+    void (*f)(const obj_t *obj, void *user, const char *dsgn) =
+            USER_GET(user2, 1);
+    char buf[256];
+    const char* i18n;
+
+    // Translation for international sky objects
+    if (strncmp(dsgn, "NAME ", 5) == 0) {
+        i18n = sys_translate("sky", dsgn + 5);
+        if (strcmp(i18n, dsgn + 5) != 0) {
+            snprintf(buf, sizeof(buf), "NAME %s", i18n);
+            f(obj, user, buf);
+            return;
+        }
+    }
+
+    f(obj, user, dsgn);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void skycultures_get_designations(const obj_t *obj, void *user,
+                  void (*f)(const obj_t *obj, void *user, const char *dsgn))
+{
+    obj_get_designations(obj, USER_PASS(user, f), on_designation_);
+    obj_get_designations(obj, USER_PASS(user, f), on_designation_sky_);
+}
+
 /*
  * Function: skycultures_fallback_to_international_names
  * Return whether a sky culture includes the international sky objects names as
@@ -444,7 +580,8 @@ const char *skycultures_get_label(const char* main_id, char *out, int out_size)
  * Return:
  *   True or false.
  */
-bool skycultures_fallback_to_international_names() {
+bool skycultures_fallback_to_international_names()
+{
     if (!g_skycultures->current)
         return false;
     return g_skycultures->current->fallback_to_international_names;
