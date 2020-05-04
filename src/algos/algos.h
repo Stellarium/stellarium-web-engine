@@ -104,20 +104,6 @@ void satrings(
     double jd,
     double *etiltp, double *stiltp);
 
-/* Parse a string into a mjd time
- *
- * inputs
- *   scale  char[]  "UTC".
- *   str    char[]  the iso time string.
- *
- * returns:
- *   mjd    double  the MJD time.
- *
- * returned value:
- *   int    status (0 if no error).
- */
-int time_parse_iso(const char *scale, const char *str, double *mjd);
-
 /* Set time from gregorian calendar value.  Any value equal to -1 means we
  * don't change it.
  */

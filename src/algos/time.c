@@ -7,24 +7,10 @@
  * repository.
  */
 
-#define _XOPEN_SOURCE // For strptime
 #include <time.h>
 #include "erfa.h"
 
 #define DJM0 ERFA_DJM0
-
-int time_parse_iso(const char *scale, const char *str, double *mjd)
-{
-    struct tm tm;
-    double d1, d2;
-    int ret;
-    // XXX: doesn't support timezone yet!
-    strptime(str, "%Y-%m-%dT%H:%M:%S", &tm);
-    ret = eraDtf2d(scale, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-                    tm.tm_hour, tm.tm_min, tm.tm_sec, &d1, &d2);
-    *mjd = d1 - DJM0 + d2;
-    return ret;
-}
 
 double time_set_dtf(double utc, double utcoffset,
                     int year, int month, int day,
