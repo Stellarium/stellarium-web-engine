@@ -22,6 +22,10 @@
 #endif
 
 #define GL_GLEXT_PROTOTYPES
+#ifdef WIN32
+#    include <windows.h>
+#    include "GL/glew.h"
+#endif
 #ifdef __APPLE__
 #  define GLES2
 #  include <OPenGLES/ES2/gl.h>

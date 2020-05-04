@@ -1714,6 +1714,10 @@ renderer_t* render_gl_create(void)
     renderer_gl_t *rend;
     GLint range[2];
 
+#ifdef WIN32
+    glewInit();
+#endif
+
     rend = calloc(1, sizeof(*rend));
     rend->white_tex = create_white_texture(16, 16);
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS);
