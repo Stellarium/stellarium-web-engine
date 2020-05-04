@@ -103,25 +103,6 @@ const char *sys_get_lang()
     return sys_callbacks.get_lang();
 }
 
-int sys_list_dir(const char *dirpath, void *user,
-                 int (*f)(void *user, const char *path, int is_dir))
-{
-    DIR *dir;
-    struct dirent *dirent;
-    char buf[1024];
-    if (sys_callbacks.list_dir)
-        return sys_callbacks.list_dir(sys_callbacks.user, dirpath, user, f);
-    dir = opendir(dirpath);
-    if (!dir) return -1;
-    while ((dirent = readdir(dir))) {
-        if (dirent->d_name[0] == '.') continue;
-        snprintf(buf, sizeof(buf) - 1, "%s/%s", dirpath, dirent->d_name);
-        f(user, buf, dirent->d_type == DT_DIR);
-    }
-    closedir(dir);
-    return 0;
-}
-
 /*
  * Function: sys_render_text
  * Render text into a texture buffer.

@@ -98,18 +98,6 @@ const char *sys_translate(const char *domain, const char *str);
 const char *sys_get_lang();
 
 /*
- * Function: sys_list_dir
- * List all the files and directories in a local directory.
- *
- * Parameters:
- *   dir    - A local dir.
- *   user   - User data passed to the callback.
- *   f      - A callback function called once per file/dir.
- */
-int sys_list_dir(const char *dir, void *user,
-                 int (*f)(void *user, const char *path, int is_dir));
-
-/*
  * Function: sys_render_text
  * Render text into a texture buffer.
  *
