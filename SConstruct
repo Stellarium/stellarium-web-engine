@@ -15,7 +15,8 @@ VariantDir('build/src', 'src', duplicate=0)
 VariantDir('build/ext_src', 'ext_src', duplicate=0)
 env = Environment(variables=vars)
 
-env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE',
+env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE '
+                   '-Wno-missing-braces',
            CXXFLAGS='-Wall -std=gnu++11 -Wno-narrowing '
                     '-Wno-unknown-pragmas -Wno-unused-function')
 
@@ -56,6 +57,10 @@ env.Append(CPPPATH=['ext_src/inih'])
 
 sources += glob.glob('ext_src/nanovg/*.c')
 env.Append(CPPPATH=['ext_src/nanovg'])
+
+sources += glob.glob('ext_src/md4c/*.c')
+env.Append(CPPPATH=['ext_src/md4c'])
+env.Append(CFLAGS=['-DMD4C_USE_UTF8'])
 
 if env['remotery']:
     env.Append(CPPPATH=['ext_src/remotery'])
