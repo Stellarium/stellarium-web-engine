@@ -19,6 +19,12 @@
 #define PATH_MAX 1024
 #endif
 
+// Fix mkdir on MINGW
+#ifdef WIN32
+#   define mkdir(p, m) mkdir(p)
+#endif
+
+
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
 
@@ -41,10 +47,15 @@ double sys_get_unix_time(void)
 
 int sys_get_utc_offset(void)
 {
+#ifndef WIN32
     time_t t = time(NULL);
     struct tm lt = {0};
     localtime_r(&t, &lt);
     return lt.tm_gmtoff;
+#else
+    // Not implemented yet.
+    return 0;
+#endif
 }
 
 const char *sys_get_user_dir(void)
