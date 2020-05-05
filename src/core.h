@@ -505,6 +505,18 @@ void skycultures_get_designations(const obj_t *obj, void *user,
 bool skycultures_fallback_to_international_names();
 
 /*
+ * Function: skycultures_md_2_html
+ * Convert the passed string format from markdown to HTML.
+ *
+ * Parameters:
+ *   md     - The markdown content to convert.
+ *
+ * Return:
+ *   A newly allocated string. The caller is responsible for freeing it.
+ */
+char *skycultures_md_2_html(const char *md);
+
+/*
  * Function: core_add_task
  * Add a function that will be executed at each frame.
  *

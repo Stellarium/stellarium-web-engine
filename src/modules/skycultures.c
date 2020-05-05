@@ -9,6 +9,8 @@
 
 #include "swe.h"
 #include "ini.h"
+#include "md4c.h"
+#include "md4c-html.h"
 #include <regex.h>
 
 /*
@@ -20,6 +22,7 @@
  */
 enum {
     SK_JSON                         = 1 << 0,
+    SK_MD                           = 1 << 1,
 };
 
 /*
@@ -154,9 +157,143 @@ static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
     return cult;
 }
 
+static void process_output(const MD_CHAR* str, MD_SIZE size, void* user)
+{
+    UT_string *instr = (UT_string*)user;
+    UT_string s;
+    utstring_init(&s);
+    utstring_bincpy(&s, str, size);
+    utstring_concat(instr, &s);
+    utstring_done(&s);
+}
+
+static void utstring_replace(UT_string *s, int start, int end, const char* rep)
+{
+    UT_string s2;
+    const char* in_str = utstring_body(s);
+    utstring_init(&s2);
+    utstring_bincpy(&s2, in_str, start);
+    utstring_bincpy(&s2, rep, strlen(rep));
+    utstring_bincpy(&s2, in_str + end, strlen(in_str + end));
+    utstring_clear(s);
+    utstring_concat(s, &s2);
+    utstring_done(&s2);
+}
+
+char *skycultures_md_2_html(const char *md)
+{
+    UT_string s;
+    char *ret = NULL;
+    const char* str;
+    char tmp[256];
+    int n;
+    regex_t re;
+    regmatch_t m[2];
+
+    utstring_init(&s);
+    md_html(md, strlen(md), process_output, &s, 0, 0);
+
+    // Apply custom rules for references
+    // Replace reference list with proper HTML refs, i.e.:
+    // replace - [#1]: XXXX   by linkable span
+    regcomp(&re, "^<li>\\[#(\\w+)\\]: ", REG_EXTENDED | REG_NEWLINE);
+    while (regexec(&re, utstring_body(&s), 2, m, 0) == 0) {
+        str = utstring_body(&s);
+        memset(tmp, 0, sizeof(tmp));
+        memcpy(tmp, str + m[1].rm_so, m[1].rm_eo - m[1].rm_so);
+        n = atoi(tmp);
+        snprintf(tmp, sizeof(tmp), "<li><span id=\"cite_%d\">[%d]</span>: ",
+                 n, n);
+        utstring_replace(&s, m[0].rm_so, m[0].rm_eo, tmp);
+    }
+
+    // Replace reference links with proper HTML links
+    regcomp(&re, "\\[#(\\w+)\\]", REG_EXTENDED | REG_NEWLINE);
+    while (regexec(&re, utstring_body(&s), 2, m, 0) == 0) {
+        str = utstring_body(&s);
+        memset(tmp, 0, sizeof(tmp));
+        memcpy(tmp, str + m[1].rm_so, m[1].rm_eo - m[1].rm_so);
+        n = atoi(tmp);
+        snprintf(tmp, sizeof(tmp), "<a href=\"#cite_%d\">[%d]</a>", n, n);
+        utstring_replace(&s, m[0].rm_so, m[0].rm_eo, tmp);
+    }
+
+    ret = strdup(utstring_body(&s));
+    utstring_done(&s);
+    return ret;
+}
+
+static char *to_buf(const char *text, int size)
+{
+    char *buf = malloc(size + 1);
+    if (!buf || size <= 0) return NULL;
+    memcpy(buf, text, size);
+    buf[size] = '\0';
+    return buf;
+
+}
+
+static void add_section(const char *section_name, const char *content,
+                        int size, skyculture_t *cult)
+{
+    while (*(content + size - 1) == '\n' && size)
+        size--;
+    if (strcmp(section_name, "Introduction") == 0) {
+        cult->introduction = to_buf(content, size);
+    } else if (strcmp(section_name, "Description") == 0) {
+        cult->description = to_buf(content, size);
+    } else if (strcmp(section_name, "References") == 0) {
+        cult->references = to_buf(content, size);
+    } else if (strcmp(section_name, "Authors") == 0) {
+        cult->authors = to_buf(content, size);
+    } else if (strcmp(section_name, "Licence") == 0) {
+        cult->licence = to_buf(content, size);
+    } else if (strcmp(section_name, "Constellations") == 0) {
+        // TODO: handle this case
+        // LOG_E("constellations: %s", to_buf(content, size));
+    } else {
+        LOG_E("Error in sky culture %s: ", cult->id);
+        LOG_E("unknown level 2 section: %s", section_name);
+    }
+}
+
+static void add_markdown(const char *md, skyculture_t *cult)
+{
+    regex_t re;
+    regcomp(&re, "^#\\s*(.+)$", REG_EXTENDED | REG_NEWLINE);
+    regmatch_t m[2];
+    char section_name[256];
+    section_name[0] = '\0';
+    if (regexec(&re, md, 2, m, 0) == 0) {
+        snprintf(section_name, min(sizeof(section_name),
+                 m[1].rm_eo - m[1].rm_so + 1), "%s", md + m[1].rm_so);
+        cult->name = strdup(section_name);
+    } else {
+        LOG_E("Error in sky culture %s: ", cult->id);
+        LOG_E("markdown must start with # Sky Culture Name");
+    }
+
+    section_name[0] = '\0';
+    regcomp(&re, "^##\\s+(.*)$", REG_EXTENDED | REG_NEWLINE);
+    const char *cur = md;
+    while (regexec(&re, cur, 2, m, 0) == 0) {
+        if (section_name[0]) {
+            add_section(section_name, cur, m[0].rm_so, cult);
+        }
+        snprintf(section_name, min(sizeof(section_name),
+                 m[1].rm_eo - m[1].rm_so + 1), "%s", cur + m[1].rm_so);
+        cur += m[0].rm_eo + 1;
+        while (*cur == '\n')
+            cur ++;
+    }
+    if (section_name[0]) {
+        add_section(section_name, cur, md + strlen(md) - cur, cult);
+    }
+}
+
 static int skyculture_update(obj_t *obj, double dt)
 {
-    const char *json;
+    const char *json, *md;
     skyculture_t *cult = (skyculture_t*)obj;
     skycultures_t *cults = (skycultures_t*)obj->parent;
     char path[1024], *name, *region, *id;
@@ -172,8 +309,27 @@ static int skyculture_update(obj_t *obj, double dt)
     bool active = (cult == cults->current);
     constellation_infos_t *cst_info;
 
-    if (cult->parsed & SK_JSON)
+    if (cult->parsed & SK_MD)
         return 0;
+
+    if (cult->parsed & SK_JSON) {
+        // JSON is already parsed, load the markdown
+        snprintf(path, sizeof(path), "%s/%s", cult->uri, "description.md");
+        md = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
+        if (!code) return 0;
+        cult->parsed |= SK_MD;
+
+        if (!md) {
+            LOG_E("Failed to download skyculture markdown file");
+            return -1;
+        }
+
+        add_markdown(md, cult);
+
+        // Once all has been parsed, we can activate the skyculture.
+        if (active) skyculture_activate(cult);
+        return 0;
+    }
 
     snprintf(path, sizeof(path), "%s/%s", cult->uri, "index.json");
     json = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
@@ -193,14 +349,14 @@ static int skyculture_update(obj_t *obj, double dt)
 
     r = jcon_parse(doc, "{",
         "id", JCON_STR(id),
-        "name", JCON_STR(name),
+        "?name", JCON_STR(name),
         "region", JCON_STR(region),
         "?fallback_to_international_names",
                    JCON_BOOL(cult->fallback_to_international_names, 0),
         "?langs_use_native_names", JCON_VAL(langs_use_native_names),
         "?common_names", JCON_VAL(names),
         "?constellations", JCON_VAL(features),
-        "introduction", JCON_STR(introduction),
+        "?introduction", JCON_STR(introduction),
         "?description", JCON_STR(description),
         "?references", JCON_STR(references),
         "?authors", JCON_STR(authors),
@@ -216,15 +372,19 @@ static int skyculture_update(obj_t *obj, double dt)
 
     cult->id = strdup(id);
     cult->has_chinese_star_names = strncmp(id, "chinese", 7) == 0;
-    cult->name = strdup(name);
+    if (name)
+        cult->name = strdup(name);
     cult->region = strdup(region);
-    cult->introduction = strdup(introduction);
+    if (introduction)
+        cult->introduction = strdup(introduction);
     if (description)
         cult->description = strdup(description);
     if (references)
         cult->references = strdup(references);
-    cult->authors = strdup(authors);
-    cult->licence = strdup(licence);
+    if (authors)
+        cult->authors = strdup(authors);
+    if (licence)
+        cult->licence = strdup(licence);
     if (names) cult->names = skyculture_parse_names_json(names);
     if (tour) cult->tour = json_copy(tour);
 
@@ -256,9 +416,6 @@ static int skyculture_update(obj_t *obj, double dt)
         skyculture_parse_edges(edges, cult->constellations,
                                cult->nb_constellations);
     }
-
-    // Once all has beed parsed, we can activate the skyculture.
-    if (active) skyculture_activate(cult);
 
 end:
     json_value_free(doc);
