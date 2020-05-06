@@ -363,7 +363,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
     switch (info) {
     case INFO_PVO:
         memcpy(out, sat->pvo, sizeof(sat->pvo));
-        return 0;
+        return sat->error ? 1 : 0;
     case INFO_VMAG:
         *(double*)out = sat->vmag;
         return 0;
