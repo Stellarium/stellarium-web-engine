@@ -31,6 +31,7 @@ struct satellite {
     double vmag;
     bool error; // Set if we got an error computing the position.
     json_value *data; // Data passed in the constructor.
+    double max_brightness; // Cached max_brightness value.
 
     // Linked list of currently visible on screen.
     satellite_t *visible_next, *visible_prev;
@@ -229,6 +230,14 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
     return 0.0;
 }
 
+static double compute_max_brightness(
+        const sgp4_elsetrec_t *elsetrec, double stdmag)
+{
+    double perigree;
+    perigree = sgp4_get_perigree_height(elsetrec);
+    return stdmag - 15.75 + 2.5 * log10(perigree * perigree);
+}
+
 static double satellite_compute_vmag(const satellite_t *sat,
                                      const observer_t *obs)
 {
@@ -297,6 +306,8 @@ static int satellite_init(obj_t *obj, json_value *args)
         strncpy(sat->obj.type, type ?: "Asa", 4);
 
         sat->data = json_copy(args);
+        sat->max_brightness = compute_max_brightness(
+                sat->elsetrec, sat->stdmag);
     }
 
     return 0;
@@ -466,10 +477,13 @@ static int satellites_list(const obj_t *obj,
 {
     obj_t *child;
     satellite_t *sat;
+    bool test_vmag = !isnan(max_mag);
 
     DL_FOREACH(obj->children, child) {
         sat = (void*)child;
         if (sat->error) continue;
+        if (test_vmag && sat->max_brightness > max_mag)
+            continue;
         if (f && f(user, child)) break;
     }
     return 0;

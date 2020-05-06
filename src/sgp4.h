@@ -28,3 +28,9 @@ bool sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3]);
  * Return the reference epoch of a sat (UTC MJD)
  */
 double sgp4_get_satepoch(const sgp4_elsetrec_t *satrec);
+
+/*
+ * Function: sgp4_get_perigree_height
+ * Compute the perigree height in km for a given satellite orbit
+ */
+double sgp4_get_perigree_height(const sgp4_elsetrec_t *satrec);

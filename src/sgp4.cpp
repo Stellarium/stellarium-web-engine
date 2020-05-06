@@ -70,3 +70,24 @@ double sgp4_get_satepoch(const sgp4_elsetrec_t *satrec)
     elsetrec *elrec = (elsetrec*)satrec;
     return (elrec->jdsatepoch + elrec->jdsatepochF) - 2400000.5;
 }
+
+double sgp4_get_perigree_height(const sgp4_elsetrec_t *satrec)
+{
+    /*
+     * Compute perigree height using the formula from:
+     * http://www.satobs.org/seesat/Dec-2002/0197.html
+     *
+     * a = (8681663.653 / n0) ^ (2/3)
+     * hp = a(1 - e0) - 6371
+     *
+     * with:
+     *   n0 = mean motion at epoch, rev/d
+     */
+    const elsetrec *elrec = (const elsetrec*)satrec;
+    const double xpdotp = 1440.0 / (2.0 * M_PI);
+    double n0 = elrec->no_kozai * xpdotp; // rad/min to rev/d.
+    double e0 = elrec->ecco;
+    double a = pow(8681663.653 / n0, 2. / 3.);
+    double hp = a * (1 - e0) - 6371;
+    return hp;
+}
