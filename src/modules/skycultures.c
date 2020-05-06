@@ -291,11 +291,35 @@ static void add_markdown(const char *md, skyculture_t *cult)
     }
 }
 
+static int skyculture_load_md(skyculture_t *cult) {
+    char path[1024];
+    const char *md;
+    int code;
+    const skycultures_t *cults = (skycultures_t*)cult->obj.parent;
+    bool active = (cult == cults->current);
+
+    // JSON is already parsed, load the markdown
+    snprintf(path, sizeof(path), "%s/%s", cult->uri, "description.md");
+    md = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
+    if (!code) return 0;
+    cult->parsed |= SK_MD;
+
+    if (!md) {
+        LOG_E("Failed to download skyculture markdown file");
+        return -1;
+    }
+
+    add_markdown(md, cult);
+
+    // Once all has been parsed, we can activate the skyculture.
+    if (active) skyculture_activate(cult);
+    return 0;
+}
+
 static int skyculture_update(obj_t *obj, double dt)
 {
-    const char *json, *md;
+    const char *json;
     skyculture_t *cult = (skyculture_t*)obj;
-    skycultures_t *cults = (skycultures_t*)obj->parent;
     char path[1024], *name, *region, *id;
     int code, r;
     unsigned int i;
@@ -306,29 +330,14 @@ static int skyculture_update(obj_t *obj, double dt)
     const char *description = NULL, *introduction = NULL,
                *references = NULL, *authors = NULL, *licence = NULL;
     const char* langname;
-    bool active = (cult == cults->current);
+
     constellation_infos_t *cst_info;
 
     if (cult->parsed & SK_MD)
         return 0;
 
     if (cult->parsed & SK_JSON) {
-        // JSON is already parsed, load the markdown
-        snprintf(path, sizeof(path), "%s/%s", cult->uri, "description.md");
-        md = asset_get_data2(path, ASSET_USED_ONCE, NULL, &code);
-        if (!code) return 0;
-        cult->parsed |= SK_MD;
-
-        if (!md) {
-            LOG_E("Failed to download skyculture markdown file");
-            return -1;
-        }
-
-        add_markdown(md, cult);
-
-        // Once all has been parsed, we can activate the skyculture.
-        if (active) skyculture_activate(cult);
-        return 0;
+        return skyculture_load_md(cult);
     }
 
     snprintf(path, sizeof(path), "%s/%s", cult->uri, "index.json");
@@ -419,7 +428,9 @@ static int skyculture_update(obj_t *obj, double dt)
 
 end:
     json_value_free(doc);
-    return 0;
+
+    // Immediately tries to load the md file if available
+    return skyculture_load_md(cult);
 }
 
 static void skycultures_gui(obj_t *obj, int location)
