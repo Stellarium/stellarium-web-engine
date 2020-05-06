@@ -2081,11 +2081,5 @@
     "412:411 M+ 20:34:00 +19:30:00 20:34:00 +20:30:00 VUL DEL",
     "410:690 M+ 20:15:00 +20:30:00 20:15:00 +21:15:00 VUL SGE",
     "687:686 M+ 19:15:00 +19:10:00 19:15:00 +21:05:00 VUL SGE"
-  ],
-  "name": "Western",
-  "introduction": "<p>Western sky culture is used internationally by modern astronomers, and is the official scheme of The International Astronomical Union. It has historical roots in Ancient Greek astronomy, with influences from Islamic astronomy.</p>",
-  "description": "<h3>Constellations</h3>\n<p>The Western culture divides the celestial sphere into 88 areas of various sizes called <em>constellations</em>, each with precise boundary, issued by the International Astronomical Union. These constellations have become the standard way to describe the sky, replacing similar sets in other sky cultures exhaustively in daily usage.</p>\n<h3>Star names</h3>\n<p>Most of traditional western star names came from Arabic. In astronomy, Bayer/Flamsteed designations and other star catalogues are widely used instead of traditional names except few cases where the traditional names are more famous than the designations.</p>",
-  "references": "<ul>\n<li><span id=\"cite_1\">[1]</span>: <a href=\"http://en.wikipedia.org/wiki/Constellation\">Constellation</a> article at Wikipedia</li>\n<li><span id=\"cite_2\">[2]</span>: <a href=\"http://en.wikipedia.org/wiki/Star_catalogue\">Star Catalogue</a> article at Wikipedia</li>\n<li><span id=\"cite_3\">[3]</span>: <a href=\"http://hubblesource.stsci.edu/sources/illustrations/constellations/\">Constellation image library</a> of the U.S. Naval Observatory and the Space Telescope Science Institute. Johannes Hevelius Engravings.</li>\n</ul>",
-  "authors": "<p>Stellarium's team</p>",
-  "licence": "<p>GNU GPL v2.0</p>"
+  ]
 }
