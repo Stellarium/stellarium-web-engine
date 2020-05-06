@@ -490,6 +490,36 @@ static int satellites_list(const obj_t *obj,
 }
 
 /*
+ * Experimental.
+ * Fast computation of observed altitude
+ */
+int satellite_get_altitude(const obj_t *obj, const observer_t *obs,
+                           double *out)
+{
+    double pos[3], obs_pos[3], speed[3], sep, alt, theta;
+    satellite_t *sat = (void*)obj;
+
+    if (sat->error) return -1;
+    assert(sat->elsetrec);
+    if (!sgp4(sat->elsetrec, obs->utc, pos, speed)) return -1;
+    vec3_mul(1000.0 / DAU, pos, pos);
+
+    // True equator to j2000.
+    // Why do we need that?
+    mat3_mul_vec3(obs->rnp, pos, pos);
+
+    eraGd2gc(1, obs->elong, obs->phi, obs->hm, obs_pos);
+    vec3_mul(1.0 / DAU, obs_pos, obs_pos);
+    theta = eraEra00(DJM0, obs->ut1);
+    vec2_rotate(theta, obs_pos, obs_pos);
+    vec3_sub(pos, obs_pos, pos);
+    sep = eraSepp(pos, obs_pos);
+    alt = M_PI / 2 - fabs(sep);
+    *out = alt;
+    return 0;
+}
+
+/*
  * Meta class declarations.
  */
 
@@ -568,6 +598,9 @@ static void check_sat(
     assert(fabs(az * DR2D - ha_az) < az_err);
     assert(fabs(dist * DAU / 1000 - ha_dist) < dist_err);
     assert(fabs(ha_vmag - vmag) < vmag_err);
+
+    satellite_get_altitude(obj, &obs, &alt);
+    assert(fabs(ha_alt - alt * DR2D) < 1);
 
     obj_release(obj);
 }
