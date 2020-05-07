@@ -291,8 +291,8 @@ static void load_constellation_md_data(const char *md, skyculture_t *cult)
         if (cid[0]) {
             set_constellation_md_data(cid, cur, m[0].rm_so, cult);
         }
-        snprintf(cid, min(sizeof(cid), m[1].rm_eo - m[1].rm_so + 1),
-                "%s", cur + m[1].rm_so);
+        snprintf(cid, sizeof(cid), "%.*s", (int)(m[1].rm_eo - m[1].rm_so),
+                 cur + m[1].rm_so);
         cur += m[0].rm_eo + 1;
         while (*cur == '\n')
             cur ++;
@@ -337,8 +337,8 @@ static void add_markdown(const char *md, skyculture_t *cult)
     char section_name[256];
     section_name[0] = '\0';
     if (regexec(&re, md, 2, m, 0) == 0) {
-        snprintf(section_name, min(sizeof(section_name),
-                 m[1].rm_eo - m[1].rm_so + 1), "%s", md + m[1].rm_so);
+        snprintf(section_name, sizeof(section_name), "%.*s",
+                 (int)(m[1].rm_eo - m[1].rm_so), md + m[1].rm_so);
         cult->name = strdup(section_name);
     } else {
         LOG_E("Error in sky culture %s: ", cult->id);
@@ -354,8 +354,8 @@ static void add_markdown(const char *md, skyculture_t *cult)
         if (section_name[0]) {
             add_section(section_name, cur, m[0].rm_so, cult);
         }
-        snprintf(section_name, min(sizeof(section_name),
-                 m[1].rm_eo - m[1].rm_so + 1), "%s", cur + m[1].rm_so);
+        snprintf(section_name, sizeof(section_name), "%.*s",
+                 (int)(m[1].rm_eo - m[1].rm_so), cur + m[1].rm_so);
         cur += m[0].rm_eo + 1;
         while (*cur == '\n')
             cur ++;
@@ -627,14 +627,14 @@ static void skycultures_translate_english_name(const char* name, char *out,
         }
         s = strstr(name, " Added");
         if (s) {
-            snprintf(tmp, min(tmp_size, s - name + 1), "%s", name);
+            snprintf(tmp, tmp_size, "%.*s", (int)(s - name), name);
             tr_name = sys_translate("skyculture", tmp);
             snprintf(out, out_size, "%s %s%s", tr_name,
                      sys_translate("skyculture", "Added"),
                      number ? number : "");
             return;
         } else if (number) {
-            snprintf(tmp, min(tmp_size, m.rm_so + 1), "%s", name);
+            snprintf(tmp, tmp_size, "%.*s", (int)m.rm_so, name);
             tr_name = sys_translate("skyculture", tmp);
             snprintf(out, out_size, "%s%s", tr_name, number);
             return;
