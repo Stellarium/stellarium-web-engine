@@ -236,9 +236,77 @@ static char *to_buf(const char *text, int size)
 
 }
 
+static const char *skyculture_cst_id_for_name(const char *name,
+                                              const skyculture_t *cult)
+{
+    skyculture_name_t *item, *tmp;
+    HASH_ITER(hh, cult->names, item, tmp) {
+        if ((item->name_english && strcmp(item->name_english, name) == 0) ||
+            (item->name_native && strcmp(item->name_native, name) == 0) ||
+            (item->name_pronounce && strcmp(item->name_pronounce, name) == 0)) {
+            return item->main_id;
+        }
+    }
+    return NULL;
+}
+
+static constellation_infos_t *skyculture_cst_info_for_id(const char *id,
+                                                    const skyculture_t *cult)
+{
+    int i;
+    for (i = 0; i < cult->nb_constellations; ++i) {
+        constellation_infos_t *cst_info = &cult->constellations[i];
+        if (strcmp(cst_info->id, id) == 0)
+            return cst_info;
+    }
+    return NULL;
+}
+
+static void set_constellation_md_data(const char *cstname, const char *content,
+                                      int size, skyculture_t *cult)
+{
+    constellation_infos_t *cst_info;
+    const char* cst_id = skyculture_cst_id_for_name(cstname, cult);
+    if (!cst_id)
+        return;
+    cst_info = skyculture_cst_info_for_id(cst_id, cult);
+    if (!cst_info)
+        return;
+
+    while (*(content + size - 1) == '\n' && size)
+        size--;
+    cst_info->description = to_buf(content, size);
+}
+
+static void load_constellation_md_data(const char *md, skyculture_t *cult)
+{
+    char cid[256];
+    cid[0] = '\0';
+    regex_t re;
+    regmatch_t m[2];
+    const char *cur = md;
+
+    regcomp(&re, "^#####\\s+(.*)$", REG_EXTENDED | REG_NEWLINE);
+    while (regexec(&re, cur, 2, m, 0) == 0) {
+        if (cid[0]) {
+            set_constellation_md_data(cid, cur, m[0].rm_so, cult);
+        }
+        snprintf(cid, min(sizeof(cid), m[1].rm_eo - m[1].rm_so + 1),
+                "%s", cur + m[1].rm_so);
+        cur += m[0].rm_eo + 1;
+        while (*cur == '\n')
+            cur ++;
+    }
+    regfree(&re);
+    if (cid[0]) {
+        set_constellation_md_data(cid, cur, md + strlen(md) - cur, cult);
+    }
+}
+
 static void add_section(const char *section_name, const char *content,
                         int size, skyculture_t *cult)
 {
+    const char* cst_md_data;
     while (*(content + size - 1) == '\n' && size)
         size--;
     if (strcmp(section_name, "Introduction") == 0) {
@@ -252,8 +320,9 @@ static void add_section(const char *section_name, const char *content,
     } else if (strcmp(section_name, "Licence") == 0) {
         cult->licence = to_buf(content, size);
     } else if (strcmp(section_name, "Constellations") == 0) {
-        // TODO: handle this case
-        // LOG_E("constellations: %s", to_buf(content, size));
+        cst_md_data = to_buf(content, size);
+        load_constellation_md_data(cst_md_data, cult);
+        free(cst_md_data);
     } else {
         LOG_E("Error in sky culture %s: ", cult->id);
         LOG_E("unknown level 2 section: %s", section_name);
