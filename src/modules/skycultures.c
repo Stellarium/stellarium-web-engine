@@ -206,6 +206,7 @@ char *skycultures_md_2_html(const char *md)
                  n, n);
         utstring_replace(&s, m[0].rm_so, m[0].rm_eo, tmp);
     }
+    regfree(&re);
 
     // Replace reference links with proper HTML links
     regcomp(&re, "\\[#(\\w+)\\]", REG_EXTENDED | REG_NEWLINE);
@@ -217,6 +218,7 @@ char *skycultures_md_2_html(const char *md)
         snprintf(tmp, sizeof(tmp), "<a href=\"#cite_%d\">[%d]</a>", n, n);
         utstring_replace(&s, m[0].rm_so, m[0].rm_eo, tmp);
     }
+    regfree(&re);
 
     ret = strdup(utstring_body(&s));
     utstring_done(&s);
@@ -225,8 +227,9 @@ char *skycultures_md_2_html(const char *md)
 
 static char *to_buf(const char *text, int size)
 {
+    if (size <= 0) return NULL;
     char *buf = malloc(size + 1);
-    if (!buf || size <= 0) return NULL;
+    if (!buf) return NULL;
     memcpy(buf, text, size);
     buf[size] = '\0';
     return buf;
@@ -271,7 +274,9 @@ static void add_markdown(const char *md, skyculture_t *cult)
     } else {
         LOG_E("Error in sky culture %s: ", cult->id);
         LOG_E("markdown must start with # Sky Culture Name");
+        cult->name = strdup("Unknown");
     }
+    regfree(&re);
 
     section_name[0] = '\0';
     regcomp(&re, "^##\\s+(.*)$", REG_EXTENDED | REG_NEWLINE);
@@ -286,6 +291,7 @@ static void add_markdown(const char *md, skyculture_t *cult)
         while (*cur == '\n')
             cur ++;
     }
+    regfree(&re);
     if (section_name[0]) {
         add_section(section_name, cur, md + strlen(md) - cur, cult);
     }
