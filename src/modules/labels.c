@@ -218,11 +218,6 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
         label->oid = oid;
         fader_init(&label->fader, false);
         label->render_text = label->text = strdup(text);
-        // Note: should be done by the painter directly.
-        if (effects & TEXT_UPPERCASE) {
-            label->render_text = malloc(strlen(text) + 64);
-            u8_upper(label->render_text, text, strlen(text) + 64);
-        }
         DL_APPEND(g_labels->labels, label);
     }
 

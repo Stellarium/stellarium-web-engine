@@ -867,7 +867,7 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
         item->text.align = align;
         item->text.effects = effects;
         item->text.angle = angle;
-        if (effects & TEXT_SMALL_CAP) {
+        if (effects & TEXT_UPPERCASE || effects & TEXT_SMALL_CAP) {
             // Emulate Small Cap effect by doing regular capitalize
             u8_upper(item->text.text, text, sizeof(item->text.text) - 1);
         } else {
