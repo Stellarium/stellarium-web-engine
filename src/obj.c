@@ -219,9 +219,6 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
 
     // Some fallback values.
     switch (info) {
-    case INFO_TYPE:
-        strncpy(out, obj->type, 4);
-        return 0;
     case INFO_RADEC: // First component of the PVO info.
         obj_get_info(obj, obs, INFO_PVO, pvo);
         memcpy(out, pvo[0], sizeof(pvo[0]));
@@ -358,10 +355,31 @@ EMSCRIPTEN_KEEPALIVE
 json_value *obj_get_json_data(const obj_t *obj)
 {
     json_value* ret;
+    json_value* types;
+    const char* ptype, *model;
+
+    char tmp[5];
     if (obj->klass->get_json_data)
         ret = obj->klass->get_json_data(obj);
     else
         ret = json_object_new(0);
+
+    // Generic code to add object's model
+    model = obj->klass->model ?: obj->klass->id;
+    json_object_push(ret, "model", json_string_new(model));
+
+    // Generic code to add object's types list
+    types = json_array_new(1);
+    strncpy(tmp, obj->type, 4);
+    json_array_push(types, json_string_new(tmp));
+    ptype = otype_get_parent(obj->type);
+    while (ptype) {
+        strncpy(tmp, ptype, 4);
+        json_array_push(types, json_string_new(tmp));
+        ptype = otype_get_parent(ptype);
+    }
+    json_object_push(ret, "types", types);
+
     return ret;
 }
 

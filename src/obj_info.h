@@ -65,19 +65,12 @@ int obj_info_from_str(const char *str);
  */
 #define ALL_INFO(X) \
     X(VMAG,     vmag,   MAG,    1) \
-    X(TYPE,     type,   OTYPE,  2) \
     X(DISTANCE, distance, DIST, 4) \
     X(RADEC,    radec,  V4,     5) \
-    X(SMIN,     smin,   ANGLE,  6) \
-    X(SMAX,     smax,   ANGLE,  7) \
-    X(MORPHO,   morpho, STRING, 8) \
     X(PHASE,    phase,  FLOAT,  9) \
     X(RADIUS,   radius, ANGLE,  10) \
     X(PVO,      pvo,    V4X2,   11) \
-    X(LHA,      lha,    ANGLE,  12) \
-    X(PARALLAX, plx,    FLOAT,  13) \
-    X(SP_TYPE,  sp_type,STRING, 14) \
-    X(BVMAG,    bv,     FLOAT,  15) \
+    X(LHA,      lha,    ANGLE,  12)
 
 /*
  * Enum of all the info.

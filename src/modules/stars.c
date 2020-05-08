@@ -237,22 +237,27 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_DISTANCE:
         *(double*)out = star->data.distance;
         return 0;
-    case INFO_PARALLAX:
-        *(double*)out = star->data.plx * 1000;
-        return 0;
-    case INFO_SP_TYPE:
-        *(char**)out = star->data.sp_type;
-        return 0;
-    case INFO_BVMAG:
-        if (isnan(star->data.bv)) {
-            *(double*)out = 0;
-            return 1;
-        }
-        *(double*)out = star->data.bv;
-        return 0;
     default:
         return 1;
     }
+}
+
+static json_value *star_get_json_data(const obj_t *obj)
+{
+    const star_t *star = (star_t*)obj;
+    json_value* ret = json_object_new(0);
+    json_value* md = json_object_new(0);
+    if (!isnan(star->data.plx)) {
+        json_object_push(md, "plx", json_double_new(star->data.plx * 1000));
+    }
+    if (!isnan(star->data.bv)) {
+        json_object_push(md, "BVMag", json_double_new(star->data.bv));
+    }
+    if (star->data.sp_type) {
+        json_object_push(md, "spect_t", json_string_new(star->data.sp_type));
+    }
+    json_object_push(ret, "model_data", md);
+    return ret;
 }
 
 /*
@@ -1101,6 +1106,7 @@ static obj_klass_t star_klass = {
     .init       = star_init,
     .size       = sizeof(star_t),
     .get_info   = star_get_info,
+    .get_json_data = star_get_json_data,
     .render     = star_render,
     .get_designations = star_get_designations,
 };

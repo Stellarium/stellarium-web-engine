@@ -382,6 +382,13 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
     return 1;
 }
 
+static json_value *satellite_get_json_data(const obj_t *obj)
+{
+    satellite_t *sat = (satellite_t*)obj;
+    if (sat->data)
+        return json_copy(sat->data);
+    return json_object_new(0);
+}
 
 /*
  * Render an individual satellite.
@@ -462,14 +469,6 @@ static void satellite_get_designations(
     }
 }
 
-static json_value *satellite_data_fn(obj_t *obj, const attribute_t *attr,
-                                     const json_value *args)
-{
-    satellite_t *sat = (void*)obj;
-    if (!args && sat->data) return json_copy(sat->data);
-    return NULL;
-}
-
 static int satellites_list(const obj_t *obj,
                            double max_mag, uint64_t hint,
                            const char *sources, void *user,
@@ -531,12 +530,9 @@ static obj_klass_t satellite_klass = {
     .init           = satellite_init,
     .del            = satellite_del,
     .get_info       = satellite_get_info,
+    .get_json_data  = satellite_get_json_data,
     .render         = satellite_render,
-    .get_designations = satellite_get_designations,
-    .attributes = (attribute_t[]) {
-        PROPERTY(data, TYPE_JSON, .fn = satellite_data_fn),
-        {}
-    },
+    .get_designations = satellite_get_designations
 };
 OBJ_REGISTER(satellite_klass)
 

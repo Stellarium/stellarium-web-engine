@@ -156,20 +156,36 @@ static int dso_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_VMAG:
         *(double*)out = dso->data.vmag;
         return 0;
-    case INFO_SMIN:
-        *(double*)out = dso->data.smin;
-        return 0;
-    case INFO_SMAX:
-        *(double*)out = dso->data.smax;
-        return 0;
-    case INFO_MORPHO:
-        *(char**)out = dso->data.morpho;
-        return 0;
     default:
         return 1;
     }
 }
 
+static json_value *dso_get_json_data(const obj_t *obj)
+{
+    const dso_t *dso = (dso_t*)obj;
+    json_value* ret = json_object_new(0);
+    json_value* md = json_object_new(0);
+    if (!isnan(dso->data.vmag)) {
+        json_object_push(md, "Vmag", json_double_new(dso->data.vmag));
+    }
+    if (!isnan(dso->data.smax)) {
+        json_object_push(md, "dimx",
+                         json_double_new(dso->data.smax * DR2D * 60));
+    }
+    if (!isnan(dso->data.smax)) {
+        json_object_push(md, "dimy",
+                         json_double_new(dso->data.smin * DR2D * 60));
+    }
+    if (!isnan(dso->data.angle)) {
+        json_object_push(md, "angle", json_double_new(dso->data.angle * DR2D));
+    }
+    if (dso->data.morpho) {
+        json_object_push(md, "morpho", json_string_new(dso->data.morpho));
+    }
+    json_object_push(ret, "model_data", md);
+    return ret;
+}
 
 // Turn a json array of string into a '\0' separated C string.
 // Move this in utils?
@@ -872,6 +888,7 @@ static obj_klass_t dso_klass = {
     .id = "dso",
     .size = sizeof(dso_t),
     .init = dso_init,
+    .get_json_data = dso_get_json_data,
     .get_info = dso_get_info,
     .render = dso_render,
     .get_designations = dso_get_designations,
