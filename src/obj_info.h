@@ -66,7 +66,6 @@ int obj_info_from_str(const char *str);
 #define ALL_INFO(X) \
     X(VMAG,     vmag,   MAG,    1) \
     X(TYPE,     type,   OTYPE,  2) \
-    X(NAME,     name,   STRING, 3) \
     X(DISTANCE, distance, DIST, 4) \
     X(RADEC,    radec,  V4,     5) \
     X(SMIN,     smin,   ANGLE,  6) \
