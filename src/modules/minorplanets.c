@@ -9,6 +9,7 @@
 
 #include "swe.h"
 #include "mpc.h"
+#include "designation.h"
 #include <zlib.h> // For crc32.
 
 // Minor planets module
@@ -178,9 +179,8 @@ static int mplanet_init(obj_t *obj, json_value *args)
     // Support creating a minor planet using noctuasky model data json values.
     mplanet_t *mp = (mplanet_t*)obj;
     orbit_t *orbit = &mp->orbit;
-    json_value *model;
-    const char *name;
-    int num;
+    json_value *model, *names;
+    int num = -1;
     model = json_get_attr(args, "model_data", json_object);
     if (model) {
         mp->h = json_get_attr_f(model, "H", 0);
@@ -193,14 +193,16 @@ static int mplanet_init(obj_t *obj, json_value *args)
         orbit->n = json_get_attr_f(model, "n", 0) * DD2R;
         orbit->e = json_get_attr_f(model, "e", 0);
         orbit->m = json_get_attr_f(model, "M", 0) * DD2R;
+        num = json_get_attr_i(model, "Number", -1);
     }
-    name = json_get_attr_s(args, "short_name");
-    if (name) {
-        strncpy(mp->name, name, sizeof(mp->name));
-        if (sscanf(name, "(%d)", &num) == 1) {
-            mp->obj.oid = oid_create("MPl", num);
-            mp->mpl_number = num;
-        }
+    if (num >=0) {
+        mp->obj.oid = oid_create("MPl", num);
+        mp->mpl_number = num;
+    }
+    names = json_get_attr(args, "names", json_array);
+    if (names && names->u.array.length > 0) {
+        designation_cleanup(names->u.array.values[0]->u.string.ptr, mp->name,
+                            sizeof(mp->name), 0);
     }
     // XXX: use proper type.
     strncpy(mp->obj.type, "MBA", 4);
