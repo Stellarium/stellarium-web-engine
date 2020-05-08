@@ -48,6 +48,7 @@ int gl_check_errors(const char *file, int line)
               file, line, x, gl_get_error_text(x));
         errors++;
     }
+    return errors;
 }
 
 static int compile_shader(int shader, const char *code,
@@ -271,7 +272,7 @@ void gl_buf_enable(const gl_buf_t *buf)
         if (!a->size) continue;
         GL(glEnableVertexAttribArray(i));
         GL(glVertexAttribPointer(i, a->size, a->type, a->normalized,
-                                 info->size, (void*)(long)a->ofs));
+                                 info->size, (void*)(uintptr_t)a->ofs));
         tot += a->size * gl_size_for_type(a->type);
         if (tot == info->size) break;
     }
