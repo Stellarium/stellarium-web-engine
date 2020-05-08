@@ -895,6 +895,17 @@ static obj_t *constellations_get_by_oid(const obj_t *obj, uint64_t oid,
     return NULL;
 }
 
+static json_value *constellation_get_json_data(const obj_t *obj)
+{
+    json_value* ret = json_object_new(0);
+    const constellation_t *con = (constellation_t*)obj;
+    if (con->info.description) {
+        json_object_push(ret, "description",
+                         json_string_new(con->info.description));
+    }
+    return ret;
+}
+
 /*
  * Meta class declarations.
  */
@@ -907,6 +918,7 @@ static obj_klass_t constellation_klass = {
     .render         = constellation_render,
     .render_pointer = constellation_render_pointer,
     .del            = constellation_del,
+    .get_json_data  = constellation_get_json_data,
     .get_designations = constellation_get_designations,
     .get_2d_ellipse = constellation_get_2d_ellipse,
     .attributes = (attribute_t[]) {

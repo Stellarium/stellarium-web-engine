@@ -134,6 +134,11 @@ struct obj_klass
                       int (*f)(const obj_t *obj, void *user,
                                const char *cat, const char *str));
 
+    // Return the JSON data for a sky object. This data contains the immutable
+    // object's information such as names or type.
+    // The caller takes the ownership of the returned json object.
+    json_value *(*get_json_data)(const obj_t *obj);
+
     void (*gui)(obj_t *obj, int location);
 
     obj_t* (*clone)(const obj_t *obj);
@@ -407,6 +412,19 @@ const char *obj_get_name(const obj_t *obj, char *buf, int len);
 int obj_get_designations(const obj_t *obj, void *user,
                 void (*f)(const obj_t *obj, void *user, const char *dsgn));
 
+/*
+ * Function: obj_get_json_data
+ * Return the JSON data for a sky object. This data contains the immutable
+ * object's information such as names or type, but not the computed data like
+ * position or distance.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ * Return:
+ *   The data as a json object. It is the responsibility of the caller to
+ *   free the returned json object (see json_value_free).
+ */
+json_value *obj_get_json_data(const obj_t *obj);
 
 /*
  * Section: attributes manipulation.

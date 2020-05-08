@@ -354,6 +354,16 @@ int obj_get_designations(const obj_t *obj, void *user,
     return nb;
 }
 
+EMSCRIPTEN_KEEPALIVE
+json_value *obj_get_json_data(const obj_t *obj)
+{
+    json_value* ret;
+    if (obj->klass->get_json_data)
+        ret = obj->klass->get_json_data(obj);
+    else
+        ret = json_object_new(0);
+    return ret;
+}
 
 // XXX: cleanup this code.
 static json_value *obj_fn_default(obj_t *obj, const attribute_t *attr,
