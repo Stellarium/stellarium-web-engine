@@ -101,7 +101,7 @@ void texture_release(texture_t *tex)
     tex->ref--;
     if (tex->ref) return;
     free(tex->url);
-    GL(glDeleteTextures(1, &tex->id));
+    if (tex->id) GL(glDeleteTextures(1, &tex->id));
     free(tex);
 }
 
