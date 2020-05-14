@@ -272,20 +272,45 @@ static double satellite_compute_vmag(const satellite_t *sat,
     return sat->stdmag - 15.75 + 2.5 * log10(range * range / fracil);
 }
 
+/*
+ * Compute the otype from a json list of otype
+ * Parameters:
+ *   val    - A json value, anything but an array of string is an error.
+ *   base   - The base otype value.  This is used as a fallback in case of
+ *            error or if we don't find any known otype that is a child of
+ *            base.
+ */
+static const char *otype_from_json(const json_value *val, const char *base)
+{
+    int i;
+    const char *ret = NULL;
+    if (!val || val->type != json_array)
+        return base;
+    for (i = 0; i < val->u.array.length; i++) {
+        if (val->u.array.values[i]->type != json_string)
+            return base;
+        ret = val->u.array.values[i]->u.string.ptr;
+        if (!otype_match(ret, base))
+            continue;
+    }
+    return base;
+}
+
 static int satellite_init(obj_t *obj, json_value *args)
 {
     // Support creating a satellite using noctuasky model data json values.
     satellite_t *sat = (satellite_t*)obj;
-    const char *tle1, *tle2, *name = NULL, *type = NULL;
+    const char *tle1, *tle2, *name = NULL;
     double startmfe, stopmfe, deltamin;
     int r;
+    const json_value *types = NULL;
 
     sat->vmag = SATELLITE_DEFAULT_MAG;
     sat->stdmag = SATELLITE_DEFAULT_MAG;
 
     if (args) {
         r = jcon_parse(args, "{",
-            "?types", "[", JCON_STR(type), "]",
+            "?types", JCON_VAL(types),
             "model_data", "{",
                 "norad_number", JCON_INT(sat->number, 0),
                 "?mag", JCON_DOUBLE(sat->stdmag, SATELLITE_DEFAULT_MAG),
@@ -303,7 +328,7 @@ static int satellite_init(obj_t *obj, json_value *args)
                                         &startmfe, &stopmfe, &deltamin);
         if (name && strncmp(name, "NAME ", 5) == 0)
             snprintf(sat->name, sizeof(sat->name), "%s", name + 5);
-        strncpy(sat->obj.type, type ?: "Asa", 4);
+        strncpy(sat->obj.type, otype_from_json(types, "Asa"), 4);
 
         sat->data = json_copy(args);
         sat->max_brightness = compute_max_brightness(
