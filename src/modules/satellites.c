@@ -290,8 +290,8 @@ static const char *otype_from_json(const json_value *val, const char *base)
         if (val->u.array.values[i]->type != json_string)
             return base;
         ret = val->u.array.values[i]->u.string.ptr;
-        if (!otype_match(ret, base))
-            continue;
+        if (otype_match(ret, base))
+            return ret;
     }
     return base;
 }
