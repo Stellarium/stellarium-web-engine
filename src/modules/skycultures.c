@@ -286,7 +286,7 @@ static void load_constellation_md_data(const char *md, skyculture_t *cult)
     regmatch_t m[2];
     const char *cur = md;
 
-    regcomp(&re, "^#####\\s+(.*)$", REG_EXTENDED | REG_NEWLINE);
+    regcomp(&re, "^##### +(.+)$", REG_EXTENDED | REG_NEWLINE);
     while (regexec(&re, cur, 2, m, 0) == 0) {
         if (cid[0]) {
             set_constellation_md_data(cid, cur, m[0].rm_so, cult);
@@ -332,7 +332,7 @@ static void add_section(const char *section_name, const char *content,
 static void add_markdown(const char *md, skyculture_t *cult)
 {
     regex_t re;
-    regcomp(&re, "^#\\s*(.+)$", REG_EXTENDED | REG_NEWLINE);
+    regcomp(&re, "^# +(.+)$", REG_EXTENDED | REG_NEWLINE);
     regmatch_t m[2];
     char section_name[256];
     section_name[0] = '\0';
@@ -348,8 +348,9 @@ static void add_markdown(const char *md, skyculture_t *cult)
     regfree(&re);
 
     section_name[0] = '\0';
-    regcomp(&re, "^##\\s+(.*)$", REG_EXTENDED | REG_NEWLINE);
+    regcomp(&re, "^## +(.+)$", REG_EXTENDED | REG_NEWLINE);
     const char *cur = md;
+
     while (regexec(&re, cur, 2, m, 0) == 0) {
         if (section_name[0]) {
             add_section(section_name, cur, m[0].rm_so, cult);
