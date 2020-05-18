@@ -191,7 +191,8 @@ char *skycultures_md_2_html(const char *md)
     regmatch_t m[2];
 
     utstring_init(&s);
-    md_html(md, strlen(md), process_output, &s, 0, 0);
+    md_html(md, strlen(md), process_output, &s,
+            MD_DIALECT_GITHUB | MD_FLAG_NOHTML, 0);
 
     // Apply custom rules for references
     // Replace reference list with proper HTML refs, i.e.:
