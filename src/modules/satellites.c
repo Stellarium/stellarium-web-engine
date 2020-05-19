@@ -508,7 +508,7 @@ static int satellites_list(const obj_t *obj,
         if (sat->error) continue;
         if (test_vmag && sat->max_brightness > max_mag)
             continue;
-        if (f && f(user, child)) break;
+        if (f(user, child)) break;
     }
     return 0;
 }

@@ -47,7 +47,8 @@ int module_update(obj_t *module, double dt);
  */
 int module_list_objs(const obj_t *module,
                      double max_mag, uint64_t hint, const char *source,
-                     void *user, int (*f)(void *user, obj_t *obj));
+                     void *user, int (*f)(void *user, obj_t *obj))
+__attribute__((nonnull(1, 6)));
 
 /*
  * Function: module_add_data_source

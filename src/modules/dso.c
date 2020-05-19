@@ -831,7 +831,6 @@ static int dsos_list(const obj_t *obj,
             for (i = 0; i < tile->nb; i++) {
                 vmag = tile->sources[i].vmag;
                 if (!isnan(vmag) && vmag > max_mag) continue;
-                if (!f) continue;
                 dso = dso_create(&tile->sources[i]);
                 r = f(user, (obj_t*)dso);
                 obj_release((obj_t*)dso);
@@ -851,7 +850,6 @@ static int dsos_list(const obj_t *obj,
         return -1;
     }
     for (i = 0; i < tile->nb; i++) {
-        if (!f) continue;
         dso = dso_create(&tile->sources[i]);
         r = f(user, (obj_t*)dso);
         obj_release((obj_t*)dso);

@@ -44,6 +44,7 @@ int module_list_objs(const obj_t *obj,
                      void *user, int (*f)(void *user, obj_t *obj))
 {
     obj_t *child;
+    assert(f);
 
     if (obj->klass->list)
         return obj->klass->list(obj, max_mag, hint, source, user, f);
@@ -51,7 +52,7 @@ int module_list_objs(const obj_t *obj,
 
     // Default for listable modules: list all the children.
     DL_FOREACH(obj->children, child) {
-        if (f && f(user, child)) break;
+        if (f(user, child)) break;
     }
     return 0;
 }

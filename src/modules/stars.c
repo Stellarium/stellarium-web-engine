@@ -925,7 +925,6 @@ static int stars_list(const obj_t *obj,
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
                 if (tile->sources[i].vmag > max_mag) continue;
-                if (!f) continue;
                 star = star_create(&tile->sources[i]);
                 r = f(user, (obj_t*)star);
                 obj_release((obj_t*)star);
@@ -945,7 +944,6 @@ static int stars_list(const obj_t *obj,
         return -1;
     }
     for (i = 0; i < tile->nb; i++) {
-        if (!f) continue;
         star = star_create(&tile->sources[i]);
         r = f(user, (obj_t*)star);
         obj_release((obj_t*)star);
