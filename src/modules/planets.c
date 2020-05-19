@@ -1087,6 +1087,18 @@ static obj_t *planets_get_by_oid(
     return NULL;
 }
 
+static int planets_list(const obj_t *obj,
+                        double max_mag, uint64_t hint, const char *source,
+                        void *user, int (*f)(void *user, obj_t *obj))
+{
+    planet_t *p;
+    PLANETS_ITER(obj, p) {
+        if (p->id == EARTH) continue; // Skip Earth.
+        if (f(user, (obj_t*)p)) break;
+    }
+    return 0;
+}
+
 // Parse an orbit line as returned by HORIZONS online service.
 static int parse_orbit(planet_t *p, const char *v)
 {
@@ -1344,6 +1356,7 @@ static obj_klass_t planets_klass = {
     .update = planets_update,
     .render = planets_render,
     .get_by_oid = planets_get_by_oid,
+    .list   = planets_list,
     .get     = planets_get,
     .add_data_source = planets_add_data_source,
     .render_order = 30,
