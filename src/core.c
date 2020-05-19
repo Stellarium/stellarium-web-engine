@@ -104,19 +104,6 @@ static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     return NULL;
 }
 
-static int core_list(const obj_t *obj,
-                     double max_mag, uint64_t hint, const char *source,
-                     void *user, int (*f)(void *user, obj_t *obj))
-{
-    // XXX: won't stop if the callback return != 0.
-    obj_t *module;
-    int nb = 0;
-    DL_FOREACH(core->obj.children, module) {
-        nb += module_list_objs(module, max_mag, hint, source, user, f);
-    }
-    return nb;
-}
-
 static int modules_sort_cmp(void *a, void *b)
 {
     obj_t *at, *bt;
@@ -1119,7 +1106,6 @@ static obj_klass_t core_klass = {
     .flags = OBJ_IN_JSON_TREE,
     .get = core_get,
     .get_by_oid = core_get_by_oid,
-    .list = core_list,
     .attributes = (attribute_t[]) {
         PROPERTY(utcoffset, TYPE_INT, MEMBER(core_t, utc_offset),
                  .on_changed = core_on_utcoffset_changed),
