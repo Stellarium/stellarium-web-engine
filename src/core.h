@@ -55,9 +55,6 @@ struct core
     observer_t      *observer;
     double          fov;
 
-    // Global utc offset used when rendering the time (min)
-    int             utc_offset;
-
     // Two parameters to manually adjust the size of the stars.
     double          star_linear_scale;
     double          star_scale_screen_factor;

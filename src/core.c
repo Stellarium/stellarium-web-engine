@@ -22,11 +22,6 @@ static void core_on_fov_changed(obj_t *obj, const attribute_t *attr)
     core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
 }
 
-static void core_on_utcoffset_changed(obj_t *obj, const attribute_t *attr)
-{
-    core->utc_offset = clamp(core->utc_offset, -24 * 60, +24 * 60);
-}
-
 static void add_progressbar(void *user, const char *id, const char *label,
                             int v, int total,
                             int error, const char *error_msg)
@@ -169,8 +164,6 @@ static void core_set_default(void)
     obs->refraction = true;
 
     core->fov = 50 * DD2R;
-    core->utc_offset = sys_get_utc_offset() / 60;
-
     core->proj = PROJ_STEREOGRAPHIC;
     core->lwmax = 5000;
 
@@ -1107,8 +1100,6 @@ static obj_klass_t core_klass = {
     .get = core_get,
     .get_by_oid = core_get_by_oid,
     .attributes = (attribute_t[]) {
-        PROPERTY(utcoffset, TYPE_INT, MEMBER(core_t, utc_offset),
-                 .on_changed = core_on_utcoffset_changed),
         PROPERTY(fov, TYPE_ANGLE, MEMBER(core_t, fov),
                  .on_changed = core_on_fov_changed),
         PROPERTY(projection, TYPE_INT, MEMBER(core_t, proj)),
