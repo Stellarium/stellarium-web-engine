@@ -375,9 +375,8 @@ static int core_update_mount(double dt)
         quat_normalize(quat, quat);
     }
 
-    if (vec4_equal(quat, core->observer->mount_quat)) return 0;
-    quat_rotate_towards(core->observer->mount_quat, quat, dt * speed,
-                        core->observer->mount_quat);
+    if (vec4_equal(quat, obs->mount_quat)) return 0;
+    quat_rotate_towards(obs->mount_quat, quat, dt * speed, obs->mount_quat);
     return 0;
 }
 
