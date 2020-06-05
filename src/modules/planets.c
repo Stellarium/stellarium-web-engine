@@ -1335,6 +1335,15 @@ static int planets_add_data_source(
     return 0;
 }
 
+static json_value *planet_get_json_data(const obj_t *obj)
+{
+    const planet_t *planet = (void*)obj;
+    json_value *ret = json_object_new(0);
+    json_value *md = json_object_push(ret, "model_data", json_object_new(0));
+    json_object_push(md, "horizons_id", json_double_new(planet->id));
+    return ret;
+}
+
 /*
  * Meta class declarations.
  */
@@ -1345,6 +1354,7 @@ static obj_klass_t planet_klass = {
     .size = sizeof(planet_t),
     .get_info = planet_get_info,
     .get_designations = planet_get_designations,
+    .get_json_data = planet_get_json_data,
 };
 OBJ_REGISTER(planet_klass)
 
