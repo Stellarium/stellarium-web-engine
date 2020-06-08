@@ -295,20 +295,17 @@ void mplanet_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
-    mplanet_t *mplanet = (mplanet_t*)obj;
-    char buf[32];
-    if (mplanet->mpl_number) {
-        // Workaround so that we don't break stellarium web, that expect
-        // to the an id that is simply the MPC object number!
-        // Remove when we can.
-        snprintf(buf, sizeof(buf), "%d", mplanet->mpl_number);
-        f(obj, user, "", buf);
-
-        snprintf(buf, sizeof(buf), "(%d)", mplanet->mpl_number);
+    mplanet_t *mp = (mplanet_t*)obj;
+    char buf[128];
+    if (*mp->name) f(obj, user, "NAME", mp->name);
+    if (*mp->desig) f(obj, user, NULL, mp->desig);
+    if (mp->mpl_number) {
+        if (*mp->name)
+            snprintf(buf, sizeof(buf), "%d %s", mp->mpl_number, mp->name);
+        else
+            snprintf(buf, sizeof(buf), "%d", mp->mpl_number);
         f(obj, user, "MPC", buf);
     }
-    if (*mplanet->name)  f(obj, user, "NAME", mplanet->name);
-    if (*mplanet->desig) f(obj, user, "NAME", mplanet->desig);
 }
 
 static int mplanets_init(obj_t *obj, json_value *args)
