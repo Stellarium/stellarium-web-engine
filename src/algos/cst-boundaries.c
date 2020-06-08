@@ -2347,8 +2347,19 @@ int find_constellation_at(const double pos[3], char id[5])
 {
     const struct cst *cst;
     int i;
+    double pos_b1875[3];
     double ra, dec;
-    eraC2s(pos, &ra, &dec);
+
+    // Rotation matrix from J2000 to 1875.0.  Computed with erfa:
+    //     eraEpb2jd(1875.0, &djm0, &djm);
+    //     eraPnm06a(djm0, djm, rnpb);
+    const double rnpb[3][3] = {
+        {0.999535020565168, 0.027962538774844, 0.012158909862936},
+        {-0.027962067406873, 0.999608963139696, -0.000208799220464},
+        {-0.012159993837296, -0.000131286124061, 0.999926055923052},
+    };
+    eraRxp(rnpb, pos, pos_b1875);
+    eraC2s(pos_b1875, &ra, &dec);
 
     for (i = 0; ((cst = &CSTS[i]))->id[0]; i++) {
         if (test_cst(cst, ra, dec)) {
