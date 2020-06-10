@@ -10,7 +10,6 @@
 // File: core.h
 
 #include "areas.h"
-#include "events.h"
 #include "frames.h"
 #include "labels.h"
 #include "projection.h"

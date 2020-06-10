@@ -7,7 +7,18 @@
  * repository.
  */
 
+/*
+ * This file is only used by the javascript at the moment.  We could
+ * probably try to remove it totally at some point
+ */
+
 #include "swe.h"
+
+// Events types
+enum {
+    EVENT_RISE      = 1 << 0,
+    EVENT_SET       = 1 << 1,
+};
 
 // Newton algo.
 #define NEWTON_MAX_STEPS 20
@@ -102,4 +113,3 @@ double compute_event(observer_t *obs,
                     rising, &data);
     return ret;
 }
-

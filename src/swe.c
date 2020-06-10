@@ -160,51 +160,6 @@ char *a2af_json(int resolution, double angle)
     Moonset                   10:05 a.m. on following day
 */
 
-// Convenience function to call eraDtf2d.
-static double dtf2d(int iy, int im, int id, int h, int m, double s)
-{
-    double d1, d2;
-    int r;
-    r = eraDtf2d("", iy, im, id, h, m, s, &d1, &d2);
-    assert(r == 0);
-    return d1 - DJM0 + d2;
-}
-
-static void test_events(void)
-{
-    obj_t *sun, *moon;
-    double t, djm0, djm;
-    const double sec = 1. / 24 / 60 / 60;
-    core_init(100, 100, 1.0);
-
-    // Set atlanta coordinates.
-    core->observer->elong = -84.4 * DD2R;
-    core->observer->phi = 33.8 * DD2R;
-    // USNO computation of refraction.
-    core->observer->pressure = 0;
-    core->observer->horizon = -34.0 / 60.0 * DD2R;
-    sun = obj_get(NULL, "sun", 0);
-    moon = obj_get(NULL, "moon", 0);
-    assert(sun && moon);
-    eraCal2jd(2009, 9, 6, &djm0, &djm);
-
-    // Sun:
-    // Get next rising.
-    t = compute_event(core->observer, sun, EVENT_RISE, djm, djm + 1, sec);
-    assert(fabs(t - dtf2d(2009, 9, 6, 11, 15, 0)) < 1. / 24 / 60);
-    // Get next setting.
-    t = compute_event(core->observer, sun, EVENT_SET, djm, djm + 1, sec);
-    assert(fabs(t - dtf2d(2009, 9, 6, 23, 56, 0)) < 1. / 24 / 60);
-
-    // Moon:
-    // Get next rising.
-    t = compute_event(core->observer, moon, EVENT_RISE, djm, djm + 1, sec);
-    assert(fabs(t - dtf2d(2009, 9, 6, 0, 17, 0)) < 1. / 24 / 60);
-    // Get next setting.
-    t = compute_event(core->observer, moon, EVENT_SET, djm, djm + 1, sec);
-    assert(fabs(t - dtf2d(2009, 9, 6, 13, 5, 0)) < 1. / 24 / 60);
-}
-
 /*
  * Test of positions compared with skyfield computed values.
  */
@@ -449,7 +404,6 @@ static void test_u8(void)
     assert(strcmp(buf, "Venus") == 0);
 }
 
-TEST_REGISTER(NULL, test_events, 0);
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);
 TEST_REGISTER(NULL, test_clipping, TEST_AUTO);
 TEST_REGISTER(NULL, test_iter_lines, TEST_AUTO);
