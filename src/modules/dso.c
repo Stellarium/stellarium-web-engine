@@ -827,6 +827,7 @@ static int dsos_list(const obj_t *obj,
         hips_iter_init(&iter);
         while (hips_iter_next(&iter, &order, &pix)) {
             tile = get_tile(dsos, survey, order, pix, false, &code);
+            if (!tile && !code) return MODULE_AGAIN;
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
                 vmag = tile->sources[i].vmag;
