@@ -298,14 +298,14 @@ void mplanet_get_designations(
     mplanet_t *mp = (mplanet_t*)obj;
     char buf[128];
     if (*mp->name) f(obj, user, "NAME", mp->name);
-    if (*mp->desig) f(obj, user, NULL, mp->desig);
     if (mp->mpl_number) {
         if (*mp->name)
-            snprintf(buf, sizeof(buf), "%d %s", mp->mpl_number, mp->name);
+            snprintf(buf, sizeof(buf), "(%d) %s", mp->mpl_number, mp->name);
         else
-            snprintf(buf, sizeof(buf), "%d", mp->mpl_number);
+            snprintf(buf, sizeof(buf), "(%d)", mp->mpl_number);
         f(obj, user, "MPC", buf);
     }
+    if (*mp->desig) f(obj, user, NULL, mp->desig);
 }
 
 static int mplanets_init(obj_t *obj, json_value *args)
