@@ -817,6 +817,61 @@ void skycultures_get_designations(const obj_t *obj, void *user,
     obj_get_designations(obj, USER_PASS(user, f), on_designation_sky_);
 }
 
+static void add_one_cn(const skyculture_name_t *entry, const obj_t *obj,
+                             void *user, void (*f)(const obj_t *obj, void *user,
+                                                   const cultural_name_t *cn))
+{
+    char tmp[256];
+    const skyculture_t *cult = g_skycultures->current;
+
+    if (!cult) return;
+
+    cultural_name_t cn = {0};
+
+    // User with the current language prefer to use native names
+    cn.user_prefer_native = cult->prefer_native_names;
+    cn.name_native = entry->name_native;
+    cn.name_pronounce = entry->name_pronounce;
+    cn.name_english = entry->name_english;
+    tmp[0] = '\0';
+    if (cult->prefer_native_names && entry->name_english) {
+        skycultures_translate_english_name(entry->name_english, tmp,
+                                           sizeof(tmp));
+    } else if (cult->english_use_native_names && entry->name_native) {
+        skycultures_translate_english_name(entry->name_native, tmp,
+                                           sizeof(tmp));
+    } else {
+        if (entry->name_english)
+            skycultures_translate_english_name(entry->name_english, tmp,
+                                               sizeof(tmp));
+    }
+    cn.name_translated = tmp[0] ? tmp : NULL;
+    f(obj, user, &cn);
+    if (entry->alternative) {
+        add_one_cn(entry->alternative, obj, user, f);
+    }
+}
+
+static void on_designation_cn(const obj_t *obj, void *user2, const char *dsgn)
+{
+    void *user = USER_GET(user2, 0);
+    void (*f)(const obj_t *obj, void *user, const cultural_name_t *cn) =
+            USER_GET(user2, 1);
+
+    // Check if we get cultural names for this object.
+    const skyculture_name_t *entry = skycultures_get_name_info(dsgn);
+    if (entry)
+        add_one_cn(entry, obj, user, f);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void skycultures_get_cultural_names(const obj_t *obj, void *user,
+              void (*f)(const obj_t *obj, void *user,
+                        const cultural_name_t *cn))
+{
+    obj_get_designations(obj, USER_PASS(user, f), on_designation_cn);
+}
+
 /*
  * Function: skycultures_fallback_to_international_names
  * Return whether a sky culture includes the international sky objects names as

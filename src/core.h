@@ -491,6 +491,19 @@ void skycultures_get_designations(const obj_t *obj, void *user,
               void (*f)(const obj_t *obj, void *user, const char *dsgn));
 
 /*
+ * Function: skycultures_get_cultural_names
+ * Get the sorted list of cultural names for a sky object.
+ *
+ * Parameters:
+ *   obj    - A sky object.
+ *   user   - User data passed to the callback.
+ *   f      - A callback function called once per name.
+ */
+void skycultures_get_cultural_names(const obj_t *obj, void *user,
+              void (*f)(const obj_t *obj, void *user,
+                        const cultural_name_t *cn));
+
+/*
  * Function: skycultures_fallback_to_international_names
  * Return whether a sky culture includes the international sky objects names as
  * as fallback when no common names is explicitly specified for a given object.

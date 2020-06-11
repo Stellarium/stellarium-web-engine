@@ -69,6 +69,30 @@ typedef struct skyculture_name
     struct skyculture_name* alternative;
 } skyculture_name_t;
 
+/*
+ * Type: cultural_name
+ * Structure to hold information about a cultural name.
+ */
+typedef struct cultural_name
+{
+    // The english cultural name e.g. 'Great Bear'
+    char           *name_english;
+    // The translated version of this cultural name. It is translated according
+    // to the current user language as defined in sys_get_lang()
+    char           *name_translated;
+    // The native name using native spelling, e.g. for western constellation
+    // it's the latin name like 'Ursa Major'. For Chinese constellations it's
+    // the chinese name like '座旗'
+    // other
+    char           *name_native;
+    // Contains the pronounciation of the native name if it's not ascii, e.g.
+    // if native is '座旗', name_pronounce will be the pidgin 'Zuòqí'
+    char           *name_pronounce;
+    // True if the user prefers to see the native names instead of the
+    // translated ones. For example english speaker prefer to see the latin
+    // native constellation names like 'Ursa Major' instead of 'Great Bear'
+    bool           user_prefer_native;
+} cultural_name_t;
 
 /*
  * Function: skyculture_parse_edge
