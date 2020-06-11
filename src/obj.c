@@ -351,11 +351,18 @@ int obj_get_designations(const obj_t *obj, void *user,
     return nb;
 }
 
+
+static void on_name2(const obj_t *obj, void *user, const char *dsgn) {
+    json_value* arr = (json_value*)user;
+    json_array_push(arr, json_string_new(dsgn));
+}
+
 EMSCRIPTEN_KEEPALIVE
 json_value *obj_get_json_data(const obj_t *obj)
 {
     json_value* ret;
     json_value* types;
+    json_value* names;
     const char* ptype, *model;
 
     char tmp[5];
@@ -380,6 +387,10 @@ json_value *obj_get_json_data(const obj_t *obj)
     }
     json_object_push(ret, "types", types);
 
+    // Generic code to add object's names list
+    names = json_array_new(1);
+    obj_get_designations(obj, (void*)names, on_name2);
+    json_object_push(ret, "names", names);
     return ret;
 }
 
