@@ -9,6 +9,7 @@
 
 #include "swe.h"
 #include "sgp4.h"
+#include "designation.h"
 
 #define SATELLITE_DEFAULT_MAG 7.0
 /*
@@ -22,7 +23,6 @@
 typedef struct satellite satellite_t;
 struct satellite {
     obj_t obj;
-    char name[26];
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag;
@@ -326,8 +326,6 @@ static int satellite_init(obj_t *obj, json_value *args)
         sat->obj.oid = oid_create("NORA", sat->number);
         sat->elsetrec = sgp4_twoline2rv(tle1, tle2, 'c', 'm', 'i',
                                         &startmfe, &stopmfe, &deltamin);
-        if (name && strncmp(name, "NAME ", 5) == 0)
-            snprintf(sat->name, sizeof(sat->name), "%s", name + 5);
         strncpy(sat->obj.type, otype_from_json(types, "Asa"), 4);
 
         sat->data = json_copy(args);
@@ -368,8 +366,7 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     assert(sat->elsetrec);
     // Orbit computation.
     if (!sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1])) {
-        LOG_W("Cannot compute satellite position (%s, %d)",
-              sat->name, sat->number);
+        LOG_W("Cannot compute satellite position for Norad %d", sat->number);
         sat->error = true;
         return 0;
     }
@@ -415,6 +412,45 @@ static json_value *satellite_get_json_data(const obj_t *obj)
     return json_object_new(0);
 }
 
+// Find the best name to display
+static bool satellite_get_short_name(const satellite_t *sat, bool selected,
+                                     char *out, int size)
+{
+    int i;
+    json_value *jnames;
+    const char* name;
+    char best_name[size];
+    int best_name_len = size - 1;
+    int len;
+    best_name[0] = '\0';
+
+    if (!sat->data)
+        return false;
+    jnames = json_get_attr(sat->data, "names", json_array);
+    for (i = 0; i < jnames->u.array.length; ++i) {
+        name = jnames->u.array.values[i]->u.string.ptr;
+        designation_cleanup(name, out, size, DSGN_TRANSLATE);
+        len = strlen(out);
+        if (selected) {
+            return true;
+        }
+        if (strncmp(name, "NAME ", 5) == 0 && len < best_name_len) {
+            best_name_len = len;
+            strncpy(best_name, out, size);
+            if (len < 20)
+                return true;
+        }
+        // There are no NAME XX Ids, just use the first found ID
+        if (strncmp(name, "NAME ", 5) != 0 && best_name[0] == '\0') {
+            strncpy(best_name, out, size);
+            break;
+        }
+    }
+    strncpy(out, best_name, size);
+    return true;
+
+}
+
 /*
  * Render an individual satellite.
  * Note: return 1 if the satellite is actually visible on screen.
@@ -425,6 +461,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
     double color[4];
+    char buf[128] = "";
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
     satellite_t *sat = (satellite_t*)obj;
@@ -460,11 +497,12 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     size = max(8, size);
-    if (g_satellites->hints_visible && *sat->name &&
+    if (g_satellites->hints_visible &&
         (selected || vmag <= hints_limit_mag - 1.5)) {
-        labels_add_3d(sat->name, FRAME_ICRF, sat->pvo[0], false, size + 1,
-                      FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
-                      0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
+        if (satellite_get_short_name(sat, selected, buf, sizeof(buf)))
+            labels_add_3d(buf, FRAME_ICRF, sat->pvo[0], false, size + 1,
+                          FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
+                          0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
     }
 
     return 1;
@@ -488,8 +526,6 @@ static void satellite_get_designations(
         }
     } else {
         snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
-        if (*sat->name)
-            f(obj, user, "NAME", sat->name);
         f(obj, user, "NORAD", buf);
     }
 }
