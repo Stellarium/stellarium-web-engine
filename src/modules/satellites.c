@@ -412,43 +412,48 @@ static json_value *satellite_get_json_data(const obj_t *obj)
     return json_object_new(0);
 }
 
-// Find the best name to display
+/*
+ * Find the best name to display
+ *
+ * If the satellite is selected or if there are no NAME designations,
+ * return the first designation.  Otherwise, return the first NAME
+ * designation smaller than 20 bytes, or the smaller designation if none
+ * of them is.
+ */
 static bool satellite_get_short_name(const satellite_t *sat, bool selected,
                                      char *out, int size)
 {
     int i;
     json_value *jnames;
     const char* name;
-    char best_name[size];
-    int best_name_len = size - 1;
-    int len;
-    best_name[0] = '\0';
+    char buf[512];
+    int len, best_name_len = size;
 
-    if (!sat->data)
-        return false;
+    *out = '\0';
+    if (!sat->data) return false;
     jnames = json_get_attr(sat->data, "names", json_array);
+    if (!jnames || jnames->u.array.length == 0) return false;
+    if (selected) goto use_first_dsgn;
+
     for (i = 0; i < jnames->u.array.length; ++i) {
+        if (jnames->u.array.values[i]->type != json_string) continue;
         name = jnames->u.array.values[i]->u.string.ptr;
-        designation_cleanup(name, out, size, DSGN_TRANSLATE);
-        len = strlen(out);
-        if (selected) {
-            return true;
-        }
-        if (strncmp(name, "NAME ", 5) == 0 && len < best_name_len) {
+        if (strncmp(name, "NAME ", 5) != 0) continue;
+        designation_cleanup(name, buf, sizeof(buf), DSGN_TRANSLATE);
+        len = strlen(buf);
+        if (len < best_name_len) {
             best_name_len = len;
-            strncpy(best_name, out, size);
-            if (len < 20)
-                return true;
-        }
-        // There are no NAME XX Ids, just use the first found ID
-        if (strncmp(name, "NAME ", 5) != 0 && best_name[0] == '\0') {
-            strncpy(best_name, out, size);
-            break;
+            snprintf(out, size, "%s", buf);
+            if (len < 20) break;
         }
     }
-    strncpy(out, best_name, size);
-    return true;
+    if (*out) return true;
 
+use_first_dsgn:
+    if (jnames->u.array.values[0]->type != json_string) return false;
+    name = jnames->u.array.values[0]->u.string.ptr;
+    designation_cleanup(name, out, size, DSGN_TRANSLATE);
+    return true;
 }
 
 /*
