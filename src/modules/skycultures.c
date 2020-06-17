@@ -598,6 +598,70 @@ static const skyculture_name_t *skycultures_get_name_info(const char* main_id)
 }
 
 /*
+ * Function: parse_roman_numeral
+ * Parse a roman numeral string into an int
+ *
+ * Return 0 in case of error.
+ */
+static int parse_roman_numeral(const char *roman)
+{
+    int v = 0;
+    const char *p = roman;
+
+    /**/ if (strncmp(p, "XC",   2) == 0) { v += 90; p += 2; }
+    else if (strncmp(p, "LXXX", 4) == 0) { v += 80; p += 4; }
+    else if (strncmp(p, "LXX",  3) == 0) { v += 70; p += 3; }
+    else if (strncmp(p, "LX",   2) == 0) { v += 60; p += 2; }
+    else if (strncmp(p, "L",    1) == 0) { v += 50; p += 1; }
+    else if (strncmp(p, "XL",   2) == 0) { v += 40; p += 2; }
+    else if (strncmp(p, "XXX",  3) == 0) { v += 30; p += 3; }
+    else if (strncmp(p, "XX",   2) == 0) { v += 20; p += 2; }
+    else if (strncmp(p, "X",    1) == 0) { v += 10; p += 1; }
+
+    /**/ if (strncmp(p, "IX",   2) == 0) { v += 9;  p += 2; }
+    else if (strncmp(p, "VIII", 4) == 0) { v += 8;  p += 4; }
+    else if (strncmp(p, "VII",  3) == 0) { v += 7;  p += 3; }
+    else if (strncmp(p, "VI",   2) == 0) { v += 6;  p += 2; }
+    else if (strncmp(p, "V",    1) == 0) { v += 5;  p += 1; }
+    else if (strncmp(p, "IV",   2) == 0) { v += 4;  p += 2; }
+    else if (strncmp(p, "III",  3) == 0) { v += 3;  p += 3; }
+    else if (strncmp(p, "II",   2) == 0) { v += 2;  p += 2; }
+    else if (strncmp(p, "I",    1) == 0) { v += 1;  p += 1; }
+
+    return v;
+}
+
+/*
+ * Function: roman_to_chinese
+ * Convert a Roman numeral to Chinese
+ */
+static void roman_to_chinese(const char *roman, char *out, int len)
+{
+    int v, d;
+    const char *chars = "十一二三四五六七八九";
+    assert(strlen(chars) == 30); // 3 bytes per character.
+    assert(len > 64);
+
+    v = parse_roman_numeral(roman);
+    assert(v < 100);
+
+    d = v / 10;
+    v = v % 10;
+    if (d >= 2) {
+        memcpy(out, chars + d * 3, 3);
+        out += 3;
+        d = 1;
+    }
+    if (d == 1) {
+        memcpy(out, chars, 3);
+        out += 3;
+    }
+    if (v) {
+        memcpy(out, chars + v * 3, 3);
+    }
+}
+
+/*
  * Function: skycultures_translate_english_name
  * Translate a sky object cultural english name in the current locale.
  *
@@ -617,30 +681,38 @@ static void skycultures_translate_english_name(const char* name, char *out,
     const skyculture_t *cult = g_skycultures->current;
     regmatch_t m;
     const char *tr_name;
-    const char *s, *number = NULL;
-    char tmp[256];
-    const int tmp_size = sizeof(tmp);
+    const char *added, *number = NULL;
+    char tmp[256], chinese_num[128] = {};
 
     assert(name);
 
-    if (cult && cult->has_chinese_star_names) {
-        if (regexec(&g_skycultures->chinese_re, name, 1, &m, 0) == 0) {
-            number = name + m.rm_so;
+    if (!cult || !cult->has_chinese_star_names) {
+        tr_name = sys_translate("skyculture", name);
+        snprintf(out, out_size, "%s", tr_name);
+        return;
+    }
+
+    if (regexec(&g_skycultures->chinese_re, name, 1, &m, 0) == 0) {
+        number = name + m.rm_so;
+        // In Chinese we show Chinese number instead of Roman.
+        if (strncmp(sys_get_lang(), "zh", 2) == 0) {
+            roman_to_chinese(number + 1, chinese_num, sizeof(chinese_num));
+            number = chinese_num;
         }
-        s = strstr(name, " Added");
-        if (s) {
-            snprintf(tmp, tmp_size, "%.*s", (int)(s - name), name);
-            tr_name = sys_translate("skyculture", tmp);
-            snprintf(out, out_size, "%s %s%s", tr_name,
-                     sys_translate("skyculture", "Added"),
-                     number ? number : "");
-            return;
-        } else if (number) {
-            snprintf(tmp, tmp_size, "%.*s", (int)m.rm_so, name);
-            tr_name = sys_translate("skyculture", tmp);
-            snprintf(out, out_size, "%s%s", tr_name, number);
-            return;
-        }
+    }
+    added = strstr(name, " Added");
+    if (added) {
+        snprintf(tmp, sizeof(tmp), "%.*s", (int)(added - name), name);
+        tr_name = sys_translate("skyculture", tmp);
+        snprintf(out, out_size, "%s %s%s", tr_name,
+                 sys_translate("skyculture", "Added"),
+                 number ?: "");
+        return;
+    } else if (number) {
+        snprintf(tmp, sizeof(tmp), "%.*s", (int)m.rm_so, name);
+        tr_name = sys_translate("skyculture", tmp);
+        snprintf(out, out_size, "%s%s", tr_name, number);
+        return;
     }
 
     tr_name = sys_translate("skyculture", name);
