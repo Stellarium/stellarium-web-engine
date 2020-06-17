@@ -176,6 +176,7 @@ static bool designation_parse_bayer(const char *dsgn, int *cst, int *bayer,
     }
     if (i == 25) {
         // No greek letter were found, try a letter
+        if (*dsgn == 'V') return false; // Variable star.
         if ((*dsgn >= 'a' && *dsgn <= 'z') || (*dsgn >= 'A' && *dsgn <= 'Z')) {
             *bayer = *dsgn;
             dsgn++;
@@ -452,6 +453,12 @@ static void test_designations(void)
     assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 1);
     r = designation_parse_flamsteed("* 10 Aqr", &cst, &n, &suffix);
     assert(r && strcmp(CSTS[cst][0], "Aqr") == 0 && n == 10);
+
+    r = designation_parse_bayer("V* V2101 Cyg", &cst, &n, &nb, &suffix);
+    assert(!r);
+
+    r = designation_parse_variable_star("V* V2101 Cyg", &cst, buf, &suffix);
+    assert(r);
 
     r = designation_parse_variable_star("V* VZ Sgr", &cst, buf, &suffix);
     assert(r);
