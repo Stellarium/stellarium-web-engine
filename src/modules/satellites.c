@@ -361,12 +361,14 @@ static void true_equator_to_j2000(const observer_t *obs,
 static int satellite_update(satellite_t *sat, const observer_t *obs)
 {
     double pv[2][3];
+    char buf[128];
 
     if (sat->error) return 0;
     assert(sat->elsetrec);
     // Orbit computation.
     if (!sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1])) {
-        LOG_W("Cannot compute satellite position for Norad %d", sat->number);
+        LOG_W("Cannot compute satellite position for %s (%d)",
+              obj_get_name((obj_t*)sat, buf, sizeof(buf)), sat->number);
         sat->error = true;
         return 0;
     }
