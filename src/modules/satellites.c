@@ -525,16 +525,20 @@ static void satellite_get_designations(
     char *name;
     int i;
     char buf[32];
-    if (sat->data) {
-        names = json_get_attr(sat->data, "names", json_array);
-        for (i = 0; i < names->u.array.length; ++i) {
-            name = names->u.array.values[i]->u.string.ptr;
-            f(obj, user, NULL, name);
-        }
-    } else {
-        snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
-        f(obj, user, "NORAD", buf);
+
+    if (!sat->data) goto fallback;
+    names = json_get_attr(sat->data, "names", json_array);
+    if (!names || names->u.array.length == 0) goto fallback;
+    for (i = 0; i < names->u.array.length; i++) {
+        if (names->u.array.values[i]->type != json_string) goto fallback;
+        name = names->u.array.values[i]->u.string.ptr;
+        f(obj, user, NULL, name);
     }
+    return;
+
+fallback:
+    snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
+    f(obj, user, "NORAD", buf);
 }
 
 static int satellites_list(const obj_t *obj,
