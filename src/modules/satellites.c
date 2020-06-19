@@ -426,7 +426,7 @@ static bool satellite_get_short_name(const satellite_t *sat, bool selected,
     int i;
     json_value *jnames;
     const char* name;
-    char buf[512];
+    char buf[256];
     int len, best_name_len = size;
 
     *out = '\0';
@@ -466,7 +466,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
     double color[4];
-    char buf[128] = "";
+    char buf[256];
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
     satellite_t *sat = (satellite_t*)obj;
