@@ -329,9 +329,11 @@ static void add_section(const char *section_name, const char *content,
         cst_md_data = to_buf(content, size);
         load_constellation_md_data(cst_md_data, cult);
         free(cst_md_data);
+    } else if (strcmp(section_name, "Extras") == 0) {
+        // Currently ignores this section
     } else {
-        LOG_E("Error in sky culture %s: ", cult->id);
-        LOG_E("unknown level 2 section: %s", section_name);
+        LOG_W("Error in sky culture %s: ", cult->id);
+        LOG_W("unknown level 2 section: %s", section_name);
     }
 }
 
