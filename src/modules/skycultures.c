@@ -182,7 +182,7 @@ static void utstring_replace(UT_string *s, int start, int end, const char* rep)
 
 char *skycultures_md_2_html(const char *md)
 {
-    UT_string s;
+    UT_string s, s2;
     char *ret = NULL;
     const char* str;
     char tmp[256];
@@ -191,38 +191,43 @@ char *skycultures_md_2_html(const char *md)
     regmatch_t m[2];
 
     utstring_init(&s);
-    md_html(md, strlen(md), process_output, &s,
-            MD_DIALECT_GITHUB | MD_FLAG_NOHTML, 0);
+    utstring_printf(&s, "%s", md);
 
     // Apply custom rules for references
     // Replace reference list with proper HTML refs, i.e.:
     // replace - [#1]: XXXX   by linkable span
-    regcomp(&re, "^<li>\\[#(\\w+)\\]: ", REG_EXTENDED | REG_NEWLINE);
+    regcomp(&re, "^ - \\[#(\\w+)\\]: ", REG_EXTENDED | REG_NEWLINE);
     while (regexec(&re, utstring_body(&s), 2, m, 0) == 0) {
         str = utstring_body(&s);
         memset(tmp, 0, sizeof(tmp));
         memcpy(tmp, str + m[1].rm_so, m[1].rm_eo - m[1].rm_so);
         n = atoi(tmp);
-        snprintf(tmp, sizeof(tmp), "<li><span id=\"cite_%d\">[%d]</span>: ",
+        snprintf(tmp, sizeof(tmp), " - <span id=\"cite_%d\">[%d]</span> ",
                  n, n);
         utstring_replace(&s, m[0].rm_so, m[0].rm_eo, tmp);
     }
     regfree(&re);
 
+    utstring_init(&s2);
+    md_html(utstring_body(&s), utstring_len(&s), process_output, &s2,
+            MD_DIALECT_GITHUB, 0);
+
     // Replace reference links with proper HTML links
-    regcomp(&re, "\\[#(\\w+)\\]", REG_EXTENDED | REG_NEWLINE);
-    while (regexec(&re, utstring_body(&s), 2, m, 0) == 0) {
-        str = utstring_body(&s);
+    regcomp(&re, " ?\\[#(\\w+)\\]", REG_EXTENDED | REG_NEWLINE);
+    while (regexec(&re, utstring_body(&s2), 2, m, 0) == 0) {
+        str = utstring_body(&s2);
         memset(tmp, 0, sizeof(tmp));
         memcpy(tmp, str + m[1].rm_so, m[1].rm_eo - m[1].rm_so);
         n = atoi(tmp);
-        snprintf(tmp, sizeof(tmp), "<a href=\"#cite_%d\">[%d]</a>", n, n);
-        utstring_replace(&s, m[0].rm_so, m[0].rm_eo, tmp);
+        snprintf(tmp, sizeof(tmp), "<sup>[%d]</sup>", n);
+        utstring_replace(&s2, m[0].rm_so, m[0].rm_eo, tmp);
     }
     regfree(&re);
 
-    ret = strdup(utstring_body(&s));
+    ret = strdup(utstring_body(&s2));
     utstring_done(&s);
+    utstring_done(&s2);
+
     return ret;
 }
 
