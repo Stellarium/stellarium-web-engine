@@ -661,7 +661,11 @@ static bool should_render_label(
         return false;
     }
 
-    // Estimate the label bouding cap
+    // Estimate the label bounding cap.  Only render the label if it fits
+    // entirely into the line bounding cap.
+    // Add an exception for constellation with a single point line: in
+    // that case always render the label (see Kamilaroi sky culture).
+    if (con->lines_cap[3] == 1) return true;
     painter_project(painter, FRAME_ICRF, con->lines_cap, true, false, win_pos);
     win_pos[0] += 1;
     painter_unproject(painter, FRAME_ICRF, win_pos, p);
