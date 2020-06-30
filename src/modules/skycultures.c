@@ -635,6 +635,7 @@ static int parse_roman_numeral(const char *roman)
     else if (strncmp(p, "II",   2) == 0) { v += 2;  p += 2; }
     else if (strncmp(p, "I",    1) == 0) { v += 1;  p += 1; }
 
+    (void)p; // Fix clang warning.
     return v;
 }
 
