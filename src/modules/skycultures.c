@@ -196,7 +196,7 @@ char *skycultures_md_2_html(const char *md)
     // Apply custom rules for references
     // Replace reference list with proper HTML refs, i.e.:
     // replace - [#1]: XXXX   by linkable span
-    regcomp(&re, "^ - \\[#(\\w+)\\]: ", REG_EXTENDED | REG_NEWLINE);
+    regcomp(&re, "^ - \\[#([0-9]+)\\]: ", REG_EXTENDED | REG_NEWLINE);
     while (regexec(&re, utstring_body(&s), 2, m, 0) == 0) {
         str = utstring_body(&s);
         memset(tmp, 0, sizeof(tmp));
@@ -213,7 +213,7 @@ char *skycultures_md_2_html(const char *md)
             MD_DIALECT_GITHUB, 0);
 
     // Replace reference links with proper HTML links
-    regcomp(&re, " ?\\[#(\\w+)\\]", REG_EXTENDED | REG_NEWLINE);
+    regcomp(&re, " ?\\[#([0-9]+)\\]", REG_EXTENDED | REG_NEWLINE);
     while (regexec(&re, utstring_body(&s2), 2, m, 0) == 0) {
         str = utstring_body(&s2);
         memset(tmp, 0, sizeof(tmp));
