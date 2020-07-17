@@ -160,6 +160,8 @@ DEF void mat4_mul_vec3_dir(const double mat[S 4][4], const double v[S 3],
 DEF void mat4_copy(const double src[S 4][4], double out[S 4][4]);
 DEF void mat4_perspective(double mat[S 4][4], double fovy, double aspect,
                           double nearval, double farval);
+DEF void mat4_ortho(double mat[S 4][4], double left, double right,
+                    double bottom, double top, double nearval, double farval);
 DEF void mat4_to_float(const double mat[S 4][4], float out[S 16]);
 DEF void mat4_set_identity(double mat[S 4][4]);
 DEF bool mat4_is_identity(const double mat[S 4][4]);
@@ -531,6 +533,21 @@ DEF void mat4_perspective(double mat[S 4][4], double fovy, double aspect,
         {0., f, 0., 0.},
         {0., 0., (farval + nearval) / (nearval - farval), -1},
         {0., 0., 2. * farval * nearval / (nearval - farval), 0}
+    };
+    mat4_copy(ret, mat);
+}
+
+DEF void mat4_ortho(double mat[S 4][4], double left, double right,
+                    double bottom, double top, double nearval, double farval)
+{
+    double tx = -(right + left) / (right - left);
+    double ty = -(top + bottom) / (top - bottom);
+    double tz = -(farval + nearval) / (farval - nearval);
+    const double ret[4][4] = {
+        {2 / (right - left), 0, 0, 0},
+        {0, 2 / (top - bottom), 0, 0},
+        {0, 0, -2 / (farval - nearval), 0},
+        {tx, ty, tz, 1},
     };
     mat4_copy(ret, mat);
 }
