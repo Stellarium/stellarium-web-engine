@@ -26,6 +26,10 @@ SOURCES = [
 ]
 DEST = "src/assets/"
 
+if len(sys.argv) > 1:
+    ROOT = sys.argv[1]
+    DEST = sys.argv[2]
+
 if os.path.dirname(__file__) != "./tools":
     print("Should be run from root directory")
     sys.exit(-1)
@@ -126,5 +130,5 @@ for group in groups:
     # Only write the data if it has changed, so that we don't change the
     # timestamp of the files unnecessarily.
     path = os.path.join(DEST, "%s.inl" % group)
-    if open(path).read() != out.getvalue():
+    if not os.path.exists(path) or open(path).read() != out.getvalue():
         open(path, 'w').write(out.getvalue())
