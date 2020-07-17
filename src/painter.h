@@ -140,6 +140,15 @@ struct renderer
                     const painter_t     *painter,
                     const double        p1[2],
                     const double        p2[2]);
+
+    void (*model_3d)(renderer_t         *rend,
+                     const painter_t    *painter,
+                     const char         *model,
+                     const double       model_mat[4][4],
+                     const double       view_mat[4][4],
+                     const double       proj_mat[4][4],
+                     const double       light_dir[3],
+                     json_value         *args);
 };
 
 renderer_t* render_gl_create(void);
@@ -610,6 +619,9 @@ int paint_2d_line(const painter_t *painter, const double transf[3][3],
  *   cap        - The spherical cap.
  */
 void paint_cap(const painter_t *painter, int frame, double cap[4]);
+
+void paint_3d_model(const painter_t *painter, const char *model,
+                    const double mat[4][4], const json_value *args);
 
 /*
  * Function: painter_project_ellipse

@@ -784,6 +784,12 @@ void paint_cap(const painter_t *painter, int frame, double cap[4])
     obj_release(obj);
 }
 
+__attribute__((weak))
+void paint_3d_model(const painter_t *painter, const char *model,
+                    const double model_mat_[4][4], const json_value *args)
+{
+}
+
 void painter_project_ellipse(const painter_t *painter, int frame,
         float ra, float de, float angle, float size_x, float size_y,
         double win_pos[2], double win_size[2], double *win_angle)

@@ -80,6 +80,7 @@ enum {
     ITEM_TEXT,
     ITEM_QUAD_WIREFRAME,
     ITEM_LINES_GLOW,
+    ITEM_GLTF,
 };
 
 typedef struct item item_t;
@@ -152,6 +153,15 @@ struct item
             int proj;
             float proj_scaling[2];
         } mesh;
+
+        struct {
+            const char *model;
+            float model_mat[16];
+            float view_mat[16];
+            float proj_mat[16];
+            float light_dir[3];
+            json_value *args;
+        } gltf;
     };
 
     item_t *next, *prev;
@@ -257,6 +267,18 @@ typedef struct renderer_gl {
     cache_t *grid_cache;
 
 } renderer_gl_t;
+
+// Weak linking, so that we can put the implementation in a module.
+__attribute__((weak))
+int gltf_render(const char *url,
+                const float model_mat[16],
+                const float view_mat[16],
+                const float proj_mat[16],
+                const float light_dir[3],
+                json_value *args)
+{
+    return 0;
+}
 
 static void init_shader(gl_shader_t *shader)
 {
@@ -1337,6 +1359,12 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     GL(glDisable(GL_DEPTH_TEST));
 }
 
+static void item_gltf_render(renderer_gl_t *rend, const item_t *item)
+{
+    gltf_render(item->gltf.model, item->gltf.model_mat, item->gltf.view_mat,
+                item->gltf.proj_mat, item->gltf.light_dir, item->gltf.args);
+}
+
 static void rend_flush(renderer_gl_t *rend)
 {
     item_t *item, *tmp;
@@ -1407,6 +1435,9 @@ static void rend_flush(renderer_gl_t *rend)
         case ITEM_QUAD_WIREFRAME:
             item_quad_wireframe_render(rend, item);
             break;
+        case ITEM_GLTF:
+            item_gltf_render(rend, item);
+            break;
         default:
             assert(false);
         }
@@ -1415,6 +1446,8 @@ static void rend_flush(renderer_gl_t *rend)
         texture_release(item->tex);
         if (item->type == ITEM_PLANET)
             texture_release(item->planet.normalmap);
+        if (item->type == ITEM_GLTF)
+            json_builder_free(item->gltf.args);
         gl_buf_release(&item->buf);
         gl_buf_release(&item->indices);
         free(item);
@@ -1654,6 +1687,27 @@ static void line_2d(renderer_t *rend_, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
+static void model_3d(renderer_t *rend_, const painter_t *painter,
+                     const char *model,
+                     const double model_mat[4][4],
+                     const double view_mat[4][4],
+                     const double proj_mat[4][4],
+                     const double light_dir[3],
+                     json_value *args)
+{
+    renderer_gl_t *rend = (void*)rend_;
+    item_t *item;
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_GLTF;
+    item->gltf.model = model;
+    mat4_to_float(model_mat, item->gltf.model_mat);
+    mat4_to_float(view_mat, item->gltf.view_mat);
+    mat4_to_float(proj_mat, item->gltf.proj_mat);
+    vec3_to_float(light_dir, item->gltf.light_dir);
+    if (args) item->gltf.args = json_copy(args);
+    DL_APPEND(rend->items, item);
+}
+
 static texture_t *create_white_texture(int w, int h)
 {
     uint8_t *data;
@@ -1742,6 +1796,7 @@ renderer_t* render_gl_create(void)
     rend->rend.ellipse_2d = ellipse_2d;
     rend->rend.rect_2d = rect_2d;
     rend->rend.line_2d = line_2d;
+    rend->rend.model_3d = model_3d;
 
     return &rend->rend;
 }
