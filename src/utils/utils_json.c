@@ -126,6 +126,34 @@ json_value *json_copy(const json_value *val)
     return NULL;
 }
 
+json_value *json_vector_new(int size, const double *values)
+{
+    int i;
+    json_value *ret;
+    ret = json_array_new(size);
+    for (i = 0; i < size; i++)
+        json_array_push(ret, json_double_new(values[i]));
+    return ret;
+}
+
+int json_parse_vector(const json_value *data, int size, double *out)
+{
+    int i;
+    const json_value *e;
+
+    if (!data || data->type != json_array) return -1;
+    if (data->u.array.length != size) return -1;
+    for (i = 0; i < size; i++) {
+        e = data->u.array.values[i];
+        switch (e->type) {
+            case json_double: out[i] = e->u.dbl; break;
+            case json_integer: out[i] = e->u.integer; break;
+            default: return -1;
+        }
+    }
+    return 0;
+}
+
 
 static int jcon_parse_(json_value *v, va_list *ap)
 {

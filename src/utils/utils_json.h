@@ -43,6 +43,23 @@ char *json_to_string(const json_value *val);
 json_value *json_copy(const json_value *val);
 
 /*
+ * Function: json_double_array_new
+ * Create an array of double
+ */
+json_value *json_vector_new(int size, const double *values);
+
+/*
+ * Function: parse_float_array
+ * Conveniance function to parse a json array of the form [x, y, ...]
+ *
+ * Parameters:
+ *   data   - A json array.
+ *   size   - Number of double values to parse.
+ *   out    - Pointer to a double array large enough to get all the data.
+ */
+int json_parse_vector(const json_value *data, int size, double *out);
+
+/*
  * Special interface to parse json document using a syntax similar to bson
  * C Object notation.
  *
