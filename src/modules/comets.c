@@ -11,6 +11,11 @@
 #include "mpc.h"
 #include <regex.h>
 
+enum {
+    TAIL_GAS,
+    TAIL_DUST,
+};
+
 typedef struct orbit_t {
     double d;    // date (julian day).
     double i;    // inclination (rad).
@@ -200,6 +205,100 @@ void comet_get_designations(
     f(obj, user, "NAME", comet->name);
 }
 
+// https://www.projectpluto.com/update7b.htm#comet_tail_formula
+static void compute_tail_size(double H, double K, double r,
+                              double *out_l, double *out_d)
+{
+    double mhelio, Lo, L, Do, D;
+    mhelio = H + K * log10(r);
+    Lo = pow(10, -0.0075 * mhelio * mhelio - 0.19 * mhelio + 2.10);
+    L = Lo * (1 - pow(10, -4 * r)) * (1 - pow(10, -2 * r));
+    Do = pow(10, -0.0033 * mhelio * mhelio - 0.07 * mhelio + 3.25);
+    D = Do * (1 - pow(10, -2 * r)) * (1 - pow(10, -r));
+    // Convert all in AU.
+    *out_l = L * 1000000 * 1000 / DAU;
+    *out_d = D * 1000 * 1000 / DAU;
+}
+
+// Rotate a matrix to make the Y axis point toward a given position.
+static void mat_rotate_y_toward(double mat[4][4], double dir[3])
+{
+    double rot[4][4] = MAT4_IDENTITY;
+    vec3_set(rot[0], 1, 0, 0);
+    vec3_normalize(dir, rot[1]);
+    vec3_cross(rot[0], rot[1], rot[2]);
+    vec3_normalize(rot[2], rot[2]);
+    vec3_cross(rot[1], rot[2], rot[0]);
+    mat4_mul(mat, rot, mat);
+}
+
+static void render_tail(comet_t *comet, const painter_t *painter, int tail)
+{
+    double model_mat[4][4] = MAT4_IDENTITY;
+    double ph[3], rh, l, d, angle, point, dir[3], curvature = 0;
+    double color[4], lum_apparent, ld;
+    json_value *args, *uniforms;
+
+    vec3_sub(comet->pvo[0], painter->obs->sun_pvo[0], ph);
+    rh = vec3_norm(ph);
+    compute_tail_size(comet->h, comet->g, rh, &l, &d);
+    mat4_itranslate(model_mat, VEC3_SPLIT(comet->pvo[0]));
+
+    switch (tail) {
+    case TAIL_GAS:
+        vec4_set(color, 0.15, 0.35, 0.6, 1.0);
+        mat_rotate_y_toward(model_mat, ph);
+        // Rotate along axis so that both tails don't look exactly the same.
+        mat4_ry(M_PI / 2, model_mat, model_mat);
+        break;
+    case TAIL_DUST:
+        // Empirical size adjustement to the dust tail size.
+        d *= 1.5;
+        l *= 0.6;
+        curvature = -M_PI;
+        vec4_set(color, 0.7, 0.7, 0.4, 1.0);
+        vec3_addk(ph, comet->pvo[1], -5, dir);
+        mat_rotate_y_toward(model_mat, dir);
+        break;
+    }
+
+    // Compute alpha.
+    // XXX: this is ad-hoc, I have to manually make the tail brigher than
+    // it should.  Also since we don't report the luminance to the
+    // tonemapper I manually dim out the tail as we zoom in!
+    angle = d / vec3_norm(comet->pvo[0]);
+    lum_apparent = core_mag_to_lum_apparent(
+            comet->vmag - 4, M_PI * angle * angle);
+    ld = tonemapper_map(&core->tonemapper, lum_apparent);
+    color[3] = clamp(ld, 0.0, 1.0);
+
+    point = core_get_point_for_apparent_angle(painter->proj, angle);
+    color[3] *= smoothstep(1000, 100, point);
+
+    // Translate to put the orgin in the middle of the coma.
+    mat4_itranslate(model_mat, 0, -0.0001, 0);
+
+    args = json_object_new(0);
+    json_object_push(args, "shader", json_string_new("comet"));
+    json_object_push(args, "blend_mode", json_string_new("ADD"));
+    uniforms = json_object_push(args, "uniforms", json_object_new(0));
+    json_object_push(uniforms, "u_length", json_double_new(l));
+    json_object_push(uniforms, "u_coma_radius", json_double_new(d / 2));
+    json_object_push(uniforms, "u_curvature", json_double_new(curvature));
+    json_object_push(uniforms, "u_color", json_vector_new(4, color));
+
+    paint_3d_model(painter, "comet", model_mat, args);
+
+    // Render a second time a transparent and slightly zoomed model to
+    // Make a simple blurry effect on the sides.
+    mat4_iscale(model_mat, 1.2, 1.2, 1.2);
+    color[3] *= 0.5;
+    json_object_push(uniforms, "u_color", json_vector_new(4, color));
+    paint_3d_model(painter, "comet", model_mat, args);
+
+    json_builder_free(args);
+}
+
 
 static int comet_render(const obj_t *obj, const painter_t *painter)
 {
@@ -209,6 +308,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     double label_color[4] = RGBA(223, 223, 255, 255);
     const bool selected = core->selection && obj->oid == core->selection->oid;
     double hints_mag_offset = g_comets->hints_mag_offset;
+    double cap[4];
 
     comet_update(comet, painter->obs);
     vmag = comet->vmag;
@@ -216,10 +316,14 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     if (!selected && vmag > painter->stars_limit_mag + 2.0 + hints_mag_offset)
         return 0;
     if (isnan(comet->pvo[0][0])) return 0; // For the moment!
-    if (!painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true,
-                         win_pos))
+
+    // Clip test using a small radius for the tail size.
+    vec3_normalize(comet->pvo[0], cap);
+    cap[3] = cos(5 * DD2R);
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, cap))
         return 0;
 
+    painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true, win_pos);
     comet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
@@ -242,6 +346,9 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
             TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
             0, obj->oid);
     }
+
+    render_tail(comet, painter, TAIL_GAS);
+    render_tail(comet, painter, TAIL_DUST);
     return 0;
 }
 
