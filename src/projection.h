@@ -69,6 +69,7 @@ struct projection
 {
     const char *name;
     double scaling[2];
+    double fovx;
     int flags;
     int type;
 

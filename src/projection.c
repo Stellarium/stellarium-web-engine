@@ -62,6 +62,7 @@ void projection_init(projection_t *p, int type, double fov,
     memset(p, 0, sizeof(*p));
     p->window_size[0] = w;
     p->window_size[1] = h;
+    p->fovx = fov;
     switch (type) {
         case PROJ_PERSPECTIVE:
             proj_perspective_init(p, fov, aspect);
