@@ -123,20 +123,15 @@ static int satellites_update(obj_t *obj, double dt)
     char buf[128];
 
     if (sats->loaded) return 0;
+    if (!sats->jsonl_url) return 0;
 
-    if (sats->jsonl_url) {
-        data = asset_get_data2(sats->jsonl_url, ASSET_USED_ONCE, &size, &code);
-        if (!code) return 0; // Sill loading.
-        if (data) {
-            nb = load_jsonl_data(sats, data, size, sats->jsonl_url,
-                                 &last_epoch);
-            LOG_I("Parsed %d satellites (latest epoch: %s)", nb,
-                  format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
-        }
-
-        sats->loaded = true;
-    }
-
+    data = asset_get_data2(sats->jsonl_url, ASSET_USED_ONCE, &size, &code);
+    if (!code) return 0; // Sill loading.
+    if (!data) return 0; // Got error;
+    nb = load_jsonl_data(sats, data, size, sats->jsonl_url, &last_epoch);
+    LOG_I("Parsed %d satellites (latest epoch: %s)", nb,
+          format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
+    sats->loaded = true;
     return 0;
 }
 
