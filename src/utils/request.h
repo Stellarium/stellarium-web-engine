@@ -16,3 +16,6 @@ void request_delete(request_t *req);
 const void *request_get_data(request_t *req, int *size, int *status_code);
 // Don't use cache even if we have a local copy.
 void request_make_fresh(request_t *req);
+
+// Return cached version if available, even if expired.
+const void *request_get_cached(request_t *req, int *size, int *status_code);

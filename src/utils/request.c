@@ -381,6 +381,20 @@ const void *request_get_data(request_t *req, int *size, int *status_code)
     return req->data;
 }
 
+// Return cached version if available, even if expired.
+const void *request_get_cached(request_t *req, int *size, int *status_code)
+{
+    char *local_path;
+    void *data = NULL;
+    local_path = create_local_path(req->url, NULL);
+    if (file_exists(local_path)) {
+        data = read_file(local_path, size);
+        *status_code = 200;
+    }
+    free(local_path);
+    return data;
+}
+
 void request_make_fresh(request_t *req)
 {
     free(req->etag);
