@@ -288,14 +288,6 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
     json_object_push(uniforms, "u_color", json_vector_new(4, color));
 
     paint_3d_model(painter, "comet", model_mat, args);
-
-    // Render a second time a transparent and slightly zoomed model to
-    // Make a simple blurry effect on the sides.
-    mat4_iscale(model_mat, 1.2, 1.2, 1.2);
-    color[3] *= 0.5;
-    json_object_push(uniforms, "u_color", json_vector_new(4, color));
-    paint_3d_model(painter, "comet", model_mat, args);
-
     json_builder_free(args);
 }
 
