@@ -13,16 +13,18 @@
 #define MAX_ALTITUDE 120.0          // Max meteor altitude in km
 #define MIN_ALTITUDE 80.0           // Min meteor altitude in km
 
+typedef struct meteor meteor_t;
+
 /*
  * Type: meteor_t
- * Object that represents a single meteor
+ * Represents a single meteor
  */
-typedef struct {
-    obj_t       obj;
+struct meteor {
+    meteor_t    *next, *prev;   // List within the meteors module.
     double      pvo[2][4];
     double      duration; // Duration (sec).
     double      time; // From 0 to duration.
-} meteor_t;
+};
 
 /*
  * Type: meteors_t
@@ -31,6 +33,7 @@ typedef struct {
 typedef struct {
     obj_t   obj;
     double  zhr;
+    meteor_t *meteors;
 } meteors_t;
 
 static double frand(double from, double to)
@@ -38,10 +41,10 @@ static double frand(double from, double to)
     return from + (rand() / (double)RAND_MAX) * (to - from);
 }
 
-static int meteor_init(obj_t *obj, json_value *args)
+static meteor_t *meteor_create(void)
 {
     double z, mat[3][3];
-    meteor_t *m = (meteor_t*)obj;
+    meteor_t *m = calloc(1, sizeof(*m));
 
     // Give the meteor a random position and speed.
     z = (EARTH_RADIUS + MAX_ALTITUDE) * 1000 / DAU;
@@ -56,13 +59,11 @@ static int meteor_init(obj_t *obj, json_value *args)
     vec3_mul(0.00001, m->pvo[1], m->pvo[1]);
 
     m->duration = 4.0;
-
-    return 0;
+    return m;
 }
 
-static int meteor_update(obj_t *obj, double dt)
+static int meteor_update(meteor_t *m, double dt)
 {
-    meteor_t *m = (meteor_t*)obj;
     vec3_addk(m->pvo[0], m->pvo[1], dt, m->pvo[0]);
     m->time += dt;
     return 0;
@@ -115,12 +116,11 @@ static void render_tail(const painter_t *painter,
     paint_quad(painter, FRAME_ICRF, &map, 8);
 }
 
-static int meteor_render(const obj_t *obj, const painter_t *painter_)
+static int meteor_render(const meteor_t *m, const painter_t *painter_)
 {
     double p1[4]; // Head position (CIRS)
     double p2[4]; // End of tail position (CIRS)
     painter_t painter = *painter_;
-    meteor_t *m = (meteor_t*)obj;
 
     // Very basic fade out.
     painter.color[3] *= max(0.0, 1.0 - m->time / m->duration);
@@ -143,24 +143,24 @@ static int meteors_update(obj_t *obj, double dt)
 {
     PROFILE(meterors_update, 0);
     meteors_t *ms = (meteors_t*)obj;
-    meteor_t *m;
-    obj_t *child, *tmp;
+    meteor_t *m, *tmp;
     int nb, max_nb = 100;
     double proba;
 
-    DL_COUNT(obj->children, child, nb);
+    DL_COUNT(ms->meteors, m, nb);
     // Probabiliy of having a new shooting star at this frame.
     proba = ms->zhr * dt / 3600;
 
     if (nb < max_nb && frand(0, 1) < proba) {
-        module_add_new(obj, "meteor", NULL, NULL);
+        m = meteor_create();
+        DL_APPEND(ms->meteors, m);
     }
 
-    DL_FOREACH_SAFE(obj->children, child, tmp) {
-        m = (meteor_t*)child;
-        meteor_update(child, dt);
+    DL_FOREACH_SAFE(ms->meteors, m, tmp) {
+        meteor_update(m, dt);
         if (m->time > m->duration) {
-            module_remove(obj, child);
+            DL_DELETE(ms->meteors, m);
+            free(m);
         }
     }
 
@@ -170,23 +170,18 @@ static int meteors_update(obj_t *obj, double dt)
 static int meteors_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(meterors_render, 0);
-    obj_t *child;
-    MODULE_ITER(obj, child, "meteor")
-        obj_render(child, painter);
+    const meteors_t *meteors = (void*)obj;
+    meteor_t *m;
+
+    DL_FOREACH(meteors->meteors, m) {
+        meteor_render(m, painter);
+    }
     return 0;
 }
 
 /*
  * Meta class declarations.
  */
-static obj_klass_t meteor_klass = {
-    .id             = "meteor",
-    .size           = sizeof(meteor_t),
-    .init           = meteor_init,
-    .update         = meteor_update,
-    .render         = meteor_render,
-};
-OBJ_REGISTER(meteor_klass)
 
 static obj_klass_t meteors_klass = {
     .id             = "meteors",
