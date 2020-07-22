@@ -246,7 +246,7 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 
     switch (tail) {
     case TAIL_GAS:
-        vec4_set(color, 0.15, 0.35, 0.6, 1.0);
+        vec4_set(color, 0.15, 0.35, 0.6, 0.25);
         mat_rotate_y_toward(model_mat, ph);
         // Rotate along axis so that both tails don't look exactly the same.
         mat4_ry(M_PI / 2, model_mat, model_mat);
@@ -270,7 +270,7 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
     lum_apparent = core_mag_to_lum_apparent(
             comet->vmag - 4, M_PI * angle * angle);
     ld = tonemapper_map(&core->tonemapper, lum_apparent);
-    color[3] = clamp(ld, 0.0, 1.0);
+    color[3] *= clamp(ld, 0.0, 1.0);
 
     point = core_get_point_for_apparent_angle(painter->proj, angle);
     color[3] *= smoothstep(1000, 100, point);
