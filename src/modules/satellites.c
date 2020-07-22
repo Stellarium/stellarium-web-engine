@@ -40,7 +40,6 @@ struct satellite {
 // Module class.
 typedef struct satellites {
     obj_t   obj;
-    char    *norad_url; // Online norad files location.
     char    *jsonl_url;   // jsonl file in noctuasky server format.
     bool    loaded;
     int     update_pos; // Index of the position for iterative update.
