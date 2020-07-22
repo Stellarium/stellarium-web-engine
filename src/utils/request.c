@@ -171,6 +171,11 @@ request_t *request_create(const char *url)
     return req;
 }
 
+int request_is_finished(const request_t *req)
+{
+    return req->handle == NULL;
+}
+
 void request_delete(request_t *req)
 {
     if (!req) return;
@@ -419,6 +424,11 @@ void request_init(const char *cache_dir)
 request_t *request_create(const char *url)
 {
     return calloc(1, sizeof(request_t));
+}
+
+int request_is_finished(const request_t *req)
+{
+    return true;
 }
 
 void request_delete(request_t *req)

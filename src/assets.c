@@ -216,8 +216,15 @@ end:
     return data;
 }
 
-static void asset_release_(asset_t *asset)
+static int asset_release_(asset_t *asset)
 {
+    // Don't release still revalidating requests.
+    if ((asset->flags & ASSET_STALE_WHILE_REVALIDATE) &&
+        !request_is_finished(asset->request))
+    {
+        return 1;
+    }
+
     if (asset->flags & FREE_DATA) {
         free(asset->data);
         asset->data = NULL;
@@ -230,6 +237,7 @@ static void asset_release_(asset_t *asset)
         free(asset->url);
         free(asset);
     }
+    return 0;
 }
 
 static void assets_update(void)

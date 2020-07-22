@@ -47,6 +47,11 @@ request_t *request_create(const char *url)
     return req;
 }
 
+int request_is_finished(const request_t *req)
+{
+    return req->done;
+}
+
 void request_delete(request_t *req)
 {
     if (!req) return;
