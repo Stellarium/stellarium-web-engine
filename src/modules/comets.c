@@ -382,8 +382,7 @@ static int comets_update(obj_t *obj, double dt)
     if (comets->parsed || !comets->source_url)
         return 0;
 
-    data = asset_get_data2(comets->source_url,
-            ASSET_STALE_WHILE_REVALIDATE | ASSET_USED_ONCE, &size, &code);
+    data = asset_get_data2(comets->source_url, ASSET_USED_ONCE, &size, &code);
     if (!code) return 0; // Still loading.
     comets->parsed = true;
     if (!data) {

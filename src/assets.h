@@ -36,17 +36,11 @@
  *   ASSET_ACCEPT_404   - Do not log error on a 404 return.
  *   ASSET_USED_ONCE    - Hint that the data can be release after it has
  *                        been read.
- *   ASSET_STALE_WHILE_REVALIDATE - Use the cached version even if it is
- *                      expired.  The request is still sent normally so that
- *                      the cache is updated for the next time.  Note: we
- *                      could remove this if the request manager supported
- *                      the stale-while-revalidate HTTP header.
  */
 enum {
     ASSET_DELAY             = 1 << 0,
     ASSET_ACCEPT_404        = 1 << 1,
     ASSET_USED_ONCE         = 1 << 2,
-    ASSET_STALE_WHILE_REVALIDATE = 1 << 3,
 };
 
 /*

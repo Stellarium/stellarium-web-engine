@@ -139,11 +139,6 @@ const void *request_get_data(request_t *req, int *size, int *status_code)
     return req->data;
 }
 
-const void *request_get_cached(request_t *req, int *size, int *status_code)
-{
-    return 0;
-}
-
 void request_make_fresh(request_t *req)
 {
 }
