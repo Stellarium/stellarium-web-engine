@@ -34,6 +34,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     // If the selection has a custom rendering method, we use it.
     if (selection->klass->render_pointer) {
         selection->klass->render_pointer(selection, &painter);
+        return 0;
     }
 
     obj_get_2d_ellipse(selection, painter.obs, painter.proj,
