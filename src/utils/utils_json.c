@@ -65,27 +65,6 @@ bool json_get_attr_b(const json_value *val, const char *attr,
     return default_value;
 }
 
-char *json_to_string(const json_value *val)
-{
-    int i;
-    json_value *jstr;
-    UT_string ret;
-
-    if (val->type == json_string)
-        return strdup(val->u.string.ptr);
-    if (val->type != json_array)
-        return NULL;
-
-    utstring_init(&ret);
-    for (i = 0; i < val->u.array.length; i++) {
-        jstr = val->u.array.values[i];
-        if (jstr->type != json_string) continue; // Not normal!
-        if (i) utstring_bincpy(&ret, " ", 1);
-        utstring_bincpy(&ret, jstr->u.string.ptr, jstr->u.string.length);
-    }
-    return utstring_body(&ret);
-}
-
 json_value *json_copy(const json_value *val)
 {
     json_value *ret;

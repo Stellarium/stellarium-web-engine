@@ -28,15 +28,6 @@ bool json_get_attr_b(const json_value *val, const char *attr,
                      bool default_value);
 
 /*
- * Function: json_to_string
- * Interpret a json value as a string.
- *
- * If the value is a list, returns the concatenation of all the lines with
- * spaces added.  Return a new allocated string, or NULL in case of error.
- */
-char *json_to_string(const json_value *val);
-
-/*
  * Function: json_copy
  * Make a deep copy of a json value
  */
