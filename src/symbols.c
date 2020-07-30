@@ -18,6 +18,7 @@ static void   g_paint(const painter_t *painter, const double transf[3][3]);
 static void  pn_paint(const painter_t *painter, const double transf[3][3]);
 static void ism_paint(const painter_t *painter, const double transf[3][3]);
 static void bne_paint(const painter_t *painter, const double transf[3][3]);
+static void msh_paint(const painter_t *painter, const double transf[3][3]);
 
 // Match the list of svg files in tool/makedata.py.
 // We can probably do better than that.
@@ -37,6 +38,7 @@ static const struct {
     [SYMBOL_BRIGHT_NEBULA]          = {"BNe" , 0x89ff5f7f, bne_paint},
     [SYMBOL_CLUSTER_OF_STARS]       = {"Cl*" , 0x89ff5f7f, cls_paint},
     [SYMBOL_MULTIPLE_DEFAULT]       = {"mul" , 0x89ff5f7f, opc_paint},
+    [SYMBOL_METEOR_SHOWER]          = {"MSh" , 0x89ff5f7f, msh_paint},
 };
 
 static texture_t *get_texture(void)
@@ -121,6 +123,25 @@ static void glc_paint(const painter_t *painter, const double transf[3][3])
     paint_2d_line(painter, transf, VEC(-1, 0), VEC(1, 0));
     paint_2d_line(painter, transf, VEC(0, -1), VEC(0, 1));
 }
+
+static void msh_paint(const painter_t *painter, const double transf[3][3])
+{
+    int i, nb = 7;
+    double a, p1[2], p2[2], r1, r2;
+    unsigned short xsubi[3] = {0, 0, 3};
+    for (i = 0; i < nb; i++) {
+        a = i * 2 * M_PI / nb;
+        a += (erand48(xsubi) - 0.5) * 15 * DD2R;
+        r1 = mix(0.25, 0.3, erand48(xsubi));
+        r2 = mix(0.75, 1.0, erand48(xsubi));
+        p1[0] = r1 * cos(a);
+        p1[1] = r1 * sin(a);
+        p2[0] = r2 * cos(a);
+        p2[1] = r2 * sin(a);
+        paint_2d_line(painter, transf, p1, p2);
+    }
+}
+
 
 int symbols_paint(const painter_t *painter_, int symbol,
                   const double pos[2], const double size[2],

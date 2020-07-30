@@ -34,6 +34,7 @@ enum {
     SYMBOL_CLUSTER_OF_STARS,
     SYMBOL_MULTIPLE_DEFAULT,
     SYMBOL_UNKNOWN,
+    SYMBOL_METEOR_SHOWER,
 };
 
 void symbols_init(void);
