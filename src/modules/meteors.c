@@ -26,6 +26,21 @@ struct meteor {
     double      time; // From 0 to duration.
 };
 
+typedef struct shower {
+    obj_t obj;
+    char iau_code[4];
+    char designation[256];
+    double pos[3];
+    double zhr;
+
+    // Times are in MJD, modulo one year.
+    double start;
+    double finish;
+    double peak;
+
+    json_value *data; // Original json data.
+} shower_t;
+
 /*
  * Type: meteors_t
  * Meteors module object
@@ -34,6 +49,8 @@ typedef struct {
     obj_t   obj;
     double  zhr;
     meteor_t *meteors;
+    char *showers_url;
+    bool showers_loaded;
 } meteors_t;
 
 static double frand(double from, double to)
@@ -139,6 +156,165 @@ static int meteors_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+static int parse_date(const char *str, double *out)
+{
+    int m, d, r;
+    double djm0, djm;
+    if (sscanf(str, "%d-%d", &m, &d) != 2) {
+        LOG_E("Malformed meteor shower date: %s", str);
+        return -1;
+    }
+    r = eraCal2jd(2000, m, d, &djm0, &djm);
+    if (r != 0) return -1;
+    assert(djm0 == ERFA_DJM0);
+    *out = fmod(djm, ERFA_DJY);
+    return 0;
+}
+
+static shower_t *create_shower(const json_value *doc)
+{
+    const char *iau_code, *designation, *start, *finish, *peak;
+    double ra, dec, speed, zhr;
+    int r, iau_number;
+    shower_t *s = NULL;
+
+    r = jcon_parse(doc, "{",
+        "iau_code", JCON_STR(iau_code),
+        "iau_number", JCON_INT(iau_number, 0),
+        "designation", JCON_STR(designation),
+        "start", JCON_STR(start),
+        "finish", JCON_STR(finish),
+        "peak", JCON_STR(peak),
+        "ra", JCON_DOUBLE(ra, 0),
+        "dec", JCON_DOUBLE(dec, 0),
+        "speed", JCON_DOUBLE(speed, 0),
+        "zhr", JCON_DOUBLE(zhr, 0),
+    "}");
+    if (r != 0) goto error;
+
+    s = (void*)obj_create("meteor-shower", NULL, NULL);
+    eraS2c(ra * DD2R, dec * DD2R, s->pos);
+    snprintf(s->iau_code, sizeof(s->iau_code), "%s", iau_code);
+    snprintf(s->designation, sizeof(s->designation), "%s", designation);
+    strncpy(s->obj.type, "MSh", 4);
+    s->obj.oid = oid_create("MSh", iau_number);
+    if (parse_date(start, &s->start)) goto error;
+    if (parse_date(finish, &s->finish)) goto error;
+    if (parse_date(peak, &s->peak)) goto error;
+    s->data = json_copy(doc);
+    return s;
+
+error:
+    LOG_E("Error parsing meteor shower json.");
+    obj_release((obj_t*)s);
+    return NULL;
+}
+
+static void load_showers(meteors_t *ms)
+{
+    int i, size, code, nb = 0;
+    const char *data;
+    json_value *doc = NULL, *showers;
+    shower_t *shower;
+
+    if (ms->showers_loaded || !ms->showers_url) return;
+
+    data = asset_get_data2(ms->showers_url, ASSET_USED_ONCE, &size, &code);
+    if (!code) return; // Sill loading.
+    ms->showers_loaded = true;
+    if (!data) goto error;
+
+    doc = json_parse(data, strlen(data));
+    if (!doc) goto error;
+    showers = json_get_attr(doc, "showers", json_array);
+    if (!showers) goto error;
+
+    for (i = 0; i < showers->u.array.length; i++) {
+        shower = create_shower(showers->u.array.values[i]);
+        if (!shower) continue;
+        module_add(&ms->obj, &shower->obj);
+        nb++;
+    }
+    LOG_I("Added %d meteor showers", nb);
+    json_value_free(doc);
+    return;
+
+error:
+    LOG_E("Cannot parse meteor shower data");
+    json_value_free(doc);
+    return;
+}
+
+static void shower_get_designations(
+        const obj_t *obj, void *user,
+        int (*f)(const obj_t *obj, void *user,
+                 const char *cat, const char *str))
+{
+    shower_t *s = (void*)obj;
+    f(obj, user, "NAME", s->designation);
+}
+
+static int shower_get_pvo(const shower_t *s, const observer_t *obs,
+                          double pvo[2][4])
+{
+    convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, s->pos, pvo[0]);
+    pvo[0][3] = 0.0;
+    pvo[1][0] = pvo[1][1] = pvo[1][2] = pvo[1][3] = 0.0;
+    return 0;
+}
+
+static double shower_get_next_peak(const shower_t *s, const observer_t *obs)
+{
+    return obs->utc - fmod(obs->utc, ERFA_DJY) + fmod(s->peak, ERFA_DJY);
+}
+
+static int shower_get_info(const obj_t *obj, const observer_t *obs, int info,
+                           void *out)
+{
+    shower_t *s = (void*)obj;
+    switch (info) {
+    case INFO_PVO:
+        shower_get_pvo(s, obs, out);
+        return 0;
+    case INFO_NEXT_PEAK:
+        *(double*)out = shower_get_next_peak(s, obs);
+        return 0;
+    default:
+        return 1;
+    }
+}
+
+static int shower_render(const obj_t *obj, const painter_t *painter)
+{
+    const double color[4] = {1, 1, 1, 1};
+    const double size[2] = {30, 30};
+    double win_pos[2];
+    shower_t *s = (void*)obj;
+
+    // Only render if selected.
+    if (core->selection != obj) return 0;
+    if (!painter_project(painter, FRAME_ASTROM, s->pos, true, true, win_pos))
+        return 0;
+    symbols_paint(painter, SYMBOL_METEOR_SHOWER, win_pos, size, color, 0);
+    labels_add_3d(s->designation, FRAME_ASTROM, s->pos, true, size[0] / 2,
+                  FONT_SIZE_BASE, color, 0, 0, TEXT_BOLD, 0, obj->oid);
+    return 0;
+}
+
+static int shower_render_pointer(const obj_t *obj, const painter_t *painter)
+{
+    // Don't render the pointer.
+    return 0;
+}
+
+static json_value *shower_get_json_data(const obj_t *obj)
+{
+    const shower_t *s = (void*)obj;
+    json_value *ret = json_object_new(0);
+    json_object_push(ret, "model_data", json_copy(s->data));
+    return ret;
+}
+
 static int meteors_update(obj_t *obj, double dt)
 {
     PROFILE(meterors_update, 0);
@@ -146,6 +322,8 @@ static int meteors_update(obj_t *obj, double dt)
     meteor_t *m, *tmp;
     int nb, max_nb = 100;
     double proba;
+
+    load_showers(ms);
 
     DL_COUNT(ms->meteors, m, nb);
     // Probabiliy of having a new shooting star at this frame.
@@ -171,10 +349,36 @@ static int meteors_render(const obj_t *obj, const painter_t *painter)
 {
     PROFILE(meterors_render, 0);
     const meteors_t *meteors = (void*)obj;
+    obj_t *child;
     meteor_t *m;
 
     DL_FOREACH(meteors->meteors, m) {
         meteor_render(m, painter);
+    }
+
+    DL_FOREACH(meteors->obj.children, child) {
+        obj_render(child, painter);
+    }
+    return 0;
+}
+
+static int meteors_add_data_source(
+        obj_t *obj, const char *url, const char *key)
+{
+    meteors_t *ms = (void*)obj;
+    if (strcmp(key, "json/meteor-showers") != 0) return -1;
+    ms->showers_url = strdup(url);
+    return 0;
+}
+
+static int meteors_list(const obj_t *obj,
+                        double max_mag, uint64_t hint,
+                        const char *sources, void *user,
+                        int (*f)(void *user, obj_t *obj))
+{
+    obj_t *child;
+    DL_FOREACH(obj->children, child) {
+        if (f(user, child)) break;
     }
     return 0;
 }
@@ -182,6 +386,21 @@ static int meteors_render(const obj_t *obj, const painter_t *painter)
 /*
  * Meta class declarations.
  */
+
+static obj_klass_t meteor_shower_klass = {
+    .id             = "meteor-shower",
+    .size           = sizeof(shower_t),
+    .render_order   = 20,
+    .get_designations = shower_get_designations,
+    .get_info       = shower_get_info,
+    .render         = shower_render,
+    .render_pointer = shower_render_pointer,
+    .get_json_data  = shower_get_json_data,
+    .attributes = (attribute_t[]) {
+        {}
+    },
+};
+OBJ_REGISTER(meteor_shower_klass)
 
 static obj_klass_t meteors_klass = {
     .id             = "meteors",
@@ -191,6 +410,8 @@ static obj_klass_t meteors_klass = {
     .init           = meteors_init,
     .update         = meteors_update,
     .render         = meteors_render,
+    .add_data_source = meteors_add_data_source,
+    .list           = meteors_list,
     .attributes = (attribute_t[]) {
         PROPERTY(zhr, TYPE_FLOAT, MEMBER(meteors_t, zhr)),
         {}
