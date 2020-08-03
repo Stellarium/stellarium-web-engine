@@ -265,7 +265,10 @@ static int shower_get_pvo(const shower_t *s, const observer_t *obs,
 
 static double shower_get_next_peak(const shower_t *s, const observer_t *obs)
 {
-    return obs->utc - fmod(obs->utc, ERFA_DJY) + fmod(s->peak, ERFA_DJY);
+    double ret;
+    ret = obs->utc - fmod(obs->utc, ERFA_DJY) + fmod(s->peak, ERFA_DJY);
+    if (ret < obs->utc) ret += ERFA_DJY;
+    return ret;
 }
 
 static int shower_get_info(const obj_t *obj, const observer_t *obs, int info,
