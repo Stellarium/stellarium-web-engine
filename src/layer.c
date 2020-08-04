@@ -11,32 +11,11 @@
 
 // Special type of object that is just here to contain other objects.
 
-static double layer_get_render_order(const obj_t *obj);
-static int layer_update(obj_t *obj, double dt);
-static int layer_render(const obj_t *obj, const painter_t *painter);
-static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint);
-
 typedef struct layer {
     obj_t       obj;
     fader_t     visible;
     double      z;
 } layer_t;
-
-static obj_klass_t layer_klass = {
-    .id                 = "layer",
-    .size               = sizeof(layer_t),
-    .flags              = OBJ_IN_JSON_TREE,
-    .get_render_order   = layer_get_render_order,
-    .update             = layer_update,
-    .render             = layer_render,
-    .get_by_oid         = layer_get_by_oid,
-    .attributes         = (attribute_t[]) {
-        PROPERTY(visible, TYPE_BOOL, MEMBER(layer_t, visible.target)),
-        PROPERTY(z, TYPE_FLOAT, MEMBER(layer_t, z)),
-        {}
-    },
-};
-OBJ_REGISTER(layer_klass)
 
 static double layer_get_render_order(const obj_t *obj)
 {
@@ -82,3 +61,23 @@ static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     }
     return NULL;
 }
+
+/*
+ * Meta class declarations.
+ */
+
+static obj_klass_t layer_klass = {
+    .id                 = "layer",
+    .size               = sizeof(layer_t),
+    .flags              = OBJ_IN_JSON_TREE,
+    .get_render_order   = layer_get_render_order,
+    .update             = layer_update,
+    .render             = layer_render,
+    .get_by_oid         = layer_get_by_oid,
+    .attributes         = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(layer_t, visible.target)),
+        PROPERTY(z, TYPE_FLOAT, MEMBER(layer_t, z)),
+        {}
+    },
+};
+OBJ_REGISTER(layer_klass)
