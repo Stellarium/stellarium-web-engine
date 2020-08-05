@@ -207,7 +207,7 @@ render_entity(MD_HTML* r, const MD_CHAR* text, MD_SIZE size,
               void (*fn_append)(MD_HTML*, const MD_CHAR*, MD_SIZE))
 {
     if(r->flags & MD_HTML_FLAG_VERBATIM_ENTITIES) {
-        fn_append(r, text, size);
+        render_verbatim(r, text, size);
         return;
     }
 
@@ -356,7 +356,7 @@ render_close_img_span(MD_HTML* r, const MD_SPAN_IMG_DETAIL* det)
         render_attribute(r, &det->title, render_html_escaped);
     }
 
-    RENDER_VERBATIM(r, "\">");
+    RENDER_VERBATIM(r, (r->flags & MD_HTML_FLAG_XHTML) ? "\" />" : "\">");
 
     r->image_nesting_level--;
 }
