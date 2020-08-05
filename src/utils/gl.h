@@ -23,20 +23,26 @@
 
 #define GL_GLEXT_PROTOTYPES
 #ifdef WIN32
-#    include <windows.h>
-#    include "GL/glew.h"
+#   include <windows.h>
+#   include "GL/glew.h"
 #endif
 #ifdef __APPLE__
-#  define GLES2
-#  include <OPenGLES/ES2/gl.h>
-#  include <OpenGLES/ES2/glext.h>
+#   define GL_SILENCE_DEPRECATION
+#   include "TargetConditionals.h"
+#   if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+#       define GLES2
+#       include <OPenGLES/ES2/gl.h>
+#       include <OpenGLES/ES2/glext.h>
+#   else
+#       include <OpenGL/gl.h>
+#   endif
 #else
-#  ifdef GLES2
-#    include <GLES2/gl2.h>
-#    include <GLES2/gl2ext.h>
-#  else
-#    include <GL/gl.h>
-#  endif
+#   ifdef GLES2
+#       include <GLES2/gl2.h>
+#       include <GLES2/gl2ext.h>
+#   else
+#       include <GL/gl.h>
+#   endif
 #endif
 
 #if DEBUG

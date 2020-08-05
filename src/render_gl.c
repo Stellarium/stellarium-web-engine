@@ -13,13 +13,22 @@
 #include "shader_cache.h"
 #include "utils/gl.h"
 
-#define NANOVG_GLES2_IMPLEMENTATION
+#ifdef GLES2
+#   define NANOVG_GLES2_IMPLEMENTATION
+#else
+#   define NANOVG_GL2_IMPLEMENTATION
+#endif
 #include "nanovg.h"
 #include "nanovg_gl.h"
 
 #include <float.h>
 
 #define GRID_CACHE_SIZE (2 * (1 << 20))
+
+// Fix GL_PROGRAM_POINT_SIZE support on Mac.
+#ifdef __APPLE__
+#   define GL_PROGRAM_POINT_SIZE GL_PROGRAM_POINT_SIZE_EXT
+#endif
 
 enum {
     FONT_REGULAR = 0,
@@ -1774,7 +1783,11 @@ renderer_t* render_gl_create(void)
 
     rend = calloc(1, sizeof(*rend));
     rend->white_tex = create_white_texture(16, 16);
+#ifdef GLES2
     rend->vg = nvgCreateGLES2(NVG_ANTIALIAS);
+#else
+    rend->vg = nvgCreateGL2(NVG_ANTIALIAS);
+#endif
 
     if (!sys_callbacks.render_text)
         set_default_fonts(rend);
