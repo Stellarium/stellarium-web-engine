@@ -110,7 +110,7 @@ static void load_data(comets_t *comets, const char *data, int size)
         comet->orbit.q = peri_dist;
         comet->orbit.e = e;
         strncpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
-        strcpy(comet->name, desgn);
+        snprintf(comet->name, sizeof(comet->name), "%s", desgn);
         comet->obj.oid = oid_create("Com", line_idx);
         comet->pvo[0][0] = NAN;
         last_epoch = max(epoch, last_epoch);
