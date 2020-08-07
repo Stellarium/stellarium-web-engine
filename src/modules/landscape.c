@@ -276,7 +276,10 @@ static int landscapes_add_data_source(
     landscape_t *ls;
 
     // Skip if we already have it.
-    if (obj_get((obj_t*)lss, key, 0)) return 0;
+    MODULE_ITER(lss, ls, NULL) {
+        if (strcmp(ls->obj.id, key) == 0) return 0;
+    }
+
     ls = add_from_uri(lss, url, key);
     // If this is the first landscape, use it immediatly.
     if (ls == (void*)lss->obj.children) {
