@@ -1092,6 +1092,35 @@ void core_add_task(int (*fun)(task_t *task, double dt), void *user)
     DL_APPEND(core->tasks, task);
 }
 
+static void on_designation(const obj_t *obj, void *user, const char *dsgn)
+{
+    const char *query = USER_GET(user, 0);
+    obj_t **result = USER_GET(user, 1);
+    if (*result) return;
+    if (strcasecmp(query, dsgn) == 0) {
+        *result = obj_retain(obj);
+    }
+}
+
+static int on_search(void *user, obj_t *obj)
+{
+    obj_t **result = USER_GET(user, 1);
+    if (*result) return 1;
+    obj_get_designations(obj, user, on_designation);
+    return (*result) ? 1 : 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+obj_t *core_search(const char *query)
+{
+    obj_t *module, *ret;
+    DL_FOREACH(core->obj.children, module) {
+        module_list_objs(module, NAN, 0, NULL, USER_PASS(query, &ret),
+                         on_search);
+    }
+    return ret;
+}
+
 static obj_klass_t core_klass = {
     .id = "core",
     .size = sizeof(core_t),
@@ -1170,7 +1199,7 @@ static void test_basic(void)
 {
     obj_t *obj;
     // Test obj_get.
-    obj = obj_get(NULL, "Sun", 0);
+    obj = core_search("NAME Sun");
     assert(obj);
     obj_release(obj);
 }

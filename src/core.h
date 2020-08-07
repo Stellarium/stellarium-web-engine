@@ -541,6 +541,22 @@ void core_add_task(int (*fun)(task_t *task, double dt), void *user);
  */
 obj_t *core_get_planet(int horizons_id);
 
+/*
+ * Function: core_search
+ * Search for an object by designation
+ *
+ * This only tests for the objects currently loaded in the core.
+ *
+ * Parameters:
+ *   dsgn   - A designation.
+ *
+ * Return:
+ *   An object that has at least one designation matching the query,
+ *   or NULL if none was found.  The returned object should be
+ *   released with `obj_release`.
+ */
+obj_t *core_search(const char *dsgns);
+
 // Just for conveniance: horizons ids for a few common bodies.
 enum {
     PLANET_SUN = 10,
