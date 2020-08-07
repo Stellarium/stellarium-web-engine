@@ -833,30 +833,6 @@ static int stars_get_visitor(int order, int pix, void *user)
     return 1;
 }
 
-static obj_t *stars_get(const obj_t *obj, const char *id, int flags)
-{
-    int r, cat;
-    uint64_t n = 0;
-    regmatch_t matches[3];
-
-    stars_t *stars = (stars_t*)obj;
-    r = regexec(&stars->search_reg, id, 3, matches, 0);
-    if (r) return NULL;
-    n = strtoull(id + matches[2].rm_so, NULL, 10);
-    if (strncasecmp(id, "hip", 3) == 0) cat = 0;
-    if (strncasecmp(id, "gaia", 4) == 0) cat = 2;
-
-    struct {
-        stars_t  *stars;
-        obj_t    *ret;
-        int      cat;
-        uint64_t n;
-    } d = {.stars=(void*)obj, .cat=cat, .n=n};
-
-    hips_traverse(&d, stars_get_visitor);
-    return d.ret;
-}
-
 static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     int order, pix, i, code;
@@ -1116,7 +1092,6 @@ static obj_klass_t stars_klass = {
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init           = stars_init,
     .render         = stars_render,
-    .get            = stars_get,
     .get_by_oid     = stars_get_by_oid,
     .list           = stars_list,
     .add_data_source = stars_add_data_source,

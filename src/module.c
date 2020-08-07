@@ -117,29 +117,6 @@ int module_add_data_source(obj_t *module, const char *url, const char *key)
     return r;
 }
 
-
-EMSCRIPTEN_KEEPALIVE
-obj_t *obj_get(const obj_t *obj, const char *query, int flags)
-{
-    obj_t *child;
-    assert(flags == 0);
-
-    // Default to core if we passed NULL.
-    obj = obj ?: &core->obj;
-
-    // Check direct sub objects.
-    // XXX: this is a waste of time in most cases!
-    DL_FOREACH(obj->children, child) {
-        if (child->id && strcasecmp(child->id, query) == 0) {
-            child->ref++;
-            return child;
-        }
-    }
-
-    if (!obj->klass->get) return NULL;
-    return obj->klass->get(obj, query, flags);
-}
-
 // Find an object by its oid.
 obj_t *obj_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {

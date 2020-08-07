@@ -48,18 +48,6 @@ static json_value *core_fn_progressbars(obj_t *obj, const attribute_t *attr,
     return ret;
 }
 
-static obj_t *core_get(const obj_t *obj, const char *id, int flags)
-{
-    obj_t *module;
-    obj_t *ret;
-    DL_FOREACH(core->obj.children, module) {
-        if (module->id && strcmp(module->id, id) == 0) return module;
-        ret = obj_get(module, id, flags);
-        if (ret) return ret;
-    }
-    return NULL;
-}
-
 EMSCRIPTEN_KEEPALIVE
 obj_t *core_get_module(const char *id)
 {
@@ -1113,7 +1101,7 @@ static int on_search(void *user, obj_t *obj)
 EMSCRIPTEN_KEEPALIVE
 obj_t *core_search(const char *query)
 {
-    obj_t *module, *ret;
+    obj_t *module, *ret = NULL;
     DL_FOREACH(core->obj.children, module) {
         module_list_objs(module, NAN, 0, NULL, USER_PASS(query, &ret),
                          on_search);
@@ -1125,7 +1113,6 @@ static obj_klass_t core_klass = {
     .id = "core",
     .size = sizeof(core_t),
     .flags = OBJ_IN_JSON_TREE,
-    .get = core_get,
     .get_by_oid = core_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(fov, TYPE_ANGLE, MEMBER(core_t, fov),

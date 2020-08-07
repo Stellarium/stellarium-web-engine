@@ -834,18 +834,6 @@ static int constellations_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static obj_t *constellations_get(const obj_t *obj, const char *id, int flags)
-{
-    obj_t *cons;
-    MODULE_ITER(obj, cons, "constellation") {
-        if (strcmp(cons->id, id) == 0) {
-            cons->ref++; // XXX: make the object static instead?
-            return cons;
-        }
-    }
-    return NULL;
-}
-
 static int constellations_update(obj_t *obj, double dt)
 {
     constellation_t *con;
@@ -940,7 +928,6 @@ static obj_klass_t constellations_klass = {
     .init = constellations_init,
     .update = constellations_update,
     .render = constellations_render,
-    .get    = constellations_get,
     .get_by_oid = constellations_get_by_oid,
     .render_order = 25,
     .attributes = (attribute_t[]) {

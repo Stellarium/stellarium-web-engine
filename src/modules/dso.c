@@ -736,30 +736,6 @@ static int dsos_get_visitor(int order, int pix, void *user)
     return 1;
 }
 
-static obj_t *dsos_get(const obj_t *obj, const char *id, int flags)
-{
-    int r, cat;
-    uint64_t n;
-    regmatch_t matches[3];
-    dsos_t *dsos = (dsos_t*)obj;
-
-    r = regexec(&dsos->search_reg, id, 3, matches, 0);
-    if (r) return NULL;
-    n = strtoull(id + matches[2].rm_so, NULL, 10);
-    if (strncasecmp(id, "m", 1) == 0) cat = 0;
-    if (strncasecmp(id, "ngc", 3) == 0) cat = 1;
-    if (strncasecmp(id, "ic", 2) == 0) cat = 2;
-
-    struct {
-        dsos_t      *dsos;
-        obj_t       *ret;
-        int         cat;
-        uint64_t    n;
-    } d = {.dsos=(void*)obj, .cat=cat, .n=n};
-    hips_traverse(&d, dsos_get_visitor);
-    return d.ret;
-}
-
 static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
 {
     int order, pix, i, code;
@@ -902,7 +878,6 @@ static obj_klass_t dsos_klass = {
     .init   = dsos_init,
     .update = dsos_update,
     .render = dsos_render,
-    .get    = dsos_get,
     .get_by_oid  = dsos_get_by_oid,
     .list   = dsos_list,
     .add_data_source = dsos_add_data_source,

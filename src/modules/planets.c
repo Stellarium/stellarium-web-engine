@@ -1305,20 +1305,6 @@ static int planets_update(obj_t *obj, double dt)
     return 0;
 }
 
-static obj_t *planets_get(const obj_t *obj, const char *id, int flags)
-{
-    planet_t *p;
-    if (!str_startswith(id, "PLANET")) return NULL;
-    PLANETS_ITER(obj, p) {
-        if (strcmp(p->obj.id, id) == 0) {
-            p->obj.ref++;
-            return &p->obj;
-        }
-    }
-    return NULL;
-}
-
-
 static int planets_add_data_source(
         obj_t *obj, const char *url, const char *key)
 {
@@ -1380,7 +1366,6 @@ static obj_klass_t planets_klass = {
     .render = planets_render,
     .get_by_oid = planets_get_by_oid,
     .list   = planets_list,
-    .get     = planets_get,
     .add_data_source = planets_add_data_source,
     .render_order = 30,
     .attributes = (attribute_t[]) {

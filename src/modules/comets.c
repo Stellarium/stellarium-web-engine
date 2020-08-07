@@ -390,10 +390,12 @@ static int comets_update(obj_t *obj, double dt)
         return 0;
     }
     load_data(comets, data, size);
-    // Make sure the search work.
-    assert(strcmp(obj_get(NULL, "C/1995 O1", 0)->klass->id, "mpc_comet") == 0);
-    assert(strcmp(obj_get(NULL, "1P/Halley", 0)->klass->id, "mpc_comet") == 0);
 
+    // Make sure the search work.
+    obj = core_search("NAME C/1995 O1 (Hale-Bopp)");
+    assert(obj && strcmp(obj->klass->id, "mpc_comet") == 0);
+    obj = core_search("NAME 1P/Halley");
+    assert(obj && strcmp(obj->klass->id, "mpc_comet") == 0);
     return 0;
 }
 
@@ -438,23 +440,6 @@ static obj_t *comets_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
     return NULL;
 }
 
-static obj_t *comets_get(const obj_t *obj, const char *id, int flags)
-{
-    comets_t *comets = (comets_t*)obj;
-    comet_t *child;
-    regmatch_t matches[3];
-    int r;
-    r = regexec(&comets->search_reg, id, 3, matches, 0);
-    if (r) return NULL;
-    MODULE_ITER(obj, child, "mpc_comet") {
-        if (str_startswith(child->name, id)) {
-            child->obj.ref++;
-            return &child->obj;
-        }
-    }
-    return NULL;
-}
-
 /*
  * Meta class declarations.
  */
@@ -476,7 +461,6 @@ static obj_klass_t comets_klass = {
     .add_data_source = comets_add_data_source,
     .update         = comets_update,
     .render         = comets_render,
-    .get            = comets_get,
     .get_by_oid     = comets_get_by_oid,
     .render_order   = 20,
     .attributes     = (attribute_t[]) {

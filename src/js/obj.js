@@ -11,8 +11,7 @@ Module.afterInit(function() {
   // Init C function wrappers.
   var obj_call_json_str = Module.cwrap('obj_call_json_str',
     'number', ['number', 'string', 'string']);
-  var obj_get = Module.cwrap('obj_get',
-    'number', ['number', 'string', 'number']);
+  var core_search = Module.cwrap('core_search', 'number', ['string']);
   var obj_get_id = Module.cwrap('obj_get_id', 'string', ['number']);
   var module_add = Module.cwrap('module_add', null, ['number', 'number']);
   var module_remove = Module.cwrap('module_remove', null, ['number', 'number']);
@@ -298,7 +297,7 @@ Module.afterInit(function() {
   //  name      String
   Module['getObj'] = function(name) {
     assert(typeof(name) == 'string')
-    var obj = obj_get(0, name, 0);
+    var obj = core_search(name);
     return obj ? new SweObj(obj) : null;
   };
 
