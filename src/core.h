@@ -532,3 +532,17 @@ char *skycultures_md_2_html(const char *md);
  * The runs as along at it returns zero.
  */
 void core_add_task(int (*fun)(task_t *task, double dt), void *user);
+
+/*
+ * Function: core_get_planet
+ * Return a planet from its HORIZONS id
+ *
+ * The returned object should be released with obj_release.
+ */
+obj_t *core_get_planet(int horizons_id);
+
+// Just for conveniance: horizons ids for a few common bodies.
+enum {
+    PLANET_SUN = 10,
+    PLANET_MOON = 301,
+};

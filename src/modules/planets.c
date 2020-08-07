@@ -99,6 +99,8 @@ typedef struct planets {
     bool   hints_visible;
 } planets_t;
 
+// Static instance.
+static planets_t *g_planets = NULL;
 
 /*
  * List of known bodies id.
@@ -1087,6 +1089,16 @@ static obj_t *planets_get_by_oid(
     return NULL;
 }
 
+obj_t *core_get_planet(int horizons_id)
+{
+    planet_t *p;
+    PLANETS_ITER(g_planets, p) {
+        if (p->id == horizons_id)
+            return obj_retain(&p->obj);
+    }
+    return NULL;
+}
+
 static int planets_list(const obj_t *obj,
                         double max_mag, uint64_t hint, const char *source,
                         void *user, int (*f)(void *user, obj_t *obj))
@@ -1240,6 +1252,7 @@ static int planets_init(obj_t *obj, json_value *args)
     regex_t reg;
     regmatch_t matches[2];
 
+    g_planets = planets;
     fader_init(&planets->visible, true);
     planets->hints_visible = true;
 

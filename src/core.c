@@ -1179,7 +1179,7 @@ static void test_info(void)
 {
     obj_t *obj;
     double vmag;
-    obj = obj_get_by_oid(NULL, oid_create("HORI", 599), 0); // Jupiter.
+    obj = core_get_planet(599); // Jupiter.
     assert(obj);
     obj_get_info(obj, core->observer, INFO_VMAG, &vmag);
 }

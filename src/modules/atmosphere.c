@@ -213,8 +213,8 @@ static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
     observer_t *obs = painter.obs;
 
     if (atm->visible.value == 0.0) return 0;
-    sun = obj_get_by_oid(&core->obj, oid_create("HORI", 10), 0);
-    moon = obj_get_by_oid(&core->obj, oid_create("HORI", 301), 0);
+    sun = core_get_planet(PLANET_SUN);
+    moon = core_get_planet(PLANET_MOON);
     assert(sun);
     assert(moon);
     obj_get_pos(sun, painter.obs, FRAME_OBSERVED, sun_pos);

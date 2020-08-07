@@ -206,7 +206,7 @@ static void test_pos(pos_test_t t)
     observer_update(&obs, false);
 
     if (t.planet)
-        obj = obj_get_by_oid(NULL, oid_create("HORI", t.planet), 0);
+        obj = core_get_planet(t.planet);
     else if (t.klass)
         obj = obj_create_str(t.klass, NULL, t.json);
     else
