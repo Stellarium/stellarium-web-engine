@@ -20,11 +20,12 @@
 
 static const double LABEL_SPACING = 4;
 
+static obj_klass_t star_klass;
+
 typedef struct stars stars_t;
 typedef struct {
-    uint64_t oid;
+    obj_t   obj;
     uint64_t gaia;  // Gaia source id (0 if none)
-    char    type[4];
     int     hip;    // HIP number.
     float   vmag;
     float   plx;    // Parallax (arcsec) (Note: could be computed from pvo).
@@ -36,12 +37,6 @@ typedef struct {
     // List of extra names, separated by '\0', terminated by two '\0'.
     char    *names;
     char    *sp_type;
-} star_data_t;
-
-// A single star.
-typedef struct {
-    obj_t       obj;
-    star_data_t data;
 } star_t;
 
 typedef struct survey survey_t;
@@ -84,7 +79,7 @@ typedef struct tile {
     double      mag_max;
     double      illuminance; // Totall illuminance (lux).
     int         nb;
-    star_data_t *sources;
+    star_t      *sources;
 } tile_t;
 
 static uint64_t pix_to_nuniq(int order, int pix)
@@ -108,7 +103,7 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
  *   plx    - Parallax (arcseconds).
  */
 static void compute_pv(double ra, double de, double pra, double pde,
-                       double plx, double epoch, star_data_t *s)
+                       double plx, double epoch, star_t *s)
 {
     int r;
     double djm0, djm = 0;
@@ -174,34 +169,33 @@ static int star_init(obj_t *obj, json_value *args)
     // Support creating a star using noctuasky model data json values.
     star_t *star = (star_t*)obj;
     json_value *model, *names;
-    star_data_t *d = &star->data;
     double epoch, ra, de, pra, pde;
 
     model= json_get_attr(args, "model_data", json_object);
     if (model) {
         ra = json_get_attr_f(model, "ra", 0) * DD2R;
         de = json_get_attr_f(model, "de", 0) * DD2R;
-        d->plx = json_get_attr_f(model, "plx", 0) / 1000.0;
+        star->plx = json_get_attr_f(model, "plx", 0) / 1000.0;
         pra = json_get_attr_f(model, "pm_ra", 0) * ERFA_DMAS2R;
         pde = json_get_attr_f(model, "pm_de", 0) * ERFA_DMAS2R;
-        d->vmag = json_get_attr_f(model, "Vmag", NAN);
+        star->vmag = json_get_attr_f(model, "Vmag", NAN);
         epoch = json_get_attr_f(model, "epoch", 2000);
-        if (isnan(d->vmag))
-            d->vmag = json_get_attr_f(model, "Bmag", NAN);
-        d->illuminance = core_mag_to_illuminance(d->vmag);
-        compute_pv(ra, de, pra, pde, d->plx, epoch, d);
+        if (isnan(star->vmag))
+            star->vmag = json_get_attr_f(model, "Bmag", NAN);
+        star->illuminance = core_mag_to_illuminance(star->vmag);
+        compute_pv(ra, de, pra, pde, star->plx, epoch, star);
     }
 
     names = json_get_attr(args, "names", json_array);
     if (names)
-        d->names = parse_json_names(names);
+        star->names = parse_json_names(names);
     return 0;
 }
 
 // Return the star astrometric position, that is as seen from earth center
 // after applying proper motion and parallax.
-static void star_get_astrom(const star_data_t *s, const observer_t *obs,
-                        double v[3])
+static void star_get_astrom(const star_t *s, const observer_t *obs,
+                            double v[3])
 {
     // Apply proper motion
     double dt = obs->tt - ERFA_DJM00;
@@ -215,7 +209,7 @@ static void star_get_astrom(const star_data_t *s, const observer_t *obs,
 static int star_get_pvo(const obj_t *obj, const observer_t *obs,
                         double pvo[2][4])
 {
-    star_data_t *s = &((star_t*)obj)->data;
+    star_t *s = (void*)obj;
     star_get_astrom(s, obs, pvo[0]);
     convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, pvo[0], pvo[0]);
     pvo[0][3] = 0.0;
@@ -232,10 +226,10 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
         star_get_pvo(obj, obs, out);
         return 0;
     case INFO_VMAG:
-        *(double*)out = star->data.vmag;
+        *(double*)out = star->vmag;
         return 0;
     case INFO_DISTANCE:
-        *(double*)out = star->data.distance;
+        *(double*)out = star->distance;
         return 0;
     default:
         return 1;
@@ -247,14 +241,14 @@ static json_value *star_get_json_data(const obj_t *obj)
     const star_t *star = (star_t*)obj;
     json_value* ret = json_object_new(0);
     json_value* md = json_object_new(0);
-    if (!isnan(star->data.plx)) {
-        json_object_push(md, "plx", json_double_new(star->data.plx * 1000));
+    if (!isnan(star->plx)) {
+        json_object_push(md, "plx", json_double_new(star->plx * 1000));
     }
-    if (!isnan(star->data.bv)) {
-        json_object_push(md, "BVMag", json_double_new(star->data.bv));
+    if (!isnan(star->bv)) {
+        json_object_push(md, "BVMag", json_double_new(star->bv));
     }
-    if (star->data.sp_type) {
-        json_object_push(md, "spect_t", json_string_new(star->data.sp_type));
+    if (star->sp_type) {
+        json_object_push(md, "spect_t", json_string_new(star->sp_type));
     }
     json_object_push(ret, "model_data", md);
     return ret;
@@ -273,7 +267,7 @@ static json_value *star_get_json_data(const obj_t *obj)
  * Return:
  *   true if a label was found, false otherwise.
  */
-static bool star_get_skycultural_name(const star_data_t *s, char *out, int size)
+static bool star_get_skycultural_name(const star_t *s, char *out, int size)
 {
     const char *name;
     char hip_buf[128];
@@ -304,7 +298,7 @@ static bool name_is_bayer(const char* name) {
  * Return:
  *   true if a label was found, false otherwise.
  */
-static bool star_get_bayer_name(const star_data_t *s, char *out, int size,
+static bool star_get_bayer_name(const star_t *s, char *out, int size,
                                 int flags)
 {
     const char *names = s->names;
@@ -325,13 +319,13 @@ static bool star_get_bayer_name(const star_data_t *s, char *out, int size,
 }
 
 
-static void star_render_name(const painter_t *painter, const star_data_t *s,
+static void star_render_name(const painter_t *painter, const star_t *s,
                              int frame, const double pos[3], double radius,
                              double color[3])
 {
     double label_color[4] = {color[0], color[1], color[2], 0.8};
     static const double white[4] = {1, 1, 1, 1};
-    const bool selected = core->selection && s->oid == core->selection->oid;
+    const bool selected = core->selection && s->obj.oid == core->selection->oid;
     int effects = TEXT_FLOAT;
     char buf[128];
     const double hints_mag_offset = g_stars->hints_mag_offset;
@@ -383,7 +377,7 @@ static void star_render_name(const painter_t *painter, const star_data_t *s,
 
     labels_add_3d(buf, frame, pos, true,
                  radius, FONT_SIZE_BASE, label_color, 0, 0,
-                 effects, -s->vmag, s->oid);
+                 effects, -s->vmag, s->obj.oid);
 }
 
 // Render a single star.
@@ -392,7 +386,6 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
 {
     // XXX: the code is almost the same as the inner loop in stars_render.
     star_t *star = (star_t*)obj;
-    const star_data_t *s = &star->data;
     double pvo[2][4], p[2], size, luminance;
     double color[3];
     painter_t painter = *painter_;
@@ -402,20 +395,20 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     if (!painter_project(painter_, FRAME_ICRF, pvo[0], true, true, p))
         return 0;
 
-    if (!core_get_point_for_mag(s->vmag, &size, &luminance))
+    if (!core_get_point_for_mag(star->vmag, &size, &luminance))
         return 0;
-    bv_to_rgb(isnan(s->bv) ? 0 : s->bv, color);
+    bv_to_rgb(isnan(star->bv) ? 0 : star->bv, color);
 
     point = (point_t) {
         .pos = {p[0], p[1]},
         .size = size,
         .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                   luminance * 255},
-        .oid = s->oid,
+        .oid = star->obj.oid,
     };
     paint_2d_points(&painter, 1, &point);
 
-    star_render_name(&painter, s, FRAME_ICRF, pvo[0], size, color);
+    star_render_name(&painter, star, FRAME_ICRF, pvo[0], size, color);
     return 0;
 }
 
@@ -425,28 +418,17 @@ void star_get_designations(
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
     star_t *star = (star_t*)obj;
-    const star_data_t *s = &star->data;
-    const char *names = s->names;
+    const char *names = star->names;
     char buf[128];
 
     while (names && *names) {
         f(obj, user, NULL, names);
         names += strlen(names) + 1;
     }
-    if (s->gaia) {
-        snprintf(buf, sizeof(buf), "%" PRId64, s->gaia);
+    if (star->gaia) {
+        snprintf(buf, sizeof(buf), "%" PRId64, star->gaia);
         f(obj, user, "GAIA", buf);
     }
-}
-
-static star_t *star_create(const star_data_t *data)
-{
-    star_t *star;
-    star = (star_t*)obj_create("star", NULL, NULL);
-    strncpy(star->obj.type, data->type, 4);
-    star->data = *data;
-    star->obj.oid = star->data.oid;
-    return star;
 }
 
 // Used by the cache.
@@ -454,6 +436,12 @@ static int del_tile(void *data)
 {
     int i;
     tile_t *tile = data;
+
+    // Don't delete the tile if any contained star is used somehwere else.
+    for (i = 0; i < tile->nb; i++) {
+        if (tile->sources[i].obj.ref > 1) return CACHE_KEEP;
+    }
+
     for (i = 0; i < tile->nb; i++) {
         free(tile->sources[i].names);
         free(tile->sources[i].sp_type);
@@ -465,14 +453,14 @@ static int del_tile(void *data)
 
 static int star_data_cmp(const void *a, const void *b)
 {
-    return cmp(((const star_data_t*)a)->vmag, ((const star_data_t*)b)->vmag);
+    return cmp(((const star_t*)a)->vmag, ((const star_t*)b)->vmag);
 }
 
 /*
  * Compute the oid of a given star.
  * We pick the gaia number if present, else we fallback to the TYC and HIP
  */
-static uint64_t compute_oid(const star_data_t *s)
+static uint64_t compute_oid(const star_t *s)
 {
     int tyc1, tyc2, tyc3;
     if (s->gaia)
@@ -500,7 +488,7 @@ static int on_file_tile_loaded(const char type[4],
     int *transparency = USER_GET(user, 2);
     tile_t *tile;
     void *table_data;
-    star_data_t *s;
+    star_t *s;
 
     // All the columns we care about in the source file.
     eph_table_column_t columns[] = {
@@ -550,9 +538,11 @@ static int on_file_tile_loaded(const char type[4],
 
     for (i = 0; i < nb; i++) {
         s = &tile->sources[tile->nb];
+        s->obj.ref = 1;
+        s->obj.klass = &star_klass;
         eph_read_table_row(
                 table_data, size, &data_ofs, ARRAY_SIZE(columns), columns,
-                s->type, &s->gaia, &s->hip, &vmag, &gmag,
+                s->obj.type, &s->gaia, &s->hip, &vmag, &gmag,
                 &ra, &de, &plx, &pra, &pde, &epoch, &bv, ids, sp_type);
         assert(!isnan(ra));
         assert(!isnan(de));
@@ -566,7 +556,7 @@ static int on_file_tile_loaded(const char type[4],
         // Avoid overlapping stars from Gaia survey.
         if (survey->is_gaia && vmag < survey->min_vmag) continue;
 
-        if (!*s->type) strncpy(s->type, "*", 4); // Default type.
+        if (!*s->obj.type) strncpy(s->obj.type, "*", 4); // Default type.
         epoch = epoch ?: 2000; // Default epoch.
         s->vmag = vmag;
         s->plx = plx;
@@ -584,7 +574,7 @@ static int on_file_tile_loaded(const char type[4],
 
         compute_pv(ra, de, pra, pde, plx, epoch, s);
         s->illuminance = core_mag_to_illuminance(vmag);
-        s->oid = compute_oid(s);
+        s->obj.oid = compute_oid(s);
 
         tile->illuminance += s->illuminance;
         tile->mag_min = min(tile->mag_min, vmag);
@@ -681,7 +671,7 @@ static int render_visitor(int order, int pix, void *user)
     double *illuminance = USER_GET(user, 5);
     tile_t *tile;
     int i, n = 0, code;
-    star_data_t *s;
+    star_t *s;
     double p_win[4], size = 0, luminance = 0, vmag = -DBL_MAX;
     double color[3];
     double v[3];
@@ -727,11 +717,11 @@ static int render_visitor(int order, int pix, void *user)
             .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                       luminance * 255},
             // This makes very faint stars not selectable
-            .oid = (luminance > 0.5 && size > 1) ? s->oid : 0,
+            .oid = (luminance > 0.5 && size > 1) ? s->obj.oid : 0,
             .hint = pix_to_nuniq(order, pix),
         };
         n++;
-        selected = core->selection && s->oid == core->selection->oid;
+        selected = core->selection && s->obj.oid == core->selection->oid;
         if (selected || (stars->hints_visible && !survey->is_gaia))
             star_render_name(&painter, s, FRAME_ASTROM, v, size, color);
     }
@@ -825,8 +815,8 @@ static int stars_get_visitor(int order, int pix, void *user)
     for (i = 0; i < tile->nb; i++) {
         if (    (d->cat == 0 && tile->sources[i].hip == d->n) ||
                 (d->cat == 2 && tile->sources[i].gaia == d->n) ||
-                (d->cat == 3 && tile->sources[i].oid  == d->n)) {
-            d->ret = &star_create(&tile->sources[i])->obj;
+                (d->cat == 3 && tile->sources[i].obj.oid  == d->n)) {
+            d->ret = obj_retain(&tile->sources[i].obj);
             return -1; // Stop the search.
         }
     }
@@ -863,8 +853,8 @@ static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
         tile = get_tile(stars, survey, order, pix, false, &code);
         if (!tile) continue;
         for (i = 0; i < tile->nb; i++) {
-            if (tile->sources[i].oid == oid) {
-                return (obj_t*)star_create(&tile->sources[i]);
+            if (tile->sources[i].obj.oid == oid) {
+                return obj_retain(&tile->sources[i].obj);
             }
         }
     }
@@ -878,7 +868,6 @@ static int stars_list(const obj_t *obj,
     int order, pix, i, r, code;
     tile_t *tile;
     stars_t *stars = (void*)obj;
-    star_t *star;
     hips_iterator_t iter;
     survey_t *survey = NULL;
 
@@ -901,9 +890,7 @@ static int stars_list(const obj_t *obj,
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
                 if (tile->sources[i].vmag > max_mag) continue;
-                star = star_create(&tile->sources[i]);
-                r = f(user, (obj_t*)star);
-                obj_release((obj_t*)star);
+                r = f(user, &tile->sources[i].obj);
                 if (r) break;
             }
             if (i < tile->nb) break;
@@ -920,9 +907,7 @@ static int stars_list(const obj_t *obj,
         return -1;
     }
     for (i = 0; i < tile->nb; i++) {
-        star = star_create(&tile->sources[i]);
-        r = f(user, (obj_t*)star);
-        obj_release((obj_t*)star);
+        r = f(user, &tile->sources[i].obj);
         if (r) break;
     }
     return 0;
@@ -1062,7 +1047,7 @@ obj_t *obj_get_by_hip(int hip, int *code)
             if (!tile) return NULL;
             for (i = 0; i < tile->nb; i++) {
                 if (tile->sources[i].hip == hip) {
-                    return (obj_t*)star_create(&tile->sources[i]);
+                    return obj_retain(&tile->sources[i].obj);
                 }
             }
         }
