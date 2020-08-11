@@ -63,13 +63,6 @@ __attribute__((nonnull(1, 6)));
  */
 int module_add_data_source(obj_t *module, const char *url, const char *key);
 
-
-/*
- * Function: obj_get_by_oid
- * Find an object by its oid.
- */
-obj_t *obj_get_by_oid(const obj_t *module, uint64_t oid, uint64_t hint);
-
 /*
  * Function: obj_get_by_hip
  * Find a star object by its Hipparcos number.

@@ -694,70 +694,6 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-static int dsos_get_visitor(int order, int pix, void *user)
-{
-    int i, code;
-    struct {
-        dsos_t      *dsos;
-        obj_t       *ret;
-        int         cat;
-        uint64_t    n;
-    } *d = user;
-    tile_t *tile = NULL;
-    survey_t *survey;
-
-    DL_FOREACH(d->dsos->surveys, survey) {
-        tile = get_tile(d->dsos, survey, order, pix, true, &code);
-        if (!tile) continue;
-        for (i = 0; i < tile->nb; i++) {
-            if (d->cat == 4 && tile->sources[i].obj.oid == d->n) {
-                d->ret = obj_retain(&tile->sources[i].obj);
-                return -1; // Stop the search.
-            }
-        }
-    }
-    return 1;
-}
-
-static obj_t *dsos_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    int order, pix, i, code;
-    dsos_t *dsos = (void*)obj;
-    tile_t *tile = NULL;
-    survey_t *survey = NULL;
-
-    struct {
-        dsos_t      *dsos;
-        obj_t       *ret;
-        int         cat;
-        uint64_t    n;
-    } d = {.dsos=(void*)obj, .cat=4, .n=oid};
-
-    if (!hint) {
-        if (    !oid_is_catalog(oid, "NGC") &&
-                !oid_is_catalog(oid, "IC") &&
-                !oid_is_catalog(oid, "NDSO"))
-            return NULL;
-        hips_traverse(&d, dsos_get_visitor);
-        return d.ret;
-    }
-
-    // Get tile from hint (as nuniq).
-    nuniq_to_pix(hint, &order, &pix);
-
-    // Try all surveys.
-    DL_FOREACH(dsos->surveys, survey) {
-        tile = get_tile(dsos, survey, order, pix, false, &code);
-        if (!tile) continue;
-        for (i = 0; i < tile->nb; i++) {
-            if (tile->sources[i].obj.oid == oid) {
-                return obj_retain(&tile->sources[i].obj);
-            }
-        }
-    }
-    return NULL;
-}
-
 static int dsos_list(const obj_t *obj,
                      double max_mag, uint64_t hint, const char *source,
                      void *user, int (*f)(void *user, obj_t *obj))
@@ -856,7 +792,6 @@ static obj_klass_t dsos_klass = {
     .init   = dsos_init,
     .update = dsos_update,
     .render = dsos_render,
-    .get_by_oid  = dsos_get_by_oid,
     .list   = dsos_list,
     .add_data_source = dsos_add_data_source,
     .render_order = 25,

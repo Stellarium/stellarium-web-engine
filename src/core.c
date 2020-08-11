@@ -76,17 +76,6 @@ obj_t *core_get_module(const char *id)
     return ret;
 }
 
-static obj_t *core_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj_t *module;
-    obj_t *ret;
-    DL_FOREACH(core->obj.children, module) {
-        ret = obj_get_by_oid(module, oid, hint);
-        if (ret) return ret;
-    }
-    return NULL;
-}
-
 static int modules_sort_cmp(void *a, void *b)
 {
     obj_t *at, *bt;
@@ -1110,7 +1099,6 @@ static obj_klass_t core_klass = {
     .id = "core",
     .size = sizeof(core_t),
     .flags = OBJ_IN_JSON_TREE,
-    .get_by_oid = core_get_by_oid,
     .attributes = (attribute_t[]) {
         PROPERTY(fov, TYPE_ANGLE, MEMBER(core_t, fov),
                  .on_changed = core_on_fov_changed),

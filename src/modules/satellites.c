@@ -181,20 +181,6 @@ static int satellites_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static obj_t *satellites_get_by_oid(
-        const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj_t *child;
-    if (!oid_is_catalog(oid, "NORA")) return NULL;
-    MODULE_ITER(obj, child, "tle_satellite") {
-        if (child->oid == oid) {
-            child->ref++;
-            return child;
-        }
-    }
-    return NULL;
-}
-
 /*
  * Compute the amount of light the satellite receives from the Sun, taking
  * into account the Earth shadow.  Return a value from 0 (totally eclipsed)
@@ -611,7 +597,6 @@ static obj_klass_t satellites_klass = {
     .render_order   = 30,
     .update         = satellites_update,
     .render         = satellites_render,
-    .get_by_oid     = satellites_get_by_oid,
     .list           = satellites_list,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(satellites_t, visible)),

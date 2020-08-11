@@ -1075,20 +1075,6 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static obj_t *planets_get_by_oid(
-        const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj_t *child;
-    if (!oid_is_catalog(oid, "HORI")) return NULL;
-    MODULE_ITER(obj, child, "planet") {
-        if (child->oid == oid) {
-            child->ref++;
-            return child;
-        }
-    }
-    return NULL;
-}
-
 obj_t *core_get_planet(int horizons_id)
 {
     planet_t *p;
@@ -1364,7 +1350,6 @@ static obj_klass_t planets_klass = {
     .init   = planets_init,
     .update = planets_update,
     .render = planets_render,
-    .get_by_oid = planets_get_by_oid,
     .list   = planets_list,
     .add_data_source = planets_add_data_source,
     .render_order = 30,

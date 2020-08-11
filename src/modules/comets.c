@@ -427,19 +427,6 @@ static int comets_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static obj_t *comets_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj_t *child;
-    if (!oid_is_catalog(oid, "Com")) return NULL;
-    MODULE_ITER(obj, child, NULL) {
-        if (child->oid == oid) {
-            child->ref++;
-            return child;
-        }
-    }
-    return NULL;
-}
-
 /*
  * Meta class declarations.
  */
@@ -461,7 +448,6 @@ static obj_klass_t comets_klass = {
     .add_data_source = comets_add_data_source,
     .update         = comets_update,
     .render         = comets_render,
-    .get_by_oid     = comets_get_by_oid,
     .render_order   = 20,
     .attributes     = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(comets_t, visible)),

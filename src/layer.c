@@ -47,21 +47,6 @@ static int layer_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-static obj_t *layer_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj_t *child, *ret;
-    DL_FOREACH(obj->children, child) {
-        if (child->klass->get_by_oid) {
-            ret = child->klass->get_by_oid(child, oid, hint);
-            if (ret) return ret;
-        } else if (child->oid == oid) {
-            child->ref++;
-            return child;
-        }
-    }
-    return NULL;
-}
-
 /*
  * Meta class declarations.
  */
@@ -73,7 +58,6 @@ static obj_klass_t layer_klass = {
     .get_render_order   = layer_get_render_order,
     .update             = layer_update,
     .render             = layer_render,
-    .get_by_oid         = layer_get_by_oid,
     .attributes         = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(layer_t, visible.target)),
         PROPERTY(z, TYPE_FLOAT, MEMBER(layer_t, z)),

@@ -117,15 +117,6 @@ int module_add_data_source(obj_t *module, const char *url, const char *key)
     return r;
 }
 
-// Find an object by its oid.
-obj_t *obj_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj = obj ?: (obj_t*)core;
-    if (obj->klass->get_by_oid)
-        return obj->klass->get_by_oid(obj, oid, hint);
-    return NULL;
-}
-
 // For modules: return the order in which the modules should be rendered.
 // NOTE: if we used deferred rendering this wouldn't be needed at all!
 double module_get_render_order(const obj_t *module)

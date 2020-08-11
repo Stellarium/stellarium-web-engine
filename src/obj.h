@@ -86,7 +86,6 @@ typedef struct obj_klass obj_klass_t;
  *   post_render - Called after all modules are rendered, but with a still
  *                 valid OpenGL context. Useful for e.g. GUI rendering.
  *   clone  - Create a copy of the object.
- *   get_by_oid  - Find a sub-object for a given oid.
  *
  * Module Attributes:
  *   render_order - Used to sort the modules before rendering.
@@ -123,8 +122,6 @@ struct obj_klass
     int (*on_pinch)(obj_t *obj, int state, double x, double y, double scale);
 
     int (*update)(obj_t *module, double dt);
-    // Find a sky object given an oid
-    obj_t *(*get_by_oid)(const obj_t *obj, uint64_t oid, uint64_t hint);
 
     // List all the names associated with an object.
     void (*get_designations)(const obj_t *obj, void *user,

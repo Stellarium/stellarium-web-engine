@@ -874,19 +874,6 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static obj_t *constellations_get_by_oid(const obj_t *obj, uint64_t oid,
-                                        uint64_t hint)
-{
-    obj_t *con;
-    MODULE_ITER(obj, con, "constellation") {
-        if (con->oid == oid) {
-            con->ref++;
-            return con;
-        }
-    }
-    return NULL;
-}
-
 static json_value *constellation_get_json_data(const obj_t *obj)
 {
     json_value* ret = json_object_new(0);
@@ -928,7 +915,6 @@ static obj_klass_t constellations_klass = {
     .init = constellations_init,
     .update = constellations_update,
     .render = constellations_render,
-    .get_by_oid = constellations_get_by_oid,
     .render_order = 25,
     .attributes = (attribute_t[]) {
         PROPERTY(lines_visible, TYPE_BOOL,

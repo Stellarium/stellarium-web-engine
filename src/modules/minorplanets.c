@@ -384,21 +384,6 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
-static obj_t *mplanets_get_by_oid(
-        const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    obj_t *child;
-    if (    !oid_is_catalog(oid, "MPl") &&
-            !oid_is_catalog(oid, "MPl*")) return NULL;
-    MODULE_ITER(obj, child, NULL) {
-        if (child->oid == oid) {
-            child->ref++;
-            return child;
-        }
-    }
-    return NULL;
-}
-
 /*
  * Meta class declarations.
  */
@@ -422,7 +407,6 @@ static obj_klass_t mplanets_klass = {
     .add_data_source    = mplanets_add_data_source,
     .update         = mplanets_update,
     .render         = mplanets_render,
-    .get_by_oid     = mplanets_get_by_oid,
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(mplanets_t, visible)),

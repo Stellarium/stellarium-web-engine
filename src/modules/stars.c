@@ -136,12 +136,6 @@ static void compute_pv(double ra, double de, double pra, double pde,
     vec3_addk(s->pvo[0], s->pvo[1], dt, s->pvo[0]);
 }
 
-// Get the pix number from a gaia source id at a given level.
-static int gaia_index_to_pix(int order, uint64_t id)
-{
-    return (id >> 35) / (1 << (2 * (12 - order)));
-}
-
 // Turn a json array of string into a '\0' separated C string.
 // Move this in utils?
 static char *parse_json_names(json_value *names)
@@ -764,97 +758,6 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
     return 0;
 }
 
-static int stars_get_visitor(int order, int pix, void *user)
-{
-    int i, p, code, hip = 0;
-    bool is_gaia, sync;
-    survey_t *survey;
-    struct {
-        stars_t     *stars;
-        obj_t       *ret;
-        int         cat;
-        uint64_t    n;
-    } *d = user;
-    tile_t *tile = NULL;
-
-    is_gaia = d->cat == 2 || (d->cat == 3 && oid_is_gaia(d->n));
-
-    // If we are looking for a gaia star the id already gives us the tile.
-    if (is_gaia) {
-        if (gaia_index_to_pix(order, d->n) != pix)
-            return 0;
-    }
-
-    // For HIP lookup, we can use the bundled hip -> pix data if available.
-    if (d->cat == 3 && oid_is_catalog(d->n, "HIP"))
-        hip = oid_get_index(d->n);
-    if (d->cat == 0)
-        hip = d->n;
-    if (hip) {
-        p = hip_get_pix(hip, order);
-        if ((p != -1) && (p != pix)) return 0;
-    }
-
-    // Try all surveys (bundled and gaia).  For the bundled survey we
-    // don't load in a thread.  This is a fix for the constellations!
-    DL_FOREACH(d->stars->surveys, survey) {
-        sync = !survey->is_gaia;
-        tile = get_tile(d->stars, survey, order, pix, sync, &code);
-        if (tile) break; // XXX: should test all tiles.
-    }
-
-    // Gaia survey has a min order of 3.
-    // XXX: read the survey properties file instead of hard coding!
-    if (!tile) return order < 3 ? 1 : 0;
-    for (i = 0; i < tile->nb; i++) {
-        if (    (d->cat == 0 && tile->sources[i].hip == d->n) ||
-                (d->cat == 2 && tile->sources[i].gaia == d->n) ||
-                (d->cat == 3 && tile->sources[i].obj.oid  == d->n)) {
-            d->ret = obj_retain(&tile->sources[i].obj);
-            return -1; // Stop the search.
-        }
-    }
-    return 1;
-}
-
-static obj_t *stars_get_by_oid(const obj_t *obj, uint64_t oid, uint64_t hint)
-{
-    int order, pix, i, code;
-    stars_t *stars = (void*)obj;
-    tile_t *tile = NULL;
-    survey_t *survey;
-
-    struct {
-        stars_t  *stars;
-        obj_t    *ret;
-        int      cat;
-        uint64_t n;
-    } d = {.stars=(void*)obj, .cat=3, .n=oid};
-
-    if (!hint) {
-        if (    !oid_is_catalog(oid, "HIP") &&
-                !oid_is_catalog(oid, "TYC") &&
-                !oid_is_gaia(oid)) return NULL;
-        hips_traverse(&d, stars_get_visitor);
-        return d.ret;
-    }
-
-    // Get tile from hint (as nuniq).
-    nuniq_to_pix(hint, &order, &pix);
-
-    // Try all surveys.
-    DL_FOREACH(stars->surveys, survey) {
-        tile = get_tile(stars, survey, order, pix, false, &code);
-        if (!tile) continue;
-        for (i = 0; i < tile->nb; i++) {
-            if (tile->sources[i].obj.oid == oid) {
-                return obj_retain(&tile->sources[i].obj);
-            }
-        }
-    }
-    return NULL;
-}
-
 static int stars_list(const obj_t *obj,
                       double max_mag, uint64_t hint, const char *source,
                       void *user, int (*f)(void *user, obj_t *obj))
@@ -1071,7 +974,6 @@ static obj_klass_t stars_klass = {
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init           = stars_init,
     .render         = stars_render,
-    .get_by_oid     = stars_get_by_oid,
     .list           = stars_list,
     .add_data_source = stars_add_data_source,
     .render_order   = 20,
