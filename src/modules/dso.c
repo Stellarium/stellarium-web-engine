@@ -580,7 +580,7 @@ static int dso_render_from_data(const dso_t *s,
         return 0;
 
     areas_add_ellipse(core->areas, win_pos, win_angle,
-                      win_size[0] / 2, win_size[1] / 2, s->obj.oid, hint);
+                      win_size[0] / 2, win_size[1] / 2, &s->obj);
 
     // Don't display when DSO global fader is off
     // But the previous steps are still necessary as we want to be able to

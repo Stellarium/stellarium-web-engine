@@ -119,16 +119,16 @@ void core_get_proj(projection_t *proj)
 obj_t *core_get_obj_at(double x, double y, double max_dist)
 {
     double pos[2] = {x, y};
-    uint64_t oid, hint;
+    uint64_t oid;
+    obj_t *obj;
 
     // First test the labels, and then the global shape area.
     oid = labels_get_obj_at(pos, 0);
     if (oid) {
         return obj_get_by_oid(NULL, oid, 0);
     }
-    if (areas_lookup(core->areas, pos, max_dist, &oid, &hint) && oid) {
-        return obj_get_by_oid(NULL, oid, hint);
-    }
+    obj = areas_lookup(core->areas, pos, max_dist);
+    if (obj) return obj;
     return NULL;
 }
 

@@ -967,7 +967,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         .size = point_size,
         .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                   color[3] * 255},
-        .oid = planet->obj.oid,
+        .obj = &planet->obj,
     };
     paint_2d_points(&painter, 1, &point);
 

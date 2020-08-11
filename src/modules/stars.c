@@ -82,11 +82,6 @@ typedef struct tile {
     star_t      *sources;
 } tile_t;
 
-static uint64_t pix_to_nuniq(int order, int pix)
-{
-    return pix + 4 * (1L << (2 * order));
-}
-
 static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
 {
     *order = log2(nuniq / 4) / 2;
@@ -404,7 +399,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
         .size = size,
         .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                   luminance * 255},
-        .oid = star->obj.oid,
+        .obj = &star->obj,
     };
     paint_2d_points(&painter, 1, &point);
 
@@ -717,8 +712,7 @@ static int render_visitor(int order, int pix, void *user)
             .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                       luminance * 255},
             // This makes very faint stars not selectable
-            .oid = (luminance > 0.5 && size > 1) ? s->obj.oid : 0,
-            .hint = pix_to_nuniq(order, pix),
+            .obj = (luminance > 0.5 && size > 1) ? &s->obj : NULL,
         };
         n++;
         selected = core->selection && s->obj.oid == core->selection->oid;

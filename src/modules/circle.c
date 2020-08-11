@@ -108,7 +108,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     paint_quad_contour(&painter, circle->frame, &map, 64, 4);
     circle_get_2d_ellipse(&circle->obj, painter.obs, painter.proj,
                           win_pos, win_size, &win_angle);
-    areas_add_circle(core->areas, win_pos, win_size[0], obj->oid, 0);
+    areas_add_circle(core->areas, win_pos, win_size[0], obj);
     if (circle->label[0]) {
         if (selected)
             label_effects = TEXT_BOLD;

@@ -389,10 +389,10 @@ static void points_2d(renderer_t *rend_,
 
         // Add the point int the global list of rendered points.
         // XXX: could be done in the painter.
-        if (p.oid) {
+        if (p.obj) {
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
-            areas_add_circle(core->areas, p.pos, p.size, p.oid, p.hint);
+            areas_add_circle(core->areas, p.pos, p.size, p.obj);
         }
     }
 }

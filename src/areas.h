@@ -16,6 +16,7 @@
  */
 
 typedef struct areas areas_t;
+typedef struct obj obj_t;
 
 /*
  * Function: areas_create
@@ -31,15 +32,14 @@ areas_t *areas_create(void);
  *   areas  - an areas instance.
  *   pos    - a 2d position in window space.
  *   r      - radius in window space.
- *   oid    - oid associated with the circle.
- *   hint   - hint associated with the circle.
+ *   obj    - object associated with the area.
  */
 void areas_add_circle(areas_t *areas, const double pos[2], double r,
-                      uint64_t oid, uint64_t hint);
+                      obj_t *obj);
 
 void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
                        double a, double b,
-                       uint64_t oid, uint64_t hint);
+                       obj_t *obj);
 
 /*
  * Function: areas_lookup
@@ -49,14 +49,12 @@ void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
  *   area       - an areas instance.
  *   pos        - a 2d position in screen space.
  *   max_dist   - max distance to shapes to consider.
- *   oid        - get the oid associated with the shape.
- *   hint       - get the hint associated with the shape.
  *
  * Return:
- *   0 if no shape was found, otherwise 1.
+ *   The object at the location, or NULL if none is found.
+ *   The object need to be released with obj_release.
  */
-int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
-                 uint64_t *oid, uint64_t *hint);
+obj_t *areas_lookup(const areas_t *areas, const double pos[2], double max_dist);
 
 /*
  * Function: areas_clear_all

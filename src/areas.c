@@ -8,6 +8,8 @@
  */
 
 #include "areas.h"
+#include "obj.h"
+
 #include "utarray.h"
 #include "utils/vec.h"
 #include "utils/utils.h"
@@ -23,8 +25,7 @@ struct item
     double a; // Semi-major axis.
     double b; // Semi-minor axis.
     double angle;
-    uint64_t oid;
-    uint64_t hint;
+    obj_t  *obj;
 };
 
 struct areas
@@ -66,32 +67,33 @@ areas_t *areas_create(void)
 }
 
 void areas_add_circle(areas_t *areas, const double pos[2], double r,
-                      uint64_t oid, uint64_t hint)
+                      obj_t *obj)
 {
     item_t item = {};
     memcpy(item.pos, pos, sizeof(item.pos));
     item.a = item.b = r;
-    item.oid = oid;
-    item.hint = hint;
+    item.obj = obj_retain(obj);
     utarray_push_back(areas->items, &item);
 }
 
 void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
-                       double a, double b,
-                       uint64_t oid, uint64_t hint)
+                       double a, double b, obj_t *obj)
 {
     item_t item = {};
     memcpy(item.pos, pos, sizeof(item.pos));
     item.angle = angle;
     item.a = a;
     item.b = b;
-    item.oid = oid;
-    item.hint = hint;
+    item.obj = obj_retain(obj);
     utarray_push_back(areas->items, &item);
 }
 
 void areas_clear_all(areas_t *areas)
 {
+    item_t *item = NULL;
+    while ( (item = (item_t*)utarray_next(areas->items, item)) ) {
+        obj_release(item->obj);
+    }
     utarray_clear(areas->items);
 }
 
@@ -124,8 +126,7 @@ static double lookup_score(const item_t *item, const double pos[static 2],
 
 }
 
-int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
-                 uint64_t *oid, uint64_t *hint)
+obj_t *areas_lookup(const areas_t *areas, const double pos[2], double max_dist)
 {
     item_t *item = NULL, *best = NULL;
     double score, best_score = 0.0;
@@ -137,8 +138,6 @@ int areas_lookup(const areas_t *areas, const double pos[2], double max_dist,
             best = item;
         }
     }
-    if (!best) return 0;
-    *oid = best->oid;
-    *hint = best->hint;
-    return 1;
+    if (!best) return NULL;
+    return obj_retain(best->obj);
 }

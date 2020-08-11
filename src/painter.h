@@ -17,6 +17,7 @@
 #include "projection.h"
 #include "uv_map.h"
 
+typedef struct obj obj_t;
 typedef struct observer observer_t;
 typedef struct renderer renderer_t;
 typedef struct painter painter_t;
@@ -160,8 +161,7 @@ struct point
     double  pos[2];
     double  size;       // Radius in window pixel (pixel with density scale).
     uint8_t color[4];
-    uint64_t oid;       // Used instead of id if set.
-    uint64_t hint;      // Oid hint.
+    obj_t   *obj;
 };
 
 // Painter flags
