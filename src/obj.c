@@ -14,16 +14,6 @@
 _Static_assert(offsetof(obj_t, type_padding_) ==
                offsetof(obj_t, type) + 4, "");
 
-typedef struct {
-    int         id;
-    const char *id_str;
-    const char *name;
-    int         isattr; // Set to 1 if this is an attribute
-    int         type;
-    int         arg0;
-    int         arg1;
-} attr_info_t;
-
 // Global list of all the registered klasses.
 static obj_klass_t *g_klasses = NULL;
 
