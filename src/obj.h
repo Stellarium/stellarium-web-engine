@@ -193,7 +193,6 @@ struct obj
     int         ref;
     char        *id;    // To be removed.  Use oid instead.
     char        type[4];
-    char        type_padding_; // Ensure that type is null terminated.
     obj_t       *parent;
     obj_t       *children, *prev, *next;
 };

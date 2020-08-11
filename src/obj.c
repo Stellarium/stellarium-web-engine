@@ -10,10 +10,6 @@
 #include "swe.h"
 #include <inttypes.h>
 
-// Make sure the obj type padding is just after the type.
-_Static_assert(offsetof(obj_t, type_padding_) ==
-               offsetof(obj_t, type) + 4, "");
-
 // Global list of all the registered klasses.
 static obj_klass_t *g_klasses = NULL;
 
