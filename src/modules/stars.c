@@ -314,7 +314,7 @@ static void star_render_name(const painter_t *painter, const star_t *s,
 {
     double label_color[4] = {color[0], color[1], color[2], 0.8};
     static const double white[4] = {1, 1, 1, 1};
-    const bool selected = core->selection && s->obj.oid == core->selection->oid;
+    const bool selected = core->selection && &s->obj == core->selection;
     int effects = TEXT_FLOAT;
     char buf[128];
     const double hints_mag_offset = g_stars->hints_mag_offset;
@@ -445,23 +445,6 @@ static int star_data_cmp(const void *a, const void *b)
     return cmp(((const star_t*)a)->vmag, ((const star_t*)b)->vmag);
 }
 
-/*
- * Compute the oid of a given star.
- * We pick the gaia number if present, else we fallback to the TYC and HIP
- */
-static uint64_t compute_oid(const star_t *s)
-{
-    int tyc1, tyc2, tyc3;
-    if (s->gaia)
-        return s->gaia;
-    if (designations_get_tyc(s->names, &tyc1, &tyc2, &tyc3))
-        return oid_create("TYC", tyc1 * 100000 + tyc2 * 10 + tyc3);
-    if (s->hip)
-        return oid_create("HIP", s->hip);
-    assert(false);
-    return oid_create("HIP", 0);
-}
-
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size,
                                const json_value *json,
@@ -563,7 +546,6 @@ static int on_file_tile_loaded(const char type[4],
 
         compute_pv(ra, de, pra, pde, plx, epoch, s);
         s->illuminance = core_mag_to_illuminance(vmag);
-        s->obj.oid = compute_oid(s);
 
         tile->illuminance += s->illuminance;
         tile->mag_min = min(tile->mag_min, vmag);
@@ -709,7 +691,7 @@ static int render_visitor(int order, int pix, void *user)
             .obj = (luminance > 0.5 && size > 1) ? &s->obj : NULL,
         };
         n++;
-        selected = core->selection && s->obj.oid == core->selection->oid;
+        selected = core->selection && &s->obj == core->selection;
         if (selected || (stars->hints_visible && !survey->is_gaia))
             star_render_name(&painter, s, FRAME_ASTROM, v, size, color);
     }

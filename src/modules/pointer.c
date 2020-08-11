@@ -25,7 +25,6 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     const double T = 2.0;    // Animation period.
     double r, transf[3][3];
     bool skip_top_bar = false;
-    char cat[4];
     obj_t *selection = core->selection;
     painter_t painter = *painter_;
     vec4_set(painter.color, 1, 1, 1, 1);
@@ -43,11 +42,8 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     r += 5;
 
     // Draw four strokes around the object.
-    // Skip the upper stroke if the selection has a label on top.  We don't
-    // do it for the constellations (note: we could find a more generic way?).
-    oid_get_catalog(selection->oid, cat);
-    if (strcmp(cat, "CST") != 0)
-        skip_top_bar = labels_has_obj(selection);
+    // Skip the upper stroke if the selection has a label on top.
+    skip_top_bar = labels_has_obj(selection);
 
     for (i = 0; i < 4; i++) {
         if (skip_top_bar && i == 3) continue;

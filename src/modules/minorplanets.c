@@ -66,15 +66,6 @@ typedef struct mplanets {
 // Static instance.
 static mplanets_t *g_mplanets = NULL;
 
-
-static uint64_t compute_oid(int number, const char desig[static 22])
-{
-    if (number) return oid_create("MPl", number);
-    // No number, default to the crc32 of the designation.
-    return oid_create("MPl*", crc32(0L, (const Bytef*)desig, 22));
-}
-
-
 /*
  * Compute an asteroid observed magnitude from its H, G and positions.
  * http://www.britastro.org/asteroids/dymock4.pdf
@@ -148,7 +139,6 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
         orbit_type = flags & 0x3f;
         strncpy(mplanet->obj.type, ORBIT_TYPES[orbit_type], 4);
         mplanet->mpl_number = number;
-        mplanet->obj.oid = compute_oid(number, desig);
         if (name[0]) {
             _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
             memcpy(mplanet->name, name, sizeof(name));
@@ -195,8 +185,7 @@ static int mplanet_init(obj_t *obj, json_value *args)
         orbit->m = json_get_attr_f(model, "M", 0) * DD2R;
         num = json_get_attr_i(model, "Number", -1);
     }
-    if (num >=0) {
-        mp->obj.oid = oid_create("MPl", num);
+    if (num >= 0) {
         mp->mpl_number = num;
     }
     names = json_get_attr(args, "names", json_array);
@@ -255,7 +244,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     double label_color[4] = RGBA(223, 223, 255, 255);
     mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
-    const bool selected = core->selection && obj->oid == core->selection->oid;
+    const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
 
     mplanet_update(mplanet, painter->obs);

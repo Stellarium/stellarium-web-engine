@@ -844,7 +844,7 @@ static void planet_render_label(
     double s, radius;
     double pos[3];
     const char *name;
-    bool selected = core->selection && planet->obj.oid == core->selection->oid;
+    bool selected = core->selection && &planet->obj == core->selection;
     double pvo[2][3];
     char buf[256];
     snprintf(buf, sizeof(buf), "NAME %s", planet->name);
@@ -887,7 +887,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     point_t point;
     double hips_k = 2.0; // How soon we switch to the hips survey.
     planets_t *planets = (planets_t*)planet->obj.parent;
-    bool selected = core->selection && planet->obj.oid == core->selection->oid;
+    bool selected = core->selection && &planet->obj == core->selection;
     double cap[4];
     const hips_t *hips;
     double pvo[2][3];
@@ -1035,10 +1035,10 @@ static bool should_render_orbit(const planet_t *p, const painter_t *painter)
     if (p->parent->id == SUN) return false;
 
     // If the moon is selected, always render the orbit.
-    if (p->obj.oid == core->selection->oid) return true;
+    if (&p->obj == core->selection) return true;
 
     // If the parent is not selected, don't render.
-    if (p->parent->obj.oid != core->selection->oid) return false;
+    if (&p->parent->obj != core->selection) return false;
 
     // Only render the orbit if the visible radius on screen is larger than
     // a threshold value.
@@ -1162,7 +1162,6 @@ static int planets_ini_handler(void* user, const char* section,
     }
     if (strcmp(attr, "horizons_id") == 0) {
         sscanf(value, "%d", &planet->id);
-        planet->obj.oid = oid_create("HORI", planet->id);
     }
     if (strcmp(attr, "type") == 0) {
         strncpy(planet->obj.type, value, 4);

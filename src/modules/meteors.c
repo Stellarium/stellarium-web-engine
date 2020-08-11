@@ -197,7 +197,6 @@ static shower_t *create_shower(const json_value *doc)
     snprintf(s->iau_code, sizeof(s->iau_code), "%s", iau_code);
     snprintf(s->designation, sizeof(s->designation), "%s", designation);
     strncpy(s->obj.type, "MSh", 4);
-    s->obj.oid = oid_create("MSh", iau_number);
     if (parse_date(start, &s->start)) goto error;
     if (parse_date(finish, &s->finish)) goto error;
     if (parse_date(peak, &s->peak)) goto error;

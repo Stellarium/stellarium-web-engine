@@ -106,25 +106,6 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
     *pix = nuniq - 4 * (1 << (2 * (*order)));
 }
 
-/*
- * Generate a uniq oid for a DSO.
- *
- * The oid number is generated from the nuniq number of the tile healpix
- * pixel and the index in the tile.
- *
- * We use 20 bits for the nuniq, 10 bits for the running index, and 2 bits
- * for the source index. This should allow to go up to order 8, with 1024
- * sources per tile, with up to 4 data sources.
- */
-static uint64_t make_oid(int source, uint64_t nuniq, int index)
-{
-    if (nuniq >= 1 << 20 || index >= 1 << 10 || source >= 1 << 2) {
-        LOG_W("Cannot generate uniq oid for DSO");
-        LOG_W("Nuniq: %llu, index: %d", nuniq, index);
-    }
-    return oid_create("NDSO", (uint32_t)nuniq << 12 | source << 10 | index);
-}
-
 static int dso_get_info(const obj_t *obj, const observer_t *obs, int info,
                         void *out)
 {
@@ -188,7 +169,6 @@ static char *parse_json_names(json_value *names)
 static int dso_init(obj_t *obj, json_value *args)
 {
     const double DAM2R = DD2R / 60.0; // arcmin to rad.
-    int index;
 
     // Support creating a dso using noctuasky model data json values.
     dso_t *dso = (dso_t*)obj;
@@ -209,13 +189,6 @@ static int dso_init(obj_t *obj, json_value *args)
     names = json_get_attr(args, "names", json_array);
     if (names)
         dso->names = parse_json_names(names);
-
-    // Since we are not in a tile, we use the hash of the name to generate
-    // the oid.
-    if (dso->names) {
-        index = crc32(0, (void*)dso->names, strlen(dso->names));
-        dso->obj.oid = make_oid(0, 0, index % 1024 + 1);
-    }
 
     types = json_get_attr(args, "types", json_array);
     if (types && types->u.array.length > 0) {
@@ -277,8 +250,6 @@ static int on_file_tile_loaded(const char type[4],
     char morpho[32], ids[256] = {};
     double bmag, temp_mag, tmp_ra, tmp_de, tmp_smax, tmp_smin, tmp_angle;
     void *tile_data;
-    uint64_t nuniq;
-    survey_t *survey = USER_GET(user, 0);
     tile_t **out = USER_GET(user, 1); // Receive the tile.
     int *transparency = USER_GET(user, 2);
 
@@ -295,7 +266,6 @@ static int on_file_tile_loaded(const char type[4],
         {"ids",  's', .size=256},
     };
 
-    assert(survey);
     *out = NULL;
     if (strncmp(type, "DSO ", 4) != 0) return 0;
 
@@ -353,8 +323,6 @@ static int on_file_tile_loaded(const char type[4],
         s->display_vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
         tile->mag_min = min(tile->mag_min, s->display_vmag);
         tile->mag_max = max(tile->mag_max, s->display_vmag);
-        nuniq = pix_to_nuniq(order, pix);
-        s->obj.oid = make_oid(survey->idx, nuniq, i);
 
         if (*morpho) s->morpho = strdup(morpho);
         s->symbol = symbols_get_for_otype(s->obj.type);
@@ -500,7 +468,7 @@ static void dso_render_label(const dso_t *s,
                              const painter_t *painter,
                              const double win_size[2], double win_angle)
 {
-    const bool selected = core->selection && s->obj.oid == core->selection->oid;
+    const bool selected = core->selection && &s->obj == core->selection;
     int effects = 0;
     double color[4], radius;
     char buf[128] = "";
@@ -533,7 +501,7 @@ static int dso_render_from_data(const dso_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
     double win_pos[2], win_size[2], win_angle, hints_limit_mag;
-    const bool selected = core->selection && s->obj.oid == core->selection->oid;
+    const bool selected = core->selection && &s->obj == core->selection;
     double opacity;
     painter_t tmp_painter;
     const float vmag = s->display_vmag;

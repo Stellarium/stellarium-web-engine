@@ -111,7 +111,6 @@ static void load_data(comets_t *comets, const char *data, int size)
         comet->orbit.e = e;
         strncpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
         snprintf(comet->name, sizeof(comet->name), "%s", desgn);
-        comet->obj.oid = oid_create("Com", line_idx);
         comet->pvo[0][0] = NAN;
         last_epoch = max(epoch, last_epoch);
     }
@@ -298,7 +297,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     comet_t *comet = (comet_t*)obj;
     point_t point;
     double label_color[4] = RGBA(223, 223, 255, 255);
-    const bool selected = core->selection && obj->oid == core->selection->oid;
+    const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_comets->hints_mag_offset;
     double cap[4];
 

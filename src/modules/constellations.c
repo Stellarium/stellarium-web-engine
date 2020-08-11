@@ -150,9 +150,6 @@ static int constellation_init(obj_t *obj, json_value *args)
     if (!info) return 0;
     cons->info = *info;
     strcpy(cons->obj.type, "Con");
-    cons->obj.oid = oid_create("CST",
-                            crc32(0, (void*)info->id, strlen(info->id)));
-
     constellation_set_image(obj);
 
     return 0;
@@ -725,7 +722,7 @@ static bool constellation_is_visible(const constellation_t *con,
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
     // Show selected constellation no matter what.
-    if (core->selection && con->obj.oid == core->selection->oid)
+    if (core->selection && &con->obj == core->selection)
         return true;
 
     // Only show non centered constellations if 'show_only_pointed' is set.
@@ -744,7 +741,7 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
 {
     constellation_t *con = (const constellation_t*)obj;
     painter_t painter = *_painter;
-    const bool selected = core->selection && obj->oid == core->selection->oid;
+    const bool selected = core->selection && obj == core->selection;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
     assert(cons);
 

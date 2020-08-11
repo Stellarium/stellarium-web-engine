@@ -147,9 +147,6 @@ const char *obj_get_name(const obj_t *obj, char *buf, int len)
     buf[0] = '\0';
     obj_get_designations(obj, USER_PASS(&score, buf, &len),
                          name_on_designation);
-    // If no designation is found, use the oid.
-    if (!buf[0])
-        oid_to_str(obj->oid, buf, len);
     return buf;
 }
 

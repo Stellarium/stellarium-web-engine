@@ -24,14 +24,12 @@ typedef struct circle {
 
 static int circle_init(obj_t *obj, json_value *args)
 {
-    static uint32_t count = 0;
     circle_t *circle = (circle_t *)obj;
     vec4_set(circle->pos, 0, 0, 1, 0);
     vec2_set(circle->size, 5 * DD2R, 5 * DD2R);
     circle->frame = FRAME_ICRF;
     vec4_set(circle->color, 1, 1, 1, 0.25);
     vec4_set(circle->border_color, 1, 1, 1, 1);
-    obj->oid = oid_create("SHAP", count++);
     return 0;
 }
 
@@ -92,7 +90,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
         .map  = circle_project,
         .user = obj,
     };
-    const bool selected = core->selection && obj->oid == core->selection->oid;
+    const bool selected = core->selection && obj == core->selection;
     int label_effects = TEXT_FLOAT;
     double win_pos[2], win_size[2], win_angle, radius;
     const double white[4] = {1, 1, 1, 1};

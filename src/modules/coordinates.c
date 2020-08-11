@@ -21,10 +21,7 @@ typedef struct coordinates {
 
 static int coordinates_init(obj_t *obj, json_value *args)
 {
-    static uint64_t counter = 0;
     strncpy(obj->type, "Coo", 4);
-    // Make sure we use a unique oid for each coordinates object.
-    obj->oid = oid_create("Coo", counter++);
     return 0;
 }
 

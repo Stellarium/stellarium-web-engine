@@ -303,7 +303,6 @@ static int satellite_init(obj_t *obj, json_value *args)
             assert(false);
             return -1;
         }
-        sat->obj.oid = oid_create("NORA", sat->number);
         sat->elsetrec = sgp4_twoline2rv(tle1, tle2, 'c', 'm', 'i',
                                         &startmfe, &stopmfe, &deltamin);
         strncpy(sat->obj.type, otype_from_json(types, "Asa"), 4);
@@ -452,7 +451,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
     satellite_t *sat = (satellite_t*)obj;
-    const bool selected = core->selection && obj->oid == core->selection->oid;
+    const bool selected = core->selection && obj == core->selection;
     const double hints_limit_mag = painter.hints_limit_mag +
                                    g_satellites->hints_mag_offset - 2.5;
 
@@ -517,7 +516,7 @@ static void satellite_get_designations(
     return;
 
 fallback:
-    snprintf(buf, sizeof(buf), "%05d", (int)oid_get_index(obj->oid));
+    snprintf(buf, sizeof(buf), "%05d", sat->number);
     f(obj, user, "NORAD", buf);
 }
 

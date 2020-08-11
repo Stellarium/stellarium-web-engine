@@ -95,7 +95,6 @@ void swe_gen_doc(void);
 /**************************************************************************/
 
 #include "painter.h"
-#include "oid.h"
 #include "obj.h"
 #include "core.h"
 #include "gui.h"
