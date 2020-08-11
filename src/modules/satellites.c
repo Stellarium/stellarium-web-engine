@@ -503,7 +503,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
         if (satellite_get_short_name(sat, selected, buf, sizeof(buf)))
             labels_add_3d(buf, FRAME_ICRF, sat->pvo[0], false, size + 1,
                           FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
-                          0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj->oid);
+                          0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj);
     }
 
     return 1;

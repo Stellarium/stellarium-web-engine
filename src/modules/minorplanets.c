@@ -286,7 +286,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,
               FONT_SIZE_BASE - 1, label_color, 0, 0,
               TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
-              0, obj->oid);
+              0, obj);
     }
     return 1;
 }

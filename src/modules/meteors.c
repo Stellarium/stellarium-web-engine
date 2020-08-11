@@ -301,7 +301,7 @@ static int shower_render(const obj_t *obj, const painter_t *painter)
     symbols_paint(painter, SYMBOL_METEOR_SHOWER, win_pos, size, color, 0);
     labels_add_3d(sys_translate("sky", s->designation),
                   FRAME_ASTROM, s->pos, true, size[0] / 2,
-                  FONT_SIZE_BASE, color, 0, 0, TEXT_BOLD, 0, obj->oid);
+                  FONT_SIZE_BASE, color, 0, 0, TEXT_BOLD, 0, obj);
     return 0;
 }
 

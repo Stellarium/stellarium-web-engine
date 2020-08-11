@@ -47,7 +47,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     // do it for the constellations (note: we could find a more generic way?).
     oid_get_catalog(selection->oid, cat);
     if (strcmp(cat, "CST") != 0)
-        skip_top_bar = labels_has_obj(selection->oid);
+        skip_top_bar = labels_has_obj(selection);
 
     for (i = 0; i < 4; i++) {
         if (skip_top_bar && i == 3) continue;

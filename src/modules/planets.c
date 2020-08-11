@@ -868,7 +868,7 @@ static void planet_render_label(
                   true, s + 4, FONT_SIZE_BASE,
                   selected ? white : label_color, 0, 0,
                   TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
-                  -vmag, planet->obj.oid);
+                  -vmag, &planet->obj);
 }
 
 static void planet_render(const planet_t *planet, const painter_t *painter_)

@@ -521,7 +521,7 @@ static void dso_render_label(const dso_t *s,
     if (buf[0]) {
         labels_add_3d(buf, FRAME_ASTROM, s->bounding_cap, true, radius,
                       FONT_SIZE_BASE - 2, color, 0, 0, effects,
-                      -vmag, s->obj.oid);
+                      -vmag, &s->obj);
     }
 }
 

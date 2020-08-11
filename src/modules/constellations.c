@@ -714,7 +714,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
                   con->lines_cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
                   TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
-                  0, con->obj.oid);
+                  0, &con->obj);
 
     return 0;
 }

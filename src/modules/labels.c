@@ -14,7 +14,7 @@ typedef struct label label_t;
 struct label
 {
     label_t *next, *prev;
-    uint64_t oid;         // Optional unique id for the label.
+    obj_t   *obj;         // Optional object.
     char    *text;        // Original passed text.
     char    *render_text; // Processed text (can point to text).
     double  pos[3];       // 3D position in the given frame.
@@ -49,6 +49,7 @@ void labels_reset(void)
             DL_DELETE(g_labels->labels, label);
             if (label->render_text != label->text) free(label->render_text);
             free(label->text);
+            obj_release(label->obj);
             free(label);
         } else {
             label->active = false;
@@ -58,11 +59,11 @@ void labels_reset(void)
 }
 
 static label_t *label_get(label_t *list, const char *txt, double size,
-                          uint64_t oid)
+                          const obj_t *obj)
 {
     label_t *label;
     DL_FOREACH(list, label) {
-        if (oid != label->oid) continue;
+        if (obj != label->obj) continue;
         if (label->size == size && strcmp(txt, label->text) == 0)
             return label;
     }
@@ -191,17 +192,17 @@ static int labels_update(obj_t *obj, double dt)
 void labels_add(const char *text, const double pos[2],
                 double radius, double size, const double color[4],
                 double angle, int align, int effects, double priority,
-                uint64_t oid)
+                obj_t *obj)
 {
     const double p[3] = {pos[0], pos[1], 0};
     labels_add_3d(text, -1, p, true, radius, size, color, angle, align,
-                  effects, priority, oid);
+                  effects, priority, obj);
 }
 
 void labels_add_3d(const char *text, int frame, const double pos[3],
                    bool at_inf, double radius, double size,
                    const double color[4], double angle, int align,
-                   int effects, double priority, uint64_t oid)
+                   int effects, double priority, obj_t *obj)
 {
     if (!align) align = ALIGN_CENTER | ALIGN_BOTTOM;
     if (!(effects & TEXT_FLOAT)) priority = 1024.0; // Use FLT_MAX ?
@@ -212,10 +213,10 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
 
     if (!text || !*text) return;
 
-    label = label_get(g_labels->labels, text, size, oid);
+    label = label_get(g_labels->labels, text, size, obj);
     if (!label) {
         label = calloc(1, sizeof(*label));
-        label->oid = oid;
+        label->obj = obj_retain(obj);
         fader_init(&label->fader, false);
         label->render_text = label->text = strdup(text);
         DL_APPEND(g_labels->labels, label);
@@ -243,11 +244,11 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
  * Function: labels_has_obj
  * Check if an object is in the labels list
  */
-bool labels_has_obj(uint64_t oid)
+bool labels_has_obj(const obj_t *obj)
 {
     label_t *label;
     DL_FOREACH(g_labels->labels, label) {
-        if (label->oid == oid)
+        if (label->obj == obj)
             return true;
     }
     return false;
@@ -257,17 +258,17 @@ bool labels_has_obj(uint64_t oid)
  * Function: labels_get_at
  * Find a label at a given position on screen.
  */
-uint64_t labels_get_obj_at(const double pos[2], double max_dist)
+obj_t *labels_get_obj_at(const double pos[2], double max_dist)
 {
     label_t *label;
     double dist;
 
     DL_FOREACH(g_labels->labels, label) {
-        if (!label->oid || !label->active || label->fader.value == 0)
+        if (!label->obj || !label->active || label->fader.value == 0)
             continue;
         dist = bounds_dist_point(label->bounds, pos);
         if (dist <= max_dist) {
-            return label->oid;
+            return obj_retain(label->obj);
         }
     }
     return 0;

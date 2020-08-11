@@ -117,7 +117,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
                  fabs(win_size[0] - win_size[1]);
         labels_add_3d(circle->label, circle->frame, circle->pos, true, radius,
                       FONT_SIZE_BASE, painter.color, 0, 0,
-                      label_effects, 0, circle->obj.oid);
+                      label_effects, 0, &circle->obj);
     }
     return 0;
 }

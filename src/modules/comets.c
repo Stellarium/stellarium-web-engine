@@ -336,7 +336,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
         labels_add_3d(comet->name, FRAME_ICRF, comet->pvo[0], false, size + 4,
             FONT_SIZE_BASE - 2, label_color, 0, 0,
             TEXT_SEMI_SPACED | TEXT_BOLD | (selected ? 0 : TEXT_FLOAT),
-            0, obj->oid);
+            0, obj);
     }
 
     render_tail(comet, painter, TAIL_GAS);
