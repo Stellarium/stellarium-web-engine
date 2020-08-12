@@ -340,7 +340,6 @@ static void on_name2(const obj_t *obj, void *user, const char *dsgn) {
     json_array_push(arr, json_string_new(dsgn));
 }
 
-EMSCRIPTEN_KEEPALIVE
 json_value *obj_get_json_data(const obj_t *obj)
 {
     json_value* ret;
@@ -374,6 +373,22 @@ json_value *obj_get_json_data(const obj_t *obj)
     names = json_array_new(1);
     obj_get_designations(obj, (void*)names, on_name2);
     json_object_push(ret, "names", names);
+    return ret;
+}
+
+EMSCRIPTEN_KEEPALIVE
+char *obj_get_json_data_str(const obj_t *obj)
+{
+    json_value *data;
+    char *ret;
+    int size;
+
+    data = obj_get_json_data(obj);
+    if (!data) return NULL;
+    size = json_measure(data);
+    ret = calloc(1, size);
+    json_serialize(ret, data);
+    json_builder_free(data);
     return ret;
 }
 

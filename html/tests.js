@@ -33,7 +33,7 @@ var testBasic = function(stel) {
 
   // Test Sun pos.
   {
-    let sun = stel.getObj("Sun");
+    let sun = stel.getObj("NAME Sun");
     let pvo = sun.getInfo('pvo', stel.observer);
     let cirs = stel.convertFrame(stel.observer, 'ICRF', 'CIRS', pvo[0]);
     let ra  = stel.anp(stel.c2s(cirs)[0]);
@@ -69,7 +69,7 @@ var testBasic = function(stel) {
 
 var testInfo = function(stel) {
   {
-    let jupiter = stel.getObj('Jupiter');
+    let jupiter = stel.getObj('NAME Jupiter');
     assert(jupiter);
     let vmag = jupiter.getInfo('VMAG');
     assert(typeof vmag == 'number');
@@ -93,7 +93,7 @@ var testIds = function(stel) {
 var testSearch = function(stel) {
   var obj;
   // Simple object search.
-  obj = stel.getObj('jupiter');
+  obj = stel.getObj('NAME Jupiter');
   assert(obj);
 }
 
@@ -257,7 +257,6 @@ var testCreate = function(stel) {
       "SSO"
     ]
   });
-  assert(obj3.designations().includes('MPC (1)'));
   assert(obj3.designations().includes('NAME (1) Ceres'));
 
 

@@ -248,7 +248,7 @@ Module['calendar'] = function(args) {
       var ret = Module._calendar_compute(cal);
       if (!ret) {
         var callback = getCallback();
-        Module._calendar_get_results(cal, 0, callback);
+        Module._calendar_get_results_callback(cal, 0, callback);
         Module.removeFunction(callback);
         Module._calendar_delete(cal);
       }

@@ -26,6 +26,8 @@ Module.afterInit(function() {
   var core_get_module = Module.cwrap('core_get_module', 'number', ['string']);
   var obj_get_info_json = Module.cwrap('obj_get_info_json', 'number',
     ['number', 'number', 'string']);
+  var obj_get_json_data_str = Module.cwrap('obj_get_json_data_str', 'number',
+    ['number']);
 
   // List of {obj, attr, callback}
   var g_listeners = [];
@@ -257,6 +259,15 @@ Module.afterInit(function() {
       return 'core.' + ret
     }
   });
+
+  Object.defineProperty(SweObj.prototype, 'data', {
+    get: function() {
+      var cret = obj_get_json_data_str(this.v)
+      var ret = Module.UTF8ToString(cret)
+      Module._free(cret)
+      return ret ? JSON.parse(ret) : undefined
+    }
+  })
 
   // Add icrs, same as radec for the moment!
   Object.defineProperty(SweObj.prototype, 'icrs', {

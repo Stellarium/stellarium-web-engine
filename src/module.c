@@ -273,6 +273,11 @@ char *module_get_path(const obj_t *obj, const obj_t *root)
 {
     char *base, *ret;
     assert(root);
+
+    // Little hack to keep the code backward compatible.
+    if (root == &core->obj && obj == &core->observer->obj)
+        return strdup("observer");
+
     if (!obj->parent || !obj->id) return NULL;
     if (obj->parent == root) return strdup(obj->id);
     base = module_get_path(obj->parent, root);
