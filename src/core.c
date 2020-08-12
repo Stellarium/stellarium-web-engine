@@ -59,6 +59,13 @@ obj_t *core_get_module(const char *id)
     if (strcmp(id, "core") == 0) return (obj_t*)core;
     if (strncmp(id, "core.", 5) == 0) id += 5;
 
+    // Remove this once all the client code has been updated.
+    if (strcmp(id, "observer") == 0) {
+        LOG_D("Getting observer as a module is deprecated");
+        LOG_D("Use attribute API instead");
+        return &core->observer->obj;
+    }
+
     while (*id) {
         end = strchr(id, '.') ?: id + strlen(id);
         len = end - id;
@@ -206,8 +213,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
     core->win_pixels_scale = pixel_scale;
     core->display_limit_mag = 99;
 
-    core->observer = (observer_t*)module_add_new(
-            &core->obj, "observer", "observer", NULL);
+    core->observer = (observer_t*)obj_create("observer", "observer", NULL);
 
     for (module = obj_get_all_klasses(); module; module = module->next) {
         if (!(module->flags & OBJ_MODULE)) continue;
@@ -1100,6 +1106,7 @@ static obj_klass_t core_klass = {
     .size = sizeof(core_t),
     .flags = OBJ_IN_JSON_TREE,
     .attributes = (attribute_t[]) {
+        PROPERTY(observer, TYPE_OBJ, MEMBER(core_t, observer)),
         PROPERTY(fov, TYPE_ANGLE, MEMBER(core_t, fov),
                  .on_changed = core_on_fov_changed),
         PROPERTY(projection, TYPE_INT, MEMBER(core_t, proj)),
@@ -1158,8 +1165,7 @@ static void test_core(void)
     double v;
     core_init(100, 100, 1.0);
     core->observer->hm = 10.0;
-    obj_t *obs = core_get_module("observer");
-    assert(obs);
+    obj_t *obs = &core->observer->obj;
     obj_get_attr(obs, "elevation", &v); assert(v == 10.0);
     obj_set_attr(obs, "longitude", 1.0);
     assert(core->observer->elong == 1.0);
