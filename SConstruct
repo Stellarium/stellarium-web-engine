@@ -151,8 +151,8 @@ flags = [
          '-s', 'FILESYSTEM=0'
         ]
 
-if env['mode'] not in ['profile', 'debug']:
-    flags += ['--llvm-lto', '3']
+#if env['mode'] not in ['profile', 'debug']:
+#    flags += ['--closure', '1']
 
 if env['mode'] in ['profile', 'debug']:
     flags += [
@@ -165,7 +165,7 @@ if env['mode'] == 'debug':
               '-s', 'WARN_UNALIGNED=1']
 
 if env['es6']:
-    flags += ['-s', 'EXPORT_ES6=1']
+    flags += ['-s', 'EXPORT_ES6=1', '-s', 'USE_ES6_IMPORT_META=0']
 
 env.Append(CCFLAGS=['-DNO_ARGP', '-DGLES2 1'] + flags)
 env.Append(LINKFLAGS=flags)

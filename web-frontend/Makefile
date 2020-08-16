@@ -39,11 +39,11 @@ update-engine-debug:
 
 setup: Dockerfile Dockerfile.jsbuild
 	# Build docker image for compilation with emscripten
-	cd .. && docker build -f web-frontend/Dockerfile.jsbuild -t swe-dev . # --no-cache
+	docker build -f Dockerfile.jsbuild -t swe-dev . # --no-cache
 	make update-engine
 	# Build docker image for webpack/node development
 	docker build -t stellarium-web-dev .
-	docker run -it -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn
+	docker run -it -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn install
 
 dev:
 	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn run dev
