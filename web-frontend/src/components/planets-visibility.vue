@@ -52,13 +52,13 @@ export default {
   data: function () {
     return {
       objs: [
-        this.$stel.getObj('Sun'),
-        this.$stel.getObj('Moon'),
-        this.$stel.getObj('Mercury'),
-        this.$stel.getObj('Venus'),
-        this.$stel.getObj('Mars'),
-        this.$stel.getObj('Jupiter'),
-        this.$stel.getObj('Saturn')
+        this.$stel.getObj('NAME Sun'),
+        this.$stel.getObj('NAME Moon'),
+        this.$stel.getObj('NAME Mercury'),
+        this.$stel.getObj('NAME Venus'),
+        this.$stel.getObj('NAME Mars'),
+        this.$stel.getObj('NAME Jupiter'),
+        this.$stel.getObj('NAME Saturn')
       ]
     }
   },
@@ -99,7 +99,7 @@ export default {
   },
   computed: {
     sunBackgroundStr: function () {
-      var sun = this.$stel.getObj('Sun')
+      var sun = this.$stel.getObj('NAME Sun')
       const brightness = []
       const d = new Moment(this.startDate)
 
@@ -128,7 +128,7 @@ export default {
       return txt
     },
     startDate: function () {
-      var sun = this.$stel.getObj('Sun')
+      var sun = this.$stel.getObj('NAME Sun')
       let u = this.$store.state.stel.observer.utc
       if (u < sun.rise) {
         // It's still night (in the morning), display last night's planets visibility

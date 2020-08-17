@@ -188,8 +188,8 @@ export default {
       const res = []
       const nbStop = 49
       const obs = this.$stel.core.observer.clone()
-      const sun = this.$stel.getObj('Sun')
-      const moon = this.$stel.getObj('Moon')
+      const sun = this.$stel.getObj('NAME Sun')
+      const moon = this.$stel.getObj('NAME Moon')
       for (let i = 0; i <= nbStop; ++i) {
         obs.utc = this.timeMinuteRangeToUTC(1440 * i / nbStop)
         const sunAlt = this.$stel.anpm(this.$stel.c2s(this.$stel.convertFrame(obs, 'ICRF', 'OBSERVED', sun.getInfo('radec', obs)))[1]) * 180.0 / Math.PI

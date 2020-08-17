@@ -30,15 +30,15 @@ DDDate.prototype.setMJD = function (mjd) {
 
 const swh = {
   initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone, onBeforeRendering) {
-    const lstel = StelWebEngine({
+    StelWebEngine({
       wasmFile: wasmFile,
       canvas: canvasElem,
       translateFn: function (domain, str) {
         return str
         // return i18next.t(str, {ns: domain});
       },
-      onReady: function (Module) {
-        Module.onBeforeRendering = onBeforeRendering
+      onReady: function (lstel) {
+        lstel.onBeforeRendering = onBeforeRendering
 
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
@@ -541,7 +541,7 @@ const swh = {
   // If no such time was found (e.g. in a northern country in summer),
   // we default to current time.
   getTimeAfterSunset: function (stel) {
-    const sun = stel.getObj('Sun')
+    const sun = stel.getObj('NAME Sun')
     const obs = stel.observer.clone()
     const utc = Math.floor(obs.utc * 24 * 60 / 5) / (24 * 60 / 5)
     let i
