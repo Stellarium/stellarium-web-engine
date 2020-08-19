@@ -11,9 +11,14 @@ Module.afterInit(function() {
   if (!Module.canvas) return;
 
   var prevTimestamp;
+  var mouseDown = false;
+  var mousePos;
 
   // Function called at each frame
   var render = function(timestamp) {
+
+    if (mouseDown)
+      Module._core_on_mouse(0, 1, mousePos.x, mousePos.y);
 
     // Check for canvas resize
     var canvas = Module.canvas;
@@ -67,7 +72,6 @@ Module.afterInit(function() {
 
   var setupMouse = function() {
     var canvas = Module.canvas;
-    var mouseDown = false;
     function getMousePos(evt) {
       var rect = canvas.getBoundingClientRect();
       return {
@@ -81,15 +85,14 @@ Module.afterInit(function() {
       e = e || event;
       fixPageXY(e);
       mouseDown = true;
-      var pos = getMousePos(e);
-      Module._core_on_mouse(0, 1, pos.x, pos.y);
+      mousePos = getMousePos(e);
 
       document.onmouseup = function(e) {
         e = e || event;
         fixPageXY(e);
         mouseDown = false;
-        var pos = getMousePos(e);
-        Module._core_on_mouse(0, 0, pos.x, pos.y);
+        mousePos = getMousePos(e);
+        Module._core_on_mouse(0, 0, mousePos.x, mousePos.y);
       };
       document.onmouseleave = function(e) {
         mouseDown = false;
@@ -98,8 +101,7 @@ Module.afterInit(function() {
       document.onmousemove = function(e) {
         e = e || event;
         fixPageXY(e);
-        var pos = getMousePos(e);
-        Module._core_on_mouse(0, mouseDown ? 1 : 0, pos.x, pos.y);
+        mousePos = getMousePos(e);
       }
     });
 
