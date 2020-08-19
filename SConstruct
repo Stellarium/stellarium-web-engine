@@ -142,7 +142,7 @@ flags = [
          '--pre-js', 'src/js/geojson.js',
          '--pre-js', 'src/js/canvas.js',
          '-s', 'STRICT=1',
-         '-s', 'RESERVED_FUNCTION_POINTERS=5',
+         '-s', 'RESERVED_FUNCTION_POINTERS=10',
          '-O3',
          '-s', 'USE_WEBGL2=1',
          '-s', 'NO_EXIT_RUNTIME=1',

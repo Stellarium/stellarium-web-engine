@@ -32,6 +32,26 @@ Module.afterInit(function() {
   // List of {obj, attr, callback}
   var g_listeners = [];
 
+  let g_ret; // Global var used to pass back C callback values.
+
+  // Predefine all the js function that will be used as C callbacks.
+  // Is there a cleaner way?
+  let g_obj_foreach_attr_callback = Module.addFunction(
+    function(attr, isProp, user) {
+      g_ret.push([attr, isProp]);
+    }, 'viii'
+  );
+  let g_obj_foreach_child_callback = Module.addFunction(function(id) {
+    g_ret.push(id);
+  }, 'vi');
+  let g_obj_get_designations_callback = Module.addFunction(function(o, u, v) {
+    g_ret.push(v);
+  }, 'viii');
+  let g_module_list_obj2 = Module.addFunction(function(user, obj) {
+    g_ret.push(obj);
+    return 0;
+  }, 'iii');
+
   var SweObj = function(v) {
     assert(typeof(v) === 'number')
     this.v = v
@@ -39,8 +59,12 @@ Module.afterInit(function() {
     var that = this
 
     // Create all the dynamic attributes of the object.
-    var callback = Module.addFunction(function(attr, isProp, user) {
-      var name = Module.UTF8ToString(attr);
+    g_ret = [];
+    Module._obj_foreach_attr(this.v, 0, g_obj_foreach_attr_callback);
+    for (let i = 0; i < g_ret.length; i++) {
+      let attr = g_ret[i][0];
+      let isProp = g_ret[i][1];
+      let name = Module.UTF8ToString(attr);
       if (!isProp) {
         that[name] = function(args) {
           return that._call(name, args);
@@ -53,13 +77,13 @@ Module.afterInit(function() {
           set: function(v) {return that._call(name, v)},
         })
       }
-    }, 'viii')
-    Module._obj_foreach_attr(this.v, 0, callback);
-    Module.removeFunction(callback);
+    }
 
     // Also add the children as properties
-    var callback = Module.addFunction(function(id) {
-      id = Module.UTF8ToString(id);
+    g_ret = [];
+    Module._obj_foreach_child(this.v, g_obj_foreach_child_callback);
+    for (let i = 0; i < g_ret.length; i++) {
+      let id = Module.UTF8ToString(g_ret[i]);
       if (!id) return; // Child with no id?
       Object.defineProperty(that, id, {
         enumerable: true,
@@ -68,9 +92,7 @@ Module.afterInit(function() {
           return obj ? new SweObj(obj) : null
         }
       })
-    }, 'vi')
-    Module._obj_foreach_child(this.v, callback)
-    Module.removeFunction(callback)
+    }
   }
 
   // Swe objects return their values as id string.
@@ -148,13 +170,9 @@ Module.afterInit(function() {
   }
 
   SweObj.prototype.designations = function() {
-    var ret = [];
-    var callback = Module.addFunction(function(o, u, v) {
-      v = Module.UTF8ToString(v);
-      ret.push(v);
-    }, 'viii');
-    Module._obj_get_designations(this.v, 0, callback);
-    Module.removeFunction(callback);
+    g_ret = [];
+    Module._obj_get_designations(this.v, 0, g_obj_get_designations_callback);
+    let ret = g_ret.map(function(v) {return Module.UTF8ToString(v)});
     // Remove duplicates.
     // This should be done in the C code, but for the moment it's simpler
     // here.
@@ -181,17 +199,16 @@ Module.afterInit(function() {
    *
    */
   SweObj.prototype.listObjs = function(obs, maxMag, filter) {
-    var ret = [];
-    var callback = Module.addFunction(function(user, objv) {
-      var obj = new SweObj(objv);
+    let ret = [];
+    g_ret = [];
+    Module._module_list_objs2(this.v, obs.v, maxMag, 0, g_module_list_obj2);
+    for (let i = 0; i < g_ret.length; i++) {
+      let obj = new SweObj(g_ret[i]);
       if (filter(obj)) {
         obj.retain();
         ret.push(obj);
       }
-      return 0;
-    }, 'iii');
-    Module._module_list_objs2(this.v, obs.v, maxMag, 0, callback);
-    Module.removeFunction(callback);
+    }
     return ret;
   };
 
