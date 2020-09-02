@@ -683,6 +683,7 @@ static int dsos_list(const obj_t *obj,
         }
     }
     if (!survey) survey = dsos->surveys;
+    if (!survey) return 0;
 
     // Without hint, we have to iter all the tiles.
     if (!hint) {

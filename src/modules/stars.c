@@ -622,6 +622,7 @@ static tile_t *get_tile(stars_t *stars, survey_t *survey, int order, int pix,
     int flags = 0;
     tile_t *tile;
     assert(code);
+    assert(survey);
     if (!sync) flags |= HIPS_LOAD_IN_THREAD;
     if (!survey->hips) {
         *code = 0;
@@ -760,6 +761,7 @@ static int stars_list(const obj_t *obj,
         }
     }
     if (!survey) survey = stars->surveys;
+    if (!survey) return 0;
 
     // Without hint, we have to iter all the tiles.
     if (!hint) {
