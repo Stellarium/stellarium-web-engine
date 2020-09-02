@@ -397,11 +397,10 @@ Module.afterInit(function() {
   }
 
   Module['getValue'] = function(path) {
-    path = "core." + path;
     var elems = path.split('.');
     var attr = elems.pop();
     var objPath = elems.join('.');
-    var obj = Module.getModule(objPath);
+    let obj = Module.core[objPath] || Module.getModule('core.' + objPath);
     var value = obj[attr];
     if (value && typeof(value) === 'object' && value.swe_)
       value = value.v;
@@ -410,11 +409,10 @@ Module.afterInit(function() {
 
   Module['_setValue'] = Module.setValue; // So that we can still use it!
   Module['setValue'] = function(path, value) {
-    path = "core." + path;
     var elems = path.split('.');
     var attr = elems.pop();
     var objPath = elems.join('.');
-    var obj = Module.getModule(objPath);
+    let obj = Module.core[objPath] || Module.getModule('core.' + objPath);
     obj[attr] = value;
   }
 

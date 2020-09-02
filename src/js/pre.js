@@ -42,7 +42,7 @@ Module['onRuntimeInitialized'] = function() {
 
   Module._core_init(0, 0, 1);
   Module.core = Module.getModule('core');
-  Module.observer = Module.getModule('observer');
+  Module.observer = Module.core.observer;
 
   // Setup the translation function provided by the client if any.
   if (Module.translateFn) {
