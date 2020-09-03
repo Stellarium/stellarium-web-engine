@@ -277,7 +277,7 @@ Module.afterInit(function() {
     }
   });
 
-  Object.defineProperty(SweObj.prototype, 'data', {
+  Object.defineProperty(SweObj.prototype, 'jsonData', {
     get: function() {
       var cret = obj_get_json_data_str(this.v)
       var ret = Module.UTF8ToString(cret)

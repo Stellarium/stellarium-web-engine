@@ -212,7 +212,7 @@ var testCreate = function(stel) {
       ]
     }
   });
-  assert(obj2.data.model_data.norad_number === 19120);
+  assert(obj2.jsonData.model_data.norad_number === 19120);
 
   var obj3 = stel.createObj('mpc_asteroid', {
     "interest": 3.6,

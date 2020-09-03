@@ -345,7 +345,7 @@ const swh = {
     const printErr = function (n) {
       console.log("Couldn't find online skysource data for name: " + n)
 
-      const ss = obj.data
+      const ss = obj.jsonData
       if (!ss.model_data) {
         ss.model_data = {}
       }
