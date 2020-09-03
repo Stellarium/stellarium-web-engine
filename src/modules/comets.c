@@ -99,7 +99,7 @@ static void load_data(comets_t *comets, const char *data, int size)
             continue;
         }
 
-        comet = (void*)module_add_new(&comets->obj, "mpc_comet", NULL, NULL);
+        comet = (void*)module_add_new(&comets->obj, "mpc_comet", NULL);
         comet->num = num;
         comet->h = h;
         comet->g = g;

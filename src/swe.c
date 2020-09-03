@@ -208,7 +208,7 @@ static void test_pos(pos_test_t t)
     if (t.planet)
         obj = core_get_planet(t.planet);
     else if (t.klass)
-        obj = obj_create_str(t.klass, NULL, t.json);
+        obj = obj_create_str(t.klass, t.json);
     else
         assert(false);
     assert(obj);

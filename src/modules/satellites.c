@@ -98,7 +98,7 @@ static int load_jsonl_data(satellites_t *sats, const char *data, int size,
         line_idx++;
         json = json_parse(line, len);
         if (!json) goto error;
-        sat = (void*)module_add_new(&sats->obj, "tle_satellite", NULL, json);
+        sat = (void*)module_add_new(&sats->obj, "tle_satellite", json);
         json_value_free(json);
         if (!sat) goto error;
         *last_epoch = max(*last_epoch, sgp4_get_satepoch(sat->elsetrec));
@@ -625,7 +625,7 @@ static void check_sat(
              "\"norad_number\": %d,"
              "\"tle\": [\"%s\",\"%s\"]}}",
              stdmag, norad_number, tle1, tle2);
-    obj = obj_create_str("tle_satellite", NULL, json);
+    obj = obj_create_str("tle_satellite", json);
     assert(obj);
 
     obs = *core->observer;

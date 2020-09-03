@@ -138,8 +138,7 @@ void module_add(obj_t *module, obj_t *child);
  * The object is owned by the module, so we don't have to call obj_release
  * but instead module_remove.
  */
-obj_t *module_add_new(obj_t *module, const char *type, const char *id,
-                      json_value *args);
+obj_t *module_add_new(obj_t *module, const char *type, json_value *args);
 
 /*
  * Function: module_remove

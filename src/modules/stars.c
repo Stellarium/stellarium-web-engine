@@ -990,7 +990,7 @@ static void test_create_from_json(void)
         "       \"pm_ra\": 101.95"
         "   }"
         "}";
-    star = obj_create_str("star", NULL, data);
+    star = obj_create_str("star", data);
     assert(star);
     obj_get_info(star, core->observer, INFO_VMAG, &vmag);
     assert(fabs(vmag - 5.153) < 0.0001);

@@ -171,7 +171,7 @@ struct obj_klass
  * Attributes:
  *   klass      - Pointer to an <obj_klass_t> structure.
  *   ref        - Reference counter.
- *   id         - String id of the object.
+ *   id         - Optional string id of the object.  Mostly used for modules.
  *   oid        - Internal uniq id.
  *   type       - Four bytes type id of the object.  Should follow the
  *                condensed values defined by Simbad:
@@ -191,7 +191,7 @@ struct obj
 {
     obj_klass_t *klass;
     int         ref;
-    char        *id;    // To be removed.  Use oid instead.
+    const char  *id;    // To be removed.  Only used for modules.
     char        type[4];
     obj_t       *parent;
     obj_t       *children, *prev, *next;
@@ -266,13 +266,13 @@ struct attribute {
  *   id     - Unique id to give the object.
  *   args   -  Attributes to set.
  */
-obj_t *obj_create(const char *type, const char *id, json_value *args);
+obj_t *obj_create(const char *type, json_value *args);
 
 /*
  * Function: obj_create
  * Same as obj_create but the json arguments are passed as a string.
  */
-obj_t *obj_create_str(const char *type, const char *id, const char *args);
+obj_t *obj_create_str(const char *type, const char *args);
 
 /*
  * Function: obj_release

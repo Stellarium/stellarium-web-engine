@@ -192,7 +192,7 @@ static shower_t *create_shower(const json_value *doc)
     "}");
     if (r != 0) goto error;
 
-    s = (void*)obj_create("meteor-shower", NULL, NULL);
+    s = (void*)obj_create("meteor-shower", NULL);
     eraS2c(ra * DD2R, dec * DD2R, s->pos);
     snprintf(s->iau_code, sizeof(s->iau_code), "%s", iau_code);
     snprintf(s->designation, sizeof(s->designation), "%s", designation);

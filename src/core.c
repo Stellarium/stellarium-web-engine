@@ -192,6 +192,7 @@ void core_init(double win_w, double win_h, double pixel_scale)
 {
     char cache_dir[1024];
     obj_klass_t *module;
+    obj_t *m;
 
     // Why do we even need those attributes?
     assert(!isnan(win_w) && !isnan(win_h) && !isnan(pixel_scale));
@@ -207,17 +208,20 @@ void core_init(double win_w, double win_h, double pixel_scale)
              sys_get_user_dir(), ".cache");
     request_init(cache_dir);
 
-    core = (core_t*)obj_create("core", "core", NULL);
+    core = (core_t*)obj_create("core", NULL);
+    core->obj.id = "core";
     core->win_size[0] = win_w;
     core->win_size[1] = win_h;
     core->win_pixels_scale = pixel_scale;
     core->display_limit_mag = 99;
 
-    core->observer = (observer_t*)obj_create("observer", "observer", NULL);
+    core->observer = (observer_t*)obj_create("observer", NULL);
+    core->observer->obj.id = "observer";
 
     for (module = obj_get_all_klasses(); module; module = module->next) {
         if (!(module->flags & OBJ_MODULE)) continue;
-        module_add_new(&core->obj, module->id, module->id, NULL);
+        m = module_add_new(&core->obj, module->id, NULL);
+        m->id = module->id;
     }
     DL_SORT(core->obj.children, modules_sort_cmp);
 

@@ -13,7 +13,7 @@
 // Global list of all the registered klasses.
 static obj_klass_t *g_klasses = NULL;
 
-static obj_t *obj_create_(obj_klass_t *klass, const char *id, json_value *args)
+static obj_t *obj_create_(obj_klass_t *klass, json_value *args)
 {
     const char *attr;
     int i;
@@ -21,7 +21,6 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, json_value *args)
 
     assert(klass->size);
     obj = calloc(1, klass->size);
-    if (id) obj->id = strdup(id);
     obj->ref = 1;
     obj->klass = klass;
 
@@ -45,7 +44,7 @@ static obj_t *obj_create_(obj_klass_t *klass, const char *id, json_value *args)
     return obj;
 }
 
-obj_t *obj_create(const char *type, const char *id, json_value *args)
+obj_t *obj_create(const char *type, json_value *args)
 {
     obj_t *obj;
     obj_klass_t *klass;
@@ -55,20 +54,20 @@ obj_t *obj_create(const char *type, const char *id, json_value *args)
         if (klass->model && strcmp(klass->model, type) == 0) break;
     }
     assert(klass);
-    obj = obj_create_(klass, id, args);
+    obj = obj_create_(klass, args);
     return obj;
 }
 
 // Same as obj_create but the json arguments are passes the json arguments
 // as a string.
 EMSCRIPTEN_KEEPALIVE
-obj_t *obj_create_str(const char *type, const char *id, const char *args)
+obj_t *obj_create_str(const char *type, const char *args)
 {
     obj_t *ret;
     json_value *jargs;
     json_settings settings = {.value_extra = json_builder_extra};
     jargs = args ? json_parse_ex(&settings, args, strlen(args), NULL) : NULL;
-    ret = obj_create(type, id, jargs);
+    ret = obj_create(type, jargs);
     json_value_free(jargs);
     return ret;
 }
@@ -86,7 +85,6 @@ void obj_release(obj_t *obj)
         }
         assert(!obj->parent);
         if (obj->klass->del) obj->klass->del(obj);
-        free(obj->id);
         free(obj);
     }
 }

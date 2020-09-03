@@ -1151,7 +1151,7 @@ static int planets_ini_handler(void* user, const char* section,
 
     planet = planet_get_by_name(planets, section);
     if (!planet) {
-        planet = (void*)module_add_new(&planets->obj, "planet", id, NULL);
+        planet = (void*)module_add_new(&planets->obj, "planet", NULL);
         strcpy(name, section);
         name[0] += 'A' - 'a';
         planet->name = strdup(name);

@@ -124,7 +124,7 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
             nb_err++;
             continue;
         }
-        mplanet = (void*)module_add_new(&mplanets->obj, "asteroid", NULL, NULL);
+        mplanet = (void*)module_add_new(&mplanets->obj, "asteroid", NULL);
         mplanet->orbit.d = epoch;
         mplanet->orbit.m = m * DD2R;
         mplanet->orbit.w = w * DD2R;

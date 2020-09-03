@@ -22,6 +22,7 @@ enum {
  */
 typedef struct landscape {
     obj_t           obj;
+    char            *key; // The key passed to add_data_source.
     char            *uri;
     fader_t         visible;
     double          color[4];
@@ -205,7 +206,9 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
 {
     landscape_t *ls;
 
-    ls = (void*)module_add_new(&lss->obj, "landscape", key, NULL);
+    ls = (void*)module_add_new(&lss->obj, "landscape", NULL);
+    ls->key = strdup(key);
+    ls->obj.id = ls->key;
     ls->uri = strdup(uri);
     if (strcmp(key, "zero") != 0) {
         ls->hips = hips_create(uri, 0, NULL);
@@ -214,7 +217,7 @@ static landscape_t *add_from_uri(landscapes_t *lss, const char *uri,
         ls->info.name = strdup(key);
     } else {
         // Zero horizon shape.
-        ls->shape = module_add_new(&ls->obj, "circle", NULL, NULL);
+        ls->shape = module_add_new(&ls->obj, "circle", NULL);
         obj_set_attr(ls->shape, "pos", VEC(0, 0, -1, 0));
         obj_set_attr(ls->shape, "frame", FRAME_OBSERVED);
         obj_set_attr(ls->shape, "size", VEC(M_PI, M_PI));
@@ -261,7 +264,7 @@ static void landscapes_gui(obj_t *obj, int location)
     if (location == 0 && gui_tab("Landscapes")) {
         MODULE_ITER(obj, ls, "landscape") {
             gui_item(&(gui_item_t){
-                    .label = ls->obj.id,
+                    .label = ls->key,
                     .obj = (obj_t*)ls,
                     .attr = "active"});
         }
@@ -277,7 +280,7 @@ static int landscapes_add_data_source(
 
     // Skip if we already have it.
     MODULE_ITER(lss, ls, NULL) {
-        if (strcmp(ls->obj.id, key) == 0) return 0;
+        if (strcmp(ls->key, key) == 0) return 0;
     }
 
     ls = add_from_uri(lss, url, key);
@@ -299,14 +302,14 @@ static json_value *landscapes_current_id_fn(
     if (args && args->u.array.length) {
         args_get(args, TYPE_STRING, id);
         MODULE_ITER(lss, ls, "landscape") {
-            if (strcmp(ls->obj.id, id) == 0) {
+            if (strcmp(ls->key, id) == 0) {
                 obj_set_attr((obj_t*)ls, "active", true);
                 break;
             }
         }
     }
     if (!lss->current) return json_null_new();
-    return args_value_new(TYPE_STRING, lss->current->obj.id);
+    return args_value_new(TYPE_STRING, lss->current->key);
 }
 
 /*

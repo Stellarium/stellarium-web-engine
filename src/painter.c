@@ -775,7 +775,7 @@ void paint_cap(const painter_t *painter, int frame, double cap[4])
     vec3_copy(cap, p);
     p[3] = 0;
     r = acos(cap[3]) * 2;
-    obj_t* obj = obj_create("circle", "cap_circle", NULL);
+    obj_t* obj = obj_create("circle", NULL);
     obj_set_attr(obj, "pos", p);
     obj_set_attr(obj, "frame", frame);
     double size[2] = {r, r};

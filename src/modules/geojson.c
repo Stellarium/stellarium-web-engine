@@ -112,7 +112,7 @@ static void add_geojson_feature(image_t *image,
 {
     feature_t *feature;
 
-    feature = (void*)obj_create("geojson-feature", NULL, NULL);
+    feature = (void*)obj_create("geojson-feature", NULL);
     feature->frame = image->frame;
 
     vec3_copy(geo_feature->properties.fill, feature->fill_color);

@@ -360,14 +360,11 @@ Module.afterInit(function() {
   Module['createObj'] = function(type, args) {
     // Don't use the emscripten wrapped version of obj_create_str, since
     // it seems to crash with large strings!
-    let id = args ? args.id : 0;
     args = args ? stringToC(JSON.stringify(args)) : 0;
-    if (id) id = stringToC(id);
     const ctype = stringToC(type);
-    let ret = Module._obj_create_str(ctype, id, args);
+    let ret = Module._obj_create_str(ctype, args);
     Module._free(type);
     Module._free(args);
-    if (id) Module._free(id);
     ret = ret ? new SweObj(ret) : null;
     // Add special geojson object methods.
     if (type === 'geojson') Module.onGeojsonObj(ret);

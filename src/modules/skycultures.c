@@ -31,8 +31,8 @@ enum {
  */
 typedef struct skyculture {
     obj_t           obj;
+    char            *key;   // The key passed to add_data_source.
     char            *uri;
-    char            *id;
     int             nb_constellations;
     skyculture_name_t *names; // Hash table of identifier -> common names.
     constellation_infos_t *constellations;
@@ -109,35 +109,30 @@ static void skyculture_deactivate(skyculture_t *cult)
     constellations = core_get_module("constellations");
     assert(constellations);
     DL_FOREACH_SAFE(constellations->children, cst, tmp) {
-        if (str_startswith(cst->id, "CST ")) {
-            module_remove(constellations, cst);
-        }
+        module_remove(constellations, cst);
     }
 }
 
 static void skyculture_activate(skyculture_t *cult)
 {
-    char id[256];
     int i;
     json_value *args;
     constellation_infos_t *cst;
-    obj_t *constellations, *cons;
+    obj_t *constellations;
 
     // Create all the constellations object.
     constellations = core_get_module("constellations");
     assert(constellations);
     for (i = 0; i < cult->nb_constellations; i++) {
         cst = &cult->constellations[i];
-        snprintf(id, sizeof(id), "CST %s", cst->id);
-        cons = module_get_child(constellations, id);
-        if (cons) {
-            module_remove(constellations, cons);
-            obj_release(cons);
-            continue;
+        if (DEBUG) {
+            char id[256];
+            snprintf(id, sizeof(id), "CST %s", cst->id);
+            assert(!module_get_child(constellations, id));
         }
         args = json_object_new(0);
         json_object_push(args, "info_ptr", json_integer_new((int64_t)cst));
-        module_add_new(constellations, "constellation", id, args);
+        module_add_new(constellations, "constellation", args);
         json_builder_free(args);
     }
 
@@ -148,11 +143,13 @@ static void skyculture_activate(skyculture_t *cult)
 
 static int skyculture_update(obj_t *obj, double dt);
 static skyculture_t *add_from_uri(skycultures_t *cults, const char *uri,
-                                  const char *id)
+                                  const char *key)
 {
     skyculture_t *cult;
-    cult = (void*)module_add_new(&cults->obj, "skyculture", id, NULL);
+    cult = (void*)module_add_new(&cults->obj, "skyculture", NULL);
+    cult->key = strdup(key);
     cult->uri = strdup(uri);
+    cult->obj.id = cult->key;
     skyculture_update((obj_t*)cult, 0);
     return cult;
 }
@@ -332,7 +329,7 @@ static void add_section(const char *section_name, const char *content,
     } else if (strcmp(section_name, "Extras") == 0) {
         // Currently ignores this section
     } else {
-        LOG_W("Error in sky culture %s: ", cult->id);
+        LOG_W("Error in sky culture %s: ", cult->key);
         LOG_W("unknown level 2 section: %s", section_name);
     }
 }
@@ -349,7 +346,7 @@ static void add_markdown(const char *md, skyculture_t *cult)
                  (int)(m[1].rm_eo - m[1].rm_so), md + m[1].rm_so);
         cult->name = strdup(section_name);
     } else {
-        LOG_E("Error in sky culture %s: ", cult->id);
+        LOG_E("Error in sky culture %s: ", cult->key);
         LOG_E("markdown must start with # Sky Culture Name");
         cult->name = strdup("Unknown");
     }
@@ -463,7 +460,7 @@ static int skyculture_update(obj_t *obj, double dt)
         return -1;
     }
 
-    cult->id = strdup(id);
+    assert(strcmp(id, cult->key) == 0); // For the moment.
     cult->has_chinese_star_names = strncmp(id, "chinese", 7) == 0;
     if (name)
         cult->name = strdup(name);
@@ -534,7 +531,7 @@ static void skycultures_gui(obj_t *obj, int location)
             }
             res = gui_toggle(cult->name, &active);
             if (res) {
-                obj_set_attr((obj_t*)cults, "current_id", cult->obj.id);
+                obj_set_attr((obj_t*)cults, "current_id", cult->key);
             }
         }
         gui_tab_end();
@@ -978,21 +975,21 @@ static json_value *skycultures_current_id_fn(
         args_get(args, TYPE_STRING, id);
         if (cults->current) {
             MODULE_ITER(cults, cult, "skyculture") {
-                if (strcmp(cult->obj.id, cults->current->obj.id) == 0) {
+                if (strcmp(cult->key, cults->current->key) == 0) {
                     skyculture_deactivate(cult);
                     break;
                 }
             }
         }
         MODULE_ITER(cults, cult, "skyculture") {
-            if (strcmp(cult->obj.id, id) == 0) {
+            if (strcmp(cult->key, id) == 0) {
                 skyculture_activate(cult);
                 break;
             }
         }
     }
     if (!cults->current) return json_null_new();
-    return args_value_new(TYPE_STRING, cults->current->obj.id);
+    return args_value_new(TYPE_STRING, cults->current->key);
 }
 
 /*
