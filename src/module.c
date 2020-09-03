@@ -216,12 +216,19 @@ static json_value *module_get_tree_json(const obj_t *obj, bool detailed)
         attr = &klass->attributes[i];
         if (!attr->name) break;
         if (!attr->is_prop) continue;
-        val = obj_call_json(obj, attr->name, NULL);
-        // Remove the attributes informations if we want a simple tree.
-        if (!detailed && json_get_attr(val, "swe_", 0)) {
-            tmp = json_extract_attr(val, "v");
-            json_builder_free(val);
-            val = tmp;
+
+        // Special case for the observer.  Instead we should add an attribute
+        // flag to say that we want to get the detailed value here.
+        if (obj == &core->obj && strcmp(attr->name, "observer") == 0) {
+            val = module_get_tree_json(&core->observer->obj, detailed);
+        } else {
+            val = obj_call_json(obj, attr->name, NULL);
+            // Remove the attributes informations if we want a simple tree.
+            if (!detailed && json_get_attr(val, "swe_", 0)) {
+                tmp = json_extract_attr(val, "v");
+                json_builder_free(val);
+                val = tmp;
+            }
         }
         json_object_push(ret, attr->name, val);
     }
