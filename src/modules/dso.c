@@ -468,7 +468,7 @@ static void dso_render_label(const dso_t *s,
                              const painter_t *painter,
                              const double win_size[2], double win_angle)
 {
-    const bool selected = core->selection && &s->obj == core->selection;
+    const bool selected = (&s->obj == core->selection);
     int effects = 0;
     double color[4], radius;
     char buf[128] = "";
@@ -501,7 +501,7 @@ static int dso_render_from_data(const dso_t *s,
     PROFILE(dso_render_from_data, PROFILE_AGGREGATE);
     double color[4];
     double win_pos[2], win_size[2], win_angle, hints_limit_mag;
-    const bool selected = core->selection && &s->obj == core->selection;
+    const bool selected = (&s->obj == core->selection);
     double opacity;
     painter_t tmp_painter;
     const float vmag = s->display_vmag;

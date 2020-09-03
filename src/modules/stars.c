@@ -314,7 +314,7 @@ static void star_render_name(const painter_t *painter, const star_t *s,
 {
     double label_color[4] = {color[0], color[1], color[2], 0.8};
     static const double white[4] = {1, 1, 1, 1};
-    const bool selected = core->selection && &s->obj == core->selection;
+    const bool selected = (&s->obj == core->selection);
     int effects = TEXT_FLOAT;
     char buf[128];
     const double hints_mag_offset = g_stars->hints_mag_offset;
@@ -692,7 +692,7 @@ static int render_visitor(int order, int pix, void *user)
             .obj = (luminance > 0.5 && size > 1) ? &s->obj : NULL,
         };
         n++;
-        selected = core->selection && &s->obj == core->selection;
+        selected = (&s->obj == core->selection);
         if (selected || (stars->hints_visible && !survey->is_gaia))
             star_render_name(&painter, s, FRAME_ASTROM, v, size, color);
     }
