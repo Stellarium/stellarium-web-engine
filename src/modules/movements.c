@@ -18,7 +18,6 @@ typedef struct movements {
     obj_t           obj;
     gesture_t       gest_pan;
     gesture_t       gest_click;
-    gesture_t       gest_hover;
     gesture_t       gest_pinch;
 } movements_t;
 
@@ -84,15 +83,6 @@ static int on_click(const gesture_t *gest, void *user)
     return 0;
 }
 
-static int on_hover(const gesture_t *gest, void *user)
-{
-    obj_t *obj;
-    obj = core_get_obj_at(gest->pos[0], gest->pos[1], 18);
-    obj_set_attr(&core->obj, "hovered", obj);
-    obj_release(obj);
-    return 0;
-}
-
 static int on_pinch(const gesture_t *gest, void *user)
 {
     static double start_fov = 0;
@@ -114,10 +104,6 @@ static int movements_init(obj_t *obj, json_value *args)
     movs->gest_click = (gesture_t) {
         .type = GESTURE_CLICK,
         .callback = on_click,
-    };
-    movs->gest_hover = (gesture_t) {
-        .type = GESTURE_HOVER,
-        .callback = on_hover,
     };
     movs->gest_pinch = (gesture_t) {
         .type = GESTURE_PINCH,
@@ -155,9 +141,8 @@ static int movements_on_mouse(obj_t *obj, int id, int state,
     core->inputs.touches[id].pos[1] = y;
     core->inputs.touches[id].down[0] = state == 1;
     if (core->gui_want_capture_mouse) return 0;
-    gesture_t *gs[] = {&movs->gest_pan, &movs->gest_pinch,
-                       &movs->gest_click, &movs->gest_hover};
-    gesture_on_mouse(4, gs, id, state, x, y, movs);
+    gesture_t *gs[] = {&movs->gest_pan, &movs->gest_pinch, &movs->gest_click};
+    gesture_on_mouse(3, gs, id, state, x, y, movs);
     return 0;
 }
 

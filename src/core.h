@@ -89,7 +89,6 @@ struct core
     double          win_size[2];
     double          win_pixels_scale;
     obj_t           *selection;
-    obj_t           *hovered;
 
     fps_t           fps; // FPS counter.
 

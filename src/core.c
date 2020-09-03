@@ -1116,7 +1116,6 @@ static obj_klass_t core_klass = {
         PROPERTY(projection, TYPE_INT, MEMBER(core_t, proj)),
         PROPERTY(selection, TYPE_OBJ, MEMBER(core_t, selection)),
         PROPERTY(lock, TYPE_OBJ, MEMBER(core_t, target.lock)),
-        PROPERTY(hovered, TYPE_OBJ, MEMBER(core_t, hovered)),
         PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),
         PROPERTY(fps, TYPE_INT, MEMBER(core_t, fps.avg)),
         PROPERTY(clicks, TYPE_INT, MEMBER(core_t, clicks)),
