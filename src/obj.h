@@ -172,7 +172,6 @@ struct obj_klass
  *   klass      - Pointer to an <obj_klass_t> structure.
  *   ref        - Reference counter.
  *   id         - Optional string id of the object.  Mostly used for modules.
- *   oid        - Internal uniq id.
  *   type       - Four bytes type id of the object.  Should follow the
  *                condensed values defined by Simbad:
  *                http://simbad.u-strasbg.fr/simbad/sim-display?data=otypes
@@ -180,12 +179,6 @@ struct obj_klass
  *   children   - Pointer to the list of children.
  *   prev       - Pointer to the previous sibling.
  *   next       - Pointer to the next sibling.
- *   observer_hash - Hash of the observer the last time obj_update was called.
- *                   Can be used to skip update.
- *   vmag       - Visual magnitude.
- *   pos        - TODO: for the moment this is a struct with various computed
- *                positions.  I want to replace it with a single ICRS
- *                pos + speed argument.
  */
 struct obj
 {
