@@ -325,7 +325,6 @@ const swh = {
   },
 
   sweObj2SkySource: function (obj) {
-    const $stel = Vue.prototype.$stel
     const names = obj.designations()
     const that = this
 
@@ -343,47 +342,36 @@ const swh = {
       }
     }
 
-    const printErr = function (err, n) {
-      let gaiaName
-      for (const i in names) {
-        if (names[i].startsWith('GAIA')) {
-          gaiaName = names[i]
+    const printErr = function (n) {
+      console.log("Couldn't find online skysource data for name: " + n)
+
+      const ss = obj.data
+      if (!ss.model_data) {
+        ss.model_data = {}
+      }
+      // Names fixup
+      let i
+      for (i in ss.names) {
+        if (ss.names[i].startsWith('GAIA')) {
+          ss.names[i] = ss.names[i].replace(/^GAIA /, 'Gaia DR2 ')
         }
       }
-      if (gaiaName) {
-        console.log('Generate Gaia object info from StelWebEngine object')
-        const radecICRS = $stel.c2s(obj.getInfo('radec'))
-        const raICRS = $stel.anp(radecICRS[0])
-        const decICRS = $stel.anpm(radecICRS[1])
-        const ss = {
-          model: 'star',
-          types: ['*'],
-          names: [obj.designations()[0].replace(/^GAIA /, 'Gaia DR2 ')],
-          modelData: {
-            Vmag: obj.getInfo('vmag'),
-            ra: raICRS * 180 / Math.PI,
-            de: decICRS * 180 / Math.PI
-          }
-        }
-        return ss
-      }
-      console.log(err)
-      console.log("Couldn't find skysource for name: " + n)
-      throw err
+      // ss.culturalNames = obj.culturalDesignations()
+      return ss
     }
 
     return that.lookupSkySourceByName(names[0]).then(res => {
       return res
-    }, err => {
-      if (names.length === 1) return printErr(err, names[0])
+    }, () => {
+      if (names.length === 1) return printErr(names[0])
       return that.lookupSkySourceByName(names[1]).then(res => {
         return res
-      }, err => {
-        if (names.length === 2) return printErr(err, names[1])
+      }, () => {
+        if (names.length === 2) return printErr(names[1])
         return that.lookupSkySourceByName(names[2]).then(res => {
           return res
-        }, err => {
-          return printErr(err, names[2])
+        }, () => {
+          return printErr(names[2])
         })
       })
     })
