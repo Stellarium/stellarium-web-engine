@@ -941,12 +941,46 @@ static void on_designation_cn(const obj_t *obj, void *user2, const char *dsgn)
         add_one_cn(entry, obj, user, f);
 }
 
-EMSCRIPTEN_KEEPALIVE
 void skycultures_get_cultural_names(const obj_t *obj, void *user,
               void (*f)(const obj_t *obj, void *user,
                         const cultural_name_t *cn))
 {
     obj_get_designations(obj, USER_PASS(user, f), on_designation_cn);
+}
+
+static void on_cultural_name_(const obj_t *obj, void *user,
+                              const cultural_name_t *cn)
+{
+    json_value *ret = user;
+    json_value *val = json_object_new(0);
+
+    #define X(attr) if (cn->attr) \
+        json_object_push(val, #attr, json_string_new(cn->attr));
+    X(name_native);
+    X(name_english);
+    X(name_pronounce);
+    X(name_translated);
+    #undef X
+    json_object_push(val, "user_prefer_native",
+                     json_boolean_new(cn->user_prefer_native));
+    json_array_push(ret, val);
+}
+
+// Same as skycultures_get_cultural_names but returns a json array.  Used
+// for the js binding only.
+EMSCRIPTEN_KEEPALIVE
+char *skycultures_get_cultural_names_json(const obj_t *obj)
+{
+    json_value *jret;
+    char *ret;
+    int size;
+    jret = json_array_new(0);
+    skycultures_get_cultural_names(obj, jret, on_cultural_name_);
+    size = json_measure(jret);
+    ret = calloc(1, size);
+    json_serialize(ret, jret);
+    json_builder_free(jret);
+    return ret;
 }
 
 /*

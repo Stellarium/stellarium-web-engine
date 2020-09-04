@@ -183,6 +183,21 @@ Module.afterInit(function() {
   };
 
   /*
+   * Function: culturalDesignations
+   *
+   * Return an array of objects with attributes:
+   *   'name_native', 'name_english', 'name_pronounce', 'name_translated',
+   *   'user_prefer_native'.
+   */
+  SweObj.prototype.culturalDesignations = function() {
+    let ret = Module._skycultures_get_cultural_names_json(this.v);
+    ret = Module.UTF8ToString(ret);
+    Module._free(ret);
+    ret = JSON.parse(ret);
+    return ret;
+  };
+
+  /*
    * Function: listObjs
    * Return a list of SweObject for a given module.
    *
