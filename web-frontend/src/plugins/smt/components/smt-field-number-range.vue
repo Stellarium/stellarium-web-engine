@@ -79,11 +79,11 @@ export default {
       return '' + d
     },
     rangeButtonClicked: function () {
-      let constraint = {
-        'field': this.fieldResults.field,
-        'operation': 'NUMBER_RANGE',
-        'expression': [this.rangeSliderValues[0], this.rangeSliderValues[1]],
-        'negate': false
+      const constraint = {
+        field: this.fieldResults.field,
+        operation: 'NUMBER_RANGE',
+        expression: [this.rangeSliderValues[0], this.rangeSliderValues[1]],
+        negate: false
       }
       this.$emit('add-constraint', constraint)
       this.wasChanged = false
@@ -97,7 +97,7 @@ export default {
   computed: {
     fieldResultsData: function () {
       if (this.fieldResults) {
-        let newData = _.cloneDeep(this.fieldResults.data)
+        const newData = _.cloneDeep(this.fieldResults.data)
         if (newData.table.length) newData.table[0].push({ role: 'annotation' })
         for (let i = 1; i < newData.table.length; ++i) {
           newData.table[i].push('' + newData.table[i][1])
@@ -119,11 +119,11 @@ export default {
   },
   watch: {
     rangeSliderValues: function (s) {
-      let constraint = {
-        'field': this.fieldResults.field,
-        'operation': 'NUMBER_RANGE',
-        'expression': [this.rangeSliderValues[0], this.rangeSliderValues[1]],
-        'negate': false
+      const constraint = {
+        field: this.fieldResults.field,
+        operation: 'NUMBER_RANGE',
+        expression: [this.rangeSliderValues[0], this.rangeSliderValues[1]],
+        negate: false
       }
       if (this.isUserDragging) {
         this.$emit('constraint-live-changed', constraint)

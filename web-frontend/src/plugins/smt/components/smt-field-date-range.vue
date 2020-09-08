@@ -87,11 +87,11 @@ export default {
       return new Moment(d).format('YYYY-MM-DD')
     },
     rangeButtonClicked: function () {
-      let constraint = {
-        'field': this.fieldResults.field,
-        'operation': 'DATE_RANGE',
-        'expression': [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
-        'negate': false
+      const constraint = {
+        field: this.fieldResults.field,
+        operation: 'DATE_RANGE',
+        expression: [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
+        negate: false
       }
       this.$emit('add-constraint', constraint)
       this.wasChanged = false
@@ -103,14 +103,14 @@ export default {
     },
     rangeMinTextuallyChanged: function (v) {
       if (this.rules.date(v) === true) {
-        let t = new Date(v).getTime()
+        const t = new Date(v).getTime()
         this.dateRangeSliderValues = [t, this.dateRangeSliderValues[1]]
         this.wasChanged = true
       }
     },
     rangeMaxTextuallyChanged: function (v) {
       if (this.rules.date(v) === true) {
-        let t = new Date(v).getTime()
+        const t = new Date(v).getTime()
         this.dateRangeSliderValues = [this.dateRangeSliderValues[0], t]
         this.wasChanged = true
       }
@@ -119,7 +119,7 @@ export default {
   computed: {
     fieldResultsData: function () {
       if (this.fieldResults) {
-        let newData = _.cloneDeep(this.fieldResults.data)
+        const newData = _.cloneDeep(this.fieldResults.data)
         if (newData.table.length) newData.table[0].push({ role: 'annotation' })
         for (let i = 1; i < newData.table.length; ++i) {
           newData.table[i].push('' + newData.table[i][1])
@@ -141,11 +141,11 @@ export default {
   },
   watch: {
     dateRangeSliderValues: function (s) {
-      let constraint = {
-        'field': this.fieldResults.field,
-        'operation': 'DATE_RANGE',
-        'expression': [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
-        'negate': false
+      const constraint = {
+        field: this.fieldResults.field,
+        operation: 'DATE_RANGE',
+        expression: [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
+        negate: false
       }
       if (this.isUserDragging) {
         this.$emit('constraint-live-changed', constraint)

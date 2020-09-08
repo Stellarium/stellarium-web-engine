@@ -49,13 +49,13 @@ export default {
     app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
-    let baseDataURL = process.env.BASE_URL + 'plugins/smt/data/'
+    const baseDataURL = process.env.BASE_URL + 'plugins/smt/data/'
     fetch(baseDataURL + 'smtConfig.json').then(resp => {
       resp.json().then(smtConfig => {
-        let filtrexOptions = {
+        const filtrexOptions = {
           extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
         }
-        for (let field of smtConfig.fields) {
+        for (const field of smtConfig.fields) {
           if (field.formatFunc) {
             field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
           }
@@ -71,13 +71,13 @@ export default {
         }
         app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
 
-        let fetchAndIngest = function (url) {
+        const fetchAndIngest = function (url) {
           url = baseDataURL + url
           return qe.loadGeojson(url)
         }
 
         qe.initDB(smtConfig.fields).then(_ => {
-          let allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
+          const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
           Promise.all(allPromise).then(_ => {
             app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
           })
