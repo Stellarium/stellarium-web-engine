@@ -37,12 +37,15 @@ update-engine-debug:
 	cp ../build/stellarium-web-engine.js src/assets/js/
 	cp ../build/stellarium-web-engine.wasm src/assets/js/
 
+USER_UID := $(shell id -u)
+USER_GID := $(shell id -g)
+
 setup: Dockerfile Dockerfile.jsbuild
 	# Build docker image for compilation with emscripten
 	docker build -f Dockerfile.jsbuild -t swe-dev . # --no-cache
 	make update-engine
 	# Build docker image for webpack/node development
-	docker build -t stellarium-web-dev .
+	docker build -t stellarium-web-dev --build-arg USER_UID=${USER_UID} --build-arg USER_GID=${USER_GID} .
 	docker run -it -v "$(PWD):/app" -v "$(PWD)/../data:/data" stellarium-web-dev yarn install
 
 dev:
