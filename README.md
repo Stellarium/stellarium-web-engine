@@ -37,15 +37,6 @@ You need to make sure you have both emscripten and sconstruct installed.
     # Now we can open html/test-page.html in a browser.
 
 
-Build the C version
--------------------
-
-For development, it is useful to work on a native build of the code, since the
-code is written in C with OpenGL, you can simply build it with:
-
-    make
-
-
 Contributing
 ------------
 
