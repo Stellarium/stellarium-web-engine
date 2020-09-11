@@ -530,6 +530,19 @@ bool core_get_point_for_mag(double mag, double *radius, double *luminance)
     return true;
 }
 
+double core_get_hints_mag_offset(const double win_pos[2])
+{
+    const double center[2] = {core->win_size[0] / 2, core->win_size[1] / 2};
+    const double var = 60;
+    double x;
+    // Gaussian distribution at center of screen with max value
+    // core->center_hints_mag_offset and hard-codded variance.
+    if (core->center_hints_mag_offset == 0)
+        return 0;
+    x = vec2_dist(win_pos, center);
+    return core->center_hints_mag_offset * exp(-x / (2 * var));
+}
+
 /*
  * Function: compute_vmag_for_radius
  * Compute the vmag for a given screen radius.
@@ -1131,6 +1144,8 @@ static obj_klass_t core_klass = {
         PROPERTY(tonemapper_p, TYPE_FLOAT, MEMBER(core_t, tonemapper_p)),
         PROPERTY(display_limit_mag, TYPE_FLOAT,
                  MEMBER(core_t, display_limit_mag)),
+        PROPERTY(center_hints_mag_offset, TYPE_FLOAT,
+                 MEMBER(core_t, center_hints_mag_offset)),
         PROPERTY(flip_view_vertical, TYPE_BOOL,
                  MEMBER(core_t, flip_view_vertical)),
         PROPERTY(flip_view_horizontal, TYPE_BOOL,

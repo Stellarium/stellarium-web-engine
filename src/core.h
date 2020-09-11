@@ -66,6 +66,11 @@ struct core
     // of zoom/exposure levels. Set to e.g. 99 to practically disable.
     double          display_limit_mag;
 
+    // Extra hints mag offset applied around the center of the screen, to
+    // show more labels near the center if needed.  See
+    // core_get_hints_mat_offset for detail on the algo used.
+    double          center_hints_mag_offset;
+
     tonemapper_t    tonemapper;
     bool            fast_adaptation; // True if eye adpatation is fast
     double          tonemapper_p;
@@ -302,6 +307,19 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
  *               set to NULL.
  */
 bool core_get_point_for_mag(double mag, double *radius, double *luminance);
+
+/*
+ * Function: core_get_hints_mag_offset
+ * Return the global adjustment offset to apply to the label threshold
+ *
+ * Modules can call this function to adjust the density of label at a
+ * given position on screen.  This is used for real time increase of labels
+ * at the center of the screen.
+ *
+ * The client code can control the behavior with the core
+ * 'center_hints_mag_offset' attribute.
+ */
+double core_get_hints_mag_offset(const double win_pos[2]);
 
 /*
  * Function: core_mag_to_illuminance
