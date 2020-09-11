@@ -56,44 +56,30 @@ export default {
     app.$store.commit('setValue', { varName: 'showTimeButtons', newValue: false })
     app.$store.commit('setValue', { varName: 'showFPS', newValue: true })
 
-    const baseDataURL = process.env.BASE_URL + 'plugins/smt/data/'
-    fetch(baseDataURL + 'smtConfig.json').then(resp => {
-      resp.json().then(smtConfig => {
-        const filtrexOptions = {
-          extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
+    return qe.initDB().then(smtConfig => {
+      const filtrexOptions = {
+        extraFunctions: { sprintf: (fmt, x) => sprintfjs.sprintf(fmt, x) }
+      }
+      for (const field of smtConfig.fields) {
+        if (field.formatFunc) {
+          field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
         }
-        for (const field of smtConfig.fields) {
-          if (field.formatFunc) {
-            field.formatFuncCompiled = filtrex.compileExpression(field.formatFunc, filtrexOptions)
-          }
-        }
+      }
 
-        Vue.prototype.$smt = smtConfig
+      Vue.prototype.$smt = smtConfig
 
-        if (smtConfig.watermarkImage) {
-          app.$store.commit('setValue', { varName: 'SMT.watermarkImage', newValue: smtConfig.watermarkImage })
-        }
-        if (smtConfig.dataLoadingImage) {
-          app.$store.commit('setValue', { varName: 'SMT.dataLoadingImage', newValue: smtConfig.dataLoadingImage })
-        }
-        app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
-
-        const fetchAndIngest = function (url) {
-          url = baseDataURL + url
-          return qe.loadGeojson(url)
-        }
-
-        qe.initDB(smtConfig.fields).then(_ => {
-          const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-          Promise.all(allPromise).then(_ => {
-            app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
-          })
-        })
-      },
-      err => {
-        app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'error' })
-        throw err
-      })
+      if (smtConfig.watermarkImage) {
+        app.$store.commit('setValue', { varName: 'SMT.watermarkImage', newValue: smtConfig.watermarkImage })
+      }
+      if (smtConfig.dataLoadingImage) {
+        app.$store.commit('setValue', { varName: 'SMT.dataLoadingImage', newValue: smtConfig.dataLoadingImage })
+      }
+      app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'loading' })
+      app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'ready' })
+    },
+    err => {
+      app.$store.commit('setValue', { varName: 'SMT.status', newValue: 'error' })
+      throw err
     })
   }
 }

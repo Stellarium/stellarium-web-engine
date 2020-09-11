@@ -1,0 +1,19 @@
+{
+  "name": "smt-server",
+  "version": "1.0.0",
+  "description": "Survey Monitoring Tool",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Stellarium Labs <contact@stellarium-labs.fr>",
+  "license": "ISC",
+  "dependencies": {
+    "alasql": "^0.6.3",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "filtrex": "^2.1.0",
+    "hash-sum": "^2.0.0"
+  }
+}

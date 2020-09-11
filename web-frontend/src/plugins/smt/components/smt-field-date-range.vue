@@ -137,7 +137,7 @@ export default {
     },
     dateRange: function () {
       if (this.fieldResults && this.fieldResults.data && this.fieldResults.data.min !== undefined) {
-        return [this.fieldResults.data.min.getTime(), this.fieldResults.data.max.getTime()]
+        return [Date.parse(this.fieldResults.data.min), Date.parse(this.fieldResults.data.max)]
       }
       return [0, 1]
     }

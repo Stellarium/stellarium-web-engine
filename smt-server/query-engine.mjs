@@ -12,6 +12,7 @@
 import alasql from 'alasql'
 import _ from 'lodash'
 import filtrex from 'filtrex'
+import hash_sum from 'hash-sum'
 
 export default {
   fieldsList: undefined,
@@ -44,6 +45,7 @@ export default {
     }
 
     let that = this
+
     console.log('Create Data Base')
     that.fieldsList = fieldsList
     for (let i in fieldsList) {
@@ -287,5 +289,49 @@ export default {
     selectClause += ' FROM features'
     let sqlStatement = selectClause + whereClause
     return alasql.promise(sqlStatement).then(res => { return { q: q, res: res } })
+  },
+
+  // Contain the query settings (constraints) linked to a previous query
+  hashToQuery: {},
+
+  // Query the engine
+  queryVisual: function (q) {
+    const hash = hash_sum(q)
+    this.hashToQuery[hash] = q
+    return hash
+  },
+
+  getHipsProperties: function (queryHash) {
+    return "hips_tile_format = geojson\nhips_order = 5\nhips_order_min = 5"
+  },
+
+  getHipsTile: function (queryHash, level, tileId) {
+    const that = this
+    const q = _.cloneDeep(this.hashToQuery[queryHash])
+    if (!q)
+      return undefined
+    q.constraints.push({
+      field: {id: 'hips5_idx'},
+      operation: 'STRING_EQUAL',
+      expression: tileId,
+      negate: false
+    })
+    console.log(q)
+    const whereClause = this.constraints2SQLWhereClause(q.constraints)
+
+    const projectOptions = {
+      id: 1,
+      geometry: 1
+    }
+    for (const i in this.fieldsList) {
+      projectOptions[this.fieldsList[i].id] = 1
+    }
+    // Construct the SQL SELECT clause matching the given aggregate options
+    let selectClause = 'SELECT '
+    selectClause += Object.keys(projectOptions).map(k => that.fId2AlaSql(k)).join(', ')
+    selectClause += ' FROM features'
+    let sqlStatement = selectClause + whereClause
+    return alasql.promise(sqlStatement).then(res => { return { q: q, res: res } })
   }
+
 }
