@@ -131,6 +131,14 @@ void mesh_add_line(mesh_t *mesh, int ofs, int size)
     mesh->lines_count += (size - 1) * 2;
 }
 
+void mesh_add_point(mesh_t *mesh, int ofs)
+{
+    mesh->points = realloc(mesh->points,
+            (mesh->points_count + 1) * sizeof(*mesh->points));
+    mesh->points[mesh->points_count] = ofs;
+    mesh->points_count += 1;
+}
+
 // Should be in vec.h I guess, but we use eraSepp, so it's not conveniant.
 static void create_rotation_between_vecs(
         double rot[3][3], const double a[3], const double b[3])
