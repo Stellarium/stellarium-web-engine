@@ -132,7 +132,7 @@ hips_t *hips_create(const char *url, double release_date,
     hips->settings = *settings;
     hips->url = strdup(url);
     hips->service_url = strdup(url);
-    hips->ext = "jpg";
+    hips->ext = settings->ext ?: "jpg";
     hips->order_min = 3;
     hips->release_date = release_date;
     hips->frame = FRAME_ASTROM;
@@ -209,8 +209,9 @@ static int property_handler(void* user, const char* section,
         else if (strstr(value, "eph"))  {
             hips->ext = "eph";
             hips->allsky.not_available = true;
+        } else if (!hips->ext || !strstr(value, hips->ext)) {
+            LOG_W("Unknown hips format: %s", value);
         }
-        else LOG_W("Unknown hips format: %s", value);
     }
 
     /* Starting from version 1.4, hips format doesn't have allsky texture.
