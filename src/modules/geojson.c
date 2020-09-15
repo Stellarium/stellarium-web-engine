@@ -58,7 +58,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 {
     const double (*coordinates)[2];
     int i, size, ofs;
-    int rings_ofs = 0, rings_size[8];
+    int rings_ofs = 0, rings_size[16];
     mesh_t *mesh;
     geojson_geometry_t poly;
 
@@ -70,6 +70,10 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     case GEOJSON_POLYGON:
         mesh = calloc(1, sizeof(*mesh));
         for (i = 0; i < geo->polygon.size; i++) {
+            if (i >= ARRAY_SIZE(rings_size)) {
+                LOG_W("Geojson polygon has too many rings");
+                break;
+            }
             size = geo->polygon.rings[i].size;
             ofs = mesh_add_vertices_lonlat(
                     mesh, size, geo->polygon.rings[i].coordinates);
