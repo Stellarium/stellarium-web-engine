@@ -89,10 +89,15 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 
         DL_APPEND(feature->meshes, mesh);
         return;
+
     case GEOJSON_POINT:
         coordinates = &geo->point.coordinates;
-        size = 1;
-        break;
+        mesh = calloc(1, sizeof(*mesh));
+        ofs = mesh_add_vertices_lonlat(mesh, 1, coordinates);
+        mesh_add_point(mesh, ofs);
+        DL_APPEND(feature->meshes, mesh);
+        return;
+
     case GEOJSON_MULTIPOLYGON:
         for (i = 0; i < geo->multipolygon.size; i++) {
             poly.type = GEOJSON_POLYGON;
@@ -251,7 +256,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     const feature_t *feature;
     double pos[2], ofs[2];
-    int frame = image->frame;
+    int frame = image->frame, mode;
     const mesh_t *mesh;
 
     /*
@@ -266,7 +271,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->blink)
             painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            paint_mesh(&painter, frame, MODE_TRIANGLES, mesh);
+            mode = mesh->points_count ? MODE_POINTS : MODE_TRIANGLES;
+            paint_mesh(&painter, frame, mode, mesh);
         }
     }
 
@@ -274,6 +280,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->hidden || feature->stroke_color[3] == 0) continue;
         vec4_copy(feature->stroke_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
+            if (mesh->points_count) continue;
             painter.lines.width = feature->stroke_width;
             paint_mesh(&painter, frame, MODE_LINES, mesh);
         }
