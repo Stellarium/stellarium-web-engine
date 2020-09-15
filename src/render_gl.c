@@ -1019,7 +1019,9 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
     float fbo_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
 
-    gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES : GL_LINES;
+    gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES :
+              item->mesh.mode == 1 ? GL_LINES :
+              item->mesh.mode == 2 ? GL_POINTS : 0;
 
     shader_define_t defines[] = {
         {"PROJ_MOLLWEIDE", item->mesh.proj == PROJ_MOLLWEIDE},

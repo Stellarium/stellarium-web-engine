@@ -349,7 +349,7 @@ split:
  * Parameters:
  *   painter        - A painter instance.
  *   frame          - Frame of the vertex coordinates.
- *   mode           - MODE_TRIANGLES or MODE_LINES.
+ *   mode           - MODE_TRIANGLES or MODE_LINES or MODE_POINTS.
  *   mesh           - A 3d triangle mesh.
  */
 int paint_mesh(const painter_t *painter_, int frame, int mode,
@@ -359,26 +359,37 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
     int i;
     mesh_t *mesh2;
 
-    if (mesh->triangles_count == 0) return 0;
+    if (mode == MODE_TRIANGLES && mesh->triangles_count == 0) return 0;
+    if (mode == MODE_LINES && mesh->lines_count == 0) return 0;
+    if (mode == MODE_POINTS && mesh->points_count == 0) return 0;
+
     if (painter_is_cap_clipped(&painter, frame, mesh->bounding_cap))
         return 0;
 
     // Skip meshes that intersect a discontinuty.
-    if (painter.proj->flags & PROJ_HAS_DISCONTINUITY) {
+    if (mode != MODE_POINTS && (painter.proj->flags & PROJ_HAS_DISCONTINUITY)) {
         if (cap_intersects_discontinuity_line(
                     mesh->bounding_cap, painter.obs, frame)) {
             goto subdivide;
         }
     }
 
-    if (mode == MODE_TRIANGLES) {
+    switch (mode) {
+    case MODE_TRIANGLES:
         REND(painter.rend, mesh, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
              mesh->triangles_count, mesh->triangles);
-    } else {
+        break;
+    case MODE_LINES:
         REND(painter.rend, mesh, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
              mesh->lines_count, mesh->lines);
+        break;
+    case MODE_POINTS:
+        REND(painter.rend, mesh, &painter, frame, mode,
+             mesh->vertices_count, mesh->vertices,
+             mesh->points_count, mesh->points);
+        break;
     }
     return 0;
 
