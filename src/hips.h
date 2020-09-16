@@ -50,6 +50,7 @@ typedef struct hips_settings {
     const void *(*create_tile)(void *user, int order, int pix, void *data,
                                int size, int *cost, int *transparency);
     int (*delete_tile)(void *tile);
+    const char *ext; // If set, force the files extension.
     void *user;
 } hips_settings_t;
 

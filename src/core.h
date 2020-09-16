@@ -66,8 +66,13 @@ struct core
     // of zoom/exposure levels. Set to e.g. 99 to practically disable.
     double          display_limit_mag;
 
+    // Extra hints mag offset applied around the center of the screen, to
+    // show more labels near the center if needed.  See
+    // core_get_hints_mat_offset for detail on the algo used.
+    double          center_hints_mag_offset;
+
     tonemapper_t    tonemapper;
-    bool            fast_adaptation; // True if eye adpatation is fast
+    bool            fast_adaptation; // True if eye adaptation is fast
     double          tonemapper_p;
     double          lwmax; // Max visible luminance.
     double          lwmax_min; // Min value for lwmax.
@@ -148,7 +153,7 @@ struct core
     // List of running tasks.
     task_t *tasks;
 
-    // Can be used for debugging.  It's conveniant to have an exposed test
+    // Can be used for debugging.  It's convenient to have an exposed test
     // attribute.
     bool test;
 };
@@ -187,7 +192,7 @@ void core_release(void);
  * Update the core and all the modules
  *
  * Parameters:
- *   dt     - Time imcrement from last frame (sec).
+ *   dt     - Time increment from last frame (sec).
  */
 int core_update(double dt);
 
@@ -198,7 +203,7 @@ int core_update(double dt);
  * Should be called before core_update
  *
  * Parameters:
- *   dt     - Time imcrement from last frame (sec).
+ *   dt     - Time increment from last frame (sec).
  */
 void core_update_fov(double dt);
 
@@ -227,7 +232,7 @@ void core_on_zoom(double zoom, double x, double y);
 
 /*
  * Function: core_on_pinch
- * Called from the cliend to perform a pinch/panning gesture.
+ * Called from the client to perform a pinch/panning gesture.
  *
  * Parameters:
  *   state  - State of the panning gesture:
@@ -304,6 +309,19 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation);
 bool core_get_point_for_mag(double mag, double *radius, double *luminance);
 
 /*
+ * Function: core_get_hints_mag_offset
+ * Return the global adjustment offset to apply to the label threshold
+ *
+ * Modules can call this function to adjust the density of label at a
+ * given position on screen.  This is used for real time increase of labels
+ * at the center of the screen.
+ *
+ * The client code can control the behavior with the core
+ * 'center_hints_mag_offset' attribute.
+ */
+double core_get_hints_mag_offset(const double win_pos[2]);
+
+/*
  * Function: core_mag_to_illuminance
  * Compute the illuminance for a given magnitude.
  *
@@ -319,7 +337,7 @@ double core_mag_to_illuminance(double vmag);
 
 /*
  * Function: core_mag_to_surf_brightness
- * Compute the sufrace brightness from a mag and surface.
+ * Compute the surface brightness from a mag and surface.
  *
  * Parameters:
  *   mag       - The object's visual magnitude.
@@ -345,7 +363,7 @@ double core_illuminance_to_lum_apparent(double illum, double surf);
 
 /*
  * Function: core_surf_brightness_to_lum_apparent
- * Compute the apparent luminance from an objet's surface brightness.
+ * Compute the apparent luminance from an object's surface brightness.
  *
  * Parameters:
  *   surf_brightness - The object surface brightness in mag/arcsec²
@@ -357,7 +375,7 @@ double core_surf_brightness_to_lum_apparent(double surf_brightness);
 
 /*
  * Function: core_mag_to_lum_apparent
- * Compute the apparent luminance from an objet's magnitude and surface.
+ * Compute the apparent luminance from an object's magnitude and surface.
  *
  * Parameters:
  *   mag       - The visual magnitude integrated over the object's surface.
@@ -556,7 +574,7 @@ obj_t *core_get_planet(int horizons_id);
  */
 obj_t *core_search(const char *dsgns);
 
-// Just for conveniance: horizons ids for a few common bodies.
+// Just for convenience: horizons ids for a few common bodies.
 enum {
     PLANET_SUN = 10,
     PLANET_MOON = 301,

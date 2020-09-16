@@ -309,7 +309,8 @@ static bool star_get_bayer_name(const star_t *s, char *out, int size,
 
 
 static void star_render_name(const painter_t *painter, const star_t *s,
-                             int frame, const double pos[3], double radius,
+                             int frame, const double pos[3],
+                             const double win_pos[2], double radius,
                              double color[3])
 {
     double label_color[4] = {color[0], color[1], color[2], 0.8};
@@ -317,7 +318,8 @@ static void star_render_name(const painter_t *painter, const star_t *s,
     const bool selected = (&s->obj == core->selection);
     int effects = TEXT_FLOAT;
     char buf[128];
-    const double hints_mag_offset = g_stars->hints_mag_offset;
+    const double hints_mag_offset = g_stars->hints_mag_offset +
+                                    core_get_hints_mag_offset(win_pos);
     int flags = DSGN_TRANSLATE;
     const char *first_name = NULL;
 
@@ -397,7 +399,7 @@ static int star_render(const obj_t *obj, const painter_t *painter_)
     };
     paint_2d_points(&painter, 1, &point);
 
-    star_render_name(&painter, star, FRAME_ICRF, pvo[0], size, color);
+    star_render_name(&painter, star, FRAME_ICRF, pvo[0], p, size, color);
     return 0;
 }
 
@@ -694,7 +696,7 @@ static int render_visitor(int order, int pix, void *user)
         n++;
         selected = (&s->obj == core->selection);
         if (selected || (stars->hints_visible && !survey->is_gaia))
-            star_render_name(&painter, s, FRAME_ASTROM, v, size, color);
+            star_render_name(&painter, s, FRAME_ASTROM, v, p_win, size, color);
     }
     paint_2d_points(&painter, n, points);
     free(points);

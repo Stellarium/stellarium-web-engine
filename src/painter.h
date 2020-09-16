@@ -65,6 +65,7 @@ enum {
 enum {
     MODE_TRIANGLES = 0,
     MODE_LINES,
+    MODE_POINTS,
 };
 
 struct renderer

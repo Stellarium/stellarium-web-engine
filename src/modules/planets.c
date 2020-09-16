@@ -122,6 +122,7 @@ enum {
     SATURN = 699,
     URANUS = 799,
     NEPTUNE = 899,
+    PLUTO = 999,
 };
 
 /* visual elements of planets
@@ -223,6 +224,12 @@ static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
     case NEPTUNE:
         n = (planet->id - MERCURY) / 100 + 1;
         eraPlan94(DJM0, obs->tt, n, pvh);
+        break;
+
+    case PLUTO:
+        pluto_pos(obs->tt, pvh[0]);
+        pluto_pos(obs->tt + 1, pvh[1]);
+        vec3_sub(pvh[1], pvh[0], pvh[1]);
         break;
 
     case IO:

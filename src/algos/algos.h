@@ -77,6 +77,19 @@ void healpix_get_bounding_cap(int nside, int pix, double out[4]);
  */
 int moon_pos(double jde, double *lambda, double *beta, double *dist);
 
+/*
+ * Function: pluto_pos
+ * Compute Pluto position.
+ *
+ * Parameters:
+ *   tt_mjd     - TT time (MJD)
+ *   pos        - Output position, heliocentric, ICRF, AU
+ *
+ * Return:
+ *   zero.
+ */
+int pluto_pos(double tt_mjd, double pos[3]);
+
 
 /* Compute delta-t
  *

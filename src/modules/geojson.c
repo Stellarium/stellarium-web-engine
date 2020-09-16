@@ -47,6 +47,14 @@ typedef struct image {
 } image_t;
 
 
+typedef struct survey {
+    obj_t       obj;
+    hips_t      *hips;
+    double      min_fov;
+    double      max_fov;
+} survey_t;
+
+
 static int image_init(obj_t *obj, json_value *args)
 {
     image_t *image = (void*)obj;
@@ -58,7 +66,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 {
     const double (*coordinates)[2];
     int i, size, ofs;
-    int rings_ofs = 0, rings_size[8];
+    int rings_ofs = 0, rings_size[16];
     mesh_t *mesh;
     geojson_geometry_t poly;
 
@@ -70,6 +78,10 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     case GEOJSON_POLYGON:
         mesh = calloc(1, sizeof(*mesh));
         for (i = 0; i < geo->polygon.size; i++) {
+            if (i >= ARRAY_SIZE(rings_size)) {
+                LOG_W("Geojson polygon has too many rings");
+                break;
+            }
             size = geo->polygon.rings[i].size;
             ofs = mesh_add_vertices_lonlat(
                     mesh, size, geo->polygon.rings[i].coordinates);
@@ -85,10 +97,15 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 
         DL_APPEND(feature->meshes, mesh);
         return;
+
     case GEOJSON_POINT:
         coordinates = &geo->point.coordinates;
-        size = 1;
-        break;
+        mesh = calloc(1, sizeof(*mesh));
+        ofs = mesh_add_vertices_lonlat(mesh, 1, coordinates);
+        mesh_add_point(mesh, ofs);
+        DL_APPEND(feature->meshes, mesh);
+        return;
+
     case GEOJSON_MULTIPOLYGON:
         for (i = 0; i < geo->multipolygon.size; i++) {
             poly.type = GEOJSON_POLYGON;
@@ -247,7 +264,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     const feature_t *feature;
     double pos[2], ofs[2];
-    int frame = image->frame;
+    int frame = image->frame, mode;
     const mesh_t *mesh;
 
     /*
@@ -262,7 +279,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->blink)
             painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
-            paint_mesh(&painter, frame, MODE_TRIANGLES, mesh);
+            mode = mesh->points_count ? MODE_POINTS : MODE_TRIANGLES;
+            paint_mesh(&painter, frame, mode, mesh);
         }
     }
 
@@ -270,6 +288,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->hidden || feature->stroke_color[3] == 0) continue;
         vec4_copy(feature->stroke_color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
+            if (mesh->points_count) continue;
             painter.lines.width = feature->stroke_width;
             paint_mesh(&painter, frame, MODE_LINES, mesh);
         }
@@ -365,6 +384,81 @@ int geojson_query_rendered_features(
     return nb;
 }
 
+static const void *survey_create_tile(
+        void *user, int order, int pix, void *data, int size,
+        int *cost, int *transparency)
+{
+    json_value *jdata;
+    json_settings settings = {.value_extra = json_builder_extra};
+    jdata = json_parse_ex(&settings, data, size, NULL);
+    if (!jdata) return NULL;
+
+    image_t *tile = (void*)obj_create("geojson", NULL);
+    obj_call_json((obj_t*)tile, "data", jdata);
+
+    return tile;
+}
+
+static int survey_delete_tile(void *data)
+{
+    return 0;
+}
+
+static int survey_init(obj_t *obj, json_value *args)
+{
+    survey_t *survey = (void*)obj;
+    const char *path;
+    int r;
+    hips_settings_t settings = {
+        .create_tile = survey_create_tile,
+        .delete_tile = survey_delete_tile,
+        .ext = "geojson",
+    };
+
+    if (!args) return -1;
+    r = jcon_parse(args, "{",
+            "path", JCON_STR(path),
+            "?min_fov", JCON_DOUBLE(survey->min_fov, 0),
+            "?max_fov", JCON_DOUBLE(survey->max_fov, 0),
+        "}");
+    if (r) {
+        LOG_E("Cannot parse geojson survey");
+        return -1;
+    }
+
+    survey->min_fov *= DD2R;
+    survey->max_fov *= DD2R;
+    survey->hips = hips_create(path, 0, &settings);
+    hips_set_frame(survey->hips, FRAME_ICRF);
+    return 0;
+}
+
+static int survey_render_tile(hips_t *hips, const painter_t *painter,
+        const double transf[4][4], int order, int pix, int split,
+        int flags, void *user)
+{
+    image_t *tile;
+    int code;
+
+    tile = hips_get_tile(hips, order, pix, 0, &code);
+    if (!tile) return 1;
+
+    image_render((obj_t*)tile, painter);
+
+    return 0;
+}
+
+
+static int survey_render(const obj_t *obj, const painter_t *painter)
+{
+    const survey_t *survey = (void*)obj;
+    if (survey->min_fov && core->fov < survey->min_fov) return 0;
+    if (survey->max_fov && core->fov >= survey->max_fov) return 0;
+    hips_render_traverse(survey->hips, painter, NULL, 2 * M_PI, 0, survey,
+                         survey_render_tile);
+    return 0;
+}
+
 
 /*
  * Meta class declarations.
@@ -392,3 +486,11 @@ static obj_klass_t image_klass = {
     },
 };
 OBJ_REGISTER(image_klass)
+
+static obj_klass_t survey_klass = {
+    .id             = "geojson-survey",
+    .size           = sizeof(survey_t),
+    .init           = survey_init,
+    .render         = survey_render,
+};
+OBJ_REGISTER(survey_klass);

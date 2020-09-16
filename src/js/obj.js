@@ -20,7 +20,7 @@ Module.afterInit(function() {
   var module_get_path = Module.cwrap('module_get_path', 'number',
     ['number', 'number']);
   var obj_create_str = Module.cwrap('obj_create_str', 'number',
-    ['string', 'string', 'string'])
+    ['string', 'string'])
   var module_get_child = Module.cwrap('module_get_child', 'number',
     ['number', 'string']);
   var core_get_module = Module.cwrap('core_get_module', 'number', ['string']);
@@ -150,9 +150,8 @@ Module.afterInit(function() {
       module_add(this.v, obj.v)
       return obj
     } else {
-      var id = args ? args.id : undefined;
       args = JSON.stringify(args)
-      var ret = obj_create_str(type, id, args);
+      var ret = obj_create_str(type, args);
       if (ret) {
         module_add(this.v, ret);
         return new SweObj(ret);
