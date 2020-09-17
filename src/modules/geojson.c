@@ -49,7 +49,10 @@ typedef struct image {
 
 typedef struct survey {
     obj_t       obj;
+    char        *path;
     hips_t      *hips;
+    image_t     *allsky;
+    bool        allsky_loaded;
     double      min_fov;
     double      max_fov;
 } survey_t;
@@ -426,6 +429,7 @@ static int survey_init(obj_t *obj, json_value *args)
         return -1;
     }
 
+    survey->path = strdup(path);
     survey->min_fov *= DD2R;
     survey->max_fov *= DD2R;
     survey->hips = hips_create(path, 0, &settings);
@@ -448,12 +452,43 @@ static int survey_render_tile(hips_t *hips, const painter_t *painter,
     return 0;
 }
 
+static void survey_load_allsky(survey_t *survey)
+{
+    char path[1024];
+    void *data;
+    int size, code;
+    json_value *geojson;
+
+    if (survey->allsky_loaded) return;
+    // Attempt to load the allsky geojson document if available.
+    snprintf(path, sizeof(path), "%s/Allsky.geojson", survey->path);
+    data = asset_get_data2(path, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
+                           &size, &code);
+    if (!code) return;
+    survey->allsky_loaded = true;
+    if (!data) return;
+
+    geojson = json_parse(data, size);
+    if (!geojson) {
+        LOG_E("Cannot parse %s", path);
+        return;
+    }
+    survey->allsky = (void*)obj_create("geojson", NULL);
+    data_fn((obj_t*)survey->allsky, NULL, geojson);
+    json_value_free(geojson);
+}
 
 static int survey_render(const obj_t *obj, const painter_t *painter)
 {
     const survey_t *survey = (void*)obj;
+
     if (survey->min_fov && core->fov < survey->min_fov) return 0;
     if (survey->max_fov && core->fov >= survey->max_fov) return 0;
+
+    survey_load_allsky((survey_t*)survey);
+    if (survey->allsky)
+        obj_render((obj_t*)survey->allsky, painter);
+
     hips_render_traverse(survey->hips, painter, NULL, 2 * M_PI, 0, survey,
                          survey_render_tile);
     return 0;
