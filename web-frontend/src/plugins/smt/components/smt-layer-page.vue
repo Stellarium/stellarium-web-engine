@@ -101,44 +101,16 @@ export default {
       that.query.refreshObservationsInSkyInProgress = true
       const q2 = {
         constraints: this.query.constraints,
-        projectOptions: {
-          id: 1,
-          geometry: 1
-        },
         qid: this.query.count
       }
-      for (const i in qe.fieldsList) {
-        q2.projectOptions[qe.fieldsList[i].id] = 1
-      }
-      qe.query(q2).then(res => {
-        if (res.q.qid !== that.query.count) {
-          // This query is finished by another one was already triggered before
-          // it completes: just ignore these results
-          return
-        }
-
-        const geojson = {
-          type: 'FeatureCollection',
-          features: []
-        }
-
-        for (const feature of res.res) {
-          geojson.features.push({
-            geometry: feature.geometry,
-            type: 'Feature',
-            properties: {}
-          })
-          delete feature.geometry
-          that.livefilterData.push(feature)
-        }
-
-        if (geojson.features.length === 0) {
-          return
-        }
-        that.geojsonObj = that.$stel.createObj('geojson')
-        that.geojsonObj.setData(geojson)
-        that.$observingLayer.add(that.geojsonObj)
-        that.refreshGeojsonLiveFilter()
+      qe.queryVisual(q2).then(res => {
+        that.geojsonObj = that.$observingLayer.add('geojson-survey', {
+          path: 'http://localhost:3000/hips/' + res
+          // Optional:
+          // max_fov: 30,
+          // min_fov: 10
+        })
+        // that.refreshGeojsonLiveFilter()
         that.query.refreshObservationsInSkyInProgress = false
       })
     },

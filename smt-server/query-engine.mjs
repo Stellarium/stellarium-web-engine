@@ -13,6 +13,13 @@ import alasql from 'alasql'
 import _ from 'lodash'
 import filtrex from 'filtrex'
 import hash_sum from 'hash-sum'
+import healpix from '@hscmap/healpix'
+import turf from '@turf/turf'
+import assert from 'assert'
+
+const D2R = Math.PI / 180
+const R2D = 180 / Math.PI
+const HEALPIX_ORDER = 1
 
 export default {
   fieldsList: undefined,
@@ -59,14 +66,28 @@ export default {
     }
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = that.sqlFields.map(f => f + ' ' + that.fType2AlaSql(f.type)).join(', ')
-    await alasql.promise('CREATE TABLE features (id INT, geometry JSON, properties JSON, ' + sqlFieldsAndTypes + ')')
+    await alasql.promise('CREATE TABLE features (id INT, geometry JSON, healpix_index INT, properties JSON, ' + sqlFieldsAndTypes + ')')
 
     await alasql.promise('CREATE INDEX idx_id ON features(id)')
+    await alasql.promise('CREATE INDEX idx_healpix_index ON features(healpix_index)')
+
     // Create an index on each field
     for (let i in that.sqlFields) {
       let field = that.sqlFields[i]
       await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + field + ')')
     }
+  },
+
+  computeHealpixIndex: function (feature, order) {
+    let center = turf.centroid(feature)
+    assert(center)
+    center = center.geometry.coordinates
+    if (center[0] < 0) center[0] += 360
+    const theta = (90 - center[1]) * D2R
+    const phi = center[0] * D2R
+    assert((theta >= 0) && (theta <= Math.PI))
+    assert(phi >= 0 && phi <= 2 * Math.PI)
+    return healpix.ang2pix_nest(1 << order, theta, phi)
   },
 
   loadAllData: async function (jsonData) {
@@ -80,6 +101,10 @@ export default {
         feature.geometry.coordinates = feature.geometry.coordinates[0]
         feature.geometry.type = 'Polygon'
       }
+
+      const healpix_index = that.computeHealpixIndex(feature, HEALPIX_ORDER)
+      feature['healpix_index'] = healpix_index
+
       for (let i = 0; i < that.fieldsList.length; ++i) {
         const field = that.fieldsList[i]
         let d
@@ -138,6 +163,8 @@ export default {
       let fid = that.fId2AlaSql(c.field.id)
       if (c.operation === 'STRING_EQUAL') {
         return fid + ' = "' + c.expression + '"'
+      } else if (c.operation === 'INT_EQUAL') {
+        return fid + ' = ' + c.expression
       } else if (c.operation === 'IS_UNDEFINED') {
         return fid + ' IS NULL'
       } else if (c.operation === 'DATE_RANGE') {
@@ -302,21 +329,21 @@ export default {
   },
 
   getHipsProperties: function (queryHash) {
-    return "hips_tile_format = geojson\nhips_order = 5\nhips_order_min = 5"
+    return `hips_tile_format = geojson\nhips_order = ${HEALPIX_ORDER}\nhips_order_min = ${HEALPIX_ORDER}`
   },
 
-  getHipsTile: function (queryHash, level, tileId) {
+  getHipsTile: function (queryHash, order, tileId) {
+    assert(order == HEALPIX_ORDER)
     const that = this
     const q = _.cloneDeep(this.hashToQuery[queryHash])
     if (!q)
       return undefined
     q.constraints.push({
-      field: {id: 'hips5_idx'},
-      operation: 'STRING_EQUAL',
+      field: {id: 'healpix_index'},
+      operation: 'INT_EQUAL',
       expression: tileId,
       negate: false
     })
-    console.log(q)
     const whereClause = this.constraints2SQLWhereClause(q.constraints)
 
     const projectOptions = {
@@ -331,7 +358,22 @@ export default {
     selectClause += Object.keys(projectOptions).map(k => that.fId2AlaSql(k)).join(', ')
     selectClause += ' FROM features'
     let sqlStatement = selectClause + whereClause
-    return alasql.promise(sqlStatement).then(res => { return { q: q, res: res } })
+    return alasql.promise(sqlStatement).then(function (res) {
+      const geojson = {
+        type: 'FeatureCollection',
+        features: []
+      }
+      for (const item of res) {
+        const feature = {
+          geometry: item.geometry,
+          type: 'Feature',
+          properties: item
+        }
+        delete feature.properties.geometry
+        geojson.features.push(feature)
+      }
+      return geojson
+    })
   }
 
 }

@@ -63,9 +63,8 @@ app.get('/hips/:queryHash/properties', (req, res) => {
 })
 
 app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', (req, res) => {
-  console.log(req.params)
   const order = parseInt(req.params.order.replace('Norder', ''))
-  const pix = parseInt(req.params.pix.replace('Pix', ''))
+  const pix = parseInt(req.params.pix.replace('Npix', ''))
   const tileResp = qe.getHipsTile(req.params.queryHash, order, pix)
   if (!tileResp) {
     res.status(404).send('Query hash not found')

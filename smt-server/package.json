@@ -10,6 +10,8 @@
   "author": "Stellarium Labs <contact@stellarium-labs.fr>",
   "license": "ISC",
   "dependencies": {
+    "@hscmap/healpix": "^1.4.3",
+    "@turf/turf": "^5.1.6",
     "alasql": "^0.6.3",
     "cors": "^2.8.5",
     "express": "^4.17.1",

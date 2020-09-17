@@ -44,5 +44,19 @@ export default {
     }).then(function (response) {
       return response.json()
     })
+  },
+
+  queryVisual: function (q) {
+    return fetch('http://localhost:3000/queryVisual', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(q)
+    }).then(function (response) {
+      console.log(response)
+      return response.text()
+    })
   }
 }
