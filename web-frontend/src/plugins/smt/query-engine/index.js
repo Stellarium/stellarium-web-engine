@@ -55,7 +55,6 @@ export default {
       },
       body: JSON.stringify(q)
     }).then(function (response) {
-      console.log(response)
       return response.text()
     })
   }
