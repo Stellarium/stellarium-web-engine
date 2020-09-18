@@ -170,7 +170,7 @@ Module['onGeojsonSurveyObj'] = function(obj) {
 
   Object.defineProperty(obj, 'filter', {
     set: function(filter) {
-      if (obj._filterFn) Module.removeFunction(filterFn);
+      if (obj._filterFn) Module.removeFunction(obj._filterFn);
       obj._filterFn = Module.addFunction(function(img, id, fillPtr, strokePtr) {
         let features = g_tiles[img];
         const r = filter(features[id]);
