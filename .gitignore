@@ -10,3 +10,4 @@
 /build*
 /.sconsign.dblite
 /.cache
+/smt-server/node_modules/
