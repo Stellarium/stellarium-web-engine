@@ -27,6 +27,10 @@ enum {
     HIPS_FORCE_USE_ALLSKY       = 1 << 1,
     HIPS_LOAD_IN_THREAD         = 1 << 2,
     HIPS_CACHED_ONLY            = 1 << 3,
+    // If set in hips_get_tile, do not add a small delay before starting
+    // the downloads.  By default we use a small delay of about one sec
+    // per tile.
+    HIPS_NO_DELAY               = 1 << 4,
 };
 
 /*

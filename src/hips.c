@@ -743,7 +743,8 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
                 order, (pix / 10000) * 10000, pix, hips->ext);
     asset_flags = ASSET_ACCEPT_404;
-    if (order > 0) asset_flags |= ASSET_DELAY;
+    if (order > 0 && !(flags & HIPS_NO_DELAY))
+        asset_flags |= ASSET_DELAY;
     data = asset_get_data2(url, asset_flags, &size, code);
     if (!(*code)) return NULL; // Still loading the file.
 
