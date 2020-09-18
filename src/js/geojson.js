@@ -127,14 +127,14 @@ Module['onGeojsonObj'] = function(obj) {
   Object.defineProperty(obj, 'filter', {
     set: function(filter) {
       if (filterFn) Module.removeFunction(filterFn);
-      filterFn = Module.addFunction(function(id, fillPtr, strokePtr) {
+      filterFn = Module.addFunction(function(img, id, fillPtr, strokePtr) {
         const r = filter(id);
         if (r === false) return 0;
         if (r === true) return 1;
         if (r.fill) fillColorPtr(r.fill, fillPtr);
         if (r.stroke) fillColorPtr(r.stroke, strokePtr);
         return r.visible === false ? 0 : 1;
-      }, 'iiii');
+      }, 'iiiii');
       obj._call('filter', filterFn);
     }
   });
@@ -144,4 +144,44 @@ Module['onGeojsonObj'] = function(obj) {
   obj.queryRenderedFeatureIds = function(point) {
     return queryRenderedFeatureIds(obj, point);
   };
+};
+
+// Map of survey tile -> features list.
+let g_tiles = {}
+
+// Called each time a new geojson tile of a survey is loaded.
+let onNewTile = function(img, json) {
+  json = Module.UTF8ToString(json);
+  json = JSON.parse(json);
+  g_tiles[img] = json.features;
+}
+let onNewTileSet = false;
+
+/*
+ * Same for Geojson surveys
+ */
+Module['onGeojsonSurveyObj'] = function(obj) {
+
+  if (!onNewTileSet) {
+    Module._geojson_set_on_new_tile_callback(
+      Module.addFunction(onNewTile, 'vii'));
+    onNewTileSet = true;
+  }
+
+  Object.defineProperty(obj, 'filter', {
+    set: function(filter) {
+      if (obj._filterFn) Module.removeFunction(filterFn);
+      obj._filterFn = Module.addFunction(function(img, id, fillPtr, strokePtr) {
+        let features = g_tiles[img];
+        const r = filter(features[id]);
+        if (r === false) return 0;
+        if (r === true) return 1;
+        if (r.fill) fillColorPtr(r.fill, fillPtr);
+        if (r.stroke) fillColorPtr(r.stroke, strokePtr);
+        return r.visible === false ? 0 : 1;
+      }, 'iiiii');
+      obj._call('filter', obj._filterFn);
+    }
+  });
+
 };
