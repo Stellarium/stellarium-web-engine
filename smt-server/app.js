@@ -11,6 +11,7 @@
 
 import express from 'express'
 import cors from 'cors'
+import fsp from 'fs/promises'
 import fs from 'fs'
 import qe from './query-engine.mjs'
 import bodyParser from 'body-parser'
@@ -27,12 +28,9 @@ let smtConfig = JSON.parse(smtConfigData)
 app.use(bodyParser.json())         // to support JSON-encoded bodies
 
 const fetchAndIngest = function (fn) {
-  fs.readFile(__dirname + '/data/' + fn, function (err, data) {
-    if (err) {
-      throw err;
-    }
-    return qe.loadAllData(JSON.parse(data))
-  });
+  return fsp.readFile(__dirname + '/data/' + fn).then(
+    data => qe.loadAllData(JSON.parse(data)),
+    err => { throw err})
 }
 
 qe.initDB(smtConfig.fields).then(_ => {
