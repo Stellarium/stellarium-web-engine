@@ -482,7 +482,7 @@ static int survey_render_visitor(int order, int pix, void *user)
         return 0;
     if (order < hips->order_min) return 1;
 
-    tile = hips_get_tile(hips, order, pix, 0, &code);
+    tile = hips_get_tile(hips, order, pix, HIPS_NO_DELAY, &code);
     if (!tile) return 0;
 
     if (tile->filter_idx != survey->filter_idx) {
