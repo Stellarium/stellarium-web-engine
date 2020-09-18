@@ -39,19 +39,29 @@ struct feature {
  *   filter - Function called for each feature.  Can set the fill and stroke
  *            color.  If it returns zero, then the feature is hidden.
  */
-typedef struct image {
+typedef struct image image_t;
+struct image {
     obj_t       obj;
     feature_t   *features;
     int         frame;
-    int         (*filter)(int idx, float fill_color[4], float stroke_color[4]);
-} image_t;
+    int         (*filter)(const image_t *img, int idx,
+                          float fill_color[4], float stroke_color[4]);
+    int         filter_idx;
+};
 
 
 typedef struct survey {
     obj_t       obj;
+    char        *path;
     hips_t      *hips;
+    image_t     *allsky;
+    bool        allsky_loaded;
     double      min_fov;
     double      max_fov;
+
+    int         (*filter)(const image_t *img, int idx,
+                          float fill_color[4], float stroke_color[4]);
+    int         filter_idx;
 } survey_t;
 
 
@@ -194,7 +204,7 @@ static void apply_filter(image_t *image)
     int i = 0, r;
     if (!image->filter) return;
     for (feature = image->features; feature; feature = feature->next, i++) {
-        r = image->filter(i, feature->fill_color, feature->stroke_color);
+        r = image->filter(image, i, feature->fill_color, feature->stroke_color);
         feature->hidden = (r == 0);
         feature->blink = r & 0x2;
     }
@@ -384,17 +394,43 @@ int geojson_query_rendered_features(
     return nb;
 }
 
+static void (*g_survey_on_new_tile)(void *tile, const char *data);
+
+EMSCRIPTEN_KEEPALIVE
+void geojson_set_on_new_tile_callback(
+        void (*fn)(void *tile, const char *data))
+{
+    g_survey_on_new_tile = fn;
+}
+
+
 static const void *survey_create_tile(
         void *user, int order, int pix, void *data, int size,
         int *cost, int *transparency)
 {
-    json_value *jdata;
+    int mask;
+    json_value *jdata, *jhips;
     json_settings settings = {.value_extra = json_builder_extra};
+    bool empty = false;
+    image_t *tile;
+
     jdata = json_parse_ex(&settings, data, size, NULL);
     if (!jdata) return NULL;
 
-    image_t *tile = (void*)obj_create("geojson", NULL);
-    obj_call_json((obj_t*)tile, "data", jdata);
+    jhips = json_get_attr(jdata, "hips", json_object);
+    if (jhips) {
+        mask = json_get_attr_i(jhips, "children_mask", 15);
+        *transparency = (~mask) & 15;
+        if (!json_get_attr(jdata, "type", json_string))
+            empty = true;
+    }
+
+    tile = (void*)obj_create("geojson", NULL);
+    if (!empty) {
+        obj_call_json((obj_t*)tile, "data", jdata);
+        if (g_survey_on_new_tile)
+            g_survey_on_new_tile(tile, data);
+    }
 
     return tile;
 }
@@ -426,6 +462,7 @@ static int survey_init(obj_t *obj, json_value *args)
         return -1;
     }
 
+    survey->path = strdup(path);
     survey->min_fov *= DD2R;
     survey->max_fov *= DD2R;
     survey->hips = hips_create(path, 0, &settings);
@@ -433,32 +470,86 @@ static int survey_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int survey_render_tile(hips_t *hips, const painter_t *painter,
-        const double transf[4][4], int order, int pix, int split,
-        int flags, void *user)
+static int survey_render_visitor(int order, int pix, void *user)
 {
     image_t *tile;
     int code;
+    survey_t *survey = USER_GET(user, 0);
+    painter_t *painter = USER_GET(user, 1);
+    hips_t *hips = survey->hips;
 
-    tile = hips_get_tile(hips, order, pix, 0, &code);
-    if (!tile) return 1;
+    if (painter_is_healpix_clipped(painter, hips->frame, order, pix, true))
+        return 0;
+    if (order < hips->order_min) return 1;
+
+    tile = hips_get_tile(hips, order, pix, HIPS_NO_DELAY, &code);
+    if (!tile) return 0;
+
+    if (tile->filter_idx != survey->filter_idx) {
+        tile->filter = survey->filter;
+        tile->filter_idx = survey->filter_idx;
+        apply_filter(tile);
+    }
 
     image_render((obj_t*)tile, painter);
 
-    return 0;
+    return order < hips->order ? 1 : 0;
 }
 
+static void survey_load_allsky(survey_t *survey)
+{
+    char path[1024];
+    void *data;
+    int size, code;
+    json_value *geojson;
+
+    if (survey->allsky_loaded) return;
+    // Attempt to load the allsky geojson document if available.
+    snprintf(path, sizeof(path), "%s/Allsky.geojson", survey->path);
+    data = asset_get_data2(path, ASSET_ACCEPT_404 | ASSET_USED_ONCE,
+                           &size, &code);
+    if (!code) return;
+    survey->allsky_loaded = true;
+    if (!data) return;
+
+    geojson = json_parse(data, size);
+    if (!geojson) {
+        LOG_E("Cannot parse %s", path);
+        return;
+    }
+    survey->allsky = (void*)obj_create("geojson", NULL);
+    data_fn((obj_t*)survey->allsky, NULL, geojson);
+    json_value_free(geojson);
+}
 
 static int survey_render(const obj_t *obj, const painter_t *painter)
 {
     const survey_t *survey = (void*)obj;
+
     if (survey->min_fov && core->fov < survey->min_fov) return 0;
     if (survey->max_fov && core->fov >= survey->max_fov) return 0;
-    hips_render_traverse(survey->hips, painter, NULL, 2 * M_PI, 0, survey,
-                         survey_render_tile);
+
+    survey_load_allsky((survey_t*)survey);
+    if (survey->allsky)
+        obj_render((obj_t*)survey->allsky, painter);
+
+    hips_traverse(USER_PASS(survey, painter), survey_render_visitor);
     return 0;
 }
 
+static json_value *survey_filter_fn(obj_t *obj, const attribute_t *attr,
+                                    const json_value *args)
+{
+    survey_t *survey = (void*)obj;
+    if (!args) return NULL;
+    if (args->type != json_integer) {
+        LOG_E("Wrong type for filter attribute");
+        return NULL;
+    }
+    survey->filter = (void*)(intptr_t)(args->u.integer);
+    survey->filter_idx++;
+    return NULL;
+}
 
 /*
  * Meta class declarations.
@@ -492,5 +583,9 @@ static obj_klass_t survey_klass = {
     .size           = sizeof(survey_t),
     .init           = survey_init,
     .render         = survey_render,
+    .attributes = (attribute_t[]) {
+        PROPERTY(filter, TYPE_FUNC, .fn = survey_filter_fn),
+        {}
+    },
 };
 OBJ_REGISTER(survey_klass);

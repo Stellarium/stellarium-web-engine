@@ -27,6 +27,10 @@ enum {
     HIPS_FORCE_USE_ALLSKY       = 1 << 1,
     HIPS_LOAD_IN_THREAD         = 1 << 2,
     HIPS_CACHED_ONLY            = 1 << 3,
+    // If set in hips_get_tile, do not add a small delay before starting
+    // the downloads.  By default we use a small delay of about one sec
+    // per tile.
+    HIPS_NO_DELAY               = 1 << 4,
 };
 
 /*
@@ -53,6 +57,40 @@ typedef struct hips_settings {
     const char *ext; // If set, force the files extension.
     void *user;
 } hips_settings_t;
+
+
+struct hips {
+    char        *url;
+    char        *service_url;
+    const char  *ext; // jpg, png, webp.
+    double      release_date; // release date as jd value.
+    int         error; // Set if an error occurred.
+    char        *label; // Short label used in the progressbar.
+    int         frame; // FRAME_ICRF | FRAME_ASTROM | FRAME_OBSERVED.
+    uint32_t    hash; // Hash of the url.
+
+    // Stores the allsky image if available.
+    // We only do it for order zero allsky.
+    struct {
+        worker_t    worker; // Worker to load the image in a thread.
+        bool        not_available;
+        uint8_t     *src_data; // Encoded image data (png, webp...)
+        uint8_t     *data;     // RGB[A] image data.
+        int         w, h, bpp, size;
+        texture_t   *textures[12];
+    }           allsky;
+
+    // Contains all the properties as a json object.
+    json_value *properties;
+    int order;
+    int order_min;
+    int tile_width;
+
+    // The settings as passed in the create function.
+    hips_settings_t settings;
+    int ref; // Ref counting of hips survey.
+};
+
 
 /*
  * Function: hips_create

@@ -150,13 +150,10 @@ Module.afterInit(function() {
       module_add(this.v, obj.v)
       return obj
     } else {
-      args = JSON.stringify(args)
-      var ret = obj_create_str(type, args);
-      if (ret) {
-        module_add(this.v, ret);
-        return new SweObj(ret);
-      }
-      return null;
+      // Probably need to deprecate that.
+      let obj = Module.createObj(type, args)
+      this.add(obj)
+      return obj
     }
   }
 
@@ -382,6 +379,7 @@ Module.afterInit(function() {
     ret = ret ? new SweObj(ret) : null;
     // Add special geojson object methods.
     if (type === 'geojson') Module.onGeojsonObj(ret);
+    if (type === 'geojson-survey') Module.onGeojsonSurveyObj(ret);
     return ret;
   }
 
