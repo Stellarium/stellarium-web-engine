@@ -408,16 +408,29 @@ static const void *survey_create_tile(
         void *user, int order, int pix, void *data, int size,
         int *cost, int *transparency)
 {
-    json_value *jdata;
+    int mask;
+    json_value *jdata, *jhips;
     json_settings settings = {.value_extra = json_builder_extra};
+    bool empty = false;
+    image_t *tile;
+
     jdata = json_parse_ex(&settings, data, size, NULL);
     if (!jdata) return NULL;
 
-    image_t *tile = (void*)obj_create("geojson", NULL);
-    obj_call_json((obj_t*)tile, "data", jdata);
+    jhips = json_get_attr(jdata, "hips", json_object);
+    if (jhips) {
+        mask = json_get_attr_i(jhips, "children_mask", 15);
+        *transparency = (~mask) & 15;
+        if (!json_get_attr(jdata, "type", json_string))
+            empty = true;
+    }
 
-    if (g_survey_on_new_tile)
-        g_survey_on_new_tile(tile, data);
+    tile = (void*)obj_create("geojson", NULL);
+    if (!empty) {
+        obj_call_json((obj_t*)tile, "data", jdata);
+        if (g_survey_on_new_tile)
+            g_survey_on_new_tile(tile, data);
+    }
 
     return tile;
 }
@@ -457,16 +470,20 @@ static int survey_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int survey_render_tile(hips_t *hips, const painter_t *painter,
-        const double transf[4][4], int order, int pix, int split,
-        int flags, void *user)
+static int survey_render_visitor(int order, int pix, void *user)
 {
     image_t *tile;
     int code;
-    survey_t *survey = user;
+    survey_t *survey = USER_GET(user, 0);
+    painter_t *painter = USER_GET(user, 1);
+    hips_t *hips = survey->hips;
+
+    if (painter_is_healpix_clipped(painter, hips->frame, order, pix, true))
+        return 0;
+    if (order < hips->order_min) return 1;
 
     tile = hips_get_tile(hips, order, pix, 0, &code);
-    if (!tile) return 1;
+    if (!tile) return 0;
 
     if (tile->filter_idx != survey->filter_idx) {
         tile->filter = survey->filter;
@@ -476,7 +493,7 @@ static int survey_render_tile(hips_t *hips, const painter_t *painter,
 
     image_render((obj_t*)tile, painter);
 
-    return 0;
+    return order < hips->order ? 1 : 0;
 }
 
 static void survey_load_allsky(survey_t *survey)
@@ -516,8 +533,7 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
     if (survey->allsky)
         obj_render((obj_t*)survey->allsky, painter);
 
-    hips_render_traverse(survey->hips, painter, NULL, 2 * M_PI, 0, survey,
-                         survey_render_tile);
+    hips_traverse(USER_PASS(survey, painter), survey_render_visitor);
     return 0;
 }
 
