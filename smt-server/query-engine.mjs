@@ -66,10 +66,10 @@ export default {
     }
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = that.sqlFields.map(f => f + ' ' + that.fType2AlaSql(f.type)).join(', ')
-    await alasql.promise('CREATE TABLE features (id INT, geometry JSON, healpix_index INT, properties JSON, ' + sqlFieldsAndTypes + ')')
-
+    await alasql.promise('CREATE TABLE features (id INT, geometry JSON, healpix_index INT, geogroup_id STRING, properties JSON, ' + sqlFieldsAndTypes + ')')
     await alasql.promise('CREATE INDEX idx_id ON features(id)')
     await alasql.promise('CREATE INDEX idx_healpix_index ON features(healpix_index)')
+    await alasql.promise('CREATE INDEX idx_geogroup_id ON features(geogroup_id)')
 
     // Create an index on each field
     for (let i in that.sqlFields) {
@@ -104,6 +104,7 @@ export default {
 
       const healpix_index = that.computeHealpixIndex(feature, HEALPIX_ORDER)
       feature['healpix_index'] = healpix_index
+      feature['geogroup_id'] = _.get(feature.properties, 'Observation.SurveyId', '') + _.get(feature.properties, 'Pointing_id', '')
 
       for (let i = 0; i < that.fieldsList.length; ++i) {
         const field = that.fieldsList[i]
