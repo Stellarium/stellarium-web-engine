@@ -35,11 +35,5 @@ module.exports = {
       localeDir: 'locales',
       enableInSFC: true
     }
-  },
-
-  // Support 404 return code from dev server, instead of default behavior
-  // or returning the root page as a fallback.
-  devServer: {
-    historyApiFallback: false
   }
 }
