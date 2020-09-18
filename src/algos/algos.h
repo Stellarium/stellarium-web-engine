@@ -43,6 +43,8 @@ void healpix_pix2ang(int nside, int pix, double *theta, double *phi);
  */
 void healpix_ang2pix(int nside, double theta, double phi, int *pix);
 
+int healpix_vec2pix(int nside, const double vec[3]);
+
 /*
  * Function: healpix_get_neighbours
  * Returns the neighboring pixels of nest pixel

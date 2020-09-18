@@ -257,6 +257,12 @@ void healpix_ang2pix(int nside, double theta, double phi, int *pix)
     *pix = ang2pix_nest_z_phi(nside, cos(theta), phi);
 }
 
+int healpix_vec2pix(int nside, const double vec[3])
+{
+    double len = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+    return ang2pix_nest_z_phi(nside, vec[2] / len, atan2(vec[1], vec[0]));
+}
+
 void healpix_get_neighbours(int nside, int pix, int out[8])
 {
     int i, x, y, ix, iy, face_num, nsm1, fpix, order, nbnum, f, bits;
