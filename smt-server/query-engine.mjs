@@ -51,6 +51,16 @@ export default {
       }
     }
 
+    alasql.aggr.MIN_MAX = function (value, accumulator, stage) {
+      // console.log('MIN_MAX ' + value + ' ' + accumulator + ' ' + stage)
+      if (stage === 1) {
+        return [value, value]
+      } else if (stage === 2) {
+        return [Math.min(accumulator[0], value), Math.max(accumulator[1], value)]
+      }
+      return accumulator
+    }
+
     let that = this
 
     console.log('Create Data Base')
@@ -348,18 +358,17 @@ export default {
     const whereClause = this.constraints2SQLWhereClause(q.constraints)
 
     const projectOptions = {
-      id: 1,
-      geometry: 1
     }
     for (const i in this.fieldsList) {
       projectOptions[this.fieldsList[i].id] = 1
     }
     // Construct the SQL SELECT clause matching the given aggregate options
     let selectClause = 'SELECT '
-    selectClause += Object.keys(projectOptions).map(k => that.fId2AlaSql(k)).join(', ')
-    selectClause += ' FROM features'
-    let sqlStatement = selectClause + whereClause
+    selectClause += Object.keys(projectOptions).map(k => that.fId2AlaSql(k)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
+    selectClause += ', COUNT(*) as c, geogroup_id, FIRST(geometry) as geometry FROM features '
+    let sqlStatement = selectClause + whereClause + ' GROUP BY geogroup_id'
     return alasql.promise(sqlStatement).then(function (res) {
+      res = res.filter(f => f.c)
       const geojson = {
         type: 'FeatureCollection',
         features: []
@@ -373,7 +382,7 @@ export default {
         delete feature.properties.geometry
         geojson.features.push(feature)
       }
-      return geojson
+      return geojson.features.length ? geojson : undefined
     })
   }
 

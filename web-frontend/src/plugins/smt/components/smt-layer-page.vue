@@ -234,7 +234,7 @@ export default {
         // if (do_not_modify) return true
         if (liveConstraintSql) {
           const v = _.get(feature.properties, liveConstraintSql)
-          if (v === undefined || v < lc.expression[0] || v > lc.expression[1]) {
+          if (v === undefined || v[1] < lc.expression[0] || v[0] > lc.expression[1]) {
             return false
           }
         }
@@ -242,7 +242,7 @@ export default {
         if (feature.colorDone) return true
         let c = [1, 0.3, 0.3, 0.3]
         if (colorAssignedSqlField) {
-          let cstring = _.get(feature.properties, colorAssignedSqlField)
+          let cstring = _.get(feature.properties, colorAssignedSqlField)[0]
           if (!cstring) cstring = ''
           c = mapColor(stringHash(cstring) / 4294967295)
           c[3] = 0.3

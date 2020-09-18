@@ -60,15 +60,15 @@ app.get('/hips/:queryHash/properties', (req, res) => {
   res.send(qe.getHipsProperties(req.params.queryHash))
 })
 
-app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', (req, res) => {
+app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res) => {
   const order = parseInt(req.params.order.replace('Norder', ''))
   const pix = parseInt(req.params.pix.replace('Npix', ''))
-  const tileResp = qe.getHipsTile(req.params.queryHash, order, pix)
+  const tileResp = await qe.getHipsTile(req.params.queryHash, order, pix)
   if (!tileResp) {
-    res.status(404).send('Query hash not found')
+    res.status(404).send()
     return
   }
-  tileResp.then(res.send.bind(res))
+  res.send(tileResp)
 })
 
 app.listen(port, () => {
