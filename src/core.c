@@ -142,6 +142,7 @@ static void core_set_default(void)
     // section 52).
     tsl = 15 + 273.15;  // Let say we have a see level temp of 15 deg C.
     obs->pressure = 1013.25 * exp(-obs->hm / (29.3 * tsl));
+    fader_init(&core->refraction, true);
 
     core->fov = 50 * DD2R;
     core->proj = PROJ_STEREOGRAPHIC;
@@ -378,6 +379,18 @@ static void core_update_time(double dt)
         anim->duration = 0.0;
 }
 
+// Smoothly update the observer pressure for refraction effect.
+static void update_refraction(double dt, bool on)
+{
+    double tsl;
+    observer_t *obs = core->observer;
+    core->refraction.target = on;
+    fader_update(&core->refraction, dt);
+    tsl = 15 + 273.15;  // Let say we have a see level temp of 15 deg C.
+    obs->pressure = 1013.25 * exp(-obs->hm / (29.3 * tsl));
+    obs->pressure *= core->refraction.value;
+}
+
 EMSCRIPTEN_KEEPALIVE
 int core_update(double dt)
 {
@@ -390,6 +403,7 @@ int core_update(double dt)
     atm = core_get_module("atmosphere");
     assert(atm);
     obj_get_attr(atm, "visible", &atm_visible);
+    update_refraction(dt, atm_visible);
     observer_update(core->observer, true);
     // Update telescope according to the fov.
     if (core->telescope_auto)
