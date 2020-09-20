@@ -368,19 +368,20 @@ export default {
     that.$stel.on('click', e => {
       if (!that.geojsonObj) return false
       // Get the list of features indices at click position
-      const res = that.geojsonObj.queryRenderedFeatureIds(e.point)
-      if (!res.length) {
+      const features = that.geojsonObj.queryRenderedFeatures(e.point)
+      if (!features.length) {
         that.selectedFootprintData = undefined
         return false
       }
-      const ids = res.map(i => that.livefilterData[i].id)
+      const geogroupIds = features.map(f => f.properties.geogroup_id)
       const q = {
-        constraints: [{ field: { id: 'id', type: 'number' }, operation: 'IN', expression: ids, negate: false }],
+        constraints: [{ field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false }],
         projectOptions: {
           id: 1,
           properties: 1
         }
       }
+      q.constraints = that.query.constraints.concat(q.constraints)
       qe.query(q).then(qres => {
         if (!qres.res.length) {
           that.selectedFootprintData = undefined
