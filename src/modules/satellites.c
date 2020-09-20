@@ -341,13 +341,18 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
 {
     double pv[2][3];
     char buf[128];
+    int r;
 
     if (sat->error) return 0;
     assert(sat->elsetrec);
     // Orbit computation.
-    if (!sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1])) {
-        LOG_W("Cannot compute satellite position for %s (%d)",
-              obj_get_name((obj_t*)sat, buf, sizeof(buf)), sat->number);
+    r = sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1]);
+    if (r && r != 6) { // 6 = satellite decayed, don't log this case.
+        obj_get_name((obj_t*)sat, buf, sizeof(buf));
+        LOG_W("Satellite position error for %s (%d), err=%d",
+              buf, sat->number, r);
+    }
+    if (r) {
         sat->error = true;
         return 0;
     }
@@ -548,10 +553,13 @@ int satellite_get_altitude(const obj_t *obj, const observer_t *obs,
 {
     double pos[3], obs_pos[3], speed[3], sep, alt, theta;
     satellite_t *sat = (void*)obj;
+    bool r;
 
     if (sat->error) return -1;
     assert(sat->elsetrec);
-    if (!sgp4(sat->elsetrec, obs->utc, pos, speed)) return -1;
+
+    r = sgp4(sat->elsetrec, obs->utc, pos, speed);
+    if (r != 0) return -1;
     vec3_mul(1000.0 / DAU, pos, pos);
 
     // True equator to j2000.

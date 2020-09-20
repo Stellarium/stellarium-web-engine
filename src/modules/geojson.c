@@ -403,6 +403,59 @@ void geojson_set_on_new_tile_callback(
     g_survey_on_new_tile = fn;
 }
 
+/*
+ * Experimental function to get the list of rendered features index.
+ * Return the number of features returned.
+ *
+ * Assume the current core observer and projection!
+ */
+EMSCRIPTEN_KEEPALIVE
+int geojson_survey_query_rendered_features(
+        const obj_t *obj, double win_pos[2], int max_ret,
+        void **tiles, int *index)
+{
+    const survey_t *survey = (void*)obj;
+    int i, nb = 0;
+    int order, pix, code;
+    const feature_t *feature;
+    const mesh_t *mesh;
+    painter_t painter;
+    projection_t proj;
+    double pos[3];
+    hips_t *hips = survey->hips;
+    image_t *tile;
+
+    assert(!isnan(win_pos[0]) && !isnan(win_pos[1]));
+
+    core_get_proj(&proj);
+    painter = (painter_t) {
+        .obs = core->observer,
+        .proj = &proj,
+    };
+    painter_update_clip_info(&painter);
+    painter_unproject(&painter, hips->frame, win_pos, pos);
+
+    for (order = hips->order_min; order <= hips->order; order++) {
+        pix = healpix_vec2pix(1 << order, pos);
+        tile = hips_get_tile(hips, order, pix, HIPS_CACHED_ONLY, &code);
+        if (!tile) continue;
+
+        i = 0;
+        for (feature = tile->features; feature; feature = feature->next, i++) {
+            if (nb >= max_ret) break;
+            if (feature->hidden) continue;
+            for (mesh = feature->meshes; mesh; mesh = mesh->next) {
+                if (mesh_contains_vec3(mesh, pos)) {
+                    tiles[nb] = tile;
+                    index[nb] = i;
+                    nb++;
+                    break;
+                }
+            }
+        }
+    }
+    return nb;
+}
 
 static const void *survey_create_tile(
         void *user, int order, int pix, void *data, int size,

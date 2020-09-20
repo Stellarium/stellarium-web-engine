@@ -149,6 +149,30 @@ Module['onGeojsonObj'] = function(obj) {
 // Map of survey tile -> features list.
 let g_tiles = {}
 
+function surveyQueryRenderedFeatures(obj, point) {
+  if (typeof(point) === 'object') {
+    point = [point.x, point.y];
+  }
+  const pointPtr = Module._malloc(16);
+  Module._setValue(pointPtr + 0, point[0], 'double');
+  Module._setValue(pointPtr + 8, point[1], 'double');
+  const size = 128; // Max number of results.
+  const tilesPtr = Module._malloc(4 * size);
+  const indexPtr = Module._malloc(4 * size);
+  const nb = Module._geojson_survey_query_rendered_features(
+    obj.v, pointPtr, size, tilesPtr, indexPtr);
+  let ret = []
+  for (let i = 0; i < nb; i++) {
+    const tile = Module._getValue(tilesPtr + i * 4, 'i32*');
+    const idx = Module._getValue(indexPtr + i * 4, 'i32');
+    ret.push(g_tiles[tile][idx]);
+  }
+  Module._free(pointPtr);
+  Module._free(indexPtr);
+  Module._free(tilesPtr);
+  return ret;
+}
+
 // Called each time a new geojson tile of a survey is loaded.
 let onNewTile = function(img, json) {
   json = Module.UTF8ToString(json);
@@ -183,5 +207,8 @@ Module['onGeojsonSurveyObj'] = function(obj) {
       obj._call('filter', obj._filterFn);
     }
   });
+  obj.queryRenderedFeatures = function(point) {
+    return surveyQueryRenderedFeatures(obj, point);
+  };
 
 };

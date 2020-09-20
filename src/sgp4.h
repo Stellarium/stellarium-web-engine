@@ -21,7 +21,17 @@ sgp4_elsetrec_t *sgp4_twoline2rv(
         char typerun, char typeinput, char opsmode,
         double *startmfe, double *stopmfe, double *deltamin);
 
-bool sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3]);
+/*
+ * Returns same error codes as defined in ext_src/sgp4/SGP4.cpp:
+ *   0 - no error
+ *   1 - mean elements, ecc >= 1.0 or ecc < -0.001 or a < 0.95 er
+ *   2 - mean motion less than 0.0
+ *   3 - pert elements, ecc < 0.0  or  ecc > 1.0
+ *   4 - semi-latus rectum < 0.0
+ *   5 - epoch elements are sub-orbital
+ *   6 - satellite has decayed
+ */
+int sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3]);
 
 /*
  * Function: sgp4_get_satepoch

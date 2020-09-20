@@ -416,7 +416,7 @@ static double rings_vmag(const planet_t *planet, const observer_t *obs)
     eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
     satrings(hlat, hlon, vec3_norm(pvh[0]),
              earth_hlon, vec3_norm(obs->earth_pvh[0]),
-             obs->ut1 + DJM0, &et, &st);
+             obs->tt + DJM0, &et, &st);
     set = sin(fabs(et));
     return (-2.60 + 1.25 * set) * set;
 }
