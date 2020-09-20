@@ -202,7 +202,7 @@ static void test_pos(pos_test_t t)
     obj_set_attr((obj_t*)&obs, "utc", t.utc);
     obj_set_attr((obj_t*)&obs, "longitude", t.longitude * DD2R);
     obj_set_attr((obj_t*)&obs, "latitude", t.latitude * DD2R);
-    obs.refraction = false;
+    obs.pressure = 0;
     observer_update(&obs, false);
 
     if (t.planet)

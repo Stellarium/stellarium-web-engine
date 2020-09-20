@@ -142,7 +142,6 @@ static void core_set_default(void)
     // section 52).
     tsl = 15 + 273.15;  // Let say we have a see level temp of 15 deg C.
     obs->pressure = 1013.25 * exp(-obs->hm / (29.3 * tsl));
-    obs->refraction = true;
 
     core->fov = 50 * DD2R;
     core->proj = PROJ_STEREOGRAPHIC;
