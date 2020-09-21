@@ -388,9 +388,12 @@ export default {
           geometry: item.geometry,
           type: 'Feature',
           properties: item,
-          geogroup_id: item.geogroup_id
+          geogroup_id: item.geogroup_id,
+          geogroup_size: item.c
         }
         delete feature.properties.geometry
+        delete feature.properties.geogroup_id
+        delete feature.properties.c
         geojson.features.push(feature)
       }
       return geojson.features.length ? geojson : undefined
