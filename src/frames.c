@@ -84,7 +84,7 @@ static void convert_frame_forward(const observer_t *obs,
         // Ignores Diurnal aberration for the moment
         mat3_mul_vec3(obs->ri2h, p, p);
 
-        if (obs->refraction) {
+        if (obs->pressure) {
             if (at_inf) {
                 refraction(p, obs->refa, obs->refb, p);
             } else {
@@ -129,7 +129,7 @@ static void convert_frame_backward(const observer_t *obs,
 
     // OBSERVED to CIRS
     if (origin >= FRAME_OBSERVED && dest < FRAME_OBSERVED) {
-        if (obs->refraction){
+        if (obs->pressure){
             if (at_inf) {
                 refraction_inv(p, obs->refa, obs->refb, p);
             } else {
@@ -307,7 +307,7 @@ bool frame_get_rotation(const observer_t *obs, int origin, int dest,
                         double rot[3][3])
 {
     // For the moment we only support ICRF to VIEW, without refraction.
-    if (origin != FRAME_ICRF || dest != FRAME_VIEW || obs->refraction)
+    if (origin != FRAME_ICRF || dest != FRAME_VIEW || obs->pressure)
         return false;
     mat3_copy(obs->rc2v, rot);
     return true;
@@ -408,7 +408,7 @@ static void test_convert_origin(void)
     obj_set_attr((obj_t*)obs, "utc", date);
     obj_set_attr((obj_t*)obs, "longitude", lon * DD2R);
     obj_set_attr((obj_t*)obs, "latitude", lat * DD2R);
-    obs->refraction = false;
+    obs->pressure = 0;
     observer_update(core->observer, false);
 
     const planet_test_pvs_t *sun = &test_pvs[0];

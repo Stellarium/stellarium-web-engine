@@ -109,7 +109,6 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(hm);
     H(horizon);
     H(pressure);
-    H(refraction);
     *hash_partial = v;
     H(mount_quat);
     H(pitch);
@@ -175,7 +174,7 @@ void observer_update(observer_t *obs, bool fast)
                 obs->elong, obs->phi,
                 obs->hm,
                 0, 0,
-                obs->refraction ? obs->pressure : 0,
+                obs->pressure,
                 15,       // Temperature (dec C)
                 0.5,      // Relative humidity (0-1)
                 0.55,     // Effective color (micron),
@@ -290,7 +289,6 @@ static obj_klass_t observer_klass = {
         PROPERTY(longitude, TYPE_ANGLE, MEMBER(observer_t, elong)),
         PROPERTY(latitude, TYPE_ANGLE, MEMBER(observer_t, phi)),
         PROPERTY(elevation, TYPE_FLOAT, MEMBER(observer_t, hm)),
-        PROPERTY(refraction, TYPE_BOOL, MEMBER(observer_t, refraction)),
         PROPERTY(tt, TYPE_MJD, MEMBER(observer_t, tt),
                  .on_changed = observer_on_timeattr_changed),
         PROPERTY(ut1, TYPE_MJD, MEMBER(observer_t, ut1),

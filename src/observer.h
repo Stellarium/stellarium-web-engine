@@ -25,8 +25,8 @@ struct observer
     double phi;         // Observer latitude
     double hm;          // height above ellipsoid (m)
     double horizon;     // altitude of horizon (used for rise/set).
-    double pressure;    // Set to NAN to compute it from the altitude.
-    bool   refraction;  // Whether we use refraction or not.
+
+    double pressure;    // Control the refraction.  Zero for no refraction.
 
     // Quaternion representing the mount orientation with respect to the
     // observed (az/alt) referential.  Set to the identity quaternion by

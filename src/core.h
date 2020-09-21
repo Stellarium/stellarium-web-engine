@@ -137,6 +137,8 @@ struct core
         double      dst;
     } time_animation;
 
+    fader_t refraction; // Toggle the observer refraction.
+
     // Zoom movement. -1 to zoom out, +1 to zoom in.
     double zoom;
 

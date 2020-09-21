@@ -202,7 +202,9 @@ Module['onGeojsonSurveyObj'] = function(obj) {
         if (r === true) return 1;
         if (r.fill) fillColorPtr(r.fill, fillPtr);
         if (r.stroke) fillColorPtr(r.stroke, strokePtr);
-        return r.visible === false ? 0 : 1;
+        let ret = r.visible === false ? 0 : 1;
+        if (r.blink === true) ret |= 2;
+        return ret;
       }, 'iiiii');
       obj._call('filter', obj._filterFn);
     }
