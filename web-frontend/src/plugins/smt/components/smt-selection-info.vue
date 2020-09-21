@@ -10,11 +10,11 @@
 // funding from the Centre national d'études spatiales (CNES).
 
 <template>
-  <v-container class="pa-0 smt-selection-box">
+  <v-container v-if="selectionData !== undefined" class="pa-0 smt-selection-box">
     <v-card style="background: rgba(66, 66, 66, 0.7)">
       <v-btn icon style="position: absolute; right: 0" v-on:click="unselect()"><v-icon>mdi-close</v-icon></v-btn>
       <v-card-title>
-        <div class="headline">Footprint {{ currentIndex + 1 }} / {{ selectionData.length }}
+        <div class="headline">Footprint {{ currentIndex + 1 }} / {{ selectionData ? selectionData.count : 0 }}
           <v-btn icon v-on:click="decIndex()"><v-icon>mdi-chevron-left</v-icon></v-btn>
           <v-btn icon v-on:click="incIndex()"><v-icon>mdi-chevron-right</v-icon></v-btn>
         </div>
@@ -28,17 +28,19 @@
 
 <script>
 import VueJsonPretty from 'vue-json-pretty'
+import qe from '../query-engine'
 
 export default {
   data: function () {
     return {
-      currentIndex: 0
+      currentIndex: 0,
+      selectionData: undefined
     }
   },
-  props: ['selectionData'],
+  props: ['selectedFeatures', 'query'],
   computed: {
     currentItem: function () {
-      return this.selectionData.length ? this.selectionData[this.currentIndex].properties : {}
+      return this.selectionData && this.selectionData.features.length ? this.selectionData.features[this.currentIndex].properties : {}
     }
   },
   methods: {
@@ -55,8 +57,35 @@ export default {
     }
   },
   watch: {
-    selectionData: function () {
+    selectedFeatures: function () {
+      const that = this
       this.currentIndex = 0
+      if (!this.selectedFeatures || !this.selectedFeatures.length) {
+        this.selectionData = undefined
+        return
+      }
+      let featuresCount = 0
+      this.selectedFeatures.forEach(f => { featuresCount += f.geogroup_size })
+      const geogroupIds = this.selectedFeatures.map(f => f.geogroup_id)
+      const q = {
+        constraints: [{ field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false }],
+        projectOptions: {
+          id: 1,
+          properties: 1
+        },
+        limit: 50
+      }
+      q.constraints = that.query.constraints.concat(q.constraints)
+      qe.query(q).then(qres => {
+        if (!qres.res.length) {
+          that.selectionData = undefined
+          return
+        }
+        that.selectionData = {
+          count: featuresCount,
+          features: qres.res
+        }
+      })
     }
   },
   components: { VueJsonPretty }

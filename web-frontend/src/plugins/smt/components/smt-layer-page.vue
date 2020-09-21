@@ -12,7 +12,7 @@
 <template>
   <div style="height: 100%; display: flex; flex-flow: column;">
     <img :src="watermarkImage" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
-    <smt-selection-info v-if="selectedFootprintData !== undefined" :selectionData="selectedFootprintData" @unselect="unselect()"></smt-selection-info>
+    <smt-selection-info :selectedFeatures="selectedFootprintData" :query="query" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <img v-if="dataLoadingImage && $store.state.SMT.status === 'loading'" :src="dataLoadingImage" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
     <v-progress-circular v-if="query.refreshObservationsInSkyInProgress" size=160 width=10 indeterminate style="position: absolute; top: calc(50vh - 80px); right: calc(50vw + 200px - 80px); opacity: 0.2"></v-progress-circular>
@@ -78,7 +78,7 @@ export default {
         fields: [],
         implicitConstraints: []
       },
-      selectedFootprintData: undefined
+      selectedFootprintData: []
     }
   },
   created: function () {
@@ -221,7 +221,7 @@ export default {
       if (that.$smt.colorAssignedField) {
         colorAssignedSqlField = qe.fId2AlaSql(that.$smt.colorAssignedField)
       }
-      const selectedGeogroupIds = new Set(this.selectedFootprintData ? this.selectedFootprintData.map(e => e.geogroup_id) : [])
+      const selectedGeogroupIds = new Set(this.selectedFootprintData.map(e => e.geogroup_id))
 
       let liveConstraintSql
       const lc = that.liveConstraint
@@ -295,7 +295,7 @@ export default {
       return this.editedConstraint && c.field.id === this.editedConstraint.field.id
     },
     unselect: function () {
-      this.selectedFootprintData = undefined
+      this.selectedFootprintData = []
     }
   },
   watch: {
@@ -366,28 +366,12 @@ export default {
     that.$stel.on('click', e => {
       if (!that.geojsonObj) return false
       // Get the list of features indices at click position
-      const features = that.geojsonObj.queryRenderedFeatures(e.point)
-      if (!features.length) {
-        that.selectedFootprintData = undefined
-        return false
+      const r = that.geojsonObj.queryRenderedFeatures(e.point)
+      if (r.length) {
+        that.selectedFootprintData = r
+      } else {
+        that.selectedFootprintData = []
       }
-      const geogroupIds = features.map(f => f.properties.geogroup_id)
-      const q = {
-        constraints: [{ field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false }],
-        projectOptions: {
-          id: 1,
-          properties: 1,
-          geogroup_id: 1
-        }
-      }
-      q.constraints = that.query.constraints.concat(q.constraints)
-      qe.query(q).then(qres => {
-        if (!qres.res.length) {
-          that.selectedFootprintData = undefined
-          return
-        }
-        that.selectedFootprintData = qres.res
-      })
       return true
     })
   },
