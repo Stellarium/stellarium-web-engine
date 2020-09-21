@@ -217,6 +217,12 @@ export default {
   query: function (q) {
     let that = this
     let whereClause = this.constraints2SQLWhereClause(q.constraints)
+    if (q.limit && Number.isInteger(q.limit)) {
+      whereClause += ' LIMIT ' + q.limit
+    }
+    if (q.skip && Number.isInteger(q.skip)) {
+      whereClause += ' FETCH ' + q.skip
+    }
 
     // Construct the SQL SELECT clause matching the given aggregate options
     let selectClause = 'SELECT '
