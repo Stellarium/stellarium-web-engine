@@ -381,7 +381,8 @@ export default {
         const feature = {
           geometry: item.geometry,
           type: 'Feature',
-          properties: item
+          properties: item,
+          geogroup_id: item.geogroup_id
         }
         delete feature.properties.geometry
         geojson.features.push(feature)
