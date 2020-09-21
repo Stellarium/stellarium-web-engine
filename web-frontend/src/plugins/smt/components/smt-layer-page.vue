@@ -221,6 +221,8 @@ export default {
       if (that.$smt.colorAssignedField) {
         colorAssignedSqlField = qe.fId2AlaSql(that.$smt.colorAssignedField)
       }
+      const selectedGeogroupIds = new Set(this.selectedFootprintData ? this.selectedFootprintData.map(e => e.geogroup_id) : [])
+
       let liveConstraintSql
       const lc = that.liveConstraint
       if (lc && lc.field.widget === 'date_range' && lc.operation === 'DATE_RANGE') {
@@ -238,7 +240,11 @@ export default {
             return false
           }
         }
-
+        const selected = selectedGeogroupIds.has(feature.geogroup_id)
+        if (selected !== feature.selected) {
+          feature.selected = selected
+          feature.colorDone = false
+        }
         if (feature.colorDone) return true
         let c = [1, 0.3, 0.3, 0.3]
         if (colorAssignedSqlField) {
@@ -298,14 +304,6 @@ export default {
     },
     selectedFootprintData: function () {
       // refresh the geojson live filter to make the selected object blink
-      const selectedIds = this.selectedFootprintData ? this.selectedFootprintData.map(e => e.id) : []
-      for (const item of this.livefilterData) {
-        const selected = selectedIds.includes(item.id)
-        if (item.selected !== selected) {
-          item.selected = selected
-          item.colorDone = undefined
-        }
-      }
       this.refreshGeojsonLiveFilter()
     }
   },
@@ -378,7 +376,8 @@ export default {
         constraints: [{ field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false }],
         projectOptions: {
           id: 1,
-          properties: 1
+          properties: 1,
+          geogroup_id: 1
         }
       }
       q.constraints = that.query.constraints.concat(q.constraints)
