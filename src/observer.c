@@ -142,6 +142,7 @@ void observer_update(observer_t *obs, bool fast)
     double dt, dut1 = 0;
 
     uint64_t hash, hash_partial;
+    int r;
     observer_compute_hash(obs, &hash_partial, &hash);
     // Check if we have computed accurate positions already
     if (hash == obs->hash_accurate)
@@ -155,10 +156,10 @@ void observer_update(observer_t *obs, bool fast)
     // Compute UT1 and UTC time.
     if (obs->last_update != obs->tt) {
         dt = deltat(obs->tt);
-        dut1 = 0;
         eraTtut1(DJM0, obs->tt, dt, &ut11, &ut12);
         eraTttai(DJM0, obs->tt, &tai1, &tai2);
-        eraTaiutc(tai1, tai2, &utc1, &utc2);
+        r = eraTaiutc(tai1, tai2, &utc1, &utc2);
+        if (r) LOG_W_ONCE("eraTaiutc error: %d", r);
         obs->ut1 = ut11 - DJM0 + ut12;
         obs->utc = utc1 - DJM0 + utc2;
     }
