@@ -36,6 +36,7 @@ extern "C" {
 }
 
 #include <stdlib.h>
+#include <assert.h>
 
 sgp4_elsetrec_t *sgp4_twoline2rv(
         const char str1_[130], const char str2_[130],
@@ -55,10 +56,12 @@ sgp4_elsetrec_t *sgp4_twoline2rv(
 int sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3])
 {
     double tsince;
+    bool b; (void)b;
     elsetrec *elrec = (elsetrec*)satrec;
     tsince = utc_mjd - (elrec->jdsatepoch - 2400000.5 + elrec->jdsatepochF);
     tsince *= 24 * 60; // Put in min.
-    SGP4Funcs::sgp4(*((elsetrec*)satrec), tsince, r, v);
+    b = SGP4Funcs::sgp4(*((elsetrec*)satrec), tsince, r, v);
+    assert(!b == (bool)elrec->error);
     return elrec->error;
 }
 
