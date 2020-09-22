@@ -244,34 +244,30 @@ static obj_t *observer_clone(const obj_t *obj)
     return &ret->obj;
 }
 
-static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
+static void on_utc_changed(obj_t *obj, const attribute_t *attr)
 {
-    // Make sure that the TT is synced.
+    // Sync TT.
     observer_t *obs = (observer_t*)obj;
-    double ut11, ut12, tai1, tai2, tt1, tt2, utc1, utc2, dt = 0;
-    if (strcmp(attr->name, "utc") == 0) {
-        // First compute UTC -> TAI -> TT (no deltaT involved)
-        eraUtctai(DJM0, obs->utc, &tai1, &tai2);
-        eraTaitt(tai1, tai2, &tt1, &tt2);
-        obs->tt = tt1 - DJM0 + tt2;
+    double tai1, tai2, tt1, tt2;
+    int r;
+    r = eraUtctai(DJM0, obs->utc, &tai1, &tai2);
+    if (r) LOG_W_ONCE("eraUtctai error: %d", r);
+    eraTaitt(tai1, tai2, &tt1, &tt2);
+    obs->tt = tt1 - DJM0 + tt2;
+    module_changed(obj, "tt");
+}
 
-        dt = deltat(obs->utc);
-        eraTtut1(tt1, tt2, dt, &ut11, &ut12);
-        obs->ut1 = ut11 - DJM0 + ut12;
-        module_changed(obj, "tt");
-    }
-    if (strcmp(attr->name, "ut1") == 0) {
-        dt = deltat(obs->ut1);
-        eraUt1tt(DJM0, obs->ut1, dt, &tt1, &tt2);
-        obs->tt = tt1 - DJM0 + tt2;
-        module_changed(obj, "tt");
-    }
-    if (strcmp(attr->name, "tt") == 0) {
-        eraTttai(DJM0, obs->tt, &tai1, &tai2);
-        eraTaiutc(tai1, tai2, &utc1, &utc2);
-        obs->utc = utc1 - DJM0 + utc2;
-        module_changed(obj, "utc");
-    }
+static void on_tt_changed(obj_t *obj, const attribute_t *attr)
+{
+    // Sync UTC.
+    double tai1, tai2, utc1, utc2;
+    int r;
+    observer_t *obs = (observer_t*)obj;
+    eraTttai(DJM0, obs->tt, &tai1, &tai2);
+    r = eraTaiutc(tai1, tai2, &utc1, &utc2);
+    if (r) LOG_W_ONCE("eraTaiutc error: %d", r);
+    obs->utc = utc1 - DJM0 + utc2;
+    module_changed(obj, "utc");
 }
 
 // Expose azalt vector to js.
@@ -296,11 +292,9 @@ static obj_klass_t observer_klass = {
         PROPERTY(latitude, TYPE_ANGLE, MEMBER(observer_t, phi)),
         PROPERTY(elevation, TYPE_FLOAT, MEMBER(observer_t, hm)),
         PROPERTY(tt, TYPE_MJD, MEMBER(observer_t, tt),
-                 .on_changed = observer_on_timeattr_changed),
-        PROPERTY(ut1, TYPE_MJD, MEMBER(observer_t, ut1),
-                 .on_changed = observer_on_timeattr_changed),
+                 .on_changed = on_tt_changed),
         PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
-                 .on_changed = observer_on_timeattr_changed),
+                 .on_changed = on_utc_changed),
         PROPERTY(pitch, TYPE_ANGLE, MEMBER(observer_t, pitch)),
         PROPERTY(yaw, TYPE_ANGLE, MEMBER(observer_t, yaw)),
         PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll)),
