@@ -248,7 +248,7 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
 {
     // Make sure that the TT is synced.
     observer_t *obs = (observer_t*)obj;
-    double ut11, ut12, tai1, tai2, tt1, tt2, dt = 0;
+    double ut11, ut12, tai1, tai2, tt1, tt2, utc1, utc2, dt = 0;
     if (strcmp(attr->name, "utc") == 0) {
         // First compute UTC -> TAI -> TT (no deltaT involved)
         eraUtctai(DJM0, obs->utc, &tai1, &tai2);
@@ -258,14 +258,20 @@ static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
         dt = deltat(obs->utc);
         eraTtut1(tt1, tt2, dt, &ut11, &ut12);
         obs->ut1 = ut11 - DJM0 + ut12;
+        module_changed(obj, "tt");
     }
     if (strcmp(attr->name, "ut1") == 0) {
         dt = deltat(obs->ut1);
         eraUt1tt(DJM0, obs->ut1, dt, &tt1, &tt2);
         obs->tt = tt1 - DJM0 + tt2;
+        module_changed(obj, "tt");
     }
-    module_changed(obj, "tt");
-    module_changed(obj, "utc");
+    if (strcmp(attr->name, "tt") == 0) {
+        eraTttai(DJM0, obs->tt, &tai1, &tai2);
+        eraTaiutc(tai1, tai2, &utc1, &utc2);
+        obs->utc = utc1 - DJM0 + utc2;
+        module_changed(obj, "utc");
+    }
 }
 
 // Expose azalt vector to js.
