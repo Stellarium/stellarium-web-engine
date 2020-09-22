@@ -41,6 +41,11 @@ enum {
 #define LOG_W(msg, ...) LOG(NOC_LOG_WARN,    msg, ##__VA_ARGS__)
 #define LOG_E(msg, ...) LOG(NOC_LOG_ERROR,   msg, ##__VA_ARGS__)
 
+#define LOG_W_ONCE(msg, ...) do { \
+    static bool _tmp = false; \
+    if (!_tmp) { LOG_W(msg, ##__VA_ARGS__); _tmp = true; } \
+} while(0)
+
 void dolog(int level, const char *msg,
            const char *func, const char *file, int line, ...);
 
