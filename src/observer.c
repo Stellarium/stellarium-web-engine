@@ -136,13 +136,58 @@ static void update_nutation_precession_mat(observer_t *obs)
 
 }
 
+static double tt2utc(double tt, double *dut1)
+{
+    double dt, utc1, utc2, ut11, ut12, tai1, tai2, utc, ut1;
+    int r;
+
+    dt = deltat(tt);
+    eraTtut1(DJM0, tt, dt, &ut11, &ut12);
+    eraTttai(DJM0, tt, &tai1, &tai2);
+    r = eraTaiutc(tai1, tai2, &utc1, &utc2);
+
+    // If we don't know the leap seconds, assume UTC = UT1.
+    if (r != 0) {
+        *dut1 = 0;
+        return ut11 - DJM0 + ut12;
+    }
+
+    utc = utc1 - DJM0 + utc2;
+    ut1 = ut11 - DJM0 + ut12;
+    *dut1 = (ut1 - utc) * ERFA_DAYSEC;
+
+    if (fabs(*dut1) > 1) {
+        LOG_W_ONCE("DUT1 = %fs", *dut1);
+    }
+
+    return utc;
+}
+
+static double utc2tt(double utc)
+{
+    double tai1, tai2, tt1, tt2, dt;
+    int r;
+
+    r = eraUtctai(DJM0, utc, &tai1, &tai2);
+
+    // If we don't know the leap seconds, assume UTC = UT1 and use ΔT to
+    // compute TT.
+    if (r != 0) {
+        dt = deltat(utc);
+        eraUt1tt(DJM0, utc, dt, &tt1, &tt2);
+        return tt1 - DJM0 + tt2;
+    }
+
+    eraTaitt(tai1, tai2, &tt1, &tt2);
+    return tt1 - DJM0 + tt2;
+}
+
 void observer_update(observer_t *obs, bool fast)
 {
-    double utc1, utc2, ut11, ut12, tai1, tai2;
-    double dt, dut1 = 0;
 
     uint64_t hash, hash_partial;
-    int r;
+    double dut1;
+
     observer_compute_hash(obs, &hash_partial, &hash);
     // Check if we have computed accurate positions already
     if (hash == obs->hash_accurate)
@@ -155,13 +200,8 @@ void observer_update(observer_t *obs, bool fast)
 
     // Compute UT1 and UTC time.
     if (obs->last_update != obs->tt) {
-        dt = deltat(obs->tt);
-        eraTtut1(DJM0, obs->tt, dt, &ut11, &ut12);
-        eraTttai(DJM0, obs->tt, &tai1, &tai2);
-        r = eraTaiutc(tai1, tai2, &utc1, &utc2);
-        if (r) LOG_W_ONCE("eraTaiutc error: %d", r);
-        obs->ut1 = ut11 - DJM0 + ut12;
-        obs->utc = utc1 - DJM0 + utc2;
+        obs->utc = tt2utc(obs->tt, &dut1);
+        obs->ut1 = obs->utc + dut1 / ERFA_DAYSEC;
     }
 
     if (fast) {
@@ -171,7 +211,7 @@ void observer_update(observer_t *obs, bool fast)
             eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
         }
     } else {
-        eraApco13(DJM0, obs->utc, dut1,
+        eraApco13(DJM0, obs->utc, 0, // Note: should pass proper DUT1.
                 obs->elong, obs->phi,
                 obs->hm,
                 0, 0,
@@ -249,25 +289,17 @@ static void on_utc_changed(obj_t *obj, const attribute_t *attr)
 {
     // Sync TT.
     observer_t *obs = (observer_t*)obj;
-    double tai1, tai2, tt1, tt2;
-    int r;
-    r = eraUtctai(DJM0, obs->utc, &tai1, &tai2);
-    if (r) LOG_W_ONCE("eraUtctai error: %d", r);
-    eraTaitt(tai1, tai2, &tt1, &tt2);
-    obs->tt = tt1 - DJM0 + tt2;
+    obs->tt = utc2tt(obs->utc);
     module_changed(obj, "tt");
 }
 
 static void on_tt_changed(obj_t *obj, const attribute_t *attr)
 {
     // Sync UTC.
-    double tai1, tai2, utc1, utc2;
-    int r;
     observer_t *obs = (observer_t*)obj;
-    eraTttai(DJM0, obs->tt, &tai1, &tai2);
-    r = eraTaiutc(tai1, tai2, &utc1, &utc2);
-    if (r) LOG_W_ONCE("eraTaiutc error: %d", r);
-    obs->utc = utc1 - DJM0 + utc2;
+    double dut1;
+    obs->utc = tt2utc(obs->tt, &dut1);
+    obs->ut1 = obs->utc + dut1 / ERFA_DAYSEC;
     module_changed(obj, "utc");
 }
 
