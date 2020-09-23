@@ -48,11 +48,11 @@ export default {
       this.$emit('unselect')
     },
     decIndex: function () {
-      if (this.currentIndex === 0) this.currentIndex = this.selectionData.length - 1
+      if (this.currentIndex === 0) this.currentIndex = this.selectionData.features.length - 1
       else this.currentIndex--
     },
     incIndex: function () {
-      if (this.currentIndex >= this.selectionData.length - 1) this.currentIndex = 0
+      if (this.currentIndex >= this.selectionData.features.length - 1) this.currentIndex = 0
       else this.currentIndex++
     }
   },
@@ -77,10 +77,14 @@ export default {
       }
       q.constraints = that.query.constraints.concat(q.constraints)
       qe.query(q).then(qres => {
+        that.currentIndex = 0
         if (!qres.res.length) {
           that.selectionData = undefined
           return
         }
+        console.log(featuresCount)
+        console.log(qres.res.length)
+        console.assert(featuresCount === qres.res.length)
         that.selectionData = {
           count: featuresCount,
           features: qres.res
