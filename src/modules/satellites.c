@@ -29,6 +29,11 @@ struct satellite {
     double pvg[3]; // XXX: rename that.
     double pvo[2][4];
     double vmag;
+
+    // Launch and decay dates in UTC MJD.  Zero if not known.
+    double launch_date;
+    double decay_date;
+
     bool error; // Set if we got an error computing the position.
     json_value *data; // Data passed in the constructor.
     double max_brightness; // Cached max_brightness value.
@@ -276,11 +281,34 @@ static const char *otype_from_json(const json_value *val, const char *base)
     return base;
 }
 
+/*
+ * Parse a date of the form yyyy-mm-dd into a MJD value.
+ */
+static int parse_date(const char *str, double *out)
+{
+    int iy, im, id, r;
+    double d1, d2;
+
+    assert(str);
+    r = sscanf(str, "%d-%d-%d", &iy, &im, &id);
+    if (r != 3) goto error;
+    r = eraDtf2d("UTC", iy, im, id, 0, 0, 0, &d1, &d2);
+    if (r) goto error;
+    *out = d1 - DJM0 + d2;
+    return 0;
+
+error:
+    LOG_W("Cannot parse date '%s'", str);
+    *out = 0;
+    return -1;
+}
+
 static int satellite_init(obj_t *obj, json_value *args)
 {
     // Support creating a satellite using noctuasky model data json values.
     satellite_t *sat = (satellite_t*)obj;
-    const char *tle1, *tle2, *name = NULL;
+    const char *tle1, *tle2, *name = NULL,
+               *launch_date = NULL, *decay_date = NULL;
     double startmfe, stopmfe, deltamin;
     int r;
     const json_value *types = NULL;
@@ -295,6 +323,8 @@ static int satellite_init(obj_t *obj, json_value *args)
                 "norad_number", JCON_INT(sat->number, 0),
                 "?mag", JCON_DOUBLE(sat->stdmag, SATELLITE_DEFAULT_MAG),
                 "tle", "[", JCON_STR(tle1), JCON_STR(tle2), "]",
+                "?launch_date", JCON_STR(launch_date),
+                "?decay_date", JCON_STR(decay_date),
             "}",
             "?names", "[", JCON_STR(name), "]",
         "}");
@@ -310,6 +340,9 @@ static int satellite_init(obj_t *obj, json_value *args)
         sat->data = json_copy(args);
         sat->max_brightness = compute_max_brightness(
                 sat->elsetrec, sat->stdmag);
+
+        if (launch_date) parse_date(launch_date, &sat->launch_date);
+        if (decay_date) parse_date(decay_date, &sat->decay_date);
     }
 
     return 0;
@@ -334,6 +367,18 @@ static void true_equator_to_j2000(const observer_t *obs,
     mat3_mul_vec3(obs->rnp, out[0], out[0]);
 }
 
+// Check if the satellite is currently in orbit.
+static bool satellite_is_operational(const satellite_t *sat, double utc)
+{
+    // For the moment, if we don't know the launch or decay date, we 10
+    // years before/after the satellite epoch.
+    double start, end, epoch;
+    epoch = sgp4_get_satepoch(sat->elsetrec);
+    start = sat->launch_date ? sat->launch_date - 1 : epoch - 3600;
+    end = sat->decay_date ? sat->decay_date + 1 : epoch + 3600;
+    return utc > start && utc < end;
+}
+
 /*
  * Update an individual satellite.
  */
@@ -345,6 +390,8 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
 
     if (sat->error) return 0;
     assert(sat->elsetrec);
+    if (!satellite_is_operational(sat, obs->utc)) return 0;
+
     // Orbit computation.
     r = sgp4(sat->elsetrec, obs->utc, pv[0],  pv[1]);
     if (r && r != 6) { // 6 = satellite decayed, don't log this case.
@@ -462,7 +509,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     satellite_update(sat, painter.obs);
     vmag = sat->vmag;
-    if (sat->error) return 0;
+    if (sat->error || !satellite_is_operational(sat, painter.obs->utc))
+        return 0;
     if (!selected && vmag > painter.stars_limit_mag && vmag > hints_limit_mag)
         return 0;
 
