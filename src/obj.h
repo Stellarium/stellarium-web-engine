@@ -306,7 +306,8 @@ int obj_render(const obj_t *obj, const painter_t *painter);
  *   pvo    - Output ICRF position with origin on the observer.
  *
  * Return:
- *   0 for success.
+ *   0 for success, otherwise an error code, and in that case the position
+ *   is undefined.
  */
 int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
 

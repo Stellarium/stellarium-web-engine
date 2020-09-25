@@ -150,11 +150,24 @@ int obj_render(const obj_t *obj, const painter_t *painter)
  *   obj    - A sky object.
  *   obs    - An observer.
  *   pvo    - Output ICRF position with origin on the observer.
+ *
+ * Return:
+ *   0 for success, otherwise an error code, and in that case the position
+ *   is undefined.
  */
 int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 {
+    char name[64];
+    int r;
     assert(obj && obj->klass->get_info);
-    return obj->klass->get_info(obj, obs, INFO_PVO, pvo);
+    r = obj->klass->get_info(obj, obs, INFO_PVO, pvo);
+    // Extra check for NAN values.
+    if (DEBUG && r == 0 && isnan(pvo[0][0] + pvo[0][1] + pvo[0][2])) {
+        obj_get_name(obj, name, sizeof(name));
+        LOG_E("NAN value in obj position (%s)", name);
+        assert(false);
+    }
+    return r;
 }
 
 /*
