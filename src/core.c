@@ -167,6 +167,9 @@ static void core_set_default(void)
 
     core->telescope_auto = true;
     core->mount_frame = FRAME_OBSERVED;
+
+    core->time_animation.dst_utc = NAN;
+
     observer_update(core->observer, false);
 }
 
@@ -373,10 +376,13 @@ static void core_update_time(double dt)
     if (!anim->duration) return;
     anim->t += dt / anim->duration;
     t = smoothstep(0.0, 1.0, anim->t);
-    tt = mix(anim->src, anim->dst, t);
+    tt = mix(anim->src_tt, anim->dst_tt, t);
     obj_set_attr(&core->observer->obj, "tt", tt);
-    if (t >= 1.0)
+    if (t >= 1.0) {
         anim->duration = 0.0;
+        anim->dst_utc = NAN;
+        module_changed((obj_t*)core, "time_animation_target");
+    }
 }
 
 // Smoothly update the observer pressure for refraction effect.
@@ -1070,9 +1076,13 @@ void core_zoomto(double fov, double duration)
     anim->t = 0.0;
 }
 
+// Defined in observer.c (todo: move it somewhere else).
+double utc2tt(double utc);
+
 EMSCRIPTEN_KEEPALIVE
-void core_set_time(double tt, double duration)
+void core_set_time(double utc, double duration)
 {
+    double tt = utc2tt(utc);
     typeof(core->time_animation) *anim = &core->time_animation;
 
     anim->duration = 0;
@@ -1080,10 +1090,12 @@ void core_set_time(double tt, double duration)
         obj_set_attr(&core->observer->obj, "tt", tt);
         return;
     }
-    anim->src = core->observer->tt;
-    anim->dst = tt;
+    anim->src_tt = core->observer->tt;
+    anim->dst_tt = tt;
+    anim->dst_utc = utc;
     anim->duration = duration;
     anim->t = 0;
+    module_changed((obj_t*)core, "time_animation_target");
 }
 
 // Return a static string representation of a an object type id.
@@ -1165,6 +1177,8 @@ static obj_klass_t core_klass = {
                  MEMBER(core_t, flip_view_horizontal)),
         PROPERTY(mount_frame, TYPE_ENUM, MEMBER(core_t, mount_frame)),
         PROPERTY(on_click, TYPE_FUNC, MEMBER(core_t, on_click)),
+        PROPERTY(time_animation_target, TYPE_MJD,
+                 MEMBER(core_t, time_animation.dst_utc)),
         {}
     }
 };

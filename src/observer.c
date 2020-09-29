@@ -163,7 +163,7 @@ static double tt2utc(double tt, double *dut1)
     return utc;
 }
 
-static double utc2tt(double utc)
+double utc2tt(double utc)
 {
     double tai1, tai2, tt1, tt2, dt;
     int r;

@@ -133,8 +133,9 @@ struct core
     struct {
         double      t;        // Goes from 0 to 1.
         double      duration; // Animation duration in sec.
-        double      src;
-        double      dst;
+        double      src_tt;
+        double      dst_tt;
+        double      dst_utc;
     } time_animation;
 
     fader_t refraction; // Toggle the observer refraction.
