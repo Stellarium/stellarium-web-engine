@@ -119,18 +119,6 @@ void satrings(
     double jd,
     double *etiltp, double *stiltp);
 
-/* Set time from gregorian calendar value.  Any value equal to -1 means we
- * don't change it.
- */
-double time_set_dtf(double utc, double utcoffset,
-                    int year, int month, int day,
-                    int h, int m, int s);
-
-/* Increase time using gregorian calendar value. */
-double time_add_dtf(double utc, double utcoffset, int year,
-                    int month, int day,
-                    int h, int m, int s);
-
 /* Format functions to simplify printf.
  *
  * All those functions take a char buffer as a first argument, and return
