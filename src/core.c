@@ -370,6 +370,35 @@ static int core_update_mount(double dt)
     return 0;
 }
 
+/*
+ * Animate between two times in such a way to minimize the visual movements
+ */
+static double smart_time_mix(double src_tt, double dst_tt, double t)
+{
+    double dt, y4, y, d, f;
+    int sign = 1;
+
+    dt = dst_tt - src_tt;
+    if (dt < 0) {
+        sign = -1;
+        dt = -dt;
+    }
+
+    y4 = floor(dt / (4 * ERFA_DJY));
+    dt -= y4 * (4 * ERFA_DJY);
+    y = floor(dt / ERFA_DJY);
+    dt -= y * ERFA_DJY;
+    d = floor(dt);
+    f = dt - d;
+
+    y4 = round(mix(0, y4, t));
+    y = round(mix(0, y, t));
+    d = round(mix(0, d, t));
+    f = mix(0, f, t);
+
+    return src_tt + sign * (y4 * 4 * ERFA_DJY + y * ERFA_DJY + d + f);
+}
+
 // Update the core time animation.
 static void core_update_time(double dt)
 {
@@ -378,8 +407,18 @@ static void core_update_time(double dt)
 
     if (!anim->duration) return;
     anim->t += dt / anim->duration;
+
     t = smoothstep(0.0, 1.0, anim->t);
-    tt = mix(anim->src_tt, anim->dst_tt, t);
+
+    switch (anim->mode) {
+    case 0:
+        tt = mix(anim->src_tt, anim->dst_tt, t);
+        break;
+    case 1:
+        tt = smart_time_mix(anim->src_tt, anim->dst_tt, t);
+        break;
+    }
+
     obj_set_attr(&core->observer->obj, "tt", tt);
     if (t >= 1.0) {
         anim->duration = 0.0;
@@ -1086,9 +1125,10 @@ double utc2tt(double utc);
 EMSCRIPTEN_KEEPALIVE
 void core_set_time(double utc, double duration)
 {
-    double tt = utc2tt(utc);
+    double tt, speed;
     typeof(core->time_animation) *anim = &core->time_animation;
 
+    tt = utc2tt(utc);
     anim->duration = 0;
     if (duration == 0.0) {
         obj_set_attr(&core->observer->obj, "tt", tt);
@@ -1099,6 +1139,12 @@ void core_set_time(double utc, double duration)
     anim->dst_utc = utc;
     anim->duration = duration;
     anim->t = 0;
+
+    // Determine the animation mode (normal or 'smart').  If the animation
+    // moves at more than a few days per seconds, use the 'smart' mode.
+    speed = fabs(anim->dst_tt - anim->src_tt) / duration;
+    anim->mode = speed > 5 ? 1 : 0;
+
     module_changed((obj_t*)core, "time_animation_target");
 }
 

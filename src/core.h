@@ -136,6 +136,7 @@ struct core
         double      src_tt;
         double      dst_tt;
         double      dst_utc;
+        int         mode;
     } time_animation;
 
     fader_t refraction; // Toggle the observer refraction.
