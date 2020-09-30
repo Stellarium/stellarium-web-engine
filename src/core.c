@@ -331,6 +331,7 @@ static int core_update_direction(double dt)
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
         module_changed(&core->observer->obj, "yaw");
+        observer_update(core->observer, true);
     }
 
     if (core->target.lock && !core->target.move_to_lock) {
@@ -339,9 +340,10 @@ static int core_update_direction(double dt)
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
         module_changed(&core->observer->obj, "yaw");
+        observer_update(core->observer, true);
     }
 
-    return 1;
+    return 0;
 }
 
 // Update the observer mount quaternion.
@@ -364,6 +366,7 @@ static int core_update_mount(double dt)
 
     if (vec4_equal(quat, obs->mount_quat)) return 0;
     quat_rotate_towards(obs->mount_quat, quat, dt * speed, obs->mount_quat);
+    observer_update(core->observer, true);
     return 0;
 }
 
@@ -383,6 +386,7 @@ static void core_update_time(double dt)
         anim->dst_utc = NAN;
         module_changed((obj_t*)core, "time_animation_target");
     }
+    observer_update(core->observer, true);
 }
 
 // Smoothly update the observer pressure for refraction effect.
@@ -435,9 +439,9 @@ int core_update(double dt)
     double fact = screen_s / 600;
     core->star_scale_screen_factor = min(max(0.7, fact), 1.5);
 
+    core_update_time(dt);
     core_update_direction(dt);
     core_update_mount(dt);
-    core_update_time(dt);
 
     DL_FOREACH_SAFE(core->tasks, task, task_tmp) {
         if (task->fun(task, dt) != 0) {

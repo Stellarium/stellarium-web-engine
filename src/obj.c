@@ -160,6 +160,7 @@ int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
     char name[64];
     int r;
     assert(obj && obj->klass->get_info);
+    assert(observer_is_uptodate(obs, true));
     r = obj->klass->get_info(obj, obs, INFO_PVO, pvo);
     // Extra check for NAN values.
     if (DEBUG && r == 0 && isnan(pvo[0][0] + pvo[0][1] + pvo[0][2])) {

@@ -112,4 +112,6 @@ struct observer
 
 void observer_update(observer_t *obs, bool fast);
 
+bool observer_is_uptodate(const observer_t *obs, bool fast);
+
 #endif // OBSERVER_H

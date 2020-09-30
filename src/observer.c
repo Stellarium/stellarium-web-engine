@@ -303,6 +303,15 @@ static void on_tt_changed(obj_t *obj, const attribute_t *attr)
     module_changed(obj, "utc");
 }
 
+bool observer_is_uptodate(const observer_t *obs, bool fast)
+{
+    uint64_t hash, hash_partial;
+    observer_compute_hash(obs, &hash_partial, &hash);
+    if (hash == obs->hash_accurate) return true;
+    if (fast && hash == obs->hash) return true;
+    return false;
+}
+
 // Expose azalt vector to js.
 static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
                                  const json_value *args)
