@@ -417,6 +417,9 @@ static void core_update_time(double dt)
     case 1:
         tt = smart_time_mix(anim->src_tt, anim->dst_tt, t);
         break;
+    default:
+        assert(false);
+        return;
     }
 
     obj_set_attr(&core->observer->obj, "tt", tt);
