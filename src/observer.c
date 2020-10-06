@@ -165,7 +165,7 @@ static double tt2utc(double tt, double *dut1)
 
 double utc2tt(double utc)
 {
-    double tai1, tai2, tt1, tt2, dt;
+    double tai1, tai2, tt1, tt2, dt, tt;
     int r;
 
     r = eraUtctai(DJM0, utc, &tai1, &tai2);
@@ -175,7 +175,10 @@ double utc2tt(double utc)
     if (r != 0) {
         dt = deltat(utc);
         eraUt1tt(DJM0, utc, dt, &tt1, &tt2);
-        return tt1 - DJM0 + tt2;
+        tt = tt1 - DJM0 + tt2;
+        // Adjust dt with the value at the final TT time.
+        tt += (deltat(tt) - dt) / ERFA_DAYSEC;
+        return tt;
     }
 
     eraTaitt(tai1, tai2, &tt1, &tt2);
