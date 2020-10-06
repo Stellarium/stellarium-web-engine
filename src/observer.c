@@ -186,7 +186,7 @@ void observer_update(observer_t *obs, bool fast)
 {
 
     uint64_t hash, hash_partial;
-    double dut1;
+    double dut1, r[3][3], x, y, theta, s, sp;
 
     observer_compute_hash(obs, &hash_partial, &hash);
     // Check if we have computed accurate positions already
@@ -211,18 +211,24 @@ void observer_update(observer_t *obs, bool fast)
             eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
         }
     } else {
-        eraApco13(DJM0, obs->utc, 0, // Note: should pass proper DUT1.
-                obs->elong, obs->phi,
-                obs->hm,
-                0, 0,
-                obs->pressure,
-                15,       // Temperature (dec C)
-                0.5,      // Relative humidity (0-1)
-                0.55,     // Effective color (micron),
-                &obs->astrom,
-                &obs->eo);
-        // Update earth position.
+
+        // This is similar to a single call to eraApco13, except we handle
+        // the time conversion ourself, since erfa doesn't support dates
+        // before year -4800.
+        eraPnm06a(DJM0, obs->tt, r); // equinox based BPN matrix.
+        eraBpn2xy(r, &x, &y); // Extract CIP X,Y.
+        s = eraS06(DJM0, obs->tt, x, y); // Obtain CIO locator s.
+        // XXX: should be obs->ut1 here!  But it break the unit tests for now.
+        theta = eraEra00(DJM0, obs->utc); // Earth rotation angle.
+        sp = eraSp00(DJM0, obs->tt); // TIO locator s'.
+
         eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
+        eraApco(DJM0, obs->tt, obs->earth_pvb, obs->earth_pvh[0], x, y, s,
+                theta, obs->elong, obs->phi, obs->hm, 0, 0, sp, 0, 0,
+                &obs->astrom);
+        obs->eo = eraEors(r, s); // Equation of origins.
+
+        // Update earth position.
         eraCp(obs->astrom.eb, obs->obs_pvb[0]);
         vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
         eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
@@ -235,7 +241,7 @@ void observer_update(observer_t *obs, bool fast)
         // Update observer geocentric position obs_pvg. We can't use eraPvu here
         // as the movement is a rotation about the earth center and can't
         // be approximated by a linear velocity  on a 24h time span
-        double theta = eraEra00(DJM0, obs->ut1);
+        theta = eraEra00(DJM0, obs->ut1);
         eraPvtob(obs->elong, obs->phi, obs->hm, 0, 0, 0, theta, obs->obs_pvg);
         // Rotate from CIRS to ICRF
         eraTrxp(obs->astrom.bpn, obs->obs_pvg[0], obs->obs_pvg[0]);
