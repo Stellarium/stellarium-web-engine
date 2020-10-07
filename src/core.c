@@ -1074,6 +1074,7 @@ EMSCRIPTEN_KEEPALIVE
 void core_point_and_lock(obj_t *target, double duration)
 {
     double v[4];
+    observer_update(core->observer, true);
     obj_set_attr(&core->obj, "lock", target);
     obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, v);
     core_lookat(v, duration);
