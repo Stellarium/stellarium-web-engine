@@ -9,6 +9,7 @@
 
 #include "observer.h"
 #include "swe.h"
+#include "algos/utctt.h"
 
 // Simple xor hash function.
 static uint32_t hash_xor(uint32_t v, const char *data, int len)
@@ -134,55 +135,6 @@ static void update_nutation_precession_mat(observer_t *obs)
     eraPn00a(obs->tt, DJM0, &dpsi, &deps, &epsa, rb, rp, rbp, rn, rbpn);
     mat3_mul(rn, rp, obs->rnp);
 
-}
-
-static double tt2utc(double tt, double *dut1)
-{
-    double dt, utc1, utc2, ut11, ut12, tai1, tai2, utc, ut1;
-    int r;
-
-    dt = deltat(tt);
-    eraTtut1(DJM0, tt, dt, &ut11, &ut12);
-    eraTttai(DJM0, tt, &tai1, &tai2);
-    r = eraTaiutc(tai1, tai2, &utc1, &utc2);
-
-    // If we don't know the leap seconds, assume UTC = UT1.
-    if (r != 0) {
-        *dut1 = 0;
-        return ut11 - DJM0 + ut12;
-    }
-
-    utc = utc1 - DJM0 + utc2;
-    ut1 = ut11 - DJM0 + ut12;
-    *dut1 = (ut1 - utc) * ERFA_DAYSEC;
-
-    if (fabs(*dut1) > 1) {
-        LOG_W_ONCE("DUT1 = %fs", *dut1);
-    }
-
-    return utc;
-}
-
-double utc2tt(double utc)
-{
-    double tai1, tai2, tt1, tt2, dt, tt;
-    int r;
-
-    r = eraUtctai(DJM0, utc, &tai1, &tai2);
-
-    // If we don't know the leap seconds, assume UTC = UT1 and use ΔT to
-    // compute TT.
-    if (r != 0) {
-        dt = deltat(utc);
-        eraUt1tt(DJM0, utc, dt, &tt1, &tt2);
-        tt = tt1 - DJM0 + tt2;
-        // Adjust dt with the value at the final TT time.
-        tt += (deltat(tt) - dt) / ERFA_DAYSEC;
-        return tt;
-    }
-
-    eraTaitt(tai1, tai2, &tt1, &tt2);
-    return tt1 - DJM0 + tt2;
 }
 
 void observer_update(observer_t *obs, bool fast)

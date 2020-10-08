@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include "algos/utctt.h"
 
 core_t *core;   // The global core object.
 
@@ -1122,9 +1123,6 @@ void core_zoomto(double fov, double duration)
     anim->duration = duration;
     anim->t = 0.0;
 }
-
-// Defined in observer.c (todo: move it somewhere else).
-double utc2tt(double utc);
 
 EMSCRIPTEN_KEEPALIVE
 void core_set_time(double utc, double duration)
