@@ -264,6 +264,25 @@ static void test_ephemeris(void)
     }
 }
 
+// Test accuracy of eraEpv00 function in distant past.
+static void test_epv00(void)
+{
+    // Values computed with skyfield.
+    struct {
+        double tt;
+        double pos[3];
+    } DATA[] = {
+        {2459130.209134074, {0.96697733, 0.23110802, 0.10018191}},
+        {-1930719.791178426, {-1.00728366, -0.04192629, -0.00642386}},
+    };
+    int i;
+    double pvh[2][3], pvb[2][3];
+    for (i = 0; i < ARRAY_SIZE(DATA); i++) {
+        eraEpv00(0, DATA[i].tt, pvh, pvb);
+        assert(eraSepp(pvh[0], DATA[i].pos) < 0.2 * DD2R);
+    }
+}
+
 
 static void test_clipping(void)
 {
@@ -405,6 +424,7 @@ static void test_u8(void)
 }
 
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);
+TEST_REGISTER(NULL, test_epv00, TEST_AUTO);
 TEST_REGISTER(NULL, test_clipping, TEST_AUTO);
 TEST_REGISTER(NULL, test_iter_lines, TEST_AUTO);
 TEST_REGISTER(NULL, test_jcon, TEST_AUTO);
