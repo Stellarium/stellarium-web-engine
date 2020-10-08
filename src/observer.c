@@ -132,7 +132,7 @@ static void update_nutation_precession_mat(observer_t *obs)
     // XXX: we can maybe optimize this, since eraPn00a is very slow!
     double dpsi, deps, epsa, rb[3][3], rp[3][3], rbp[3][3], rn[3][3],
            rbpn[3][3];
-    eraPn00a(obs->tt, DJM0, &dpsi, &deps, &epsa, rb, rp, rbp, rn, rbpn);
+    eraPn00a(DJM0, obs->tt, &dpsi, &deps, &epsa, rb, rp, rbp, rn, rbpn);
     mat3_mul(rn, rp, obs->rnp);
 
 }
