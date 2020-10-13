@@ -358,8 +358,8 @@ json_value *obj_get_json_data(const obj_t *obj)
     json_value* types;
     json_value* names;
     const char* ptype, *model;
+    char tmp[5] = {};
 
-    char tmp[5];
     if (obj->klass->get_json_data)
         ret = obj->klass->get_json_data(obj);
     else
