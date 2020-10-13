@@ -315,7 +315,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     if (constellation_create_stars(con)) return 1;
     if (con->count == 0) return 1;
 
-    if (obs->tt - con->last_update < 1.0) {
+    if (fabs(obs->tt - con->last_update) < 1.0) {
         // Constellation shape change cannot be seen over the course of
         // one day
         goto end;
