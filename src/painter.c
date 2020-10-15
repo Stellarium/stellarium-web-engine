@@ -796,10 +796,18 @@ void paint_cap(const painter_t *painter, int frame, double cap[4])
 }
 
 __attribute__((weak))
+int painter_get_3d_model_bounds(const painter_t *painter, const char *model,
+                                double bounds[2][3])
+{
+    return 1;
+}
+
+__attribute__((weak))
 void paint_3d_model(const painter_t *painter, const char *model,
                     const double model_mat_[4][4], const json_value *args)
 {
 }
+
 
 void painter_project_ellipse(const painter_t *painter, int frame,
         float ra, float de, float angle, float size_x, float size_y,
