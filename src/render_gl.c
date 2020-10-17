@@ -165,10 +165,10 @@ struct item
 
         struct {
             const char *model;
-            float model_mat[16];
-            float view_mat[16];
-            float proj_mat[16];
-            float light_dir[3];
+            double model_mat[4][4];
+            double view_mat[4][4];
+            double proj_mat[4][4];
+            double light_dir[3];
             json_value *args;
         } gltf;
     };
@@ -280,10 +280,10 @@ typedef struct renderer_gl {
 // Weak linking, so that we can put the implementation in a module.
 __attribute__((weak))
 int gltf_render(const char *url,
-                const float model_mat[16],
-                const float view_mat[16],
-                const float proj_mat[16],
-                const float light_dir[3],
+                const double model_mat[4][4],
+                const double view_mat[4][4],
+                const double proj_mat[4][4],
+                const double light_dir[3],
                 json_value *args)
 {
     return 0;
@@ -1711,10 +1711,10 @@ static void model_3d(renderer_t *rend_, const painter_t *painter,
     item = calloc(1, sizeof(*item));
     item->type = ITEM_GLTF;
     item->gltf.model = model;
-    mat4_to_float(model_mat, item->gltf.model_mat);
-    mat4_to_float(view_mat, item->gltf.view_mat);
-    mat4_to_float(proj_mat, item->gltf.proj_mat);
-    vec3_to_float(light_dir, item->gltf.light_dir);
+    mat4_copy(model_mat, item->gltf.model_mat);
+    mat4_copy(view_mat, item->gltf.view_mat);
+    mat4_copy(proj_mat, item->gltf.proj_mat);
+    vec3_copy(light_dir, item->gltf.light_dir);
     if (args) item->gltf.args = json_copy(args);
     DL_APPEND(rend->items, item);
 }
