@@ -237,6 +237,15 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
     return 1;
 }
 
+static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter)
+{
+    double model_mat[4][4] = MAT4_IDENTITY;
+    mat4_itranslate(model_mat, VEC3_SPLIT(mplanet->pvo[0]));
+    mat4_iscale(model_mat, 1000 / DAU, 1000 / DAU, 1000 / DAU);
+    paint_3d_model(painter, mplanet->name, model_mat, NULL);
+    return 0;
+}
+
 // Note: return 1 if the planet is actually visible on screen.
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
@@ -246,6 +255,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
+    double radius_m, model_r, model_size, bounds[2][3], model_alpha = 0;
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
@@ -258,10 +268,24 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     core_get_point_for_mag(vmag, &size, &luminance);
 
+    // Render 3d model if possible.
+    if ((size > 10) &&
+        painter_get_3d_model_bounds(painter, mplanet->name, bounds) == 0)
+    {
+        radius_m = (bounds[1][0] - bounds[0][0]) / 2 * 1000;
+        model_r = radius_m / DAU / vec3_norm(mplanet->pvo[0]);
+        model_size = core_get_point_for_apparent_angle(
+                painter->proj, model_r);
+        model_alpha = smoothstep(0.5, 1.0, model_size / size);
+        if (model_alpha > 0)
+            render_3d_model(mplanet, painter);
+    }
+
+
     point = (point_t) {
         .pos = {win_pos[0], win_pos[1]},
         .size = size,
-        .color = {255, 255, 255, luminance * 255},
+        .color = {255, 255, 255, luminance * 255 * (1.0 - model_alpha)},
         .obj = obj,
     };
     paint_2d_points(painter, 1, &point);
