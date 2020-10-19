@@ -66,6 +66,11 @@ typedef struct mplanets {
 // Static instance.
 static mplanets_t *g_mplanets = NULL;
 
+static double mean3(double x, double y, double z)
+{
+    return (x + y + z) / 3;
+}
+
 /*
  * Compute an asteroid observed magnitude from its H, G and positions.
  * http://www.britastro.org/asteroids/dymock4.pdf
@@ -225,6 +230,8 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
                             void *out)
 {
     mplanet_t *mp = (mplanet_t*)obj;
+    double bounds[2][3], radius;
+
     mplanet_update(mp, obs);
     switch (info) {
     case INFO_PVO:
@@ -233,6 +240,15 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_VMAG:
         *(double*)out = mp->vmag;
         return 0;
+    case INFO_RADIUS:
+        if (painter_get_3d_model_bounds(NULL, mp->name, bounds) == 0) {
+            radius = mean3(bounds[1][0] - bounds[0][0],
+                           bounds[1][1] - bounds[0][1],
+                           bounds[1][2] - bounds[0][2]) * 1000 / 2 / DAU;
+            *(double*)out = radius / vec3_norm(mp->pvo[0]);
+            return 0;
+        }
+        return 1;
     }
     return 1;
 }
@@ -256,6 +272,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
     double radius_m, model_r, model_size, bounds[2][3], model_alpha = 0;
+    double radius;
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
@@ -294,6 +311,12 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     if (*mplanet->name && (selected || (g_mplanets->hints_visible &&
                                         vmag <= painter->hints_limit_mag +
                                         1.4 + hints_mag_offset))) {
+        // Use actual pixel radius on screen.
+        if (mplanet_get_info(obj, painter->obs, INFO_RADIUS, &radius) == 0) {
+            radius = core_get_point_for_apparent_angle(painter->proj, radius);
+            size = max(size, radius);
+        }
+
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,
