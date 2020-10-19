@@ -286,10 +286,12 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render 3d model if possible.
-    if ((size > 10) &&
+    if ((size > 5) &&
         painter_get_3d_model_bounds(painter, mplanet->name, bounds) == 0)
     {
-        radius_m = (bounds[1][0] - bounds[0][0]) / 2 * 1000;
+        radius_m = mean3(bounds[1][0] - bounds[0][0],
+                         bounds[1][1] - bounds[0][1],
+                         bounds[1][2] - bounds[0][2]) / 2 * 1000;
         model_r = radius_m / DAU / vec3_norm(mplanet->pvo[0]);
         model_size = core_get_point_for_apparent_angle(
                 painter->proj, model_r);
