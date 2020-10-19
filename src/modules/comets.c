@@ -315,7 +315,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     if (painter_is_cap_clipped(painter, FRAME_ICRF, cap))
         return 0;
 
-    painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true, win_pos);
+    painter_project(painter, FRAME_ICRF, comet->pvo[0], false, false, win_pos);
     comet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
