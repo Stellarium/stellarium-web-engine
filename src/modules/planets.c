@@ -783,6 +783,18 @@ static void planet_render_hips(const planet_t *planet,
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 
+static void planet_render_model(const planet_t *planet,
+                                double radius,
+                                double r_scale,
+                                double alpha,
+                                const painter_t *painter)
+{
+    const hips_t *hips;
+    hips = planet->hips ?: g_planets->default_hips;
+    planet_render_hips(planet, hips, radius, r_scale, alpha, painter);
+}
+
+
 /*
  * Compute Kepler orbit elements of a planet in ICRF, centered on the parent
  * body.
@@ -889,14 +901,14 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double radius_m;
     double r_scale = 1.0;    // Artificial size scale.
     double diam;                // Angular diameter (rad).
-    double hips_alpha = 0;
+    double model_alpha = 0;
     painter_t painter = *painter_;
     point_t point;
-    double hips_k = 2.0; // How soon we switch to the hips survey.
+    double model_k = 2.0; // How soon we switch to the 3d model.
     planets_t *planets = (planets_t*)planet->obj.parent;
     bool selected = core->selection && &planet->obj == core->selection;
     double cap[4];
-    const hips_t *hips;
+    bool has_model;
     double pvo[2][3];
 
     if (planet->id == EARTH) return;
@@ -907,7 +919,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // Artificially increase the moon size when we are zoomed out, so that
     // we can render it as a hips survey.
     if (planet->id == MOON) {
-        hips_k = 4.0;
+        model_k = 4.0;
         r_scale = max(1.0, core->fov / (20.0 * core->star_scale_screen_factor
                                         * DD2R));
     }
@@ -947,20 +959,21 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
             core_report_vmag_in_fov(vmag, diam / 2, 0);
     }
 
-    hips = planet->hips ?: planets->default_hips;
-    if (hips && hips_k * diam * r_scale >= point_r) {
-        hips_alpha = smoothstep(1.0, 0.5, point_r / (hips_k * diam * r_scale ));
+    has_model = planet->hips ?: planets->default_hips;
+    if (has_model && model_k * diam * r_scale >= point_r) {
+        model_alpha = smoothstep(1.0, 0.5,
+                                 point_r / (model_k * diam * r_scale));
     }
 
-    // Special case for the moon, we only render the hips, since the point
+    // Special case for the moon, we only render the 3d model, since the point
     // is much bigger than the moon.
-    if (hips && planet->id == MOON) {
-        hips_alpha = 1.0;
+    if (has_model && planet->id == MOON) {
+        model_alpha = 1.0;
     }
 
     vec4_copy(planet->color, color);
     if (!color[3]) vec4_set(color, 1, 1, 1, 1);
-    color[3] *= point_luminance * (1.0 - hips_alpha);
+    color[3] *= point_luminance * (1.0 - model_alpha);
 
     if (color[3] <= 0.001)
         point_size = 0;
@@ -978,18 +991,18 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     };
     paint_2d_points(&painter, 1, &point);
 
-    if (hips_alpha > 0) {
-        planet_render_hips(planet, hips, planet->radius_m / DAU, r_scale,
-                           hips_alpha, &painter);
+    if (model_alpha > 0) {
+        planet_render_model(planet, planet->radius_m / DAU, r_scale,
+                            model_alpha, &painter);
     }
 
-    // Note: I force rendering the label if the hips is visible for the
+    // Note: I force rendering the label if the model is visible for the
     // moment because the vmag is not a good measure for planets: if the
     // planet is big on the screen, we should see the label, no matter the
     // vmag.
     if (selected || (planets->hints_visible && (
         vmag <= painter.hints_limit_mag + 2.4 + planets->hints_mag_offset ||
-        hips_alpha > 0)))
+        model_alpha > 0)))
     {
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
     }
