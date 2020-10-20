@@ -38,6 +38,7 @@ struct mplanet {
     char        name[24];
     char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
+    char        model[64];  // Model name. e.g: '1_Ceres'
 
     // Cached values.
     float       vmag;
@@ -147,6 +148,8 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
         if (name[0]) {
             _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
             memcpy(mplanet->name, name, sizeof(name));
+            snprintf(mplanet->model, sizeof(mplanet->model), "%d_%s",
+                     mplanet->mpl_number, mplanet->name);
         }
         if (desig[0]) {
             _Static_assert(sizeof(desig) == sizeof(mplanet->desig), "");
@@ -241,7 +244,7 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = mp->vmag;
         return 0;
     case INFO_RADIUS:
-        if (painter_get_3d_model_bounds(NULL, mp->name, bounds) == 0) {
+        if (painter_get_3d_model_bounds(NULL, mp->model, bounds) == 0) {
             radius = mean3(bounds[1][0] - bounds[0][0],
                            bounds[1][1] - bounds[0][1],
                            bounds[1][2] - bounds[0][2]) * 1000 / 2 / DAU;
@@ -258,7 +261,7 @@ static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter)
     double model_mat[4][4] = MAT4_IDENTITY;
     mat4_itranslate(model_mat, VEC3_SPLIT(mplanet->pvo[0]));
     mat4_iscale(model_mat, 1000 / DAU, 1000 / DAU, 1000 / DAU);
-    paint_3d_model(painter, mplanet->name, model_mat, NULL);
+    paint_3d_model(painter, mplanet->model, model_mat, NULL);
     return 0;
 }
 
@@ -292,7 +295,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 
     // Render 3d model if possible.
     if ((size > 5) &&
-        painter_get_3d_model_bounds(painter, mplanet->name, bounds) == 0)
+        painter_get_3d_model_bounds(painter, mplanet->model, bounds) == 0)
     {
         radius_m = mean3(bounds[1][0] - bounds[0][0],
                          bounds[1][1] - bounds[0][1],
