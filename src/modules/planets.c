@@ -783,6 +783,9 @@ static void planet_render_hips(const planet_t *planet,
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 
+/*
+ * Render either the glTF 3d model, either the hips survey
+ */
 static void planet_render_model(const planet_t *planet,
                                 double radius,
                                 double r_scale,
@@ -790,8 +793,25 @@ static void planet_render_model(const planet_t *planet,
                                 const painter_t *painter)
 {
     const hips_t *hips;
-    hips = planet->hips ?: g_planets->default_hips;
-    planet_render_hips(planet, hips, radius, r_scale, alpha, painter);
+    bool has_3d_model = false;
+    double bounds[2][3], pvo[2][3];
+    double model_mat[4][4] = MAT4_IDENTITY;
+
+    if (painter_get_3d_model_bounds(painter, planet->name, bounds) == 0)
+        has_3d_model = true;
+
+    if (!has_3d_model) { // Use hips.
+        hips = planet->hips ?: g_planets->default_hips;
+        if (hips)
+            planet_render_hips(planet, hips, radius, r_scale, alpha, painter);
+        return;
+    }
+
+    // Assume the model is in km.
+    planet_get_pvo(planet, painter->obs, pvo);
+    mat4_itranslate(model_mat, VEC3_SPLIT(pvo[0]));
+    mat4_iscale(model_mat, 1000 / DAU, 1000 / DAU, 1000 / DAU);
+    paint_3d_model(painter, planet->name, model_mat, NULL);
 }
 
 
