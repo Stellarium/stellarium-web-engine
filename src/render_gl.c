@@ -944,6 +944,11 @@ static void item_points_render(renderer_gl_t *rend, const item_t *item)
     GLuint  array_buffer;
     double core_size;
 
+    if (item->buf.nb <= 0) {
+        LOG_W("Empty point buffer");
+        return;
+    }
+
     shader = shader_get("points", NULL, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 

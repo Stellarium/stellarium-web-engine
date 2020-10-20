@@ -698,7 +698,9 @@ static int render_visitor(int order, int pix, void *user)
         if (selected || (stars->hints_visible && !survey->is_gaia))
             star_render_name(&painter, s, FRAME_ASTROM, v, p_win, size, color);
     }
-    paint_2d_points(&painter, n, points);
+    if (n > 0) {
+        paint_2d_points(&painter, n, points);
+    }
     free(points);
 
 end:
