@@ -272,17 +272,22 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
     double radius_m, model_r, model_size, bounds[2][3], model_alpha = 0;
-    double radius;
+    double radius, cap[4];
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
 
     if (!selected && vmag > painter->stars_limit_mag + 1.4 + hints_mag_offset)
         return 0;
+
+    // First clip test using a fixed small radius.
     obj_get_pvo(obj, painter->obs, pvo);
-    if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
+    vec3_normalize(pvo[0], cap);
+    cap[3] = cos(1. / 60 * DD2R);
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, cap))
         return 0;
 
+    painter_project(painter, FRAME_ICRF, pvo[0], false, false, win_pos);
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render 3d model if possible.
