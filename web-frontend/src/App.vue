@@ -52,7 +52,7 @@
     </v-layout>
   </v-navigation-drawer>
 
-  <v-content>
+  <v-main>
     <v-container class="fill-height" fluid style="padding: 0">
       <div id="stel" v-bind:class="{ right_panel: $store.state.showSidePanel }">
         <div style="position: relative; width: 100%; height: 100%">
@@ -61,7 +61,7 @@
         </div>
       </div>
     </v-container>
-  </v-content>
+  </v-main>
 
 </v-app>
 
