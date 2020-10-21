@@ -279,12 +279,6 @@ const swh = {
     } else if (ss.model === 'constellation' && ss.model_data.iau_abbreviation) {
       const id = 'CST ' + ss.model_data.iau_abbreviation
       obj = $stel.getObj(id)
-    } else if (ss.model === 'mpc_comet') {
-      const id = ss.short_name
-      obj = $stel.getObj(id)
-    } else if (ss.model === 'jpl_sso') {
-      const id = ss.short_name
-      obj = $stel.getObj(id)
     }
     if (!obj) {
       obj = $stel.getObj(ss.names[0])
@@ -387,7 +381,7 @@ const swh = {
   getSkySourceSummaryFromWikipedia: function (ss) {
     let title
     if (ss.model === 'jpl_sso') {
-      title = ss.short_name.toLowerCase()
+      title = this.cleanupOneSkySourceName(ss.names[0]).toLowerCase()
       if (['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune', 'pluto'].indexOf(title) > -1) {
         title = title + '_(planet)'
       }
@@ -396,10 +390,10 @@ const swh = {
       }
     }
     if (ss.model === 'mpc_asteroid') {
-      title = ss.short_name
+      title = this.cleanupOneSkySourceName(ss.names[0]).toLowerCase()
     }
     if (ss.model === 'constellation') {
-      title = ss.short_name + '_(constellation)'
+      title = this.cleanupOneSkySourceName(ss.names[0]).toLowerCase() + '_(constellation)'
     }
     if (ss.model === 'dso') {
       for (const i in ss.names) {
