@@ -4598,13 +4598,13 @@ launch-editor@^2.2.1:
     chalk "^2.3.0"
     shell-quote "^1.6.1"
 
-leaflet-control-geocoder@^1.9.0:
+leaflet-control-geocoder@^1.13.0:
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/leaflet-control-geocoder/-/leaflet-control-geocoder-1.13.0.tgz#c84cffd8f64a8f0b1091a59c3b59c03d5dcc583e"
   optionalDependencies:
     open-location-code "^1.0.0"
 
-leaflet@^1.5.1:
+leaflet@^1.7.1:
   version "1.7.1"
   resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.7.1.tgz#10d684916edfe1bf41d688a3b97127c0322a2a19"
 
@@ -7461,9 +7461,9 @@ vue-template-es2015-compiler@^1.9.0:
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/vue-template-es2015-compiler/-/vue-template-es2015-compiler-1.9.1.tgz#1ee3bc9a16ecbf5118be334bb15f9c46f82f5825"
 
-vue2-leaflet@^2.2.1:
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/vue2-leaflet/-/vue2-leaflet-2.5.2.tgz#b89c056fe741c7ce7cb9df5aca90809092e5eb8d"
+vue2-leaflet@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/vue2-leaflet/-/vue2-leaflet-2.6.0.tgz#c83c60a745fbc2a74d9dbd0f75b2a5ae07d220a9"
 
 vue@^2.5.16, vue@^2.6.10:
   version "2.6.12"
