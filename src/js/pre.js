@@ -235,6 +235,30 @@ Module['calendar'] = function(args) {
   Module.removeFunction(callback);
 }
 
+/*
+ * Function: designationCleanup
+ * Create a printable version of a designation
+ *
+ * This can be used for example to compute the label to render for an object.
+ *
+ * Parameters:
+ *   d     - the designation string.
+ *   flags - formatting flags
+ *
+ * Return:
+ *   A human-friendly designation.
+ */
+Module['designationCleanup'] = function(d, flags) {
+  const designation_cleanup = Module.cwrap('designation_cleanup',
+                                           null, ['string', 'number',
+                                                  'number', 'number']);
+  const cbuf = Module._malloc(256);
+  designation_cleanup(d, cbuf, 256, flags);
+  const ret = Module.UTF8ToString(cbuf);
+  Module._free(out);
+  return ret;
+}
+
 Module['c2s'] = function(v) {
   var x = v[0];
   var y = v[1];
