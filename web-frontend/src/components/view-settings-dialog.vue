@@ -13,7 +13,6 @@
   <v-card-text>
     <v-checkbox hide-details :label="$t('Milky Way')" v-model="milkyWayOn"></v-checkbox>
     <v-checkbox hide-details :label="$t('DSS')" v-model="dssOn"></v-checkbox>
-    <v-checkbox hide-details :label="$t('Simulate refraction')" v-model="refractionOn"></v-checkbox>
     <v-checkbox hide-details :label="$t('Meridian Line')" v-model="meridianOn"></v-checkbox>
     <v-checkbox hide-details :label="$t('Ecliptic Line')" v-model="eclipticOn"></v-checkbox>
   </v-card-text>
@@ -46,14 +45,6 @@ export default {
       },
       set: function (newValue) {
         this.$stel.core.milkyway.visible = newValue
-      }
-    },
-    refractionOn: {
-      get: function () {
-        return this.$store.state.stel.observer.refraction
-      },
-      set: function (newValue) {
-        this.$stel.core.observer.refraction = newValue
       }
     },
     meridianOn: {
