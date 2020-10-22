@@ -265,7 +265,7 @@ const swh = {
       const id = 'NORAD ' + ss.model_data.norad_number
       obj = $stel.getObj(id)
     } else if (ss.model === 'constellation' && ss.model_data.iau_abbreviation) {
-      const id = 'CST ' + ss.model_data.iau_abbreviation
+      const id = 'CON western ' + ss.model_data.iau_abbreviation
       obj = $stel.getObj(id)
     }
     if (!obj) {
