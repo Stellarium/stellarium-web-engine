@@ -100,10 +100,10 @@ export default {
       return this.$store.state.stel && this.$store.state.stel.selection ? this.$store.state.stel.selection : undefined
     },
     title: function () {
-      return this.selectedObject ? swh.nameForSkySource(this.selectedObject) : 'Selection'
+      return this.selectedObject ? this.otherNames[0] : 'Selection'
     },
     otherNames: function () {
-      return this.selectedObject ? swh.sortedNamesForSkySource(this.selectedObject) : undefined
+      return this.selectedObject ? swh.namesForSkySource(this.selectedObject, 26) : undefined
     },
     otherNames1to7: function () {
       return this.otherNames.slice(1, 8)

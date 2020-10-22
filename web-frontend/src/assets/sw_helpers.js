@@ -149,68 +149,9 @@ const swh = {
     }
   },
 
-  cleanupOneSkySourceName: function (name) {
-    const greek = {
-      alf: 'α',
-      bet: 'β',
-      gam: 'γ',
-      del: 'δ',
-      eps: 'ε',
-      zet: 'ζ',
-      eta: 'η',
-      tet: 'θ',
-      iot: 'ι',
-      kap: 'κ',
-      lam: 'λ',
-      mu: 'μ',
-      'mu.': 'μ',
-      nu: 'ν',
-      'nu.': 'ν',
-      xi: 'ξ',
-      'xi.': 'ξ',
-      omi: 'ο',
-      pi: 'π',
-      'pi.': 'π',
-      rho: 'ρ',
-      sig: 'σ',
-      tau: 'τ',
-      ups: 'υ',
-      phi: 'φ',
-      chi: 'χ',
-      psi: 'ψ',
-      ome: 'ω'
-    }
-
-    if (name.startsWith('* ')) {
-      const ll = name.substring(2, 5).trim()
-      if (ll in greek) {
-        name = greek[ll] + name.substring(name[5] === '0' ? 6 : 5)
-      } else {
-        name = name.substring(2)
-      }
-    }
-
-    if (name.startsWith('V* ')) {
-      const ll = name.substring(3, 6).trim().toLowerCase()
-      if (ll in greek) {
-        name = greek[ll] + ' ' + name.substring(name[6] === '0' ? 7 : 6)
-      } else {
-        name = name.substring(3)
-      }
-    }
-    name = name.replace(/^Cl /, '')
-    name = name.replace(/^Cl\* /, '')
-    name = name.replace(/^NAME /, '')
-    name = name.replace(/^\*\* /, '')
-    return name
-  },
-
-  sortedNamesForSkySource: function (skySource) {
-    // Return a dict with 3 lists of cleaned up names sorted by importance
-    if (!skySource || !skySource.names) {
-      return ['?']
-    }
-    return skySource.names.map(this.cleanupOneSkySourceName)
+  cleanupOneSkySourceName: function (name, flags) {
+    flags = flags || 4
+    return Vue.prototype.$stel.designationCleanup(name, flags)
   },
 
   nameForSkySource: function (skySource) {
@@ -218,6 +159,53 @@ const swh = {
       return '?'
     }
     return this.cleanupOneSkySourceName(skySource.names[0])
+  },
+
+  culturalNameToList: function (cn) {
+    const res = []
+
+    const formatNative = function (_cn) {
+      if (cn.name_native && cn.name_pronounce) {
+        return cn.name_native + ', <i>' + cn.name_pronounce + '</i>'
+      }
+      if (cn.name_native) {
+        return cn.name_native
+      }
+      if (cn.name_pronounce) {
+        return cn.name_pronounce
+      }
+    }
+
+    const nativeName = formatNative(cn)
+    if (cn.user_prefer_native && nativeName) {
+      res.push(nativeName)
+    }
+    if (cn.name_translated) {
+      res.push(cn.name_translated)
+    }
+    if (!cn.user_prefer_native && nativeName) {
+      res.push(nativeName)
+    }
+    return res
+  },
+
+  namesForSkySource: function (ss, flags) {
+    // Return a list of cleaned up names
+    if (!ss || !ss.names) {
+      return []
+    }
+    if (!flags) flags = 10
+    let res = []
+    if (ss.culturalNames) {
+      for (const i in ss.culturalNames) {
+        res = res.concat(this.culturalNameToList(ss.culturalNames[i]))
+      }
+    }
+    res = res.concat(ss.names.map(n => Vue.prototype.$stel.designationCleanup(n, flags)))
+    // Remove duplicates, this can happen between * and V* catalogs
+    res = res.filter(function (v, i) { return res.indexOf(v) === i })
+    res = res.filter(function (v, i) { return !v.startsWith('CON ') })
+    return res
   },
 
   nameForSkySourceType: function (otype) {
@@ -249,7 +237,7 @@ const swh = {
   getShareLink: function (context) {
     let link = 'https://stellarium-web.org/'
     if (context.$store.state.selectedObject) {
-      link += 'skysource/' + context.$store.state.selectedObject.short_name
+      link += 'skysource/' + this.cleanupOneSkySourceName(context.$store.state.selectedObject.names[0], 5)
     }
     link += '?'
     link += 'fov=' + (context.$store.state.stel.fov * 180 / Math.PI).toPrecision(5)
@@ -350,24 +338,27 @@ const swh = {
           ss.names[i] = ss.names[i].replace(/^GAIA /, 'Gaia DR2 ')
         }
       }
-      // ss.culturalNames = obj.culturalDesignations()
+      ss.culturalNames = obj.culturalDesignations()
       return ss
     }
 
     return that.lookupSkySourceByName(names[0]).then(res => {
       return res
     }, () => {
-      if (names.length === 1) return printErr(names[0])
+      if (names.length === 1) return printErr(names)
       return that.lookupSkySourceByName(names[1]).then(res => {
         return res
       }, () => {
-        if (names.length === 2) return printErr(names[1])
+        if (names.length === 2) return printErr(names)
         return that.lookupSkySourceByName(names[2]).then(res => {
           return res
         }, () => {
           return printErr(names[2])
         })
       })
+    }).then(res => {
+      res.culturalNames = obj.culturalDesignations()
+      return res
     })
   },
 
@@ -415,6 +406,7 @@ const swh = {
       for (const i in ss.names) {
         if (ss.names[i].startsWith('* ')) {
           title = this.cleanupOneSkySourceName(ss.names[i])
+          break
         }
       }
     }
