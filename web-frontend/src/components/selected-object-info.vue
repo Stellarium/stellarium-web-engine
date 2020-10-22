@@ -89,7 +89,8 @@ export default {
       wikipediaData: undefined,
       shareLink: undefined,
       showShareLinkDialog: false,
-      copied: false
+      copied: false,
+      items: []
     }
   },
   computed: {
@@ -137,7 +138,69 @@ export default {
     icon: function () {
       return swh.iconForSkySource(this.selectedObject)
     },
-    items: function () {
+    showPointToButton: function () {
+      if (!this.$store.state.stel.lock) return true
+      if (this.$store.state.stel.lock !== this.$store.state.stel.selection) return true
+      return false
+    },
+    zoomInButtonEnabled: function () {
+      if (!this.$store.state.stel.lock || !this.selectedObject) return false
+      return true
+    },
+    zoomOutButtonEnabled: function () {
+      if (!this.$store.state.stel.lock || !this.selectedObject) return false
+      return true
+    },
+    extraButtons: function () {
+      return swh.selectedObjectExtraButtons
+    },
+    pluginsSelectedInfoExtraGuiComponents: function () {
+      let res = []
+      for (const i in this.$stellariumWebPlugins()) {
+        const plugin = this.$stellariumWebPlugins()[i]
+        if (plugin.selectedInfoExtraGuiComponents) {
+          res = res.concat(plugin.selectedInfoExtraGuiComponents)
+        }
+      }
+      return res
+    }
+  },
+  watch: {
+    selectedObject: function (s) {
+      this.showMinorNames = false
+      this.wikipediaData = undefined
+      if (!s) {
+        if (this.timer) clearInterval(this.timer)
+        this.timer = undefined
+        return
+      }
+      var that = this
+      that.items = that.computeItems()
+      if (that.timer) clearInterval(that.timer)
+      that.timer = setInterval(() => { that.items = that.computeItems() }, 1000)
+
+      swh.getSkySourceSummaryFromWikipedia(s).then(data => {
+        that.wikipediaData = data
+      }, reason => { })
+    },
+    stelSelectionId: function (s) {
+      if (!this.$stel.core.selection) {
+        this.$store.commit('setSelectedObject', 0)
+        return
+      }
+      swh.sweObj2SkySource(this.$stel.core.selection).then(res => {
+        this.$store.commit('setSelectedObject', res)
+      }, err => {
+        console.log("Couldn't find info for object " + s + ':' + err)
+        this.$store.commit('setSelectedObject', 0)
+      })
+    },
+    showShareLinkDialog: function (b) {
+      this.shareLink = swh.getShareLink(this)
+    }
+  },
+  methods: {
+    computeItems: function () {
       const obj = this.$stel.core.selection
       if (!obj) return []
       const that = this
@@ -187,11 +250,11 @@ export default {
       }
       const formatAz = function (a) {
         const raf = that.$stel.a2af(a, 1)
-        return '<div class="radecVal">' + formatInt(raf.degrees < 0 ? raf.degrees + 180 : raf.degrees, 3) + '<span class="radecUnit">°</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
+        return '<div class="radecVal">' + formatInt(raf.degrees < 0 ? raf.degrees + 180 : raf.degrees, 3) + '<span class="radecUnit">&deg;</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
       }
       const formatDec = function (a) {
         const raf = that.$stel.a2af(a, 1)
-        return '<div class="radecVal">' + raf.sign + formatInt(raf.degrees, 2) + '<span class="radecUnit">°</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
+        return '<div class="radecVal">' + raf.sign + formatInt(raf.degrees, 2) + '<span class="radecUnit">&deg;</span></div><div class="radecVal">' + formatInt(raf.arcminutes, 2) + '<span class="radecUnit">\'</span></div><div class="radecVal">' + formatInt(raf.arcseconds, 2) + '.' + raf.fraction + '<span class="radecUnit">"</span></div>'
       }
       const posCIRS = this.$stel.convertFrame(this.$stel.core.observer, 'ICRF', 'JNOW', obj.getInfo('radec'))
       const radecCIRS = this.$stel.c2s(posCIRS)
@@ -224,60 +287,6 @@ export default {
       })
       return ret
     },
-    showPointToButton: function () {
-      if (!this.$store.state.stel.lock) return true
-      if (this.$store.state.stel.lock !== this.$store.state.stel.selection) return true
-      return false
-    },
-    zoomInButtonEnabled: function () {
-      if (!this.$store.state.stel.lock || !this.selectedObject) return false
-      return true
-    },
-    zoomOutButtonEnabled: function () {
-      if (!this.$store.state.stel.lock || !this.selectedObject) return false
-      return true
-    },
-    extraButtons: function () {
-      return swh.selectedObjectExtraButtons
-    },
-    pluginsSelectedInfoExtraGuiComponents: function () {
-      let res = []
-      for (const i in this.$stellariumWebPlugins()) {
-        const plugin = this.$stellariumWebPlugins()[i]
-        if (plugin.selectedInfoExtraGuiComponents) {
-          res = res.concat(plugin.selectedInfoExtraGuiComponents)
-        }
-      }
-      return res
-    }
-  },
-  watch: {
-    selectedObject: function (s) {
-      this.showMinorNames = false
-      this.wikipediaData = undefined
-      if (!s) return
-      var that = this
-      swh.getSkySourceSummaryFromWikipedia(s).then(data => {
-        that.wikipediaData = data
-      }, reason => { })
-    },
-    stelSelectionId: function (s) {
-      if (!this.$stel.core.selection) {
-        this.$store.commit('setSelectedObject', 0)
-        return
-      }
-      swh.sweObj2SkySource(this.$stel.core.selection).then(res => {
-        this.$store.commit('setSelectedObject', res)
-      }, err => {
-        console.log("Couldn't find info for object " + s + ':' + err)
-        this.$store.commit('setSelectedObject', 0)
-      })
-    },
-    showShareLinkDialog: function (b) {
-      this.shareLink = swh.getShareLink(this)
-    }
-  },
-  methods: {
     formatPhase: function (v) {
       return (v * 100).toFixed(0) + '%'
     },
