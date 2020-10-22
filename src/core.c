@@ -8,6 +8,7 @@
  */
 
 #include "swe.h"
+#include "algos/utctt.h"
 
 core_t *core;   // The global core object.
 
@@ -167,6 +168,9 @@ static void core_set_default(void)
 
     core->telescope_auto = true;
     core->mount_frame = FRAME_OBSERVED;
+
+    core->time_animation.dst_utc = NAN;
+
     observer_update(core->observer, false);
 }
 
@@ -328,6 +332,7 @@ static int core_update_direction(double dt)
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
         module_changed(&core->observer->obj, "yaw");
+        observer_update(core->observer, true);
     }
 
     if (core->target.lock && !core->target.move_to_lock) {
@@ -336,9 +341,10 @@ static int core_update_direction(double dt)
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
         module_changed(&core->observer->obj, "yaw");
+        observer_update(core->observer, true);
     }
 
-    return 1;
+    return 0;
 }
 
 // Update the observer mount quaternion.
@@ -361,7 +367,37 @@ static int core_update_mount(double dt)
 
     if (vec4_equal(quat, obs->mount_quat)) return 0;
     quat_rotate_towards(obs->mount_quat, quat, dt * speed, obs->mount_quat);
+    observer_update(core->observer, true);
     return 0;
+}
+
+/*
+ * Animate between two times in such a way to minimize the visual movements
+ */
+static double smart_time_mix(double src_tt, double dst_tt, double t)
+{
+    double dt, y4, y, d, f;
+    int sign = 1;
+
+    dt = dst_tt - src_tt;
+    if (dt < 0) {
+        sign = -1;
+        dt = -dt;
+    }
+
+    y4 = floor(dt / (4 * ERFA_DJY));
+    dt -= y4 * (4 * ERFA_DJY);
+    y = floor(dt / ERFA_DJY);
+    dt -= y * ERFA_DJY;
+    d = floor(dt);
+    f = dt - d;
+
+    y4 = round(mix(0, y4, t));
+    y = round(mix(0, y, t));
+    d = round(mix(0, d, t));
+    f = mix(0, f, t);
+
+    return src_tt + sign * (y4 * 4 * ERFA_DJY + y * ERFA_DJY + d + f);
 }
 
 // Update the core time animation.
@@ -372,11 +408,28 @@ static void core_update_time(double dt)
 
     if (!anim->duration) return;
     anim->t += dt / anim->duration;
+
     t = smoothstep(0.0, 1.0, anim->t);
-    tt = mix(anim->src, anim->dst, t);
+
+    switch (anim->mode) {
+    case 0:
+        tt = mix(anim->src_tt, anim->dst_tt, t);
+        break;
+    case 1:
+        tt = smart_time_mix(anim->src_tt, anim->dst_tt, t);
+        break;
+    default:
+        assert(false);
+        return;
+    }
+
     obj_set_attr(&core->observer->obj, "tt", tt);
-    if (t >= 1.0)
+    if (t >= 1.0) {
         anim->duration = 0.0;
+        anim->dst_utc = NAN;
+        module_changed((obj_t*)core, "time_animation_target");
+    }
+    observer_update(core->observer, true);
 }
 
 // Smoothly update the observer pressure for refraction effect.
@@ -429,9 +482,9 @@ int core_update(double dt)
     double fact = screen_s / 600;
     core->star_scale_screen_factor = min(max(0.7, fact), 1.5);
 
+    core_update_time(dt);
     core_update_direction(dt);
     core_update_mount(dt);
-    core_update_time(dt);
 
     DL_FOREACH_SAFE(core->tasks, task, task_tmp) {
         if (task->fun(task, dt) != 0) {
@@ -1022,6 +1075,8 @@ EMSCRIPTEN_KEEPALIVE
 void core_point_and_lock(obj_t *target, double duration)
 {
     double v[4];
+    if (core->target.lock == target) return;
+    observer_update(core->observer, true);
     obj_set_attr(&core->obj, "lock", target);
     obj_get_pos(core->target.lock, core->observer, FRAME_OBSERVED, v);
     core_lookat(v, duration);
@@ -1071,19 +1126,29 @@ void core_zoomto(double fov, double duration)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_set_time(double tt, double duration)
+void core_set_time(double utc, double duration)
 {
+    double tt, speed;
     typeof(core->time_animation) *anim = &core->time_animation;
 
+    tt = utc2tt(utc);
     anim->duration = 0;
     if (duration == 0.0) {
         obj_set_attr(&core->observer->obj, "tt", tt);
         return;
     }
-    anim->src = core->observer->tt;
-    anim->dst = tt;
+    anim->src_tt = core->observer->tt;
+    anim->dst_tt = tt;
+    anim->dst_utc = utc;
     anim->duration = duration;
     anim->t = 0;
+
+    // Determine the animation mode (normal or 'smart').  If the animation
+    // moves at more than a few days per seconds, use the 'smart' mode.
+    speed = fabs(anim->dst_tt - anim->src_tt) / duration;
+    anim->mode = speed > 5 ? 1 : 0;
+
+    module_changed((obj_t*)core, "time_animation_target");
 }
 
 // Return a static string representation of a an object type id.
@@ -1165,6 +1230,8 @@ static obj_klass_t core_klass = {
                  MEMBER(core_t, flip_view_horizontal)),
         PROPERTY(mount_frame, TYPE_ENUM, MEMBER(core_t, mount_frame)),
         PROPERTY(on_click, TYPE_FUNC, MEMBER(core_t, on_click)),
+        PROPERTY(time_animation_target, TYPE_MJD,
+                 MEMBER(core_t, time_animation.dst_utc)),
         {}
     }
 };

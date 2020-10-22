@@ -150,11 +150,25 @@ int obj_render(const obj_t *obj, const painter_t *painter)
  *   obj    - A sky object.
  *   obs    - An observer.
  *   pvo    - Output ICRF position with origin on the observer.
+ *
+ * Return:
+ *   0 for success, otherwise an error code, and in that case the position
+ *   is undefined.
  */
 int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
 {
-    assert(obj && obj->klass->get_info);
-    return obj->klass->get_info(obj, obs, INFO_PVO, pvo);
+    char name[64];
+    int r;
+    assert(obj && obj->klass && obj->klass->get_info);
+    assert(observer_is_uptodate(obs, true));
+    r = obj->klass->get_info(obj, obs, INFO_PVO, pvo);
+    // Extra check for NAN values.
+    if (DEBUG && r == 0 && isnan(pvo[0][0] + pvo[0][1] + pvo[0][2])) {
+        obj_get_name(obj, name, sizeof(name));
+        LOG_E("NAN value in obj position (%s)", name);
+        assert(false);
+    }
+    return r;
 }
 
 /*
@@ -344,8 +358,8 @@ json_value *obj_get_json_data(const obj_t *obj)
     json_value* types;
     json_value* names;
     const char* ptype, *model;
+    char tmp[5] = {};
 
-    char tmp[5];
     if (obj->klass->get_json_data)
         ret = obj->klass->get_json_data(obj);
     else

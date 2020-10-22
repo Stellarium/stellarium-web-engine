@@ -343,6 +343,7 @@ static const char * to_exponent(char c) {
  *
  * This can be used for example to compute the label to render for an object.
  */
+EMSCRIPTEN_KEEPALIVE
 void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 {
     int cst;

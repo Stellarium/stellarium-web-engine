@@ -52,7 +52,7 @@
     </v-layout>
   </v-navigation-drawer>
 
-  <v-content>
+  <v-main>
     <v-container class="fill-height" fluid style="padding: 0">
       <div id="stel" v-bind:class="{ right_panel: $store.state.showSidePanel }">
         <div style="position: relative; width: 100%; height: 100%">
@@ -61,7 +61,7 @@
         </div>
       </div>
     </v-container>
-  </v-content>
+  </v-main>
 
 </v-app>
 
@@ -170,7 +170,7 @@ export default {
             this.$selectionLayer.add(obj)
           }
           if (!obj) {
-            console.warning("Can't find object in SWE: " + ss.short_name)
+            console.warning("Can't find object in SWE: " + ss.names[0])
           }
           swh.setSweObjAsSelection(obj)
         }, err => {
@@ -240,6 +240,7 @@ export default {
 
           that.$stel.setFont('regular', process.env.BASE_URL + 'fonts/Roboto-Regular.ttf', 1.38)
           that.$stel.setFont('bold', process.env.BASE_URL + 'fonts/Roboto-Bold.ttf', 1.38)
+          that.$stel.core.constellations.show_only_pointed = false
 
           that.setStateFromQueryArgs()
           that.guiComponent = 'Gui'

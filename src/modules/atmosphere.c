@@ -131,14 +131,37 @@ static render_data_t prepare_render_data(
     return data;
 }
 
+// Convert MJD UTC to proleptic Gergorian Calendar.
+static void mjd2gcal(double mjd, int *year, int *month)
+{
+    // Algo based on 'Date Algorithms'
+    // By Peter Baum, 2017.
+    double z, g, a, b, c;
+    #define INT(x) ((int)floor(x))
+    #define FIX(x) ((int)(x))
+    z = INT(mjd + 678882.0);
+    g = z - 0.25;
+    a = INT(g / 36524.25);
+    b = a - INT(a / 4.0);
+    *year = INT((b + g) / 365.25);
+    c = b + z - INT(365.25 * (*year));
+    *month = FIX((5 * c + 456) / 153.0);
+    if (*month > 12) {
+        *year += 1;
+        *month -= 12;
+    }
+    #undef INT
+    #undef FIX
+}
+
 static void prepare_skybrightness(
         skybrightness_t *sb, const painter_t *painter,
         const double sun_pos[3], const double moon_pos[3], double moon_vmag)
 {
-    int year, month, day, ihmsf[4];
+    int year, month;
     const observer_t *obs = painter->obs;
     const double zenith[3] = {0, 0, 1};
-    eraD2dtf("UTC", 0, DJM0, obs->utc, &year, &month, &day, ihmsf);
+    mjd2gcal(obs->utc, &year, &month);
     skybrightness_prepare(sb, year, month,
                           moon_vmag,
                           obs->phi, obs->hm,

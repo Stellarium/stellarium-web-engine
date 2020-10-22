@@ -43,7 +43,7 @@
               <v-btn light fab class="mx-0 pa-0" @click.native.stop="centerOnRealPosition()" style="position: absolute; z-index: 10000; bottom: 16px; right: 12px;">
                 <v-icon>mdi-crosshairs-gps</v-icon>
               </v-btn>
-            <l-map class="black--text" ref="myMap" :center="mapCenter" :zoom="10" style="width: 100%; height: 100%;" :options="{zoomControl: false}">
+            <l-map class="black--text" ref="myMap" :center="mapCenter" :zoom="10" style="width: 100%; height: 375px;" :options="{zoomControl: false}">
               <l-control-zoom position="topright"></l-control-zoom>
               <l-tile-layer :url="url" attribution='&copy; <a target="_blank" rel="noopener" href="http://osm.org/copyright">OpenStreetMap</a> contributors'></l-tile-layer>
               <l-marker :key="loc.id"
@@ -116,6 +116,8 @@ export default {
     this.setPickLocation(this.startLocation)
     this.$nextTick(() => {
       const map = this.$refs.myMap.mapObject
+      map._onResize()
+
       var geocoder = new L.Control.Geocoder({
         defaultMarkGeocode: false,
         position: 'topleft',

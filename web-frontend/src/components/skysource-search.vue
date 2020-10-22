@@ -10,7 +10,7 @@
   <div style="position: relative;">
     <v-text-field prepend-icon="mdi-magnify" :label="$t('Search...')" v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line v-click-outside="resetSearch"></v-text-field>
     <v-list dense v-if="showList" two-line :style="listStyle" class="get-click">
-      <v-list-item v-for="source in autoCompleteChoices" :key="source.short_name" @click="sourceClicked(source)">
+      <v-list-item v-for="source in autoCompleteChoices" :key="source.names[0]" @click="sourceClicked(source)">
         <v-list-item-action>
           <img :src="iconForSkySource(source)"/>
         </v-list-item-action>

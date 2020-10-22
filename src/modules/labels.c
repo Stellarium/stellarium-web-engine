@@ -209,6 +209,7 @@ void labels_add_3d(const char *text, int frame, const double pos[3],
     assert(priority <= 1024.0);
     assert(color);
     assert(!angle); // Not supported at the moment.
+    assert(!obj || (obj->klass && obj->klass->get_info));
     label_t *label;
 
     if (!text || !*text) return;

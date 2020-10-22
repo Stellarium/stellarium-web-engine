@@ -78,9 +78,9 @@ pluginsLocales.keys().forEach(key => {
   }
 })
 
-let loc = 'en'
+const loc = 'en'
 // Un-comment to select user's language automatically
-loc = (navigator.language || navigator.userLanguage).split('-')[0] || 'en'
+// loc = (navigator.language || navigator.userLanguage).split('-')[0] || 'en'
 Moment.locale(loc)
 var i18n = new VueI18n({
   locale: loc,

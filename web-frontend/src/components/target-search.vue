@@ -33,7 +33,7 @@ export default {
         this.$selectionLayer.add(obj)
       }
       if (!obj) {
-        console.warning("Can't find object in SWE: " + ss.short_name)
+        console.warning("Can't find object in SWE: " + ss.names[0])
         return
       }
       swh.setSweObjAsSelection(obj)

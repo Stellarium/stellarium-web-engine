@@ -621,6 +621,9 @@ int paint_2d_line(const painter_t *painter, const double transf[3][3],
  */
 void paint_cap(const painter_t *painter, int frame, double cap[4]);
 
+int painter_get_3d_model_bounds(const painter_t *painter, const char *model,
+                                double bounds[2][3]);
+
 void paint_3d_model(const painter_t *painter, const char *model,
                     const double mat[4][4], const json_value *args);
 

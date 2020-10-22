@@ -83,7 +83,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
             continue;
         labels_add_3d(sys_translate("gui", POINTS[i].text), FRAME_OBSERVED,
                       POINTS[i].pos, true, 0, size, color, 0,
-                      ALIGN_CENTER | ALIGN_MIDDLE, TEXT_BOLD, 0, obj);
+                      ALIGN_CENTER | ALIGN_MIDDLE, TEXT_BOLD, 0, NULL);
     }
     return 0;
 }

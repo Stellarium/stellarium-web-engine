@@ -38,6 +38,7 @@ struct mplanet {
     char        name[24];
     char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
+    char        model[64];  // Model name. e.g: '1_Ceres'
 
     // Cached values.
     float       vmag;
@@ -65,6 +66,11 @@ typedef struct mplanets {
 
 // Static instance.
 static mplanets_t *g_mplanets = NULL;
+
+static double mean3(double x, double y, double z)
+{
+    return (x + y + z) / 3;
+}
 
 /*
  * Compute an asteroid observed magnitude from its H, G and positions.
@@ -142,6 +148,8 @@ static void load_data(mplanets_t *mplanets, const char *data, int size)
         if (name[0]) {
             _Static_assert(sizeof(name) == sizeof(mplanet->name), "");
             memcpy(mplanet->name, name, sizeof(name));
+            snprintf(mplanet->model, sizeof(mplanet->model), "%d_%s",
+                     mplanet->mpl_number, mplanet->name);
         }
         if (desig[0]) {
             _Static_assert(sizeof(desig) == sizeof(mplanet->desig), "");
@@ -225,6 +233,8 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
                             void *out)
 {
     mplanet_t *mp = (mplanet_t*)obj;
+    double bounds[2][3], radius;
+
     mplanet_update(mp, obs);
     switch (info) {
     case INFO_PVO:
@@ -233,8 +243,26 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_VMAG:
         *(double*)out = mp->vmag;
         return 0;
+    case INFO_RADIUS:
+        if (painter_get_3d_model_bounds(NULL, mp->model, bounds) == 0) {
+            radius = mean3(bounds[1][0] - bounds[0][0],
+                           bounds[1][1] - bounds[0][1],
+                           bounds[1][2] - bounds[0][2]) * 1000 / 2 / DAU;
+            *(double*)out = radius / vec3_norm(mp->pvo[0]);
+            return 0;
+        }
+        return 1;
     }
     return 1;
+}
+
+static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter)
+{
+    double model_mat[4][4] = MAT4_IDENTITY;
+    mat4_itranslate(model_mat, VEC3_SPLIT(mplanet->pvo[0]));
+    mat4_iscale(model_mat, 1000 / DAU, 1000 / DAU, 1000 / DAU);
+    paint_3d_model(painter, mplanet->model, model_mat, NULL);
+    return 0;
 }
 
 // Note: return 1 if the planet is actually visible on screen.
@@ -246,22 +274,45 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     point_t point;
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
+    double radius_m, model_r, model_size, bounds[2][3], model_alpha = 0;
+    double radius, cap[4];
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
 
     if (!selected && vmag > painter->stars_limit_mag + 1.4 + hints_mag_offset)
         return 0;
+
+    // First clip test using a fixed small radius.
     obj_get_pvo(obj, painter->obs, pvo);
-    if (!painter_project(painter, FRAME_ICRF, pvo[0], false, true, win_pos))
+    vec3_normalize(pvo[0], cap);
+    cap[3] = cos(1. / 60 * DD2R);
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, cap))
         return 0;
 
+    painter_project(painter, FRAME_ICRF, pvo[0], false, false, win_pos);
     core_get_point_for_mag(vmag, &size, &luminance);
+
+    // Render 3d model if possible.
+    if ((size > 5) &&
+        painter_get_3d_model_bounds(painter, mplanet->model, bounds) == 0)
+    {
+        radius_m = mean3(bounds[1][0] - bounds[0][0],
+                         bounds[1][1] - bounds[0][1],
+                         bounds[1][2] - bounds[0][2]) / 2 * 1000;
+        model_r = radius_m / DAU / vec3_norm(mplanet->pvo[0]);
+        model_size = core_get_point_for_apparent_angle(
+                painter->proj, model_r);
+        model_alpha = smoothstep(0.5, 1.0, model_size / size);
+        if (model_alpha > 0)
+            render_3d_model(mplanet, painter);
+    }
+
 
     point = (point_t) {
         .pos = {win_pos[0], win_pos[1]},
         .size = size,
-        .color = {255, 255, 255, luminance * 255},
+        .color = {255, 255, 255, luminance * 255 * (1.0 - model_alpha)},
         .obj = obj,
     };
     paint_2d_points(painter, 1, &point);
@@ -270,6 +321,12 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     if (*mplanet->name && (selected || (g_mplanets->hints_visible &&
                                         vmag <= painter->hints_limit_mag +
                                         1.4 + hints_mag_offset))) {
+        // Use actual pixel radius on screen.
+        if (mplanet_get_info(obj, painter->obs, INFO_RADIUS, &radius) == 0) {
+            radius = core_get_point_for_apparent_angle(painter->proj, radius);
+            size = max(size, radius);
+        }
+
         if (selected)
             vec4_set(label_color, 1, 1, 1, 1);
         labels_add_3d(mplanet->name, FRAME_ICRF, pvo[0], false, size + 4,

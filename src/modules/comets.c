@@ -273,6 +273,7 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 
     point = core_get_point_for_apparent_angle(painter->proj, angle);
     color[3] *= smoothstep(1000, 100, point);
+    if (color[3] <= 0.0) return;
 
     // Translate to put the orgin in the middle of the coma.
     mat4_itranslate(model_mat, 0, -0.0001, 0);
@@ -314,7 +315,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     if (painter_is_cap_clipped(painter, FRAME_ICRF, cap))
         return 0;
 
-    painter_project(painter, FRAME_ICRF, comet->pvo[0], false, true, win_pos);
+    painter_project(painter, FRAME_ICRF, comet->pvo[0], false, false, win_pos);
     comet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
@@ -338,8 +339,10 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
             0, obj);
     }
 
-    render_tail(comet, painter, TAIL_GAS);
-    render_tail(comet, painter, TAIL_DUST);
+    if (size > 1) {
+        render_tail(comet, painter, TAIL_GAS);
+        render_tail(comet, painter, TAIL_DUST);
+    }
     return 0;
 }
 

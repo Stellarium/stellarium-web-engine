@@ -9,6 +9,7 @@
 
 #include "observer.h"
 #include "swe.h"
+#include "algos/utctt.h"
 
 // Simple xor hash function.
 static uint32_t hash_xor(uint32_t v, const char *data, int len)
@@ -131,17 +132,17 @@ static void update_nutation_precession_mat(observer_t *obs)
     // XXX: we can maybe optimize this, since eraPn00a is very slow!
     double dpsi, deps, epsa, rb[3][3], rp[3][3], rbp[3][3], rn[3][3],
            rbpn[3][3];
-    eraPn00a(obs->tt, DJM0, &dpsi, &deps, &epsa, rb, rp, rbp, rn, rbpn);
+    eraPn00a(DJM0, obs->tt, &dpsi, &deps, &epsa, rb, rp, rbp, rn, rbpn);
     mat3_mul(rn, rp, obs->rnp);
 
 }
 
 void observer_update(observer_t *obs, bool fast)
 {
-    double utc1, utc2, ut11, ut12, tai1, tai2;
-    double dt, dut1 = 0;
 
     uint64_t hash, hash_partial;
+    double dut1, r[3][3], x, y, theta, s, sp;
+
     observer_compute_hash(obs, &hash_partial, &hash);
     // Check if we have computed accurate positions already
     if (hash == obs->hash_accurate)
@@ -154,13 +155,8 @@ void observer_update(observer_t *obs, bool fast)
 
     // Compute UT1 and UTC time.
     if (obs->last_update != obs->tt) {
-        dt = deltat(obs->tt);
-        dut1 = 0;
-        eraTtut1(DJM0, obs->tt, dt, &ut11, &ut12);
-        eraTttai(DJM0, obs->tt, &tai1, &tai2);
-        eraTaiutc(tai1, tai2, &utc1, &utc2);
-        obs->ut1 = ut11 - DJM0 + ut12;
-        obs->utc = utc1 - DJM0 + utc2;
+        obs->utc = tt2utc(obs->tt, &dut1);
+        obs->ut1 = obs->utc + dut1 / ERFA_DAYSEC;
     }
 
     if (fast) {
@@ -170,18 +166,24 @@ void observer_update(observer_t *obs, bool fast)
             eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
         }
     } else {
-        eraApco13(DJM0, obs->utc, dut1,
-                obs->elong, obs->phi,
-                obs->hm,
-                0, 0,
-                obs->pressure,
-                15,       // Temperature (dec C)
-                0.5,      // Relative humidity (0-1)
-                0.55,     // Effective color (micron),
-                &obs->astrom,
-                &obs->eo);
-        // Update earth position.
+
+        // This is similar to a single call to eraApco13, except we handle
+        // the time conversion ourself, since erfa doesn't support dates
+        // before year -4800.
+        eraPnm06a(DJM0, obs->tt, r); // equinox based BPN matrix.
+        eraBpn2xy(r, &x, &y); // Extract CIP X,Y.
+        s = eraS06(DJM0, obs->tt, x, y); // Obtain CIO locator s.
+        // XXX: should be obs->ut1 here!  But it break the unit tests for now.
+        theta = eraEra00(DJM0, obs->utc); // Earth rotation angle.
+        sp = eraSp00(DJM0, obs->tt); // TIO locator s'.
+
         eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
+        eraApco(DJM0, obs->tt, obs->earth_pvb, obs->earth_pvh[0], x, y, s,
+                theta, obs->elong, obs->phi, obs->hm, 0, 0, sp, 0, 0,
+                &obs->astrom);
+        obs->eo = eraEors(r, s); // Equation of origins.
+
+        // Update earth position.
         eraCp(obs->astrom.eb, obs->obs_pvb[0]);
         vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
         eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
@@ -194,7 +196,7 @@ void observer_update(observer_t *obs, bool fast)
         // Update observer geocentric position obs_pvg. We can't use eraPvu here
         // as the movement is a rotation about the earth center and can't
         // be approximated by a linear velocity  on a 24h time span
-        double theta = eraEra00(DJM0, obs->ut1);
+        theta = eraEra00(DJM0, obs->ut1);
         eraPvtob(obs->elong, obs->phi, obs->hm, 0, 0, 0, theta, obs->obs_pvg);
         // Rotate from CIRS to ICRF
         eraTrxp(obs->astrom.bpn, obs->obs_pvg[0], obs->obs_pvg[0]);
@@ -244,28 +246,31 @@ static obj_t *observer_clone(const obj_t *obj)
     return &ret->obj;
 }
 
-static void observer_on_timeattr_changed(obj_t *obj, const attribute_t *attr)
+static void on_utc_changed(obj_t *obj, const attribute_t *attr)
 {
-    // Make sure that the TT is synced.
+    // Sync TT.
     observer_t *obs = (observer_t*)obj;
-    double ut11, ut12, tai1, tai2, tt1, tt2, dt = 0;
-    if (strcmp(attr->name, "utc") == 0) {
-        // First compute UTC -> TAI -> TT (no deltaT involved)
-        eraUtctai(DJM0, obs->utc, &tai1, &tai2);
-        eraTaitt(tai1, tai2, &tt1, &tt2);
-        obs->tt = tt1 - DJM0 + tt2;
-
-        dt = deltat(obs->utc);
-        eraTtut1(tt1, tt2, dt, &ut11, &ut12);
-        obs->ut1 = ut11 - DJM0 + ut12;
-    }
-    if (strcmp(attr->name, "ut1") == 0) {
-        dt = deltat(obs->ut1);
-        eraUt1tt(DJM0, obs->ut1, dt, &tt1, &tt2);
-        obs->tt = tt1 - DJM0 + tt2;
-    }
+    obs->tt = utc2tt(obs->utc);
     module_changed(obj, "tt");
+}
+
+static void on_tt_changed(obj_t *obj, const attribute_t *attr)
+{
+    // Sync UTC.
+    observer_t *obs = (observer_t*)obj;
+    double dut1;
+    obs->utc = tt2utc(obs->tt, &dut1);
+    obs->ut1 = obs->utc + dut1 / ERFA_DAYSEC;
     module_changed(obj, "utc");
+}
+
+bool observer_is_uptodate(const observer_t *obs, bool fast)
+{
+    uint64_t hash, hash_partial;
+    observer_compute_hash(obs, &hash_partial, &hash);
+    if (hash == obs->hash_accurate) return true;
+    if (fast && hash == obs->hash) return true;
+    return false;
 }
 
 // Expose azalt vector to js.
@@ -290,11 +295,9 @@ static obj_klass_t observer_klass = {
         PROPERTY(latitude, TYPE_ANGLE, MEMBER(observer_t, phi)),
         PROPERTY(elevation, TYPE_FLOAT, MEMBER(observer_t, hm)),
         PROPERTY(tt, TYPE_MJD, MEMBER(observer_t, tt),
-                 .on_changed = observer_on_timeattr_changed),
-        PROPERTY(ut1, TYPE_MJD, MEMBER(observer_t, ut1),
-                 .on_changed = observer_on_timeattr_changed),
+                 .on_changed = on_tt_changed),
         PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
-                 .on_changed = observer_on_timeattr_changed),
+                 .on_changed = on_utc_changed),
         PROPERTY(pitch, TYPE_ANGLE, MEMBER(observer_t, pitch)),
         PROPERTY(yaw, TYPE_ANGLE, MEMBER(observer_t, yaw)),
         PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll)),

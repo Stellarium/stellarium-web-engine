@@ -96,27 +96,6 @@ Module['date2MJD'] = function(date) {
 }
 
 /*
- * Function: formatAngle
- * format an angle to a human readable representation.
- *
- * Parameters:
- *   angle  - a number in radian.
- *   format - one of 'dms', 'hms', default to 'dms'
- *
- * Return:
- *   A string representation of the angle.
- */
-Module['formatAngle'] = function(angle, format) {
-  format = format || 'dms';
-  var format_angle = Module.cwrap('format_angle', 'number',
-                                  ['number', 'string']);
-  var cret = format_angle(angle, format);
-  var ret = Module.UTF8ToString(cret);
-  Module._free(cret);
-  return ret;
-}
-
-/*
  * Function: a2tf
  * Decompose radians into hours, minutes, seconds, fraction.
  *
@@ -172,11 +151,6 @@ Module['a2af'] = function(angle, resolution) {
   Module._free(cret);
   ret = JSON.parse(ret);
   return ret;
-}
-
-Module['typeToStr'] = function(t) {
-  var type_to_str = Module.cwrap('type_to_str', 'string', ['string']);
-  return type_to_str(t);
 }
 
 /*
@@ -259,6 +233,30 @@ Module['calendar'] = function(args) {
   var callback = getCallback();
   Module._calendar_get(this.observer.v, start, end, 1, 0, callback);
   Module.removeFunction(callback);
+}
+
+/*
+ * Function: designationCleanup
+ * Create a printable version of a designation
+ *
+ * This can be used for example to compute the label to render for an object.
+ *
+ * Parameters:
+ *   d     - the designation string.
+ *   flags - formatting flags
+ *
+ * Return:
+ *   A human-friendly designation.
+ */
+Module['designationCleanup'] = function(d, flags) {
+  const designation_cleanup = Module.cwrap('designation_cleanup',
+                                           null, ['string', 'number',
+                                                  'number', 'number']);
+  const cbuf = Module._malloc(256);
+  designation_cleanup(d, cbuf, 256, flags);
+  const ret = Module.UTF8ToString(cbuf);
+  Module._free(out);
+  return ret;
 }
 
 Module['c2s'] = function(v) {
