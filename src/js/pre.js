@@ -96,27 +96,6 @@ Module['date2MJD'] = function(date) {
 }
 
 /*
- * Function: formatAngle
- * format an angle to a human readable representation.
- *
- * Parameters:
- *   angle  - a number in radian.
- *   format - one of 'dms', 'hms', default to 'dms'
- *
- * Return:
- *   A string representation of the angle.
- */
-Module['formatAngle'] = function(angle, format) {
-  format = format || 'dms';
-  var format_angle = Module.cwrap('format_angle', 'number',
-                                  ['number', 'string']);
-  var cret = format_angle(angle, format);
-  var ret = Module.UTF8ToString(cret);
-  Module._free(cret);
-  return ret;
-}
-
-/*
  * Function: a2tf
  * Decompose radians into hours, minutes, seconds, fraction.
  *
@@ -172,11 +151,6 @@ Module['a2af'] = function(angle, resolution) {
   Module._free(cret);
   ret = JSON.parse(ret);
   return ret;
-}
-
-Module['typeToStr'] = function(t) {
-  var type_to_str = Module.cwrap('type_to_str', 'string', ['string']);
-  return type_to_str(t);
 }
 
 /*
