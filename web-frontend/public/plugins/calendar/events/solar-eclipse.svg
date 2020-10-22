@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="svg4355" width="24" height="24" version="1.1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <ellipse id="path4512" cx="12.031" cy="12" rx="4.5312" ry="4.5455" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="bevel" stroke-width="1.8153"/>
+ <path id="path4514" d="m12.031 2v2.7273" fill="none" stroke="#fff" stroke-width="1.8153"/>
+ <use id="use4516" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#path4514"/>
+ <use id="use4518" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#use4516"/>
+ <use id="use4520" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#use4518"/>
+ <use id="use4522" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#use4520"/>
+ <use id="use4524" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#use4522"/>
+ <use id="use4526" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#use4524"/>
+ <use id="use4528" transform="matrix(.70711 .70932 -.7049 .70711 11.983 -5.0193)" width="100%" height="100%" xlink:href="#use4526"/>
+ <ellipse id="circle4609" cx="15.43" cy="12" rx="5.4375" ry="5.4545" fill="#fff"/>
+</svg>
