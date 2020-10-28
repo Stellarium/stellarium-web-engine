@@ -790,28 +790,38 @@ static void planet_render_model(const planet_t *planet,
                                 double radius,
                                 double r_scale,
                                 double alpha,
-                                const painter_t *painter)
+                                const painter_t *painter_)
 {
     const hips_t *hips;
     bool has_3d_model = false;
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
+    double dist, depth_range[2];
+    painter_t painter = *painter_;
 
-    if (painter_get_3d_model_bounds(painter, planet->name, bounds) == 0)
+    if (painter_get_3d_model_bounds(&painter, planet->name, bounds) == 0)
         has_3d_model = true;
 
     if (!has_3d_model) { // Use hips.
         hips = planet->hips ?: g_planets->default_hips;
         if (hips)
-            planet_render_hips(planet, hips, radius, r_scale, alpha, painter);
+            planet_render_hips(planet, hips, radius, r_scale, alpha, &painter);
         return;
     }
 
     // Assume the model is in km.
-    planet_get_pvo(planet, painter->obs, pvo);
+    planet_get_pvo(planet, painter.obs, pvo);
+
+    // Set the min required depth range needed.
+    // XXX: could be computed properly.
+    dist = vec3_norm(pvo[0]);
+    depth_range[0] = dist * 0.5;
+    depth_range[1] = dist * 2;
+    painter.depth_range = &depth_range;
+
     mat4_itranslate(model_mat, VEC3_SPLIT(pvo[0]));
     mat4_iscale(model_mat, 1000 / DAU, 1000 / DAU, 1000 / DAU);
-    paint_3d_model(painter, planet->name, model_mat, NULL);
+    paint_3d_model(&painter, planet->name, model_mat, NULL);
 }
 
 

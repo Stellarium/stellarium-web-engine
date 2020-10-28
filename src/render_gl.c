@@ -1377,8 +1377,19 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 
 static void item_gltf_render(renderer_gl_t *rend, const item_t *item)
 {
+    double proj[4][4], nearval, farval;
+    mat4_copy(item->gltf.proj_mat, proj);
+
+    if (item->depth_range[0]) {
+        // Fix the depth range of the projection to the current frame values.
+        nearval = rend->depth_range[0] * DAU;
+        farval = rend->depth_range[1] * DAU;
+        proj[2][2] = (farval + nearval) / (nearval - farval);
+        proj[3][2] = 2. * farval * nearval / (nearval - farval);
+    }
+
     gltf_render(item->gltf.model, item->gltf.model_mat, item->gltf.view_mat,
-                item->gltf.proj_mat, item->gltf.light_dir, item->gltf.args);
+                proj, item->gltf.light_dir, item->gltf.args);
 }
 
 static void rend_flush(renderer_gl_t *rend)
@@ -1720,6 +1731,8 @@ static void model_3d(renderer_t *rend_, const painter_t *painter,
     mat4_copy(view_mat, item->gltf.view_mat);
     mat4_copy(proj_mat, item->gltf.proj_mat);
     vec3_copy(light_dir, item->gltf.light_dir);
+    if (painter->depth_range)
+        vec2_to_float(*painter->depth_range, item->depth_range);
     if (args) item->gltf.args = json_copy(args);
     DL_APPEND(rend->items, item);
 }
