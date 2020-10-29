@@ -26,8 +26,8 @@ struct satellite {
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag;
-    double pvg[3]; // XXX: rename that.
-    double pvo[2][4];
+    double pvg[2][3];
+    double pvo[2][3];
     double vmag;
 
     // Launch and decay dates in UTC MJD.  Zero if not known.
@@ -202,8 +202,8 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
     const double EARTH_RADIUS = 6371000; // (m).
 
 
-    vec3_mul(-DAU, sat->pvg, e_pos);
-    vec3_add(obs->earth_pvh[0], sat->pvg, s_pos);
+    vec3_mul(-DAU, sat->pvg[0], e_pos);
+    vec3_add(obs->earth_pvh[0], sat->pvg[0], s_pos);
     vec3_mul(-DAU, s_pos, s_pos);
     elong = eraSepp(e_pos, s_pos);
     e_r = asin(EARTH_RADIUS / vec3_norm(e_pos));
@@ -409,13 +409,12 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     vec3_mul(1000.0 / DAU, pv[1], pv[1]);
     true_equator_to_j2000(obs, pv, pv);
 
-    vec3_copy(pv[0], sat->pvg);
+    vec3_copy(pv[0], sat->pvg[0]);
+    vec3_copy(pv[1], sat->pvg[1]);
 
     position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
     vec3_copy(pv[0], sat->pvo[0]);
     vec3_copy(pv[1], sat->pvo[1]);
-    sat->pvo[0][3] = 1.0; // AU
-    sat->pvo[1][3] = 0.0;
 
     sat->vmag = satellite_compute_vmag(sat, obs);
     return 0;
@@ -424,11 +423,16 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
 static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
                               void *out)
 {
+    double pvo[2][4];
     satellite_t *sat = (satellite_t*)obj;
     satellite_update(sat, obs);
     switch (info) {
     case INFO_PVO:
-        memcpy(out, sat->pvo, sizeof(sat->pvo));
+        vec3_copy(sat->pvo[0], pvo[0]);
+        vec3_copy(sat->pvo[1], pvo[1]);
+        pvo[0][3] = 1;
+        pvo[1][3] = 0;
+        memcpy(out, pvo, sizeof(pvo));
         if (sat->error || !satellite_is_operational(sat, obs->utc))
             return 1;
         return 0;
