@@ -59,6 +59,11 @@ typedef struct satellites {
 // Static instance.
 static satellites_t *g_satellites = NULL;
 
+static double max3(double x, double y, double z)
+{
+    return max(x, max(y, z));
+}
+
 static int satellites_init(obj_t *obj, json_value *args)
 {
     satellites_t *sats = (void*)obj;
@@ -496,6 +501,64 @@ use_first_dsgn:
 }
 
 /*
+ * Compute the rotation from ICRF to Local Vertical Local Horizontal
+ * for 3d models rendering.
+ */
+static void get_lvlh_rot(const observer_t *obs, const double pvo[2][3],
+                         double out[3][3])
+{
+    /*
+     * X Point forward
+     * Y Points overheard, away from Earth.
+     */
+    vec3_normalize(pvo[1], out[0]);
+    vec3_sub(obs->obs_pvg[0], pvo[0], out[1]);
+    vec3_normalize(out[1], out[1]);
+    vec3_cross(out[0], out[1], out[2]);
+    mat3_invert(out, out);
+}
+
+static void satellite_render_model(const satellite_t *sat,
+                                   const painter_t *painter_)
+{
+    double p_win[4], model_mat[4][4] = MAT4_IDENTITY;
+    double lvlh_rot[3][3];
+    double dist, depth_range[2];
+    painter_t painter = *painter_;
+
+    if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
+        return;
+    mat4_itranslate(model_mat, sat->pvo[0][0], sat->pvo[0][1], sat->pvo[0][2]);
+    mat4_iscale(model_mat, 1.0 / DAU, 1.0 / DAU, 1.0 / DAU);
+
+    get_lvlh_rot(painter.obs, sat->pvo, lvlh_rot);
+    mat4_mul_mat3(model_mat, lvlh_rot, model_mat);
+
+    dist = vec3_norm(sat->pvo[0]);
+    depth_range[0] = dist * 0.5;
+    depth_range[1] = dist * 2;
+    painter.depth_range = &depth_range;
+
+    paint_3d_model(&painter, "ISS", model_mat, NULL);
+}
+
+static double get_model_alpha(const satellite_t *sat, const painter_t *painter)
+{
+    double bounds[2][3], dim_au, angle, point_size;
+    // For the moment we only consider the ISS.
+    if (sat->number != 25544)
+        return 0;
+    if (painter_get_3d_model_bounds(NULL, "ISS", bounds) != 0)
+        return 0;
+    dim_au = max3(bounds[1][0] - bounds[0][0],
+                  bounds[1][1] - bounds[0][1],
+                  bounds[1][2] - bounds[0][2]) / DAU;
+    angle = dim_au / vec3_norm(sat->pvo[0]);
+    point_size = core_get_point_for_apparent_angle(painter->proj, angle);
+    return smoothstep(5, 20, point_size);
+}
+
+/*
  * Render an individual satellite.
  * Note: return 1 if the satellite is actually visible on screen.
  */
@@ -504,7 +567,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     double vmag, size, luminance, p_win[4];
     painter_t painter = *painter_;
     point_t point;
-    double color[4];
+    double color[4], model_alpha = 0;
     char buf[256];
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
@@ -524,6 +587,13 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
         return 0;
 
     core_get_point_for_mag(vmag, &size, &luminance);
+
+    // Render model if possible.
+    model_alpha = get_model_alpha(sat, &painter);
+    if (model_alpha > 0) {
+        satellite_render_model(sat, &painter);
+        painter.color[3] *= 1.0 - model_alpha;
+    }
 
     // Render symbol if needed.
     if (g_satellites->hints_visible && (selected || vmag <= hints_limit_mag)) {
