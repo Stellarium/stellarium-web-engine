@@ -406,7 +406,7 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     assert(!isnan(pv[0][0]) && !isnan(pv[0][1]));
 
     vec3_mul(1000.0 / DAU, pv[0], pv[0]);
-    vec3_mul(1000.0 / DAU, pv[1], pv[1]);
+    vec3_mul(1000.0 / DAU * 60 * 60 * 24, pv[1], pv[1]);
     true_equator_to_j2000(obs, pv, pv);
 
     vec3_copy(pv[0], sat->pvg[0]);
