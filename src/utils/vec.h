@@ -167,6 +167,9 @@ DEF void mat4_set_identity(double mat[S 4][4]);
 DEF bool mat4_is_identity(const double mat[S 4][4]);
 DEF void mat4_mul(const double a[S 4][4], const double b[S 4][4],
                   double out[S 4][4]);
+DEF void mat4_mul_mat3(const double a[S 4][4], const double b[S 3][3],
+                       double out[S 4][4]);
+
 DEF void mat4_rx(double a, const double mat[S 4][4], double out[S 4][4]);
 DEF void mat4_ry(double a, const double mat[S 4][4], double out[S 4][4]);
 DEF void mat4_rz(double a, const double mat[S 4][4], double out[S 4][4]);
@@ -621,6 +624,14 @@ DEF void mat4_mul(const double a[S 4][4], const double b[S 4][4],
         }
     }
     mat4_copy(ret, out);
+}
+
+DEF void mat4_mul_mat3(const double a[S 4][4], const double b[S 3][3],
+                       double out[S 4][4])
+{
+    double b4[4][4];
+    mat3_to_mat4(b, b4);
+    mat4_mul(a, b4, out);
 }
 
 DEF void mat3_rx(double a, const double mat[S 3][3], double out[S 3][3])
