@@ -515,7 +515,8 @@ static void get_lvlh_rot(const observer_t *obs, const double pvo[2][3],
     vec3_sub(obs->obs_pvg[0], pvo[0], out[1]);
     vec3_normalize(out[1], out[1]);
     vec3_cross(out[0], out[1], out[2]);
-    mat3_invert(out, out);
+    vec3_normalize(out[2], out[2]);
+    vec3_cross(out[2], out[0], out[1]);
 }
 
 static void satellite_render_model(const satellite_t *sat,
