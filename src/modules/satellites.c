@@ -526,6 +526,13 @@ static void satellite_render_model(const satellite_t *sat,
     double lvlh_rot[3][3];
     double dist, depth_range[2];
     painter_t painter = *painter_;
+    const char *model;
+
+    switch (sat->number) {
+        case 25544: model = "ISS"; break;
+        case 20580: model = "HST"; break;
+        default: return;
+    }
 
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return;
@@ -540,16 +547,20 @@ static void satellite_render_model(const satellite_t *sat,
     depth_range[1] = dist + 500 / DAU;
     painter.depth_range = &depth_range;
 
-    paint_3d_model(&painter, "ISS", model_mat, NULL);
+    paint_3d_model(&painter, model, model_mat, NULL);
 }
 
 static double get_model_alpha(const satellite_t *sat, const painter_t *painter)
 {
     double bounds[2][3], dim_au, angle, point_size;
-    // For the moment we only consider the ISS.
-    if (sat->number != 25544)
-        return 0;
-    if (painter_get_3d_model_bounds(NULL, "ISS", bounds) != 0)
+    const char *model;
+    // For the moment we only consider the ISS and the HST.
+    switch (sat->number) {
+        case 25544: model = "ISS"; break;
+        case 20580: model = "HST"; break;
+        default: return 0;
+    }
+    if (painter_get_3d_model_bounds(NULL, model, bounds) != 0)
         return 0;
     dim_au = max3(bounds[1][0] - bounds[0][0],
                   bounds[1][1] - bounds[0][1],
