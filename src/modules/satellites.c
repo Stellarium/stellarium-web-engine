@@ -535,8 +535,8 @@ static void satellite_render_model(const satellite_t *sat,
     mat4_mul_mat3(model_mat, lvlh_rot, model_mat);
 
     dist = vec3_norm(sat->pvo[0]);
-    depth_range[0] = dist * 0.5;
-    depth_range[1] = dist * 2;
+    depth_range[0] = dist - 500 / DAU;
+    depth_range[1] = dist + 500 / DAU;
     painter.depth_range = &depth_range;
 
     paint_3d_model(&painter, "ISS", model_mat, NULL);
