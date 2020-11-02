@@ -615,10 +615,14 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     vmag = sat->vmag;
     if (sat->error || !satellite_is_operational(sat, painter.obs->utc))
         return 0;
-    if (!selected && vmag > painter.stars_limit_mag && vmag > hints_limit_mag)
-        return 0;
 
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
+        return 0;
+
+    model_alpha = get_model_alpha(sat, &painter, &model_size);
+
+    if (!model_alpha && !selected &&
+            vmag > painter.stars_limit_mag && vmag > hints_limit_mag)
         return 0;
 
     core_get_point_for_mag(vmag, &size, &luminance);
