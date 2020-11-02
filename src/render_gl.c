@@ -928,6 +928,9 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     renderer_gl_t *rend = (void*)rend_;
     assert(size);
 
+    // Prevent overflow in nvg.
+    if (fabs(pos[0]) > 100000 || fabs(pos[1]) > 100000) return;
+
     if (sys_callbacks.render_text) {
         text_using_texture(rend, text, pos, align, effects, size, color, angle,
                            bounds);
