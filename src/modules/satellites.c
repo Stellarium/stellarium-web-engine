@@ -573,7 +573,8 @@ static void satellite_render_model(const satellite_t *sat,
     json_builder_free(args);
 }
 
-static double get_model_alpha(const satellite_t *sat, const painter_t *painter)
+static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
+                              double *model_size)
 {
     double bounds[2][3], dim_au, angle, point_size;
     const char *model;
@@ -587,6 +588,7 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter)
                   bounds[1][2] - bounds[0][2]) / DAU;
     angle = dim_au / vec3_norm(sat->pvo[0]);
     point_size = core_get_point_for_apparent_angle(painter->proj, angle);
+    *model_size = point_size;
     return smoothstep(5, 20, point_size);
 }
 
@@ -599,7 +601,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     double vmag, size, luminance, p_win[4];
     painter_t painter = *painter_;
     point_t point;
-    double color[4], model_alpha = 0;
+    double color[4], model_alpha, model_size;
     double radius;
     char buf[256];
     const double label_color[4] = RGBA(124, 205, 124, 205);
@@ -622,10 +624,11 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     core_get_point_for_mag(vmag, &size, &luminance);
 
     // Render model if possible.
-    model_alpha = get_model_alpha(sat, &painter);
+    model_alpha = get_model_alpha(sat, &painter, &model_size);
     if (model_alpha > 0) {
         satellite_render_model(sat, &painter);
         painter.color[3] *= 1.0 - model_alpha;
+        core_report_luminance_in_fov(model_size * 0.005, false);
     }
 
     // Render symbol if needed.
