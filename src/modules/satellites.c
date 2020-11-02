@@ -549,7 +549,7 @@ static void satellite_render_model(const satellite_t *sat,
     double dist, depth_range[2];
     painter_t painter = *painter_;
     const char *model;
-
+    json_value *args, *uniforms;
 
     model = sat_get_model(sat);
     if (!model) return;
@@ -566,7 +566,11 @@ static void satellite_render_model(const satellite_t *sat,
     depth_range[1] = dist + 500 / DAU;
     painter.depth_range = &depth_range;
 
-    paint_3d_model(&painter, model, model_mat, NULL);
+    args = json_object_new(0);
+    uniforms = json_object_push(args, "uniforms", json_object_new(0));
+    json_object_push(uniforms, "u_light.ambient", json_double_new(0.05));
+    paint_3d_model(&painter, model, model_mat, args);
+    json_builder_free(args);
 }
 
 static double get_model_alpha(const satellite_t *sat, const painter_t *painter)
