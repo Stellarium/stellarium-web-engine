@@ -425,11 +425,23 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     return 0;
 }
 
+static const char *sat_get_model(const satellite_t *sat)
+{
+    switch (sat->number) {
+        case 25544: return "ISS";
+        case 20580: return "HST";
+        default: return NULL;
+    }
+}
+
 static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
                               void *out)
 {
     double pvo[2][4];
+    double bounds[2][3], radius;
+    const char *model;
     satellite_t *sat = (satellite_t*)obj;
+
     satellite_update(sat, obs);
     switch (info) {
     case INFO_PVO:
@@ -444,6 +456,16 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_VMAG:
         *(double*)out = sat->vmag;
         return 0;
+    case INFO_RADIUS:
+        model = sat_get_model(sat);
+        if (painter_get_3d_model_bounds(NULL, model, bounds) == 0) {
+            radius = max3(bounds[1][0] - bounds[0][0],
+                          bounds[1][1] - bounds[0][1],
+                          bounds[1][2] - bounds[0][2]) / 2 / DAU;
+            *(double*)out = radius / vec3_norm(sat->pvo[0]);
+            return 0;
+        }
+        return 1;
     }
     return 1;
 }
@@ -528,12 +550,9 @@ static void satellite_render_model(const satellite_t *sat,
     painter_t painter = *painter_;
     const char *model;
 
-    switch (sat->number) {
-        case 25544: model = "ISS"; break;
-        case 20580: model = "HST"; break;
-        default: return;
-    }
 
+    model = sat_get_model(sat);
+    if (!model) return;
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return;
     mat4_itranslate(model_mat, sat->pvo[0][0], sat->pvo[0][1], sat->pvo[0][2]);
@@ -554,12 +573,9 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter)
 {
     double bounds[2][3], dim_au, angle, point_size;
     const char *model;
-    // For the moment we only consider the ISS and the HST.
-    switch (sat->number) {
-        case 25544: model = "ISS"; break;
-        case 20580: model = "HST"; break;
-        default: return 0;
-    }
+
+    model = sat_get_model(sat);
+    if (!model) return 0;
     if (painter_get_3d_model_bounds(NULL, model, bounds) != 0)
         return 0;
     dim_au = max3(bounds[1][0] - bounds[0][0],
@@ -580,6 +596,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     point_t point;
     double color[4], model_alpha = 0;
+    double radius;
     char buf[256];
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
@@ -624,12 +641,21 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     size = max(8, size);
+
     if (g_satellites->hints_visible &&
         (selected || vmag <= hints_limit_mag - 1.5)) {
-        if (satellite_get_short_name(sat, selected, buf, sizeof(buf)))
+
+        // Use actual pixel radius on screen.
+        if (satellite_get_info(obj, painter.obs, INFO_RADIUS, &radius) == 0) {
+            radius = core_get_point_for_apparent_angle(painter.proj, radius);
+            size = max(size, radius);
+        }
+
+        if (satellite_get_short_name(sat, selected, buf, sizeof(buf))) {
             labels_add_3d(buf, FRAME_ICRF, sat->pvo[0], false, size + 1,
                           FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
                           0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj);
+        }
     }
 
     return 1;
