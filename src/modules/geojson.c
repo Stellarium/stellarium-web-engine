@@ -92,11 +92,11 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
                 LOG_W("Geojson polygon has too many rings");
                 break;
             }
-            size = geo->polygon.rings[i].size;
+            size = geo->polygon.rings[i].size - 1;
             ofs = mesh_add_vertices_lonlat(
                     mesh, size, geo->polygon.rings[i].coordinates);
             if (i == 0) rings_ofs = ofs;
-            mesh_add_line(mesh, ofs, size);
+            mesh_add_line(mesh, ofs, size, true);
             rings_size[i] = size;
         }
         mesh_add_poly(mesh, geo->polygon.size, rings_ofs, rings_size);
@@ -129,7 +129,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     }
     mesh = calloc(1, sizeof(*mesh));
     ofs = mesh_add_vertices_lonlat(mesh, size, coordinates);
-    mesh_add_line(mesh, ofs, size);
+    mesh_add_line(mesh, ofs, size, false);
 
     DL_APPEND(feature->meshes, mesh);
 }

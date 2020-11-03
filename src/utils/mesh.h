@@ -40,7 +40,7 @@ mesh_t *mesh_copy(const mesh_t *mesh);
 
 int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3]);
 int mesh_add_vertices_lonlat(mesh_t *mesh, int count, double (*verts)[2]);
-void mesh_add_line(mesh_t *mesh, int ofs, int size);
+void mesh_add_line(mesh_t *mesh, int ofs, int size, bool loop);
 void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size);
 void mesh_add_point(mesh_t *mesh, int ofs);
 

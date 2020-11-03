@@ -119,16 +119,17 @@ int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3])
     return ofs;
 }
 
-void mesh_add_line(mesh_t *mesh, int ofs, int size)
+void mesh_add_line(mesh_t *mesh, int ofs, int size, bool loop)
 {
-    int i;
-    mesh->lines = realloc(mesh->lines, (mesh->lines_count + (size - 1) * 2) *
+    int i, nb_lines;
+    nb_lines = (size - 1) + (loop ? 1 : 0);
+    mesh->lines = realloc(mesh->lines, (mesh->lines_count + nb_lines * 2) *
                           sizeof(*mesh->lines));
-    for (i = 0; i < size - 1; i++) {
-        mesh->lines[mesh->lines_count + i * 2 + 0] = ofs + i;
-        mesh->lines[mesh->lines_count + i * 2 + 1] = ofs + i + 1;
+    for (i = 0; i < nb_lines; i++) {
+        mesh->lines[mesh->lines_count + i * 2 + 0] = ofs + (i + 0) % size;
+        mesh->lines[mesh->lines_count + i * 2 + 1] = ofs + (i + 1) % size;
     }
-    mesh->lines_count += (size - 1) * 2;
+    mesh->lines_count += nb_lines * 2;
 }
 
 void mesh_add_point(mesh_t *mesh, int ofs)
