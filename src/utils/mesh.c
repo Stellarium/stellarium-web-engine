@@ -238,6 +238,16 @@ static void mesh_add_triangle(mesh_t *mesh, int a, int b, int c)
     mesh->triangles_count += 3;
 }
 
+static void mesh_add_segment(mesh_t *mesh, int a, int b)
+{
+    mesh->lines = realloc(mesh->lines,
+                          (mesh->lines_count + 2) *
+                          sizeof(*mesh->lines));
+    mesh->lines[mesh->lines_count + 0] = a;
+    mesh->lines[mesh->lines_count + 1] = b;
+    mesh->lines_count += 2;
+}
+
 static bool segment_intersects_antimeridian(
         const double a[3], const double b[3], double o[3])
 {
@@ -318,6 +328,19 @@ static void mesh_subdivide_edge(mesh_t *mesh, int e1, int e2)
                 mesh->triangles[i + (j + 2) % 3] = o;
                 assert(!(a == e2 && c == e1));
                 mesh_add_triangle(mesh, a, o, c);
+                break;
+            }
+        }
+    }
+
+    count = mesh->lines_count;
+    for (i = 0; i < count; i += 2) {
+        for (j = 0; j < 2; j++) {
+            a = mesh->lines[i + (j + 0) % 2];
+            b = mesh->lines[i + (j + 1) % 2];
+            if (a == e1 && b == e2) {
+                mesh->lines[i + (j + 1) % 2] = o;
+                mesh_add_segment(mesh, o, b);
                 break;
             }
         }
