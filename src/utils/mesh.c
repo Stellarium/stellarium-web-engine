@@ -12,6 +12,17 @@
 #include "vec.h"
 #include "erfa.h" // XXX: to remove, we barely use it here.
 
+/*
+ * We support both earcut and libtess2 to tesselate the polygons for now.
+ * Earcut is faster, but doesn't work well in 3D.
+ * Default to Earcut.
+ */
+#ifndef MESH_USE_LIBTESS2
+#   define MESH_USE_LIBTESS2 0
+#endif
+
+#include "../../ext_src/libtess2/tesselator.h"
+
 #include <float.h>
 #include <stdlib.h>
 
@@ -167,8 +178,9 @@ static void create_rotation_between_vecs(
 }
 
 
-void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
-                          const double (**verts)[2])
+static void mesh_add_poly_lonlat_earcut(
+        mesh_t *mesh, int nbrings, const int *rings_size,
+        const double (**verts)[2])
 {
     int r, i, j, triangles_size, ofs;
     earcut_t *earcut;
@@ -213,6 +225,75 @@ void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
     // For testing.  We want to avoid meshes with too long edges
     // for the distortion.
     mesh_subdivide(mesh, M_PI / 8);
+}
+
+static void mesh_add_poly_lonlat_libtess2(
+        mesh_t *mesh, int nbrings, const int *rings_size,
+        const double (**verts)[2])
+{
+    int r, i, j, ofs, verts_count, nb_triangles;
+    double (*ring)[3];
+    double (*new_verts)[3];
+    const int *triangles;
+    TESStesselator *tess;
+
+    tess = tessNewTess(NULL);
+    tessSetOption(tess, TESS_CONSTRAINED_DELAUNAY_TRIANGULATION, 1);
+    for (r = 0; r < nbrings; r++) {
+        ring = calloc(rings_size[r], sizeof(*ring));
+        for (i = 0; i < rings_size[r]; i++) {
+            lonlat2c(verts[r][i], ring[i]);
+        }
+        tessAddContour(tess, 3, ring, 24, rings_size[r]);
+        free(ring);
+    }
+    r = tessTesselate(tess, TESS_WINDING_NONZERO, TESS_CONNECTED_POLYGONS,
+                      3, 3, NULL);
+    if (r == 0) {
+        LOG_E("Tesselation error");
+        assert(false);
+        return;
+    }
+
+    verts_count = tessGetVertexCount(tess);
+    new_verts = (void*)tessGetVertices(tess);
+    nb_triangles = tessGetElementCount(tess);
+    triangles = tessGetElements(tess);
+
+    ofs = mesh_add_vertices(mesh, verts_count, new_verts);
+
+    // Add the triangles and lines.
+    mesh->triangles = realloc(mesh->triangles,
+            (mesh->triangles_count + nb_triangles * 3) *
+            sizeof(*mesh->triangles));
+    for (i = 0; i < nb_triangles; i++) {
+        for (j = 0; j < 3; j++) {
+            mesh->triangles[mesh->triangles_count + i * 3 + j] =
+                triangles[i * 6 + j] + ofs;
+
+            if (triangles[i * 6 + 3 + j] == TESS_UNDEF) {
+                mesh->lines = realloc(mesh->lines, (mesh->lines_count + 2) *
+                                      sizeof(*mesh->lines));
+                mesh->lines[mesh->lines_count + 0] =
+                    triangles[i * 6 + (j + 0) % 3] + ofs;
+                mesh->lines[mesh->lines_count + 1] =
+                    triangles[i * 6 + (j + 1) % 3] + ofs;
+                mesh->lines_count += 2;
+            }
+        }
+    }
+    mesh->triangles_count += nb_triangles * 3;
+
+    tessDeleteTess(tess);
+}
+
+void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
+                          const double (**verts)[2])
+{
+    if (!MESH_USE_LIBTESS2)
+        mesh_add_poly_lonlat_earcut(mesh, nbrings, rings_size, verts);
+    else
+        mesh_add_poly_lonlat_libtess2(mesh, nbrings, rings_size, verts);
 }
 
 
