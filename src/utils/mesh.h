@@ -61,7 +61,9 @@ void mesh_cut_antimeridian(mesh_t *mesh);
 /*
  * Function: mesh_subdivide
  * Subdivide edges that are larger than a given length.
+ *
+ * Return the number of edges that got cut.
  */
-void mesh_subdivide(mesh_t *mesh, double max_length);
+int mesh_subdivide(mesh_t *mesh, double max_length);
 
 #endif // MESH_H

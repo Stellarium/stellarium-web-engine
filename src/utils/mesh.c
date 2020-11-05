@@ -447,11 +447,11 @@ static void mesh_subdivide_edge(mesh_t *mesh, int e1, int e2)
     }
 }
 
-static void mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
+static int mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
 {
     double sides[3];
     const double (*vs)[3];
-    int i;
+    int i, ret = 0;
 
     while (true) {
         // Compute all sides lengths (squared).
@@ -468,21 +468,26 @@ static void mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
         }
         assert(i < 3);
         if (sides[i] < max_length * max_length)
-            return;
+            break;
 
         mesh_subdivide_edge(mesh, mesh->triangles[idx + (i + 1) % 3],
                                   mesh->triangles[idx + (i + 2) % 3]);
+        ret++;
     }
+    return ret;
 }
 
 /*
  * Function: mesh_subdivide
  * Subdivide edges that are larger than a given length.
+ *
+ * Return the number of edges that got cut.
  */
-void mesh_subdivide(mesh_t *mesh, double max_length)
+int mesh_subdivide(mesh_t *mesh, double max_length)
 {
-    int i;
+    int i, ret = 0;
     for (i = 0; i < mesh->triangles_count; i += 3) {
-        mesh_subdivide_triangle(mesh, i, max_length);
+        ret += mesh_subdivide_triangle(mesh, i, max_length);
     }
+    return ret;
 }
