@@ -87,7 +87,8 @@ static void lonlat2c(const double lonlat[2], double c[3])
 }
 
 
-int mesh_add_vertices_lonlat(mesh_t *mesh, int count, double (*verts)[2])
+static int mesh_add_vertices_lonlat(mesh_t *mesh, int count,
+                                    const double (*verts)[2])
 {
     int i, ofs;
     ofs = mesh->vertices_count;
@@ -120,9 +121,11 @@ int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3])
     return ofs;
 }
 
-void mesh_add_line(mesh_t *mesh, int ofs, int size, bool loop)
+void mesh_add_line_lonlat(mesh_t *mesh, int size, const double (*verts)[2],
+                          bool loop)
 {
-    int i, nb_lines;
+    int ofs, i, nb_lines;
+    ofs = mesh_add_vertices_lonlat(mesh, size, verts);
     nb_lines = (size - 1) + (loop ? 1 : 0);
     mesh->lines = realloc(mesh->lines, (mesh->lines_count + nb_lines * 2) *
                           sizeof(*mesh->lines));
@@ -133,8 +136,10 @@ void mesh_add_line(mesh_t *mesh, int ofs, int size, bool loop)
     mesh->lines_count += nb_lines * 2;
 }
 
-void mesh_add_point(mesh_t *mesh, int ofs)
+void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2])
 {
+    int ofs;
+    ofs = mesh_add_vertices_lonlat(mesh, 1, (void*)vert);
     mesh->points = realloc(mesh->points,
             (mesh->points_count + 1) * sizeof(*mesh->points));
     mesh->points[mesh->points_count] = ofs;
@@ -162,39 +167,51 @@ static void create_rotation_between_vecs(
 }
 
 
-void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size)
+void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
+                          const double (**verts)[2])
 {
-    int r, i, j = 0, triangles_size;
-    double rot[3][3], p[3];
-    double (*centered_lonlat)[2];
-    const uint16_t *triangles;
+    int r, i, j, triangles_size, ofs;
     earcut_t *earcut;
+    const uint16_t *triangles;
+    double center[3], rot[3][3], p[3];
+    double (*ring)[2];
 
-    earcut = earcut_new();
-    // Triangulate the shape.
-    // First we rotate the points so that they are centered around the
-    // origin.
-    create_rotation_between_vecs(rot, mesh->bounding_cap, VEC(1, 0, 0));
-
-    for (r = 0; r < nb_rings; r++) {
-        centered_lonlat = calloc(size[r], sizeof(*centered_lonlat));
-        for (i = 0; i < size[r]; i++) {
-            mat3_mul_vec3(rot, mesh->vertices[ofs + j++], p);
-            c2lonlat(p, centered_lonlat[i]);
+    // Compute rotation to center the polygon.
+    vec3_set(center, 0, 0, 0);
+    for (r = 0, j = 0; r < nbrings; r++) {
+        for (i = 0; i < rings_size[r]; i++) {
+            lonlat2c(verts[r][i], p);
+            vec3_add(center, p, center);
         }
-        earcut_add_poly(earcut, size[r], centered_lonlat);
-        free(centered_lonlat);
     }
+    vec3_normalize(center, center);
+    create_rotation_between_vecs(rot, center, VEC(1, 0, 0));
 
+    ofs = mesh->vertices_count;
+    earcut = earcut_new();
+    for (r = 0, j = 0; r < nbrings; r++) {
+        mesh_add_line_lonlat(mesh, rings_size[r], verts[r], true);
+        ring = calloc(rings_size[r], sizeof(*ring));
+        for (i = 0; i < rings_size[r]; i++) {
+            mat3_mul_vec3(rot, mesh->vertices[ofs + j++], p);
+            c2lonlat(p, ring[i]);
+        }
+        earcut_add_poly(earcut, rings_size[r], ring);
+        free(ring);
+    }
     triangles = earcut_triangulate(earcut, &triangles_size);
     mesh->triangles = realloc(mesh->triangles,
             (mesh->triangles_count + triangles_size) *
             sizeof(*mesh->triangles));
     for (i = 0; i < triangles_size; i++) {
-        mesh->triangles[mesh->triangles_count + i] = ofs + triangles[i];
+        mesh->triangles[mesh->triangles_count + i] = triangles[i] + ofs;
     }
     mesh->triangles_count += triangles_size;
     earcut_delete(earcut);
+
+    // For testing.  We want to avoid meshes with too long edges
+    // for the distortion.
+    mesh_subdivide(mesh, M_PI / 8);
 }
 
 
