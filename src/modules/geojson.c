@@ -84,7 +84,11 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     case GEOJSON_LINESTRING:
         coordinates = geo->linestring.coordinates;
         size = geo->linestring.size;
-        break;
+        mesh = calloc(1, sizeof(*mesh));
+        ofs = mesh_add_vertices_lonlat(mesh, size, coordinates);
+        mesh_add_line(mesh, ofs, size, false);
+        DL_APPEND(feature->meshes, mesh);
+        return;
     case GEOJSON_POLYGON:
         mesh = calloc(1, sizeof(*mesh));
         for (i = 0; i < geo->polygon.size; i++) {
@@ -127,11 +131,6 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         assert(false);
         return;
     }
-    mesh = calloc(1, sizeof(*mesh));
-    ofs = mesh_add_vertices_lonlat(mesh, size, coordinates);
-    mesh_add_line(mesh, ofs, size, false);
-
-    DL_APPEND(feature->meshes, mesh);
 }
 
 static void add_geojson_feature(image_t *image,
