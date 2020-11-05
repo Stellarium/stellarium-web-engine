@@ -77,7 +77,7 @@ static void c2lonlat(const double c[3], double lonlat[2])
 {
     double lon, lat;
     eraC2s(c, &lon, &lat);
-    lonlat[0] = -lon * DR2D;
+    lonlat[0] = lon * DR2D;
     lonlat[1] = lat * DR2D;
 }
 
@@ -195,6 +195,7 @@ void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
         for (i = 0; i < rings_size[r]; i++) {
             mat3_mul_vec3(rot, mesh->vertices[ofs + j++], p);
             c2lonlat(p, ring[i]);
+            ring[i][0] *= -1; // Earcut seems to work better with this.
         }
         earcut_add_poly(earcut, rings_size[r], ring);
         free(ring);
