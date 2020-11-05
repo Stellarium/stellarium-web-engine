@@ -161,6 +161,7 @@ struct item
             // Projection setttings.  Should be set globally probably.
             int proj;
             float proj_scaling[2];
+            bool use_stencil;
         } mesh;
 
         struct {
@@ -1054,11 +1055,24 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
                                GL_ZERO, GL_ONE));
     }
 
+    // Stencil hack to remove projection deformations artifacts.
+    if (item->mesh.use_stencil) {
+        GL(glClear(GL_STENCIL_BUFFER_BIT));
+        GL(glEnable(GL_STENCIL_TEST));
+        GL(glStencilFunc(GL_NOTEQUAL, 1, 0xFF));
+        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+    }
+
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_fbo_size", fbo_size);
     gl_update_uniform(shader, "u_proj_scaling", item->mesh.proj_scaling);
 
     draw_buffer(&item->buf, &item->indices, gl_mode);
+
+    if (item->mesh.use_stencil) {
+        GL(glDisable(GL_STENCIL_TEST));
+        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP));
+    }
 }
 
 // XXX: almost the same as item_mesh_render!
@@ -1609,7 +1623,8 @@ static void mesh(renderer_t          *rend_,
                  int                 verts_count,
                  const double        verts[][3],
                  int                 indices_count,
-                 const uint16_t      indices[])
+                 const uint16_t      indices[],
+                 bool                use_stencil)
 {
     int i, ofs;
     double pos[4] = {};
@@ -1621,6 +1636,7 @@ static void mesh(renderer_t          *rend_,
     vec4_to_float(painter->color, color);
 
     item = get_item(rend, ITEM_MESH, verts_count, indices_count, NULL);
+    if (use_stencil) item = NULL;
     if (item && item->mesh.mode != mode) item = NULL;
     if (item && item->mesh.stroke_width != painter->lines.width) item = NULL;
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
@@ -1631,6 +1647,7 @@ static void mesh(renderer_t          *rend_,
         memcpy(item->color, color, sizeof(color));
         item->mesh.mode = mode;
         item->mesh.stroke_width = painter->lines.width;
+        item->mesh.use_stencil = use_stencil;
         gl_buf_alloc(&item->buf, &MESH_BUF, max(verts_count, 1024));
         gl_buf_alloc(&item->indices, &INDICES_BUF, max(indices_count, 1024));
         DL_APPEND(rend->items, item);

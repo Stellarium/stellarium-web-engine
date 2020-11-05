@@ -285,6 +285,11 @@ static void mesh_add_poly_lonlat_libtess2(
     mesh->triangles_count += nb_triangles * 3;
 
     tessDeleteTess(tess);
+
+    // For testing.  We want to avoid meshes with too long edges
+    // for the distortion.
+    r = mesh_subdivide(mesh, M_PI / 8);
+    if (r) mesh->subdivided = true;
 }
 
 void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,

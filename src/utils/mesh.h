@@ -32,6 +32,8 @@ struct mesh {
 
     int         points_count; // Number of points.
     uint16_t    *points;
+
+    bool        subdivided; // Set if the mesh was subdivided.
 };
 
 mesh_t *mesh_create(void);
