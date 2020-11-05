@@ -35,6 +35,7 @@ void mesh_delete(mesh_t *mesh)
     free(mesh->vertices);
     free(mesh->triangles);
     free(mesh->lines);
+    free(mesh->points);
     free(mesh);
 }
 
