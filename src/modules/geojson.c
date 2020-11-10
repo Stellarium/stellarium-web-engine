@@ -75,8 +75,9 @@ static int image_init(obj_t *obj, json_value *args)
 static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
 {
     const double (*coordinates)[2];
-    int i, size, ofs;
-    int rings_ofs = 0, rings_size[16];
+    int *rings_size;
+    const double (**rings_verts)[2];
+    int i, size;
     mesh_t *mesh;
     geojson_geometry_t poly;
 
@@ -84,26 +85,22 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     case GEOJSON_LINESTRING:
         coordinates = geo->linestring.coordinates;
         size = geo->linestring.size;
-        break;
+        mesh = calloc(1, sizeof(*mesh));
+        mesh_add_line_lonlat(mesh, size, coordinates, false);
+        DL_APPEND(feature->meshes, mesh);
+        return;
+
     case GEOJSON_POLYGON:
         mesh = calloc(1, sizeof(*mesh));
+        rings_size = calloc(geo->polygon.size, sizeof(*rings_size));
+        rings_verts = calloc(geo->polygon.size, sizeof(*rings_verts));
         for (i = 0; i < geo->polygon.size; i++) {
-            if (i >= ARRAY_SIZE(rings_size)) {
-                LOG_W("Geojson polygon has too many rings");
-                break;
-            }
-            size = geo->polygon.rings[i].size;
-            ofs = mesh_add_vertices_lonlat(
-                    mesh, size, geo->polygon.rings[i].coordinates);
-            if (i == 0) rings_ofs = ofs;
-            mesh_add_line(mesh, ofs, size);
-            rings_size[i] = size;
+            rings_size[i] = geo->polygon.rings[i].size - 1;
+            rings_verts[i] = geo->polygon.rings[i].coordinates;
         }
-        mesh_add_poly(mesh, geo->polygon.size, rings_ofs, rings_size);
-
-        // For testing.  We want to avoid meshes with too long edges
-        // for the distortion.
-        mesh_subdivide(mesh, M_PI / 8);
+        mesh_add_poly_lonlat(mesh, geo->polygon.size, rings_size, rings_verts);
+        free(rings_size);
+        free(rings_verts);
 
         DL_APPEND(feature->meshes, mesh);
         return;
@@ -111,8 +108,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     case GEOJSON_POINT:
         coordinates = &geo->point.coordinates;
         mesh = calloc(1, sizeof(*mesh));
-        ofs = mesh_add_vertices_lonlat(mesh, 1, coordinates);
-        mesh_add_point(mesh, ofs);
+        mesh_add_point_lonlat(mesh, coordinates[0]);
         DL_APPEND(feature->meshes, mesh);
         return;
 
@@ -127,11 +123,6 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         assert(false);
         return;
     }
-    mesh = calloc(1, sizeof(*mesh));
-    ofs = mesh_add_vertices_lonlat(mesh, size, coordinates);
-    mesh_add_line(mesh, ofs, size);
-
-    DL_APPEND(feature->meshes, mesh);
 }
 
 static void add_geojson_feature(image_t *image,

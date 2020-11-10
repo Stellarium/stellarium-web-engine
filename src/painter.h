@@ -123,7 +123,8 @@ struct renderer
                  int                 verts_count,
                  const double        verts[][3],
                  int                 indices_count,
-                 const uint16_t      indices[]);
+                 const uint16_t      indices[],
+                 bool                use_stencil);
 
     void (*ellipse_2d)(renderer_t       *rend,
                        const painter_t  *painter,

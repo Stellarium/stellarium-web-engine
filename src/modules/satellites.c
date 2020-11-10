@@ -26,8 +26,8 @@ struct satellite {
     sgp4_elsetrec_t *elsetrec; // Orbit elements.
     int number;
     double stdmag;
-    double pvg[3]; // XXX: rename that.
-    double pvo[2][4];
+    double pvg[2][3];
+    double pvo[2][3];
     double vmag;
 
     // Launch and decay dates in UTC MJD.  Zero if not known.
@@ -58,6 +58,11 @@ typedef struct satellites {
 
 // Static instance.
 static satellites_t *g_satellites = NULL;
+
+static double max3(double x, double y, double z)
+{
+    return max(x, max(y, z));
+}
 
 static int satellites_init(obj_t *obj, json_value *args)
 {
@@ -202,8 +207,8 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
     const double EARTH_RADIUS = 6371000; // (m).
 
 
-    vec3_mul(-DAU, sat->pvg, e_pos);
-    vec3_add(obs->earth_pvh[0], sat->pvg, s_pos);
+    vec3_mul(-DAU, sat->pvg[0], e_pos);
+    vec3_add(obs->earth_pvh[0], sat->pvg[0], s_pos);
     vec3_mul(-DAU, s_pos, s_pos);
     elong = eraSepp(e_pos, s_pos);
     e_r = asin(EARTH_RADIUS / vec3_norm(e_pos));
@@ -406,35 +411,61 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     assert(!isnan(pv[0][0]) && !isnan(pv[0][1]));
 
     vec3_mul(1000.0 / DAU, pv[0], pv[0]);
-    vec3_mul(1000.0 / DAU, pv[1], pv[1]);
+    vec3_mul(1000.0 / DAU * 60 * 60 * 24, pv[1], pv[1]);
     true_equator_to_j2000(obs, pv, pv);
 
-    vec3_copy(pv[0], sat->pvg);
+    vec3_copy(pv[0], sat->pvg[0]);
+    vec3_copy(pv[1], sat->pvg[1]);
 
     position_to_apparent(obs, ORIGIN_GEOCENTRIC, false, pv, pv);
     vec3_copy(pv[0], sat->pvo[0]);
     vec3_copy(pv[1], sat->pvo[1]);
-    sat->pvo[0][3] = 1.0; // AU
-    sat->pvo[1][3] = 0.0;
 
     sat->vmag = satellite_compute_vmag(sat, obs);
     return 0;
 }
 
+static const char *sat_get_model(const satellite_t *sat)
+{
+    switch (sat->number) {
+        case 25544: return "ISS";
+        case 20580: return "HST";
+        default: return NULL;
+    }
+}
+
 static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
                               void *out)
 {
+    double pvo[2][4];
+    double bounds[2][3], radius;
+    const char *model;
     satellite_t *sat = (satellite_t*)obj;
+
     satellite_update(sat, obs);
     switch (info) {
     case INFO_PVO:
-        memcpy(out, sat->pvo, sizeof(sat->pvo));
+        vec3_copy(sat->pvo[0], pvo[0]);
+        vec3_copy(sat->pvo[1], pvo[1]);
+        pvo[0][3] = 1;
+        pvo[1][3] = 0;
+        memcpy(out, pvo, sizeof(pvo));
         if (sat->error || !satellite_is_operational(sat, obs->utc))
             return 1;
         return 0;
     case INFO_VMAG:
         *(double*)out = sat->vmag;
         return 0;
+    case INFO_RADIUS:
+        model = sat_get_model(sat);
+        if (painter_get_3d_model_bounds(NULL, model, bounds) == 0) {
+            radius = max3(bounds[1][0] - bounds[0][0],
+                          bounds[1][1] - bounds[0][1],
+                          bounds[1][2] - bounds[0][2]) / 2 / DAU;
+            *(double*)out = radius / vec3_norm(sat->pvo[0]);
+            return 0;
+        }
+        return 1;
     }
     return 1;
 }
@@ -492,6 +523,77 @@ use_first_dsgn:
 }
 
 /*
+ * Compute the rotation from ICRF to Local Vertical Local Horizontal
+ * for 3d models rendering.
+ */
+static void get_lvlh_rot(const observer_t *obs, const double pvo[2][3],
+                         double out[3][3])
+{
+    /*
+     * X Point forward
+     * Y Points overheard, away from Earth.
+     */
+    vec3_normalize(pvo[1], out[0]);
+    vec3_sub(obs->obs_pvg[0], pvo[0], out[1]);
+    vec3_normalize(out[1], out[1]);
+    vec3_cross(out[0], out[1], out[2]);
+    vec3_normalize(out[2], out[2]);
+    vec3_cross(out[2], out[0], out[1]);
+}
+
+static void satellite_render_model(const satellite_t *sat,
+                                   const painter_t *painter_)
+{
+    double p_win[4], model_mat[4][4] = MAT4_IDENTITY;
+    double lvlh_rot[3][3];
+    double dist, depth_range[2];
+    painter_t painter = *painter_;
+    const char *model;
+    json_value *args, *uniforms;
+
+    model = sat_get_model(sat);
+    if (!model) return;
+    if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
+        return;
+    mat4_itranslate(model_mat, sat->pvo[0][0], sat->pvo[0][1], sat->pvo[0][2]);
+    mat4_iscale(model_mat, 1.0 / DAU, 1.0 / DAU, 1.0 / DAU);
+
+    get_lvlh_rot(painter.obs, sat->pvo, lvlh_rot);
+    mat4_mul_mat3(model_mat, lvlh_rot, model_mat);
+
+    dist = vec3_norm(sat->pvo[0]);
+    depth_range[0] = dist - 500 / DAU;
+    depth_range[1] = dist + 500 / DAU;
+    painter.depth_range = &depth_range;
+
+    args = json_object_new(0);
+    uniforms = json_object_push(args, "uniforms", json_object_new(0));
+    json_object_push(uniforms, "u_light.ambient", json_double_new(0.05));
+    json_object_push(args, "use_ibl", json_boolean_new(true));
+    paint_3d_model(&painter, model, model_mat, args);
+    json_builder_free(args);
+}
+
+static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
+                              double *model_size)
+{
+    double bounds[2][3], dim_au, angle, point_size;
+    const char *model;
+
+    model = sat_get_model(sat);
+    if (!model) return 0;
+    if (painter_get_3d_model_bounds(NULL, model, bounds) != 0)
+        return 0;
+    dim_au = max3(bounds[1][0] - bounds[0][0],
+                  bounds[1][1] - bounds[0][1],
+                  bounds[1][2] - bounds[0][2]) / DAU;
+    angle = dim_au / vec3_norm(sat->pvo[0]);
+    point_size = core_get_point_for_apparent_angle(painter->proj, angle);
+    *model_size = point_size;
+    return smoothstep(5, 20, point_size);
+}
+
+/*
  * Render an individual satellite.
  * Note: return 1 if the satellite is actually visible on screen.
  */
@@ -500,7 +602,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     double vmag, size, luminance, p_win[4];
     painter_t painter = *painter_;
     point_t point;
-    double color[4];
+    double color[4], model_alpha, model_size;
+    double radius;
     char buf[256];
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
@@ -513,13 +616,25 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     vmag = sat->vmag;
     if (sat->error || !satellite_is_operational(sat, painter.obs->utc))
         return 0;
-    if (!selected && vmag > painter.stars_limit_mag && vmag > hints_limit_mag)
-        return 0;
 
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return 0;
 
+    model_alpha = get_model_alpha(sat, &painter, &model_size);
+
+    if (!model_alpha && !selected &&
+            vmag > painter.stars_limit_mag && vmag > hints_limit_mag)
+        return 0;
+
     core_get_point_for_mag(vmag, &size, &luminance);
+
+    // Render model if possible.
+    model_alpha = get_model_alpha(sat, &painter, &model_size);
+    if (model_alpha > 0) {
+        satellite_render_model(sat, &painter);
+        painter.color[3] *= 1.0 - model_alpha;
+        core_report_luminance_in_fov(model_size * 0.005, false);
+    }
 
     // Render symbol if needed.
     if (g_satellites->hints_visible && (selected || vmag <= hints_limit_mag)) {
@@ -538,12 +653,21 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
 
     // Render name if needed.
     size = max(8, size);
+
     if (g_satellites->hints_visible &&
         (selected || vmag <= hints_limit_mag - 1.5)) {
-        if (satellite_get_short_name(sat, selected, buf, sizeof(buf)))
+
+        // Use actual pixel radius on screen.
+        if (satellite_get_info(obj, painter.obs, INFO_RADIUS, &radius) == 0) {
+            radius = core_get_point_for_apparent_angle(painter.proj, radius);
+            size = max(size, radius);
+        }
+
+        if (satellite_get_short_name(sat, selected, buf, sizeof(buf))) {
             labels_add_3d(buf, FRAME_ICRF, sat->pvo[0], false, size + 1,
                           FONT_SIZE_BASE - 3, selected ? white : label_color, 0,
                           0, selected ? TEXT_BOLD : TEXT_FLOAT, 0, obj);
+        }
     }
 
     return 1;

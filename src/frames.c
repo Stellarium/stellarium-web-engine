@@ -306,6 +306,10 @@ void apparent_to_astrometric(const observer_t *obs, const double in[3],
 bool frame_get_rotation(const observer_t *obs, int origin, int dest,
                         double rot[3][3])
 {
+    if (dest == origin) {
+        mat3_set_identity(rot);
+        return true;
+    }
     // For the moment we only support ICRF to VIEW, without refraction.
     if (origin != FRAME_ICRF || dest != FRAME_VIEW || obs->pressure)
         return false;

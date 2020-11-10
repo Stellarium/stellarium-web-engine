@@ -161,6 +161,7 @@ struct item
             // Projection setttings.  Should be set globally probably.
             int proj;
             float proj_scaling[2];
+            bool use_stencil;
         } mesh;
 
         struct {
@@ -928,6 +929,9 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     renderer_gl_t *rend = (void*)rend_;
     assert(size);
 
+    // Prevent overflow in nvg.
+    if (fabs(pos[0]) > 100000 || fabs(pos[1]) > 100000) return;
+
     if (sys_callbacks.render_text) {
         text_using_texture(rend, text, pos, align, effects, size, color, angle,
                            bounds);
@@ -1051,11 +1055,24 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
                                GL_ZERO, GL_ONE));
     }
 
+    // Stencil hack to remove projection deformations artifacts.
+    if (item->mesh.use_stencil) {
+        GL(glClear(GL_STENCIL_BUFFER_BIT));
+        GL(glEnable(GL_STENCIL_TEST));
+        GL(glStencilFunc(GL_NOTEQUAL, 1, 0xFF));
+        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+    }
+
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_fbo_size", fbo_size);
     gl_update_uniform(shader, "u_proj_scaling", item->mesh.proj_scaling);
 
     draw_buffer(&item->buf, &item->indices, gl_mode);
+
+    if (item->mesh.use_stencil) {
+        GL(glDisable(GL_STENCIL_TEST));
+        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP));
+    }
 }
 
 // XXX: almost the same as item_mesh_render!
@@ -1377,8 +1394,19 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
 
 static void item_gltf_render(renderer_gl_t *rend, const item_t *item)
 {
+    double proj[4][4], nearval, farval;
+    mat4_copy(item->gltf.proj_mat, proj);
+
+    if (item->depth_range[0]) {
+        // Fix the depth range of the projection to the current frame values.
+        nearval = rend->depth_range[0] * DAU;
+        farval = rend->depth_range[1] * DAU;
+        proj[2][2] = (farval + nearval) / (nearval - farval);
+        proj[3][2] = 2. * farval * nearval / (nearval - farval);
+    }
+
     gltf_render(item->gltf.model, item->gltf.model_mat, item->gltf.view_mat,
-                item->gltf.proj_mat, item->gltf.light_dir, item->gltf.args);
+                proj, item->gltf.light_dir, item->gltf.args);
 }
 
 static void rend_flush(renderer_gl_t *rend)
@@ -1595,7 +1623,8 @@ static void mesh(renderer_t          *rend_,
                  int                 verts_count,
                  const double        verts[][3],
                  int                 indices_count,
-                 const uint16_t      indices[])
+                 const uint16_t      indices[],
+                 bool                use_stencil)
 {
     int i, ofs;
     double pos[4] = {};
@@ -1607,6 +1636,7 @@ static void mesh(renderer_t          *rend_,
     vec4_to_float(painter->color, color);
 
     item = get_item(rend, ITEM_MESH, verts_count, indices_count, NULL);
+    if (use_stencil) item = NULL;
     if (item && item->mesh.mode != mode) item = NULL;
     if (item && item->mesh.stroke_width != painter->lines.width) item = NULL;
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
@@ -1617,6 +1647,7 @@ static void mesh(renderer_t          *rend_,
         memcpy(item->color, color, sizeof(color));
         item->mesh.mode = mode;
         item->mesh.stroke_width = painter->lines.width;
+        item->mesh.use_stencil = use_stencil;
         gl_buf_alloc(&item->buf, &MESH_BUF, max(verts_count, 1024));
         gl_buf_alloc(&item->indices, &INDICES_BUF, max(indices_count, 1024));
         DL_APPEND(rend->items, item);
@@ -1720,6 +1751,8 @@ static void model_3d(renderer_t *rend_, const painter_t *painter,
     mat4_copy(view_mat, item->gltf.view_mat);
     mat4_copy(proj_mat, item->gltf.proj_mat);
     vec3_copy(light_dir, item->gltf.light_dir);
+    if (painter->depth_range)
+        vec2_to_float(*painter->depth_range, item->depth_range);
     if (args) item->gltf.args = json_copy(args);
     DL_APPEND(rend->items, item);
 }

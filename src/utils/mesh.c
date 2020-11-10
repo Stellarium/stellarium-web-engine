@@ -8,9 +8,10 @@
  */
 
 #include "mesh.h"
-#include "earcut.h" // XXX: move into utils.
 #include "vec.h"
 #include "erfa.h" // XXX: to remove, we barely use it here.
+
+#include "../../ext_src/libtess2/tesselator.h"
 
 #include <float.h>
 #include <stdlib.h>
@@ -35,6 +36,7 @@ void mesh_delete(mesh_t *mesh)
     free(mesh->vertices);
     free(mesh->triangles);
     free(mesh->lines);
+    free(mesh->points);
     free(mesh);
 }
 
@@ -72,21 +74,14 @@ static void compute_bounding_cap(int size, const double (*verts)[3],
     }
 }
 
-static void c2lonlat(const double c[3], double lonlat[2])
-{
-    double lon, lat;
-    eraC2s(c, &lon, &lat);
-    lonlat[0] = -lon * DR2D;
-    lonlat[1] = lat * DR2D;
-}
-
 static void lonlat2c(const double lonlat[2], double c[3])
 {
     eraS2c(lonlat[0] * DD2R, lonlat[1] * DD2R, c);
 }
 
 
-int mesh_add_vertices_lonlat(mesh_t *mesh, int count, double (*verts)[2])
+static int mesh_add_vertices_lonlat(mesh_t *mesh, int count,
+                                    const double (*verts)[2])
 {
     int i, ofs;
     ofs = mesh->vertices_count;
@@ -119,80 +114,93 @@ int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3])
     return ofs;
 }
 
-void mesh_add_line(mesh_t *mesh, int ofs, int size)
+void mesh_add_line_lonlat(mesh_t *mesh, int size, const double (*verts)[2],
+                          bool loop)
 {
-    int i;
-    mesh->lines = realloc(mesh->lines, (mesh->lines_count + (size - 1) * 2) *
+    int ofs, i, nb_lines;
+    ofs = mesh_add_vertices_lonlat(mesh, size, verts);
+    nb_lines = (size - 1) + (loop ? 1 : 0);
+    mesh->lines = realloc(mesh->lines, (mesh->lines_count + nb_lines * 2) *
                           sizeof(*mesh->lines));
-    for (i = 0; i < size - 1; i++) {
-        mesh->lines[mesh->lines_count + i * 2 + 0] = ofs + i;
-        mesh->lines[mesh->lines_count + i * 2 + 1] = ofs + i + 1;
+    for (i = 0; i < nb_lines; i++) {
+        mesh->lines[mesh->lines_count + i * 2 + 0] = ofs + (i + 0) % size;
+        mesh->lines[mesh->lines_count + i * 2 + 1] = ofs + (i + 1) % size;
     }
-    mesh->lines_count += (size - 1) * 2;
+    mesh->lines_count += nb_lines * 2;
 }
 
-void mesh_add_point(mesh_t *mesh, int ofs)
+void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2])
 {
+    int ofs;
+    ofs = mesh_add_vertices_lonlat(mesh, 1, (void*)vert);
     mesh->points = realloc(mesh->points,
             (mesh->points_count + 1) * sizeof(*mesh->points));
     mesh->points[mesh->points_count] = ofs;
     mesh->points_count += 1;
 }
 
-// Should be in vec.h I guess, but we use eraSepp, so it's not conveniant.
-static void create_rotation_between_vecs(
-        double rot[3][3], const double a[3], const double b[3])
+void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
+                          const double (**verts)[2])
 {
-    double angle = eraSepp(a, b);
-    double axis[3];
-    double quat[4];
-    if (angle < FLT_EPSILON) {
-        mat3_set_identity(rot);
+    int r, i, j, ofs, verts_count, nb_triangles;
+    double (*ring)[3];
+    double (*new_verts)[3];
+    const int *triangles;
+    TESStesselator *tess;
+
+    tess = tessNewTess(NULL);
+    tessSetOption(tess, TESS_CONSTRAINED_DELAUNAY_TRIANGULATION, 1);
+    for (r = 0; r < nbrings; r++) {
+        ring = calloc(rings_size[r], sizeof(*ring));
+        for (i = 0; i < rings_size[r]; i++) {
+            lonlat2c(verts[r][i], ring[i]);
+        }
+        tessAddContour(tess, 3, ring, 24, rings_size[r]);
+        free(ring);
+    }
+    r = tessTesselate(tess, TESS_WINDING_NONZERO, TESS_CONNECTED_POLYGONS,
+                      3, 3, NULL);
+    if (r == 0) {
+        LOG_E("Tesselation error");
+        assert(false);
         return;
     }
-    if (fabs(angle - M_PI) > FLT_EPSILON) {
-        vec3_cross(a, b, axis);
-    } else {
-        vec3_get_ortho(a, axis);
-    }
-    quat_from_axis(quat, angle, axis[0], axis[1], axis[2]);
-    quat_to_mat3(quat, rot);
-}
 
+    verts_count = tessGetVertexCount(tess);
+    new_verts = (void*)tessGetVertices(tess);
+    nb_triangles = tessGetElementCount(tess);
+    triangles = tessGetElements(tess);
 
-void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size)
-{
-    int r, i, j = 0, triangles_size;
-    double rot[3][3], p[3];
-    double (*centered_lonlat)[2];
-    const uint16_t *triangles;
-    earcut_t *earcut;
+    ofs = mesh_add_vertices(mesh, verts_count, new_verts);
 
-    earcut = earcut_new();
-    // Triangulate the shape.
-    // First we rotate the points so that they are centered around the
-    // origin.
-    create_rotation_between_vecs(rot, mesh->bounding_cap, VEC(1, 0, 0));
-
-    for (r = 0; r < nb_rings; r++) {
-        centered_lonlat = calloc(size[r], sizeof(*centered_lonlat));
-        for (i = 0; i < size[r]; i++) {
-            mat3_mul_vec3(rot, mesh->vertices[ofs + j++], p);
-            c2lonlat(p, centered_lonlat[i]);
-        }
-        earcut_add_poly(earcut, size[r], centered_lonlat);
-        free(centered_lonlat);
-    }
-
-    triangles = earcut_triangulate(earcut, &triangles_size);
+    // Add the triangles and lines.
     mesh->triangles = realloc(mesh->triangles,
-            (mesh->triangles_count + triangles_size) *
+            (mesh->triangles_count + nb_triangles * 3) *
             sizeof(*mesh->triangles));
-    for (i = 0; i < triangles_size; i++) {
-        mesh->triangles[mesh->triangles_count + i] = ofs + triangles[i];
+    for (i = 0; i < nb_triangles; i++) {
+        for (j = 0; j < 3; j++) {
+            mesh->triangles[mesh->triangles_count + i * 3 + j] =
+                triangles[i * 6 + j] + ofs;
+
+            if (triangles[i * 6 + 3 + j] == TESS_UNDEF) {
+                mesh->lines = realloc(mesh->lines, (mesh->lines_count + 2) *
+                                      sizeof(*mesh->lines));
+                mesh->lines[mesh->lines_count + 0] =
+                    triangles[i * 6 + (j + 0) % 3] + ofs;
+                mesh->lines[mesh->lines_count + 1] =
+                    triangles[i * 6 + (j + 1) % 3] + ofs;
+                mesh->lines_count += 2;
+            }
+        }
     }
-    mesh->triangles_count += triangles_size;
-    earcut_delete(earcut);
+    mesh->triangles_count += nb_triangles * 3;
+
+    tessDeleteTess(tess);
+
+    // For testing.  We want to avoid meshes with too long edges
+    // for the distortion.
+    r = mesh_subdivide(mesh, M_PI / 8);
+    if (r) mesh->subdivided = true;
 }
 
 
@@ -235,6 +243,16 @@ static void mesh_add_triangle(mesh_t *mesh, int a, int b, int c)
     mesh->triangles[mesh->triangles_count + 1] = b;
     mesh->triangles[mesh->triangles_count + 2] = c;
     mesh->triangles_count += 3;
+}
+
+static void mesh_add_segment(mesh_t *mesh, int a, int b)
+{
+    mesh->lines = realloc(mesh->lines,
+                          (mesh->lines_count + 2) *
+                          sizeof(*mesh->lines));
+    mesh->lines[mesh->lines_count + 0] = a;
+    mesh->lines[mesh->lines_count + 1] = b;
+    mesh->lines_count += 2;
 }
 
 static bool segment_intersects_antimeridian(
@@ -321,13 +339,26 @@ static void mesh_subdivide_edge(mesh_t *mesh, int e1, int e2)
             }
         }
     }
+
+    count = mesh->lines_count;
+    for (i = 0; i < count; i += 2) {
+        for (j = 0; j < 2; j++) {
+            a = mesh->lines[i + (j + 0) % 2];
+            b = mesh->lines[i + (j + 1) % 2];
+            if (a == e1 && b == e2) {
+                mesh->lines[i + (j + 1) % 2] = o;
+                mesh_add_segment(mesh, o, b);
+                break;
+            }
+        }
+    }
 }
 
-static void mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
+static int mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
 {
     double sides[3];
     const double (*vs)[3];
-    int i;
+    int i, ret = 0;
 
     while (true) {
         // Compute all sides lengths (squared).
@@ -344,21 +375,26 @@ static void mesh_subdivide_triangle(mesh_t *mesh, int idx, double max_length)
         }
         assert(i < 3);
         if (sides[i] < max_length * max_length)
-            return;
+            break;
 
         mesh_subdivide_edge(mesh, mesh->triangles[idx + (i + 1) % 3],
                                   mesh->triangles[idx + (i + 2) % 3]);
+        ret++;
     }
+    return ret;
 }
 
 /*
  * Function: mesh_subdivide
  * Subdivide edges that are larger than a given length.
+ *
+ * Return the number of edges that got cut.
  */
-void mesh_subdivide(mesh_t *mesh, double max_length)
+int mesh_subdivide(mesh_t *mesh, double max_length)
 {
-    int i;
+    int i, ret = 0;
     for (i = 0; i < mesh->triangles_count; i += 3) {
-        mesh_subdivide_triangle(mesh, i, max_length);
+        ret += mesh_subdivide_triangle(mesh, i, max_length);
     }
+    return ret;
 }

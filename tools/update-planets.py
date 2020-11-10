@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
 #
@@ -11,7 +11,7 @@
 # This script queries NASA JPL HORIZONS service using the batch interface to
 # update the solar system planet info in data/planets.ini.
 
-import ConfigParser
+import configparser
 import math
 import os
 import requests
@@ -21,7 +21,7 @@ import time
 
 
 if os.path.dirname(__file__) != "./tools":
-    print "Should be run from root directory"
+    print("Should be run from root directory")
     sys.exit(-1)
 
 
@@ -89,7 +89,7 @@ def parse_orbital_data(txt):
     return dict(orbit='horizons:%s' % line)
 
 
-config = ConfigParser.SafeConfigParser()
+config = configparser.ConfigParser()
 config.read('./data/planets.ini')
 
 
@@ -99,16 +99,16 @@ now = time.time() / 86400.0 + 2440587.5 - 2400000.5
 # Truncate to the day, so that we can run the script several times
 # and the values won't change.
 now = math.floor(now)
-print 'now', now
+print('now', now)
 
 for id, name in all_bodies:
     if id == 10: continue # skip sun.
-    if id / 100 == 3: continue  # skip Moon, L1, L2, L4, L4, L5, Earth
+    if id // 100 == 3: continue  # skip Moon, L1, L2, L4, L4, L5, Earth
     if id % 100 == 99: parent = 10 # Planet
-    if id % 100 != 99: parent = id / 100 * 100 + 99 # Moon
+    if id % 100 != 99: parent = id // 100 * 100 + 99 # Moon
 
     section = name.lower()
-    print 'process %s (%d)' % (name, id)
+    print('process %s (%d)' % (name, id))
 
     try:
         center = '500@%d' % parent # Center of parent body.
@@ -131,15 +131,15 @@ for id, name in all_bodies:
         data['parent'] = [x for x in all_bodies if x[0] == parent][0][1].lower()
         data['type'] = 'Pla' if parent == 10 else 'Moo'
 
-        print ', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
-                        for k, v in data.items())
+        print(', '.join('%s = %s' % (k, v[:16] + bool(v[16:]) * '...')
+                        for k, v in data.items()))
         # if not 'albedo' in data or not 'radius' in data: continue
         if not config.has_section(section): config.add_section(section)
 
         for key, value in data.items():
             config.set(section, key, value)
-    except:
-        print('Failed')
+    except Exception as ex:
+        print('Failed:', ex)
 
-print 'Update planets.ini'
+print('Update planets.ini')
 config.write(open('./data/planets.ini', 'w'))

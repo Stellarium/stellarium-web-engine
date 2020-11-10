@@ -74,8 +74,7 @@ typedef struct observer observer_t;
  * FRAME_CIRS     - CIRS frame. Like Equatorial of date but with the origin of
  *                  right ascension being the Celestial Intermediate Origin
  *                  (CIO) instead of the true equinox.
- *                  Also use this frame to describe apparent directions of
- *                  astronomical objects as seen from the Earth.
+ *                  You should not normally need this frame for normal use.
  * FRAME_OBSERVED - Observed frame (the frame of alt/az). Includes atmospheric
  *                  refraction.
  * FRAME_MOUNT    - Frame oriented along the mount rest position.  For

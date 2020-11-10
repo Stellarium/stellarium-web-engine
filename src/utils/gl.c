@@ -315,6 +315,7 @@ void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
     switch (uni->type) {
     case GL_INT:
     case GL_SAMPLER_2D:
+    case GL_SAMPLER_CUBE:
         GL(glUniform1i(uni->loc, va_arg(args, int)));
         break;
     case GL_FLOAT:

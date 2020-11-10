@@ -358,6 +358,7 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
     painter_t painter = *painter_;
     int i;
     mesh_t *mesh2;
+    bool use_stencil = (mode == MODE_TRIANGLES && mesh->subdivided);
 
     if (mode == MODE_TRIANGLES && mesh->triangles_count == 0) return 0;
     if (mode == MODE_LINES && mesh->lines_count == 0) return 0;
@@ -378,17 +379,17 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
     case MODE_TRIANGLES:
         REND(painter.rend, mesh, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
-             mesh->triangles_count, mesh->triangles);
+             mesh->triangles_count, mesh->triangles, use_stencil);
         break;
     case MODE_LINES:
         REND(painter.rend, mesh, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
-             mesh->lines_count, mesh->lines);
+             mesh->lines_count, mesh->lines, false);
         break;
     case MODE_POINTS:
         REND(painter.rend, mesh, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
-             mesh->points_count, mesh->points);
+             mesh->points_count, mesh->points, false);
         break;
     }
     return 0;
@@ -408,7 +409,7 @@ subdivide:
     mesh_cut_antimeridian(mesh2);
     REND(painter.rend, mesh, &painter, FRAME_VIEW, MODE_TRIANGLES,
              mesh2->vertices_count, mesh2->vertices,
-             mesh2->triangles_count, mesh2->triangles);
+             mesh2->triangles_count, mesh2->triangles, use_stencil);
 
     mesh_delete(mesh2);
     return 0;

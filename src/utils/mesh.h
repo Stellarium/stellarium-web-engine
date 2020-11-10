@@ -32,17 +32,19 @@ struct mesh {
 
     int         points_count; // Number of points.
     uint16_t    *points;
+
+    bool        subdivided; // Set if the mesh was subdivided.
 };
 
 mesh_t *mesh_create(void);
 void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 
-int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3]);
-int mesh_add_vertices_lonlat(mesh_t *mesh, int count, double (*verts)[2]);
-void mesh_add_line(mesh_t *mesh, int ofs, int size);
-void mesh_add_poly(mesh_t *mesh, int nb_rings, const int ofs, const int *size);
-void mesh_add_point(mesh_t *mesh, int ofs);
+void mesh_add_line_lonlat(mesh_t *mesh, int size, const double (*verts)[2],
+                          bool loop);
+void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2]);
+void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
+                          const double (**verts)[2]);
 
 /*
  * Function: mesh_contains_vec3
@@ -61,7 +63,9 @@ void mesh_cut_antimeridian(mesh_t *mesh);
 /*
  * Function: mesh_subdivide
  * Subdivide edges that are larger than a given length.
+ *
+ * Return the number of edges that got cut.
  */
-void mesh_subdivide(mesh_t *mesh, double max_length);
+int mesh_subdivide(mesh_t *mesh, double max_length);
 
 #endif // MESH_H

@@ -525,7 +525,7 @@ error:
  */
 void geojson_delete(geojson_t *geojson)
 {
-    int i, j;
+    int i, j, k;
     geojson_feature_t *feature;
     geojson_geometry_t *geo;
 
@@ -543,6 +543,15 @@ void geojson_delete(geojson_t *geojson)
             for (j = 0; j < geo->polygon.size; j++)
                 free(geo->polygon.rings[j].coordinates);
             free(geo->polygon.rings);
+            break;
+        case GEOJSON_MULTIPOLYGON:
+            for (j = 0; j < geo->multipolygon.size; j++) {
+                for (k = 0; k < geo->multipolygon.polygons[j].size; k++) {
+                    free(geo->multipolygon.polygons[j].rings[k].coordinates);
+                }
+                free(geo->multipolygon.polygons[j].rings);
+            }
+            free(geo->multipolygon.polygons);
             break;
         default:
             break;
