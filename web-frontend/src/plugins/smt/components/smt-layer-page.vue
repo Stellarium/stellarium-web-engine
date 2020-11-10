@@ -371,6 +371,7 @@ export default {
         that.selectedFootprintData = r
       } else {
         that.selectedFootprintData = []
+        return false
       }
       return true
     })
