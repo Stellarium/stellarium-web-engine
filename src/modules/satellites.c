@@ -569,6 +569,7 @@ static void satellite_render_model(const satellite_t *sat,
     args = json_object_new(0);
     uniforms = json_object_push(args, "uniforms", json_object_new(0));
     json_object_push(uniforms, "u_light.ambient", json_double_new(0.05));
+    json_object_push(args, "use_ibl", json_boolean_new(true));
     paint_3d_model(&painter, model, model_mat, args);
     json_builder_free(args);
 }
