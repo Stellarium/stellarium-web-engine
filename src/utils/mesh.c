@@ -8,18 +8,8 @@
  */
 
 #include "mesh.h"
-#include "earcut.h" // XXX: move into utils.
 #include "vec.h"
 #include "erfa.h" // XXX: to remove, we barely use it here.
-
-/*
- * We support both earcut and libtess2 to tesselate the polygons for now.
- * Earcut is faster, but doesn't work well in 3D.
- * Default to Earcut.
- */
-#ifndef MESH_USE_LIBTESS2
-#   define MESH_USE_LIBTESS2 0
-#endif
 
 #include "../../ext_src/libtess2/tesselator.h"
 
@@ -82,14 +72,6 @@ static void compute_bounding_cap(int size, const double (*verts)[3],
     for (i = 0; i < size; i++) {
         cap[3] = min(cap[3], vec3_dot(cap, verts[i]));
     }
-}
-
-static void c2lonlat(const double c[3], double lonlat[2])
-{
-    double lon, lat;
-    eraC2s(c, &lon, &lat);
-    lonlat[0] = lon * DR2D;
-    lonlat[1] = lat * DR2D;
 }
 
 static void lonlat2c(const double lonlat[2], double c[3])
@@ -157,79 +139,8 @@ void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2])
     mesh->points_count += 1;
 }
 
-// Should be in vec.h I guess, but we use eraSepp, so it's not conveniant.
-static void create_rotation_between_vecs(
-        double rot[3][3], const double a[3], const double b[3])
-{
-    double angle = eraSepp(a, b);
-    double axis[3];
-    double quat[4];
-    if (angle < FLT_EPSILON) {
-        mat3_set_identity(rot);
-        return;
-    }
-    if (fabs(angle - M_PI) > FLT_EPSILON) {
-        vec3_cross(a, b, axis);
-    } else {
-        vec3_get_ortho(a, axis);
-    }
-    quat_from_axis(quat, angle, axis[0], axis[1], axis[2]);
-    quat_to_mat3(quat, rot);
-}
-
-
-static void mesh_add_poly_lonlat_earcut(
-        mesh_t *mesh, int nbrings, const int *rings_size,
-        const double (**verts)[2])
-{
-    int r, i, j, triangles_size, ofs;
-    earcut_t *earcut;
-    const uint16_t *triangles;
-    double center[3], rot[3][3], p[3];
-    double (*ring)[2];
-
-    // Compute rotation to center the polygon.
-    vec3_set(center, 0, 0, 0);
-    for (r = 0, j = 0; r < nbrings; r++) {
-        for (i = 0; i < rings_size[r]; i++) {
-            lonlat2c(verts[r][i], p);
-            vec3_add(center, p, center);
-        }
-    }
-    vec3_normalize(center, center);
-    create_rotation_between_vecs(rot, center, VEC(1, 0, 0));
-
-    ofs = mesh->vertices_count;
-    earcut = earcut_new();
-    for (r = 0, j = 0; r < nbrings; r++) {
-        mesh_add_line_lonlat(mesh, rings_size[r], verts[r], true);
-        ring = calloc(rings_size[r], sizeof(*ring));
-        for (i = 0; i < rings_size[r]; i++) {
-            mat3_mul_vec3(rot, mesh->vertices[ofs + j++], p);
-            c2lonlat(p, ring[i]);
-            ring[i][0] *= -1; // Earcut seems to work better with this.
-        }
-        earcut_add_poly(earcut, rings_size[r], ring);
-        free(ring);
-    }
-    triangles = earcut_triangulate(earcut, &triangles_size);
-    mesh->triangles = realloc(mesh->triangles,
-            (mesh->triangles_count + triangles_size) *
-            sizeof(*mesh->triangles));
-    for (i = 0; i < triangles_size; i++) {
-        mesh->triangles[mesh->triangles_count + i] = triangles[i] + ofs;
-    }
-    mesh->triangles_count += triangles_size;
-    earcut_delete(earcut);
-
-    // For testing.  We want to avoid meshes with too long edges
-    // for the distortion.
-    mesh_subdivide(mesh, M_PI / 8);
-}
-
-static void mesh_add_poly_lonlat_libtess2(
-        mesh_t *mesh, int nbrings, const int *rings_size,
-        const double (**verts)[2])
+void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
+                          const double (**verts)[2])
 {
     int r, i, j, ofs, verts_count, nb_triangles;
     double (*ring)[3];
@@ -290,15 +201,6 @@ static void mesh_add_poly_lonlat_libtess2(
     // for the distortion.
     r = mesh_subdivide(mesh, M_PI / 8);
     if (r) mesh->subdivided = true;
-}
-
-void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
-                          const double (**verts)[2])
-{
-    if (!MESH_USE_LIBTESS2)
-        mesh_add_poly_lonlat_earcut(mesh, nbrings, rings_size, verts);
-    else
-        mesh_add_poly_lonlat_libtess2(mesh, nbrings, rings_size, verts);
 }
 
 

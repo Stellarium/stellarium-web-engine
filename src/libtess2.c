@@ -9,12 +9,6 @@
 
 // Compile all the libtess2 files as a single unit.
 
-#ifndef MESH_USE_LIBTESS2
-#   define MESH_USE_LIBTESS2 1
-#endif
-
-#if MESH_USE_LIBTESS2
-
 #include "../ext_src/libtess2/bucketalloc.c"
 #include "../ext_src/libtess2/dict.c"
 #include "../ext_src/libtess2/geom.c"
@@ -23,5 +17,3 @@
 #include "../ext_src/libtess2/priorityq.c"
 #include "../ext_src/libtess2/sweep.c"
 #include "../ext_src/libtess2/tess.c"
-
-#endif
