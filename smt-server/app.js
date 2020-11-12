@@ -71,6 +71,15 @@ app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res
   res.send(tileResp)
 })
 
+app.get('/hips/:queryHash/Allsky.geojson', async (req, res) => {
+  const tileResp = await qe.getHipsTile(req.params.queryHash, -1, 0)
+  if (!tileResp) {
+    res.status(404).send()
+    return
+  }
+  res.send(tileResp)
+})
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })

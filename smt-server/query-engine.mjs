@@ -89,6 +89,10 @@ export default {
   },
 
   computeHealpixIndex: function (feature, order) {
+    let area = turf.area(feature) * 4 * Math.PI / 509600000 / (1000 * 1000)
+    // For large footprints, we return -1 so that it goes in the AllSky order
+    if (area > healpix.nside2pixarea(1 << order))
+      return -1
     let center = turf.centroid(feature)
     assert(center)
     center = center.geometry.coordinates
@@ -348,7 +352,12 @@ export default {
   },
 
   getHipsTile: function (queryHash, order, tileId) {
-    assert(order == HEALPIX_ORDER)
+    if (order === -1) {
+      // Special case for Allsky
+      tileId = -1
+    } else {
+      assert(order == HEALPIX_ORDER)
+    }
     const that = this
     const q = _.cloneDeep(this.hashToQuery[queryHash])
     if (!q)
