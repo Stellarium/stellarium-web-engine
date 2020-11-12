@@ -37,5 +37,6 @@ export default {
 <style>
 .obspanel-toolbar {
   background-color: #212121!important;
+  flex: 0 1 auto;
 }
 </style>
