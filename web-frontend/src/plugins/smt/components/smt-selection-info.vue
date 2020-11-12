@@ -82,8 +82,6 @@ export default {
           that.selectionData = undefined
           return
         }
-        console.log(featuresCount)
-        console.log(qres.res.length)
         console.assert(featuresCount === qres.res.length)
         that.selectionData = {
           count: featuresCount,
