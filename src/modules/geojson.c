@@ -14,6 +14,7 @@
 #include "utils/mesh.h"
 
 typedef struct feature feature_t;
+typedef struct image image_t;
 
 struct feature {
     obj_t       obj;
@@ -31,6 +32,9 @@ struct feature {
     bool        blink;
 };
 
+typedef int (*filter_fn_t)(const image_t *img, int idx,
+                           float fill_color[4], float stroke_color[4]);
+
 /*
  * Struct: image_t
  * Represents a geojson document
@@ -39,13 +43,11 @@ struct feature {
  *   filter - Function called for each feature.  Can set the fill and stroke
  *            color.  If it returns zero, then the feature is hidden.
  */
-typedef struct image image_t;
 struct image {
     obj_t       obj;
     feature_t   *features;
     int         frame;
-    int         (*filter)(const image_t *img, int idx,
-                          float fill_color[4], float stroke_color[4]);
+    filter_fn_t filter;
     int         filter_idx;
 };
 
@@ -514,6 +516,15 @@ static int survey_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+static void image_update_filter(image_t *image,
+                                filter_fn_t filter, int filter_idx)
+{
+    if (image->filter_idx == filter_idx) return;
+    image->filter = filter;
+    image->filter_idx = filter_idx;
+    apply_filter(image);
+}
+
 static int survey_render_visitor(int order, int pix, void *user)
 {
     image_t *tile;
@@ -529,12 +540,7 @@ static int survey_render_visitor(int order, int pix, void *user)
     tile = hips_get_tile(hips, order, pix, HIPS_NO_DELAY, &code);
     if (!tile) return 0;
 
-    if (tile->filter_idx != survey->filter_idx) {
-        tile->filter = survey->filter;
-        tile->filter_idx = survey->filter_idx;
-        apply_filter(tile);
-    }
-
+    image_update_filter(tile, survey->filter, survey->filter_idx);
     image_render((obj_t*)tile, painter);
 
     return order < hips->order ? 1 : 0;
@@ -563,6 +569,8 @@ static void survey_load_allsky(survey_t *survey)
     }
     survey->allsky = (void*)obj_create("geojson", NULL);
     data_fn((obj_t*)survey->allsky, NULL, geojson);
+    if (g_survey_on_new_tile)
+        g_survey_on_new_tile(survey->allsky, data);
     json_value_free(geojson);
 }
 
@@ -574,8 +582,10 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
     if (survey->max_fov && core->fov >= survey->max_fov) return 0;
 
     survey_load_allsky((survey_t*)survey);
-    if (survey->allsky)
+    if (survey->allsky) {
+        image_update_filter(survey->allsky, survey->filter, survey->filter_idx);
         obj_render((obj_t*)survey->allsky, painter);
+    }
 
     hips_traverse(USER_PASS(survey, painter), survey_render_visitor);
     return 0;
