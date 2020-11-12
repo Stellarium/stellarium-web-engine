@@ -930,7 +930,15 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     assert(size);
 
     // Prevent overflow in nvg.
-    if (fabs(pos[0]) > 100000 || fabs(pos[1]) > 100000) return;
+    if (fabs(pos[0]) > 100000 || fabs(pos[1]) > 100000) {
+        LOG_W_ONCE("Render text far outside screen: %s, %f %f",
+                   text, pos[0], pos[1]);
+        if (bounds) {
+            bounds[0] = pos[0];
+            bounds[1] = pos[1];
+        }
+        return;
+    }
 
     if (sys_callbacks.render_text) {
         text_using_texture(rend, text, pos, align, effects, size, color, angle,

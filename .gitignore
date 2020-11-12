@@ -8,6 +8,6 @@
 /imgui.ini
 /todo
 /build*
-/.sconsign.dblite
+.sconsign.dblite
 /.cache
 /smt-server/node_modules/
