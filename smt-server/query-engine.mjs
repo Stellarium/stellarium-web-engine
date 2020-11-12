@@ -76,7 +76,7 @@ export default {
     }
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = that.sqlFields.map(f => f + ' ' + that.fType2AlaSql(f.type)).join(', ')
-    await alasql.promise('CREATE TABLE features (id INT, geometry JSON, healpix_index INT, geogroup_id STRING, properties JSON, ' + sqlFieldsAndTypes + ')')
+    await alasql.promise('CREATE TABLE features (id STRING, geometry JSON, healpix_index INT, geogroup_id STRING, properties JSON, ' + sqlFieldsAndTypes + ')')
     await alasql.promise('CREATE INDEX idx_id ON features(id)')
     await alasql.promise('CREATE INDEX idx_healpix_index ON features(healpix_index)')
     await alasql.promise('CREATE INDEX idx_geogroup_id ON features(geogroup_id)')
