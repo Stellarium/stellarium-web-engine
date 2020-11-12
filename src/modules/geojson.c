@@ -428,6 +428,12 @@ int geojson_survey_query_rendered_features(
     painter_update_clip_info(&painter);
     painter_unproject(&painter, hips->frame, win_pos, pos);
 
+    if (survey->allsky) {
+        nb = geojson_query_rendered_features(
+                (obj_t*)survey->allsky, win_pos, max_ret, index);
+        for (i = 0; i < nb; i++) tiles[i] = survey->allsky;
+    }
+
     for (order = hips->order_min; order <= hips->order; order++) {
         pix = healpix_vec2pix(1 << order, pos);
         tile = hips_get_tile(hips, order, pix, HIPS_CACHED_ONLY, &code);
