@@ -106,12 +106,6 @@ export default {
 
     // Insert all data
     for (let feature of jsonData.features) {
-      if (feature.geometry.type === 'MultiPolygon') {
-        // Currently the engine doesn't deal with multi-polygons
-        feature.geometry.coordinates = feature.geometry.coordinates[0]
-        feature.geometry.type = 'Polygon'
-      }
-
       const healpix_index = that.computeHealpixIndex(feature, HEALPIX_ORDER)
       feature['healpix_index'] = healpix_index
       feature['geogroup_id'] = _.get(feature.properties, 'Observation.SurveyId', '') + _.get(feature.properties, 'Pointing_id', '')
