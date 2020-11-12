@@ -8,5 +8,5 @@
 /imgui.ini
 /todo
 /build*
-/.sconsign.dblite
+.sconsign.dblite
 /.cache
