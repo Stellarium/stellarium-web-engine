@@ -1,76 +1,29 @@
 {
   "sources": [
-    "Surveys/DES.geojson",
-    "Surveys/JEDIS.geojson",
-    "Surveys/lsst_north.geojson",
-    "Surveys/lsst_south.geojson"
+    "Surveys/des.geojson",
+    "Surveys/DES",
+    "Surveys/lsst.geojson",
+    "Surveys/LSST",
+    "Surveys/CFIS"
   ],
   "fields": [
     {
-      "id": "Observation.SurveyId",
+      "id": "survey_id",
       "name": "Survey Id",
       "type": "string",
       "widget": "tags"
     },
     {
-      "id": "Planning.Acquisition.Estimated_Date_Start",
-      "name": "Acquisition Estimated Date Start",
-      "type": "date",
-      "widget": "date_range"
+      "id": "SurveyName",
+      "name": "Survey Name",
+      "type": "string",
+      "widget": "tags"
     },
     {
       "id": "Planning.Acquisition.Real_Date_Start",
       "name": "Acquisition Real Date Start",
       "type": "date",
       "widget": "date_range"
-    },
-    {
-      "id": "Planning.Acquisition.State",
-      "name": "Acquisition State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.LE1.State",
-      "name": "LE1 State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.VIS.State",
-      "name": "VIS State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.NIR.State",
-      "name": "NIR State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.MER.State",
-      "name": "MER State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.PHZ.State",
-      "name": "PHZ State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.SIR.State",
-      "name": "SIR State",
-      "type": "string",
-      "widget": "tags"
-    },
-    {
-      "id": "Planning.SHE.State",
-      "name": "SHE State",
-      "type": "string",
-      "widget": "tags"
     },
     {
       "id": "Planning.Acquisition.Delay_Acquisition",
@@ -197,7 +150,7 @@
       "widget" : "tags"
     }
   ],
-  "colorAssignedField": "Observation.SurveyId",
+  "colorAssignedField": "SurveyName",
   "dataLoadingImage": "images/euclid-logo.png",
   "watermarkImage": "images/focse.png"
 }

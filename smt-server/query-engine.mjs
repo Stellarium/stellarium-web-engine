@@ -112,7 +112,7 @@ export default {
     for (let feature of jsonData.features) {
       const healpix_index = that.computeHealpixIndex(feature, HEALPIX_ORDER)
       feature['healpix_index'] = healpix_index
-      feature['geogroup_id'] = _.get(feature.properties, 'Observation.SurveyId', '') + _.get(feature.properties, 'Pointing_id', '')
+      feature['geogroup_id'] = _.get(feature.properties, 'SurveyName', '') + _.get(feature, 'id', '')
 
       for (let i = 0; i < that.fieldsList.length; ++i) {
         const field = that.fieldsList[i]
