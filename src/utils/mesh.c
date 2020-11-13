@@ -21,6 +21,8 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
+#define SWAP(a, b) ({typeof(a) tmp_ = a; a = b; b = tmp_;})
+
 static double min(double x, double y)
 {
     return x < y ? x : y;
@@ -139,6 +141,20 @@ void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2])
     mesh->points_count += 1;
 }
 
+// Ensure all the triangles culling is correct.
+static void mesh_fix_triangles_culling(mesh_t *mesh)
+{
+    int i;
+    double u[3];
+    const double (*vs)[3] = mesh->vertices;
+    for (i = 0; i < mesh->triangles_count; i += 3) {
+        vec3_cross(vs[mesh->triangles[i]], vs[mesh->triangles[i + 1]], u);
+        if (vec3_dot(u, vs[mesh->triangles[i + 2]]) > 0) {
+            SWAP(mesh->triangles[i + 1], mesh->triangles[i + 2]);
+        }
+    }
+}
+
 void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
                           const double (**verts)[2])
 {
@@ -201,6 +217,9 @@ void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
     // for the distortion.
     r = mesh_subdivide(mesh, M_PI / 8);
     if (r) mesh->subdivided = true;
+
+    // Not sure if we should instead assume the culling is always correct.
+    mesh_fix_triangles_culling(mesh);
 }
 
 
