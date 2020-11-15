@@ -15,30 +15,65 @@ import fsp from 'fs/promises'
 import fs from 'fs'
 import qe from './query-engine.mjs'
 import bodyParser from 'body-parser'
+import NodeGit from 'nodegit'
 
 const app = express()
 app.use(cors())
-
-const port = 3000
-
-const __dirname = process.cwd();
-const smtConfigData = fs.readFileSync(__dirname + '/data/smtConfig.json')
-let smtConfig = JSON.parse(smtConfigData)
-
 app.use(bodyParser.json())         // to support JSON-encoded bodies
 
-const fetchAndIngest = function (fn) {
-  return fsp.readFile(__dirname + '/data/' + fn).then(
-    data => qe.loadAllData(JSON.parse(data)),
-    err => { throw err})
+const port = 3000
+const __dirname = process.cwd();
+
+const cloneURL = "git@github.com:Stellarium-Labs/smt-data.git"
+const localPath = __dirname + '/data'
+const cloneOptions = {
+  fetchOpts: {
+    callbacks: {
+      certificateCheck: function() { return 0 },
+      credentials: function(url, userName) {
+        return NodeGit.Cred.sshKeyFromAgent(userName)
+      }
+    }
+  }
 }
 
-qe.initDB(smtConfig.fields).then(_ => {
-  const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-  Promise.all(allPromise).then(_ => {
-    console.log('Loading finished')
+var smtConfigData
+
+const ingestAll = function () {
+  smtConfigData = fs.readFileSync(__dirname + '/data/smtConfig.json')
+  let smtConfig = JSON.parse(smtConfigData)
+
+  const fetchAndIngest = function (fn) {
+    return fsp.readFile(__dirname + '/data/' + fn).then(
+      data => qe.loadAllData(JSON.parse(data)),
+      err => { throw err})
+  }
+
+  qe.initDB(smtConfig.fields).then(_ => {
+    const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
+    Promise.all(allPromise).then(_ => {
+      console.log('Loading finished')
+    })
   })
-})
+}
+
+console.log('Opening/cloning data repo')
+NodeGit.Clone(cloneURL, localPath, cloneOptions)
+  .catch(err => {
+    return NodeGit.Repository.open(localPath)
+  })
+  .then(repo => {
+    console.log('Pulling to last commit')
+    repo.fetchAll(cloneOptions.fetchOpts)
+    .then(function() {
+      repo.mergeBranches("master", "origin/master")
+      ingestAll()
+
+      app.listen(port, () => {
+        console.log(`Example app listening at http://localhost:${port}`)
+      })
+    })
+  })
 
 app.get('/smtConfig', (req, res) => {
   res.send(smtConfigData)
@@ -80,6 +115,3 @@ app.get('/hips/:queryHash/Allsky.geojson', async (req, res) => {
   res.send(tileResp)
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
-})
