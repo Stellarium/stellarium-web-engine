@@ -17,6 +17,8 @@ import qe from './query-engine.mjs'
 import bodyParser from 'body-parser'
 import NodeGit from 'nodegit'
 
+console.log('Starting SMT Server')
+
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())         // to support JSON-encoded bodies
@@ -31,7 +33,14 @@ const cloneOptions = {
     callbacks: {
       certificateCheck: function() { return 0 },
       credentials: function(url, userName) {
-        return NodeGit.Cred.sshKeyFromAgent(userName)
+        if (fs.existsSync(__dirname + '/access_key.pub')) {
+          return NodeGit.Cred.sshKeyNew(
+            userName,
+            __dirname + '/access_key.pub',
+            __dirname + '/access_key', '')
+        } else {
+          return NodeGit.Cred.sshKeyFromAgent(userName)
+        }
       }
     }
   }
@@ -70,7 +79,7 @@ NodeGit.Clone(cloneURL, localPath, cloneOptions)
       ingestAll()
 
       app.listen(port, () => {
-        console.log(`Example app listening at http://localhost:${port}`)
+        console.log(`SMT Server listening at http://localhost:${port}`)
       })
     })
   })
