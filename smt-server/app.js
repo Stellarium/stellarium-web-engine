@@ -23,6 +23,11 @@ const app = express()
 app.use(cors())
 app.use(bodyParser.json())         // to support JSON-encoded bodies
 
+process.on('SIGINT', () => {
+  console.info("User Interrupted")
+  process.exit(0)
+})
+
 const port = 3000
 const __dirname = process.cwd();
 
