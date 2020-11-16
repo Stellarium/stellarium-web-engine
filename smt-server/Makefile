@@ -6,7 +6,7 @@
 # The terms of the AGPL v3 license can be found in the main directory of this
 # repository.
 
-.PHONY: setup start
+.PHONY: setup dev
 
 USER_UID := $(shell id -u)
 USER_GID := $(shell id -g)
@@ -15,6 +15,14 @@ setup: Dockerfile
 	docker build -t smt-server --build-arg USER_UID=${USER_UID} --build-arg USER_GID=${USER_GID} .
 	docker run -it -v "$(PWD):/app" smt-server npm install
 
-start:
-	docker run -e NPM_CONFIG_LOGLEVEL=info -it -p 3000:3000 -v "$(PWD):/app" smt-server node app.js
+dev:
+	docker-compose build && docker-compose up --remove-orphans
 
+DEPLOY_SERVER := ubuntu@smt-server.stellarium-web.org
+
+deploy-prod:
+	rm -rf data
+	ssh -t $(DEPLOY_SERVER) "cd smt && docker-compose down"
+	ssh -t $(DEPLOY_SERVER) "rm -rf smt/*"
+	scp * $(DEPLOY_SERVER):/home/ubuntu/smt/
+	ssh -t $(DEPLOY_SERVER) "cd smt && docker-compose build && docker-compose up -d --remove-orphans"

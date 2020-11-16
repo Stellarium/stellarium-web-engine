@@ -1,0 +1,22 @@
+version: '2.1'
+
+services:
+  smt-server:
+    build: .
+    expose:
+      - 8100
+    ports:
+      - 8100:8100
+    restart: always
+    logging:
+      driver: journald
+    volumes:
+      - .:/app
+    environment:
+      VIRTUAL_HOST: smt-server.stellarium-web.org
+      VIRTUAL_PORT: 8100
+      LETSENCRYPT_HOST: smt-server.stellarium-web.org
+      LETSENCRYPT_EMAIL: contact@noctua-software.com
+      FRONTEND_ROOT_URL: https://smt2.stellarium-web.org
+    container_name: smt-server
+    network_mode: bridge

@@ -28,7 +28,7 @@ process.on('SIGINT', () => {
   process.exit(0)
 })
 
-const port = 3000
+const port = 8100
 const __dirname = process.cwd();
 
 const cloneURL = "git@github.com:Stellarium-Labs/smt-data.git"

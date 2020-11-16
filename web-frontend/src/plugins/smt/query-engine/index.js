@@ -22,7 +22,7 @@ export default {
 
   initDB: function () {
     const that = this
-    return fetch('http://localhost:3000/smtConfig', {
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/smtConfig', {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
@@ -34,7 +34,7 @@ export default {
   },
 
   query: function (q) {
-    return fetch('http://localhost:3000/query', {
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/query', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -47,7 +47,7 @@ export default {
   },
 
   queryVisual: function (q) {
-    return fetch('http://localhost:3000/queryVisual', {
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/queryVisual', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
