@@ -16,7 +16,7 @@ ENV LC_ALL C.UTF-8
 #ARG USER_GID=1000
 #RUN addgroup --gid $USER_GID app && useradd -g app -u $USER_UID app
 
-#RUN chown app /app
-#USER app
-#RUN id app
+RUN chown node /app
+USER node
+RUN id node
 CMD node app.js
