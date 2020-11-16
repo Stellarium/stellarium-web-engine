@@ -17,6 +17,6 @@ services:
       VIRTUAL_PORT: 8100
       LETSENCRYPT_HOST: smt-server.stellarium-web.org
       LETSENCRYPT_EMAIL: contact@noctua-software.com
-      FRONTEND_ROOT_URL: https://smt2.stellarium-web.org
+      FRONTEND_ROOT_URL: https://smt-frontend.stellarium-web.org
     container_name: smt-server
     network_mode: bridge
