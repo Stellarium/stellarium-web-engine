@@ -23,6 +23,7 @@ const app = express()
 app.use(cors())
 app.use(bodyParser.json())         // to support JSON-encoded bodies
 
+// Allow to catch CTRL+C when runnning inside a docker
 process.on('SIGINT', () => {
   console.info("User Interrupted")
   process.exit(0)
@@ -71,7 +72,7 @@ const ingestAll = function () {
   })
 }
 
-console.log('Opening/cloning data repo')
+console.log('Synchronizing with SMT data git repo: ' + cloneURL)
 NodeGit.Clone(cloneURL, localPath, cloneOptions)
   .catch(err => {
     return NodeGit.Repository.open(localPath)
