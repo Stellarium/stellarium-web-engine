@@ -22,7 +22,8 @@ DEPLOY_SERVER := ubuntu@smt-server.stellarium-web.org
 
 deploy-prod:
 	rm -rf data
-	ssh -t $(DEPLOY_SERVER) "cd smt && docker-compose down"
-	ssh -t $(DEPLOY_SERVER) "rm -rf smt/*"
-	scp * $(DEPLOY_SERVER):/home/ubuntu/smt/
-	ssh -t $(DEPLOY_SERVER) "cd smt && docker-compose build && docker-compose up -d --remove-orphans"
+	rm -rf node_modules
+	ssh -t $(DEPLOY_SERVER) "mkdir -p smt-server && cd smt-server && docker-compose down || true"
+	ssh -t $(DEPLOY_SERVER) "rm -rf smt-server/*"
+	scp * $(DEPLOY_SERVER):/home/ubuntu/smt-server/
+	ssh -t $(DEPLOY_SERVER) "cd smt-server && make setup && docker-compose up -d --remove-orphans"
