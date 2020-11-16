@@ -108,6 +108,33 @@ export default {
     console.log('Loading ' + jsonData.features.length + ' features')
     let that = this
 
+    // Normalize coordinates between -180;180
+    turf.coordEach(jsonData, function(coord) {
+      if (coord[0] > 180) coord[0] -= 360
+    })
+
+    function crossAntimeridian(feature) {
+      let left = false
+      let right = false
+
+      turf.coordEach(feature, function(coord) {
+        if (left && right) return
+        let lng = coord[0]
+        if (lng > 180) lng -= 360
+        right = right || (lng >= 90)
+        left = left || (lng <= -90)
+      })
+      return left && right
+    }
+
+    console.log('Shift polygons crossing antimeridian')
+    turf.geomEach(jsonData, function(geom) {
+      if (!crossAntimeridian(geom)) return
+      turf.coordEach(geom, function(coord) {
+        if (coord[0] < 0) coord[0] += 360
+      })
+    })
+
     // Insert all data
     for (let feature of jsonData.features) {
       const healpix_index = that.computeHealpixIndex(feature, HEALPIX_ORDER)
