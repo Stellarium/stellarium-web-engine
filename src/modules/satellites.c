@@ -29,6 +29,7 @@ struct satellite {
     double pvg[2][3];
     double pvo[2][3];
     double vmag;
+    const char *model;
 
     // Launch and decay dates in UTC MJD.  Zero if not known.
     double launch_date;
@@ -348,6 +349,12 @@ static int satellite_init(obj_t *obj, json_value *args)
 
         if (launch_date) parse_date(launch_date, &sat->launch_date);
         if (decay_date) parse_date(decay_date, &sat->decay_date);
+
+        // Determin what 3d model to use.
+        if (name && strncmp(name, "NAME STARLINK", 13) == 0)
+            sat->model = "Starlink";
+        if (sat->number == 25544) sat->model = "ISS";
+        if (sat->number == 20580) sat->model = "HST";
     }
 
     return 0;
@@ -425,21 +432,11 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     return 0;
 }
 
-static const char *sat_get_model(const satellite_t *sat)
-{
-    switch (sat->number) {
-        case 25544: return "ISS";
-        case 20580: return "HST";
-        default: return NULL;
-    }
-}
-
 static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
                               void *out)
 {
     double pvo[2][4];
     double bounds[2][3], radius;
-    const char *model;
     satellite_t *sat = (satellite_t*)obj;
 
     satellite_update(sat, obs);
@@ -457,8 +454,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = sat->vmag;
         return 0;
     case INFO_RADIUS:
-        model = sat_get_model(sat);
-        if (painter_get_3d_model_bounds(NULL, model, bounds) == 0) {
+        if (painter_get_3d_model_bounds(NULL, sat->model, bounds) == 0) {
             radius = max3(bounds[1][0] - bounds[0][0],
                           bounds[1][1] - bounds[0][1],
                           bounds[1][2] - bounds[0][2]) / 2 / DAU;
@@ -548,11 +544,9 @@ static void satellite_render_model(const satellite_t *sat,
     double lvlh_rot[3][3];
     double dist, depth_range[2];
     painter_t painter = *painter_;
-    const char *model;
     json_value *args, *uniforms;
 
-    model = sat_get_model(sat);
-    if (!model) return;
+    if (!sat->model) return;
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return;
     mat4_itranslate(model_mat, sat->pvo[0][0], sat->pvo[0][1], sat->pvo[0][2]);
@@ -570,7 +564,7 @@ static void satellite_render_model(const satellite_t *sat,
     uniforms = json_object_push(args, "uniforms", json_object_new(0));
     json_object_push(uniforms, "u_light.ambient", json_double_new(0.05));
     json_object_push(args, "use_ibl", json_boolean_new(true));
-    paint_3d_model(&painter, model, model_mat, args);
+    paint_3d_model(&painter, sat->model, model_mat, args);
     json_builder_free(args);
 }
 
@@ -578,11 +572,9 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
                               double *model_size)
 {
     double bounds[2][3], dim_au, angle, point_size;
-    const char *model;
 
-    model = sat_get_model(sat);
-    if (!model) return 0;
-    if (painter_get_3d_model_bounds(NULL, model, bounds) != 0)
+    if (!sat->model) return 0;
+    if (painter_get_3d_model_bounds(NULL, sat->model, bounds) != 0)
         return 0;
     dim_au = max3(bounds[1][0] - bounds[0][0],
                   bounds[1][1] - bounds[0][1],
