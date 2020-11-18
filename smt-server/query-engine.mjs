@@ -272,7 +272,7 @@ export default {
     // Insert all data
     let subFeatures = []
     turf.featureEach(jsonData, function (feature, featureIndex) {
-      feature['geogroup_id'] = _.get(feature.properties, 'SurveyName', '') + _.get(feature, 'id', '')
+      feature.geogroup_id = _.get(feature.properties, 'fieldID', undefined) || _.get(feature.properties, 'SurveyName', '') + _.get(feature, 'id', '')
       feature.id = that.fcounter++
       subFeatures = subFeatures.concat(that.splitOnHealpixGrid(feature, HEALPIX_ORDER))
     })
@@ -539,7 +539,8 @@ export default {
     }
     // Construct the SQL SELECT clause matching the given aggregate options
     let selectClause = 'SELECT '
-    selectClause += Object.keys(projectOptions).map(k => that.fId2AlaSql(k)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
+    selectClause += this.fieldsList.filter(f => f.widget !== 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
+    selectClause += ', ' + this.fieldsList.filter(f => f.widget === 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'VALUES_AND_COUNT(' + k + ') as ' + k).join(', ')
     selectClause += ', COUNT(*) as c, geogroup_id, FIRST(geometry) as geometry FROM features '
     let sqlStatement = selectClause + whereClause + ' GROUP BY geogroup_id'
     return alasql.promise(sqlStatement).then(function (res) {
