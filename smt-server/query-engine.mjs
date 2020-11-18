@@ -242,10 +242,8 @@ export default {
 
     const v = geojsonPointToVec3(center)
     const ret = []
-    //console.log('-----------------')
     healpix.query_disc_inclusive_nest(1 << order, v, radius, function (pix) {
       let hppixel = that.getHealpixCornerFeature(order, pix)
-      //console.log(JSON.stringify(hppixel) + ',')
       const intersection = intersectionRobust(feature, hppixel, center)
       if (intersection === null) return
       const f = _.cloneDeep(feature)
@@ -255,7 +253,6 @@ export default {
     })
     if (ret.length === 0) {
       console.log(JSON.stringify(feature))
-      //process.exit()
     }
     return ret
   },
