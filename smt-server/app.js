@@ -32,26 +32,6 @@ process.on('SIGINT', () => {
 const port = 8100
 const __dirname = process.cwd();
 
-const cloneURL = "git@github.com:Stellarium-Labs/smt-data.git"
-const localPath = __dirname + '/data'
-const cloneOptions = {
-  fetchOpts: {
-    callbacks: {
-      certificateCheck: function() { return 0 },
-      credentials: function(url, userName) {
-        if (fs.existsSync(__dirname + '/access_key.pub')) {
-          return NodeGit.Cred.sshKeyNew(
-            userName,
-            __dirname + '/access_key.pub',
-            __dirname + '/access_key', '')
-        } else {
-          return NodeGit.Cred.sshKeyFromAgent(userName)
-        }
-      }
-    }
-  }
-}
-
 var smtConfigData
 
 const ingestAll = function () {
@@ -64,31 +44,56 @@ const ingestAll = function () {
       err => { throw err})
   }
 
-  qe.initDB(smtConfig.fields).then(_ => {
+  return qe.initDB(smtConfig.fields).then(_ => {
     const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-    Promise.all(allPromise).then(_ => {
+    return Promise.all(allPromise).then(_ => {
       console.log('Loading finished')
     })
   })
 }
 
-console.log('Synchronizing with SMT data git repo: ' + cloneURL)
-NodeGit.Clone(cloneURL, localPath, cloneOptions)
-  .catch(err => {
-    return NodeGit.Repository.open(localPath)
-  })
-  .then(repo => {
-    console.log('Pulling to last commit')
-    repo.fetchAll(cloneOptions.fetchOpts)
-    .then(function() {
-      repo.mergeBranches("master", "origin/master")
-      ingestAll()
-
-      app.listen(port, () => {
-        console.log(`SMT Server listening at http://localhost:${port}`)
-      })
+const syncGitData = async function () {
+  const cloneURL = "git@github.com:Stellarium-Labs/smt-data.git"
+  const localPath = __dirname + '/data'
+  const branchName = 'data_v01'
+  const cloneOptions = {
+    fetchOpts: {
+      callbacks: {
+        certificateCheck: function() { return 0 },
+        credentials: function(url, userName) {
+          if (fs.existsSync(__dirname + '/access_key.pub')) {
+            return NodeGit.Cred.sshKeyNew(
+              userName,
+              __dirname + '/access_key.pub',
+              __dirname + '/access_key', '')
+          } else {
+            return NodeGit.Cred.sshKeyFromAgent(userName)
+          }
+        }
+      }
+    }
+  }
+  console.log('Synchronizing with SMT data git repo: ' + cloneURL)
+  const repo = await NodeGit.Clone(cloneURL, localPath, cloneOptions)
+    .catch(err => {
+      console.log('Repo already exists, user local version from ' + localPath)
+      return NodeGit.Repository.open(localPath)
     })
+  await repo.fetchAll(cloneOptions.fetchOpts)
+  console.log('Getting to last commit on branch ' + branchName)
+  const ref = await repo.getBranch('refs/remotes/origin/' + branchName)
+  await repo.checkoutRef(ref)
+
+}
+
+const initServer = async function () {
+  await syncGitData()
+  await ingestAll()
+  app.listen(port, () => {
+    console.log(`SMT Server listening at http://localhost:${port}`)
   })
+}
+initServer()
 
 app.get('/smtConfig', (req, res) => {
   res.send(smtConfigData)
