@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.0.3] - 2020-11-19
+- Add version and Changelog file
+- Show info about SMT server in the GUI
+
 ## [0.0.2] - 2020-11-19
 - Footprints are cut precisely on healpix pixels boundaries
 - Switch to data_01 branch from smt-data project

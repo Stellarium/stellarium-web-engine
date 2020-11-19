@@ -18,13 +18,13 @@ import bodyParser from 'body-parser'
 import NodeGit from 'nodegit'
 
 const SMT_SERVER_INFO = {
-  version: '0.0.2',
+  version: process.env.npm_package_version || 'dev',
   dataGitServer: 'git@github.com:Stellarium-Labs/smt-data.git',
   dataGitBranch: 'data_v01',
   dataGitSha1: ''
 }
 
-console.log('Starting SMT Server')
+console.log('Starting SMT Server ' + SMT_SERVER_INFO.version)
 
 const app = express()
 app.use(cors())
