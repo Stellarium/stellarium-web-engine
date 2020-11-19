@@ -15,22 +15,32 @@
 
 export default {
   fieldsList: undefined,
+  smtServerInfo: undefined,
 
   fId2AlaSql: function (fieldId) {
     return fieldId.replace(/\./g, '_')
   },
 
-  initDB: function () {
+  initDB: async function () {
     const that = this
-    return fetch(process.env.VUE_APP_SMT_SERVER + '/smtConfig', {
+    let resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/smtConfig', {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       }
-    }).then(resp => resp.json()).then(smtConfig => {
-      that.fieldsList = smtConfig.fields
-      return smtConfig
     })
+    const smtConfig = await resp.json()
+    that.fieldsList = smtConfig.fields
+
+    resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/smtServerInfo', {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    that.smtServerInfo = await resp.json()
+
+    return smtConfig
   },
 
   query: function (q) {

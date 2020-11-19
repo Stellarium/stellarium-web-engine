@@ -16,7 +16,13 @@ const moduleStore = {
   state: {
     status: undefined,
     watermarkImage: '',
-    dataLoadingImage: ''
+    dataLoadingImage: '',
+    smtServerInfo: {
+      version: '',
+      dataGitServer: '',
+      dataGitBranch: '',
+      dataGitSha1: ''
+    }
   },
   mutations: {
     setValue (state, { varName, newValue }) {

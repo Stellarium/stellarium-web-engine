@@ -17,6 +17,13 @@ import qe from './query-engine.mjs'
 import bodyParser from 'body-parser'
 import NodeGit from 'nodegit'
 
+const SMT_SERVER_INFO = {
+  version: '0.0.2',
+  dataGitServer: 'git@github.com:Stellarium-Labs/smt-data.git',
+  dataGitBranch: 'data_v01',
+  dataGitSha1: ''
+}
+
 console.log('Starting SMT Server')
 
 const app = express()
@@ -53,9 +60,7 @@ const ingestAll = function () {
 }
 
 const syncGitData = async function () {
-  const cloneURL = "git@github.com:Stellarium-Labs/smt-data.git"
   const localPath = __dirname + '/data'
-  const branchName = 'data_v01'
   const cloneOptions = {
     fetchOpts: {
       callbacks: {
@@ -73,17 +78,18 @@ const syncGitData = async function () {
       }
     }
   }
-  console.log('Synchronizing with SMT data git repo: ' + cloneURL)
-  const repo = await NodeGit.Clone(cloneURL, localPath, cloneOptions)
+  console.log('Synchronizing with SMT data git repo: ' + SMT_SERVER_INFO.dataGitServer)
+  const repo = await NodeGit.Clone(SMT_SERVER_INFO.dataGitServer, localPath, cloneOptions)
     .catch(err => {
       console.log('Repo already exists, user local version from ' + localPath)
       return NodeGit.Repository.open(localPath)
     })
   await repo.fetchAll(cloneOptions.fetchOpts)
-  console.log('Getting to last commit on branch ' + branchName)
-  const ref = await repo.getBranch('refs/remotes/origin/' + branchName)
+  console.log('Getting to last commit on branch ' + SMT_SERVER_INFO.dataGitBranch)
+  const ref = await repo.getBranch('refs/remotes/origin/' + SMT_SERVER_INFO.dataGitBranch)
   await repo.checkoutRef(ref)
-
+  const commit = await repo.getHeadCommit()
+  SMT_SERVER_INFO.dataGitSha1 = await commit.sha()
 }
 
 const initServer = async function () {
@@ -94,6 +100,10 @@ const initServer = async function () {
   })
 }
 initServer()
+
+app.get('/smtServerInfo', (req, res) => {
+  res.send(SMT_SERVER_INFO)
+})
 
 app.get('/smtConfig', (req, res) => {
   res.send(smtConfigData)
