@@ -129,10 +129,13 @@ app.get('/queryVisual', (req, res) => {
 })
 
 app.get('/hips/:queryHash/properties', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=31536000')
   res.send(qe.getHipsProperties(req.params.queryHash))
 })
 
 app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res) => {
+  res.set('Cache-Control', 'public, max-age=31536000')
+
   const order = parseInt(req.params.order.replace('Norder', ''))
   const pix = parseInt(req.params.pix.replace('Npix', ''))
   const tileResp = await qe.getHipsTile(req.params.queryHash, order, pix)
@@ -144,6 +147,7 @@ app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res
 })
 
 app.get('/hips/:queryHash/Allsky.geojson', async (req, res) => {
+  res.set('Cache-Control', 'public, max-age=31536000')
   const tileResp = await qe.getHipsTile(req.params.queryHash, -1, 0)
   if (!tileResp) {
     res.status(404).send()
