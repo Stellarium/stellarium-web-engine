@@ -15,7 +15,6 @@
     <smt-selection-info :selectedFeatures="selectedFootprintData" :query="query" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
     <img v-if="dataLoadingImage && $store.state.SMT.status === 'loading'" :src="dataLoadingImage" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
-    <v-progress-circular v-if="query.refreshObservationsInSkyInProgress" size=160 width=10 indeterminate style="position: absolute; top: calc(50vh - 80px); right: calc(50vw + 200px - 80px); opacity: 0.2"></v-progress-circular>
     <v-card tile>
       <v-card-text>
         <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary"><v-progress-circular v-if="results.summary.count === undefined" size=18 indeterminate></v-progress-circular>{{ results.summary.count }} items</div>
@@ -66,9 +65,7 @@ export default {
     return {
       query: {
         constraints: [],
-        liveConstraint: undefined,
-        count: 0,
-        refreshObservationsInSkyInProgress: false
+        liveConstraint: undefined
       },
       editedConstraint: undefined,
       results: {
@@ -99,10 +96,8 @@ export default {
     },
     refreshObservationsInSky: function () {
       const that = this
-      that.query.refreshObservationsInSkyInProgress = true
       const q2 = {
-        constraints: this.query.constraints,
-        qid: this.query.count
+        constraints: this.query.constraints
       }
       qe.queryVisual(q2).then(res => {
         that.geojsonObj = that.$observingLayer.add('geojson-survey', {
@@ -112,7 +107,6 @@ export default {
           // min_fov: 10
         })
         that.refreshGeojsonLiveFilter()
-        that.query.refreshObservationsInSkyInProgress = false
       })
     },
     refreshAllFields: function () {
@@ -201,7 +195,6 @@ export default {
       that.results.fields = that.$smt.fields.map(function (e) { return { status: 'loading', data: {} } })
       that.results.implicitConstraints = []
 
-      this.query.count++
       const q1 = {
         constraints: this.query.constraints,
         groupingOptions: [{ operation: 'GROUP_ALL' }],
