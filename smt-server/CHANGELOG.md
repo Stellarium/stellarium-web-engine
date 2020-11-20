@@ -2,9 +2,10 @@
 
 ## [Unreleased]
 
-## [0.0.3] - 2020-11-19
+## [0.0.3] - 2020-11-20
 - Add version and Changelog file
 - Show info about SMT server in the GUI
+- Enable client-side caching of tile data
 
 ## [0.0.2] - 2020-11-19
 - Footprints are cut precisely on healpix pixels boundaries
