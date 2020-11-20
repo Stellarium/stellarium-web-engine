@@ -26,4 +26,4 @@ deploy-prod:
 	ssh -t $(DEPLOY_SERVER) "mkdir -p smt-server && cd smt-server && docker-compose down || true"
 	ssh -t $(DEPLOY_SERVER) "rm -rf smt-server/*"
 	scp * $(DEPLOY_SERVER):/home/ubuntu/smt-server/
-	ssh -t $(DEPLOY_SERVER) "cd smt-server && make setup && docker-compose up -d --remove-orphans"
+	ssh -t $(DEPLOY_SERVER) "cd smt-server && docker-compose build && docker-compose up -d --remove-orphans"

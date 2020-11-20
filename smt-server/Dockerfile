@@ -12,4 +12,4 @@ ENV LC_ALL C.UTF-8
 RUN chown node /app
 USER node
 RUN id node
-CMD npm start
+CMD npm install && npm start
