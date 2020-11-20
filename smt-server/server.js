@@ -51,7 +51,10 @@ const ingestAll = function () {
       err => { throw err})
   }
 
-  return qe.initDB(smtConfig.fields).then(_ => {
+  let baseHashKey = SMT_SERVER_INFO.dataGitSha1
+  if (SMT_SERVER_INFO.dataLocalModifications)
+    baseHashKey += '_' + Date.now()
+  return qe.initDB(smtConfig.fields, baseHashKey).then(_ => {
     const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
     return Promise.all(allPromise).then(_ => {
       console.log('Loading finished')
@@ -89,7 +92,11 @@ const syncGitData = async function () {
   const ref = await repo.getBranch('refs/remotes/origin/' + SMT_SERVER_INFO.dataGitBranch)
   await repo.checkoutRef(ref)
   const commit = await repo.getHeadCommit()
+  const statuses = await repo.getStatus()
   SMT_SERVER_INFO.dataGitSha1 = await commit.sha()
+  let modified = false
+  statuses.forEach(s => { if (s.isModified()) modified = true })
+  SMT_SERVER_INFO.dataLocalModifications = modified
 }
 
 const initServer = async function () {

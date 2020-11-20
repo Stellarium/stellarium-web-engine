@@ -25,7 +25,8 @@
         SMT Server version: <b>{{ $store.state.SMT.smtServerInfo.version }}</b><br>
         Displaying data coming from server: <b>{{ $store.state.SMT.smtServerInfo.dataGitServer }}</b><br>
         Git Branch: <b>{{ $store.state.SMT.smtServerInfo.dataGitBranch }}</b><br>
-        Last ref: <b>{{ $store.state.SMT.smtServerInfo.dataGitSha1 }}</b>
+        Last ref: <b>{{ $store.state.SMT.smtServerInfo.dataGitSha1 }}</b><br>
+        Local Modifications: <b>{{ $store.state.SMT.smtServerInfo.dataLocalModifications }}</b>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

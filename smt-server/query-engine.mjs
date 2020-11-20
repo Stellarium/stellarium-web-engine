@@ -124,6 +124,7 @@ const intersectionRobust = function (feature1, feature2, shiftCenter) {
 
 export default {
   fieldsList: undefined,
+  baseHashKey: '',
   sqlFields: undefined,
   fcounter: 0,
 
@@ -137,7 +138,7 @@ export default {
     return 'JSON'
   },
 
-  initDB: async function (fieldsList) {
+  initDB: async function (fieldsList, baseHashKey) {
     // Add a custom aggregation operator for the chip tags
     alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
       if (stage === 1) {
@@ -166,6 +167,7 @@ export default {
 
     console.log('Create Data Base')
     that.fieldsList = fieldsList
+    that.baseHashKey = baseHashKey
     for (let i in fieldsList) {
       if (fieldsList[i].computed) {
         let options = {
@@ -504,6 +506,9 @@ export default {
 
   // Query the engine
   queryVisual: function (q) {
+    // Inject a key unique to each revision of the input data
+    // this ensure the hash depends on query + data content
+    q.baseHashKey = this.baseHashKey
     const hash = hash_sum(q)
     this.hashToQuery[hash] = q
     return hash
