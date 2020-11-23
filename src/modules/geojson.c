@@ -540,13 +540,17 @@ static int survey_render_visitor(int order, int pix, void *user)
     int code;
     survey_t *survey = USER_GET(user, 0);
     painter_t *painter = USER_GET(user, 1);
+    int *nb_tot = USER_GET(user, 2);
+    int *nb_loaded = USER_GET(user, 3);
     hips_t *hips = survey->hips;
 
     if (painter_is_healpix_clipped(painter, hips->frame, order, pix, true))
         return 0;
     if (order < hips->order_min) return 1;
 
+    (*nb_tot)++;
     tile = hips_get_tile(hips, order, pix, HIPS_NO_DELAY, &code);
+    if (code) (*nb_loaded)++;
     if (!tile) return 0;
 
     image_update_filter(tile, survey->filter, survey->filter_idx);
@@ -586,6 +590,7 @@ static void survey_load_allsky(survey_t *survey)
 static int survey_render(const obj_t *obj, const painter_t *painter)
 {
     const survey_t *survey = (void*)obj;
+    int nb_tot = 0, nb_loaded = 0;
 
     if (survey->min_fov && core->fov < survey->min_fov) return 0;
     if (survey->max_fov && core->fov >= survey->max_fov) return 0;
@@ -596,7 +601,10 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
         obj_render((obj_t*)survey->allsky, painter);
     }
 
-    hips_traverse(USER_PASS(survey, painter), survey_render_visitor);
+    hips_traverse(USER_PASS(survey, painter, &nb_tot, &nb_loaded),
+                            survey_render_visitor);
+    progressbar_report(survey->hips->url, survey->hips->label,
+                       nb_loaded, nb_tot, -1);
     return 0;
 }
 
