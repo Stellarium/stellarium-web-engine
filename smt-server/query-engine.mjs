@@ -29,7 +29,7 @@ const crossAntimeridian = function (feature) {
   let left = false
   let right = false
 
-  turf.coordEach(feature, function(coord) {
+  turf.coordEach(feature, function (coord) {
     if (left && right) return
     let lng = coord[0]
     if (lng > 180) lng -= 360
