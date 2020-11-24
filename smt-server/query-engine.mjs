@@ -209,7 +209,11 @@ export default {
     return healpix.ang2pix_nest(1 << order, theta, phi)
   },
 
+  healpixCornerFeatureCache: {},
   getHealpixCornerFeature: function (order, pix) {
+    const cacheKey = '' + order + '_' + pix
+    if (cacheKey in this.healpixCornerFeatureCache)
+      return this.healpixCornerFeatureCache[cacheKey]
     const mod = function(v, n) {
       return ( v + n ) % n
     }
@@ -225,6 +229,7 @@ export default {
     corners.push(_.cloneDeep(corners[0]))
     let hppixel = turf.polygon([corners])
     normalizeGeoJson(hppixel)
+    this.healpixCornerFeatureCache[cacheKey] = hppixel
     return hppixel
   },
 
