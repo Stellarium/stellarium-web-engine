@@ -169,6 +169,46 @@ export default {
       return accumulator
     }
 
+    alasql.aggr.GEO_UNION = function (value, accumulator, stage) {
+      if (stage === 1) {
+        const feature = {
+          "type": "Feature",
+          "geometry": _.cloneDeep(value)
+        }
+        const shiftCenter = turf.pointOnFeature(feature).geometry.coordinates
+
+        // Compute shift matrices
+        let q = glMatrix.quat.create()
+        const center = geojsonPointToVec3(shiftCenter)
+        glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
+        feature.m = glMatrix.mat3.create()
+        feature.mInv = glMatrix.mat3.create()
+        glMatrix.mat3.fromQuat(feature.m, q)
+        glMatrix.mat3.invert(feature.mInv, feature.m)
+        rotateGeojsonFeature(feature, feature.m)
+        return feature
+      } else if (stage === 2) {
+        try {
+          const f2 =  {
+            "type": "Feature",
+            "geometry": _.cloneDeep(value)
+          }
+          rotateGeojsonFeature(f2, accumulator.m)
+          const union = turf.union(accumulator, f2)
+          accumulator.geometry = union.geometry
+          return accumulator
+        } catch (err) {
+          console.log('Error computing feature union: ' + err)
+          return accumulator
+        }
+      } else if (stage === 3) {
+        if (!accumulator)
+          return undefined
+        rotateGeojsonFeature(accumulator, accumulator.mInv)
+        return accumulator.geometry
+      }
+    }
+
     let that = this
 
     console.log('Create Data Base')
@@ -557,7 +597,7 @@ export default {
     let selectClause = 'SELECT '
     selectClause += this.fieldsList.filter(f => f.widget !== 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
     selectClause += ', ' + this.fieldsList.filter(f => f.widget === 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'VALUES_AND_COUNT(' + k + ') as ' + k).join(', ')
-    selectClause += ', COUNT(*) as c, geogroup_id, FIRST(geometry) as geometry FROM features '
+    selectClause += ', COUNT(*) as c, geogroup_id, GEO_UNION(geometry) as geometry FROM features '
     let sqlStatement = selectClause + whereClause + ' GROUP BY geogroup_id'
     return alasql.promise(sqlStatement).then(function (res) {
       res = res.filter(f => f.c)
