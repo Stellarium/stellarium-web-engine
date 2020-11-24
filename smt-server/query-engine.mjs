@@ -24,6 +24,7 @@ glMatrix.glMatrix.setMatrixArrayType(Array)
 const D2R = Math.PI / 180
 const R2D = 180 / Math.PI
 const HEALPIX_ORDER = 1
+const STERADIAN_TO_DEG2 = (180 / Math.PI) * (180 / Math.PI)
 
 const crossAntimeridian = function (feature) {
   let left = false
@@ -120,6 +121,11 @@ const intersectionRobust = function (feature1, feature2, shiftCenter) {
     res = null
   }
   return res
+}
+
+// Return the area of the feature in steradiant
+const featureArea (feature) {
+  return turf.area(feature) / (1000 * 1000) * 4 * Math.PI / 509600000
 }
 
 export default {
@@ -227,7 +233,7 @@ export default {
   // index.
   splitOnHealpixGrid: function (feature, order) {
     const that = this
-    let area = turf.area(feature) * 4 * Math.PI / 509600000 / (1000 * 1000)
+    let area = featureArea(feature)
     // For large footprints, we return -1 so that it goes in the AllSky order
     if (area > healpix.nside2pixarea(1 << order)) {
       feature['healpix_index'] = -1
