@@ -201,16 +201,6 @@ static int dso_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void strip_type(char str[4])
-{
-    char *start, *end;
-    int i;
-    for (start = str; *start == ' '; start++);
-    for (end = start; end < &str[4] && *end != ' '; end++);
-    for (i = 0; i < end - start; i++)
-        str[i] = start[i];
-}
-
 // Used by the cache.
 static int del_tile(void *data)
 {
@@ -319,7 +309,7 @@ static int on_file_tile_loaded(const char type[4],
         s->vmag = temp_mag;
         // For the moment use bmag as fallback vmag value
         if (isnan(s->vmag)) s->vmag = bmag;
-        strip_type(s->obj.type);
+        if (memchr(s->obj.type, ' ', 4)) LOG_W_ONCE("Malformated otype");
         s->display_vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
         tile->mag_min = min(tile->mag_min, s->display_vmag);
         tile->mag_max = max(tile->mag_max, s->display_vmag);
