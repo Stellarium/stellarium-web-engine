@@ -124,7 +124,7 @@ const intersectionRobust = function (feature1, feature2, shiftCenter) {
 }
 
 // Return the area of the feature in steradiant
-const featureArea (feature) {
+const featureArea = function (feature) {
   return turf.area(feature) / (1000 * 1000) * 4 * Math.PI / 509600000
 }
 
