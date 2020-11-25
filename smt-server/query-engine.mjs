@@ -281,7 +281,7 @@ export default {
     const that = this
     let area = featureArea(feature)
     // For large footprints, we return -1 so that it goes in the AllSky order
-    if (area > healpix.nside2pixarea(1 << order)) {
+    if (area * STERADIAN_TO_DEG2 > 25) {
       feature['healpix_index'] = -1
       return [feature]
     }
