@@ -399,7 +399,7 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 
     // At this point we shouldn't have any "*" or "V*" designations.
     if (strncmp(dsgn, "V* ", 3) == 0 || strncmp(dsgn, "* ", 2) == 0) {
-        LOG_E("Unmatched star designation: '%s'", dsgn);
+        LOG_W_ONCE("Unmatched star designation: '%s'", dsgn);
     }
 
     // NAME designation with translation.
