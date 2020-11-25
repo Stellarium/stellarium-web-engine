@@ -408,6 +408,49 @@ void geojson_set_on_new_tile_callback(
     g_survey_on_new_tile = fn;
 }
 
+static void image_update_filter(image_t *image,
+                                filter_fn_t filter, int filter_idx)
+{
+    if (image->filter_idx == filter_idx) return;
+    image->filter = filter;
+    image->filter_idx = filter_idx;
+    apply_filter(image);
+}
+
+/*
+ * Iter all the visible and ready to render tiles of a survey
+ */
+static bool survey_iter_visible_tiles(
+        const survey_t *survey,
+        const painter_t *painter,
+        hips_iterator_t *iter,
+        int *order, int *pix, int *code,
+        image_t **tile)
+{
+    int render_order;
+    hips_t *hips = survey->hips;
+
+    render_order = hips_get_render_order(hips, painter, 2 * M_PI);
+    render_order = clamp(render_order, hips->order_min, hips->order);
+
+    while (true) {
+        if (!hips_iter_next(iter, order, pix)) return false;
+        if (painter_is_healpix_clipped(
+                    painter, hips->frame, *order, *pix, true))
+            continue;
+        if (*order < render_order) {
+            hips_iter_push_children(iter, *order, *pix);
+            continue;
+        }
+        *tile = hips_get_tile(hips, *order, *pix, HIPS_NO_DELAY, code);
+        if (!(*code)) continue;
+        if (*tile)
+            image_update_filter(*tile, survey->filter, survey->filter_idx);
+        return true;
+    }
+}
+
+
 /*
  * Experimental function to get the list of rendered features index.
  * Return the number of features returned.
@@ -421,12 +464,13 @@ int geojson_survey_query_rendered_features(
 {
     const survey_t *survey = (void*)obj;
     int i, nb = 0;
-    int order, pixs[9], code;
+    int order, pix, code;
     painter_t painter;
     projection_t proj;
     double pos[3];
     hips_t *hips = survey->hips;
     image_t *tile;
+    hips_iterator_t iter;
 
     assert(!isnan(win_pos[0]) && !isnan(win_pos[1]));
 
@@ -444,17 +488,15 @@ int geojson_survey_query_rendered_features(
         for (i = 0; i < nb; i++) tiles[i] = survey->allsky;
     }
 
-    for (order = hips->order_min; order <= hips->order; order++) {
+    if (!hips_is_ready(hips)) return nb;
+    hips_iter_init(&iter);
+    while (survey_iter_visible_tiles(survey, &painter, &iter, &order, &pix,
+                                     &code, &tile)) {
+        if (!tile) continue;
         if (nb >= max_ret) break;
-        pixs[0] = healpix_vec2pix(1 << order, pos);
-        healpix_get_neighbours(1 << order, pixs[0], &pixs[1]);
-        for (i = 0; i < 9; i++) {
-            tile = hips_get_tile(hips, order, pixs[i], HIPS_CACHED_ONLY, &code);
-            if (!tile) continue;
-            nb += query_rendered_features_(tile, pos, max_ret - nb,
-                                           tiles + nb, index + nb);
-            if (nb >= max_ret) break;
-        }
+        nb += query_rendered_features_(tile, pos, max_ret - nb,
+                                       tiles + nb, index + nb);
+        if (nb >= max_ret) break;
     }
     return nb;
 }
@@ -525,40 +567,6 @@ static int survey_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void image_update_filter(image_t *image,
-                                filter_fn_t filter, int filter_idx)
-{
-    if (image->filter_idx == filter_idx) return;
-    image->filter = filter;
-    image->filter_idx = filter_idx;
-    apply_filter(image);
-}
-
-static int survey_render_visitor(int order, int pix, void *user)
-{
-    image_t *tile;
-    int code;
-    survey_t *survey = USER_GET(user, 0);
-    painter_t *painter = USER_GET(user, 1);
-    int *nb_tot = USER_GET(user, 2);
-    int *nb_loaded = USER_GET(user, 3);
-    hips_t *hips = survey->hips;
-
-    if (painter_is_healpix_clipped(painter, hips->frame, order, pix, true))
-        return 0;
-    if (order < hips->order_min) return 1;
-
-    (*nb_tot)++;
-    tile = hips_get_tile(hips, order, pix, HIPS_NO_DELAY, &code);
-    if (code) (*nb_loaded)++;
-    if (!tile) return 0;
-
-    image_update_filter(tile, survey->filter, survey->filter_idx);
-    image_render((obj_t*)tile, painter);
-
-    return order < hips->order ? 1 : 0;
-}
-
 static void survey_load_allsky(survey_t *survey)
 {
     char path[1024];
@@ -591,6 +599,10 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
 {
     const survey_t *survey = (void*)obj;
     int nb_tot = 0, nb_loaded = 0;
+    int order, pix, code;
+    hips_t *hips = survey->hips;
+    hips_iterator_t iter;
+    image_t *tile;
 
     if (survey->min_fov && core->fov < survey->min_fov) return 0;
     if (survey->max_fov && core->fov >= survey->max_fov) return 0;
@@ -601,8 +613,16 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
         obj_render((obj_t*)survey->allsky, painter);
     }
 
-    hips_traverse(USER_PASS(survey, painter, &nb_tot, &nb_loaded),
-                            survey_render_visitor);
+    if (!hips_is_ready(hips)) return 0;
+    hips_iter_init(&iter);
+    while (survey_iter_visible_tiles(survey, painter, &iter, &order, &pix,
+                                     &code, &tile)) {
+        nb_tot++;
+        if (code) nb_loaded++;
+        if (!tile) continue;
+        image_render((obj_t*)tile, painter);
+    }
+
     progressbar_report(survey->hips->url, survey->hips->label,
                        nb_loaded, nb_tot, -1);
     return 0;
