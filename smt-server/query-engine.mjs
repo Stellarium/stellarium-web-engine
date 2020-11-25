@@ -23,7 +23,7 @@ glMatrix.glMatrix.setMatrixArrayType(Array)
 
 const D2R = Math.PI / 180
 const R2D = 180 / Math.PI
-const HEALPIX_ORDER = 2
+const HEALPIX_ORDER = 5
 const STERADIAN_TO_DEG2 = (180 / Math.PI) * (180 / Math.PI)
 
 const crossAntimeridian = function (feature) {
@@ -567,28 +567,33 @@ export default {
   },
 
   getHipsProperties: function (queryHash) {
-    return `hips_tile_format = geojson\nhips_order = ${HEALPIX_ORDER}\nhips_order_min = ${HEALPIX_ORDER}`
+    return `hips_tile_format = geojson\nhips_order = 1\nhips_order_min = 1`
   },
 
   getHipsTile: function (queryHash, order, tileId) {
-    if (order === -1) {
-      // Special case for Allsky
-      tileId = -1
-    } else {
-      assert(order === HEALPIX_ORDER)
-    }
+    const that = this
     // Can be 0: lowest details, only plain healpix tiles shapes
     //        1: medium details, the union of all footprints per tile
     //        2: high details, the union of all footprints having the same geo_groupid
-    const LOD_LEVEL = 1
-    const that = this
+    let LOD_LEVEL = 2
+
+    if (order === -1) {
+      // Special case for Allsky
+      tileId = -1
+      LOD_LEVEL = 2
+    } else {
+      assert(order === 1)
+    }
+
     const q = _.cloneDeep(this.hashToQuery[queryHash])
     if (!q)
       return undefined
+    const healPixScale = (tileId === -1) ? 1 : Math.pow(4, HEALPIX_ORDER - order)
+    const queryTileId = tileId * healPixScale
     q.constraints.push({
       field: {id: 'healpix_index'},
-      operation: 'INT_EQUAL',
-      expression: tileId,
+      operation: 'NUMBER_RANGE',
+      expression: [queryTileId, queryTileId + healPixScale - 1],
       negate: false
     })
     const whereClause = this.constraints2SQLWhereClause(q.constraints)
@@ -597,8 +602,8 @@ export default {
     let selectClause = 'SELECT '
     selectClause += this.fieldsList.filter(f => f.widget !== 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
     selectClause += ', ' + this.fieldsList.filter(f => f.widget === 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'VALUES_AND_COUNT(' + k + ') as ' + k).join(', ')
-    selectClause += ', COUNT(*) as c, ' + (LOD_LEVEL === 0 ? 'healpix_index ' : 'geogroup_id, GEO_UNION(geometry) as geometry ') + 'FROM features '
-    let sqlStatement = selectClause + whereClause + ' GROUP BY ' + (LOD_LEVEL > 1 ? 'geogroup_id' : 'healpix_index, SurveyName')
+    selectClause += ', COUNT(*) as c, healpix_index, ' + (LOD_LEVEL === 0 ? '' : 'geogroup_id, GEO_UNION(geometry) as geometry ') + 'FROM features '
+    let sqlStatement = selectClause + whereClause + ' GROUP BY ' + (LOD_LEVEL > 1 ? 'healpix_index, geogroup_id, SurveyName' : 'healpix_index, SurveyName')
     return alasql.promise(sqlStatement).then(function (res) {
       res = res.filter(f => f.c)
       const geojson = {
@@ -607,7 +612,7 @@ export default {
       }
       for (const item of res) {
         const feature = {
-          geometry: LOD_LEVEL === 0 ? getHealpixCornerFeature(order, item.healpix_index).geometry : item.geometry,
+          geometry: LOD_LEVEL === 0 ? getHealpixCornerFeature(HEALPIX_ORDER, item.healpix_index).geometry : item.geometry,
           type: 'Feature',
           properties: item,
           geogroup_id: item.geogroup_id,
