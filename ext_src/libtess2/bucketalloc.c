@@ -40,7 +40,7 @@ typedef struct Bucket Bucket;
 
 struct Bucket
 {
-	Bucket *next;
+	Bucket *next __attribute__((aligned(8)));
 };
 
 struct BucketAlloc
