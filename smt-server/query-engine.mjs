@@ -23,7 +23,7 @@ glMatrix.glMatrix.setMatrixArrayType(Array)
 
 const D2R = Math.PI / 180
 const R2D = 180 / Math.PI
-const HEALPIX_ORDER = 1
+const HEALPIX_ORDER = 2
 const STERADIAN_TO_DEG2 = (180 / Math.PI) * (180 / Math.PI)
 
 const crossAntimeridian = function (feature) {
@@ -574,8 +574,12 @@ export default {
       // Special case for Allsky
       tileId = -1
     } else {
-      assert(order == HEALPIX_ORDER)
+      assert(order === HEALPIX_ORDER)
     }
+    // Can be 0: lowest details, only plain healpix tiles shapes
+    //        1: medium details, the union of all footprints per tile
+    //        2: high details, the union of all footprints having the same geo_groupid
+    const LOD_LEVEL = 1
     const that = this
     const q = _.cloneDeep(this.hashToQuery[queryHash])
     if (!q)
@@ -597,8 +601,8 @@ export default {
     let selectClause = 'SELECT '
     selectClause += this.fieldsList.filter(f => f.widget !== 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
     selectClause += ', ' + this.fieldsList.filter(f => f.widget === 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'VALUES_AND_COUNT(' + k + ') as ' + k).join(', ')
-    selectClause += ', COUNT(*) as c, geogroup_id, GEO_UNION(geometry) as geometry FROM features '
-    let sqlStatement = selectClause + whereClause + ' GROUP BY geogroup_id'
+    selectClause += ', COUNT(*) as c, ' + (LOD_LEVEL === 0 ? 'healpix_index ' : 'geogroup_id, GEO_UNION(geometry) as geometry ') + 'FROM features '
+    let sqlStatement = selectClause + whereClause + ' GROUP BY ' + (LOD_LEVEL > 1 ? 'geogroup_id' : 'healpix_index, SurveyName')
     return alasql.promise(sqlStatement).then(function (res) {
       res = res.filter(f => f.c)
       const geojson = {
@@ -607,14 +611,16 @@ export default {
       }
       for (const item of res) {
         const feature = {
-          geometry: item.geometry,
+          geometry: LOD_LEVEL === 0 ? getHealpixCornerFeature(order, item.healpix_index).geometry : item.geometry,
           type: 'Feature',
           properties: item,
           geogroup_id: item.geogroup_id,
+          healpix_index: item.healpix_index,
           geogroup_size: item.c
         }
         delete feature.properties.geometry
         delete feature.properties.geogroup_id
+        delete feature.properties.healpix_index
         delete feature.properties.c
         geojson.features.push(feature)
       }
