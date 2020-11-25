@@ -87,6 +87,20 @@ const rotateGeojsonFeature = function (feature, m) {
 }
 
 const intersectionRobust = function (feature1, feature2, shiftCenter) {
+  assert(feature2.geometry.type === 'Polygon')
+  if (feature1.geometry.type === 'MultiPolygon') {
+    const featuresCollection = turf.flatten(feature1)
+    let featuresIntersected = []
+    turf.featureEach(featuresCollection, f => { const inte = intersectionRobust(f, feature2, shiftCenter); if (inte) featuresIntersected.push(inte) })
+    if (featuresIntersected.length === 0) return null
+    const combinedFc = turf.combine(turf.featureCollection(featuresIntersected))
+    assert(combinedFc.features.length === 1)
+    const f = _.cloneDeep(feature1)
+    f.geometry = combinedFc.features[0].geometry
+    return f
+  }
+
+  assert(feature1.geometry.type === 'Polygon')
   let q = glMatrix.quat.create()
   const center = geojsonPointToVec3(shiftCenter)
   glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
@@ -101,20 +115,7 @@ const intersectionRobust = function (feature1, feature2, shiftCenter) {
   rotateGeojsonFeature(f2, m)
   let res = null
   try {
-    if (f1.geometry.type === 'MultiPolygon') {
-      const intPoly = []
-      for (let i = 0; i < f1.geometry.coordinates.length; ++i) {
-          const poly = turf.polygon(f1.geometry.coordinates[i])
-          const intersection = turf.intersect(poly, f2)
-          if (intersection && intersection.geometry.type === 'Polygon') intPoly.push(intersection.geometry.coordinates)
-      }
-      if (intPoly.length) {
-        f1.geometry.coordinates = intPoly
-        res = f1
-      }
-    } else {
-      res = turf.intersect(f1, f2)
-    }
+    res = turf.intersect(f1, f2)
     if (res) rotateGeojsonFeature(res, mInv)
   } catch (err) {
     console.log('Error computing feature intersection: ' + err)
