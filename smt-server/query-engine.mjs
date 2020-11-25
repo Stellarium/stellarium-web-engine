@@ -128,6 +128,30 @@ const featureArea = function (feature) {
   return turf.area(feature) / (1000 * 1000) * 4 * Math.PI / 509600000
 }
 
+const healpixCornerFeatureCache = {}
+const getHealpixCornerFeature = function (order, pix) {
+  const cacheKey = '' + order + '_' + pix
+  if (cacheKey in healpixCornerFeatureCache)
+    return healpixCornerFeatureCache[cacheKey]
+  const mod = function(v, n) {
+    return ( v + n ) % n
+  }
+  let corners = healpix.corners_nest(1 << order, pix)
+  corners = corners.map(c => { return vec3TogeojsonPoint(c) })
+  for (let i = 0; i < corners.length; ++i) {
+    if (Math.abs(corners[i][1]) > 89.9999999) {
+      corners[i][0] = corners[mod(i + 1, corners.length)][0]
+      corners.splice(i, 0, [corners[mod(i - 1, corners.length)][0], corners[i][1]])
+      break
+    }
+  }
+  corners.push(_.cloneDeep(corners[0]))
+  let hppixel = turf.polygon([corners])
+  normalizeGeoJson(hppixel)
+  healpixCornerFeatureCache[cacheKey] = hppixel
+  return hppixel
+}
+
 export default {
   fieldsList: undefined,
   baseHashKey: '',
@@ -249,30 +273,6 @@ export default {
     return healpix.ang2pix_nest(1 << order, theta, phi)
   },
 
-  healpixCornerFeatureCache: {},
-  getHealpixCornerFeature: function (order, pix) {
-    const cacheKey = '' + order + '_' + pix
-    if (cacheKey in this.healpixCornerFeatureCache)
-      return this.healpixCornerFeatureCache[cacheKey]
-    const mod = function(v, n) {
-      return ( v + n ) % n
-    }
-    let corners = healpix.corners_nest(1 << order, pix)
-    corners = corners.map(c => { return vec3TogeojsonPoint(c) })
-    for (let i = 0; i < corners.length; ++i) {
-      if (Math.abs(corners[i][1]) > 89.9999999) {
-        corners[i][0] = corners[mod(i + 1, corners.length)][0]
-        corners.splice(i, 0, [corners[mod(i - 1, corners.length)][0], corners[i][1]])
-        break
-      }
-    }
-    corners.push(_.cloneDeep(corners[0]))
-    let hppixel = turf.polygon([corners])
-    normalizeGeoJson(hppixel)
-    this.healpixCornerFeatureCache[cacheKey] = hppixel
-    return hppixel
-  },
-
   // Split the given feature in pieces on the healpix grid
   // Returns a list of features each with 'healpix_index' set to the matching
   // index.
@@ -296,7 +296,7 @@ export default {
     const v = geojsonPointToVec3(center)
     const ret = []
     healpix.query_disc_inclusive_nest(1 << order, v, radius, function (pix) {
-      let hppixel = that.getHealpixCornerFeature(order, pix)
+      let hppixel = getHealpixCornerFeature(order, pix)
       const intersection = intersectionRobust(feature, hppixel, center)
       if (intersection === null) return
       const f = _.cloneDeep(feature)
@@ -315,7 +315,7 @@ export default {
     let that = this
 
 //    for (let pix=0; pix < 12 * (2 << HEALPIX_ORDER); pix++) {
-//      let hppixel = that.getHealpixCornerFeature(HEALPIX_ORDER, pix)
+//      let hppixel = getHealpixCornerFeature(HEALPIX_ORDER, pix)
 //      console.log(JSON.stringify(hppixel) + ',')
 //    }
 //    process.exit()
