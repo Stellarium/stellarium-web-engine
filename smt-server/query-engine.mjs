@@ -593,11 +593,6 @@ export default {
     })
     const whereClause = this.constraints2SQLWhereClause(q.constraints)
 
-    const projectOptions = {
-    }
-    for (const i in this.fieldsList) {
-      projectOptions[this.fieldsList[i].id] = 1
-    }
     // Construct the SQL SELECT clause matching the given aggregate options
     let selectClause = 'SELECT '
     selectClause += this.fieldsList.filter(f => f.widget !== 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
