@@ -124,6 +124,28 @@ const intersectionRobust = function (feature1, feature2, shiftCenter) {
   return res
 }
 
+// Try to merge elements from a MultiPolygon into a single Polygon
+// This is useful if elements from a multipolygon overlap
+const unionMergeMultiPolygon = function (feature) {
+  assert(feature.geometry.type === 'MultiPolygon')
+  let merged
+  try {
+    merged = turf.flattenReduce(feature, function (previousValue, currentFeature, featureIndex, multiFeatureIndex) {
+      if (!previousValue)
+        return currentFeature
+      return turf.union(previousValue, currentFeature)
+    })
+  } catch (err) {
+    // Can't merge this multipolygon, just give up
+    // TODO try with rotation ?
+    console.log('Error computing feature union: ' + err)
+    return
+  }
+  if (merged.geometry.type === 'Polygon') {
+    feature.geometry = merged.geometry
+  }
+}
+
 // Return the area of the feature in steradiant
 const featureArea = function (feature) {
   return turf.area(feature) / (1000 * 1000) * 4 * Math.PI / 509600000
@@ -326,6 +348,9 @@ export default {
     // Insert all data
     let subFeatures = []
     turf.featureEach(jsonData, function (feature, featureIndex) {
+      if (feature.geometry.type === 'MultiPolygon') {
+        unionMergeMultiPolygon(feature)
+      }
       feature.geogroup_id = _.get(feature.properties, 'fieldID', undefined) || _.get(feature.properties, 'SurveyName', '') + _.get(feature, 'id', '')
       feature.id = that.fcounter++
       subFeatures = subFeatures.concat(that.splitOnHealpixGrid(feature, HEALPIX_ORDER))
