@@ -418,7 +418,7 @@ static void image_update_filter(image_t *image,
 }
 
 /*
- * Iter all the visible and ready to render tiles of a survey
+ * Iter all the visible tiles at the appropriate order.
  */
 static bool survey_iter_visible_tiles(
         const survey_t *survey,
@@ -443,7 +443,6 @@ static bool survey_iter_visible_tiles(
             continue;
         }
         *tile = hips_get_tile(hips, *order, *pix, HIPS_NO_DELAY, code);
-        if (!(*code)) continue;
         if (*tile)
             image_update_filter(*tile, survey->filter, survey->filter_idx);
         return true;
