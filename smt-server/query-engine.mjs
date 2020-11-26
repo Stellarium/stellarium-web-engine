@@ -592,7 +592,8 @@ export default {
   },
 
   getHipsProperties: function (queryHash) {
-    return `hips_tile_format = geojson\nhips_order = 2\nhips_order_min = 1`
+    return `hips_tile_format = geojson\nhips_order = 2\nhips_order_min = 1` +
+        '\nhips_tile_width = 400'
   },
 
   getHipsTile: function (queryHash, order, tileId) {
