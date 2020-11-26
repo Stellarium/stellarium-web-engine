@@ -592,7 +592,7 @@ export default {
   },
 
   getHipsProperties: function (queryHash) {
-    return `hips_tile_format = geojson\nhips_order = 1\nhips_order_min = 1`
+    return `hips_tile_format = geojson\nhips_order = 2\nhips_order_min = 1`
   },
 
   getHipsTile: function (queryHash, order, tileId) {
@@ -605,9 +605,8 @@ export default {
     if (order === -1) {
       // Special case for Allsky
       tileId = -1
-      LOD_LEVEL = 2
-    } else {
-      assert(order === 1)
+    } else if (order === 1) {
+      LOD_LEVEL = 0
     }
 
     const q = _.cloneDeep(this.hashToQuery[queryHash])
