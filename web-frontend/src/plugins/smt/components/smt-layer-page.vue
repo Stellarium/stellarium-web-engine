@@ -214,7 +214,7 @@ export default {
       if (that.$smt.colorAssignedField) {
         colorAssignedSqlField = qe.fId2AlaSql(that.$smt.colorAssignedField)
       }
-      const selectedGeogroupIds = new Set(this.selectedFootprintData.map(e => e.geogroup_id))
+      const selectedGeogroupIds = new Set(that.selectedFootprintData.map(e => e.geogroup_id))
 
       let liveConstraintSql
       const lc = that.liveConstraint
@@ -360,7 +360,9 @@ export default {
       if (!that.geojsonObj) return false
       // Get the list of features indices at click position
       const r = that.geojsonObj.queryRenderedFeatures(e.point)
-      if (r.length && r[0].geogroup_id) {
+      let someFeatureHaveNoGeogroupId = false
+      r.forEach(f => { someFeatureHaveNoGeogroupId ||= (f.geogroup_id === undefined) })
+      if (r.length && r[0].geogroup_id && !someFeatureHaveNoGeogroupId) {
         that.selectedFootprintData = r
       } else {
         that.selectedFootprintData = []
