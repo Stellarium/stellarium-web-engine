@@ -141,6 +141,8 @@ static int satellites_update(obj_t *obj, double dt)
     nb = load_jsonl_data(sats, data, size, sats->jsonl_url, &last_epoch);
     LOG_I("Parsed %d satellites (latest epoch: %s)", nb,
           format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
+    if (last_epoch < unix_to_mjd(sys_get_unix_time()) - 2)
+        LOG_W("Warning: satellites data seems outdated.");
     sats->loaded = true;
     return 0;
 }
