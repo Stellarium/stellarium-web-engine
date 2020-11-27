@@ -18,6 +18,10 @@ function fillColorPtr(color, ptr) {
   }
 }
 
+function fillBoolPtr(value, ptr) {
+  Module._setValue(ptr, value, 'i8');
+}
+
 /*
  * Method: setData
  * Set the geojson data of a geojson object.
@@ -57,19 +61,18 @@ function setData(obj, data) {
 
 /*
  * Method: filterAll
+ * Deprecated.
  *
  * Apply a filter function to all the features of the geojson.
  *
- * The callback function takes as input the index of a feature and can
- * return either:
+ * The callback function takes as input the index of a feature and
+ * return a dict of values:
  *
- *  - false, to hide the feature.
- *  - true, to show the feature unchanged.
- *  - A dict of values to change colors:
  *      fill    - Array of 4 float values.
  *      stroke  - Array of 4 float values.
  *      visible - Boolean (default to true).
  *      blink   - Boolean
+ *      hidden  - Boolean
  */
 function filterAll(obj, callback) {
   const features = obj._features;
@@ -195,17 +198,15 @@ Module['onGeojsonSurveyObj'] = function(obj) {
   Object.defineProperty(obj, 'filter', {
     set: function(filter) {
       if (obj._filterFn) Module.removeFunction(obj._filterFn);
-      obj._filterFn = Module.addFunction(function(img, id, fillPtr, strokePtr) {
+      obj._filterFn = Module.addFunction(
+          function(img, id, fillPtr, strokePtr, blinkPtr, hiddenPtr) {
         let features = g_tiles[img];
         const r = filter(features[id]);
-        if (r === false) return 0;
-        if (r === true) return 4; // Unchanged.
         if (r.fill) fillColorPtr(r.fill, fillPtr);
         if (r.stroke) fillColorPtr(r.stroke, strokePtr);
-        let ret = r.visible === false ? 0 : 1;
-        if (r.blink === true) ret |= 2;
-        return ret;
-      }, 'iiiii');
+        if (r.blink !== undefined) fillBoolPtr(r.blink, blinkPtr);
+        if (r.hidden !== undefined) fillBoolPtr(r.hidden, hiddenPtr);
+      }, 'viiiiii');
       obj._call('filter', obj._filterFn);
     }
   });

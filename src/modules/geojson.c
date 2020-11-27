@@ -32,8 +32,9 @@ struct feature {
     bool        blink;
 };
 
-typedef int (*filter_fn_t)(const image_t *img, int idx,
-                           float fill_color[4], float stroke_color[4]);
+typedef void (*filter_fn_t)(const image_t *img, int idx,
+                            float fill_color[4], float stroke_color[4],
+                            bool *blink, bool *hidden);
 
 /*
  * Struct: image_t
@@ -61,8 +62,9 @@ typedef struct survey {
     double      min_fov;
     double      max_fov;
 
-    int         (*filter)(const image_t *img, int idx,
-                          float fill_color[4], float stroke_color[4]);
+    void        (*filter)(const image_t *img, int idx,
+                          float fill_color[4], float stroke_color[4],
+                          bool *blink, bool *hidden);
     int         filter_idx;
 } survey_t;
 
@@ -193,17 +195,11 @@ void geojson_remove_all_features(image_t *image)
 static void apply_filter(image_t *image)
 {
     feature_t *feature;
-    int i = 0, r;
+    int i = 0;
     if (!image->filter) return;
     for (feature = image->features; feature; feature = feature->next, i++) {
-        r = image->filter(image, i, feature->fill_color, feature->stroke_color);
-        // return bits mask:
-        // 1 - visible.
-        // 2 - blink.
-        // 4 - unchanged (optim).
-        if (r & 4) continue;
-        feature->hidden = !(r & 1);
-        feature->blink = r & 2;
+        image->filter(image, i, feature->fill_color, feature->stroke_color,
+                      &feature->blink, &feature->hidden);
     }
 }
 
