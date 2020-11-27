@@ -477,6 +477,8 @@ int geojson_survey_query_rendered_features(
     painter = (painter_t) {
         .obs = core->observer,
         .proj = &proj,
+        .fb_size = {core->win_size[0] * core->win_pixels_scale,
+                    core->win_size[1] * core->win_pixels_scale},
     };
     painter_update_clip_info(&painter);
     painter_unproject(&painter, hips->frame, win_pos, pos);
