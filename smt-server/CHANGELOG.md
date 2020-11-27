@@ -1,6 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [0.0.4] - 2020-11-27
+- Render the sky with 2 levels of details (LOD)
+- In LOD 0: the boundaries of the features displayed are aligned on the healpix grid
+- In LOD 1: displayed features are now the real geospatial union of the groupped features
+- Improve polygon pre-processing at load time, deal with more corner cases
+- Dispay progress bars while loading geojson data
 
 ## [0.0.3] - 2020-11-20
 - Add version and Changelog file
