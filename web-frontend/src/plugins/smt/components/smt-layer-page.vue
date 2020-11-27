@@ -360,7 +360,7 @@ export default {
       if (!that.geojsonObj) return false
       // Get the list of features indices at click position
       const r = that.geojsonObj.queryRenderedFeatures(e.point)
-      if (r.length) {
+      if (r.length && r[0].geogroup_id) {
         that.selectedFootprintData = r
       } else {
         that.selectedFootprintData = []
