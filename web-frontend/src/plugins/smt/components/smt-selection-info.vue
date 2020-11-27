@@ -64,11 +64,16 @@ export default {
         this.selectionData = undefined
         return
       }
+
       let featuresCount = 0
       this.selectedFeatures.forEach(f => { featuresCount += f.geogroup_size })
       const geogroupIds = this.selectedFeatures.map(f => f.geogroup_id)
+      const hpIndices = [...new Set(this.selectedFeatures.map(f => f.healpix_index))]
       const q = {
-        constraints: [{ field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false }],
+        constraints: [
+          { field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false },
+          { field: { id: 'healpix_index', type: 'number' }, operation: 'IN', expression: hpIndices, negate: false }
+        ],
         projectOptions: {
           id: 1,
           properties: 1
@@ -82,11 +87,11 @@ export default {
           that.selectionData = undefined
           return
         }
-        console.assert(featuresCount === qres.res.length)
         that.selectionData = {
           count: featuresCount,
           features: qres.res
         }
+        console.assert(featuresCount === qres.res.length)
       })
     }
   },
