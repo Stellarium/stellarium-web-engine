@@ -23,6 +23,7 @@ DEPLOY_SERVER := ubuntu@smt-server.stellarium-web.org
 deploy-prod:
 	rm -rf data
 	rm -rf node_modules
+	bash -c "git log | head -n 1 | sed 's/commit //g' > extraVersionHash.txt"
 	ssh -t $(DEPLOY_SERVER) "mkdir -p smt-server && cd smt-server && docker-compose down || true"
 	ssh -t $(DEPLOY_SERVER) "rm -rf smt-server/*"
 	scp * $(DEPLOY_SERVER):/home/ubuntu/smt-server/
