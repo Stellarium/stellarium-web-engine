@@ -97,6 +97,7 @@ const syncGitData = async function () {
   let modified = false
   statuses.forEach(s => { if (s.isModified()) modified = true })
   SMT_SERVER_INFO.dataLocalModifications = modified
+  if (modified) console.log('Data has local modifications')
 }
 
 const initServer = async function () {
