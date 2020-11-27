@@ -190,7 +190,6 @@ void geojson_remove_all_features(image_t *image)
     }
 }
 
-// XXX: deprecated: we use filter_all instead now!
 static void apply_filter(image_t *image)
 {
     feature_t *feature;
@@ -198,8 +197,13 @@ static void apply_filter(image_t *image)
     if (!image->filter) return;
     for (feature = image->features; feature; feature = feature->next, i++) {
         r = image->filter(image, i, feature->fill_color, feature->stroke_color);
-        feature->hidden = (r == 0);
-        feature->blink = r & 0x2;
+        // return bits mask:
+        // 1 - visible.
+        // 2 - blink.
+        // 4 - unchanged (optim).
+        if (r & 4) continue;
+        feature->hidden = !(r & 1);
+        feature->blink = r & 2;
     }
 }
 

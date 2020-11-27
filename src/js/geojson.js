@@ -130,7 +130,7 @@ Module['onGeojsonObj'] = function(obj) {
       filterFn = Module.addFunction(function(img, id, fillPtr, strokePtr) {
         const r = filter(id);
         if (r === false) return 0;
-        if (r === true) return 1;
+        if (r === true) return 4; // Unchanged.
         if (r.fill) fillColorPtr(r.fill, fillPtr);
         if (r.stroke) fillColorPtr(r.stroke, strokePtr);
         return r.visible === false ? 0 : 1;
@@ -199,7 +199,7 @@ Module['onGeojsonSurveyObj'] = function(obj) {
         let features = g_tiles[img];
         const r = filter(features[id]);
         if (r === false) return 0;
-        if (r === true) return 1;
+        if (r === true) return 4; // Unchanged.
         if (r.fill) fillColorPtr(r.fill, fillPtr);
         if (r.stroke) fillColorPtr(r.stroke, strokePtr);
         let ret = r.visible === false ? 0 : 1;
