@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.5] - 2020-11-27
+- Fix selection issues
+- Properly invalidate client cache when the server code was modified
+
 ## [0.0.4] - 2020-11-27
 - Render the sky with 2 levels of details (LOD)
 - In LOD 0: the boundaries of the features displayed are aligned on the healpix grid
