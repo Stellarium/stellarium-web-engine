@@ -125,10 +125,6 @@ app.post('/queryVisual', (req, res) => {
   res.send(qe.queryVisual(req.body))
 })
 
-app.get('/queryVisual', (req, res) => {
-  res.send(qe.queryVisual(req.body))
-})
-
 app.get('/hips/:queryHash/properties', (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000')
   res.send(qe.getHipsProperties(req.params.queryHash))
