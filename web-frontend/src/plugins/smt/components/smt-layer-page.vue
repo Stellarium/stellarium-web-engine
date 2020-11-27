@@ -225,12 +225,10 @@ export default {
         liveConstraintSql = qe.fId2AlaSql(lc.field.id)
       }
       that.geojsonObj.filter = function (feature) {
-        // if (do_not_show) return false
-        // if (do_not_modify) return true
         if (liveConstraintSql) {
           const v = _.get(feature.properties, liveConstraintSql)
           if (v === undefined || v[1] < lc.expression[0] || v[0] > lc.expression[1]) {
-            return false
+            return { hidden: true }
           }
         }
         const selected = selectedGeogroupIds.has(feature.geogroup_id)
@@ -238,7 +236,7 @@ export default {
           feature.selected = selected
           feature.colorDone = false
         }
-        if (feature.colorDone) return true
+        if (feature.colorDone) return { hidden: false }
         let c = [1, 0.3, 0.3, 0.3]
         if (colorAssignedSqlField) {
           let cstring = Object.keys(_.get(feature.properties, colorAssignedSqlField))[0]
@@ -250,7 +248,7 @@ export default {
         return {
           fill: c,
           stroke: [1, 0, 0, 0],
-          visible: true,
+          hidden: false,
           blink: feature.selected
         }
       }
