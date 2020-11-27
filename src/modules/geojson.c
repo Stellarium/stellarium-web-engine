@@ -180,6 +180,24 @@ static int feature_get_info(const obj_t *obj, const observer_t *obs,
     }
 }
 
+// Use to optimize the js code so that we don't use the slow _setValue.
+EMSCRIPTEN_KEEPALIVE
+void geojson_set_bool_ptr_(bool *ptr, bool value)
+{
+    *ptr = value;
+}
+
+// Use to optimize the js code so that we don't use the slow _setValue.
+EMSCRIPTEN_KEEPALIVE
+void geojson_set_color_ptr_(float *ptr, float r, float g, float b, float a)
+{
+    ptr[0] = r;
+    ptr[1] = g;
+    ptr[2] = b;
+    ptr[3] = a;
+}
+
+
 EMSCRIPTEN_KEEPALIVE
 void geojson_remove_all_features(image_t *image)
 {

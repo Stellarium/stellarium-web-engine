@@ -13,13 +13,11 @@
 //  filterAll - filter and change the properties of the geojson features.
 
 function fillColorPtr(color, ptr) {
-  for (let i = 0; i < 4; i++) {
-    Module._setValue(ptr + i * 4, color[i], 'float');
-  }
+  Module._geojson_set_color_ptr_(ptr, color[0], color[1], color[2], color[3])
 }
 
 function fillBoolPtr(value, ptr) {
-  Module._setValue(ptr, value, 'i8');
+  Module._geojson_set_bool_ptr_(ptr, value);
 }
 
 /*
