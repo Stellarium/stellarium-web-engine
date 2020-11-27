@@ -41,7 +41,7 @@ const __dirname = process.cwd();
 
 var smtConfigData
 
-const ingestAll = function () {
+const ingestAll = function (extraVersionHash) {
   smtConfigData = fs.readFileSync(__dirname + '/data/smtConfig.json')
   let smtConfig = JSON.parse(smtConfigData)
 
@@ -51,7 +51,8 @@ const ingestAll = function () {
       err => { throw err})
   }
 
-  let baseHashKey = SMT_SERVER_INFO.dataGitSha1
+  extraVersionHash = extraVersionHash || ''
+  let baseHashKey = SMT_SERVER_INFO.dataGitSha1 + extraVersionHash
   if (SMT_SERVER_INFO.dataLocalModifications)
     baseHashKey += '_' + Date.now()
   return qe.initDB(smtConfig.fields, baseHashKey).then(_ => {
@@ -101,8 +102,33 @@ const syncGitData = async function () {
 }
 
 const initServer = async function () {
+  let extraVersionHash = ''
+  try {
+    extraVersionHash = await fsp.readFile(__dirname + '/extraVersionHash.txt')
+  } catch (err) {
+    console.log('No extraVersionHash.txt file found, try to generate one from git status')
+    // Check if this server is in a git and if it has modifications, generate
+    // an extraVersionHash on the fly
+    try {
+      const repo = await NodeGit.Repository.open(__dirname + '/..')
+      const commit = await repo.getHeadCommit()
+      const statuses = await repo.getStatus()
+      SMT_SERVER_INFO.serverCodeGitSha1 = await commit.sha()
+      let modified = false
+      statuses.forEach(s => { if (s.isModified()) modified = true })
+      SMT_SERVER_INFO.serverCodeLocalModifications = modified
+      extraVersionHash = SMT_SERVER_INFO.serverCodeGitSha1
+      if (SMT_SERVER_INFO.serverCodeLocalModifications) {
+        if (modified) console.log('Server code has local modifications')
+        extraVersionHash += '_' + Date.now()
+      }
+    } catch (err) {
+      // This server is not in a git, just give up
+    }
+  }
+
   await syncGitData()
-  await ingestAll()
+  await ingestAll(extraVersionHash)
   app.listen(port, () => {
     console.log(`SMT Server listening at http://localhost:${port}`)
   })
