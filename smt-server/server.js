@@ -117,8 +117,9 @@ app.get('/smtConfig', (req, res) => {
   res.send(smtConfigData)
 })
 
-app.post('/query', (req, res) => {
-  qe.query(req.body).then(res.send.bind(res))
+app.post('/query', async (req, res) => {
+  const queryResp = await qe.query(req.body)
+  res.send(queryResp)
 })
 
 app.post('/queryVisual', (req, res) => {
