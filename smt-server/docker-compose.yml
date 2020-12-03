@@ -3,10 +3,6 @@ version: '2.1'
 services:
   smt-server:
     build: .
-    expose:
-      - 8101
-    ports:
-      - 8101:8101
     restart: always
     environment:
       PORT: 8101
