@@ -20,4 +20,4 @@ RUN groupmod -g $USER_GID node && usermod -u $USER_UID -g $USER_GID node
 RUN chown node /app
 USER node
 RUN id node
-CMD npm install && npm start
+CMD npm install --no-fund && npm start
