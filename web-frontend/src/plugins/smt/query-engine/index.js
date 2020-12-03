@@ -23,7 +23,16 @@ export default {
 
   initDB: async function () {
     const that = this
-    let resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/smtConfig', {
+
+    let resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/smtServerInfo', {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    that.smtServerInfo = await resp.json()
+
+    resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/smtConfig', {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
@@ -32,38 +41,34 @@ export default {
     const smtConfig = await resp.json()
     that.fieldsList = smtConfig.fields
 
-    resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/smtServerInfo', {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    that.smtServerInfo = await resp.json()
-
     return smtConfig
   },
 
   query: function (q) {
-    return fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/query', {
-      method: 'POST',
+    const that = this
+    console.assert(that.smtServerInfo.baseHashKey)
+    const body = encodeURIComponent(JSON.stringify(q))
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/' + that.smtServerInfo.baseHashKey + '/query?q=' + body, {
+      method: 'GET',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(q)
+      }
     }).then(function (response) {
       return response.json()
     })
   },
 
   queryVisual: function (q) {
-    return fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/queryVisual', {
-      method: 'POST',
+    const that = this
+    console.assert(that.smtServerInfo.baseHashKey)
+    const body = encodeURIComponent(JSON.stringify(q))
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/' + that.smtServerInfo.baseHashKey + '/queryVisual?q=' + body, {
+      method: 'GET',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(q)
+      }
     }).then(function (response) {
       return response.text()
     })

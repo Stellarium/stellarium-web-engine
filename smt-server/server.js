@@ -132,6 +132,7 @@ const initServer = async function () {
     baseHashKey += '_' + Date.now()
   SMT_SERVER_INFO.baseHashKey = hash_sum(baseHashKey)
 
+  console.log('Server base hash key: ' + SMT_SERVER_INFO.baseHashKey )
   await ingestAll()
   app.listen(port, () => {
     console.log(`SMT Server listening at http://localhost:${port}`)
@@ -152,8 +153,29 @@ app.post('/api/v1/query', async (req, res) => {
   res.send(queryResp)
 })
 
+app.get('/api/v1/:serverHash/query', async (req, res) => {
+  if (req.params.serverHash !== SMT_SERVER_INFO.baseHashKey) {
+    res.status(404).send()
+    return
+  }
+  const q = JSON.parse(decodeURIComponent(req.query.q))
+  res.set('Cache-Control', 'public, max-age=31536000')
+  const queryResp = await qe.query(q)
+  res.send(queryResp)
+})
+
 app.post('/api/v1/queryVisual', (req, res) => {
   res.send(qe.queryVisual(req.body))
+})
+
+app.get('/api/v1/:serverHash/queryVisual', (req, res) => {
+  if (req.params.serverHash !== SMT_SERVER_INFO.baseHashKey) {
+    res.status(404).send()
+    return
+  }
+  const q = JSON.parse(decodeURIComponent(req.query.q))
+  res.set('Cache-Control', 'public, max-age=31536000')
+  res.send(qe.queryVisual(q))
 })
 
 app.get('/api/v1/hips/:queryHash/properties', (req, res) => {
