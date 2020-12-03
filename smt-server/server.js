@@ -135,29 +135,29 @@ const initServer = async function () {
 }
 initServer()
 
-app.get('/smtServerInfo', (req, res) => {
+app.get('/api/v1/smtServerInfo', (req, res) => {
   res.send(SMT_SERVER_INFO)
 })
 
-app.get('/smtConfig', (req, res) => {
+app.get('/api/v1/smtConfig', (req, res) => {
   res.send(smtConfigData)
 })
 
-app.post('/query', async (req, res) => {
+app.post('/api/v1/query', async (req, res) => {
   const queryResp = await qe.query(req.body)
   res.send(queryResp)
 })
 
-app.post('/queryVisual', (req, res) => {
+app.post('/api/v1/queryVisual', (req, res) => {
   res.send(qe.queryVisual(req.body))
 })
 
-app.get('/hips/:queryHash/properties', (req, res) => {
+app.get('/api/v1/hips/:queryHash/properties', (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000')
   res.send(qe.getHipsProperties(req.params.queryHash))
 })
 
-app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res) => {
+app.get('/api/v1/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000')
 
   const order = parseInt(req.params.order.replace('Norder', ''))
@@ -170,7 +170,7 @@ app.get('/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res
   res.send(tileResp)
 })
 
-app.get('/hips/:queryHash/Allsky.geojson', async (req, res) => {
+app.get('/api/v1/hips/:queryHash/Allsky.geojson', async (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000')
   const tileResp = await qe.getHipsTile(req.params.queryHash, -1, 0)
   if (!tileResp) {

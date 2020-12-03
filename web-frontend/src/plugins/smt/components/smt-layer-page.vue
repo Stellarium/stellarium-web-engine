@@ -101,7 +101,7 @@ export default {
       }
       qe.queryVisual(q2).then(res => {
         that.geojsonObj = that.$observingLayer.add('geojson-survey', {
-          path: process.env.VUE_APP_SMT_SERVER + '/hips/' + res
+          path: process.env.VUE_APP_SMT_SERVER + '/api/v1/hips/' + res
           // Optional:
           // max_fov: 30,
           // min_fov: 10

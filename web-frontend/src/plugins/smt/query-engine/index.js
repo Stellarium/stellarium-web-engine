@@ -23,7 +23,7 @@ export default {
 
   initDB: async function () {
     const that = this
-    let resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/smtConfig', {
+    let resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/smtConfig', {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
@@ -32,7 +32,7 @@ export default {
     const smtConfig = await resp.json()
     that.fieldsList = smtConfig.fields
 
-    resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/smtServerInfo', {
+    resp = await fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/smtServerInfo', {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
@@ -44,7 +44,7 @@ export default {
   },
 
   query: function (q) {
-    return fetch(process.env.VUE_APP_SMT_SERVER + '/query', {
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/query', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -57,7 +57,7 @@ export default {
   },
 
   queryVisual: function (q) {
-    return fetch(process.env.VUE_APP_SMT_SERVER + '/queryVisual', {
+    return fetch(process.env.VUE_APP_SMT_SERVER + '/api/v1/queryVisual', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
