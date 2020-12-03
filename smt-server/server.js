@@ -16,12 +16,14 @@ import fs from 'fs'
 import qe from './query-engine.mjs'
 import bodyParser from 'body-parser'
 import NodeGit from 'nodegit'
+import hash_sum from 'hash-sum'
 
 const SMT_SERVER_INFO = {
   version: process.env.npm_package_version || 'dev',
   dataGitServer: 'git@github.com:Stellarium-Labs/smt-data.git',
   dataGitBranch: 'data_v01',
-  dataGitSha1: ''
+  dataGitSha1: '',
+  baseHashKey: ''
 }
 
 console.log('Starting SMT Server ' + SMT_SERVER_INFO.version)
@@ -41,7 +43,7 @@ const __dirname = process.cwd()
 
 var smtConfigData
 
-const ingestAll = function (extraVersionHash) {
+const ingestAll = function () {
   smtConfigData = fs.readFileSync(__dirname + '/data/smtConfig.json')
   let smtConfig = JSON.parse(smtConfigData)
 
@@ -51,11 +53,7 @@ const ingestAll = function (extraVersionHash) {
       err => { throw err})
   }
 
-  extraVersionHash = extraVersionHash || ''
-  let baseHashKey = SMT_SERVER_INFO.dataGitSha1 + extraVersionHash
-  if (SMT_SERVER_INFO.dataLocalModifications)
-    baseHashKey += '_' + Date.now()
-  return qe.initDB(smtConfig.fields, baseHashKey).then(_ => {
+  return qe.initDB(smtConfig.fields, SMT_SERVER_INFO.baseHashKey).then(_ => {
     const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
     return Promise.all(allPromise).then(_ => {
       console.log('Loading finished')
@@ -128,7 +126,13 @@ const initServer = async function () {
   }
 
   await syncGitData()
-  await ingestAll(extraVersionHash)
+
+  let baseHashKey = SMT_SERVER_INFO.dataGitSha1 + extraVersionHash
+  if (SMT_SERVER_INFO.dataLocalModifications)
+    baseHashKey += '_' + Date.now()
+  SMT_SERVER_INFO.baseHashKey = hash_sum(baseHashKey)
+
+  await ingestAll()
   app.listen(port, () => {
     console.log(`SMT Server listening at http://localhost:${port}`)
   })
