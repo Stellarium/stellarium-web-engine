@@ -2,6 +2,7 @@
   "name": "smt-server",
   "version": "0.0.5",
   "description": "Survey Monitoring Tool",
+  "private": true,
   "main": "index.js",
   "type": "module",
   "scripts": {
