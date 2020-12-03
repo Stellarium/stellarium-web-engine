@@ -4,19 +4,34 @@ services:
   smt-server:
     build: .
     expose:
+      - 8101
+    ports:
+      - 8101:8101
+    restart: always
+    environment:
+      PORT: 8101
+    logging:
+      driver: journald
+    volumes:
+      - .:/app
+    container_name: smt-server
+
+  smt-server-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    expose:
       - 8100
     ports:
       - 8100:8100
     restart: always
     logging:
       driver: journald
-    volumes:
-      - .:/app
+    depends_on:
+     - smt-server
     environment:
       VIRTUAL_HOST: smt-server.stellarium-web.org
       VIRTUAL_PORT: 8100
       LETSENCRYPT_HOST: smt-server.stellarium-web.org
       LETSENCRYPT_EMAIL: contact@noctua-software.com
-      FRONTEND_ROOT_URL: https://smt-frontend.stellarium-web.org
-    container_name: smt-server
-    network_mode: bridge
+    container_name: smt-server-frontend

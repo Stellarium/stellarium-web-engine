@@ -1,6 +1,6 @@
 FROM node:14.15.0-stretch
 
-EXPOSE 8100
+EXPOSE 8101
 
 RUN apt-get update && apt-get install -y libcurl3-gnutls ca-certificates
 
