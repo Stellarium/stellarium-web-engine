@@ -36,8 +36,8 @@ process.on('SIGINT', () => {
   process.exit(0)
 })
 
-const port = 8100
-const __dirname = process.cwd();
+const port = process.env.PORT || 8100
+const __dirname = process.cwd()
 
 var smtConfigData
 
