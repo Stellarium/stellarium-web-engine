@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6] - 2020-12-03
+- Run the node server behind a nginx frontend
+- Enable server-side caching and gzip compression
+- Fix some docker issues
+- Change API to use a /api/v1/ prefix
+- Add cache-friendly GET query methods
+
 ## [0.0.5] - 2020-11-27
 - Fix selection issues
 - Properly invalidate client cache when the server code was modified
@@ -27,4 +34,3 @@
 - First deployed version on test dev server [smt-frontend](https://smt-frontend.stellarium-web.org/)
 - Data files are now stored on [smt-data github project](https://github.com/Stellarium-Labs/smt-data)
 - Official code repo is now on [smt github project](https://github.com/Stellarium-Labs/smt)
-
