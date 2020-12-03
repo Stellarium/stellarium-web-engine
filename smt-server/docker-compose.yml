@@ -5,12 +5,17 @@ services:
     build: .
     restart: always
     environment:
-      PORT: 8101
+      PORT: 8102
+    expose:
+      - 8102
+    ports:
+      - 8102:8102
     logging:
       driver: journald
     volumes:
       - .:/app
     container_name: smt-server
+    network_mode: bridge
 
   smt-server-frontend:
     build:
@@ -31,3 +36,4 @@ services:
       LETSENCRYPT_HOST: smt-server.stellarium-web.org
       LETSENCRYPT_EMAIL: contact@noctua-software.com
     container_name: smt-server-frontend
+    network_mode: bridge
