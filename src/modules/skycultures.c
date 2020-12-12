@@ -320,7 +320,7 @@ static void add_section(const char *section_name, const char *content,
         cult->references = to_buf(content, size);
     } else if (strcmp(section_name, "Authors") == 0) {
         cult->authors = to_buf(content, size);
-    } else if (strcmp(section_name, "Licence") == 0) {
+    } else if (strcmp(section_name, "License") == 0) {
         cult->licence = to_buf(content, size);
     } else if (strcmp(section_name, "Constellations") == 0) {
         cst_md_data = to_buf(content, size);

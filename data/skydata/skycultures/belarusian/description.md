@@ -2,17 +2,25 @@
 
 ## Introduction
 
-Astronomy constellations found in Belarus, a country in Eastern Europe bordered by Russia to the northeast, Ukraine to the south, Poland to the west, and Lithuania and Latvia to the northwest.
+Astronomy constellations found in Belarus, a country in Eastern Europe bordered
+by Russia to the northeast, Ukraine to the south, Poland to the west, and
+Lithuania and Latvia to the northwest.
 
 ## Description
 
-Belarus is landlocked and contains large tracts of marshy land and thousands of lakes. Forests cover about 40% of the country. Belarus is exceptional in that people in the villages have preserved their traditional knowledge about the stars and related beliefs, right through to the present time. The illustrations are by no means exhaustive. In fact, many asterisms have multiple recorded meanings, ranging from ancient to Christianized.
+Belarus is landlocked and contains large tracts of marshy land and thousands of
+lakes. Forests cover about 40% of the country. Belarus is exceptional in that
+people in the villages have preserved their traditional knowledge about the
+stars and related beliefs, right through to the present time. The illustrations
+are by no means exhaustive. In fact, many asterisms have multiple recorded
+meanings, ranging from ancient to Christianized.
 
 ## Constellations
 
 ##### Elias's Cart
 
-The burning cart that is ridden by Elias, the Christianized version of a constellation previously seen as simply a large cart.
+The burning cart that is ridden by Elias, the Christianized version of a
+constellation previously seen as simply a large cart.
 
 ##### The Cross
 
@@ -24,7 +32,8 @@ The thorn wreath that was put on Christ’s head.
 
 ##### The Mowers
 
-These three stars stand one after another in the manner of people mowing the fields.
+These three stars stand one after another in the manner of people mowing the
+fields.
 
 ##### The Nail
 
@@ -32,7 +41,8 @@ The north star is seen as a nail around which the skies revolve.
 
 ##### The Serpent
 
-St. Yuri killed this serpent and hung it near the star that always stands in the same place.
+St. Yuri killed this serpent and hung it near the star that always stands in
+the same place.
 
 ##### The Sieve
 
@@ -56,9 +66,12 @@ Lord Jesus's chair.
 
 ## Authors
 
-The creation of this sky culture for Stellarium was suggested by Alexander Wolf to Johan Meuris, based on the article __Astronyms in Belarussian Folk Beliefs__ by Tsimafei Avilin [#1], published in the peer-reviewed journal Archaeologia Baltica.
+Text and data by Alexander Wolf, Tsimafei Avilin and Johan Meuris.
+
 Illustrations by Johan Meuris.
 
-## Licence
+## License
 
-GNU GPL v2.0
+Text and data: TODO
+
+Illustrations: Free Art License
