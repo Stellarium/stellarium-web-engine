@@ -1007,16 +1007,9 @@ static json_value *skycultures_current_id_fn(
     skyculture_t *cult;
     if (args && args->u.array.length) {
         args_get(args, TYPE_STRING, id);
-        if (cults->current) {
-            MODULE_ITER(cults, cult, "skyculture") {
-                if (strcmp(cult->key, cults->current->key) == 0) {
-                    skyculture_deactivate(cult);
-                    break;
-                }
-            }
-        }
         MODULE_ITER(cults, cult, "skyculture") {
             if (strcmp(cult->key, id) == 0) {
+                if (cults->current) skyculture_deactivate(cults->current);
                 skyculture_activate(cult);
                 break;
             }
