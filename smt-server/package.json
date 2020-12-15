@@ -14,7 +14,7 @@
   "dependencies": {
     "@hscmap/healpix": "^1.4.3",
     "@turf/turf": "^5.1.6",
-    "alasql": "^0.6.3",
+    "better-sqlite3": "^7.1.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "filtrex": "^2.1.0",

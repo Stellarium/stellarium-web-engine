@@ -9,7 +9,7 @@
 // This file is part of the Survey Monitoring Tool plugin, which received
 // funding from the Centre national d'études spatiales (CNES).
 
-import alasql from 'alasql'
+import Database from 'better-sqlite3'
 import _ from 'lodash'
 import filtrex from 'filtrex'
 import hash_sum from 'hash-sum'
@@ -181,60 +181,73 @@ export default {
   sqlFields: undefined,
   fcounter: 0,
 
+  db: undefined,
+
   fId2AlaSql: function (fieldId) {
     return fieldId.replace(/\./g, '_')
   },
 
+  postProcessSQLiteResult: function (res)  {
+    for (const i in res) {
+      const item = res[i]
+      if (typeof item === 'string' && item.startsWith('__JSON'))
+        res[i] = JSON.parse(item.substring(6))
+    }
+  },
+
   fType2AlaSql: function (fieldType) {
-    if (fieldType === 'string') return 'STRING'
+    if (fieldType === 'string') return 'TEXT'
     if (fieldType === 'date') return 'INT' // Dates are converted to unix time stamp
+    if (fieldType === 'number') return 'NUMERIC'
     return 'JSON'
   },
 
   initDB: async function (fieldsList, baseHashKey) {
+    let that = this
+    console.log('Create Data Base')
+    const db = new Database(':memory:');
+
     // Add a custom aggregation operator for the chip tags
-    alasql.aggr.VALUES_AND_COUNT = function (value, accumulator, stage) {
-      if (stage === 1) {
-        let ac = {}
-        ac[value] = 1
-        return ac
-      } else if (stage === 2) {
+    db.aggregate('VALUES_AND_COUNT', {
+      start: () => {},
+      step: (accumulator, value) => {
+        if (!accumulator) accumulator = {}
         accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
         return accumulator
-      } else if (stage === 3) {
-        return accumulator
-      }
-    }
+      },
+      result: accumulator => '__JSON' + JSON.stringify(accumulator)
+    })
 
-    alasql.aggr.MIN_MAX = function (value, accumulator, stage) {
-      // console.log('MIN_MAX ' + value + ' ' + accumulator + ' ' + stage)
-      if (stage === 1) {
-        return [value, value]
-      } else if (stage === 2) {
+    db.aggregate('MIN_MAX', {
+      start: undefined,
+      step: (accumulator, value) => {
+        if (!accumulator) return [value, value]
         return [Math.min(accumulator[0], value), Math.max(accumulator[1], value)]
-      }
-      return accumulator
-    }
+      },
+      result: accumulator => '__JSON' + JSON.stringify(accumulator)
+    })
 
-    alasql.aggr.GEO_UNION = function (value, accumulator, stage) {
-      if (stage === 1) {
-        const feature = {
-          "type": "Feature",
-          "geometry": _.cloneDeep(value)
+    db.aggregate('GEO_UNION', {
+      start: undefined,
+      step: (accumulator, value) => {
+        if (!accumulator) {
+          const feature = {
+            "type": "Feature",
+            "geometry": _.cloneDeep(value)
+          }
+          const shiftCenter = turf.pointOnFeature(feature).geometry.coordinates
+
+          // Compute shift matrices
+          let q = glMatrix.quat.create()
+          const center = geojsonPointToVec3(shiftCenter)
+          glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
+          feature.m = glMatrix.mat3.create()
+          feature.mInv = glMatrix.mat3.create()
+          glMatrix.mat3.fromQuat(feature.m, q)
+          glMatrix.mat3.invert(feature.mInv, feature.m)
+          rotateGeojsonFeature(feature, feature.m)
+          return feature
         }
-        const shiftCenter = turf.pointOnFeature(feature).geometry.coordinates
-
-        // Compute shift matrices
-        let q = glMatrix.quat.create()
-        const center = geojsonPointToVec3(shiftCenter)
-        glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
-        feature.m = glMatrix.mat3.create()
-        feature.mInv = glMatrix.mat3.create()
-        glMatrix.mat3.fromQuat(feature.m, q)
-        glMatrix.mat3.invert(feature.mInv, feature.m)
-        rotateGeojsonFeature(feature, feature.m)
-        return feature
-      } else if (stage === 2) {
         try {
           const f2 =  {
             "type": "Feature",
@@ -248,17 +261,15 @@ export default {
           console.log('Error computing feature union: ' + err)
           return accumulator
         }
-      } else if (stage === 3) {
+      },
+      result: accumulator => {
         if (!accumulator)
           return undefined
         rotateGeojsonFeature(accumulator, accumulator.mInv)
-        return accumulator.geometry
+        return '__JSON' + JSON.stringify(accumulator.geometry)
       }
-    }
+    })
 
-    let that = this
-
-    console.log('Create Data Base')
     that.fieldsList = fieldsList
     that.baseHashKey = baseHashKey
     for (let i in fieldsList) {
@@ -271,18 +282,23 @@ export default {
       }
     }
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
-    let sqlFieldsAndTypes = that.sqlFields.map(f => f + ' ' + that.fType2AlaSql(f.type)).join(', ')
-    await alasql.promise('CREATE TABLE features (id STRING, geometry JSON, healpix_index INT, geogroup_id STRING, properties JSON, ' + sqlFieldsAndTypes + ')')
-    await alasql.promise('CREATE INDEX idx_id ON features(id)')
-    await alasql.promise('CREATE INDEX idx_healpix_index ON features(healpix_index)')
-    await alasql.promise('CREATE INDEX idx_geogroup_id ON features(geogroup_id)')
+    let sqlFieldsAndTypes = fieldsList.map(f => that.fId2AlaSql(f.id) + ' ' + that.fType2AlaSql(f.type)).join(', ')
+
+    let info = db.prepare('CREATE TABLE features (id TEXT, geometry TEXT, healpix_index INT, geogroup_id TEXT, properties TEXT, ' + sqlFieldsAndTypes + ')').run()
+    db.prepare('CREATE INDEX idx_id ON features(id)').run()
+    db.prepare('CREATE INDEX idx_healpix_index ON features(healpix_index)').run()
+    db.prepare('CREATE INDEX idx_geogroup_id ON features(geogroup_id)').run()
 
     // Create an index on each field
     for (let i in that.sqlFields) {
-      let field = that.sqlFields[i]
-      await alasql.promise('CREATE INDEX idx_' + i + ' ON features(' + field + ')')
+      const field = that.sqlFields[i]
+      db.prepare('CREATE INDEX idx_' + i + ' ON features(' + field + ')').run()
     }
+
+    that.db = db
   },
+
+
 
   computeCentroidHealpixIndex: function (feature, order) {
     let center = turf.centroid(feature)
@@ -328,7 +344,6 @@ export default {
       ret.push(f)
     })
     if (ret.length === 0) {
-      console.log(JSON.stringify(feature))
     }
     return ret
   },
@@ -370,8 +385,15 @@ export default {
         }
         feature[that.sqlFields[i]] = d
       }
+      feature.geometry = '__JSON' + JSON.stringify(feature.geometry)
+      feature.properties = '__JSON' + JSON.stringify(feature.properties)
     }
-    await alasql.promise('SELECT * INTO features FROM ?', [subFeatures])
+    const insert = that.db.prepare('INSERT INTO features VALUES (@id, @geometry, @healpix_index, @geogroup_id, @properties, ' + that.sqlFields.map(f => '@' + f).join(',') + ')')
+    const insertMany = that.db.transaction((features) => {
+      for (const feature of features)
+        insert.run(feature)
+    })
+    insertMany(subFeatures)
   },
 
   loadGeojson: function (url) {
@@ -412,7 +434,7 @@ export default {
     let c2sql = function (c) {
       let fid = that.fId2AlaSql(c.field.id)
       if (c.operation === 'STRING_EQUAL') {
-        return fid + ' = "' + c.expression + '"'
+        return fid + ' = \'' + c.expression + '\''
       } else if (c.operation === 'INT_EQUAL') {
         return fid + ' = ' + c.expression
       } else if (c.operation === 'IS_UNDEFINED') {
@@ -484,90 +506,98 @@ export default {
           let fid = that.fId2AlaSql(agOpt.fieldId)
           let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
           let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
-          return alasql.promise(req).then(res => {
-            if (res[0].dmin === undefined || res[0].dmax === undefined) {
-              // No results
-              let data = {
-                min: undefined,
-                max: undefined,
-                step: 'DAY',
-                table: [['Date', 'Count']]
-              }
-              let retd = {}
-              retd[agOpt.out] = data
-              return { q: q, res: [retd] }
+          let stmt = that.db.prepare(req)
+          const res = stmt.get()
+          that.postProcessSQLiteResult(res)
+          if (res.dmin === undefined || res.dmax === undefined) {
+            // No results
+            let data = {
+              min: undefined,
+              max: undefined,
+              step: 'YYYY-MM-DD',
+              table: [['Date', 'Count']]
             }
-            let start = new Date(res[0].dmin)
-            start.setHours(0, 0, 0, 0)
-            // Switch to next day and truncate
-            let stop = new Date(res[0].dmax + 1000 * 60 * 60 * 24)
-            stop.setHours(0, 0, 0, 0)
-            // Range in days
-            let range = (stop - start) / (1000 * 60 * 60 * 24)
-            let step = 'DAY'
-            if (range > 3 * 365) {
-              step = 'YEAR'
-            } else if (range > 3 * 30) {
-              step = 'MONTH'
-            }
+            let retd = {}
+            retd[agOpt.out] = data
+            console.log({ q: q, res: [retd] })
+            return { q: q, res: [retd] }
+          }
+          let start = new Date(res.dmin)
+          start.setHours(0, 0, 0, 0)
+          // Switch to next day and truncate
+          let stop = new Date(res.dmax + 1000 * 60 * 60 * 24)
+          stop.setHours(0, 0, 0, 0)
+          // Range in days
+          let range = (stop - start) / (1000 * 60 * 60 * 24)
+          let step = 'YYYY-MM-DD'
+          if (range > 3 * 365) {
+            step = 'YYYY'
+          } else if (range > 3 * 30) {
+            step = 'YYYY-MM'
+          }
 
-            let sqlQ = 'SELECT COUNT(*) AS c, FIRST(' + fid + ') AS d FROM features ' + wc + ' GROUP BY ' + step + ' (' + fid + ')'
-            return alasql.promise(sqlQ).then(res2 => {
-              let data = {
-                min: start,
-                max: stop,
-                step: step,
-                table: [['Date', 'Count']]
-              }
-              for (let j in res2) {
-                let d = new Date(res2[j].d)
-                d.setHours(0, 0, 0, 0)
-                if (step === 'MONTH') d.setDate(0)
-                if (step === 'YEAR') d.setMonth(0)
-                data.table.push([d, res2[j].c])
-              }
-              let retd = {}
-              retd[agOpt.out] = data
-              return { q: q, res: [retd] }
-            })
-          })
+          let sqlQ = 'SELECT COUNT(*) AS c, MIN(' + fid + ') AS d FROM features ' + wc + ' GROUP BY date(' + fid + ', \'' + step + '\')'
+          stmt = that.db.prepare(sqlQ)
+          const res2 = stmt.all()
+          let data = {
+            min: start,
+            max: stop,
+            step: step,
+            table: [['Date', 'Count']]
+          }
+          for (let j in res2) {
+            that.postProcessSQLiteResult(res2[j])
+            let d = new Date(res2[j].d)
+            d.setHours(0, 0, 0, 0)
+            if (step === 'YYYY-MM') d.setDate(0)
+            if (step === 'YYYY') d.setMonth(0)
+            data.table.push([d, res2[j].c])
+          }
+          let retd = {}
+          retd[agOpt.out] = data
+          console.log(sqlQ)
+          console.log(' => ')
+          console.log(JSON.stringify({ q: q, res: [retd] }))
+          return { q: q, res: [retd] }
         } else if (agOpt.operation === 'NUMBER_HISTOGRAM') {
           // Special case, do custom queries and return
           console.assert(q.aggregationOptions.length === 1)
           let fid = that.fId2AlaSql(agOpt.fieldId)
           let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
           let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
-          return alasql.promise(req).then(res => {
-            if (res[0].dmin === res[0].dmax) {
-              // No results
-              let data = {
-                min: res[0].dmin,
-                max: res[0].dmax,
-                step: undefined,
-                table: [['Value', 'Count']]
-              }
-              let retd = {}
-              retd[agOpt.out] = data
-              return { q: q, res: [retd] }
+          let stmt = that.db.prepare(req)
+          const res = stmt.get()
+          that.postProcessSQLiteResult(res)
+          if (res.dmin === res.dmax) {
+            // No results
+            let data = {
+              min: res.dmin,
+              max: res.dmax,
+              step: undefined,
+              table: [['Value', 'Count']]
             }
-            let step = (res[0].dmax - res[0].dmin) / 10
+            let retd = {}
+            retd[agOpt.out] = data
+            return { q: q, res: [retd] }
+          }
+          let step = (res.dmax - res.dmin) / 10
 
-            let sqlQ = 'SELECT COUNT(*) AS c, ROUND((FIRST(' + fid + ') - ' + res[0].dmin + ') / ' + step + ') * ' + step + ' AS d FROM features ' + wc + ' GROUP BY ROUND((' + fid + ' - ' + res[0].dmin + ') / ' + step + ')'
-            return alasql.promise(sqlQ).then(res2 => {
-              let data = {
-                min: res[0].dmin,
-                max: res[0].dmax,
-                step: step,
-                table: [['Value', 'Count']]
-              }
-              for (let j in res2) {
-                data.table.push([res2[j].d, res2[j].c])
-              }
-              let retd = {}
-              retd[agOpt.out] = data
-              return { q: q, res: [retd] }
-            })
-          })
+          let sqlQ = 'SELECT COUNT(*) AS c, ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ') * ' + step + ' AS d FROM features ' + wc + ' GROUP BY ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ')'
+          stmt = that.db.prepare(sqlQ)
+          const res2 = stmt.all()
+          let data = {
+            min: res.dmin,
+            max: res.dmax,
+            step: step,
+            table: [['Value', 'Count']]
+          }
+          for (let j in res2) {
+            that.postProcessSQLiteResult(res2[j])
+            data.table.push([res2[j].d, res2[j].c])
+          }
+          let retd = {}
+          retd[agOpt.out] = data
+          return { q: q, res: [retd] }
         } else {
           throw new Error('Unsupported aggregation operation: ' + agOpt.operation)
         }
@@ -575,7 +605,10 @@ export default {
     }
     selectClause += ' FROM features'
     let sqlStatement = selectClause + whereClause
-    return alasql.promise(sqlStatement).then(res => { return { q: q, res: res } })
+    const res = that.db.prepare(sqlStatement).all()
+    for (let i in res)
+      that.postProcessSQLiteResult(res[i])
+    return { q: q, res: res }
   },
 
   // Contain the query settings (constraints) linked to a previous query
@@ -627,31 +660,32 @@ export default {
     let selectClause = 'SELECT '
     selectClause += this.fieldsList.filter(f => f.widget !== 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'MIN_MAX(' + k + ') as ' + k).join(', ')
     selectClause += ', ' + this.fieldsList.filter(f => f.widget === 'tags').map(f => that.fId2AlaSql(f.id)).map(k => 'VALUES_AND_COUNT(' + k + ') as ' + k).join(', ')
-    selectClause += ', COUNT(*) as c, healpix_index ' + (LOD_LEVEL === 0 ? '' : ', geogroup_id, FIRST(geometry) as geometry ') + 'FROM features '
+    selectClause += ', COUNT(*) as c, healpix_index ' + (LOD_LEVEL === 0 ? '' : ', geogroup_id, geometry ') + 'FROM features '
     let sqlStatement = selectClause + whereClause + ' GROUP BY ' + (LOD_LEVEL > 1 ? 'healpix_index, geogroup_id, SurveyName' : 'healpix_index, SurveyName')
-    return alasql.promise(sqlStatement).then(function (res) {
-      res = res.filter(f => f.c)
-      const geojson = {
-        type: 'FeatureCollection',
-        features: []
+    const stmt = that.db.prepare(sqlStatement)
+    let res = stmt.all()
+    res = res.filter(f => f.c)
+    const geojson = {
+      type: 'FeatureCollection',
+      features: []
+    }
+    for (const item of res) {
+      that.postProcessSQLiteResult(item)
+      const feature = {
+        geometry: LOD_LEVEL === 0 ? getHealpixCornerFeature(HEALPIX_ORDER, item.healpix_index).geometry : item.geometry,
+        type: 'Feature',
+        properties: item,
+        geogroup_id: item.geogroup_id,
+        healpix_index: item.healpix_index,
+        geogroup_size: item.c
       }
-      for (const item of res) {
-        const feature = {
-          geometry: LOD_LEVEL === 0 ? getHealpixCornerFeature(HEALPIX_ORDER, item.healpix_index).geometry : item.geometry,
-          type: 'Feature',
-          properties: item,
-          geogroup_id: item.geogroup_id,
-          healpix_index: item.healpix_index,
-          geogroup_size: item.c
-        }
-        delete feature.properties.geometry
-        delete feature.properties.geogroup_id
-        delete feature.properties.healpix_index
-        delete feature.properties.c
-        geojson.features.push(feature)
-      }
-      return geojson.features.length ? geojson : undefined
-    })
+      delete feature.properties.geometry
+      delete feature.properties.geogroup_id
+      delete feature.properties.healpix_index
+      delete feature.properties.c
+      geojson.features.push(feature)
+    }
+    return geojson.features.length ? geojson : undefined
   }
 
 }
