@@ -215,7 +215,7 @@ export default {
         accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
         return accumulator
       },
-      result: accumulator => '__JSON' + JSON.stringify(accumulator)
+      result: accumulator => accumulator ? '__JSON' + JSON.stringify(accumulator) : undefined
     })
 
     db.aggregate('MIN_MAX', {
@@ -224,7 +224,7 @@ export default {
         if (!accumulator) return [value, value]
         return [Math.min(accumulator[0], value), Math.max(accumulator[1], value)]
       },
-      result: accumulator => '__JSON' + JSON.stringify(accumulator)
+      result: accumulator => accumulator ? '__JSON' + JSON.stringify(accumulator) : undefined
     })
 
     db.aggregate('GEO_UNION', {
