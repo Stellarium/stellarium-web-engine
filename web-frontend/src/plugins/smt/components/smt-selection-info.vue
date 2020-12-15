@@ -81,6 +81,7 @@ export default {
         limit: 50
       }
       q.constraints = that.query.constraints.concat(q.constraints)
+      q.onSubFeatures = true
       qe.query(q).then(qres => {
         that.currentIndex = 0
         if (!qres.res.length) {
