@@ -331,6 +331,7 @@ export default {
         const rf = this.results.fields[i]
         if (!rf.field) continue
         if (this.isEdited(rf)) {
+          if (rf.field.widget === 'date_range' && rf.data && (rf.data.max === undefined || rf.data.min === undefined)) continue
           res.push(rf)
           continue
         }
