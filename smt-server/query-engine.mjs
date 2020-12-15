@@ -596,7 +596,12 @@ export default {
         }
       }
     }
-    selectClause += ' FROM features'
+    // Use a sub-query to ensure that we don't return all pieces of features
+    // split on each helpix pixel as separate entries
+    // In some case, when the query work on healpix_index, we do want to
+    // consider each pieces as a separated entry, in such case the onSubFeatures
+    // flag has to be defined.
+    selectClause += ' FROM ' + (q.onSubFeatures ? 'features' : '(SELECT * FROM features GROUP BY id)')
     let sqlStatement = selectClause + whereClause
     const res = that.db.prepare(sqlStatement).all()
     for (let i in res) {
