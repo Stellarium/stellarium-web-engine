@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.0.7] - 2020-12-15
+- Use SQLite as a primary DB engine
+
 ## [0.0.6] - 2020-12-03
 - Run the node server behind a nginx frontend
 - Enable server-side caching and gzip compression
