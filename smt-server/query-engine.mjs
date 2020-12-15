@@ -506,20 +506,18 @@ export default {
           let fid = that.fId2AlaSql(agOpt.fieldId)
           let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
           let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
-          let stmt = that.db.prepare(req)
-          const res = stmt.get()
+          const res = that.db.prepare(req).get()
           that.postProcessSQLiteResult(res)
-          if (res.dmin === undefined || res.dmax === undefined) {
+          if (!res.dmin || !res.dmax) {
             // No results
             let data = {
               min: undefined,
               max: undefined,
-              step: 'YYYY-MM-DD',
+              step: '%Y-%m-%d',
               table: [['Date', 'Count']]
             }
             let retd = {}
             retd[agOpt.out] = data
-            console.log({ q: q, res: [retd] })
             return { q: q, res: [retd] }
           }
           let start = new Date(res.dmin)
@@ -529,16 +527,15 @@ export default {
           stop.setHours(0, 0, 0, 0)
           // Range in days
           let range = (stop - start) / (1000 * 60 * 60 * 24)
-          let step = 'YYYY-MM-DD'
+          let step = '%Y-%m-%d'
           if (range > 3 * 365) {
-            step = 'YYYY'
+            step = '%Y'
           } else if (range > 3 * 30) {
-            step = 'YYYY-MM'
+            step = '%Y-%m'
           }
 
-          let sqlQ = 'SELECT COUNT(*) AS c, MIN(' + fid + ') AS d FROM features ' + wc + ' GROUP BY date(' + fid + ', \'' + step + '\')'
-          stmt = that.db.prepare(sqlQ)
-          const res2 = stmt.all()
+          let sqlQ = 'SELECT COUNT(*) AS c, STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\') AS d FROM features ' + wc + ' GROUP BY STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\')'
+          const res2 = that.db.prepare(sqlQ).all()
           let data = {
             min: start,
             max: stop,
@@ -549,15 +546,12 @@ export default {
             that.postProcessSQLiteResult(res2[j])
             let d = new Date(res2[j].d)
             d.setHours(0, 0, 0, 0)
-            if (step === 'YYYY-MM') d.setDate(0)
-            if (step === 'YYYY') d.setMonth(0)
+            if (step === '%Y-%m') d.setDate(0)
+            if (step === '%Y') d.setMonth(0)
             data.table.push([d, res2[j].c])
           }
           let retd = {}
           retd[agOpt.out] = data
-          console.log(sqlQ)
-          console.log(' => ')
-          console.log(JSON.stringify({ q: q, res: [retd] }))
           return { q: q, res: [retd] }
         } else if (agOpt.operation === 'NUMBER_HISTOGRAM') {
           // Special case, do custom queries and return
@@ -583,8 +577,7 @@ export default {
           let step = (res.dmax - res.dmin) / 10
 
           let sqlQ = 'SELECT COUNT(*) AS c, ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ') * ' + step + ' AS d FROM features ' + wc + ' GROUP BY ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ')'
-          stmt = that.db.prepare(sqlQ)
-          const res2 = stmt.all()
+          const res2 = that.db.prepare(sqlQ).all()
           let data = {
             min: res.dmin,
             max: res.dmax,
@@ -606,8 +599,9 @@ export default {
     selectClause += ' FROM features'
     let sqlStatement = selectClause + whereClause
     const res = that.db.prepare(sqlStatement).all()
-    for (let i in res)
+    for (let i in res) {
       that.postProcessSQLiteResult(res[i])
+    }
     return { q: q, res: res }
   },
 
