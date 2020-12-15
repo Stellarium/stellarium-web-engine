@@ -5,7 +5,6 @@
   "author": "Fabien Chereau <fabien@stellarium-labs.fr>",
   "private": true,
   "dependencies": {
-    "alasql": "^0.6.3",
     "filtrex": "^2.0.0",
     "sprintf-js": "^1.1.2",
     "string-hash": "^1.1.3",
