@@ -14,7 +14,6 @@
     <img :src="watermarkImage" style="position: fixed; left: 5px; bottom: 5px; opacity: 0.7;"></img>
     <smt-selection-info :selectedFeatures="selectedFootprintData" :query="query" @unselect="unselect()"></smt-selection-info>
     <smt-panel-root-toolbar></smt-panel-root-toolbar>
-    <img v-if="dataLoadingImage && $store.state.SMT.status === 'loading'" :src="dataLoadingImage" style="position: absolute; bottom: calc(50% - 100px); right: 80px;"></img>
     <v-card tile>
       <v-card-text>
         <div v-if="$store.state.SMT.status === 'ready'" class="display-1 text--primary"><v-progress-circular v-if="results.summary.count === undefined" size=18 indeterminate></v-progress-circular>{{ results.summary.count }} items</div>
@@ -301,10 +300,6 @@ export default {
   computed: {
     watermarkImage: function () {
       if (this.$store.state.SMT.watermarkImage) return process.env.BASE_URL + 'plugins/smt/data/' + this.$store.state.SMT.watermarkImage
-      return ''
-    },
-    dataLoadingImage: function () {
-      if (this.$store.state.SMT.dataLoadingImage) return process.env.BASE_URL + 'plugins/smt/data/' + this.$store.state.SMT.dataLoadingImage
       return ''
     },
     // Return real and implicit constraints to display in GUI

@@ -16,7 +16,6 @@ const moduleStore = {
   state: {
     status: undefined,
     watermarkImage: '',
-    dataLoadingImage: '',
     smtServerInfo: {
       version: '',
       dataGitServer: '',
