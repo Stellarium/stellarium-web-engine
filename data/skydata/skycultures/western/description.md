@@ -163,10 +163,12 @@ exoplanets.
 
 ## Authors
 
-Stellarium's team
+Stellarium's team.
 
-Reworked by Susanne M Hoffmann and Stellarium's team.
+Illustrations by Johan Meuris.
 
-## Licence
+## License
 
-GNU GPL v2.0
+Text and data: CC BY-SA
+
+Illustrations: Free Art License

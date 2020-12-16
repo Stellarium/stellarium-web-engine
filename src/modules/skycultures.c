@@ -320,7 +320,7 @@ static void add_section(const char *section_name, const char *content,
         cult->references = to_buf(content, size);
     } else if (strcmp(section_name, "Authors") == 0) {
         cult->authors = to_buf(content, size);
-    } else if (strcmp(section_name, "Licence") == 0) {
+    } else if (strcmp(section_name, "License") == 0) {
         cult->licence = to_buf(content, size);
     } else if (strcmp(section_name, "Constellations") == 0) {
         cst_md_data = to_buf(content, size);
@@ -1007,16 +1007,9 @@ static json_value *skycultures_current_id_fn(
     skyculture_t *cult;
     if (args && args->u.array.length) {
         args_get(args, TYPE_STRING, id);
-        if (cults->current) {
-            MODULE_ITER(cults, cult, "skyculture") {
-                if (strcmp(cult->key, cults->current->key) == 0) {
-                    skyculture_deactivate(cult);
-                    break;
-                }
-            }
-        }
         MODULE_ITER(cults, cult, "skyculture") {
             if (strcmp(cult->key, id) == 0) {
+                if (cults->current) skyculture_deactivate(cults->current);
                 skyculture_activate(cult);
                 break;
             }

@@ -133,6 +133,7 @@ static int circle_get_info(const obj_t *obj, const observer_t *obs,
         assert(fabs(vec3_norm2(pvo[0]) - 1.0) <= 0.000001);
         vec4_set(pvo[1], 0, 0, 0, 0);
         memcpy(out, pvo, sizeof(pvo));
+        return 0;
     default:
         return 1;
     }

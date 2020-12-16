@@ -246,8 +246,10 @@ void core_on_zoom(double zoom, double x, double y);
  *   x      - X position in windows coordinates.
  *   y      - Y position in windows coordinates.
  *   scale  - Pinch scale (starts at 1).
+ *   points_count - Number of touches in the gesture.
  */
-void core_on_pinch(int state, double x, double y, double scale);
+void core_on_pinch(int state, double x, double y, double scale,
+                   int points_count);
 
 /*
  * Function: core_get_proj
