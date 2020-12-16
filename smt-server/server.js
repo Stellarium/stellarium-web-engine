@@ -61,7 +61,7 @@ const ingestAll = function () {
   })
 }
 
-const syncGitData = async function () {
+const syncGitData = async function (gitServer, gitBranch) {
   const localPath = __dirname + '/data'
   const cloneOptions = {
     fetchOpts: {
@@ -80,26 +80,27 @@ const syncGitData = async function () {
       }
     }
   }
-  console.log('Synchronizing with SMT data git repo: ' + SMT_SERVER_INFO.dataGitServer)
-  const repo = await NodeGit.Clone(SMT_SERVER_INFO.dataGitServer, localPath, cloneOptions)
+  console.log('Synchronizing with SMT data git repo: ' + gitServer)
+  const repo = await NodeGit.Clone(gitServer, localPath, cloneOptions)
     .catch(err => {
       console.log('Repo already exists, user local version from ' + localPath)
       return NodeGit.Repository.open(localPath)
     })
   await repo.fetchAll(cloneOptions.fetchOpts)
-  console.log('Getting to last commit on branch ' + SMT_SERVER_INFO.dataGitBranch)
-  const ref = await repo.getBranch('refs/remotes/origin/' + SMT_SERVER_INFO.dataGitBranch)
+  console.log('Getting to last commit on branch ' + gitBranch)
+  const ref = await repo.getBranch('refs/remotes/origin/' + gitBranch)
   await repo.checkoutRef(ref)
   const commit = await repo.getHeadCommit()
   const statuses = await repo.getStatus()
-  SMT_SERVER_INFO.dataGitSha1 = await commit.sha()
-  let modified = false
-  statuses.forEach(s => { if (s.isModified()) modified = true })
-  SMT_SERVER_INFO.dataLocalModifications = modified
-  if (modified) console.log('Data has local modifications')
+  const ret = {}
+  ret.dataGitSha1 = await commit.sha()
+  ret.modified = false
+  statuses.forEach(s => { if (s.isModified()) ret.modified = true })
+  if (ret.modified) console.log('Data has local modifications')
+  return ret
 }
 
-const initServer = async function () {
+const getSmtServerSourceCodeHash = async function () {
   let extraVersionHash = ''
   try {
     extraVersionHash = await fsp.readFile(__dirname + '/extraVersionHash.txt')
@@ -111,28 +112,35 @@ const initServer = async function () {
       const repo = await NodeGit.Repository.open(__dirname + '/..')
       const commit = await repo.getHeadCommit()
       const statuses = await repo.getStatus()
-      SMT_SERVER_INFO.serverCodeGitSha1 = await commit.sha()
+      const serverCodeGitSha1 = await commit.sha()
       let modified = false
       statuses.forEach(s => { if (s.isModified()) modified = true })
-      SMT_SERVER_INFO.serverCodeLocalModifications = modified
-      extraVersionHash = SMT_SERVER_INFO.serverCodeGitSha1
-      if (SMT_SERVER_INFO.serverCodeLocalModifications) {
-        if (modified) console.log('Server code has local modifications')
+      extraVersionHash = serverCodeGitSha1
+      if (modified) {
+        console.log('Server code has local modifications')
         extraVersionHash += '_' + Date.now()
       }
     } catch (err) {
-      // This server is not in a git, just give up
+      // This server is not in a git, just give up and return empty string
     }
   }
+  return extraVersionHash
+}
 
-  await syncGitData()
+const initServer = async function () {
+  const extraVersionHash = await getSmtServerSourceCodeHash()
+  const ret = await syncGitData(SMT_SERVER_INFO.dataGitServer, SMT_SERVER_INFO.dataGitBranch)
+  SMT_SERVER_INFO.dataGitSha1 = ret.dataGitSha1
+  SMT_SERVER_INFO.dataLocalModifications = ret.modified
 
+  // Compute the base hash key which is unique for a given version of the server
+  // code and data. It will be used to generate cache-friendly URLs.
   let baseHashKey = SMT_SERVER_INFO.dataGitSha1 + extraVersionHash
   if (SMT_SERVER_INFO.dataLocalModifications)
     baseHashKey += '_' + Date.now()
   SMT_SERVER_INFO.baseHashKey = hash_sum(baseHashKey)
-
   console.log('Server base hash key: ' + SMT_SERVER_INFO.baseHashKey )
+
   await ingestAll()
   app.listen(port, () => {
     console.log(`SMT Server listening at http://localhost:${port}`)
