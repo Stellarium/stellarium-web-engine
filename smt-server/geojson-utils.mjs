@@ -66,6 +66,7 @@ const rotateGeojsonPoint = function (p, m) {
 
 
 const healpixCornerFeatureCache = {}
+const healpixRotationMatsCache = {}
 
 export default {
   // Return the area of the feature in steradiant
@@ -133,8 +134,35 @@ export default {
     corners.push(_.cloneDeep(corners[0]))
     let hppixel = turf.polygon([corners])
     this.normalizeGeoJson(hppixel)
+
     healpixCornerFeatureCache[cacheKey] = hppixel
     return hppixel
+  },
+
+  getHealpixRotationMats: function (order, pix) {
+    const cacheKey = '' + order + '_' + pix
+    if (cacheKey in healpixRotationMatsCache)
+      return healpixRotationMatsCache[cacheKey]
+
+    let hppixel = this.getHealpixCornerFeature(order, pix)
+    let q = glMatrix.quat.create()
+    let shiftCenter = turf.centroid(hppixel)
+    assert(shiftCenter)
+    shiftCenter = shiftCenter.geometry.coordinates
+    const center = geojsonPointToVec3(shiftCenter)
+    glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
+    const m = glMatrix.mat3.create()
+    const mInv = glMatrix.mat3.create()
+    glMatrix.mat3.fromQuat(m, q)
+    glMatrix.mat3.invert(mInv, m)
+
+    const rotationMats = {
+      m: m,
+      mInv: mInv
+    }
+
+    healpixRotationMatsCache[cacheKey] = rotationMats
+    return rotationMats
   },
 
   computeCentroidHealpixIndex: function (feature, order) {
@@ -172,8 +200,9 @@ export default {
     const v = geojsonPointToVec3(center)
     const ret = []
     healpix.query_disc_inclusive_nest(1 << order, v, radius, function (pix) {
-      let hppixel = that.getHealpixCornerFeature(order, pix)
-      const intersection = that.intersectionRobust(feature, hppixel, center)
+      const hppixel = that.getHealpixCornerFeature(order, pix)
+      const rotationMats = that.getHealpixRotationMats(order, pix)
+      const intersection = that.intersectionRobust(feature, hppixel, rotationMats)
       if (intersection === null) return
       const f = _.cloneDeep(feature)
       f['healpix_index'] = pix
@@ -185,13 +214,13 @@ export default {
     return ret
   },
 
-  intersectionRobust: function (feature1, feature2, shiftCenter) {
+  intersectionRobust: function (feature1, feature2, rotationMats) {
     const that = this
     assert(feature2.geometry.type === 'Polygon')
     if (feature1.geometry.type === 'MultiPolygon') {
       const featuresCollection = turf.flatten(feature1)
       let featuresIntersected = []
-      turf.featureEach(featuresCollection, f => { const inte = that.intersectionRobust(f, feature2, shiftCenter); if (inte) featuresIntersected.push(inte) })
+      turf.featureEach(featuresCollection, f => { const inte = that.intersectionRobust(f, feature2, rotationMats); if (inte) featuresIntersected.push(inte) })
       if (featuresIntersected.length === 0) return null
       const combinedFc = turf.combine(turf.featureCollection(featuresIntersected))
       assert(combinedFc.features.length === 1)
@@ -201,22 +230,15 @@ export default {
     }
 
     assert(feature1.geometry.type === 'Polygon')
-    let q = glMatrix.quat.create()
-    const center = geojsonPointToVec3(shiftCenter)
-    glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
-    const m = glMatrix.mat3.create()
-    const mInv = glMatrix.mat3.create()
-    glMatrix.mat3.fromQuat(m, q)
-    glMatrix.mat3.invert(mInv, m)
 
     const f1 = _.cloneDeep(feature1)
     const f2 = _.cloneDeep(feature2)
-    this.rotateGeojsonFeature(f1, m)
-    this.rotateGeojsonFeature(f2, m)
+    this.rotateGeojsonFeature(f1, rotationMats.m)
+    this.rotateGeojsonFeature(f2, rotationMats.m)
     let res = null
     try {
       res = turf.intersect(f1, f2)
-      if (res) this.rotateGeojsonFeature(res, mInv)
+      if (res) this.rotateGeojsonFeature(res, rotationMats.mInv)
     } catch (err) {
       console.log('Error computing feature intersection: ' + err)
       res = null
