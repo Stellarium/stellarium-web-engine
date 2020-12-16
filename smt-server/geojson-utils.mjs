@@ -20,7 +20,6 @@ glMatrix.glMatrix.setMatrixArrayType(Array)
 
 const D2R = Math.PI / 180
 const R2D = 180 / Math.PI
-const HEALPIX_ORDER = 5
 const STERADIAN_TO_DEG2 = (180 / Math.PI) * (180 / Math.PI)
 
 const crossAntimeridian = function (feature) {
@@ -139,27 +138,30 @@ export default {
     return hppixel
   },
 
+  rotationMatsForShiftCenter: function (center) {
+    let q = glMatrix.quat.create()
+    glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
+    const m = glMatrix.mat3.create()
+    const mInv = glMatrix.mat3.create()
+    glMatrix.mat3.fromQuat(m, q)
+    glMatrix.mat3.invert(mInv, m)
+    return {
+      m: m,
+      mInv: mInv
+    }
+  },
+
   getHealpixRotationMats: function (order, pix) {
     const cacheKey = '' + order + '_' + pix
     if (cacheKey in healpixRotationMatsCache)
       return healpixRotationMatsCache[cacheKey]
 
     let hppixel = this.getHealpixCornerFeature(order, pix)
-    let q = glMatrix.quat.create()
     let shiftCenter = turf.centroid(hppixel)
     assert(shiftCenter)
     shiftCenter = shiftCenter.geometry.coordinates
     const center = geojsonPointToVec3(shiftCenter)
-    glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
-    const m = glMatrix.mat3.create()
-    const mInv = glMatrix.mat3.create()
-    glMatrix.mat3.fromQuat(m, q)
-    glMatrix.mat3.invert(mInv, m)
-
-    const rotationMats = {
-      m: m,
-      mInv: mInv
-    }
+    const rotationMats = this.rotationMatsForShiftCenter(center)
 
     healpixRotationMatsCache[cacheKey] = rotationMats
     return rotationMats

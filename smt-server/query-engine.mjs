@@ -15,13 +15,9 @@ import filtrex from 'filtrex'
 import hash_sum from 'hash-sum'
 import turf from '@turf/turf'
 import assert from 'assert'
-import glMatrix from 'gl-matrix'
 import geo_utils from './geojson-utils.mjs'
 
 const HEALPIX_ORDER = 5
-
-// Use native JS array in glMatrix lib
-glMatrix.glMatrix.setMatrixArrayType(Array)
 
 export default {
   fieldsList: undefined,
@@ -86,13 +82,10 @@ export default {
           const shiftCenter = turf.pointOnFeature(feature).geometry.coordinates
 
           // Compute shift matrices
-          let q = glMatrix.quat.create()
           const center = geojsonPointToVec3(shiftCenter)
-          glMatrix.quat.rotationTo(q, glMatrix.vec3.fromValues(center[0], center[1], center[2]), glMatrix.vec3.fromValues(1, 0, 0))
-          feature.m = glMatrix.mat3.create()
-          feature.mInv = glMatrix.mat3.create()
-          glMatrix.mat3.fromQuat(feature.m, q)
-          glMatrix.mat3.invert(feature.mInv, feature.m)
+          const mats = geo_utils.rotationMatsForShiftCenter(center)
+          feature.m = mats.m
+          feature.mInv = mats.mInv
           geo_utils.rotateGeojsonFeature(feature, feature.m)
           return feature
         }
@@ -149,12 +142,6 @@ export default {
   loadAllData: async function (jsonData) {
     console.log('Loading ' + jsonData.features.length + ' features')
     let that = this
-
-//    for (let pix=0; pix < 12 * (2 << HEALPIX_ORDER); pix++) {
-//      let hppixel = getHealpixCornerFeature(HEALPIX_ORDER, pix)
-//      console.log(JSON.stringify(hppixel) + ',')
-//    }
-//    process.exit()
 
     geo_utils.normalizeGeoJson(jsonData)
 
