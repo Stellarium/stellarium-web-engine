@@ -13,7 +13,7 @@
 
   <v-col cols="12">
     <v-chip small class="white--text ma-1" :close="tag.closable" :color="tag.closable ? 'primary' : 'secondary'" v-for="(tag, i) in fieldResultsData" :key="i" @click="chipClicked(tag.name)" @click:close="chipClosed(tag.name)">
-      {{ tag.name }}&nbsp;<span :class="tag.closable ? 'white--text' : 'primary--text'"> ({{ tag.count }})</span>
+      <span v-if="tag.name === '__undefined'"><i>Undefined</i></span><span v-else>{{ tag.name }}</span>&nbsp;<span :class="tag.closable ? 'white--text' : 'primary--text'"> ({{ tag.count }})</span>
     </v-chip>
   </v-col>
 
@@ -30,11 +30,11 @@ export default {
   methods: {
     chipClicked: function (name) {
       if (this.fieldResults.data.filter(tag => tag.name === name && tag.closable).length > 0) return
-      const constraint = { field: this.fieldResults.field, operation: (name === 'undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
+      const constraint = { field: this.fieldResults.field, operation: (name === '__undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
       this.$emit('add-constraint', constraint)
     },
     chipClosed: function (name) {
-      const constraint = { field: this.fieldResults.field, operation: (name === 'undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
+      const constraint = { field: this.fieldResults.field, operation: (name === '__undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
       this.$emit('remove-constraint', constraint)
     }
   },
