@@ -56,6 +56,7 @@ export default {
       start: () => {},
       step: (accumulator, value) => {
         if (!accumulator) accumulator = {}
+        if (!value) value = '__undefined'
         accumulator[value] = (accumulator[value] !== undefined) ? accumulator[value] + 1 : 1
         return accumulator
       },
