@@ -338,11 +338,7 @@ export default {
           }
           for (let j in res2) {
             that.postProcessSQLiteResult(res2[j])
-            let d = new Date(res2[j].d)
-            d.setHours(0, 0, 0, 0)
-            if (step === '%Y-%m') d.setDate(0)
-            if (step === '%Y') d.setMonth(0)
-            data.table.push([d, res2[j].c])
+            data.table.push([res2[j].d, res2[j].c])
           }
           let retd = {}
           retd[agOpt.out] = data
