@@ -292,7 +292,7 @@ static const unsigned char DATA_shaders_lines_glsl[2238] __attribute__((aligned(
 
 ASSET_REGISTER(shaders_lines_glsl, "shaders/lines.glsl", DATA_shaders_lines_glsl, false)
 
-static const unsigned char DATA_shaders_mesh_glsl[1455] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_mesh_glsl[1509] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -302,13 +302,13 @@ static const unsigned char DATA_shaders_mesh_glsl[1455] __attribute__((aligned(4
     " * repository.\n"
     " */\n"
     "\n"
-    "uniform   lowp    vec4 u_color;\n"
     "uniform   lowp    vec2 u_fbo_size;\n"
+    "varying   lowp    vec4 v_color;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
     "attribute highp   vec4 a_pos;\n"
-    "\n"
+    "attribute lowp    vec4 a_color;\n"
     "\n"
     "// Mollweide projection implementation.\n"
     "// Note: we should probably put this in a seperate file and support include.\n"
@@ -352,6 +352,7 @@ static const unsigned char DATA_shaders_mesh_glsl[1455] __attribute__((aligned(4
     "#else\n"
     "    gl_Position = a_pos;\n"
     "#endif\n"
+    "    v_color = a_color;\n"
     "}\n"
     "\n"
     "#endif\n"
@@ -359,7 +360,7 @@ static const unsigned char DATA_shaders_mesh_glsl[1455] __attribute__((aligned(4
     "\n"
     "void main()\n"
     "{\n"
-    "    gl_FragColor = u_color;\n"
+    "    gl_FragColor = v_color;\n"
     "}\n"
     "\n"
     "#endif\n"
