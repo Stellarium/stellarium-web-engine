@@ -185,9 +185,10 @@ static const gl_buf_info_t INDICES_BUF = {
 };
 
 static const gl_buf_info_t MESH_BUF = {
-    .size = 16,
+    .size = 20,
     .attrs = {
-        [ATTR_POS] = {GL_FLOAT, 4, false, 0},
+        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 16},
     },
 };
 
@@ -1055,13 +1056,9 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
     GL(glDisable(GL_CULL_FACE));
     GL(glDisable(GL_DEPTH_TEST));
 
-    if (item->color[3] == 1) {
-        GL(glDisable(GL_BLEND));
-    } else {
-        GL(glEnable(GL_BLEND));
-        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                               GL_ZERO, GL_ONE));
-    }
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                           GL_ZERO, GL_ONE));
 
     // Stencil hack to remove projection deformations artifacts.
     if (item->mesh.use_stencil) {
@@ -1071,7 +1068,6 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
         GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
     }
 
-    gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_fbo_size", fbo_size);
     gl_update_uniform(shader, "u_proj_scaling", item->mesh.proj_scaling);
 
@@ -1637,22 +1633,24 @@ static void mesh(renderer_t          *rend_,
     int i, ofs;
     double pos[4] = {};
     double rot[3][3];
-    float color[4];
+    uint8_t color[4];
     item_t *item;
     renderer_gl_t *rend = (void*)rend_;
 
-    vec4_to_float(painter->color, color);
+    color[0] = painter->color[0] * 255;
+    color[1] = painter->color[1] * 255;
+    color[2] = painter->color[2] * 255;
+    color[3] = painter->color[3] * 255;
+    if (!color[3]) return;
 
     item = get_item(rend, ITEM_MESH, verts_count, indices_count, NULL);
     if (use_stencil) item = NULL;
     if (item && item->mesh.mode != mode) item = NULL;
     if (item && item->mesh.stroke_width != painter->lines.width) item = NULL;
-    if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_MESH;
-        memcpy(item->color, color, sizeof(color));
         item->mesh.mode = mode;
         item->mesh.stroke_width = painter->lines.width;
         item->mesh.use_stencil = use_stencil;
@@ -1674,6 +1672,7 @@ static void mesh(renderer_t          *rend_,
         for (i = 0; i < verts_count; i++) {
             mat3_mul_vec3(rot, verts[i], pos);
             gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+            gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(color));
             gl_buf_next(&item->buf);
         }
     } else {
@@ -1685,6 +1684,7 @@ static void mesh(renderer_t          *rend_,
             pos[3] = 0.0;
             project(painter->proj, PROJ_ALREADY_NORMALIZED, pos, pos);
             gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
+            gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(color));
             gl_buf_next(&item->buf);
         }
     }

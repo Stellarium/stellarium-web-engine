@@ -7,13 +7,13 @@
  * repository.
  */
 
-uniform   lowp    vec4 u_color;
 uniform   lowp    vec2 u_fbo_size;
+varying   lowp    vec4 v_color;
 
 #ifdef VERTEX_SHADER
 
 attribute highp   vec4 a_pos;
-
+attribute lowp    vec4 a_color;
 
 // Mollweide projection implementation.
 // Note: we should probably put this in a seperate file and support include.
@@ -57,6 +57,7 @@ void main()
 #else
     gl_Position = a_pos;
 #endif
+    v_color = a_color;
 }
 
 #endif
@@ -64,7 +65,7 @@ void main()
 
 void main()
 {
-    gl_FragColor = u_color;
+    gl_FragColor = v_color;
 }
 
 #endif
