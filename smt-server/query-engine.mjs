@@ -276,6 +276,14 @@ export default {
     if (q.projectOptions) {
       selectClause += Object.keys(q.projectOptions).map(k => that.fId2AlaSql(k)).join(', ')
     }
+
+    // Use a sub-query to ensure that we don't return all pieces of features
+    // split on each helpix pixel as separate entries
+    // In some case, when the query work on healpix_index, we do want to
+    // consider each pieces as a separated entry, in such case the onSubFeatures
+    // flag has to be defined.
+    const fromClause = ' FROM ' + (q.onSubFeatures ? 'features' : '(SELECT * FROM features GROUP BY id)')
+
     if (q.aggregationOptions) {
       // We can't do much more than group all using SQL language
       console.assert(q.groupingOptions.length === 1 && q.groupingOptions[0].operation === 'GROUP_ALL')
@@ -291,7 +299,7 @@ export default {
           console.assert(q.aggregationOptions.length === 1)
           let fid = that.fId2AlaSql(agOpt.fieldId)
           let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
-          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax ' + fromClause + wc
           const res = that.db.prepare(req).get()
           that.postProcessSQLiteResult(res)
           if (!res.dmin || !res.dmax) {
@@ -320,7 +328,7 @@ export default {
             step = '%Y-%m'
           }
 
-          let sqlQ = 'SELECT COUNT(*) AS c, STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\') AS d FROM features ' + wc + ' GROUP BY STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\')'
+          let sqlQ = 'SELECT COUNT(*) AS c, STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\') AS d ' + fromClause + wc + ' GROUP BY STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\')'
           const res2 = that.db.prepare(sqlQ).all()
           let data = {
             min: start,
@@ -344,7 +352,7 @@ export default {
           console.assert(q.aggregationOptions.length === 1)
           let fid = that.fId2AlaSql(agOpt.fieldId)
           let wc = (whereClause === '') ? ' WHERE ' + fid + ' IS NOT NULL' : whereClause + ' AND ' + fid + ' IS NOT NULL'
-          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax FROM features' + wc
+          let req = 'SELECT MIN(' + fid + ') AS dmin, MAX(' + fid + ') AS dmax ' + fromClause + wc
           let stmt = that.db.prepare(req)
           const res = stmt.get()
           that.postProcessSQLiteResult(res)
@@ -362,7 +370,7 @@ export default {
           }
           let step = (res.dmax - res.dmin) / 10
 
-          let sqlQ = 'SELECT COUNT(*) AS c, ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ') * ' + step + ' AS d FROM features ' + wc + ' GROUP BY ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ')'
+          let sqlQ = 'SELECT COUNT(*) AS c, ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ') * ' + step + ' AS d ' + fromClause + wc + ' GROUP BY ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ')'
           const res2 = that.db.prepare(sqlQ).all()
           let data = {
             min: res.dmin,
@@ -382,13 +390,8 @@ export default {
         }
       }
     }
-    // Use a sub-query to ensure that we don't return all pieces of features
-    // split on each helpix pixel as separate entries
-    // In some case, when the query work on healpix_index, we do want to
-    // consider each pieces as a separated entry, in such case the onSubFeatures
-    // flag has to be defined.
-    selectClause += ' FROM ' + (q.onSubFeatures ? 'features' : '(SELECT * FROM features GROUP BY id)')
-    let sqlStatement = selectClause + whereClause
+
+    let sqlStatement = selectClause + fromClause + whereClause
     const res = that.db.prepare(sqlStatement).all()
     for (let i in res) {
       that.postProcessSQLiteResult(res[i])
