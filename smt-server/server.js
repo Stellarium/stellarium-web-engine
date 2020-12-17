@@ -188,6 +188,7 @@ app.get('/api/v1/:serverHash/queryVisual', (req, res) => {
 
 app.get('/api/v1/hips/:queryHash/properties', (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000')
+  res.type('text/plain')
   res.send(qe.getHipsProperties(req.params.queryHash))
 })
 
