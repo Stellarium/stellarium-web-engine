@@ -397,7 +397,7 @@ export default {
           }
           let step = (res.dmax - res.dmin) / 10
 
-          let sqlQ = 'SELECT COUNT(*) AS c, ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ') * ' + step + ' AS d ' + fromClause + wc + ' GROUP BY ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ')'
+          let sqlQ = 'SELECT COUNT(*) AS c, ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ') * ' + step + ' + ' + res.dmin + ' AS d ' + fromClause + wc + ' GROUP BY ROUND((' + fid + ' - ' + res.dmin + ') / ' + step + ')'
           const res2 = that.db.prepare(sqlQ).all()
           let data = {
             min: res.dmin,
@@ -405,10 +405,19 @@ export default {
             step: step,
             table: [['Value', 'Count']]
           }
+
+          let tmpTable = {}
+          // Prefill the table to make sure that all steps do have a value
+          for (let d = res.dmin; d < res.dmax; d += step) {
+            tmpTable['' + d] = 0
+          }
           for (let j in res2) {
             that.postProcessSQLiteResult(res2[j])
-            data.table.push([res2[j].d, res2[j].c])
+            tmpTable['' + res2[j].d] = res2[j].c
           }
+          Object.keys(tmpTable).forEach(function (key) {
+            data.table.push([key, tmpTable[key]])
+          })
           let retd = {}
           retd[agOpt.out] = data
           return { q: q, res: [retd] }
