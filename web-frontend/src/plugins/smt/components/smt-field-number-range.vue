@@ -108,6 +108,7 @@ export default {
         if (newData.table.length) newData.table[0].push({ role: 'annotation' })
         for (let i = 1; i < newData.table.length; ++i) {
           newData.table[i].push('' + newData.table[i][1])
+          newData.table[i][0] = this.formatValue(newData.table[i][0])
         }
         return newData
       }
