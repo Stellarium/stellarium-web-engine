@@ -315,10 +315,10 @@ export default {
             return { q: q, res: [retd] }
           }
           let start = new Date(res.dmin)
-          start.setHours(0, 0, 0, 0)
+          start.setUTCHours(0, 0, 0, 0)
           // Switch to next day and truncate
           let stop = new Date(res.dmax + 1000 * 60 * 60 * 24)
-          stop.setHours(0, 0, 0, 0)
+          stop.setUTCHours(23, 59, 59, 0)
           // Range in days
           let range = (stop - start) / (1000 * 60 * 60 * 24)
           let step = '%Y-%m-%d'
@@ -326,6 +326,17 @@ export default {
             step = '%Y'
           } else if (range > 3 * 30) {
             step = '%Y-%m'
+          }
+
+          // Adjust min max so that they fall on an integer number of month/year
+          if (step === '%Y-%m-%d') {
+            // Min max already OK
+          } else if (step === '%Y-%m') {
+            start.setUTCDate(1)
+            stop.setUTCMonth(stop.getUTCMonth() + 1, 0)
+          } else if (step === '%Y') {
+            start.setUTCMonth(0)
+            stop.setUTCFullYear(stop.getUTCFullYear(), 11, 31)
           }
 
           let sqlQ = 'SELECT COUNT(*) AS c, STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\') AS d ' + fromClause + wc + ' GROUP BY STRFTIME(\'' + step + '\', ROUND(' + fid + '/1000), \'unixepoch\')'
@@ -336,10 +347,30 @@ export default {
             step: step,
             table: [['Date', 'Count']]
           }
+
+          let tmpTable = {}
+          // Prefill the table to make sure that all steps do have a value
+          let d = new Date(start.getTime())
+          if (step === '%Y') {
+            for (; d < stop; d.setUTCYear(d.getUTCYear() + 1)) {
+              tmpTable[d.toISOString().slice(0, 4)] = 0
+            }
+          } else if (step === '%Y-%m') {
+            for (; d < stop; d.setUTCMonth(d.getUTCMonth() + 1)) {
+              tmpTable[d.toISOString().slice(0, 7)] = 0
+            }
+          } else if (step === '%Y-%m-%d') {
+            for (; d < stop; d.setUTCDate(d.getUTCDate() + 1)) {
+              tmpTable[d.toISOString().slice(0, 10)] = 0
+            }
+          }
           for (let j in res2) {
             that.postProcessSQLiteResult(res2[j])
-            data.table.push([res2[j].d, res2[j].c])
+            tmpTable[res2[j].d] = res2[j].c
           }
+          Object.keys(tmpTable).forEach(function (key) {
+            data.table.push([key, tmpTable[key]])
+          })
           let retd = {}
           retd[agOpt.out] = data
           return { q: q, res: [retd] }
