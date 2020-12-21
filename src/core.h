@@ -24,6 +24,8 @@
 
 #include "utils/fps.h"
 
+#define CORE_MIN_FOV (1./3600 * DD2R)
+
 typedef struct core core_t;
 typedef struct task task_t;
 
