@@ -1062,6 +1062,8 @@ static obj_klass_t core_klass = {
         PROPERTY(on_click, TYPE_FUNC, MEMBER(core_t, on_click)),
         PROPERTY(time_animation_target, TYPE_MJD,
                  MEMBER(core_t, time_animation.dst_utc)),
+        PROPERTY(time_speed, TYPE_FLOAT, MEMBER(core_t, time_speed)),
+        PROPERTY(y_offset, TYPE_FLOAT, MEMBER(core_t, y_offset)),
         {}
     }
 };

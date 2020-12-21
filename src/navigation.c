@@ -86,33 +86,41 @@ void core_update_time(double dt)
     typeof(core->time_animation) *anim = &core->time_animation;
     double t, tt;
 
-    if (!anim->duration) return;
-    anim->t += dt / anim->duration;
-
-    t = smoothstep(0.0, 1.0, anim->t);
-
-    switch (anim->mode) {
-    case 0:
-        tt = mix(anim->src_tt, anim->dst_tt, t);
-        break;
-    case 1:
-        tt = smart_time_mix(anim->src_tt, anim->dst_tt, t);
-        break;
-    default:
-        assert(false);
+    // Normal time increase.
+    if (!anim->duration && core->time_speed) {
+        tt = core->observer->tt + dt * core->time_speed / 86400;
+        obj_set_attr(&core->observer->obj, "tt", tt);
+        observer_update(core->observer, true);
         return;
     }
 
-    obj_set_attr(&core->observer->obj, "tt", tt);
-    if (t >= 1.0) {
-        anim->duration = 0.0;
-        anim->dst_utc = NAN;
-        module_changed((obj_t*)core, "time_animation_target");
+    // Time animation.
+    if (anim->duration) {
+        anim->t += dt / anim->duration;
+        t = smoothstep(0.0, 1.0, anim->t);
+        switch (anim->mode) {
+        case 0:
+            tt = mix(anim->src_tt, anim->dst_tt, t);
+            break;
+        case 1:
+            tt = smart_time_mix(anim->src_tt, anim->dst_tt, t);
+            break;
+        default:
+            assert(false);
+            return;
+        }
+        obj_set_attr(&core->observer->obj, "tt", tt);
+        if (t >= 1.0) {
+            anim->duration = 0.0;
+            anim->dst_utc = NAN;
+            module_changed((obj_t*)core, "time_animation_target");
+        }
+        observer_update(core->observer, true);
+        return;
     }
-    observer_update(core->observer, true);
 }
 
-int core_update_direction(double dt)
+void core_update_direction(double dt)
 {
     double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
 
@@ -154,12 +162,10 @@ int core_update_direction(double dt)
         module_changed(&core->observer->obj, "yaw");
         observer_update(core->observer, true);
     }
-
-    return 0;
 }
 
 // Update the observer mount quaternion.
-int core_update_mount(double dt)
+void core_update_mount(double dt)
 {
     observer_t *obs = core->observer;
     int frame = core->mount_frame;
@@ -179,9 +185,10 @@ int core_update_mount(double dt)
     if (vec4_equal(quat, obs->mount_quat)) return 0;
     quat_rotate_towards(obs->mount_quat, quat, dt * speed, obs->mount_quat);
     observer_update(core->observer, true);
-    return 0;
 }
 
+// Weak so that we can easily replace the navigation algorithm.
+__attribute__((weak))
 void core_update_observer(double dt)
 {
     core_update_time(dt);

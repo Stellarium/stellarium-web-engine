@@ -21,5 +21,4 @@
  *
  * Should be called at each frame.
  */
-__attribute__((weak))
 void core_update_observer(double dt);
