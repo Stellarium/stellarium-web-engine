@@ -182,7 +182,7 @@ void core_update_mount(double dt)
         quat_normalize(quat, quat);
     }
 
-    if (vec4_equal(quat, obs->mount_quat)) return 0;
+    if (vec4_equal(quat, obs->mount_quat)) return;
     quat_rotate_towards(obs->mount_quat, quat, dt * speed, obs->mount_quat);
     observer_update(core->observer, true);
 }
