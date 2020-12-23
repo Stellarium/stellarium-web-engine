@@ -114,6 +114,19 @@ const char *sys_get_lang()
     return sys_callbacks.get_lang();
 }
 
+bool sys_lang_supports_spacing()
+{
+    static int lang_has_spacing = -1;
+    if (lang_has_spacing != -1)
+        return lang_has_spacing;
+    lang_has_spacing = strncmp(sys_get_lang(), "ar", 2) != 0 &&
+                       strncmp(sys_get_lang(), "zh", 2) != 0 &&
+                       strncmp(sys_get_lang(), "ja", 2) != 0 &&
+                       strncmp(sys_get_lang(), "ko", 2) != 0;
+    lang_has_spacing = lang_has_spacing ? 1 : 0;
+    return lang_has_spacing;
+}
+
 /*
  * Function: sys_render_text
  * Render text into a texture buffer.

@@ -98,6 +98,12 @@ const char *sys_translate(const char *domain, const char *str);
 const char *sys_get_lang();
 
 /*
+ * Function: sys_lang_supports_spacing
+ * Get whether the current lang support spacing between characters.
+ */
+bool sys_lang_supports_spacing();
+
+/*
  * Function: sys_render_text
  * Render text into a texture buffer.
  *
