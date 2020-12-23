@@ -1176,10 +1176,11 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     nvgRotate(rend->vg, item->text.angle);
 
     nvgFontFaceId(rend->vg, rend->fonts[font].id);
-    if (item->text.effects & TEXT_SPACED)
+
+    if (sys_lang_supports_spacing() && item->text.effects & TEXT_SPACED)
         nvgTextLetterSpacing(rend->vg, round(item->text.size *
                              rend->fonts[font].scale * 0.2));
-    if (item->text.effects & TEXT_SEMI_SPACED)
+    if (sys_lang_supports_spacing() && item->text.effects & TEXT_SEMI_SPACED)
         nvgTextLetterSpacing(rend->vg, round(item->text.size *
                              rend->fonts[font].scale * 0.05));
     nvgFontSize(rend->vg, item->text.size * rend->fonts[font].scale);
