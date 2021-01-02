@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.9] - 2021-01-3
+- Fix date range slider disalignement when scroll bar appears
+- Fix histograms tooltip blinking bug
+- Only pass fieldId in server API instead of the full field definition
+
 ## [0.0.8] - 2020-12-16
 - Fix date range bug when range is too small
 - Fix invalid number of results caused by sub-features (features splitted on the healpix grid)
