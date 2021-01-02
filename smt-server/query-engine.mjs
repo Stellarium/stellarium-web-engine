@@ -361,7 +361,7 @@ export default {
           // Prefill the table to make sure that all steps do have a value
           let d = new Date(start.getTime())
           if (step === '%Y') {
-            for (; d < stop; d.setUTCYear(d.getUTCYear() + 1)) {
+            for (; d < stop; d.setUTCFullYear(d.getUTCFullYear() + 1)) {
               tmpTable[d.toISOString().slice(0, 4)] = 0
             }
           } else if (step === '%Y-%m') {
