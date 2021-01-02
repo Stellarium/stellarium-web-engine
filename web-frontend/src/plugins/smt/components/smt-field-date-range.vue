@@ -168,4 +168,9 @@ export default {
 .v-input__slot {
   min-height: 10px;
 }
+/* Work-around google chart tooltip blinking
+ See https://stackoverflow.com/questions/37902708/google-charts-tooltip-flickering */
+svg > g > g:last-child {
+  pointer-events: none
+}
 </style>
