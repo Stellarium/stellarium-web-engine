@@ -8,6 +8,7 @@
 ## [0.0.8] - 2020-12-16
 - Fix date range bug when range is too small
 - Fix invalid number of results caused by sub-features (features splitted on the healpix grid)
+- Fix footprint display performance regression
 
 ## [0.0.7] - 2020-12-15
 - Use SQLite as a primary DB engine
