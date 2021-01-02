@@ -313,7 +313,7 @@ export default {
         return []
       }
 
-      let res = this.query.constraints.slice()
+      let res = _.cloneDeep(this.query.constraints)
       for (const i in res) {
         res[i].closable = true
         res[i].field = this.$smt.fields.find(f => f.id === res[i].fieldId)
