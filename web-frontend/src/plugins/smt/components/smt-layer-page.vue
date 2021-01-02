@@ -372,7 +372,7 @@ export default {
 <style>
 .scroll-container {
   flex: 1 1 auto;
-  overflow-y: auto;
+  overflow-y: overlay;
   backface-visibility: hidden;
 }
 ul {
