@@ -71,8 +71,8 @@ export default {
       const hpIndices = [...new Set(this.selectedFeatures.map(f => f.healpix_index))]
       const q = {
         constraints: [
-          { field: { id: 'geogroup_id', type: 'string' }, operation: 'IN', expression: geogroupIds, negate: false },
-          { field: { id: 'healpix_index', type: 'number' }, operation: 'IN', expression: hpIndices, negate: false }
+          { fieldId: 'geogroup_id', operation: 'IN', expression: geogroupIds, negate: false },
+          { fieldId: 'healpix_index', operation: 'IN', expression: hpIndices, negate: false }
         ],
         projectOptions: {
           id: 1,

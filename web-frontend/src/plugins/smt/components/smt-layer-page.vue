@@ -113,12 +113,12 @@ export default {
 
       // Compute the WHERE clause to be used in following queries
       const queryConstraintsEdited = this.query.constraints.filter(c => !this.isEdited(c))
-      const constraintsIds = that.query.constraints.map(c => c.field.id)
+      const constraintsIds = that.query.constraints.map(c => c.fieldId)
 
       // And recompute all fields
       for (const i in that.$smt.fields) {
         const field = that.$smt.fields[i]
-        const edited = that.editedConstraint && that.editedConstraint.field.id === field.id
+        const edited = that.editedConstraint && that.editedConstraint.fieldId === field.id
         if (field.widget === 'tags') {
           const q = {
             constraints: edited ? queryConstraintsEdited : this.query.constraints,
@@ -128,7 +128,7 @@ export default {
           qe.query(q).then(res => {
             let tags = res.res[0].tags ? res.res[0].tags : {}
             tags = Object.keys(tags).map(function (key) {
-              const closable = that.query.constraints.filter(c => c.field.id === field.id && c.expression === key).length !== 0
+              const closable = that.query.constraints.filter(c => c.fieldId === field.id && c.expression === key).length !== 0
               return { name: key, count: tags[key], closable: closable }
             })
             Vue.set(that.results.fields, i, {
@@ -139,7 +139,7 @@ export default {
             })
             // Fill the implicit constraints list, i.e. the tags where only one value remains
             if (!constraintsIds.includes(field.id) && res.res[0].tags && Object.keys(res.res[0].tags).length === 1) {
-              that.results.implicitConstraints.push({ field: field, expression: Object.keys(res.res[0].tags)[0], closable: false })
+              that.results.implicitConstraints.push({ fieldId: field.id, field: field, expression: Object.keys(res.res[0].tags)[0], closable: false })
             }
           }, err => {
             console.log(err)
@@ -217,11 +217,14 @@ export default {
 
       let liveConstraintSql
       const lc = that.liveConstraint
-      if (lc && lc.field.widget === 'date_range' && lc.operation === 'DATE_RANGE') {
-        liveConstraintSql = qe.fId2AlaSql(lc.field.id)
-      }
-      if (lc && lc.field.widget === 'number_range' && lc.operation === 'NUMBER_RANGE') {
-        liveConstraintSql = qe.fId2AlaSql(lc.field.id)
+      if (lc) {
+        const lcField = that.$smt.fields.find(f => f.id === lc.fieldId)
+        if (lcField.widget === 'date_range' && lc.operation === 'DATE_RANGE') {
+          liveConstraintSql = qe.fId2AlaSql(lc.fieldId)
+        }
+        if (lcField.widget === 'number_range' && lc.operation === 'NUMBER_RANGE') {
+          liveConstraintSql = qe.fId2AlaSql(lc.fieldId)
+        }
       }
       that.geojsonObj.filter = function (feature) {
         if (liveConstraintSql) {
@@ -253,9 +256,11 @@ export default {
       }
     },
     addConstraint: function (c) {
+      const that = this
       this.query.constraints = this.query.constraints.filter(cons => {
-        if (cons.field.widget === 'date_range' && cons.field.id === c.field.id) return false
-        if (cons.field.widget === 'number_range' && cons.field.id === c.field.id) return false
+        const consField = that.$smt.fields.find(f => f.id === cons.fieldId)
+        if (consField.widget === 'date_range' && cons.fieldId === c.fieldId) return false
+        if (consField.widget === 'number_range' && cons.fieldId === c.fieldId) return false
         return true
       })
       this.query.constraints.push(c)
@@ -264,7 +269,7 @@ export default {
     },
     removeConstraint: function (c) {
       this.query.constraints = this.query.constraints.filter(cons => {
-        if (cons.field.id === c.field.id && cons.expression === c.expression && cons.operation === c.operation) return false
+        if (cons.fieldId === c.fieldId && cons.expression === c.expression && cons.operation === c.operation) return false
         return true
       })
       this.refreshObservationGroups()
@@ -282,7 +287,7 @@ export default {
       this.refreshObservationGroups()
     },
     isEdited: function (c) {
-      return this.editedConstraint && c.field.id === this.editedConstraint.field.id
+      return this.editedConstraint && c.fieldId === this.editedConstraint.fieldId
     },
     unselect: function () {
       this.selectedFootprintData = []
@@ -311,6 +316,7 @@ export default {
       let res = this.query.constraints.slice()
       for (const i in res) {
         res[i].closable = true
+        res[i].field = this.$smt.fields.find(f => f.id === res[i].fieldId)
       }
       // Add implicit constraints (when only a unique tag value match the query)
       res = res.concat(this.results.implicitConstraints)

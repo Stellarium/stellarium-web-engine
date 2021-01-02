@@ -21,6 +21,7 @@ const HEALPIX_ORDER = 5
 
 export default {
   fieldsList: undefined,
+  fieldsMap: undefined,
   baseHashKey: '',
   sqlFields: undefined,
   fcounter: 0,
@@ -114,7 +115,9 @@ export default {
 
     that.fieldsList = fieldsList
     that.baseHashKey = baseHashKey
+    that.fieldsMap = {}
     for (let i in fieldsList) {
+      that.fieldsMap[fieldsList[i].id] = fieldsList[i]
       if (fieldsList[i].computed) {
         let options = {
           extraFunctions: { date2unix: function (dstr) { return new Date(dstr).getTime() } },
@@ -123,6 +126,11 @@ export default {
         fieldsList[i].computed_compiled = filtrex.compileExpression(fieldsList[i].computed, options)
       }
     }
+    // Add dummy entries matching our generated fields
+    that.fieldsMap['id'] = { type: 'string' }
+    that.fieldsMap['healpix_index'] = { type: 'number' }
+    that.fieldsMap['geogroup_id'] = { type: 'string' }
+
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = fieldsList.map(f => that.fId2AlaSql(f.id) + ' ' + that.fType2AlaSql(f.type)).join(', ')
 
@@ -208,17 +216,17 @@ export default {
     let groupedConstraints = {}
     for (let i in constraints) {
       let c = constraints[i]
-      if (c.field.id in groupedConstraints) {
-        groupedConstraints[c.field.id].push(c)
+      if (c.fieldId in groupedConstraints) {
+        groupedConstraints[c.fieldId].push(c)
       } else {
-        groupedConstraints[c.field.id] = [c]
+        groupedConstraints[c.fieldId] = [c]
       }
     }
     groupedConstraints = Object.values(groupedConstraints)
 
     // Convert one contraint to a SQL string
     let c2sql = function (c) {
-      let fid = that.fId2AlaSql(c.field.id)
+      const fid = that.fId2AlaSql(c.fieldId)
       if (c.operation === 'STRING_EQUAL') {
         return fid + ' = \'' + c.expression + '\''
       } else if (c.operation === 'INT_EQUAL') {
@@ -232,7 +240,8 @@ export default {
         return '( ' + fid + ' IS NOT NULL AND ' + fid + ' >= ' + c.expression[0] +
           ' AND ' + fid + ' <= ' + c.expression[1] + ')'
       } else if (c.operation === 'IN') {
-        if (c.field.type === 'string') {
+        let fType = that.fieldsMap[c.fieldId] ? that.fieldsMap[c.fieldId].type : undefined
+        if (fType === 'string') {
           return '( ' + fid + ' IN (' + c.expression.map(e => "'" + e + "'").join(', ') + ') )'
         } else {
           return '( ' + fid + ' IN (' + c.expression.map(e => '' + e).join(', ') + ') )'
@@ -473,7 +482,7 @@ export default {
     const healPixScale = (tileId === -1) ? 1 : Math.pow(4, HEALPIX_ORDER - order)
     const queryTileId = tileId * healPixScale
     q.constraints.push({
-      field: {id: 'healpix_index'},
+      fieldId: 'healpix_index',
       operation: 'NUMBER_RANGE',
       expression: [queryTileId, queryTileId + healPixScale - 1],
       negate: false

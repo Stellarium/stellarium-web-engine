@@ -30,11 +30,11 @@ export default {
   methods: {
     chipClicked: function (name) {
       if (this.fieldResults.data.filter(tag => tag.name === name && tag.closable).length > 0) return
-      const constraint = { field: this.fieldResults.field, operation: (name === '__undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
+      const constraint = { fieldId: this.fieldResults.field.id, operation: (name === '__undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
       this.$emit('add-constraint', constraint)
     },
     chipClosed: function (name) {
-      const constraint = { field: this.fieldResults.field, operation: (name === '__undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
+      const constraint = { fieldId: this.fieldResults.field.id, operation: (name === '__undefined' ? 'IS_UNDEFINED' : 'STRING_EQUAL'), expression: name, negate: false }
       this.$emit('remove-constraint', constraint)
     }
   },

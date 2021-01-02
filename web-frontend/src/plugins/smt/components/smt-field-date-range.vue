@@ -95,7 +95,7 @@ export default {
     },
     rangeButtonClicked: function () {
       const constraint = {
-        field: this.fieldResults.field,
+        fieldId: this.fieldResults.field.id,
         operation: 'DATE_RANGE',
         expression: [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
         negate: false
@@ -149,7 +149,7 @@ export default {
   watch: {
     dateRangeSliderValues: function (s) {
       const constraint = {
-        field: this.fieldResults.field,
+        fieldId: this.fieldResults.field.id,
         operation: 'DATE_RANGE',
         expression: [this.dateRangeSliderValues[0], this.dateRangeSliderValues[1]],
         negate: false

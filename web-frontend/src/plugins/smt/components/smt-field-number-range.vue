@@ -87,7 +87,7 @@ export default {
     },
     rangeButtonClicked: function () {
       const constraint = {
-        field: this.fieldResults.field,
+        fieldId: this.fieldResults.field.id,
         operation: 'NUMBER_RANGE',
         expression: [this.rangeSliderValues[0], this.rangeSliderValues[1]],
         negate: false
@@ -128,7 +128,7 @@ export default {
   watch: {
     rangeSliderValues: function (s) {
       const constraint = {
-        field: this.fieldResults.field,
+        fieldId: this.fieldResults.field.id,
         operation: 'NUMBER_RANGE',
         expression: [this.rangeSliderValues[0], this.rangeSliderValues[1]],
         negate: false
