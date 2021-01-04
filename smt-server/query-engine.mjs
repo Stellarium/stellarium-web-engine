@@ -16,6 +16,8 @@ import turf from '@turf/turf'
 import assert from 'assert'
 import geo_utils from './geojson-utils.mjs'
 import fs from 'fs'
+import worker_threads from 'worker_threads'
+import os from 'os'
 
 const HEALPIX_ORDER = 5
 
@@ -49,7 +51,7 @@ export default {
     return 'JSON'
   },
 
-  init: function (dbFileName, fieldsList) {
+  init: function (dbFileName, _fieldsList) {
     let that = this
 
     let dbAlreadyExists = fs.existsSync(dbFileName)
@@ -119,16 +121,16 @@ export default {
       }
     })
 
-    that.fieldsList = fieldsList
+    that.fieldsList = _.cloneDeep(_fieldsList)
     that.fieldsMap = {}
-    for (let i in fieldsList) {
-      that.fieldsMap[fieldsList[i].id] = fieldsList[i]
-      if (fieldsList[i].computed) {
+    for (let i in that.fieldsList) {
+      that.fieldsMap[that.fieldsList[i].id] = that.fieldsList[i]
+      if (that.fieldsList[i].computed) {
         let options = {
           extraFunctions: { date2unix: function (dstr) { return new Date(dstr).getTime() } },
           customProp: (path, unused, obj) => _.get(obj, path, undefined)
         }
-        fieldsList[i].computed_compiled = filtrex.compileExpression(fieldsList[i].computed, options)
+        that.fieldsList[i].computed_compiled = filtrex.compileExpression(that.fieldsList[i].computed, options)
       }
     }
     // Add dummy entries matching our generated fields
@@ -136,8 +138,8 @@ export default {
     that.fieldsMap['healpix_index'] = { type: 'number' }
     that.fieldsMap['geogroup_id'] = { type: 'string' }
 
-    that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
-    let sqlFieldsAndTypes = fieldsList.map(f => that.fId2AlaSql(f.id) + ' ' + that.fType2AlaSql(f.type)).join(', ')
+    that.sqlFields = that.fieldsList.map(f => that.fId2AlaSql(f.id))
+    let sqlFieldsAndTypes = that.fieldsList.map(f => that.fId2AlaSql(f.id) + ' ' + that.fType2AlaSql(f.type)).join(', ')
 
     if (!dbAlreadyExists) {
       let info = db.prepare('CREATE TABLE features (id TEXT, geometry TEXT, healpix_index INT, geogroup_id TEXT, properties TEXT, ' + sqlFieldsAndTypes + ')').run()
@@ -153,6 +155,9 @@ export default {
     }
 
     that.db = db
+
+    if (worker_threads.isMainThread)
+      that.initAsync(dbFileName, _fieldsList)
   },
 
   ingestGeoJson: function (jsonData) {
@@ -435,6 +440,10 @@ export default {
     return { q: q, res: res }
   },
 
+  queryAsync: function (...parameters) {
+    return this.asyncJob('query', ...parameters)
+  },
+
   getHipsProperties: function () {
     return `hips_tile_format = geojson\nhips_order = 2\nhips_order_min = 1` +
         '\nhips_tile_width = 400\nobs_title = SMT Geojson'
@@ -494,6 +503,75 @@ export default {
       geojson.features.push(feature)
     }
     return geojson.features.length ? geojson : undefined
-  }
+  },
 
+  getHipsTileAsync: function (...parameters) {
+    return this.asyncJob('getHipsTile', ...parameters)
+  },
+
+  // A queue containing all pending async jobs
+  queue: [],
+
+  // Add async jobs into queue
+  asyncJob: function (func, ...parameters) {
+    const that = this
+    return new Promise((resolve, reject) => {
+      that.queue.push({
+        resolve,
+        reject,
+        message: { func, parameters },
+      })
+    })
+  },
+
+  initAsync: function (dbFileName, fieldsList) {
+    const that = this
+
+    const spawn = function () {
+      const worker = new worker_threads.Worker('./worker.mjs', { workerData: { dbFileName, fieldsList } })
+
+      let job = null // Current item from the queue
+      let error = null // Error that caused the worker to crash
+      let timer = null // Timer used for polling
+
+      function poll() {
+        if (that.queue.length) {
+          // If there's a job in the queue, send it to the worker
+          job = that.queue.shift()
+          worker.postMessage(job.message)
+        } else {
+          // Otherwise, check again later
+          timer = setImmediate(poll)
+        }
+      }
+
+      worker
+        .on('online', poll)
+        .on('message', (result) => {
+          job.resolve(result)
+          job = null
+          poll() // Check if there's more work to do
+        })
+        .on('error', (err) => {
+          console.error(err)
+          error = err
+        })
+        .on('exit', (code) => {
+          clearImmediate(timer)
+          if (job) {
+            job.reject(error || new Error('worker died'))
+          }
+          if (code !== 0) {
+            console.error(`worker exited with code ${code}`)
+            spawn() // Worker died, so spawn a new one
+          }
+        })
+    }
+
+    // Spawn workers that try to drain the queue
+    const nbWorkers = Math.max(1, os.cpus().length - 1)
+    for (let i = 0; i < nbWorkers; ++i) {
+      spawn()
+    }
+  }
 }

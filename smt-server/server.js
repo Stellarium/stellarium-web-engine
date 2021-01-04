@@ -144,7 +144,7 @@ const initServer = async function () {
       fs.unlinkSync(dbFileName)
     }
   }
-  qe.init(dbFileName, smtConfig.fields, SMT_SERVER_INFO.baseHashKey)
+  qe.init(dbFileName, smtConfig.fields)
 
   // And start listening to connection while the DB is being filled
   app.listen(port, () => {
@@ -206,7 +206,7 @@ app.get('/api/v1/:serverHash/query', async (req, res) => {
   }
   const q = JSON.parse(decodeURIComponent(req.query.q))
   res.set('Cache-Control', 'public, max-age=31536000')
-  const queryResp = await qe.query(q)
+  const queryResp = await qe.queryAsync(q)
   res.send(queryResp)
 })
 
@@ -241,7 +241,7 @@ app.get('/api/v1/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (r
     res.status(404).send()
     return
   }
-  const tileResp = await qe.getHipsTile(q, order, pix)
+  const tileResp = await qe.getHipsTileAsync(q, order, pix)
   if (!tileResp) {
     res.status(404).send()
     return
@@ -256,7 +256,7 @@ app.get('/api/v1/hips/:queryHash/Allsky.geojson', async (req, res) => {
     res.status(404).send()
     return
   }
-  const tileResp = await qe.getHipsTile(q, -1, 0)
+  const tileResp = await qe.getHipsTileAsync(q, -1, 0)
   if (!tileResp) {
     res.status(404).send()
     return
