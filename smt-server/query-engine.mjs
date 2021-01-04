@@ -155,7 +155,7 @@ export default {
     that.db = db
   },
 
-  ingestGeoJson: async function (jsonData) {
+  ingestGeoJson: function (jsonData) {
     console.log('Loading ' + jsonData.features.length + ' features')
     let that = this
 
