@@ -12,7 +12,6 @@
 import Database from 'better-sqlite3'
 import _ from 'lodash'
 import filtrex from 'filtrex'
-import hash_sum from 'hash-sum'
 import turf from '@turf/turf'
 import assert from 'assert'
 import geo_utils from './geojson-utils.mjs'
@@ -25,7 +24,6 @@ export default {
   // All these variable are initialized by the init() function
   fieldsList: undefined,
   fieldsMap: undefined,
-  baseHashKey: '',
   sqlFields: undefined,
   db: undefined,
 
@@ -51,7 +49,7 @@ export default {
     return 'JSON'
   },
 
-  init: function (dbFileName, fieldsList, baseHashKey) {
+  init: function (dbFileName, fieldsList) {
     let that = this
 
     let dbAlreadyExists = fs.existsSync(dbFileName)
@@ -122,7 +120,6 @@ export default {
     })
 
     that.fieldsList = fieldsList
-    that.baseHashKey = baseHashKey
     that.fieldsMap = {}
     for (let i in fieldsList) {
       that.fieldsMap[fieldsList[i].id] = fieldsList[i]
@@ -198,22 +195,6 @@ export default {
         insert.run(feature)
     })
     insertMany(subFeatures)
-  },
-
-  loadGeojson: function (url) {
-    let that = this
-    return fetch(url).then(function (response) {
-      if (!response.ok) {
-        throw response.body
-      }
-      return response.json().then(jsonData => {
-        return that.loadAllData(jsonData).then(_ => {
-          return jsonData.length
-        })
-      }, err => { throw err })
-    }, err => {
-      throw err
-    })
   },
 
   // Construct the SQL WHERE clause matching the given constraints
@@ -454,25 +435,12 @@ export default {
     return { q: q, res: res }
   },
 
-  // Contain the query settings (constraints) linked to a previous query
-  hashToQuery: {},
-
-  // Query the engine
-  queryVisual: function (q) {
-    // Inject a key unique to each revision of the input data
-    // this ensure the hash depends on query + data content
-    q.baseHashKey = this.baseHashKey
-    const hash = hash_sum(q)
-    this.hashToQuery[hash] = q
-    return hash
-  },
-
-  getHipsProperties: function (queryHash) {
+  getHipsProperties: function () {
     return `hips_tile_format = geojson\nhips_order = 2\nhips_order_min = 1` +
         '\nhips_tile_width = 400\nobs_title = SMT Geojson'
   },
 
-  getHipsTile: function (queryHash, order, tileId) {
+  getHipsTile: function (q, order, tileId) {
     const that = this
     // Can be 0: lowest details, only plain healpix tiles shapes
     //        1: medium details, the union of all footprints per tile
@@ -486,9 +454,6 @@ export default {
       LOD_LEVEL = 0
     }
 
-    const q = _.cloneDeep(this.hashToQuery[queryHash])
-    if (!q)
-      return undefined
     const healPixScale = (tileId === -1) ? 1 : Math.pow(4, HEALPIX_ORDER - order)
     const queryTileId = tileId * healPixScale
     q.constraints.push({

@@ -13,6 +13,7 @@ import express from 'express'
 import cors from 'cors'
 import fsp from 'fs/promises'
 import fs from 'fs'
+import _ from 'lodash'
 import qe from './query-engine.mjs'
 import bodyParser from 'body-parser'
 import NodeGit from 'nodegit'
@@ -177,10 +178,26 @@ app.get('/api/v1/smtConfig', (req, res) => {
   res.send(JSON.stringify(smtConfig))
 })
 
-app.post('/api/v1/query', async (req, res) => {
-  const queryResp = await qe.query(req.body)
-  res.send(queryResp)
-})
+// Global storage of hash -> query for later lookup
+var hashToQuery = {}
+
+// Insert this query in the global list of hash -> query for later lookup
+// Returns a unique hash key referencing this query
+const insertQuery = function (q) {
+  // Inject a key unique to each revision of the input data
+  // this ensure the hash depends on query + data content
+  q.baseHashKey = SMT_SERVER_INFO.baseHashKey
+  const hash = hash_sum(q)
+  hashToQuery[hash] = q
+  return hash
+}
+
+// Returns the query matching this hash key
+const lookupQuery = function (hash) {
+  if (!(hash in hashToQuery))
+    return undefined
+  return _.cloneDeep(hashToQuery[hash])
+}
 
 app.get('/api/v1/:serverHash/query', async (req, res) => {
   if (req.params.serverHash !== SMT_SERVER_INFO.baseHashKey) {
@@ -193,10 +210,6 @@ app.get('/api/v1/:serverHash/query', async (req, res) => {
   res.send(queryResp)
 })
 
-app.post('/api/v1/queryVisual', (req, res) => {
-  res.send(qe.queryVisual(req.body))
-})
-
 app.get('/api/v1/:serverHash/queryVisual', (req, res) => {
   if (req.params.serverHash !== SMT_SERVER_INFO.baseHashKey) {
     res.status(404).send()
@@ -204,13 +217,18 @@ app.get('/api/v1/:serverHash/queryVisual', (req, res) => {
   }
   const q = JSON.parse(decodeURIComponent(req.query.q))
   res.set('Cache-Control', 'public, max-age=31536000')
-  res.send(qe.queryVisual(q))
+  res.send(insertQuery(q))
 })
 
 app.get('/api/v1/hips/:queryHash/properties', (req, res) => {
+  if (!lookupQuery(req.params.queryHash)) {
+    res.status(404).send()
+    return
+  }
+
   res.set('Cache-Control', 'public, max-age=31536000')
   res.type('text/plain')
-  res.send(qe.getHipsProperties(req.params.queryHash))
+  res.send(qe.getHipsProperties())
 })
 
 app.get('/api/v1/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (req, res) => {
@@ -218,7 +236,12 @@ app.get('/api/v1/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (r
 
   const order = parseInt(req.params.order.replace('Norder', ''))
   const pix = parseInt(req.params.pix.replace('Npix', ''))
-  const tileResp = await qe.getHipsTile(req.params.queryHash, order, pix)
+  const q = lookupQuery(req.params.queryHash)
+  if (!q) {
+    res.status(404).send()
+    return
+  }
+  const tileResp = await qe.getHipsTile(q, order, pix)
   if (!tileResp) {
     res.status(404).send()
     return
@@ -228,7 +251,12 @@ app.get('/api/v1/hips/:queryHash/:order(Norder\\d+)/:dir/:pix.geojson', async (r
 
 app.get('/api/v1/hips/:queryHash/Allsky.geojson', async (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000')
-  const tileResp = await qe.getHipsTile(req.params.queryHash, -1, 0)
+  const q = lookupQuery(req.params.queryHash)
+  if (!q) {
+    res.status(404).send()
+    return
+  }
+  const tileResp = await qe.getHipsTile(q, -1, 0)
   if (!tileResp) {
     res.status(404).send()
     return
