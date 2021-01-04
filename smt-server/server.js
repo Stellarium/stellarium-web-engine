@@ -126,6 +126,7 @@ const initServer = async function () {
   // Now that all files are up-to-date, load the server config
   smtConfig = JSON.parse(fs.readFileSync(__dirname + '/data/smtConfig.json'))
 
+  // Check if we can preserve the previous DB to avoid re-loading the whole DB
   const dbFileName = __dirname + '/qe.db'
   let reloadGeojson = true
   const dbAlreadyExists = fs.existsSync(dbFileName)
@@ -149,23 +150,21 @@ const initServer = async function () {
     console.log(`SMT Server listening at http://localhost:${port}`)
   })
 
-  if (!reloadGeojson) {
-    console.log('No data/code change since last start: reload previous DB')
-    return
-  } else {
+  if (reloadGeojson) {
     console.log('Data or code has changed since last start: reload geojson')
-  }
 
-  const fetchAndIngest = function (fn) {
-    return fsp.readFile(__dirname + '/data/' + fn).then(
-      data => qe.loadAllData(JSON.parse(data)),
-      err => { throw err})
+    const fetchAndIngest = async function (fn) {
+      const data = await fsp.readFile(__dirname + '/data/' + fn)
+      await qe.ingestGeoJson(JSON.parse(data))
+    }
+    const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
+    return Promise.all(allPromise).then(_ => {
+      console.log('Loading finished')
+      fs.writeFileSync(dbFileName + '-HashKey.txt', SMT_SERVER_INFO.baseHashKey);
+    })
+  } else {
+    console.log('No data/code change since last start: reload previous DB')
   }
-  const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-  return Promise.all(allPromise).then(_ => {
-    console.log('Loading finished')
-    fs.writeFileSync(dbFileName + '-HashKey.txt', SMT_SERVER_INFO.baseHashKey);
-  })
 }
 
 initServer()
