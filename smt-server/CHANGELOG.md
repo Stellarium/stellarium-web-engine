@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.0] - 2021-01-4
+- User workers to speed up queries computations
+- API cleanup and code refactoring
+- User file-based SQLite data base instead of memory-based
+- Don't reload DB when nothing has changed
+
 ## [0.0.9] - 2021-01-3
 - Fix date range slider disalignement when scroll bar appears
 - Fix histograms tooltip blinking bug
