@@ -16,21 +16,21 @@ import hash_sum from 'hash-sum'
 import turf from '@turf/turf'
 import assert from 'assert'
 import geo_utils from './geojson-utils.mjs'
+import fs from 'fs'
 
 const HEALPIX_ORDER = 5
 
 export default {
+
+  // All these variable are initialized by the init() function
   fieldsList: undefined,
   fieldsMap: undefined,
   baseHashKey: '',
   sqlFields: undefined,
-  fcounter: 0,
-
   db: undefined,
 
-  fId2AlaSql: function (fieldId) {
-    return fieldId.replace(/\./g, '_')
-  },
+  // Internal counter used to assign IDs
+  fcounter: 0,
 
   postProcessSQLiteResult: function (res)  {
     for (const i in res) {
@@ -40,6 +40,10 @@ export default {
     }
   },
 
+  fId2AlaSql: function (fieldId) {
+    return fieldId.replace(/\./g, '_')
+  },
+
   fType2AlaSql: function (fieldType) {
     if (fieldType === 'string') return 'TEXT'
     if (fieldType === 'date') return 'INT' // Dates are converted to unix time stamp
@@ -47,10 +51,14 @@ export default {
     return 'JSON'
   },
 
-  initDB: async function (fieldsList, baseHashKey) {
+  init: function (dbFileName, fieldsList, baseHashKey) {
     let that = this
-    console.log('Create Data Base')
-    const db = new Database(':memory:');
+
+    let dbAlreadyExists = fs.existsSync(dbFileName)
+    if (dbAlreadyExists) console.log('Opening existing Data Base (read only): ' + dbFileName)
+    else console.log('Create new Data Base: ' + dbFileName)
+
+    const db = new Database(dbFileName, { readonly: dbAlreadyExists });
 
     // Add a custom aggregation operator for the chip tags
     db.aggregate('VALUES_AND_COUNT', {
@@ -134,15 +142,17 @@ export default {
     that.sqlFields = fieldsList.map(f => that.fId2AlaSql(f.id))
     let sqlFieldsAndTypes = fieldsList.map(f => that.fId2AlaSql(f.id) + ' ' + that.fType2AlaSql(f.type)).join(', ')
 
-    let info = db.prepare('CREATE TABLE features (id TEXT, geometry TEXT, healpix_index INT, geogroup_id TEXT, properties TEXT, ' + sqlFieldsAndTypes + ')').run()
-    db.prepare('CREATE INDEX idx_id ON features(id)').run()
-    db.prepare('CREATE INDEX idx_healpix_index ON features(healpix_index)').run()
-    db.prepare('CREATE INDEX idx_geogroup_id ON features(geogroup_id)').run()
+    if (!dbAlreadyExists) {
+      let info = db.prepare('CREATE TABLE features (id TEXT, geometry TEXT, healpix_index INT, geogroup_id TEXT, properties TEXT, ' + sqlFieldsAndTypes + ')').run()
+      db.prepare('CREATE INDEX idx_id ON features(id)').run()
+      db.prepare('CREATE INDEX idx_healpix_index ON features(healpix_index)').run()
+      db.prepare('CREATE INDEX idx_geogroup_id ON features(geogroup_id)').run()
 
-    // Create an index on each field
-    for (let i in that.sqlFields) {
-      const field = that.sqlFields[i]
-      db.prepare('CREATE INDEX idx_' + i + ' ON features(' + field + ')').run()
+      // Create an index on each field
+      for (let i in that.sqlFields) {
+        const field = that.sqlFields[i]
+        db.prepare('CREATE INDEX idx_' + i + ' ON features(' + field + ')').run()
+      }
     }
 
     that.db = db

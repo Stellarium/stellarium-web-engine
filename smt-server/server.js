@@ -41,25 +41,7 @@ process.on('SIGINT', () => {
 const port = process.env.PORT || 8100
 const __dirname = process.cwd()
 
-var smtConfigData
-
-const ingestAll = function () {
-  smtConfigData = fs.readFileSync(__dirname + '/data/smtConfig.json')
-  let smtConfig = JSON.parse(smtConfigData)
-
-  const fetchAndIngest = function (fn) {
-    return fsp.readFile(__dirname + '/data/' + fn).then(
-      data => qe.loadAllData(JSON.parse(data)),
-      err => { throw err})
-  }
-
-  return qe.initDB(smtConfig.fields, SMT_SERVER_INFO.baseHashKey).then(_ => {
-    const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
-    return Promise.all(allPromise).then(_ => {
-      console.log('Loading finished')
-    })
-  })
-}
+var smtConfig
 
 const syncGitData = async function (gitServer, gitBranch) {
   const localPath = __dirname + '/data'
@@ -139,13 +121,53 @@ const initServer = async function () {
   if (SMT_SERVER_INFO.dataLocalModifications)
     baseHashKey += '_' + Date.now()
   SMT_SERVER_INFO.baseHashKey = hash_sum(baseHashKey)
-  console.log('Server base hash key: ' + SMT_SERVER_INFO.baseHashKey )
+  console.log('Server base hash key: ' + SMT_SERVER_INFO.baseHashKey)
 
-  await ingestAll()
+  // Now that all files are up-to-date, load the server config
+  smtConfig = JSON.parse(fs.readFileSync(__dirname + '/data/smtConfig.json'))
+
+  const dbFileName = __dirname + '/qe.db'
+  let reloadGeojson = true
+  const dbAlreadyExists = fs.existsSync(dbFileName)
+  if (dbAlreadyExists) {
+    try {
+      const lastDBbHashKey = fs.readFileSync(dbFileName + '-HashKey.txt')
+      if (lastDBbHashKey === SMT_SERVER_INFO.baseHashKey) {
+        reloadGeojson = false
+      } else {
+        // Code and/or data changed, supress previous DB
+        fs.unlinkSync(dbFileName)
+      }
+    } catch (err) {
+      fs.unlinkSync(dbFileName)
+    }
+  }
+  qe.init(dbFileName, smtConfig.fields, SMT_SERVER_INFO.baseHashKey)
+
+  // And start listening to connection while the DB is being filled
   app.listen(port, () => {
     console.log(`SMT Server listening at http://localhost:${port}`)
   })
+
+  if (!reloadGeojson) {
+    console.log('No data/code change since last start: reload previous DB')
+    return
+  } else {
+    console.log('Data or code has changed since last start: reload geojson')
+  }
+
+  const fetchAndIngest = function (fn) {
+    return fsp.readFile(__dirname + '/data/' + fn).then(
+      data => qe.loadAllData(JSON.parse(data)),
+      err => { throw err})
+  }
+  const allPromise = smtConfig.sources.map(url => fetchAndIngest(url))
+  return Promise.all(allPromise).then(_ => {
+    console.log('Loading finished')
+    fs.writeFileSync(dbFileName + '-HashKey.txt', SMT_SERVER_INFO.baseHashKey);
+  })
 }
+
 initServer()
 
 app.get('/api/v1/smtServerInfo', (req, res) => {
@@ -153,7 +175,7 @@ app.get('/api/v1/smtServerInfo', (req, res) => {
 })
 
 app.get('/api/v1/smtConfig', (req, res) => {
-  res.send(smtConfigData)
+  res.send(JSON.stringify(smtConfig))
 })
 
 app.post('/api/v1/query', async (req, res) => {
