@@ -1,3 +1,6 @@
 data/
 access_key.pub
 access_key
+extraVersionHash.txt
+qe.db
+qe.db-HashKey.txt
