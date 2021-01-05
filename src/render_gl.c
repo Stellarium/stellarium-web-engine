@@ -1645,7 +1645,7 @@ static void mesh(renderer_t          *rend_,
     if (!color[3]) return;
 
     item = get_item(rend, ITEM_MESH, verts_count, indices_count, NULL);
-    if (use_stencil) item = NULL;
+    if (item && (use_stencil != item->mesh.use_stencil)) item = NULL;
     if (item && item->mesh.mode != mode) item = NULL;
     if (item && item->mesh.stroke_width != painter->lines.width) item = NULL;
 
