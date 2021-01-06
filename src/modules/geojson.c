@@ -547,6 +547,7 @@ static const void *survey_create_tile(
         if (g_survey_on_new_tile)
             g_survey_on_new_tile(tile, data);
     }
+    json_builder_free(jdata);
 
     return tile;
 }
