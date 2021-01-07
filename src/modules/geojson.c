@@ -82,7 +82,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
     int *rings_size;
     const double (**rings_verts)[2];
     int i, size;
-    mesh_t *mesh;
+    mesh_t *mesh = NULL;
     geojson_geometry_t poly;
 
     switch (geo->type) {
@@ -92,7 +92,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         mesh = calloc(1, sizeof(*mesh));
         mesh_add_line_lonlat(mesh, size, coordinates, false);
         DL_APPEND(feature->meshes, mesh);
-        return;
+        break;
 
     case GEOJSON_POLYGON:
         mesh = calloc(1, sizeof(*mesh));
@@ -107,14 +107,14 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         free(rings_verts);
 
         DL_APPEND(feature->meshes, mesh);
-        return;
+        break;
 
     case GEOJSON_POINT:
         coordinates = &geo->point.coordinates;
         mesh = calloc(1, sizeof(*mesh));
         mesh_add_point_lonlat(mesh, coordinates[0]);
         DL_APPEND(feature->meshes, mesh);
-        return;
+        break;
 
     case GEOJSON_MULTIPOLYGON:
         for (i = 0; i < geo->multipolygon.size; i++) {
@@ -122,11 +122,13 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
             poly.polygon = geo->multipolygon.polygons[i];
             feature_add_geo(feature, &poly);
         }
-        return;
+        break;
+
     default:
         assert(false);
         return;
     }
+    if (mesh) mesh_update_bounding_cap(mesh);
 }
 
 static void add_geojson_feature(image_t *image,

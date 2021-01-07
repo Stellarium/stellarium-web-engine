@@ -60,20 +60,20 @@ mesh_t *mesh_copy(const mesh_t *mesh)
     return ret;
 }
 
-// XXX: naive algo.
-static void compute_bounding_cap(int size, const double (*verts)[3],
-                                 double cap[4])
+void mesh_update_bounding_cap(mesh_t *mesh)
 {
+    // XXX: naive algo, could be improved.
     int i;
-    vec4_set(cap, 0, 0, 0, 1);
-    for (i = 0; i < size; i++) {
-        vec3_add(cap, verts[i], cap);
+    double cap[4] = {0, 0, 0, 1};
+    for (i = 0; i < mesh->vertices_count; i++) {
+        vec3_add(cap, mesh->vertices[i], cap);
     }
     vec3_normalize(cap, cap);
 
-    for (i = 0; i < size; i++) {
-        cap[3] = min(cap[3], vec3_dot(cap, verts[i]));
+    for (i = 0; i < mesh->vertices_count; i++) {
+        cap[3] = min(cap[3], vec3_dot(cap, mesh->vertices[i]));
     }
+    vec4_copy(cap, mesh->bounding_cap);
 }
 
 static void lonlat2c(const double lonlat[2], double c[3])
@@ -95,9 +95,6 @@ static int mesh_add_vertices_lonlat(mesh_t *mesh, int count,
         assert(!isnan(mesh->vertices[mesh->vertices_count + i][0]));
     }
     mesh->vertices_count += count;
-    // XXX: shouldn't be done here!
-    compute_bounding_cap(mesh->vertices_count, mesh->vertices,
-                         mesh->bounding_cap);
     return ofs;
 }
 
@@ -110,9 +107,6 @@ int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3])
     memcpy(mesh->vertices + mesh->vertices_count, verts,
            count * sizeof(*mesh->vertices));
     mesh->vertices_count += count;
-    // XXX: shouldn't be done here!
-    compute_bounding_cap(mesh->vertices_count, mesh->vertices,
-                         mesh->bounding_cap);
     return ofs;
 }
 

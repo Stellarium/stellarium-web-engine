@@ -20,7 +20,7 @@
 typedef struct mesh mesh_t;
 struct mesh {
     mesh_t      *next, *prev; // Can be used to put mesh inside geojson.
-    double      bounding_cap[4];
+    double      bounding_cap[4]; // Not automatically updated.
     int         vertices_count;
     double      (*vertices)[3];
 
@@ -45,6 +45,15 @@ void mesh_add_line_lonlat(mesh_t *mesh, int size, const double (*verts)[2],
 void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2]);
 void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
                           const double (**verts)[2]);
+
+/*
+ * Function: mesh_update_bounding_cap
+ * Recompute the mesh bounding_cap value.
+ *
+ * Should be called only after we know we will not add anymore vertices
+ * to the mesh.
+ */
+void mesh_update_bounding_cap(mesh_t *mesh);
 
 /*
  * Function: mesh_contains_vec3
