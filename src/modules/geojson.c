@@ -653,6 +653,7 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
 static json_value *survey_filter_fn(obj_t *obj, const attribute_t *attr,
                                     const json_value *args)
 {
+    static int filter_idx = 1;
     survey_t *survey = (void*)obj;
     if (!args) return NULL;
     if (args->type != json_integer) {
@@ -660,7 +661,7 @@ static json_value *survey_filter_fn(obj_t *obj, const attribute_t *attr,
         return NULL;
     }
     survey->filter = (void*)(intptr_t)(args->u.integer);
-    survey->filter_idx++;
+    survey->filter_idx = filter_idx++;
     return NULL;
 }
 
