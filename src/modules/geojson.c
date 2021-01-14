@@ -564,6 +564,8 @@ static int survey_init(obj_t *obj, json_value *args)
     survey_t *survey = (void*)obj;
     const char *path;
     int r;
+    static int counter = 0;
+
     hips_settings_t settings = {
         .create_tile = survey_create_tile,
         .delete_tile = survey_delete_tile,
@@ -585,6 +587,12 @@ static int survey_init(obj_t *obj, json_value *args)
     survey->min_fov *= DD2R;
     survey->max_fov *= DD2R;
     survey->hips = hips_create(path, 0, &settings);
+
+    // Manually change the hash so that even surveys with same url are
+    // considered independent, since we dynamically change the tiles
+    // attributes with the filters.
+    survey->hips->hash += counter++;
+
     hips_set_frame(survey->hips, FRAME_ICRF);
     return 0;
 }
