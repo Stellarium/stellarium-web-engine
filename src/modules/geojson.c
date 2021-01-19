@@ -66,6 +66,7 @@ typedef struct survey {
                           float fill_color[4], float stroke_color[4],
                           bool *blink, bool *hidden);
     int         filter_idx;
+    double      z;      // For sorting inside a layer.
 } survey_t;
 
 
@@ -707,6 +708,7 @@ static obj_klass_t survey_klass = {
     .render         = survey_render,
     .attributes = (attribute_t[]) {
         PROPERTY(filter, TYPE_FUNC, .fn = survey_filter_fn),
+        PROPERTY(z, TYPE_FLOAT, MEMBER(survey_t, z)),
         {}
     },
 };

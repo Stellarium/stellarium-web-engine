@@ -23,11 +23,24 @@ static double layer_get_render_order(const obj_t *obj)
     return layer->z;
 }
 
+static int children_sort_cmp(void *a_, void *b_)
+{
+    // We sort the objects inside a layer according to their "z" attribute.
+    obj_t *a = a_;
+    obj_t *b = b_;
+    float az = 0, bz = 0;
+    obj_get_attr(a, "z", &az);
+    obj_get_attr(b, "z", &bz);
+    return cmp(az, bz);
+}
+
 static int layer_update(obj_t *obj, double dt)
 {
     layer_t *layer = (layer_t*)obj;
     obj_t *child;
     fader_update(&layer->visible, dt);
+
+    DL_SORT(obj->children, children_sort_cmp);
     MODULE_ITER(obj, child, NULL) {
         if (child->klass->flags & OBJ_MODULE)
             module_update(child, dt);
