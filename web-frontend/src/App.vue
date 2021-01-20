@@ -13,7 +13,8 @@
     <v-layout column fill-height>
       <v-list dense>
         <template v-for="(item,i) in menuItems">
-          <v-subheader v-if="item.header" v-text="item.header" class="grey--text text--darken-1" :key="i"/>
+          <template v-if="$store.state[item.store_show_menu_item] === false"></template>
+          <v-subheader v-else-if="item.header" v-text="item.header" class="grey--text text--darken-1" :key="i"/>
           <v-divider class="divider_menu" v-else-if="item.divider" :key="i"/>
           <v-list-item v-else-if="item.switch" @click.stop="toggleStoreValue(item.store_var_name)" :key="i">
             <v-list-item-action>
@@ -79,8 +80,8 @@ export default {
   data (context) {
     return {
       menuItems: [
-        { title: this.$t('View Settings'), icon: 'mdi-settings', store_var_name: 'showViewSettingsDialog' },
-        { title: this.$t('Planets Tonight'), icon: 'mdi-panorama-fisheye', store_var_name: 'showPlanetsVisibilityDialog' },
+        { title: this.$t('View Settings'), icon: 'mdi-settings', store_var_name: 'showViewSettingsDialog', store_show_menu_item: 'showViewSettingsMenuItem' },
+        { title: this.$t('Planets Tonight'), icon: 'mdi-panorama-fisheye', store_var_name: 'showPlanetsVisibilityDialog', store_show_menu_item: 'showPlanetsVisibilityMenuItem' },
         { divider: true }
       ].concat(this.getPluginsMenuItems()).concat([
         { title: this.$t('Data Credits'), footer: true, icon: 'mdi-copyright', store_var_name: 'showDataCreditsDialog' }

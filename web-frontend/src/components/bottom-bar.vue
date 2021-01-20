@@ -14,30 +14,35 @@
     <v-spacer></v-spacer>
 
     <bottom-button :label="$t('Constellations')"
+                v-if="$store.state.showConstellationsLinesButton !== false"
                 :img="require('@/assets/images/btn-cst-lines.svg')"
                 img_alt="Constellations Button"
                 :toggled="$store.state.stel.constellations.lines_visible"
                 @clicked="(b) => { $stel.core.constellations.lines_visible = b; $stel.core.constellations.labels_visible = b }">
     </bottom-button>
     <bottom-button :label="$t('Constellations Art')"
+                v-if="$store.state.showConstellationsArtButton !== false"
                 :img="require('@/assets/images/btn-cst-art.svg')"
                 img_alt="Constellations Art Button"
                 :toggled="$store.state.stel.constellations.images_visible"
                 @clicked="(b) => { $stel.core.constellations.images_visible = b }">
     </bottom-button>
     <bottom-button :label="$t('Atmosphere')"
+                v-if="$store.state.showAtmosphereButton !== false"
                 :img="require('@/assets/images/btn-atmosphere.svg')"
                 img_alt="Atmosphere Button"
                 :toggled="$store.state.stel.atmosphere.visible"
                 @clicked="(b) => { $stel.core.atmosphere.visible = b }">
     </bottom-button>
     <bottom-button :label="$t('Landscape')"
+                v-if="$store.state.showLandscapeButton !== false"
                 :img="require('@/assets/images/btn-landscape.svg')"
                 img_alt="Landscape Button"
                 :toggled="$store.state.stel.landscapes.visible"
                 @clicked="(b) => { $stel.core.landscapes.visible = b }">
     </bottom-button>
     <bottom-button :label="$t('Azimuthal Grid')"
+                v-if="$store.state.showAzimuthalGridButton !== false"
                 :img="require('@/assets/images/btn-azimuthal-grid.svg')"
                 img_alt="Azimuthal Button"
                 :toggled="$store.state.stel.lines.azimuthal.visible"
@@ -57,6 +62,7 @@
                 @clicked="(b) => { $stel.core.dsos.visible = b }">
     </bottom-button>
     <bottom-button :label="$t('Night Mode')"
+                v-if="$store.state.showNightmodeButton !== false"
                 :img="require('@/assets/images/btn-night-mode.svg')"
                 img_alt="Night Mode Button"
                 class="mr-auto"
