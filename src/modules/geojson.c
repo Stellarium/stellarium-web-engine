@@ -50,6 +50,7 @@ struct image {
     int         frame;
     filter_fn_t filter;
     int         filter_idx;
+    double      z;      // For sorting inside a layer.
 };
 
 
@@ -696,6 +697,7 @@ static obj_klass_t image_klass = {
         PROPERTY(data, TYPE_JSON, .fn = data_fn),
         PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),
         PROPERTY(filter, TYPE_FUNC, .fn = filter_fn),
+        PROPERTY(z, TYPE_FLOAT, MEMBER(image_t, z)),
         {}
     },
 };
