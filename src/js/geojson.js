@@ -128,14 +128,15 @@ Module['onGeojsonObj'] = function(obj) {
   Object.defineProperty(obj, 'filter', {
     set: function(filter) {
       if (filterFn) Module.removeFunction(filterFn);
-      filterFn = Module.addFunction(function(img, id, fillPtr, strokePtr) {
+      filterFn = Module.addFunction(
+          function(img, id, fillPtr, strokePtr, blinkPtr, hiddenPtr) {
         const r = filter(id);
-        if (r === false) return 0;
-        if (r === true) return 4; // Unchanged.
         if (r.fill) fillColorPtr(r.fill, fillPtr);
         if (r.stroke) fillColorPtr(r.stroke, strokePtr);
-        return r.visible === false ? 0 : 1;
-      }, 'iiiii');
+        if (r.stroke) fillColorPtr(r.stroke, strokePtr);
+        if (r.blink !== undefined) fillBoolPtr(r.blink, blinkPtr);
+        if (r.hidden !== undefined) fillBoolPtr(r.hidden, hiddenPtr);
+      }, 'viiiiii');
       obj._call('filter', filterFn);
     }
   });
