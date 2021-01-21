@@ -28,9 +28,11 @@ static int children_sort_cmp(void *a_, void *b_)
     // We sort the objects inside a layer according to their "z" attribute.
     obj_t *a = a_;
     obj_t *b = b_;
-    float az = 0, bz = 0;
-    obj_get_attr(a, "z", &az);
-    obj_get_attr(b, "z", &bz);
+    double az = 0, bz = 0;
+    if (obj_has_attr(a, "z"))
+        obj_get_attr(a, "z", &az);
+    if (obj_has_attr(b, "z"))
+        obj_get_attr(b, "z", &bz);
     return cmp(az, bz);
 }
 
