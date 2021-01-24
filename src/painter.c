@@ -396,9 +396,6 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
 
 subdivide:
     // Case where we need to split the mesh into smaller parts.
-    // For the moment only do it for triangles, not lines.
-    if (mode != MODE_TRIANGLES) return 0;
-
     mesh2 = mesh_copy(mesh);
     // Convert the positions to view frame.
     for (i = 0; i < mesh->vertices_count; i++) {
@@ -407,9 +404,20 @@ subdivide:
                       mesh2->vertices[i], mesh2->vertices[i]);
     }
     mesh_cut_antimeridian(mesh2);
-    REND(painter.rend, mesh, &painter, FRAME_VIEW, MODE_TRIANGLES,
-             mesh2->vertices_count, mesh2->vertices,
-             mesh2->triangles_count, mesh2->triangles, use_stencil);
+
+    // XXX: can clean up this.
+    switch (mode) {
+    case MODE_TRIANGLES:
+        REND(painter.rend, mesh, &painter, FRAME_VIEW, mode,
+                 mesh2->vertices_count, mesh2->vertices,
+                 mesh2->triangles_count, mesh2->triangles, use_stencil);
+        break;
+    case MODE_LINES:
+        REND(painter.rend, mesh, &painter, FRAME_VIEW, mode,
+                 mesh2->vertices_count, mesh2->vertices,
+                 mesh2->lines_count, mesh2->lines, false);
+        break;
+    }
 
     mesh_delete(mesh2);
     return 0;

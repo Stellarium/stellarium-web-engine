@@ -312,6 +312,23 @@ static void mesh_cut_triangle_antimeridian(mesh_t *mesh, int idx)
     mesh_add_triangle(mesh, b, c, ac2);
 }
 
+static void mesh_cut_segment_antimeridian(mesh_t *mesh, int idx)
+{
+    const double (*vs)[3] = mesh->vertices;
+    double ab[3], new_points[2][3];
+    int a, b, ofs;
+    a = mesh->lines[idx];
+    b = mesh->lines[idx + 1];
+    if (!segment_intersects_antimeridian(vs[a], vs[b], ab))
+        return;
+    // We add a small gap around the cut, to avoid rendering problems.
+    vec3_mix(vs[a], ab, 0.99, new_points[0]);
+    vec3_mix(vs[b], ab, 0.99, new_points[1]);
+    ofs = mesh_add_vertices(mesh, 2, new_points);
+    mesh->lines[idx + 1] = ofs;
+    mesh_add_segment(mesh, ofs + 1, b);
+}
+
 /*
  * Function: mesh_cut_antimeridian
  * Split the mesh so that no triangle intersects the YZ plan
@@ -324,6 +341,10 @@ void mesh_cut_antimeridian(mesh_t *mesh)
     count = mesh->triangles_count;
     for (i = 0; i < count; i += 3) {
         mesh_cut_triangle_antimeridian(mesh, i);
+    }
+    count = mesh->lines_count;
+    for (i = 0; i < count; i += 2) {
+        mesh_cut_segment_antimeridian(mesh, i);
     }
 }
 
