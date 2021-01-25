@@ -47,7 +47,6 @@ export default {
 @media all and (min-width: 600px) {
   .tsearch {
     z-index: 2;
-    margin-left: -200px;
   }
 }
 </style>
