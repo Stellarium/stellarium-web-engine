@@ -7,9 +7,9 @@
 // repository.
 
 <template>
-  <div style="position: relative;">
-    <v-text-field prepend-icon="mdi-magnify" :label="$t('Search...')" v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line v-click-outside="resetSearch"></v-text-field>
-    <v-list dense v-if="showList" two-line :style="listStyle" class="get-click">
+  <div style="position: relative;" v-click-outside="resetSearch">
+    <v-text-field prepend-icon="mdi-magnify" :label="$t('Search...')" v-model="searchText" @keyup.native.esc="resetSearch()" hide-details single-line></v-text-field>
+    <v-list dense v-if="showList" two-line :style="listStyle">
       <v-list-item v-for="source in autoCompleteChoices" :key="source.names[0]" @click="sourceClicked(source)">
         <v-list-item-action>
           <img :src="iconForSkySource(source)"/>
@@ -25,7 +25,7 @@
 
 <script>
 import swh from '@/assets/sw_helpers.js'
-import ClickOutside from 'vue-click-outside'
+import vClickOutside from 'v-click-outside'
 import _ from 'lodash'
 
 export default {
@@ -107,7 +107,7 @@ export default {
     guiParent.addEventListener('click', onClick, false)
   },
   directives: {
-    ClickOutside
+    clickOutside: vClickOutside.directive
   }
 }
 </script>
