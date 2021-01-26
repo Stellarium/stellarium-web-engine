@@ -11,13 +11,13 @@
     <v-container>
       <v-row justify="space-between" no-gutters class="ma-3">
         <div>
-          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="incTime('years')"><v-icon>mdi-menu-up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 21px" @mousedown="incTime('months')"><v-icon>mdi-menu-up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 8px"  @mousedown="incTime('days')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="incTime('years')" @touchstart.prevent="incTime('years')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 21px" @mousedown="incTime('months')" @touchstart.prevent="incTime('months')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 8px"  @mousedown="incTime('days')" @touchstart.prevent="incTime('days')"><v-icon>mdi-menu-up</v-icon></v-btn>
           <h1>{{ date }}</h1>
-          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="decTime('years')"><v-icon>mdi-menu-down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 21px" @mousedown="decTime('months')"><v-icon>mdi-menu-down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt" style="margin-left: 8px"  @mousedown="decTime('days')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 16px" @mousedown="decTime('years')" @touchstart.prevent="decTime('years')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 21px" @mousedown="decTime('months')" @touchstart.prevent="decTime('months')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" style="margin-left: 8px"  @mousedown="decTime('days')" @touchstart.prevent="decTime('days')"><v-icon>mdi-menu-down</v-icon></v-btn>
         </div>
         <div>
         <div>
@@ -38,13 +38,13 @@
         </div>
         </div>
         <div>
-          <v-btn text icon class="up_down_bt" @mousedown="incTime('hours')"><v-icon>mdi-menu-up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt ml-1" @mousedown="incTime('minutes')"><v-icon>mdi-menu-up</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt ml-1" @mousedown="incTime('seconds')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="incTime('hours')" @touchstart.prevent="incTime('hours')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt ml-1" @mousedown="incTime('minutes')" @touchstart.prevent="incTime('minutes')"><v-icon>mdi-menu-up</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt ml-1" @mousedown="incTime('seconds')" @touchstart.prevent="incTime('seconds')"><v-icon>mdi-menu-up</v-icon></v-btn>
           <h1 class="ml-2">{{ time }}</h1>
-          <v-btn text icon class="up_down_bt" @mousedown="decTime('hours')"><v-icon>mdi-menu-down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt ml-1" @mousedown="decTime('minutes')"><v-icon>mdi-menu-down</v-icon></v-btn>
-          <v-btn text icon class="up_down_bt ml-1" @mousedown="decTime('seconds')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt" @mousedown="decTime('hours')" @touchstart.prevent="decTime('hours')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt ml-1" @mousedown="decTime('minutes')" @touchstart.prevent="decTime('minutes')"><v-icon>mdi-menu-down</v-icon></v-btn>
+          <v-btn text icon class="up_down_bt ml-1" @mousedown="decTime('seconds')" @touchstart.prevent="decTime('seconds')"><v-icon>mdi-menu-down</v-icon></v-btn>
         </div>
       </v-row>
     </v-container>
@@ -220,6 +220,10 @@ export default {
     const that = this
     window.addEventListener('mouseup', function (event) {
       that.stopIncTime()
+    })
+    window.addEventListener('touchend', function (event) {
+      that.stopIncTime()
+      event.preventDefault()
     })
   },
   watch: {
