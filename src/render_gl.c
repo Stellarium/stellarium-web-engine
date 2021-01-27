@@ -1538,6 +1538,8 @@ static void line_glow(renderer_t           *rend_,
         item = NULL;
     if (item && item->lines.dash_ratio != painter->lines.dash_ratio)
         item = NULL;
+    if (item && item->lines.width != painter->lines.width)
+        item = NULL;
 
 
     if (!item) {

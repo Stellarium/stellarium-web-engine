@@ -94,19 +94,32 @@ int skyculture_parse_edges(const json_value *edges,
     return nb;
 }
 
-static int parse_lines_json(const json_value *v, int lines[64][2])
+static int parse_lines_json(const json_value *v,
+                            constellation_line_t lines[static 64])
 {
     int i, j, n, nb = 0;
     const json_value *seg;
+    bool thin;
+    json_value **values;
 
     if (v->type != json_array) return -1;
     for (i = 0; i < v->u.array.length; i++) {
         seg = v->u.array.values[i];
         if (seg->type != json_array) return -1;
         n = seg->u.array.length - 1;
+        thin = false;
+        values = seg->u.array.values;
+
         for (j = 0; j < n; j++) {
-            lines[nb][0] = seg->u.array.values[j]->u.integer;
-            lines[nb][1] = seg->u.array.values[j + 1]->u.integer;
+            // The first value can be a string defining the line style.
+            if (j == 0 && values[0]->type == json_string) {
+                if (strcmp(values[0]->u.string.ptr, "thin") == 0)
+                    thin = true;
+                continue;
+            }
+            lines[nb].hip[0] = values[j]->u.integer;
+            lines[nb].hip[1] = values[j + 1]->u.integer;
+            lines[nb].thin = thin;
             nb++;
         }
     }

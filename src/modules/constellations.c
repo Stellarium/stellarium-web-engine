@@ -178,7 +178,7 @@ static int constellation_create_stars(constellation_t *cons)
     cons->count = cons->info.nb_lines * 2;
     cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
-        hip = cons->info.lines[i / 2][i % 2];
+        hip = cons->info.lines[i / 2].hip[i % 2];
         assert(hip);
         cons->stars[i] = obj_get_by_hip(hip, &code);
         if (code == 0) goto still_loading;
@@ -508,7 +508,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     int i;
     double (*lines)[4];
     double lines_color[4];
-    double mag[2], radius[2], visible;
+    double mag[2], radius[2], visible, width;
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
@@ -547,8 +547,12 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
             line_animation_effect(&lines[i], visible * 2);
     }
 
+    width = painter.lines.width;
     for (i = 0; i < con->count; i += 2) {
         if (!con->stars[i + 0] || !con->stars[i + 1]) continue;
+        painter.lines.width = width;
+        if (con->info.lines[i / 2].thin)
+            painter.lines.width *= 0.1;
         paint_line(&painter, FRAME_ICRF, lines + i, NULL, 1,
                    PAINTER_SKIP_DISCONTINUOUS);
     }
