@@ -25,10 +25,19 @@
 #include "json.h"
 #include "uthash.h"
 
+/*
+ * Weight used for displaying constellation lines.
+ */
+enum {
+    LINE_WEIGHT_NORMAL    = 0,
+    LINE_WEIGHT_THIN      = 1,
+    LINE_WEIGHT_BOLD      = 2
+};
+
 typedef struct constellation_line
 {
     int hip[2];
-    bool thin;
+    uint8_t line_weight;
 } constellation_line_t;
 
 /*

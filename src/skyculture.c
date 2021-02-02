@@ -99,7 +99,7 @@ static int parse_lines_json(const json_value *v,
 {
     int i, j, n, nb = 0;
     const json_value *seg;
-    bool thin;
+    uint8_t line_weight;
     json_value **values;
 
     if (v->type != json_array) return -1;
@@ -107,19 +107,21 @@ static int parse_lines_json(const json_value *v,
         seg = v->u.array.values[i];
         if (seg->type != json_array) return -1;
         n = seg->u.array.length - 1;
-        thin = false;
+        line_weight = LINE_WEIGHT_NORMAL;
         values = seg->u.array.values;
 
         for (j = 0; j < n; j++) {
             // The first value can be a string defining the line style.
             if (j == 0 && values[0]->type == json_string) {
                 if (strcmp(values[0]->u.string.ptr, "thin") == 0)
-                    thin = true;
+                    line_weight = LINE_WEIGHT_THIN;
+                else if (strcmp(values[0]->u.string.ptr, "bold") == 0)
+                    line_weight = LINE_WEIGHT_BOLD;
                 continue;
             }
             lines[nb].hip[0] = values[j]->u.integer;
             lines[nb].hip[1] = values[j + 1]->u.integer;
-            lines[nb].thin = thin;
+            lines[nb].line_weight = line_weight;
             nb++;
         }
     }

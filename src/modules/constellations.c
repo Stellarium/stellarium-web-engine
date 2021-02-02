@@ -551,8 +551,10 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     for (i = 0; i < con->count; i += 2) {
         if (!con->stars[i + 0] || !con->stars[i + 1]) continue;
         painter.color[3] = opacity;
-        if (con->info.lines[i / 2].thin)
-            painter.color[3] *= 0.3;
+        if (con->info.lines[i / 2].line_weight == LINE_WEIGHT_THIN)
+            painter.color[3] *= 0.25;
+        else if (con->info.lines[i / 2].line_weight == LINE_WEIGHT_BOLD)
+            painter.color[3] *= 1.6;
         paint_line(&painter, FRAME_ICRF, lines + i, NULL, 1,
                    PAINTER_SKIP_DISCONTINUOUS);
     }
