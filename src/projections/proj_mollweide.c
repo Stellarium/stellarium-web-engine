@@ -107,6 +107,7 @@ void proj_mollweide_init(projection_t *p, double fovx, double aspect)
     p->name                      = "mollweide";
     p->type                      = PROJ_MOLLWEIDE;
     p->max_fov                   = 360 * DD2R;
+    p->max_ui_fov                = 360 * DD2R;
     p->project                   = proj_mollweide_project;
     p->backward                  = proj_mollweide_backward;
     p->scaling[0]                = fovx / M_PI * sqrt(2);

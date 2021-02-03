@@ -63,7 +63,8 @@ void proj_mercator_init(projection_t *p, double fov, double aspect)
 {
     p->name                      = "mercator";
     p->type                      = PROJ_MERCATOR;
-    p->max_fov                   = 175.0 * aspect * DD2R;
+    p->max_fov                   = 360 * DD2R;
+    p->max_ui_fov                = 175.0 * aspect * DD2R;
     p->project                   = proj_mercator_project;
     p->backward                  = proj_mercator_backward;
     p->scaling[0]                = fov / 2;

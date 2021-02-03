@@ -696,10 +696,13 @@ void core_on_zoom(double k, double x, double y)
 {
     double fov, pos_start[3], pos_end[3];
     double sal, saz, dal, daz;
+    projection_t proj;
 
+    core_get_proj(&proj);
     win_to_observed(x, y, pos_start);
     obj_get_attr(&core->obj, "fov", &fov);
     fov /= k;
+    fov = clamp(fov, CORE_MIN_FOV, proj.max_ui_fov);
     obj_set_attr(&core->obj, "fov", fov);
     win_to_observed(x, y, pos_end);
 
@@ -918,8 +921,8 @@ void core_zoomto(double fov, double duration)
 {
     projection_t proj;
     core_get_proj(&proj);
-    if (fov > proj.max_fov)
-        fov = proj.max_fov;
+    if (fov > proj.max_ui_fov)
+        fov = proj.max_ui_fov;
 
     // Direct lookat.
     if (duration == 0.0) {

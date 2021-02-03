@@ -78,8 +78,10 @@ struct projection
     // Window size (screen size / screen density).
     double window_size[2];
 
-    // Maximum FOV at which we can display
+    // Maximum FOV value we can accept.
     double max_fov;
+    // Maximum FOV that looks good for the UI.
+    double max_ui_fov;
 
     void (*project)(const projection_t *proj, int flags,
                     const double v[S 4], double out[S 4]);

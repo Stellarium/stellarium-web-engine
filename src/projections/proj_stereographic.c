@@ -87,7 +87,8 @@ void proj_stereographic_init(projection_t *p, double fovx, double aspect)
 {
     p->name          = "stereographic";
     p->type          = PROJ_STEREOGRAPHIC;
-    p->max_fov       = 185. * DD2R;
+    p->max_fov       = 360. * DD2R;
+    p->max_ui_fov    = 185. * DD2R;
     p->project       = proj_stereographic_project;
     p->backward      = proj_stereographic_backward;
     p->scaling[0]    = 2 * tan(fovx / 4);
