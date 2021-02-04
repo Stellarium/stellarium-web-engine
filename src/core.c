@@ -136,7 +136,7 @@ static void core_set_default(void)
     obj_set_attr(&obs->obj, "latitude", 25.066667 * DD2R);
     obj_set_attr(&obs->obj, "longitude", 121.516667 * DD2R);
     obj_set_attr(&obs->obj, "elevation", 0.0);
-    obs->tt = unix_to_mjd(sys_get_unix_time());
+    obs->tt = utc2tt(unix_to_mjd(sys_get_unix_time()));
 
     // We approximate the pressure from the altitude and the sea level
     // temperature in K (See Astrophysical Quantities, C.W.Allen, 3rd edition,
