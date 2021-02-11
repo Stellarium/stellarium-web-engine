@@ -17,19 +17,12 @@ void core_update_fov(double dt)
     double save_fov = core->fov;
     typeof(core->fov_animation)* anim = &core->fov_animation;
 
-    if (anim->duration) {
-        core->fov_animation.t += dt / core->fov_animation.duration;
-        t = smoothstep(0.0, 1.0, anim->t);
-        // Make sure we finish on an exact value.
-        if (anim->t >= 1.0) t = 1.0;
-        if (anim->dst_fov) {
+    if (anim->src_time) {
+        t = smoothstep(anim->src_time, anim->dst_time, core->clock);
+        if (anim->dst_fov)
             core->fov = mix(anim->src_fov, anim->dst_fov, t);
-        }
-        if (anim->t >= 1.0) {
-            anim->duration = 0.0;
-            anim->t = 0.0;
-            anim->dst_fov = 0.0;
-        }
+        if (t >= 1.0)
+            memset(anim, 0, sizeof(*anim));
     }
 
     projection_t proj;
@@ -87,7 +80,7 @@ void core_update_time(double dt)
     double t, tt;
 
     // Normal time increase.
-    if (!anim->duration && core->time_speed) {
+    if (!anim->src_time && core->time_speed) {
         tt = core->observer->tt + dt * core->time_speed / 86400;
         obj_set_attr(&core->observer->obj, "tt", tt);
         observer_update(core->observer, true);
@@ -95,9 +88,8 @@ void core_update_time(double dt)
     }
 
     // Time animation.
-    if (anim->duration) {
-        anim->t += dt / anim->duration;
-        t = smoothstep(0.0, 1.0, anim->t);
+    if (anim->src_time) {
+        t = smoothstep(anim->src_time, anim->dst_time, core->clock);
         switch (anim->mode) {
         case 0:
             tt = mix(anim->src_tt, anim->dst_tt, t);
@@ -111,7 +103,8 @@ void core_update_time(double dt)
         }
         obj_set_attr(&core->observer->obj, "tt", tt);
         if (t >= 1.0) {
-            anim->duration = 0.0;
+            anim->src_time = 0.0;
+            anim->dst_time = 0.0;
             anim->dst_utc = NAN;
             module_changed((obj_t*)core, "time_animation_target");
         }
@@ -125,11 +118,8 @@ void core_update_direction(double dt)
     double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
     typeof(core->target) *anim = &core->target;
 
-    if (anim->duration) {
-        anim->t += dt / anim->duration;
-        t = smoothstep(0.0, 1.0, anim->t);
-        // Make sure we finish on an exact value.
-        if (anim->t >= 1.0) t = 1.0;
+    if (anim->src_time) {
+        t = smoothstep(anim->src_time, anim->dst_time, core->clock);
         if (anim->lock && anim->move_to_lock) {
             // We are moving toward a potentially moving target, adjust the
             // destination
@@ -144,9 +134,9 @@ void core_update_direction(double dt)
             quat_mul_vec3(q, v, v);
             eraC2s(v, &core->observer->yaw, &core->observer->pitch);
         }
-        if (anim->t >= 1.0) {
-            anim->duration = 0.0;
-            anim->t = 0.0;
+        if (t >= 1.0) {
+            anim->src_time = 0.0;
+            anim->dst_time = 0.0;
             anim->move_to_lock = false;
         }
         // Notify the changes.

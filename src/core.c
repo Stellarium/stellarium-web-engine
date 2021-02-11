@@ -889,15 +889,17 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 EMSCRIPTEN_KEEPALIVE
 void core_lookat(const double *pos, double duration)
 {
-    double az, al;
+    double az, al, now;
     typeof(core->target) *anim = &core->target;
 
     // Direct lookat.
     if (duration == 0.0) {
         eraC2s(pos, &core->observer->yaw, &core->observer->pitch);
+        memset(anim, 0, sizeof(*anim));
         return;
     }
 
+    now = sys_get_unix_time();
     quat_set_identity(anim->src_q);
     quat_rz(core->observer->yaw, anim->src_q, anim->src_q);
     quat_ry(-core->observer->pitch, anim->src_q, anim->src_q);
@@ -907,8 +909,8 @@ void core_lookat(const double *pos, double duration)
     quat_rz(az, anim->dst_q, anim->dst_q);
     quat_ry(-al, anim->dst_q, anim->dst_q);
 
-    anim->duration = duration;
-    anim->t = 0.0;
+    anim->src_time = now;
+    anim->dst_time = now + duration;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -926,7 +928,10 @@ void core_point_and_lock(obj_t *target, double duration)
 EMSCRIPTEN_KEEPALIVE
 void core_zoomto(double fov, double duration)
 {
+    double s, now;
     projection_t proj;
+
+    now = sys_get_unix_time();
     core_get_proj(&proj);
     if (fov > proj.max_ui_fov)
         fov = proj.max_ui_fov;
@@ -938,7 +943,7 @@ void core_zoomto(double fov, double duration)
     }
 
     typeof(core->fov_animation)* anim = &core->fov_animation;
-    if (anim->t < 1 && anim->t > 0) {
+    if (now > anim->src_time && now <= anim->dst_time) {
         // We request a new animation while another one is still on going
         if (fov == anim->dst_fov) {
             // Same animation is going on, just finish it
@@ -947,41 +952,37 @@ void core_zoomto(double fov, double duration)
         // We are looking for a new set of zoom parameters so that:
         // - we preserve the current zoom level
         // - the remaining animation time is equal to the new duration
-        double t2 = (anim->t * anim->duration) / (anim->t * anim->duration +
-                                                  duration);
-        assert(t2 >= 0 && t2 <= 1);
-        double st2 = smoothstep(0, 1, t2);
-        double src2 = (core->fov - fov * st2) / (1.0 - st2);
-        anim->src_fov = src2;
+        s = smoothstep(anim->src_time, now + duration, now);
+        anim->dst_time = now + duration;
         anim->dst_fov = fov;
-        anim->duration = anim->t * anim->duration + duration;
-        anim->t = t2;
+        anim->src_fov = (core->fov - s * fov) / (1 - s);
         return;
     }
 
     anim->src_fov = core->fov;
     anim->dst_fov = fov;
-    anim->duration = duration;
-    anim->t = 0.0;
+    anim->src_time = now;
+    anim->dst_time = now + duration;
 }
 
 EMSCRIPTEN_KEEPALIVE
 void core_set_time(double utc, double duration)
 {
-    double tt, speed;
+    double tt, speed, now;
     typeof(core->time_animation) *anim = &core->time_animation;
 
     tt = utc2tt(utc);
-    anim->duration = 0;
     if (duration == 0.0) {
         obj_set_attr(&core->observer->obj, "tt", tt);
+        memset(anim, 0, sizeof(*anim));
         return;
     }
+    now = sys_get_unix_time();
     anim->src_tt = core->observer->tt;
     anim->dst_tt = tt;
     anim->dst_utc = utc;
-    anim->duration = duration;
-    anim->t = 0;
+    anim->src_time = now;
+    anim->dst_time = now + duration;
 
     // Determine the animation mode (normal or 'smart').  If the animation
     // moves at more than a few days per seconds, use the 'smart' mode.
