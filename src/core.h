@@ -98,6 +98,7 @@ struct core
     double          win_pixels_scale;
     obj_t           *selection;
 
+    double          clock; // Real time clock (sec, unix time).
     fps_t           fps; // FPS counter.
 
     // Number of clicks so far.  This is just so that we can wait for clicks
@@ -199,11 +200,8 @@ void core_release(void);
 /*
  * Function: core_update
  * Update the core and all the modules
- *
- * Parameters:
- *   dt     - Time increment from last frame (sec).
  */
-int core_update(double dt);
+int core_update(void);
 
 /*
  * Function: core_update_fov

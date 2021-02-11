@@ -148,6 +148,7 @@ static void core_set_default(void)
     core->fov = 50 * DD2R;
     core->proj = PROJ_STEREOGRAPHIC;
     core->lwmax = 5000;
+    core->clock = sys_get_unix_time();
 
     // Adjust those values to make the sky look good.
     core->star_linear_scale = 0.8;
@@ -275,13 +276,18 @@ static void update_refraction(double dt, bool on)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int core_update(double dt)
+int core_update(void)
 {
     bool atm_visible;
-    double lwmax;
+    double lwmax, now, dt;
     int r;
     obj_t *atm, *module;
     task_t *task, *task_tmp;
+
+    now = sys_get_unix_time();
+    dt = now - core->clock;
+    dt = max(dt, 0.001); // Prevent bug in case the clock goes backward.
+    core->clock = now;
 
     atm = core_get_module("atmosphere");
     assert(atm);
