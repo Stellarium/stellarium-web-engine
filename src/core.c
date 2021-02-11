@@ -884,6 +884,7 @@ EMSCRIPTEN_KEEPALIVE
 void core_lookat(const double *pos, double duration)
 {
     double az, al;
+    typeof(core->target) *anim = &core->target;
 
     // Direct lookat.
     if (duration == 0.0) {
@@ -891,17 +892,17 @@ void core_lookat(const double *pos, double duration)
         return;
     }
 
-    quat_set_identity(core->target.src_q);
-    quat_rz(core->observer->yaw, core->target.src_q, core->target.src_q);
-    quat_ry(-core->observer->pitch, core->target.src_q, core->target.src_q);
+    quat_set_identity(anim->src_q);
+    quat_rz(core->observer->yaw, anim->src_q, anim->src_q);
+    quat_ry(-core->observer->pitch, anim->src_q, anim->src_q);
 
     eraC2s((double*)pos, &az, &al);
-    quat_set_identity(core->target.dst_q);
-    quat_rz(az, core->target.dst_q, core->target.dst_q);
-    quat_ry(-al, core->target.dst_q, core->target.dst_q);
+    quat_set_identity(anim->dst_q);
+    quat_rz(az, anim->dst_q, anim->dst_q);
+    quat_ry(-al, anim->dst_q, anim->dst_q);
 
-    core->target.duration = duration;
-    core->target.t = 0.0;
+    anim->duration = duration;
+    anim->t = 0.0;
 }
 
 EMSCRIPTEN_KEEPALIVE

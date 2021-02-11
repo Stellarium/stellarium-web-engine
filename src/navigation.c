@@ -15,20 +15,20 @@ void core_update_fov(double dt)
 {
     double t;
     double save_fov = core->fov;
+    typeof(core->fov_animation)* anim = &core->fov_animation;
 
-    if (core->fov_animation.duration) {
+    if (anim->duration) {
         core->fov_animation.t += dt / core->fov_animation.duration;
-        t = smoothstep(0.0, 1.0, core->fov_animation.t);
+        t = smoothstep(0.0, 1.0, anim->t);
         // Make sure we finish on an exact value.
-        if (core->fov_animation.t >= 1.0) t = 1.0;
-        if (core->fov_animation.dst_fov) {
-            core->fov = mix(core->fov_animation.src_fov,
-                            core->fov_animation.dst_fov, t);
+        if (anim->t >= 1.0) t = 1.0;
+        if (anim->dst_fov) {
+            core->fov = mix(anim->src_fov, anim->dst_fov, t);
         }
-        if (core->fov_animation.t >= 1.0) {
-            core->fov_animation.duration = 0.0;
-            core->fov_animation.t = 0.0;
-            core->fov_animation.dst_fov = 0.0;
+        if (anim->t >= 1.0) {
+            anim->duration = 0.0;
+            anim->t = 0.0;
+            anim->dst_fov = 0.0;
         }
     }
 
@@ -123,30 +123,31 @@ void core_update_time(double dt)
 void core_update_direction(double dt)
 {
     double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
+    typeof(core->target) *anim = &core->target;
 
-    if (core->target.duration) {
-        core->target.t += dt / core->target.duration;
-        t = smoothstep(0.0, 1.0, core->target.t);
+    if (anim->duration) {
+        anim->t += dt / anim->duration;
+        t = smoothstep(0.0, 1.0, anim->t);
         // Make sure we finish on an exact value.
-        if (core->target.t >= 1.0) t = 1.0;
-        if (core->target.lock && core->target.move_to_lock) {
+        if (anim->t >= 1.0) t = 1.0;
+        if (anim->lock && anim->move_to_lock) {
             // We are moving toward a potentially moving target, adjust the
             // destination
-            obj_get_pos(core->target.lock, core->observer, FRAME_MOUNT, vv);
+            obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, vv);
             eraC2s((double*)vv, &az, &al);
-            quat_set_identity(core->target.dst_q);
-            quat_rz(az, core->target.dst_q, core->target.dst_q);
-            quat_ry(-al, core->target.dst_q, core->target.dst_q);
+            quat_set_identity(anim->dst_q);
+            quat_rz(az, anim->dst_q, anim->dst_q);
+            quat_ry(-al, anim->dst_q, anim->dst_q);
         }
-        if (!core->target.lock || core->target.move_to_lock) {
-            quat_slerp(core->target.src_q, core->target.dst_q, t, q);
+        if (!anim->lock || anim->move_to_lock) {
+            quat_slerp(anim->src_q, anim->dst_q, t, q);
             quat_mul_vec3(q, v, v);
             eraC2s(v, &core->observer->yaw, &core->observer->pitch);
         }
-        if (core->target.t >= 1.0) {
-            core->target.duration = 0.0;
-            core->target.t = 0.0;
-            core->target.move_to_lock = false;
+        if (anim->t >= 1.0) {
+            anim->duration = 0.0;
+            anim->t = 0.0;
+            anim->move_to_lock = false;
         }
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
@@ -154,8 +155,8 @@ void core_update_direction(double dt)
         observer_update(core->observer, true);
     }
 
-    if (core->target.lock && !core->target.move_to_lock) {
-        obj_get_pos(core->target.lock, core->observer, FRAME_MOUNT, v);
+    if (anim->lock && !anim->move_to_lock) {
+        obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, v);
         eraC2s(v, &core->observer->yaw, &core->observer->pitch);
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
