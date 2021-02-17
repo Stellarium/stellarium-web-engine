@@ -377,7 +377,6 @@ texture_t *hips_get_tile_texture(
         double transf[3][3], double *fade,
         bool *loading_complete)
 {
-    PROFILE(hips_get_tile_texture, PROFILE_AGGREGATE)
     bool loading_complete_;
     int code, x, y, nbw;
     img_tile_t *tile = NULL;
@@ -475,7 +474,6 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
 int hips_render(hips_t *hips, const painter_t *painter_,
                 const double transf[4][4], double angle, int split_order)
 {
-    PROFILE(hips_render, 0);
     int nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;
     if (painter.color[3] == 0.0) return 0;

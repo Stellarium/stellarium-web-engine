@@ -125,7 +125,6 @@ error:
 
 static int satellites_update(obj_t *obj, double dt)
 {
-    PROFILE(satellites_update, 0);
     satellites_t *sats = (satellites_t*)obj;
     const char *data;
     double last_epoch = 0;
@@ -157,8 +156,6 @@ static int satellite_render(const obj_t *obj, const painter_t *painter);
 
 static int satellites_render(const obj_t *obj, const painter_t *painter)
 {
-    PROFILE(satellites_render, 0);
-
     satellites_t *sats = (void*)obj;
     int i, r;
     const int update_nb = 32;

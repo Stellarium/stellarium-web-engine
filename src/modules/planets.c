@@ -1099,7 +1099,6 @@ static bool should_render_orbit(const planet_t *p, const painter_t *painter)
 
 static int planets_render(const obj_t *obj, const painter_t *painter)
 {
-    PROFILE(planets_render, 0);
     planets_t *planets = (planets_t*)obj;
     planet_t *p;
 

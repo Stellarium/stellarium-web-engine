@@ -8,7 +8,6 @@ vars.AddVariables(
         allowed_values=('debug', 'release', 'profile')),
     BoolVariable('es6', 'Create ES6 js module', False),
     BoolVariable('werror', 'Warnings as error', True),
-    BoolVariable('remotery', 'Use remotery profiling', False),
 )
 
 VariantDir('build/src', 'src', duplicate=0)
@@ -61,10 +60,6 @@ env.Append(CPPPATH=['ext_src/nanovg'])
 sources += glob.glob('ext_src/md4c/*.c')
 env.Append(CPPPATH=['ext_src/md4c'])
 env.Append(CFLAGS=['-DMD4C_USE_UTF8'])
-
-if env['remotery']:
-    env.Append(CPPPATH=['ext_src/remotery'])
-    env.Append(CFLAGS=['-DRMT_ENABLED=1'])
 
 # Add webp
 sources += (

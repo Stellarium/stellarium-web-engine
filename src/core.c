@@ -207,7 +207,6 @@ void core_init(double win_w, double win_h, double pixel_scale)
         core_set_default();
         return;
     }
-    profile_init();
     texture_set_load_callback(NULL, texture_load_function);
     snprintf(cache_dir, sizeof(cache_dir), "%s/%s",
              sys_get_user_dir(), ".cache");
@@ -242,7 +241,6 @@ void core_release(void)
     DL_FOREACH(core->obj.children, module) {
         if (module->klass->del) module->klass->del(module);
     }
-    profile_release();
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -536,7 +534,6 @@ static void render_proj_markers(const painter_t *painter_)
 EMSCRIPTEN_KEEPALIVE
 int core_render(double win_w, double win_h, double pixel_scale)
 {
-    PROFILE(core_render, 0);
     obj_t *module;
     projection_t proj;
     double max_vmag, hints_vmag;

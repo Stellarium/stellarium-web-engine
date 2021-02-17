@@ -320,7 +320,6 @@ static json_value *shower_get_json_data(const obj_t *obj)
 
 static int meteors_update(obj_t *obj, double dt)
 {
-    PROFILE(meterors_update, 0);
     meteors_t *ms = (meteors_t*)obj;
     meteor_t *m, *tmp;
     int nb, max_nb = 100;
@@ -350,7 +349,6 @@ static int meteors_update(obj_t *obj, double dt)
 
 static int meteors_render(const obj_t *obj, const painter_t *painter)
 {
-    PROFILE(meterors_render, 0);
     const meteors_t *meteors = (void*)obj;
     obj_t *child;
     meteor_t *m;

@@ -133,7 +133,6 @@ void painter_update_clip_info(painter_t *painter)
 int paint_prepare(painter_t *painter, double win_w, double win_h,
                   double scale)
 {
-    PROFILE(paint_prepare, 0);
     int i;
     bool cull_flipped;
 
@@ -149,7 +148,6 @@ int paint_prepare(painter_t *painter, double win_w, double win_h,
 
 int paint_finish(const painter_t *painter)
 {
-    PROFILE(paint_finish, 0);
     REND(painter->rend, finish);
     return 0;
 }
@@ -177,7 +175,6 @@ void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
 
 int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 {
-    PROFILE(paint_2d_points, PROFILE_AGGREGATE);
     REND(painter->rend, points_2d, painter, n, points);
     return 0;
 }
@@ -187,7 +184,6 @@ int paint_quad(const painter_t *painter,
                const uv_map_t *map,
                int grid_size)
 {
-    PROFILE(paint_quad, PROFILE_AGGREGATE);
     if (painter->textures[PAINTER_TEX_COLOR].tex) {
         if (!texture_load(painter->textures[PAINTER_TEX_COLOR].tex, NULL))
             return 0;

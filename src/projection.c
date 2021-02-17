@@ -8,7 +8,6 @@
  */
 
 #include "projection.h"
-#include "profiler.h"
 
 #include "tests.h"
 #include "utils/vec.h"
@@ -91,7 +90,6 @@ bool project(const projection_t *proj, int flags,
              const double v[static 4],
              double out[static 4])
 {
-    PROFILE(project, PROFILE_AGGREGATE);
     double p[4] = {0, 0, 0, 1};
     bool visible;
 

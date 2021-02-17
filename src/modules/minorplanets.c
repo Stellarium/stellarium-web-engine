@@ -392,8 +392,6 @@ static void add_to_visible(mplanets_t *mps, mplanet_t *mplanet)
 
 static int mplanets_render(const obj_t *obj, const painter_t *painter)
 {
-    PROFILE(mplanets_render, 0);
-
     mplanets_t *mps = (void*)obj;
     int i, r;
     const int update_nb = 32;

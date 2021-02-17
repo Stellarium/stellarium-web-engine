@@ -32,7 +32,6 @@ static int milkyway_update(obj_t *obj, double dt)
 
 static int milkyway_render(const obj_t *obj, const painter_t *painter_)
 {
-    PROFILE(milkyway_render, 0);
     double lum, c;
     int split_order = 2;
     milkyway_t *mw = (milkyway_t*)obj;

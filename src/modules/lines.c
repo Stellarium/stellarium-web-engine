@@ -237,7 +237,6 @@ static int lines_update(obj_t *obj, double dt)
 
 static int lines_render(const obj_t *obj, const painter_t *painter)
 {
-    PROFILE(lines_render, 0);
     obj_t *line;
     MODULE_ITER(obj, line, "line")
         line->klass->render(line, painter);

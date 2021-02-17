@@ -136,7 +136,6 @@ static void render_fog(const painter_t *painter_, double alpha)
 
 static int landscape_render(const obj_t *obj, const painter_t *painter_)
 {
-    PROFILE(landscape_render, 0);
     landscape_t *ls = (landscape_t*)obj;
     landscapes_t *lss = (landscapes_t*)obj->parent;
     painter_t painter = *painter_;

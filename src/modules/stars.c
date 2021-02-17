@@ -636,7 +636,6 @@ static tile_t *get_tile(stars_t *stars, survey_t *survey, int order, int pix,
 
 static int render_visitor(int order, int pix, void *user)
 {
-    PROFILE(stars_render_visitor, PROFILE_AGGREGATE);
     stars_t *stars = USER_GET(user, 0);
     const survey_t *survey = (void*)USER_GET(user, 1);
     painter_t painter = *(const painter_t*)USER_GET(user, 2);
@@ -713,7 +712,6 @@ end:
 
 static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
-    PROFILE(stars_render, 0);
     stars_t *stars = (stars_t*)obj;
     int nb_tot = 0, nb_loaded = 0;
     double illuminance = 0; // Totall illuminance
