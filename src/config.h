@@ -59,6 +59,14 @@ extern "C" {
 #   endif
 #endif
 
+// Use stb implementation of sprintf and snprinf
+#ifndef __cplusplus
+#   include <stdio.h>
+#   include "../ext_src/stb/stb_sprintf.h"
+#   define STB_SPRINTF_NOUNALIGNED
+#   define sprintf stbsp_sprintf
+#   define snprintf stbsp_snprintf
+#endif
 
 // Ini config.
 #define INI_MAX_LINE 512
