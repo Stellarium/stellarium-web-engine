@@ -64,7 +64,13 @@ extern "C" {
 #   include <stdio.h>
 #   include "../ext_src/stb/stb_sprintf.h"
 #   define STB_SPRINTF_NOUNALIGNED
+#   ifdef sprintf
+#       undef sprintf
+#   endif
 #   define sprintf stbsp_sprintf
+#   ifdef snprintf
+#       undef snprintf
+#   endif
 #   define snprintf stbsp_snprintf
 #endif
 
