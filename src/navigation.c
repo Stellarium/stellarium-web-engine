@@ -162,13 +162,17 @@ void core_update_mount(double dt)
     int frame = core->mount_frame;
     double quat[4], mat[3][3];
     const double speed = 4;
+    const double FLIP_Y_AXIS_MAT[3][3] = {{1, 0, 0},
+                                          {0, -1, 0},
+                                          {0, 0, 1}};
 
     if (frame == FRAME_OBSERVED) {
         quat_set_identity(quat);
     } else {
         convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(1, 0, 0), mat[0]);
-        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, -1, 0), mat[1]);
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 1, 0), mat[1]);
         convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 0, 1), mat[2]);
+        mat3_mul(FLIP_Y_AXIS_MAT, mat, mat); // Could we avoid this?
         mat3_to_quat(mat, quat);
         quat_normalize(quat, quat);
     }
