@@ -12,6 +12,14 @@
 #include "designation.h"
 #include <zlib.h> // For crc32.
 
+// J2000 ecliptic to ICRF rotation matrix.
+// Computed with 'eraEcm06(ERFA_DJ00, 0)'
+static const double ECLIPTIC_ROT[3][3] = {
+    { 1.000000000000, -0.000000070784, 0.000000080562},
+    { 0.000000032897,  0.917482129915, 0.397776999444},
+    {-0.000000102070, -0.397776999444, 0.917482129915},
+};
+
 // Minor planets module
 
 typedef struct orbit_t {
@@ -214,9 +222,8 @@ static int mplanet_update(mplanet_t *mp, const observer_t *obs)
             mp->orbit.d, mp->orbit.i, mp->orbit.o, mp->orbit.w,
             mp->orbit.a, mp->orbit.n, mp->orbit.e, mp->orbit.m,
             0, 0);
-
-    mat3_mul_vec3(obs->re2i, pvh[0], pvh[0]);
-    mat3_mul_vec3(obs->re2i, pvh[1], pvh[1]);
+    mat3_mul_vec3(ECLIPTIC_ROT, pvh[0], pvh[0]);
+    mat3_mul_vec3(ECLIPTIC_ROT, pvh[1], pvh[1]);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, pvh, pvo);
     vec3_copy(pvo[0], mp->pvo[0]);
     vec3_copy(pvo[1], mp->pvo[1]);
