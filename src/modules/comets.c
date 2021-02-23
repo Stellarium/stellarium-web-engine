@@ -11,6 +11,14 @@
 #include "mpc.h"
 #include <regex.h>
 
+// J2000 ecliptic to ICRF rotation matrix.
+// Computed with 'eraEcm06(ERFA_DJ00, 0)'
+static const double ECLIPTIC_ROT[3][3] = {
+    { 1.000000000000, -0.000000070784, 0.000000080562},
+    { 0.000000032897,  0.917482129915, 0.397776999444},
+    {-0.000000102070, -0.397776999444, 0.917482129915},
+};
+
 enum {
     TAIL_GAS,
     TAIL_DUST,
@@ -160,7 +168,7 @@ static int comet_update(comet_t *comet, const observer_t *obs)
         ph[0][2] = r * (sin(u) * sin(i));
     }
 
-    mat3_mul_vec3(obs->re2i, ph[0], ph[0]);
+    mat3_mul_vec3(ECLIPTIC_ROT, ph[0], ph[0]);
 
     vec3_set(ph[1], 0, 0, 0);
     position_to_apparent(obs, ORIGIN_HELIOCENTRIC, false, ph, pv);
