@@ -79,8 +79,7 @@ static void update_matrices(observer_t *obs)
     mat3_mul(ro2v, ri2h, ri2v);
 
     // Equatorial to ecliptic
-    mat3_set_identity(re2i);
-    mat3_rx(eraObl80(DJM0, obs->ut1), re2i, re2i);
+    eraEcm06(DJM0, obs->tt, re2i);
     mat3_invert(re2i, ri2e);
 
     // ICRF to view (ignoring refraction).
