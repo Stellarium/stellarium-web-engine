@@ -43,7 +43,17 @@ void projection_compute_fovs(int type, double fov, double aspect,
     case PROJ_MOLLWEIDE_ADAPTIVE:
         proj_mollweide_compute_fov(fov, aspect, fovx, fovy);
         break;
+    case PROJ_PERSPECTIVE:
+        if (aspect < 1) {
+            *fovx = fov;
+            *fovy = 2 * atan(tan(fov / 2) / aspect);
+        } else {
+            *fovy = fov;
+            *fovx = 2 * atan(tan(fov / 2) * aspect);
+        }
+        break;
     default:
+        // To remove?
         if (aspect < 1) {
             *fovx = fov;
             *fovy = fov / aspect;
