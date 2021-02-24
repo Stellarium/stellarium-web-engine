@@ -180,6 +180,18 @@ int convert_frame(const observer_t *obs,
     vec3_copy(in, out);
     assert(!isnan(out[0] + out[1] + out[2]));
 
+    if (origin == FRAME_ECLIPTIC) {
+        mat3_mul_vec3(obs->re2i, out, out);
+        convert_frame(obs, FRAME_ICRF, dest, at_inf, out, out);
+        return 0;
+    }
+
+    if (dest == FRAME_ECLIPTIC) {
+        convert_frame(obs, origin, FRAME_ICRF, at_inf, out, out);
+        mat3_mul_vec3(obs->ri2e, out, out);
+        return 0;
+    }
+
     if (dest > origin) {
         convert_frame_forward(obs, origin, dest, at_inf, out);
     } else if (dest < origin) {

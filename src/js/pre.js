@@ -86,6 +86,7 @@ Module['FRAME_JNOW'] = 3;
 Module['FRAME_OBSERVED'] = 4;
 Module['FRAME_MOUNT'] = 5;
 Module['FRAME_VIEW'] = 6;
+Module['FRAME_ECLIPTIC'] = 7;
 
 Module['MJD2date'] = function(v) {
   return new Date(Math.round((v + 2400000.5 - 2440587.5) * 86400000));

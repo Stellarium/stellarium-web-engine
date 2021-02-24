@@ -82,6 +82,7 @@ typedef struct observer observer_t;
  *                  other mounts, we have to apply the rotation of the mount
  *                  relative to the alt/az frame.
  * FRAME_VIEW     - Observed frame rotated in the observer view direction.
+ * FRAME_ECLIPTIC - Ecliptic frame.
  */
 enum {
     FRAME_ASTROM              = 0,
@@ -90,7 +91,8 @@ enum {
     FRAME_JNOW                = 3,
     FRAME_OBSERVED            = 4,
     FRAME_MOUNT               = 5,
-    FRAME_VIEW                = 6
+    FRAME_VIEW                = 6,
+    FRAME_ECLIPTIC            = 7,
 };
 
 #define FRAMES_NB (FRAME_VIEW + 1)
