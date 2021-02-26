@@ -15,6 +15,7 @@ int args_vget(const json_value *args, int type, va_list* ap)
     const json_value *val;
     assert(args);
     int i;
+    uint64_t ptr;
     double *v;
     type = type % 16;
 
@@ -62,8 +63,17 @@ int args_vget(const json_value *args, int type, va_list* ap)
             args_get(val->u.array.values[i], TYPE_FLOAT, &v[i]);
     }
     else if (type == TYPE_PTR) {
-        assert(val->type == json_integer);
-        *va_arg(*ap, void**) = (void*)val->u.integer;
+        switch(val->type) {
+        case json_integer:
+            *va_arg(*ap, void**) = (void*)val->u.integer;
+            break;
+        case json_string:
+            sscanf(val->u.string.ptr, "%" PRIx64, &ptr);
+            *va_arg(*ap, void**) = (void*)ptr;
+            break;
+        default:
+            assert(false);
+        }
     }
     else if (type == TYPE_STRING) {
         assert(val->type == json_string);
@@ -91,7 +101,7 @@ json_value *args_vvalue_new(int type, va_list *ap)
     json_value *ret, *val;
     double f;
     double *v;
-    char buf[16];
+    char buf[32];
 
     ret = json_object_new(0);
     json_object_push(ret, "swe_", json_integer_new(1));
@@ -115,9 +125,10 @@ json_value *args_vvalue_new(int type, va_list *ap)
     }
     else if (type == TYPE_STRING)
         val = json_string_new(va_arg(*ap, char*) ?: "");
-    else if (type == TYPE_PTR)
-        val = json_integer_new((uintptr_t)va_arg(*ap, void*));
-    else if (type == TYPE_V2) {
+    else if (type == TYPE_PTR) {
+        snprintf(buf, sizeof(buf), "%" PRIx64, (uint64_t)va_arg(*ap, void*));
+        val = json_string_new(buf);
+    } else if (type == TYPE_V2) {
         v = va_arg(*ap, double*);
         val = json_array_new(2);
         json_array_push(val, json_double_new(v[0]));
