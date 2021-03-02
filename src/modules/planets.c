@@ -920,6 +920,21 @@ static void planet_render_label(
                   -vmag, &planet->obj);
 }
 
+// For the moment only consider the parent body of moons.
+// Used to prevent showing the planet moons labels behind a planet.
+static bool planet_is_occulted(const planet_t *planet, const painter_t *painter)
+{
+    double sep, pvo[2][3], parent_pvo[2][3], r1, r2;
+    if (!planet->parent) return false;
+    planet_get_pvo(planet, painter->obs, pvo);
+    planet_get_pvo(planet->parent, painter->obs, parent_pvo);
+    if (vec3_norm2(pvo[0]) < vec3_norm2(parent_pvo[0])) return false;
+    sep = eraSepp(pvo[0], parent_pvo[0]);
+    r1 = planet->radius_m / DAU / vec3_norm(pvo[0]);
+    r2 = planet->parent->radius_m / DAU / vec3_norm(parent_pvo[0]);
+    return sep < r1 + r2;
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], p_win[4];
@@ -1030,9 +1045,11 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // moment because the vmag is not a good measure for planets: if the
     // planet is big on the screen, we should see the label, no matter the
     // vmag.
+    // XXX: cleanup this line.
     if (selected || (planets->hints_visible && (
         vmag <= painter.hints_limit_mag + 2.4 + planets->hints_mag_offset ||
-        model_alpha > 0)))
+        model_alpha > 0)
+        && !planet_is_occulted(planet, &painter)))
     {
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
     }
