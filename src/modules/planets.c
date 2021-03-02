@@ -926,6 +926,7 @@ static bool planet_is_occulted(const planet_t *planet, const painter_t *painter)
 {
     double sep, pvo[2][3], parent_pvo[2][3], r1, r2;
     if (!planet->parent) return false;
+    if (planet->id == MOON) return false;
     planet_get_pvo(planet, painter->obs, pvo);
     planet_get_pvo(planet->parent, painter->obs, parent_pvo);
     if (vec3_norm2(pvo[0]) < vec3_norm2(parent_pvo[0])) return false;
