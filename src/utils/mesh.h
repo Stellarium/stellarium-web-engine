@@ -77,4 +77,6 @@ void mesh_cut_antimeridian(mesh_t *mesh);
  */
 int mesh_subdivide(mesh_t *mesh, double max_length);
 
+bool mesh_intersects_2d_box(const mesh_t *mesh, const double box[2][2]);
+
 #endif // MESH_H

@@ -394,6 +394,52 @@ static int query_rendered_features_(
     return nb;
 }
 
+static bool mesh_intersects_box(const mesh_t *mesh_, const painter_t *painter,
+                                const double box[2][2])
+{
+    mesh_t *mesh;
+    int i;
+    double p[4];
+    bool ret;
+
+    // Project the mesh vertices into screen coordinates.
+    mesh = mesh_copy(mesh_);
+    for (i = 0; i < mesh->vertices_count; i++) {
+        vec3_normalize(mesh->vertices[i], p);
+        convert_frame(painter->obs, FRAME_ICRF, FRAME_VIEW, true, p, p);
+        project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
+                p, p);
+        vec2_copy(p, mesh->vertices[i]);
+    }
+    ret = mesh_intersects_2d_box(mesh, box);
+    mesh_delete(mesh);
+    return ret;
+}
+
+static int query_rendered_features_box_(
+        const painter_t *painter, const image_t *image,
+        const double box[2][2], int max_ret,
+        void **tiles, int *index)
+{
+    int i = 0, nb = 0;
+    const feature_t *feature;
+    const mesh_t *mesh;
+
+    for (feature = image->features; feature; feature = feature->next, i++) {
+        if (nb >= max_ret) break;
+        if (feature->hidden) continue;
+        for (mesh = feature->meshes; mesh; mesh = mesh->next) {
+            if (mesh_intersects_box(mesh, painter, box)) {
+                index[nb] = i;
+                if (tiles) tiles[nb] = image;
+                nb++;
+                break;
+            }
+        }
+    }
+    return nb;
+}
+
 /*
  * Experimental function to get the list of rendered features index.
  * Return the number of features returned.
@@ -477,10 +523,14 @@ static bool survey_iter_visible_tiles(
  * Return the number of features returned.
  *
  * Assume the current core observer and projection!
+ *
+ * Parameters:
+ *   box    - bounding box as two points.  If they are the same the search
+ *            is done on a single point.
  */
 EMSCRIPTEN_KEEPALIVE
 int geojson_survey_query_rendered_features(
-        const obj_t *obj, double win_pos[2], int max_ret,
+        const obj_t *obj, double box[2][2], int max_ret,
         void **tiles, int *index)
 {
     const survey_t *survey = (void*)obj;
@@ -493,7 +543,7 @@ int geojson_survey_query_rendered_features(
     image_t *tile;
     hips_iterator_t iter;
 
-    assert(!isnan(win_pos[0]) && !isnan(win_pos[1]));
+    assert(!isnan(box[0][0] + box[0][1] + box[1][0] + box[0][1]));
 
     core_get_proj(&proj);
     painter = (painter_t) {
@@ -503,22 +553,38 @@ int geojson_survey_query_rendered_features(
                     core->win_size[1] * core->win_pixels_scale},
     };
     painter_update_clip_info(&painter);
-    painter_unproject(&painter, hips->frame, win_pos, pos);
 
-    if (survey->allsky) {
-        nb = geojson_query_rendered_features(
-                (obj_t*)survey->allsky, win_pos, max_ret, index);
-        for (i = 0; i < nb; i++) tiles[i] = survey->allsky;
+    // Case where we query a single point.
+    if (box[0][0] == box[1][0] && box[0][1] == box[1][1]) {
+        painter_unproject(&painter, hips->frame, box[0], pos);
+
+        if (survey->allsky) {
+            nb = geojson_query_rendered_features(
+                    (obj_t*)survey->allsky, box[0], max_ret, index);
+            for (i = 0; i < nb; i++) tiles[i] = survey->allsky;
+        }
+
+        if (!hips_is_ready(hips)) return nb;
+        hips_iter_init(&iter);
+        while (survey_iter_visible_tiles(survey, &painter, &iter, &order, &pix,
+                                         &code, &tile)) {
+            if (!tile) continue;
+            if (nb >= max_ret) break;
+            nb += query_rendered_features_(tile, pos, max_ret - nb,
+                                           tiles + nb, index + nb);
+            if (nb >= max_ret) break;
+        }
+        return nb;
     }
 
-    if (!hips_is_ready(hips)) return nb;
+    if (!hips_is_ready(hips)) return 0;
     hips_iter_init(&iter);
     while (survey_iter_visible_tiles(survey, &painter, &iter, &order, &pix,
                                      &code, &tile)) {
         if (!tile) continue;
         if (nb >= max_ret) break;
-        nb += query_rendered_features_(tile, pos, max_ret - nb,
-                                       tiles + nb, index + nb);
+        nb += query_rendered_features_box_(&painter, tile, box, max_ret - nb,
+                                           tiles + nb, index + nb);
         if (nb >= max_ret) break;
     }
     return nb;

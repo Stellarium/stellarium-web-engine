@@ -28,6 +28,11 @@ static double min(double x, double y)
     return x < y ? x : y;
 }
 
+static double max(double x, double y)
+{
+    return x > y ? x : y;
+}
+
 mesh_t *mesh_create(void)
 {
     return calloc(1, sizeof(mesh_t));
@@ -431,4 +436,72 @@ int mesh_subdivide(mesh_t *mesh, double max_length)
         ret += mesh_subdivide_triangle(mesh, i, max_length);
     }
     return ret;
+}
+
+static bool segment_intersects_2d_box(const double a[2], const double b[2],
+                                      const double box[2][2])
+{
+    const double n[2] = {b[0] - a[0], b[1] - a[1]};
+    double tx1, tx2, ty1, ty2;
+    double txmin = -DBL_MAX, txmax = +DBL_MAX;
+    double tymin = -DBL_MAX, tymax = +DBL_MAX;
+    double vmin, vmax;
+
+    if (n[0] != 0.0) {
+        tx1 = (box[0][0] - a[0]) / n[0];
+        tx2 = (box[1][0] - a[0]) / n[0];
+        txmin = min(tx1, tx2);
+        txmax = max(tx1, tx2);
+    }
+
+    if (n[1] != 0.0) {
+        ty1 = (box[0][1] - a[1]) / n[1];
+        ty2 = (box[0][1] - a[1]) / n[1];
+        tymin = min(ty1, ty2);
+        tymax = max(ty1, ty2);
+    }
+    if (tymin <= txmax && txmin <= tymax) {
+        vmin = max(txmin, tymin);
+        vmax = min(txmax, tymax);
+        if (0.0 <= vmax && vmin <= 1.0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool triangle_intersects_2d_box(const double tri[3][2],
+                                       const double box[2][2])
+{
+    double a[2], b[2];
+    int i;
+
+    // Test if any point is inside.
+    for (i = 0; i < 3; i++) {
+        if (    (tri[i][0] >= box[0][0] && tri[i][0] < box[1][0] &&
+                 tri[i][1] >= box[0][1] && tri[i][1] < box[1][1]))
+            return true;
+    }
+
+    // Return whether a segment intersects the box.
+    for (i = 0; i < 3; i++) {
+        vec2_copy(tri[i], a);
+        vec2_copy(tri[(i + 1) % 3], b);
+        if (segment_intersects_2d_box(a, b, box))
+            return true;
+    }
+    return false;
+}
+
+bool mesh_intersects_2d_box(const mesh_t *mesh, const double box[2][2])
+{
+    int i, j;
+    double tri[3][2];
+    for (i = 0; i < mesh->triangles_count; i += 3) {
+        for (j = 0; j < 3; j++)
+            vec2_copy(mesh->vertices[mesh->triangles[i + j]], tri[j]);
+        if (triangle_intersects_2d_box(tri, box))
+            return true;
+    }
+    return false;
 }

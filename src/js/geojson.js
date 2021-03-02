@@ -151,25 +151,39 @@ Module['onGeojsonObj'] = function(obj) {
 // Map of survey tile -> features list.
 let g_tiles = {}
 
-function surveyQueryRenderedFeatures(obj, point) {
-  if (typeof(point) === 'object') {
-    point = [point.x, point.y];
+function asBox(box) {
+  if (!(box instanceof Array)) {
+    return [[box.x, box.y], [box.x, box.y]]
   }
-  const pointPtr = Module._malloc(16);
-  Module._setValue(pointPtr + 0, point[0], 'double');
-  Module._setValue(pointPtr + 8, point[1], 'double');
+  assert(box instanceof Array)
+  return box.map(function(v) {
+    if (!(v instanceof Array)) {
+      return [v.x, v.y]
+    }
+    return v
+  })
+}
+
+function surveyQueryRenderedFeatures(obj, box) {
+  box = asBox(box)
+  console.log(box)
+  const boxPtr = Module._malloc(32);
+  Module._setValue(boxPtr +  0, box[0][0], 'double');
+  Module._setValue(boxPtr +  8, box[0][1], 'double');
+  Module._setValue(boxPtr + 16, box[1][0], 'double');
+  Module._setValue(boxPtr + 24, box[1][1], 'double');
   const size = 128; // Max number of results.
   const tilesPtr = Module._malloc(4 * size);
   const indexPtr = Module._malloc(4 * size);
   const nb = Module._geojson_survey_query_rendered_features(
-    obj.v, pointPtr, size, tilesPtr, indexPtr);
+    obj.v, boxPtr, size, tilesPtr, indexPtr);
   let ret = []
   for (let i = 0; i < nb; i++) {
     const tile = Module._getValue(tilesPtr + i * 4, 'i32*');
     const idx = Module._getValue(indexPtr + i * 4, 'i32');
     ret.push(g_tiles[tile][idx]);
   }
-  Module._free(pointPtr);
+  Module._free(boxPtr);
   Module._free(indexPtr);
   Module._free(tilesPtr);
   return ret;
