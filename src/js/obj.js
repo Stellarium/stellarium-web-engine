@@ -314,7 +314,10 @@ Module.afterInit(function() {
     if (!ret) return null;
     ret = JSON.parse(ret)
     if (!ret.swe_) return ret;
-    if (ret.type === 'obj') return ret.v ? new SweObj(ret.v) : null;
+    if (ret.type === 'obj') {
+      let v = parseInt(ret.v)
+      return v ? new SweObj(v) : null;
+    }
     return ret.v;
   }
 
