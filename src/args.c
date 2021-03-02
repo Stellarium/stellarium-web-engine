@@ -68,7 +68,7 @@ int args_vget(const json_value *args, int type, va_list* ap)
             *va_arg(*ap, void**) = (void*)val->u.integer;
             break;
         case json_string:
-            sscanf(val->u.string.ptr, "%" PRIx64, &ptr);
+            sscanf(val->u.string.ptr, "0x%" PRIx64, &ptr);
             *va_arg(*ap, void**) = (void*)ptr;
             break;
         default:
@@ -126,7 +126,7 @@ json_value *args_vvalue_new(int type, va_list *ap)
     else if (type == TYPE_STRING)
         val = json_string_new(va_arg(*ap, char*) ?: "");
     else if (type == TYPE_PTR) {
-        snprintf(buf, sizeof(buf), "%" PRIx64, (uint64_t)va_arg(*ap, void*));
+        snprintf(buf, sizeof(buf), "0x%" PRIx64, (uint64_t)va_arg(*ap, void*));
         val = json_string_new(buf);
     } else if (type == TYPE_V2) {
         v = va_arg(*ap, double*);
