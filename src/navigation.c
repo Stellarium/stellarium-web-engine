@@ -166,15 +166,28 @@ void core_update_mount(double dt)
                                           {0, -1, 0},
                                           {0, 0, 1}};
 
-    if (frame == FRAME_OBSERVED) {
+    switch (frame) {
+    case FRAME_OBSERVED:
         quat_set_identity(quat);
-    } else {
+        break;
+    // XXX: not clear why we cannot use the same code for ICRF and Ecliptic.
+    case FRAME_ICRF:
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(1, 0, 0), mat[0]);
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, -1, 0), mat[1]);
+        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 0, 1), mat[2]);
+        mat3_to_quat(mat, quat);
+        quat_normalize(quat, quat);
+        break;
+    case FRAME_ECLIPTIC:
         convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(1, 0, 0), mat[0]);
         convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 1, 0), mat[1]);
         convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 0, 1), mat[2]);
         mat3_mul(FLIP_Y_AXIS_MAT, mat, mat); // Could we avoid this?
         mat3_to_quat(mat, quat);
         quat_normalize(quat, quat);
+        break;
+    default:
+        assert(false);
     }
 
     if (vec4_equal(quat, obs->mount_quat)) return;
