@@ -47,9 +47,6 @@ Module.afterInit(function() {
     if (Module.onBeforeRendering)
       Module.onBeforeRendering(timestamp)
 
-    // TODO: combine those calls
-    Module._core_observer_update();
-
     // TODO: manage paning and flicking here
 
     Module._core_update(dt / 1000);

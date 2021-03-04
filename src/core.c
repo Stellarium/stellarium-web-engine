@@ -244,12 +244,6 @@ void core_release(void)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_observer_update()
-{
-    observer_update(core->observer, true);
-}
-
-EMSCRIPTEN_KEEPALIVE
 void core_set_view_offset(double center_y_offset)
 {
     double pix_angular_size;

@@ -204,12 +204,6 @@ void core_release(void);
 int core_update(void);
 
 /*
- * Function: core_observer_update
- * Update the observer.
- */
-void core_observer_update();
-
-/*
  * Function: core_set_view_offset
  * Update the view center vertical offset.
  *
