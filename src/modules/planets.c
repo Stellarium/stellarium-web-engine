@@ -45,6 +45,7 @@ struct planet {
     double      shadow_brightness; // in [0-1].
     int         id; // Uniq id number, as defined in JPL HORIZONS.
     double      mass;       // kg (0 if unknown).
+    bool        no_model;   // Set if we do not have a 3d model.
 
     // Optimizations vars
     float update_delta_s;    // Number of seconds between 2 orbits full update
@@ -793,16 +794,15 @@ static void planet_render_model(const planet_t *planet,
                                 const painter_t *painter_)
 {
     const hips_t *hips;
-    bool has_3d_model = false;
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
     double dist, depth_range[2];
     painter_t painter = *painter_;
 
-    if (painter_get_3d_model_bounds(&painter, planet->name, bounds) == 0)
-        has_3d_model = true;
+    ((planet_t*)planet)->no_model = planet->no_model ||
+        painter_get_3d_model_bounds(&painter, planet->name, bounds);
 
-    if (!has_3d_model) { // Use hips.
+    if (planet->no_model) { // Use hips.
         hips = planet->hips ?: g_planets->default_hips;
         if (hips)
             planet_render_hips(planet, hips, radius, r_scale, alpha, &painter);

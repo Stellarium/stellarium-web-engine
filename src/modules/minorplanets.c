@@ -47,6 +47,7 @@ struct mplanet {
     char        desig[24];  // Principal designation.
     int         mpl_number; // Minor planet number if one has been assigned.
     char        model[64];  // Model name. e.g: '1_Ceres'
+    bool        no_model;
 
     // Cached values.
     float       vmag;
@@ -251,7 +252,9 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = mp->vmag;
         return 0;
     case INFO_RADIUS:
-        if (painter_get_3d_model_bounds(NULL, mp->model, bounds) == 0) {
+        mp->no_model = mp->no_model ||
+            painter_get_3d_model_bounds(NULL, mp->model, bounds);
+        if (!mp->no_model) {
             radius = mean3(bounds[1][0] - bounds[0][0],
                            bounds[1][1] - bounds[0][1],
                            bounds[1][2] - bounds[0][2]) * 1000 / 2 / DAU;
