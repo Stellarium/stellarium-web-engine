@@ -204,17 +204,6 @@ void core_release(void);
 int core_update(void);
 
 /*
- * Function: core_update_fov
- * Update the core fov animation.
- *
- * Should be called before core_update
- *
- * Parameters:
- *   dt     - Time increment from last frame (sec).
- */
-void core_update_fov(double dt);
-
-/*
  * Function: core_observer_update
  * Update the observer.
  */

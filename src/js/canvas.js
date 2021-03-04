@@ -48,7 +48,6 @@ Module.afterInit(function() {
       Module.onBeforeRendering(timestamp)
 
     // TODO: combine those calls
-    Module._core_update_fov(dt / 1000)
     Module._core_observer_update();
 
     // TODO: manage paning and flicking here
