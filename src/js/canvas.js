@@ -10,7 +10,6 @@
 Module.afterInit(function() {
   if (!Module.canvas) return;
 
-  var prevTimestamp;
   var mouseDown = false;
   var mousePos;
 
@@ -39,17 +38,12 @@ Module.afterInit(function() {
       canvas.height = displayHeight * dpr;
     }
 
-    if (!prevTimestamp)
-      prevTimestamp = timestamp;
-    var dt = timestamp - prevTimestamp;
-    prevTimestamp = timestamp;
-
     if (Module.onBeforeRendering)
       Module.onBeforeRendering(timestamp)
 
     // TODO: manage paning and flicking here
 
-    Module._core_update(dt / 1000);
+    Module._core_update();
     Module._core_render(displayWidth, displayHeight, dpr);
 
     window.requestAnimationFrame(render)
