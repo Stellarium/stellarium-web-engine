@@ -571,8 +571,16 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
                               double *model_size)
 {
     double bounds[2][3], dim_au, angle, point_size;
+    const double max_dim_au = 110 / DAU; // No sat is larger than that.
 
     if (!sat->model) return 0;
+
+    // First check with the max possible dimension, to avoid loading the
+    // model if we can.
+    angle = max_dim_au / vec3_norm(sat->pvo[0]);
+    point_size = core_get_point_for_apparent_angle(painter->proj, angle);
+    if (point_size < 5) return 0;
+
     if (painter_get_3d_model_bounds(NULL, sat->model, bounds) != 0)
         return 0;
     dim_au = max3(bounds[1][0] - bounds[0][0],
