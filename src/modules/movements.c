@@ -130,9 +130,10 @@ static int get_touch_index(int id)
 }
 
 static int movements_on_mouse(obj_t *obj, int id, int state,
-                              double x, double y)
+                              double x, double y, int buttons)
 {
     movements_t *movs = (void*)obj;
+    if (buttons != 1) return 0;
     id = get_touch_index(id + 1);
     if (id == -1) return 0;
     if (state == -1) state = core->inputs.touches[id].down[0];

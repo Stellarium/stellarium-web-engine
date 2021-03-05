@@ -10,14 +10,16 @@
 Module.afterInit(function() {
   if (!Module.canvas) return;
 
+  // XXX: remove this I guess.
   var mouseDown = false;
+  var mouseButtons = 0;
   var mousePos;
 
   // Function called at each frame
   var render = function(timestamp) {
 
     if (mouseDown)
-      Module._core_on_mouse(0, 1, mousePos.x, mousePos.y);
+      Module._core_on_mouse(0, 1, mousePos.x, mousePos.y, mouseButtons);
 
     // Check for canvas resize
     var canvas = Module.canvas;
@@ -76,13 +78,14 @@ Module.afterInit(function() {
       fixPageXY(e);
       mouseDown = true;
       mousePos = getMousePos(e);
+      mouseButtons = e.buttons;
 
       document.onmouseup = function(e) {
         e = e || event;
         fixPageXY(e);
         mouseDown = false;
         mousePos = getMousePos(e);
-        Module._core_on_mouse(0, 0, mousePos.x, mousePos.y);
+        Module._core_on_mouse(0, 0, mousePos.x, mousePos.y, mouseButtons);
       };
       document.onmouseleave = function(e) {
         mouseDown = false;
@@ -150,6 +153,12 @@ Module.afterInit(function() {
     };
     canvas.addEventListener('mousewheel', onWheelEvent, {passive: false});
     canvas.addEventListener('DOMMouseScroll', onWheelEvent, {passive: false});
+
+    canvas.oncontextmenu = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
   };
 
   setupMouse();

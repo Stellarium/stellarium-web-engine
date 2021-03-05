@@ -215,7 +215,7 @@ void core_set_view_offset(double center_y_offset);
 
 int core_render(double win_w, double win_h, double pixel_scale);
 // x and y in screen coordinates.
-void core_on_mouse(int id, int state, double x, double y);
+void core_on_mouse(int id, int state, double x, double y, int buttons);
 void core_on_key(int key, int action);
 void core_on_char(uint32_t c);
 void core_on_zoom(double zoom, double x, double y);

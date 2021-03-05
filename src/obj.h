@@ -118,7 +118,8 @@ struct obj_klass
                            double* win_angle);
 
     // For modules objects.
-    int (*on_mouse)(obj_t *obj, int id, int state, double x, double y);
+    int (*on_mouse)(obj_t *obj, int id, int state, double x, double y,
+                    int buttons);
     int (*on_pinch)(obj_t *obj, int state, double x, double y, double scale,
                     int points_count);
 

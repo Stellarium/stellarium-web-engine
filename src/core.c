@@ -609,12 +609,12 @@ int core_render(double win_w, double win_h, double pixel_scale)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_on_mouse(int id, int state, double x, double y)
+void core_on_mouse(int id, int state, double x, double y, int buttons)
 {
     obj_t *module;
     DL_FOREACH(core->obj.children, module) {
         if (module->klass->on_mouse) {
-            module->klass->on_mouse(module, id, state, x, y);
+            module->klass->on_mouse(module, id, state, x, y, buttons);
         };
     }
 }
