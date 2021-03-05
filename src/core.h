@@ -159,6 +159,8 @@ struct core
     // Click callback that can be set by the client.  If it returns true,
     // the event is canceled (no selection is made).
     bool (*on_click)(double x, double y);
+    // Callback called if we do a rectangle selection.
+    bool (*on_rect)(double x1, double y1, double x2, double y2);
 
     // List of running tasks.
     task_t *tasks;

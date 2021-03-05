@@ -1062,6 +1062,7 @@ static obj_klass_t core_klass = {
                  MEMBER(core_t, flip_view_horizontal)),
         PROPERTY(mount_frame, TYPE_ENUM, MEMBER(core_t, mount_frame)),
         PROPERTY(on_click, TYPE_FUNC, MEMBER(core_t, on_click)),
+        PROPERTY(on_rect, TYPE_FUNC, MEMBER(core_t, on_rect)),
         PROPERTY(time_animation_target, TYPE_MJD,
                  MEMBER(core_t, time_animation.dst_utc)),
         PROPERTY(time_speed, TYPE_FLOAT, MEMBER(core_t, time_speed)),
