@@ -428,7 +428,7 @@ Module['on'] = function(eventName, callback) {
     onClickCallback = callback;
     Module.core.on_click = onClickFn;
   }
-  if (eventName === 'rect') {
+  if (eventName === 'rectSelection') {
     onRectFn = Module.addFunction(function(x1, y1, x2, y2) {
       return onRectCallback({rect: [{x: x1, y: y1}, {x: x2, y: y2}]});
     }, 'idddd');
