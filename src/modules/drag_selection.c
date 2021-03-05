@@ -11,7 +11,16 @@
  * Module that allows to drag selection rectangles on the sky.
  */
 
-#ifdef DRAG_SELECTION_MODULE_ENABLED
+// Enable by default only if we compile to js.
+#ifndef DRAG_SELECTION_MODULE_ENABLED
+#   ifdef __EMSCRIPTEN__
+#       define DRAG_SELECTION_MODULE_ENABLED 1
+#   else
+#       define DRAG_SELECTION_MODULE_ENABLED 0
+#   endif
+#endif
+
+#if DRAG_SELECTION_MODULE_ENABLED
 
 #include "swe.h"
 
@@ -62,6 +71,7 @@ static int drag_selection_on_mouse(obj_t *obj, int id, int state,
                                    double x, double y, int buttons)
 {
     drag_selection_t *module = (void*)obj;
+    if (!core->on_rect) return 0;
     if (buttons != 2) return 0;
     gesture_t *gs[] = {&module->gest_pan};
     gesture_on_mouse(1, gs, id, state, x, y, module);
