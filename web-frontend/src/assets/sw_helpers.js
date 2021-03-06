@@ -29,7 +29,7 @@ DDDate.prototype.setMJD = function (mjd) {
 }
 
 const swh = {
-  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone, onBeforeRendering) {
+  initStelWebEngine: function (store, wasmFile, canvasElem, callBackOnDone) {
     StelWebEngine({
       wasmFile: wasmFile,
       canvas: canvasElem,
@@ -38,8 +38,6 @@ const swh = {
         // return i18next.t(str, {ns: domain});
       },
       onReady: function (lstel) {
-        lstel.onBeforeRendering = onBeforeRendering
-
         store.commit('replaceStelWebEngine', lstel.getTree())
         lstel.onValueChanged(function (path, value) {
           const tree = store.state.stel

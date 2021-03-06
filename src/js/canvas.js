@@ -40,9 +40,6 @@ Module.afterInit(function() {
       canvas.height = displayHeight * dpr;
     }
 
-    if (Module.onBeforeRendering)
-      Module.onBeforeRendering(timestamp)
-
     // TODO: manage paning and flicking here
 
     Module._core_update();

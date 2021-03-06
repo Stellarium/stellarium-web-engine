@@ -139,7 +139,7 @@ export default {
       return tm > 720 ? this.$t('Dawn') : this.$t('Twilight')
     },
     isTimePaused: function () {
-      return this.$store.state.timeSpeed === 0
+      return this.$store.state.stel.time_speed === 0
     },
     togglePauseTimeIcon: function () {
       return this.isTimePaused ? 'mdi-play' : 'mdi-pause'
@@ -152,7 +152,7 @@ export default {
       this.$emit('input', m.format())
     },
     togglePauseTime: function () {
-      this.$store.commit('setValue', { varName: 'timeSpeed', newValue: this.isTimePaused ? 1 : 0 })
+      this.$stel.core.time_speed = (this.$stel.core.time_speed === 0) ? 1 : 0
     },
     incTime: function (unit) {
       this.startIncTime(1, unit)

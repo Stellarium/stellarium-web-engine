@@ -90,7 +90,6 @@ export default {
       guiComponent: 'GuiLoader',
       startTimeIsSet: false,
       initDone: false,
-      timeRef: undefined,
       dataSourceInitDone: false
     }
   },
@@ -122,12 +121,6 @@ export default {
     getStoreValue: function (storeVarName) {
       return _.get(this.$store.state, storeVarName)
     },
-    onBeforeRendering: function (timestamp) {
-      if (!this.timeRef) this.timeRef = new Date().getMJD()
-      const d = new Date().getMJD()
-      this.$stel.observer.utc += this.$store.state.timeSpeed * (d - this.timeRef)
-      this.timeRef = d
-    },
     setStateFromQueryArgs: function () {
       // Check whether the observing panel must be displayed
       this.$store.commit('setValue', { varName: 'showSidePanel', newValue: this.$route.path.startsWith('/p/') })
@@ -137,6 +130,7 @@ export default {
       var that = this
 
       if (!this.initDone) {
+        this.$stel.core.time_speed = 1
         let d = new Date()
         if (this.$route.query.date) {
           d = new Moment(this.$route.query.date).toDate()
@@ -267,7 +261,7 @@ export default {
             core.comets.addDataSource({ url: process.env.BASE_URL + 'skydata/CometEls.txt', key: 'mpc_comets' })
             core.satellites.addDataSource({ url: process.env.BASE_URL + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
           }
-        }, that.onBeforeRendering)
+        })
       } catch (e) {
         this.$store.commit('setValue', { varName: 'wasmSupport', newValue: false })
       }
