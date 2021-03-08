@@ -136,7 +136,7 @@ static struct {
         .name       = "Equator",
         .id         = "equator_line",
         .color      = 0x2a81ad80,
-        .frame      = FRAME_ICRF,
+        .frame      = FRAME_JNOW,
         .format     = 'n',
         .grid       = false,
     },
