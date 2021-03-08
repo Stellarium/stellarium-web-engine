@@ -16,7 +16,7 @@
 
 typedef struct coordinates {
     obj_t obj;
-    double po[3]; // In ICRF, Observer Centric.
+    double po[3]; // In Ra/Dec J2000, Observer Centric.
 } coordinates_t;
 
 static int coordinates_init(obj_t *obj, json_value *args)
@@ -32,7 +32,7 @@ static int coordinates_get_info(const obj_t *obj, const observer_t *obs,
     double pvo[2][4] = {};
     switch (info) {
     case INFO_PVO:
-        vec3_copy(coo->po, pvo[0]);
+        convert_frame(obs, FRAME_JNOW, FRAME_ICRF, true, coo->po, pvo[0]);
         memcpy(out, pvo, sizeof(pvo));
         return 0;
     }
