@@ -78,6 +78,12 @@ static void convert_frame_forward(const observer_t *obs,
         return;
     }
 
+    if (origin == FRAME_JNOW) {
+        double mat[3][3] = MAT3_IDENTITY;
+        mat3_rz(obs->eo, mat, mat);
+        mat3_mul_vec3(mat, p, p);
+    }
+
     // CIRS to OBSERVED.
     if (origin < FRAME_OBSERVED && dest >= FRAME_OBSERVED) {
         // Precomputed earth rotation and polar motion.
