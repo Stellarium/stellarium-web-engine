@@ -107,7 +107,7 @@ enum {
  * aberration must already be taken into account before calling this function.
  *
  * Parameters:
- *  obs     - The observer.  If NULL we use the current core observer.
+ *  obs     - The observer.
  *  origin  - Origin coordinates.
  *            One of the <FRAME> enum values.
  *  dest    - Destination coordinates.
@@ -121,6 +121,7 @@ enum {
  * Return:
  *  0 for success.
  */
+__attribute__((nonnull))
 int convert_frame(const observer_t *obs,
                         int origin, int dest, bool at_inf,
                         const double in[3], double out[3]);
@@ -135,12 +136,13 @@ int convert_frame(const observer_t *obs,
  * contains the real object's distance in AU.
  *
  * Parameters:
- *   obs    - The observer.  If NULL we use the current core observer.
+ *   obs    - The observer.
  *   origin - The origin frame.  One of the <FRAME> enum values.
  *   dest   - The dest frame.  One of the <FRAME> enum values.
  *   in     - Input 4D vector.
  *   out    - Output 4D vector.
  */
+__attribute__((nonnull))
 int convert_framev4(const observer_t *obs,
                     int origin, int dest,
                     const double in[S 4], double out[S 4]);
