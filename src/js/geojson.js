@@ -166,7 +166,6 @@ function asBox(box) {
 
 function surveyQueryRenderedFeatures(obj, box) {
   box = asBox(box)
-  console.log(box)
   const boxPtr = Module._malloc(32);
   Module._setValue(boxPtr +  0, box[0][0], 'double');
   Module._setValue(boxPtr +  8, box[0][1], 'double');
