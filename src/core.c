@@ -642,7 +642,7 @@ void core_on_key(int key, int action)
         {"C", "core.constellations", "labels_visible"},
         {"R", "core.constellations", "images_visible"},
         {"Z", "core.lines.azimuthal"},
-        {"E", "core.lines.equatorial"},
+        {"E", "core.lines.equatorial_jnow"},
         {"M", "core.lines.meridian"},
         {"N", "core.dsos"},
         {"D", "core.dss"},
