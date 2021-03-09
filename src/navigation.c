@@ -163,10 +163,41 @@ void core_update_mount(double dt)
     observer_update(core->observer, true);
 }
 
+void core_update_fov(double dt)
+{
+    double t;
+    double save_fov = core->fov;
+    projection_t proj;
+    const double ZOOM_FACTOR = 0.05;
+    typeof(core->fov_animation)* anim = &core->fov_animation;
+
+    if (anim->src_time) {
+        t = smoothstep(anim->src_time, anim->dst_time, core->clock);
+        if (anim->dst_fov)
+            core->fov = mix(anim->src_fov, anim->dst_fov, t);
+        if (t >= 1.0)
+            memset(anim, 0, sizeof(*anim));
+    }
+
+    // Continuous zoom.
+    core_get_proj(&proj);
+    if (core->zoom) {
+        core->fov *= pow(1. + ZOOM_FACTOR * (-core->zoom), dt/(1./60));
+        if (core->fov > proj.max_fov)
+            core->fov = proj.max_fov;
+    }
+
+    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
+    if (core->fov != save_fov)
+        module_changed((obj_t*)core, "fov");
+}
+
+
 // Weak so that we can easily replace the navigation algorithm.
 __attribute__((weak))
 void core_update_observer(double dt)
 {
+    core_update_fov(dt);
     core_update_time(dt);
     core_update_direction(dt);
     core_update_mount(dt);
