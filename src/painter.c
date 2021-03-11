@@ -209,6 +209,10 @@ int paint_text(const painter_t *painter, const char *text,
                const double pos[2], int align, int effects, double size,
                const double color[4], double angle)
 {
+    const double shadow_pos[2] = {pos[0] + 0.5, pos[1] + 0.5};
+    const double shadow_color[4] = {0, 0, 0, color[3] * 0.5};
+    REND(painter->rend, text, text, shadow_pos, align, effects, size,
+         shadow_color, angle, NULL);
     REND(painter->rend, text, text, pos, align, effects, size, color, angle,
          NULL);
     return 0;
