@@ -209,10 +209,16 @@ int paint_text(const painter_t *painter, const char *text,
                const double pos[2], int align, int effects, double size,
                const double color[4], double angle)
 {
-    const double shadow_pos[2] = {pos[0] + 0.5, pos[1] + 0.5};
-    const double shadow_color[4] = {0, 0, 0, color[3] * 0.5};
-    REND(painter->rend, text, text, shadow_pos, align, effects, size,
-         shadow_color, angle, NULL);
+    double shadow_pos[2];
+    const double shadow_color[4] = {0, 0, 0, color[3] * 0.15};
+    const double shadow_size = 1.0 / painter->pixel_scale;
+    int i;
+    for (i = 0; i < 4; i++) {
+        shadow_pos[0] = pos[0] + ((i % 2) - 0.5) * 2.0 * shadow_size;
+        shadow_pos[1] = pos[1] + ((i / 2) - 0.5) * 2.0 * shadow_size;
+        REND(painter->rend, text, text, shadow_pos, align, effects, size,
+             shadow_color, angle, NULL);
+    }
     REND(painter->rend, text, text, pos, align, effects, size, color, angle,
          NULL);
     return 0;
