@@ -353,15 +353,21 @@ void mplanet_get_designations(
 {
     mplanet_t *mp = (mplanet_t*)obj;
     char buf[128];
+    // Make sure we sort so that the first designation is the most useful.
+    // First name, e.g. 'Ceres'
     if (*mp->name) f(obj, user, "NAME", mp->name);
-    if (mp->mpl_number) {
-        if (*mp->name)
-            snprintf(buf, sizeof(buf), "(%d) %s", mp->mpl_number, mp->name);
-        else
-            snprintf(buf, sizeof(buf), "(%d)", mp->mpl_number);
+    // Then MPC number with name e.g. '(1) Ceres'
+    if (*mp->name && mp->mpl_number) {
+        snprintf(buf, sizeof(buf), "(%d) %s", mp->mpl_number, mp->name);
         f(obj, user, "MPC", buf);
     }
+    // Then designation, e.g. '2001 FO32'
     if (*mp->desig) f(obj, user, NULL, mp->desig);
+    // Finally only number, e.g. '(231937)'
+    if (!*mp->name && mp->mpl_number) {
+        snprintf(buf, sizeof(buf), "(%d) %s", mp->mpl_number, mp->name);
+        f(obj, user, "MPC", buf);
+    }
 }
 
 static int mplanets_init(obj_t *obj, json_value *args)
