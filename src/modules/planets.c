@@ -120,7 +120,17 @@ enum {
     GANYMEDE = 503,
     CALLISTO = 504,
     JUPITER = 599,
+
+    MIMAS = 601,
+    ENCELADUS = 602,
+    TETHYS = 603,
+    DIONE = 604,
+    RHEA = 605,
+    TITAN = 606,
+    HYPERION = 607,
+    IAPETUS = 608,
     SATURN = 699,
+
     URANUS = 799,
     NEPTUNE = 899,
     PLUTO = 999,
@@ -239,6 +249,20 @@ static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
     case CALLISTO:
         planet_get_pvh(planet->parent, obs, parent_pvh);
         l12(DJM0, obs->tt, planet->id - IO + 1, pvh);
+        vec3_add(pvh[0], parent_pvh[0], pvh[0]);
+        vec3_add(pvh[1], parent_pvh[1], pvh[1]);
+        break;
+
+    case MIMAS:
+    case ENCELADUS:
+    case TETHYS:
+    case DIONE:
+    case RHEA:
+    case TITAN:
+    case HYPERION:
+    case IAPETUS:
+        planet_get_pvh(planet->parent, obs, parent_pvh);
+        tass17(DJM0 + obs->tt, planet->id - MIMAS, pvh[0], pvh[1]);
         vec3_add(pvh[0], parent_pvh[0], pvh[0]);
         vec3_add(pvh[1], parent_pvh[1], pvh[1]);
         break;

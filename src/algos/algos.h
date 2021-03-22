@@ -175,6 +175,11 @@ void refraction_prepare(double phpa, double tc, double rh,
  */
 int l12(double tt1, double tt2, int ks, double pv[2][3]);
 
+
+/* Tass1.7 model of Saturnian Satellites.
+ */
+void tass17(double jd, int body, double xyz[3], double xyzdot[3]);
+
 /*
  * Find which constellation a point is located in.
  *
