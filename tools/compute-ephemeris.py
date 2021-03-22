@@ -21,7 +21,7 @@ from math import *
 # Load all the needed kernels.
 loader = sf.Loader('./tmp')
 de421 = loader('de421.bsp')
-jup310 = loader('jup310.bsp')
+jup365 = loader('jup365.bsp')
 mar097 = loader('https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/'
                 'satellites/mar097.bsp')
 
@@ -133,18 +133,22 @@ def compute_all():
     yield compute('Sun', precision_radec=1)
     yield compute('Moon')
     yield compute('Jupiter barycenter', planet=599)
-    yield compute('Io', kernel=jup310)
-    # XXX: would be better to pass the orbit elements for Metis, since the
-    # test might fail when we update the planet.ini data.
-    yield compute('Metis', kernel=jup310, t=[2019, 12, 3, 15, 0, 0],
+    yield compute('Io', kernel=jup365)
+
+    # XXX: Those tests might fail when we update the planet.ini data since
+    #      the orbits are not stable.
+    t = [2021, 3, 22, 15, 0, 0]
+    yield compute('Metis', kernel=jup365, t=t,
                   precision_radec=15, precision_azalt=20)
-    yield compute('Phobos', kernel=mar097, precision_radec=5,
+    yield compute('Thebe', kernel=jup365, t=t,
+                  precision_radec=15, precision_azalt=20)
+    yield compute('Phobos', kernel=mar097, t=t,
+                  precision_radec=5, precision_azalt=10)
+    yield compute('Deimos', kernel=mar097, precision_radec=5, t=t,
                   precision_azalt=10)
-    yield compute('Deimos', kernel=mar097, precision_radec=5,
-                  precision_azalt=10)
-    yield compute('Pluto barycenter', planet=999, t=[2020, 3, 26, 21, 0, 0],
+    yield compute('Pluto barycenter', planet=999, t=t,
                   precision_radec=10, precision_azalt=15)
-    yield compute('Pluto barycenter', planet=999, t=[2020, 9, 14, 0, 0, 0],
+    yield compute('Pluto barycenter', planet=999, t=t,
                   precision_radec=10, precision_azalt=15)
 
     # ISS, using TLE as of 2019-08-04.
