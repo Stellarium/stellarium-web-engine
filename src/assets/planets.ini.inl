@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[25864] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[25884] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -126,6 +126,7 @@ static const unsigned char DATA_planets_ini[25864] __attribute__((aligned(4))) =
     "orbit = horizons:2459295.500000000, A.D. 2021-Mar-22 00:00:00.0000,  2.479495582714048E-01,  4.431873481210917E+09,  2.342498817292693E+01,  4.378691118359238E+01,  1.831291224457183E+02,  2.447726040449957E+06,  4.613896797528031E-08,  4.612057260515122E+01,  7.127323819110714E+01,  5.893053491231535E+09,  7.354233501252153E+09,  7.802515222986258E+09,\n"
     "parent = sun\n"
     "type = Pla\n"
+    "mass = 1.307e+22 kg\n"
     "\n"
     "[moon]\n"
     "type = Moo\n"
