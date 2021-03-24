@@ -131,7 +131,13 @@ enum {
     IAPETUS = 608,
     SATURN = 699,
 
+    ARIEL = 701,
+    UMBRIEL = 702,
+    TITANIA = 703,
+    OBERON = 704,
+    MIRANDA = 705,
     URANUS = 799,
+
     NEPTUNE = 899,
     PLUTO = 999,
 };
@@ -208,6 +214,19 @@ static int tass17_id(int id)
     }
 }
 
+/* Convert HORIZONS id to gust86 function id */
+static int gust86_id(int id)
+{
+    switch (id) {
+        case MIRANDA:   return 0;
+        case ARIEL:     return 1;
+        case UMBRIEL:   return 2;
+        case TITANIA:   return 3;
+        case OBERON:    return 4;
+        default: assert(false); return 0;
+    }
+}
+
 /*
  * Function: planet_get_pvh
  * Get the heliocentric (ICRF) position of a planet at a given time.
@@ -278,6 +297,17 @@ static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
     case IAPETUS:
         planet_get_pvh(planet->parent, obs, parent_pvh);
         tass17(DJM0 + obs->tt, tass17_id(planet->id), pvh[0], pvh[1]);
+        vec3_add(pvh[0], parent_pvh[0], pvh[0]);
+        vec3_add(pvh[1], parent_pvh[1], pvh[1]);
+        break;
+
+    case ARIEL:
+    case UMBRIEL:
+    case TITANIA:
+    case OBERON:
+    case MIRANDA:
+        planet_get_pvh(planet->parent, obs, parent_pvh);
+        gust86(DJM0 + obs->tt, gust86_id(planet->id), pvh[0], pvh[1]);
         vec3_add(pvh[0], parent_pvh[0], pvh[0]);
         vec3_add(pvh[1], parent_pvh[1], pvh[1]);
         break;
