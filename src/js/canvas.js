@@ -101,7 +101,7 @@ Module.afterInit(function() {
         var id = e.changedTouches[i].identifier;
         var relX = e.changedTouches[i].pageX - rect.left;
         var relY = e.changedTouches[i].pageY - rect.top;
-        Module._core_on_mouse(id, 1, relX, relY);
+        Module._core_on_mouse(id, 1, relX, relY, 1);
       }
     }, {passive: true});
     canvas.addEventListener('touchmove', function(e) {
@@ -111,7 +111,7 @@ Module.afterInit(function() {
         var id = e.changedTouches[i].identifier;
         var relX = e.changedTouches[i].pageX - rect.left;
         var relY = e.changedTouches[i].pageY - rect.top;
-        Module._core_on_mouse(id, -1, relX, relY);
+        Module._core_on_mouse(id, -1, relX, relY, 1);
       }
     }, {passive: false});
     canvas.addEventListener('touchend', function(e) {
@@ -120,7 +120,7 @@ Module.afterInit(function() {
         var id = e.changedTouches[i].identifier;
         var relX = e.changedTouches[i].pageX - rect.left;
         var relY = e.changedTouches[i].pageY - rect.top;
-        Module._core_on_mouse(id, 0, relX, relY);
+        Module._core_on_mouse(id, 0, relX, relY, 1);
       }
     });
 
