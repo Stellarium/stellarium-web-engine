@@ -220,7 +220,7 @@ EllipticToRectangular(const double a,const double n,
   }
 }
 
-void EllipticToRectangularN(double mu,const double elem[6],double dt,
+static void EllipticToRectangularN(double mu,const double elem[6],double dt,
                             double xyz[]) {
   const double n = elem[0];
 #if defined __USE_MISC || defined __USE_XOPEN_EXTENDED || defined __USE_ISOC99

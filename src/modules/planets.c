@@ -192,6 +192,21 @@ static void moon_icrf_geocentric_pos(double tt, double pos[3])
     eraTrxp(rmatp, pos, pos);
 }
 
+/* Convert HORIZONS id to tass17 function id */
+static int tass17_id(int id)
+{
+    switch (id) {
+        case MIMAS:     return 0;
+        case ENCELADUS: return 1;
+        case TETHYS:    return 2;
+        case DIONE:     return 3;
+        case RHEA:      return 4;
+        case TITAN:     return 5;
+        case IAPETUS:   return 6;
+        case HYPERION:  return 7;
+        default: assert(false); return 0;
+    }
+}
 
 /*
  * Function: planet_get_pvh
@@ -262,7 +277,7 @@ static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
     case HYPERION:
     case IAPETUS:
         planet_get_pvh(planet->parent, obs, parent_pvh);
-        tass17(DJM0 + obs->tt, planet->id - MIMAS, pvh[0], pvh[1]);
+        tass17(DJM0 + obs->tt, tass17_id(planet->id), pvh[0], pvh[1]);
         vec3_add(pvh[0], parent_pvh[0], pvh[0]);
         vec3_add(pvh[1], parent_pvh[1], pvh[1]);
         break;
