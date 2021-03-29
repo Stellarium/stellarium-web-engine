@@ -126,7 +126,6 @@ bool project(const projection_t *proj, int flags,
         memcpy(out, p, 4 * sizeof(double));
         return true;
     }
-    assert(!(proj->flags & PROJ_NO_CLIP));
     visible = (p[0] >= -p[3] && p[0] < +p[3] &&
                p[1] >= -p[3] && p[1] < +p[3] &&
                p[2] >= -p[3] && p[2] < +p[3]);

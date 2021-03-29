@@ -41,7 +41,6 @@ enum {
  * Modify the behavior of the <project> function.
  */
 enum {
-    PROJ_NO_CLIP            = 1 << 0,
     PROJ_BACKWARD           = 1 << 1,
     PROJ_TO_NDC_SPACE       = 1 << 2,
 
