@@ -1525,7 +1525,7 @@ static void line_glow(renderer_t           *rend_,
     vec4_to_float(painter->color, color);
     mesh = line_to_mesh(line, size, 10);
 
-    if (mesh->indices_count >= 1024) {
+    if (mesh->indices_count >= 1024 || mesh->verts_count >= 1024) {
         LOG_W("Too many points in lines! (size: %d)", size);
         goto end;
     }
