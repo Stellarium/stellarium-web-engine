@@ -122,7 +122,7 @@ bool project(const projection_t *proj, int flags,
     if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
     if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
 
-    if (!(flags & (PROJ_TO_NDC_SPACE | PROJ_TO_WINDOW_SPACE))) {
+    if (!(flags & PROJ_TO_WINDOW_SPACE)) {
         memcpy(out, p, 4 * sizeof(double));
         return true;
     }

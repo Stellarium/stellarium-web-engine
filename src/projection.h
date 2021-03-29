@@ -42,7 +42,6 @@ enum {
  */
 enum {
     PROJ_BACKWARD           = 1 << 1,
-    PROJ_TO_NDC_SPACE       = 1 << 2,
 
     PROJ_TO_WINDOW_SPACE    = 1 << 3,
     PROJ_FROM_WINDOW_SPACE  = 1 << 3,
@@ -123,8 +122,7 @@ void projection_init(projection_t *proj, int type, double fovx,
  *
  * If we project forward (without the PROJ_BACKWARD) flag, the projection
  * expects a 4d input, and return the coordinates in the plane clipping space.
- * To get normalized device space coordinates, we can use the
- * PROJ_TO_NDC_SPACE flag.  To get windows coordinates, we can use the
+ * To get windows coordinates, we can use the
  * PROJ_TO_WINDOWS_SPACE flag.
  *
  * Parameters:

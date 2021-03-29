@@ -269,6 +269,13 @@ static int line_update(obj_t *obj, double dt)
     return changed ? 1 : 0;
 }
 
+static void win_to_ndc(const projection_t *proj, const double win[2],
+                       double ndc[2])
+{
+    ndc[0] = win[0] / proj->window_size[0] * 2 - 1;
+    ndc[1] = 1 - win[1] / proj->window_size[1] * 2;
+}
+
 static void ndc_to_win(const projection_t *proj, const double ndc[2],
                        double win[2])
 {
@@ -356,9 +363,11 @@ static bool check_borders(const double a[3], const double b[3],
     bool visible[2];
     int border;
     const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
-    visible[0] = project(proj, PROJ_TO_NDC_SPACE, a, pos[0]);
-    visible[1] = project(proj, PROJ_TO_NDC_SPACE, b, pos[1]);
+    visible[0] = project(proj, PROJ_TO_WINDOW_SPACE, a, pos[0]);
+    visible[1] = project(proj, PROJ_TO_WINDOW_SPACE, b, pos[1]);
     if (visible[0] != visible[1]) {
+        win_to_ndc(proj, pos[0], pos[0]);
+        win_to_ndc(proj, pos[1], pos[1]);
         q = segment_viewport_intersection(pos[0], pos[1], &border);
         if (q == DBL_MAX) return false;
         vec2_mix(pos[0], pos[1], q, p);
