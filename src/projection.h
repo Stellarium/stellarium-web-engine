@@ -41,8 +41,6 @@ enum {
  * Modify the behavior of the <project> function.
  */
 enum {
-    PROJ_BACKWARD           = 1 << 1,
-
     PROJ_TO_WINDOW_SPACE    = 1 << 3,
     PROJ_FROM_WINDOW_SPACE  = 1 << 3,
 
