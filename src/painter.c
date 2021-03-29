@@ -917,7 +917,7 @@ bool painter_unproject(const painter_t *painter, int frame,
     p[0] = win_pos[0] / painter->proj->window_size[0] * 2 - 1;
     p[1] = 1 - win_pos[1] / painter->proj->window_size[1] * 2;
     // NDC to view.
-    ret = project(painter->proj, PROJ_BACKWARD, p, p);
+    ret = unproject(painter->proj, 0, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
     return ret;
 }

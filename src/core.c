@@ -494,7 +494,7 @@ static void win_to_observed(double x, double y, double p[3])
     // Convert to NDC coordinates.
     pos[0] = pos[0] / core->win_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / core->win_size[1] * 2 - 1);
-    project(&proj, PROJ_BACKWARD, pos, pos);
+    unproject(&proj, 0, pos, pos);
     convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
 }
 
@@ -517,8 +517,7 @@ static void render_proj_markers(const painter_t *painter_)
         project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
         paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(2, 2), NULL);
 
-        project(painter.proj, PROJ_BACKWARD | PROJ_FROM_WINDOW_SPACE,
-                p_win, p);
+        unproject(painter.proj, PROJ_FROM_WINDOW_SPACE, p_win, p);
         project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
         paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(4, 4), NULL);
     }

@@ -135,6 +135,24 @@ void projection_init(projection_t *proj, int type, double fovx,
 bool project(const projection_t *proj, int flags,
              const double v[S 4], double out[S 4]);
 
+/*
+ * Function: unproject
+ * Compute a backward projection
+ *
+ * Parameters:
+ *   proj   - A projection.
+ *   flags  - Union of <PROJ_FLAGS> value.  We can use `FROM_WINDOW_SPACE`
+ *            to specify that the inputs is in window coordinates.
+ *            By default we unproject from clipping space.
+ *   v      - Input coordinates.
+ *   out    - Output coordinates.
+ *
+ * Return:
+ *   True for success.
+ */
+bool unproject(const projection_t *proj, int flags,
+               const double v[S 4], double out[S 4]);
+
 #undef S
 
 #endif // PROJECTION_H

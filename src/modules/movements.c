@@ -33,7 +33,7 @@ static void screen_to_mount(
     // Could be done in the projector?
     pos[0] = pos[0] / proj->window_size[0] * 2 - 1;
     pos[1] = -1 * (pos[1] / proj->window_size[1] * 2 - 1);
-    project(proj, PROJ_BACKWARD, pos, pos);
+    unproject(proj, 0, pos, pos);
     convert_frame(obs, FRAME_VIEW, FRAME_MOUNT, true, pos, p);
 }
 
