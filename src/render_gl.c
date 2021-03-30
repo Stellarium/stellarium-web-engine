@@ -1667,8 +1667,8 @@ static void mesh(renderer_t          *rend_,
 
     // Special cas for Mollweide projection when the frame convertion can
     // be expressed as a single matrix rotation.
-    if ((painter->proj->type == PROJ_MOLLWEIDE ||
-         painter->proj->type == PROJ_MOLLWEIDE_ADAPTIVE) &&
+    if ((painter->proj->klass->id == PROJ_MOLLWEIDE ||
+         painter->proj->klass->id == PROJ_MOLLWEIDE_ADAPTIVE) &&
             frame_get_rotation(painter->obs, frame, FRAME_VIEW, rot)) {
         item->mesh.proj = PROJ_MOLLWEIDE;
         vec2_to_float(painter->proj->scaling, item->mesh.proj_scaling);

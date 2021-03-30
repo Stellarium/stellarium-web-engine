@@ -183,11 +183,11 @@ void core_update_fov(double dt)
     core_get_proj(&proj);
     if (core->zoom) {
         core->fov *= pow(1. + ZOOM_FACTOR * (-core->zoom), dt/(1./60));
-        if (core->fov > proj.max_fov)
-            core->fov = proj.max_fov;
+        if (core->fov > proj.klass->max_fov)
+            core->fov = proj.klass->max_fov;
     }
 
-    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
+    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.klass->max_fov);
     if (core->fov != save_fov)
         module_changed((obj_t*)core, "fov");
 }

@@ -49,14 +49,18 @@ static bool proj_hammer_backward(const projection_t *proj, int flags,
 
 void proj_hammer_init(projection_t *p, double fov, double aspect)
 {
-    p->name                      = "hammer";
-    p->type                      = PROJ_HAMMER;
-    p->max_fov                   = 360 * DD2R;
-    p->max_ui_fov                = 360 * DD2R;
-    p->project                   = proj_hammer_project;
-    p->backward                  = proj_hammer_backward;
-    p->scaling[0]                = aspect < 1 ? fov / 2 : fov / aspect / 2;
-    p->scaling[1]                = p->scaling[0] / aspect;
-    p->flags                     = PROJ_HAS_DISCONTINUITY;
+    p->scaling[0] = aspect < 1 ? fov / 2 : fov / aspect / 2;
+    p->scaling[1] = p->scaling[0] / aspect;
+    p->flags = PROJ_HAS_DISCONTINUITY;
 }
 
+static const projection_klass_t proj_hammer_klass = {
+    .name                   = "hammer",
+    .id                     = PROJ_HAMMER,
+    .max_fov                = 360 * DD2R,
+    .max_ui_fov             = 360 * DD2R,
+    .init                   = proj_hammer_init,
+    .project                = proj_hammer_project,
+    .backward               = proj_hammer_backward,
+};
+PROJECTION_REGISTER(proj_hammer_klass);

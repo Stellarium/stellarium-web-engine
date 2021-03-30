@@ -71,8 +71,8 @@ static bool proj_stereographic_backward(const projection_t *proj, int flags,
     return true;
 }
 
-void proj_stereographic_compute_fov(double fov, double aspect,
-                                    double *fovx, double *fovy)
+static void proj_stereographic_compute_fov(int id, double fov, double aspect,
+                                           double *fovx, double *fovy)
 {
     if (aspect < 1) {
         *fovx = fov;
@@ -83,14 +83,20 @@ void proj_stereographic_compute_fov(double fov, double aspect,
     }
 }
 
-void proj_stereographic_init(projection_t *p, double fovx, double aspect)
+static void proj_stereographic_init(projection_t *p, double fovx, double aspect)
 {
-    p->name          = "stereographic";
-    p->type          = PROJ_STEREOGRAPHIC;
-    p->max_fov       = 360. * DD2R;
-    p->max_ui_fov    = 185. * DD2R;
-    p->project       = proj_stereographic_project;
-    p->backward      = proj_stereographic_backward;
-    p->scaling[0]    = 2 * tan(fovx / 4);
-    p->scaling[1]    = p->scaling[0] / aspect;
+    p->scaling[0] = 2 * tan(fovx / 4);
+    p->scaling[1] = p->scaling[0] / aspect;
 }
+
+static const projection_klass_t proj_stereographic_klass = {
+    .name           = "stereographic",
+    .id             = PROJ_STEREOGRAPHIC,
+    .max_fov        = 360. * DD2R,
+    .max_ui_fov     = 185. * DD2R,
+    .init           = proj_stereographic_init,
+    .project        = proj_stereographic_project,
+    .backward       = proj_stereographic_backward,
+    .compute_fovs   = proj_stereographic_compute_fov,
+};
+PROJECTION_REGISTER(proj_stereographic_klass);

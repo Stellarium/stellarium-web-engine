@@ -61,14 +61,19 @@ static bool proj_mercator_backward(const projection_t *proj, int flags,
 
 void proj_mercator_init(projection_t *p, double fov, double aspect)
 {
-    p->name                      = "mercator";
-    p->type                      = PROJ_MERCATOR;
-    p->max_fov                   = 360 * DD2R;
-    p->max_ui_fov                = 175.0 * aspect * DD2R;
-    p->project                   = proj_mercator_project;
-    p->backward                  = proj_mercator_backward;
-    p->scaling[0]                = fov / 2;
-    p->scaling[1]                = p->scaling[0] / aspect;
-    p->flags                     = PROJ_HAS_DISCONTINUITY;
+    p->scaling[0] = fov / 2;
+    p->scaling[1] = p->scaling[0] / aspect;
+    p->flags = PROJ_HAS_DISCONTINUITY;
 }
+
+static const projection_klass_t proj_mercator_klass = {
+    .name                   = "mercator",
+    .id                     = PROJ_MERCATOR,
+    .max_fov                = 360 * DD2R,
+    .max_ui_fov             = 175.0 * DD2R,
+    .init                   = proj_mercator_init,
+    .project                = proj_mercator_project,
+    .backward               = proj_mercator_backward,
+};
+PROJECTION_REGISTER(proj_mercator_klass);
 

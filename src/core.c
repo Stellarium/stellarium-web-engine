@@ -20,7 +20,7 @@ static void core_on_fov_changed(obj_t *obj, const attribute_t *attr)
     // For the moment there is not point going further than 0.5°.
     projection_t proj;
     core_get_proj(&proj);
-    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.max_fov);
+    core->fov = clamp(core->fov, CORE_MIN_FOV, proj.klass->max_fov);
 }
 
 static void add_progressbar(void *user, const char *id, const char *label,
@@ -698,7 +698,7 @@ void core_on_zoom(double k, double x, double y)
     win_to_observed(x, y, pos_start);
     obj_get_attr(&core->obj, "fov", &fov);
     fov /= k;
-    fov = clamp(fov, CORE_MIN_FOV, proj.max_ui_fov);
+    fov = clamp(fov, CORE_MIN_FOV, proj.klass->max_ui_fov);
     obj_set_attr(&core->obj, "fov", fov);
     win_to_observed(x, y, pos_end);
 
@@ -923,8 +923,8 @@ void core_zoomto(double fov, double duration)
 
     now = sys_get_unix_time();
     core_get_proj(&proj);
-    if (fov > proj.max_ui_fov)
-        fov = proj.max_ui_fov;
+    if (fov > proj.klass->max_ui_fov)
+        fov = proj.klass->max_ui_fov;
 
     // Direct lookat.
     if (duration == 0.0) {

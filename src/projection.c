@@ -20,48 +20,18 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-void proj_perspective_init(projection_t *p, double fov, double aspect);
-void proj_stereographic_init(projection_t *p, double fov, double aspect);
-void proj_mercator_init(projection_t *p, double fov, double aspect);
-void proj_hammer_init(projection_t *p, double fov, double aspect);
-void proj_mollweide_init(projection_t *p, double fov, double aspect);
-void proj_mollweide_adaptive_init(projection_t *p, double fovx, double aspect);
+static projection_klass_t *g_klasses[PROJ_COUNT];
 
-void proj_stereographic_compute_fov(double fov, double aspect,
-                                    double *fovx, double *fovy);
-void proj_mollweide_compute_fov(double fov, double aspect,
-                                double *fovx, double *fovy);
+void proj_register_(projection_klass_t *klass)
+{
+    g_klasses[klass->id] = klass;
+}
 
 void projection_compute_fovs(int type, double fov, double aspect,
                              double *fovx, double *fovy)
 {
-    switch (type) {
-    case PROJ_STEREOGRAPHIC:
-        proj_stereographic_compute_fov(fov, aspect, fovx, fovy);
-        break;
-    case PROJ_MOLLWEIDE:
-    case PROJ_MOLLWEIDE_ADAPTIVE:
-        proj_mollweide_compute_fov(fov, aspect, fovx, fovy);
-        break;
-    case PROJ_PERSPECTIVE:
-        if (aspect < 1) {
-            *fovx = fov;
-            *fovy = 2 * atan(tan(fov / 2) / aspect);
-        } else {
-            *fovy = fov;
-            *fovx = 2 * atan(tan(fov / 2) * aspect);
-        }
-        break;
-    default:
-        // To remove?
-        if (aspect < 1) {
-            *fovx = fov;
-            *fovy = fov / aspect;
-        } else {
-            *fovy = fov;
-            *fovx = fov * aspect;
-        }
-    }
+    assert(g_klasses[type]->compute_fovs);
+    g_klasses[type]->compute_fovs(type, fov, aspect, fovx, fovy);
 }
 
 void projection_init(projection_t *p, int type, double fov,
@@ -72,28 +42,8 @@ void projection_init(projection_t *p, int type, double fov,
     p->window_size[0] = w;
     p->window_size[1] = h;
     p->fovx = fov;
-    switch (type) {
-        case PROJ_PERSPECTIVE:
-            proj_perspective_init(p, fov, aspect);
-            break;
-        case PROJ_STEREOGRAPHIC:
-            proj_stereographic_init(p, fov, aspect);
-            break;
-        case PROJ_MERCATOR:
-            proj_mercator_init(p, fov, aspect);
-            break;
-        case PROJ_HAMMER:
-            proj_hammer_init(p, fov, aspect);
-            break;
-        case PROJ_MOLLWEIDE:
-            proj_mollweide_init(p, fov, aspect);
-            break;
-        case PROJ_MOLLWEIDE_ADAPTIVE:
-            proj_mollweide_adaptive_init(p, fov, aspect);
-            break;
-        default:
-            assert(false);
-    }
+    p->klass = g_klasses[type];
+    p->klass->init(p, fov, aspect);
 }
 
 bool project(const projection_t *proj, int flags,
@@ -103,11 +53,11 @@ bool project(const projection_t *proj, int flags,
     double p[4] = {0, 0, 0, 1};
     bool visible;
 
-    assert(proj->project);
+    assert(proj->klass->project);
     vec3_copy(v, p);
     if (flags & PROJ_ALREADY_NORMALIZED)
         assert(vec3_is_normalized(p));
-    proj->project(proj, flags, v, p);
+    proj->klass->project(proj, flags, v, p);
     if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
     if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
 
@@ -141,6 +91,6 @@ bool unproject(const projection_t *proj, int flags,
     }
     if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
     if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
-    assert(proj->backward);
-    return proj->backward(proj, flags, p, out);
+    assert(proj->klass->backward);
+    return proj->klass->backward(proj, flags, p, out);
 }

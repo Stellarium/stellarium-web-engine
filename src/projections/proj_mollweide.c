@@ -84,8 +84,8 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
     return ret;
 }
 
-void proj_mollweide_compute_fov(double fov, double aspect,
-                                double *fovx, double *fovy)
+static void proj_mollweide_compute_fov(int id, double fov, double aspect,
+                                       double *fovx, double *fovy)
 {
     *fovx = fov;
     *fovy = fov / aspect;
@@ -104,12 +104,6 @@ static inline double mix(double x, double y, double t)
 
 void proj_mollweide_init(projection_t *p, double fovx, double aspect)
 {
-    p->name                      = "mollweide";
-    p->type                      = PROJ_MOLLWEIDE;
-    p->max_fov                   = 360 * DD2R;
-    p->max_ui_fov                = 360 * DD2R;
-    p->project                   = proj_mollweide_project;
-    p->backward                  = proj_mollweide_backward;
     p->scaling[0]                = fovx / M_PI * sqrt(2);
     p->scaling[1]                = p->scaling[0] / aspect;
     p->flags                     = PROJ_HAS_DISCONTINUITY;
@@ -124,3 +118,27 @@ void proj_mollweide_adaptive_init(projection_t *p, double fovx, double aspect)
     proj_mollweide_init(p, fovx, aspect);
     p->scaling[1] *= mix(mu / 2, 1, scale);
 }
+
+static const projection_klass_t proj_mollweide_klass = {
+    .name                   = "mollweide",
+    .id                     = PROJ_MOLLWEIDE,
+    .max_fov                = 360 * DD2R,
+    .max_ui_fov             = 360 * DD2R,
+    .init                   = proj_mollweide_init,
+    .project                = proj_mollweide_project,
+    .backward               = proj_mollweide_backward,
+    .compute_fovs           = proj_mollweide_compute_fov,
+};
+PROJECTION_REGISTER(proj_mollweide_klass);
+
+static const projection_klass_t proj_mollweide_adaptive_klass = {
+    .name                   = "mollweide_adaptive",
+    .id                     = PROJ_MOLLWEIDE_ADAPTIVE,
+    .max_fov                = 360 * DD2R,
+    .max_ui_fov             = 360 * DD2R,
+    .init                   = proj_mollweide_adaptive_init,
+    .project                = proj_mollweide_project,
+    .backward               = proj_mollweide_backward,
+    .compute_fovs           = proj_mollweide_compute_fov,
+};
+PROJECTION_REGISTER(proj_mollweide_adaptive_klass);

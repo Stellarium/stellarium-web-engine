@@ -20,6 +20,7 @@
 #endif
 
 typedef struct projection projection_t;
+typedef struct projection_klass projection_klass_t;
 
 /******** Section: Projection *******************************************/
 
@@ -63,27 +64,39 @@ enum {
  */
 struct projection
 {
-    const char *name;
+    projection_klass_t *klass;
     double scaling[2];
     double fovx;
     int flags;
-    int type;
 
     // Matrices used by some projections.
     double mat[4][4];
     // Window size (screen size / screen density).
     double window_size[2];
+};
 
+struct projection_klass
+{
+    int id;
+    const char *name;
     // Maximum FOV value we can accept.
     double max_fov;
     // Maximum FOV that looks good for the UI.
     double max_ui_fov;
-
+    void (*init)(projection_t *proj, double fovx, double aspect);
     void (*project)(const projection_t *proj, int flags,
                     const double v[S 4], double out[S 4]);
     bool (*backward)(const projection_t *proj, int flags,
                      const double v[S 2], double out[4]);
+    void (*compute_fovs)(int proj_type, double fov, double aspect,
+                         double *fovx, double *fovy);
 };
+
+#define PROJECTION_REGISTER(klass) \
+    static void proj_register_##klass##_(void) __attribute__((constructor)); \
+    static void proj_register_##klass##_(void) { proj_register_(&klass); }
+void proj_register_(projection_klass_t *klass);
+
 
 /*
  * Function: projection_compute_fovs
