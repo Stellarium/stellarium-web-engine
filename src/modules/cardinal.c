@@ -53,30 +53,10 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
 {
     int i;
     double size = 24;
-    obj_t *sun;
-    double pos[4];
-    double sin_angle;
-    double brightness = 0.0;
-    double color[4];
     cardinal_t *c = (void*)obj;
+    double color[4] = {0.8, 0.4, 0.4, 0.8 * c->visible.value};
 
     if (c->visible.value <= 0) return 0;
-
-    // Compute global brightness to adjust opacity/color of labels
-    sun = core_get_planet(PLANET_SUN);
-    obj_get_pos(sun, core->observer, FRAME_OBSERVED, pos);
-    vec3_normalize(pos, pos);
-    sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
-    if (sin_angle > -0.1 / 1.5 )
-        brightness += 1.5 * (sin_angle + 0.1 / 1.5);
-    brightness = min(brightness, 1.0);
-
-    color[0] = 0.6 + 0.4 * brightness;
-    color[1] = 0.5 - 0.3 * brightness;
-    color[2] = 0.5 - 0.3 * brightness;
-    color[3] = 0.6 + 0.4 * brightness;
-    color[3] *= c->visible.value;
-
     for (i = 0; i < 4; i++) {
         if (painter_is_point_clipped_fast(painter, FRAME_OBSERVED,
                 POINTS[i].pos, true))
