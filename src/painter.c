@@ -200,8 +200,8 @@ int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, int effects,
                       double size, double bounds[4])
 {
-    REND(painter->rend, text, painter, text, pos, align, effects, size, NULL,
-         0, bounds);
+    REND(painter->rend, text, painter, text, pos, align, effects, size,
+         painter->color, 0, bounds);
     return 0;
 }
 
@@ -209,16 +209,6 @@ int paint_text(const painter_t *painter, const char *text,
                const double pos[2], int align, int effects, double size,
                double angle)
 {
-    double shadow_pos[2];
-    const double shadow_color[4] = {0, 0, 0, painter->color[3] * 0.15};
-    const double shadow_size = 1.0 / painter->pixel_scale;
-    int i;
-    for (i = 0; i < 4; i++) {
-        shadow_pos[0] = pos[0] + ((i % 2) - 0.5) * 2.0 * shadow_size;
-        shadow_pos[1] = pos[1] + ((i / 2) - 0.5) * 2.0 * shadow_size;
-        REND(painter->rend, text, painter, text, shadow_pos, align, effects,
-             size, shadow_color, angle, NULL);
-    }
     REND(painter->rend, text, painter, text, pos, align, effects, size,
          painter->color, angle, NULL);
     return 0;
