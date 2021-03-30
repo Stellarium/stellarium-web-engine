@@ -411,7 +411,7 @@ static void render_label(const double p[2], const double u[2],
 {
     char buf[32];
     double pos[2];
-    double a, color[4], label_angle;
+    double a, label_angle;
     char s;
     int h[4];
     double n[2];
@@ -419,6 +419,7 @@ static void render_label(const double p[2], const double u[2],
     const double text_size = 12;
     painter_t painter = *painter_;
 
+    painter.color[3] = 1;
     vec2_normalize(u, n);
 
     // Give up if angle with screen is too acute.
@@ -492,11 +493,8 @@ static void render_label(const double p[2], const double u[2],
     pos[0] += n3[0] * size[1] / 2;
     pos[1] += n3[1] * size[1] / 2;
 
-    vec4_copy(painter.color, color);
-
-    color[3] = 1.0;
     paint_text(&painter, buf, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
-               text_size, color, label_angle);
+               text_size, label_angle);
 }
 
 /*
@@ -577,9 +575,7 @@ static void render_recursion(
                 (pos[1] == 0 || pos[1] == splits[1] - 1))
             continue;
 
-        core->test = true;
         paint_line(painter, line->frame, lines + dir * 2, &map, 8, 0);
-        core->test = false;
         if (!line->format) continue;
         if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
                           p, u, v)) {

@@ -323,15 +323,14 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->hidden) continue;
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->title) {
+                vec4_copy(feature->stroke_color, painter.color);
                 painter_project(&painter, frame, mesh->bounding_cap,
                                 true, false, pos);
                 vec2_copy(feature->text_offset, ofs);
                 vec2_rotate(feature->text_rotate, ofs, ofs);
                 vec2_add(pos, ofs, pos);
                 paint_text(&painter, feature->title, pos, feature->text_anchor,
-                           0, FONT_SIZE_BASE,
-                           VEC(VEC4_SPLIT(feature->stroke_color)),
-                           feature->text_rotate);
+                           0, FONT_SIZE_BASE, feature->text_rotate);
             }
         }
     }

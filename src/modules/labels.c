@@ -151,29 +151,30 @@ static int labels_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int labels_render(const obj_t *obj, const painter_t *painter)
+static int labels_render(const obj_t *obj, const painter_t *painter_)
 {
     label_t *label;
-    double pos[2], color[4];
+    double pos[2];
     const double max_overlap = 8;
+    painter_t painter = *painter_;
 
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
+        vec4_copy(label->color, painter.color);
+        painter.color[3] *= label->fader.value;
         // Re-project label on screen
         if (label->frame != -1) {
-            painter_project(painter, label->frame, label->pos, label->at_inf,
+            painter_project(&painter, label->frame, label->pos, label->at_inf,
                             false, label->win_pos);
         }
-        label_get_bounds(painter, label, label->align, label->effects,
+        label_get_bounds(&painter, label, label->align, label->effects,
                          label->bounds);
         label->fader.target = label->active &&
                                 (test_label_overlaps(label) <= max_overlap);
         pos[0] = label->bounds[0];
         pos[1] = label->bounds[1];
-        vec4_copy(label->color, color);
-        color[3] *= label->fader.value;
-        paint_text(painter, label->render_text, pos,
-                ALIGN_LEFT | ALIGN_TOP, label->effects, label->size, color,
+        paint_text(&painter, label->render_text, pos,
+                ALIGN_LEFT | ALIGN_TOP, label->effects, label->size,
                 label->angle);
     }
     return 0;
