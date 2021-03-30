@@ -9,7 +9,7 @@
 <template>
 <v-dialog scrollable max-width='600' v-model="$store.state.showDataCreditsDialog">
   <v-card v-if="$store.state.showDataCreditsDialog">
-    <v-card-title><div class="headline">Data Credits</div></v-card-title>
+    <v-card-title><div class="text-h5">Data Credits</div></v-card-title>
     <v-card-text style="height: 600px;">
       <h3>Stars</h3>
       <p>Combination of the following catalogues:

@@ -30,10 +30,10 @@
               <v-row>
                 <v-col>
                   <div>
-                    <div class="headline" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
+                    <div class="text-h5" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ locationForDetail ? locationForDetail.short_name + ', ' + locationForDetail.country :  '-' }}</div>
                     <v-btn @click.native.stop="useLocation()" style="position: absolute; right: 20px"><v-icon>mdi-chevron-right</v-icon> {{ $t('Use this location') }}</v-btn>
-                    <div class="grey--text subtitle-2" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : $t('Unknown Address')) : '-' }}</div>
-                    <div class="grey--text subtitle-2">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</div>
+                    <div class="grey--text text-subtitle-2" v-if="locationForDetail.street_address">{{ locationForDetail ? (locationForDetail.street_address ? locationForDetail.street_address : $t('Unknown Address')) : '-' }}</div>
+                    <div class="grey--text text-subtitle-2">{{ locationForDetail ? locationForDetail.lat.toFixed(5) + ' ' + locationForDetail.lng.toFixed(5) : '-' }}</div>
                   </div>
                 </v-col>
               </v-row>

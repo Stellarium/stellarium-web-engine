@@ -9,7 +9,7 @@
 <template>
 <v-dialog max-width='600' v-model="$store.state.showViewSettingsDialog">
 <v-card v-if="$store.state.showViewSettingsDialog" class="secondary white--text">
-  <v-card-title><div class="headline">{{ $t('View settings') }}</div></v-card-title>
+  <v-card-title><div class="text-h5">{{ $t('View settings') }}</div></v-card-title>
   <v-card-text>
     <v-checkbox hide-details :label="$t('Milky Way')" v-model="milkyWayOn"></v-checkbox>
     <v-checkbox hide-details :label="$t('DSS')" v-model="dssOn"></v-checkbox>

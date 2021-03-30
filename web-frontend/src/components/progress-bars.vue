@@ -11,7 +11,7 @@
     <div class="tfaders" v-for="bar in progressBars" v-bind:key="bar.id">
       <transition name="fade">
         <div class="tfader" v-if="bar.value != bar.total">
-          <span class="caption" style="right: 4px; position: relative;">{{ bar.label }}</span>
+          <span class="text-caption" style="right: 4px; position: relative;">{{ bar.label }}</span>
           <v-progress-circular :rotate="-90" size=18 :value="bar.value / bar.total * 100"></v-progress-circular>
         </div>
       </transition>

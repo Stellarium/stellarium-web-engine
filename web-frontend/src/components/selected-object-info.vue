@@ -13,17 +13,17 @@
       <div style="width: 100%">
         <img :src="icon" height="48" width="48" align="left" style="margin-top: 3px; margin-right: 10px"/>
         <div style="overflow: hidden; text-overflow: ellipsis;">
-          <div class="headline">{{ title }}</div>
-          <div class="grey--text body-2">{{ type }}</div>
+          <div class="text-h5">{{ title }}</div>
+          <div class="grey--text text-body-2">{{ type }}</div>
         </div>
       </div>
     </v-card-title>
     <v-card-text style="padding-bottom: 5px;">
       <v-row v-if="otherNames.length > 1" style="width: 100%;">
         <v-col cols="12">
-          <span style="position: absolute;">{{ $t('Also known as') }}</span><span style="padding-left: 33.3333%">&nbsp;</span><span class="caption white--text" v-for="mname in otherNames1to7" :key="mname" style="margin-right: 15px; font-weight: 500;">{{ mname }}</span>
+          <span style="position: absolute;">{{ $t('Also known as') }}</span><span style="padding-left: 33.3333%">&nbsp;</span><span class="text-caption white--text" v-for="mname in otherNames1to7" :key="mname" style="margin-right: 15px; font-weight: 500;">{{ mname }}</span>
           <v-btn small icon class="grey--text" v-if="otherNames.length > 8" v-on:click.native="showMinorNames = !showMinorNames" style="margin-top: -5px; margin-bottom: -5px;"><v-icon>mdi-dots-horizontal</v-icon></v-btn>
-          <span class="caption white--text" v-for="mname in otherNames8andMore" :key="mname" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
+          <span class="text-caption white--text" v-for="mname in otherNames8andMore" :key="mname" style="margin-right: 15px; font-weight: 500">{{ mname }}</span>
         </v-col>
       </v-row>
     </v-card-text>
@@ -46,7 +46,7 @@
       <v-card style="height: 180px" class="secondary white--text">
         <v-card-title primary-title>
           <div>
-            <h3 class="headline mb-0">Share link</h3>
+            <h3 class="text-h5 mb-0">Share link</h3>
           </div>
         </v-card-title>
         <v-card-text style="width:100%;">
@@ -117,7 +117,7 @@ export default {
       const page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]
       if (!page || !page.extract) return ''
       const wl = '<b><a style="color: #62d1df;" target="_blank" rel="noopener" href="' + this.wikipediaLink + '">wikipedia</a></b></i>'
-      return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; ' + this.$t('more on {0}', [wl]) + '</span>'
+      return page.extract.replace(/<p>/g, '').replace(/<\/p>/g, '') + '<span class="grey--text text-caption" style="margin-left:auto; margin-right:0;"><i>&nbsp; ' + this.$t('more on {0}', [wl]) + '</span>'
     },
     wikipediaLink: function () {
       const page = this.wikipediaData.query.pages[Object.keys(this.wikipediaData.query.pages)[0]]

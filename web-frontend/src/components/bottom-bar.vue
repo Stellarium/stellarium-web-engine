@@ -84,8 +84,8 @@
         <v-btn large class="tmenubt" color="secondary" v-on="on">
           <v-icon class="hidden-sm-and-up">mdi-clock-outline</v-icon>
           <span class="hidden-xs-only">
-            <div class="subtitle-2">{{ time }}</div>
-            <div class="caption">{{ date }}</div>
+            <div class="text-subtitle-2">{{ time }}</div>
+            <div class="text-caption">{{ date }}</div>
           </span>
         </v-btn>
       </template>
