@@ -343,12 +343,20 @@ static item_t *get_item(renderer_gl_t *rend, int type,
 {
     item_t *item;
     item = rend->items ? rend->items->prev : NULL;
-    if (    item && item->type == type &&
+
+    while (item) {
+        if (item->type == type &&
             item->buf.capacity > item->buf.nb + buf_size &&
             (indices_size == 0 ||
                 item->indices.capacity > item->indices.nb + indices_size) &&
             item->tex == tex)
-        return item;
+        {
+            return item;
+        }
+        // Keep searching only if we allow reordering.
+        if (!(item->flags & PAINTER_ALLOW_REORDER)) break;
+        item = item->prev;
+    }
     return NULL;
 }
 
@@ -789,6 +797,7 @@ static void texture(renderer_t *rend_,
 
 // Render text using a system bakend generated texture.
 static void text_using_texture(renderer_gl_t *rend,
+                               const painter_t *painter,
                                const char *text, const double pos[2],
                                int align, int effects, double size,
                                const double color[4], double angle,
@@ -798,7 +807,7 @@ static void text_using_texture(renderer_gl_t *rend,
     double s[2], ofs[2] = {0, 0}, bounds[4];
     const double scale = rend->scale;
     uint8_t *img;
-    int i, w, h, xoff, yoff;
+    int i, w, h, xoff, yoff, flags;
     tex_cache_t *ctex;
     texture_t *tex;
 
@@ -867,13 +876,15 @@ static void text_using_texture(renderer_gl_t *rend,
         window_to_ndc(rend, verts[i], verts[i]);
     }
 
-    texture2(rend, tex, uv, verts, color,
-             (effects & TEXT_BLEND_ADD) ? PAINTER_ADD : 0,
-             rend->cull_flipped);
+    flags = painter->flags;
+    if (effects & TEXT_BLEND_ADD) flags |= PAINTER_ADD;
+    texture2(rend, tex, uv, verts, color, flags, rend->cull_flipped);
 }
 
 // Render text using nanovg.
-static void text_using_nanovg(renderer_gl_t *rend, const char *text,
+static void text_using_nanovg(renderer_gl_t *rend,
+                              const painter_t *painter,
+                              const char *text,
                               const double pos[2], int align, int effects,
                               double size, const double color[4], double angle,
                               double bounds[4])
@@ -890,6 +901,7 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
     if (!bounds) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXT;
+        item->flags = painter->flags;
         vec4_to_float(color, item->color);
         item->color[0] = clamp(item->color[0], 0.0, 1.0);
         item->color[1] = clamp(item->color[1], 0.0, 1.0);
@@ -922,7 +934,8 @@ static void text_using_nanovg(renderer_gl_t *rend, const char *text,
     }
 }
 
-static void text(renderer_t *rend_, const char *text, const double pos[2],
+static void text(renderer_t *rend_, const painter_t *painter,
+                 const char *text, const double pos[2],
                  int align, int effects, double size, const double color[4],
                  double angle, double bounds[4])
 {
@@ -942,11 +955,11 @@ static void text(renderer_t *rend_, const char *text, const double pos[2],
     }
 
     if (sys_callbacks.render_text) {
-        text_using_texture(rend, text, pos, align, effects, size, color, angle,
-                           bounds);
+        text_using_texture(rend, painter, text, pos, align, effects, size,
+                           color, angle, bounds);
     } else {
-        text_using_nanovg(rend, text, pos, align, effects, size, color, angle,
-                          bounds);
+        text_using_nanovg(rend, painter, text, pos, align, effects, size,
+                          color, angle, bounds);
     }
 
 }

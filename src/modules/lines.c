@@ -407,7 +407,7 @@ static void spherical_project(
 static void render_label(const double p[2], const double u[2],
                          const double v[2], const double uv[2],
                          int dir, line_t *line, int step,
-                         const painter_t *painter)
+                         const painter_t *painter_)
 {
     char buf[32];
     double pos[2];
@@ -417,11 +417,15 @@ static void render_label(const double p[2], const double u[2],
     double n[2];
     double bounds[4], size[2];
     const double text_size = 12;
+    painter_t painter = *painter_;
 
     vec2_normalize(u, n);
 
     // Give up if angle with screen is too acute.
     if (fabs(vec2_dot(n, v)) < 0.25) return;
+    // Hints the renderer that we can move the labels after the lines to
+    // optimize batching.
+    painter.flags |= PAINTER_ALLOW_REORDER;
 
     if (vec2_dot(n, v) < 0) {
         vec2_mul(-1, u, u);
@@ -469,7 +473,7 @@ static void render_label(const double p[2], const double u[2],
         assert(false);
     }
 
-    paint_text_bounds(painter, buf, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
+    paint_text_bounds(&painter, buf, p, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                       text_size, bounds);
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
@@ -488,10 +492,10 @@ static void render_label(const double p[2], const double u[2],
     pos[0] += n3[0] * size[1] / 2;
     pos[1] += n3[1] * size[1] / 2;
 
-    vec4_copy(painter->color, color);
+    vec4_copy(painter.color, color);
 
     color[3] = 1.0;
-    paint_text(painter, buf, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
+    paint_text(&painter, buf, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                text_size, color, label_angle);
 }
 
@@ -573,7 +577,9 @@ static void render_recursion(
                 (pos[1] == 0 || pos[1] == splits[1] - 1))
             continue;
 
+        core->test = true;
         paint_line(painter, line->frame, lines + dir * 2, &map, 8, 0);
+        core->test = false;
         if (!line->format) continue;
         if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
                           p, u, v)) {

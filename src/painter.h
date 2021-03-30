@@ -101,6 +101,7 @@ struct renderer
                     double           angle);
 
     void (*text)(renderer_t      *rend,
+                 const painter_t *painter,
                  const char      *text,
                  const double    pos[2],
                  int             align,
@@ -178,6 +179,8 @@ enum {
 
     // Passed to paint_lines.
     PAINTER_SKIP_DISCONTINUOUS  = 1 << 10,
+    // Allow the renderer to reorder this item for batch optimiziation.
+    PAINTER_ALLOW_REORDER       = 1 << 11,
 };
 
 enum {

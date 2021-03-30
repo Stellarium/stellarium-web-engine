@@ -53,7 +53,8 @@ static void points(renderer_t *rend_, const painter_t *painter,
     }
 }
 
-static void text(renderer_t *rend_, const char *text, const double pos[2],
+static void text(renderer_t *rend_, const painter_t *painter,
+                 const char *text, const double pos[2],
                  int align, int effects, double size, const double color[4],
                  double angle, double bounds[4])
 {
