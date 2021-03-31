@@ -1466,8 +1466,15 @@ static void rend_flush(renderer_gl_t *rend)
     }
 
     // Set default OpenGL state.
+    // Make sure we clear everything.
     GL(glClearColor(0.0, 0.0, 0.0, 1.0));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL(glColorMask(true, true, true, true));
+    GL(glDepthMask(true));
+    GL(glStencilMask(0xff));
+    GL(glClear(GL_COLOR_BUFFER_BIT |
+               GL_DEPTH_BUFFER_BIT |
+               GL_STENCIL_BUFFER_BIT));
+
     GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
     GL(glDepthMask(GL_FALSE));
     GL(glDisable(GL_DEPTH_TEST));
