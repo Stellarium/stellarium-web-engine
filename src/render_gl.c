@@ -89,7 +89,6 @@ enum {
     ITEM_VG_LINE,
     ITEM_TEXT,
     ITEM_QUAD_WIREFRAME,
-    ITEM_LINES_GLOW,
     ITEM_GLTF,
 };
 
@@ -194,15 +193,6 @@ static const gl_buf_info_t MESH_BUF = {
 };
 
 static const gl_buf_info_t LINES_BUF = {
-    .size = 28,
-    .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 24},
-    },
-};
-
-static const gl_buf_info_t LINES_GLOW_BUF = {
     .size = 20,
     .attrs = {
         [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
@@ -1070,25 +1060,6 @@ static void draw_buffer(const gl_buf_t *buf, const gl_buf_t *indices,
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
-static void item_lines_render(renderer_gl_t *rend, const item_t *item)
-{
-    gl_shader_t *shader;
-    shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
-    GL(glUseProgram(shader->prog));
-
-    GL(glLineWidth(item->lines.width * rend->scale));
-
-    GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
-
-    GL(glEnable(GL_BLEND));
-    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                           GL_ZERO, GL_ONE));
-    GL(glDisable(GL_DEPTH_TEST));
-
-    draw_buffer(&item->buf, &item->indices, GL_LINES);
-}
-
 static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 {
     // XXX: almost the same as item_lines_render.
@@ -1140,7 +1111,7 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 }
 
 // XXX: almost the same as item_mesh_render!
-static void item_lines_glow_render(renderer_gl_t *rend, const item_t *item)
+static void item_lines_render(renderer_gl_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
@@ -1512,9 +1483,6 @@ static void rend_flush(renderer_gl_t *rend)
         case ITEM_LINES:
             item_lines_render(rend, item);
             break;
-        case ITEM_LINES_GLOW:
-            item_lines_glow_render(rend, item);
-            break;
         case ITEM_MESH:
             item_mesh_render(rend, item);
             break;
@@ -1571,10 +1539,10 @@ static void finish(renderer_t *rend_)
     rend_flush(rend);
 }
 
-static void line_glow(renderer_t           *rend_,
-                      const painter_t      *painter,
-                      const double         (*line)[3],
-                      int                  size)
+static void line(renderer_t           *rend_,
+                 const painter_t      *painter,
+                 const double         (*line)[3],
+                 int                  size)
 {
     renderer_gl_t *rend = (void*)rend_;
     line_mesh_t *mesh;
@@ -1582,6 +1550,7 @@ static void line_glow(renderer_t           *rend_,
     float color[4];
     item_t *item;
 
+    assert(painter->lines.glow); // Only glowing lines supported for now.
     vec4_to_float(painter->color, color);
     mesh = line_to_mesh(line, size, 10);
 
@@ -1591,7 +1560,7 @@ static void line_glow(renderer_t           *rend_,
     }
 
     // Get the item.
-    item = get_item(rend, ITEM_LINES_GLOW, mesh->verts_count,
+    item = get_item(rend, ITEM_LINES, mesh->verts_count,
                     mesh->indices_count, NULL);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
     if (item && item->lines.dash_length != painter->lines.dash_length)
@@ -1604,8 +1573,8 @@ static void line_glow(renderer_t           *rend_,
 
     if (!item) {
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_LINES_GLOW;
-        gl_buf_alloc(&item->buf, &LINES_GLOW_BUF, 1024);
+        item->type = ITEM_LINES;
+        gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
         item->lines.width = painter->lines.width;
         item->lines.glow = painter->lines.glow;
@@ -1633,54 +1602,6 @@ static void line_glow(renderer_t           *rend_,
 
 end:
     line_mesh_delete(mesh);
-}
-
-static void line(renderer_t           *rend_,
-                 const painter_t      *painter,
-                 const double         (*line)[3],
-                 int                  size)
-{
-    int i, ofs;
-    renderer_gl_t *rend = (void*)rend_;
-    item_t *item;
-    float color[4];
-    double pos[2];
-
-    if (painter->lines.glow) {
-        line_glow(rend_, painter, line, size);
-        return;
-    }
-
-    vec4_to_float(painter->color, color);
-    item = get_item(rend, ITEM_LINES, size, size * 2, NULL);
-    if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
-    if (item && item->lines.width != painter->lines.width) item = NULL;
-
-    if (!item) {
-        item = calloc(1, sizeof(*item));
-        item->type = ITEM_LINES;
-        gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
-        gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
-        item->lines.width = painter->lines.width;
-        memcpy(item->color, color, sizeof(color));
-        DL_APPEND(rend->items, item);
-    }
-
-    ofs = item->buf.nb;
-
-    for (i = 0; i < size; i++) {
-        window_to_ndc(rend, line[i], pos);
-        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, (double)i / (size - 1), 0);
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC2_SPLIT(pos), 0.0, 1.0);
-        gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
-        gl_buf_next(&item->buf);
-        if (i < size - 1) {
-            gl_buf_1i(&item->indices, -1, 0, ofs + i);
-            gl_buf_next(&item->indices);
-            gl_buf_1i(&item->indices, -1, 0, ofs + i + 1);
-            gl_buf_next(&item->indices);
-        }
-    }
 }
 
 static void mesh(renderer_t          *rend_,
