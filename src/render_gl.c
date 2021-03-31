@@ -1193,6 +1193,9 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
     nvgStroke(rend->vg);
     nvgRestore(rend->vg);
     nvgEndFrame(rend->vg);
+
+    // Reset colormask to its original value.
+    GL(glColorMask(true, true, true, false));
 }
 
 static void item_text_render(renderer_gl_t *rend, const item_t *item)
@@ -1478,6 +1481,7 @@ static void rend_flush(renderer_gl_t *rend)
     GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
     GL(glDepthMask(GL_FALSE));
     GL(glDisable(GL_DEPTH_TEST));
+    GL(glColorMask(true, true, true, false)); // Do not change the alpha.
 
     // On OpenGL Desktop, we have to enable point sprite support.
 #ifndef GLES2
@@ -1538,6 +1542,7 @@ static void rend_flush(renderer_gl_t *rend)
     }
     // Reset to default OpenGL settings.
     GL(glDepthMask(GL_TRUE));
+    GL(glColorMask(true, true, true, true));
 }
 
 static void finish(renderer_t *rend_)
