@@ -792,12 +792,29 @@ static uint8_t img_get(const uint8_t *img, int w, int h, int x, int y)
     return img[y * w + x];
 }
 
+static void blend_color(double dst[4], const double src[4])
+{
+    double a;
+    a = (1 - src[3]) * dst[3] + src[3];
+    if (a == 0) {
+        dst[0] = src[0];
+        dst[1] = src[1];
+        dst[2] = src[2];
+        dst[3] = 0;
+        return;
+    }
+    dst[0] = ((1 - src[3]) * dst[3] * dst[0] + src[3] * src[0]) / a;
+    dst[1] = ((1 - src[3]) * dst[3] * dst[1] + src[3] * src[1]) / a;
+    dst[2] = ((1 - src[3]) * dst[3] * dst[2] + src[3] * src[2]) / a;
+    dst[3] = a;
+}
+
 static void text_shadow_effect(const uint8_t *src, uint8_t *dst,
                                int w, int h, const double color[3])
 {
     int i, j, di, dj;
     double s;
-    double colsrc[4], frag[4];
+    double text_col[4], frag[4];
 
     for (i = 0; i < h; i++)
     for (j = 0; j < w; j++) {
@@ -811,9 +828,9 @@ static void text_shadow_effect(const uint8_t *src, uint8_t *dst,
         s /= 9;
         vec4_set(frag, color[0] / 8, color[1] / 8, color[2] / 8, s);
         // Blend real color on top of shadow.
-        vec4_set(colsrc, color[0], color[1], color[2],
+        vec4_set(text_col, color[0], color[1], color[2],
                  img_get(src, w - 2, h - 2, j - 1, i - 1) / 255.);
-        vec4_mix(frag, colsrc, colsrc[3], frag);
+        blend_color(frag, text_col);
 
         dst[(i * w + j) * 4 + 0] = frag[0] * 255;
         dst[(i * w + j) * 4 + 1] = frag[1] * 255;
