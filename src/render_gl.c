@@ -7,6 +7,7 @@
  * repository.
  */
 
+#include "render.h"
 #include "swe.h"
 
 #include "line_mesh.h"
@@ -246,9 +247,7 @@ static const gl_buf_info_t FOG_BUF = {
     },
 };
 
-typedef struct renderer_gl {
-    renderer_t  rend;
-
+struct renderer {
     int     fb_size[2];
     double  scale;
     bool    cull_flipped;
@@ -268,7 +267,7 @@ typedef struct renderer_gl {
     item_t  *items;
     cache_t *grid_cache;
 
-} renderer_gl_t;
+};
 
 // Weak linking, so that we can put the implementation in a module.
 __attribute__((weak))
@@ -296,17 +295,16 @@ static bool color_is_white(const float c[4])
     return c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f;
 }
 
-static void window_to_ndc(renderer_gl_t *rend,
+static void window_to_ndc(renderer_t *rend,
                           const double win[2], double ndc[2])
 {
     ndc[0] = (win[0] * rend->scale / rend->fb_size[0]) * 2 - 1;
     ndc[1] = 1 - (win[1] * rend->scale / rend->fb_size[1]) * 2;
 }
 
-static void prepare(renderer_t *rend_, double win_w, double win_h,
+void render_prepare(renderer_t *rend, double win_w, double win_h,
                     double scale, bool cull_flipped)
 {
-    renderer_gl_t *rend = (void*)rend_;
     tex_cache_t *ctex;
 
     rend->fb_size[0] = win_w * scale;
@@ -327,7 +325,7 @@ static void prepare(renderer_t *rend_, double win_w, double win_h,
  *   buf_size       - The free vertex buffer size requiered.
  *   indices_size   - The free indice size required.
  */
-static item_t *get_item(renderer_gl_t *rend, int type,
+static item_t *get_item(renderer_t *rend, int type,
                         int buf_size,
                         int indices_size,
                         texture_t *tex)
@@ -351,12 +349,9 @@ static item_t *get_item(renderer_gl_t *rend, int type,
     return NULL;
 }
 
-static void points_2d(renderer_t *rend_,
-                      const painter_t *painter,
-                      int n,
-                      const point_t *points)
+void render_points_2d(renderer_t *rend, const painter_t *painter,
+                      int n, const point_t *points)
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     int i;
     const int MAX_POINTS = 4096;
@@ -402,7 +397,7 @@ static void points_2d(renderer_t *rend_,
  * Function: get_grid
  * Compute an uv_map grid, and cache it if possible.
  */
-static const double (*get_grid(renderer_gl_t *rend,
+static const double (*get_grid(renderer_t *rend,
                                const uv_map_t *map, int split,
                                bool *should_delete))[4]
 {
@@ -460,13 +455,12 @@ static void compute_tangent(const double uv[2], const uv_map_t *map,
 }
 
 static void quad_planet(
-                 renderer_t          *rend_,
+                 renderer_t          *rend,
                  const painter_t     *painter,
                  int                 frame,
                  int                 grid_size,
                  const uv_map_t      *map)
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     int n, i, j, k;
     double p[4], mpos[4], normal[4] = {0}, tangent[4] = {0}, z, mv[4][4];
@@ -570,13 +564,9 @@ static void quad_planet(
     DL_APPEND(rend->items, item);
 }
 
-static void quad(renderer_t          *rend_,
-                 const painter_t     *painter,
-                 int                 frame,
-                 int                 grid_size,
-                 const uv_map_t      *map)
+void render_quad(renderer_t *rend, const painter_t *painter,
+                 int frame, int grid_size, const uv_map_t *map)
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     int n, i, j, k, ofs;
     const int INDICES[6][2] = {
@@ -589,7 +579,7 @@ static void quad(renderer_t          *rend_,
 
     // Special case for planet shader.
     if (painter->flags & (PAINTER_PLANET_SHADER | PAINTER_RING_SHADER))
-        return quad_planet(rend_, painter, frame, grid_size, map);
+        return quad_planet(rend, painter, frame, grid_size, map);
 
     if (!tex) tex = rend->white_tex;
     n = grid_size + 1;
@@ -670,13 +660,9 @@ static void quad(renderer_t          *rend_,
     DL_APPEND(rend->items, item);
 }
 
-static void quad_wireframe(renderer_t          *rend_,
-                           const painter_t     *painter,
-                           int                 frame,
-                           int                 grid_size,
-                           const uv_map_t      *map)
+void render_quad_wireframe(renderer_t *rend, const painter_t *painter,
+                           int frame, int grid_size, const uv_map_t *map)
 {
-    renderer_gl_t *rend = (void*)rend_;
     int n, i, j;
     item_t *item;
     n = grid_size + 1;
@@ -721,7 +707,7 @@ static void quad_wireframe(renderer_t          *rend_,
     DL_APPEND(rend->items, item);
 }
 
-static void texture2(renderer_gl_t *rend, texture_t *tex,
+static void texture2(renderer_t *rend, texture_t *tex,
                      double uv[4][2], double pos[4][2],
                      const double color_[4], int flags, bool swap_indices)
 {
@@ -762,15 +748,10 @@ static void texture2(renderer_gl_t *rend, texture_t *tex,
     }
 }
 
-static void texture(renderer_t *rend_,
-                    const texture_t *tex,
-                    double uv[4][2],
-                    const double pos[2],
-                    double size,
-                    const double color[4],
-                    double angle)
+void render_texture(renderer_t *rend, const texture_t  *tex,
+                    double uv[4][2], const double pos[2], double size,
+                    const double color[4], double angle)
 {
-    renderer_gl_t *rend = (void*)rend_;
     int i;
     double verts[4][2], w, h;
     w = size;
@@ -840,7 +821,7 @@ static void text_shadow_effect(const uint8_t *src, uint8_t *dst,
 }
 
 // Render text using a system bakend generated texture.
-static void text_using_texture(renderer_gl_t *rend,
+static void text_using_texture(renderer_t *rend,
                                const painter_t *painter,
                                const char *text, const double pos[2],
                                int align, int effects, double size,
@@ -936,7 +917,7 @@ static void text_using_texture(renderer_gl_t *rend,
 }
 
 // Render text using nanovg.
-static void text_using_nanovg(renderer_gl_t *rend,
+static void text_using_nanovg(renderer_t *rend,
                               const painter_t *painter,
                               const char *text,
                               const double pos[2], int align, int effects,
@@ -988,13 +969,13 @@ static void text_using_nanovg(renderer_gl_t *rend,
     }
 }
 
-static void text(renderer_t *rend_, const painter_t *painter,
+void render_text(renderer_t *rend, const painter_t *painter,
                  const char *text, const double pos[2],
-                 int align, int effects, double size, const double color[4],
-                 double angle, double bounds[4])
+                 int align, int effects, double size,
+                 const double color[4], double angle,
+                 double bounds[4])
 {
     assert(pos);
-    renderer_gl_t *rend = (void*)rend_;
     assert(size);
 
     // Prevent overflow in nvg.
@@ -1018,7 +999,7 @@ static void text(renderer_t *rend_, const painter_t *painter,
 
 }
 
-static void item_points_render(renderer_gl_t *rend, const item_t *item)
+static void item_points_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     GLuint  array_buffer;
@@ -1077,7 +1058,7 @@ static void draw_buffer(const gl_buf_t *buf, const gl_buf_t *indices,
     GL(glDeleteBuffers(1, &index_buffer));
 }
 
-static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
+static void item_mesh_render(renderer_t *rend, const item_t *item)
 {
     // XXX: almost the same as item_lines_render.
     gl_shader_t *shader;
@@ -1128,7 +1109,7 @@ static void item_mesh_render(renderer_gl_t *rend, const item_t *item)
 }
 
 // XXX: almost the same as item_mesh_render!
-static void item_lines_render(renderer_gl_t *rend, const item_t *item)
+static void item_lines_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
@@ -1169,7 +1150,7 @@ static void item_lines_render(renderer_gl_t *rend, const item_t *item)
     GL(glDisable(GL_DEPTH_TEST));
 }
 
-static void item_vg_render(renderer_gl_t *rend, const item_t *item)
+static void item_vg_render(renderer_t *rend, const item_t *item)
 {
     double a, da;
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
@@ -1215,7 +1196,7 @@ static void item_vg_render(renderer_gl_t *rend, const item_t *item)
     GL(glColorMask(true, true, true, false));
 }
 
-static void item_text_render(renderer_gl_t *rend, const item_t *item)
+static void item_text_render(renderer_t *rend, const item_t *item)
 {
     int font = (item->text.effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
@@ -1260,7 +1241,7 @@ static void item_text_render(renderer_gl_t *rend, const item_t *item)
     nvgEndFrame(rend->vg);
 }
 
-static void item_fog_render(renderer_gl_t *rend, const item_t *item)
+static void item_fog_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     shader = shader_get("fog", NULL, ATTR_NAMES, init_shader);
@@ -1275,7 +1256,7 @@ static void item_fog_render(renderer_gl_t *rend, const item_t *item)
     GL(glCullFace(GL_BACK));
 }
 
-static void item_atmosphere_render(renderer_gl_t *rend, const item_t *item)
+static void item_atmosphere_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     float tm[3];
@@ -1311,7 +1292,7 @@ static void item_atmosphere_render(renderer_gl_t *rend, const item_t *item)
     GL(glCullFace(GL_BACK));
 }
 
-static void item_texture_render(renderer_gl_t *rend, const item_t *item)
+static void item_texture_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
 
@@ -1356,7 +1337,7 @@ static void item_texture_render(renderer_gl_t *rend, const item_t *item)
     GL(glCullFace(GL_BACK));
 }
 
-static void item_quad_wireframe_render(renderer_gl_t *rend, const item_t *item)
+static void item_quad_wireframe_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
 
@@ -1374,7 +1355,7 @@ static void item_quad_wireframe_render(renderer_gl_t *rend, const item_t *item)
     draw_buffer(&item->buf, &item->indices, GL_LINES);
 }
 
-static void item_planet_render(renderer_gl_t *rend, const item_t *item)
+static void item_planet_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     bool is_moon;
@@ -1448,7 +1429,7 @@ static void item_planet_render(renderer_gl_t *rend, const item_t *item)
     GL(glDisable(GL_DEPTH_TEST));
 }
 
-static void item_gltf_render(renderer_gl_t *rend, const item_t *item)
+static void item_gltf_render(renderer_t *rend, const item_t *item)
 {
     double proj[4][4], nearval, farval;
     mat4_copy(item->gltf.proj_mat, proj);
@@ -1465,7 +1446,7 @@ static void item_gltf_render(renderer_gl_t *rend, const item_t *item)
                 proj, item->gltf.light_dir, item->gltf.args);
 }
 
-static void rend_flush(renderer_gl_t *rend)
+static void rend_flush(renderer_t *rend)
 {
     item_t *item, *tmp;
 
@@ -1562,18 +1543,14 @@ static void rend_flush(renderer_gl_t *rend)
     GL(glColorMask(true, true, true, true));
 }
 
-static void finish(renderer_t *rend_)
+void render_finish(renderer_t *rend)
 {
-    renderer_gl_t *rend = (void*)rend_;
     rend_flush(rend);
 }
 
-static void line(renderer_t           *rend_,
-                 const painter_t      *painter,
-                 const double         (*line)[3],
-                 int                  size)
+void render_line(renderer_t *rend, const painter_t *painter,
+                 const double (*line)[3], int size)
 {
-    renderer_gl_t *rend = (void*)rend_;
     line_mesh_t *mesh;
     int i, ofs;
     float color[4];
@@ -1633,22 +1610,16 @@ end:
     line_mesh_delete(mesh);
 }
 
-static void mesh(renderer_t          *rend_,
-                 const painter_t     *painter,
-                 int                 frame,
-                 int                 mode,
-                 int                 verts_count,
-                 const double        verts[][3],
-                 int                 indices_count,
-                 const uint16_t      indices[],
-                 bool                use_stencil)
+void render_mesh(renderer_t *rend, const painter_t *painter,
+                 int frame, int mode, int verts_count,
+                 const double verts[][3], int indices_count,
+                 const uint16_t indices[], bool use_stencil)
 {
     int i, ofs;
     double pos[4] = {};
     double rot[3][3];
     uint8_t color[4];
     item_t *item;
-    renderer_gl_t *rend = (void*)rend_;
 
     color[0] = painter->color[0] * 255;
     color[1] = painter->color[1] * 255;
@@ -1709,11 +1680,10 @@ static void mesh(renderer_t          *rend_,
     }
 }
 
-static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
+void render_ellipse_2d(renderer_t *rend, const painter_t *painter,
                        const double pos[2], const double size[2],
                        double angle, double dashes)
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_ELLIPSE;
@@ -1726,10 +1696,10 @@ static void ellipse_2d(renderer_t *rend_, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
-static void rect_2d(renderer_t *rend_, const painter_t *painter,
-                    const double pos[2], const double size[2], double angle)
+void render_rect_2d(renderer_t *rend, const painter_t *painter,
+                    const double pos[2], const double size[2],
+                    double angle)
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_RECT;
@@ -1741,10 +1711,9 @@ static void rect_2d(renderer_t *rend_, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
-static void line_2d(renderer_t *rend_, const painter_t *painter,
+void render_line_2d(renderer_t *rend, const painter_t *painter,
                     const double p1[2], const double p2[2])
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_VG_LINE;
@@ -1755,15 +1724,11 @@ static void line_2d(renderer_t *rend_, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
-static void model_3d(renderer_t *rend_, const painter_t *painter,
-                     const char *model,
-                     const double model_mat[4][4],
-                     const double view_mat[4][4],
-                     const double proj_mat[4][4],
-                     const double light_dir[3],
-                     json_value *args)
+void render_model_3d(renderer_t *rend, const painter_t *painter,
+                     const char *model, const double model_mat[4][4],
+                     const double view_mat[4][4], const double proj_mat[4][4],
+                     const double light_dir[3], json_value *args)
 {
-    renderer_gl_t *rend = (void*)rend_;
     item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_GLTF;
@@ -1790,7 +1755,7 @@ static texture_t *create_white_texture(int w, int h)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_add_font(renderer_gl_t *rend, const char *name,
+void core_add_font(renderer_t *rend, const char *name,
                    const char *url, const uint8_t *data,
                    int size, float scale)
 {
@@ -1822,7 +1787,7 @@ void core_add_font(renderer_gl_t *rend, const char *name,
     }
 }
 
-static void set_default_fonts(renderer_gl_t *rend)
+static void set_default_fonts(renderer_t *rend)
 {
     const float scale = 1.38;
     core_add_font(rend, "regular", "asset://font/NotoSans-Regular.ttf",
@@ -1833,9 +1798,9 @@ static void set_default_fonts(renderer_gl_t *rend)
     rend->fonts[FONT_BOLD].is_default_font = true;
 }
 
-renderer_t* render_gl_create(void)
+renderer_t* render_create(void)
 {
-    renderer_gl_t *rend;
+    renderer_t *rend;
     GLint range[2];
 
 #ifdef WIN32
@@ -1858,19 +1823,5 @@ renderer_t* render_gl_create(void)
     if (range[1] < 32)
         LOG_W("OpenGL Doesn't support large point size!");
 
-    rend->rend.prepare = prepare;
-    rend->rend.finish = finish;
-    rend->rend.points_2d = points_2d;
-    rend->rend.quad = quad;
-    rend->rend.quad_wireframe = quad_wireframe;
-    rend->rend.texture = texture;
-    rend->rend.text = text;
-    rend->rend.line = line;
-    rend->rend.mesh = mesh;
-    rend->rend.ellipse_2d = ellipse_2d;
-    rend->rend.rect_2d = rect_2d;
-    rend->rend.line_2d = line_2d;
-    rend->rend.model_3d = model_3d;
-
-    return &rend->rend;
+    return rend;
 }

@@ -10,6 +10,7 @@
 #include "swe.h"
 #include "algos/utctt.h"
 #include "navigation.h"
+#include "render.h"
 
 core_t *core;   // The global core object.
 
@@ -554,7 +555,7 @@ int core_render(double win_w, double win_h, double pixel_scale)
     module_changed(&core->obj, "fps");
 
     if (!core->rend)
-        core->rend = render_gl_create();
+        core->rend = render_create();
     labels_reset();
 
     painter_t painter = {

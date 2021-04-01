@@ -19,10 +19,10 @@
 
 typedef struct obj obj_t;
 typedef struct observer observer_t;
-typedef struct renderer renderer_t;
 typedef struct painter painter_t;
 typedef struct point point_t;
 typedef struct texture texture_t;
+typedef struct renderer renderer_t;
 
 // Base font size in pixels
 #define FONT_SIZE_BASE 15
@@ -67,97 +67,6 @@ enum {
     MODE_LINES,
     MODE_POINTS,
 };
-
-struct renderer
-{
-    void (*prepare)(renderer_t *rend,
-                    double win_w, double win_h, double scale,
-                    bool cull_flipped);
-    void (*finish)(renderer_t *rend);
-
-    void (*points_2d)(renderer_t        *rend,
-                   const painter_t      *painter,
-                   int                  n,
-                   const point_t        *points);
-
-    void (*quad)(renderer_t          *rend,
-                 const painter_t     *painter,
-                 int                 frame,
-                 int                 grid_size,
-                 const uv_map_t      *map);
-
-    void (*quad_wireframe)(renderer_t           *rend,
-                           const painter_t      *painter,
-                           int                  frame,
-                           int                  grid_size,
-                           const uv_map_t       *map);
-
-    void (*texture)(renderer_t       *rend,
-                    const texture_t  *tex,
-                    double           uv[4][2],
-                    const double     pos[2],
-                    double           size,
-                    const double     color[4],
-                    double           angle);
-
-    void (*text)(renderer_t      *rend,
-                 const painter_t *painter,
-                 const char      *text,
-                 const double    pos[2],
-                 int             align,
-                 int             effects,
-                 double          size,
-                 const double    color[4],
-                 double          angle,
-                 double          bounds[4]    // Output, can be NULL.
-                 );
-
-    void (*line)(renderer_t           *rend,
-                 const painter_t      *painter,
-                 const double         (*line)[3],
-                 int                  size);
-
-    void (*mesh)(renderer_t          *rend,
-                 const painter_t     *painter,
-                 int                 frame,
-                 int                 mode,
-                 int                 verts_count,
-                 const double        verts[][3],
-                 int                 indices_count,
-                 const uint16_t      indices[],
-                 bool                use_stencil);
-
-    void (*ellipse_2d)(renderer_t       *rend,
-                       const painter_t  *painter,
-                       const double     pos[2],
-                       const double     size[2],
-                       double           angle,
-                       double           nb_dashes);
-
-    void (*rect_2d)(renderer_t          *rend,
-                    const painter_t     *painter,
-                    const double        pos[2],
-                    const double        size[2],
-                    double              angle);
-
-    void (*line_2d)(renderer_t          *rend,
-                    const painter_t     *painter,
-                    const double        p1[2],
-                    const double        p2[2]);
-
-    void (*model_3d)(renderer_t         *rend,
-                     const painter_t    *painter,
-                     const char         *model,
-                     const double       model_mat[4][4],
-                     const double       view_mat[4][4],
-                     const double       proj_mat[4][4],
-                     const double       light_dir[3],
-                     json_value         *args);
-};
-
-renderer_t* render_gl_create(void);
-renderer_t* render_svg_create(const char *out);
-
 
 struct point
 {

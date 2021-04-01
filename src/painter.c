@@ -8,17 +8,12 @@
  */
 
 #include "swe.h"
-
 #include "line_mesh.h"
+#include "render.h"
 
 #include <float.h>
 
 static bool g_debug = false;
-
-#define REND(rend, f, ...) do { \
-        if ((rend)->f) (rend)->f((rend), ##__VA_ARGS__); \
-    } while (0)
-
 
 // Test if a shape in clipping coordinates is clipped or not.
 static bool is_clipped(int n, double (*pos)[4])
@@ -142,13 +137,13 @@ int paint_prepare(painter_t *painter, double win_w, double win_h,
 
     cull_flipped = (bool)(painter->proj->flags & PROJ_FLIP_HORIZONTAL) !=
                    (bool)(painter->proj->flags & PROJ_FLIP_VERTICAL);
-    REND(painter->rend, prepare, win_w, win_h, scale, cull_flipped);
+    render_prepare(painter->rend, win_w, win_h, scale, cull_flipped);
     return 0;
 }
 
 int paint_finish(const painter_t *painter)
 {
-    REND(painter->rend, finish);
+    render_finish(painter->rend);
     return 0;
 }
 
@@ -175,7 +170,7 @@ void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
 
 int paint_2d_points(const painter_t *painter, int n, const point_t *points)
 {
-    REND(painter->rend, points_2d, painter, n, points);
+    render_points_2d(painter->rend, painter, n, points);
     return 0;
 }
 
@@ -192,7 +187,7 @@ int paint_quad(const painter_t *painter,
 
     // XXX: need to check if we intersect discontinuity, and if so split
     // the painter projection.
-    REND(painter->rend, quad, painter, frame, grid_size, map);
+    render_quad(painter->rend, painter, frame, grid_size, map);
     return 0;
 }
 
@@ -200,7 +195,7 @@ int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, int effects,
                       double size, double bounds[4])
 {
-    REND(painter->rend, text, painter, text, pos, align, effects, size,
+    render_text(painter->rend, painter, text, pos, align, effects, size,
          painter->color, 0, bounds);
     return 0;
 }
@@ -209,7 +204,7 @@ int paint_text(const painter_t *painter, const char *text,
                const double pos[2], int align, int effects, double size,
                double angle)
 {
-    REND(painter->rend, text, painter, text, pos, align, effects, size,
+    render_text(painter->rend, painter, text, pos, align, effects, size,
          painter->color, angle, NULL);
     return 0;
 }
@@ -229,7 +224,7 @@ int paint_texture(const painter_t *painter,
     if (!color) color = white;
     if (!uv) uv = uv_full;
     vec4_emul(painter->color, color, c);
-    REND(painter->rend, texture, tex, uv, pos, size, c, angle);
+    render_texture(painter->rend, tex, uv, pos, size, c, angle);
     return 0;
 }
 
@@ -321,7 +316,7 @@ int paint_line(const painter_t *painter,
                           USER_PASS(painter, &frame, line, map),
                           split, &win_line);
     if (size < 0) goto split;
-    REND(painter->rend, line, painter, win_line, size);
+    render_line(painter->rend, painter, win_line, size);
     free(win_line);
     return 0;
 
@@ -373,17 +368,17 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
 
     switch (mode) {
     case MODE_TRIANGLES:
-        REND(painter.rend, mesh, &painter, frame, mode,
+        render_mesh(painter.rend, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
              mesh->triangles_count, mesh->triangles, use_stencil);
         break;
     case MODE_LINES:
-        REND(painter.rend, mesh, &painter, frame, mode,
+        render_mesh(painter.rend, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
              mesh->lines_count, mesh->lines, false);
         break;
     case MODE_POINTS:
-        REND(painter.rend, mesh, &painter, frame, mode,
+        render_mesh(painter.rend, &painter, frame, mode,
              mesh->vertices_count, mesh->vertices,
              mesh->points_count, mesh->points, false);
         break;
@@ -404,12 +399,12 @@ subdivide:
     // XXX: can clean up this.
     switch (mode) {
     case MODE_TRIANGLES:
-        REND(painter.rend, mesh, &painter, FRAME_VIEW, mode,
+        render_mesh(painter.rend, &painter, FRAME_VIEW, mode,
                  mesh2->vertices_count, mesh2->vertices,
                  mesh2->triangles_count, mesh2->triangles, use_stencil);
         break;
     case MODE_LINES:
-        REND(painter.rend, mesh, &painter, FRAME_VIEW, mode,
+        render_mesh(painter.rend, &painter, FRAME_VIEW, mode,
                  mesh2->vertices_count, mesh2->vertices,
                  mesh2->lines_count, mesh2->lines, false);
         break;
@@ -712,7 +707,7 @@ int paint_2d_ellipse(const painter_t *painter_,
     s[0] = sqrt(a2);
     s[1] = sqrt(b2);
     angle = atan2(m[0][1], m[0][0]);
-    REND(painter.rend, ellipse_2d, &painter, p, s, angle, nb_dashes);
+    render_ellipse_2d(painter.rend, &painter, p, s, angle, nb_dashes);
 
     if (label_pos) {
         label_pos[1] = DBL_MAX;
@@ -751,7 +746,7 @@ int paint_2d_rect(const painter_t *painter, const double transf[3][3],
     s[0] = vec2_norm(m[0]);
     s[1] = vec2_norm(m[1]);
     angle = atan2(m[0][1], m[0][0]);
-    REND(painter->rend, rect_2d, painter, p, s, angle);
+    render_rect_2d(painter->rend, painter, p, s, angle);
     return 0;
 }
 
@@ -775,7 +770,7 @@ int paint_2d_line(const painter_t *painter, const double transf[3][3],
         mat3_mul_vec3(transf, p1_win, p1_win);
         mat3_mul_vec3(transf, p2_win, p2_win);
     }
-    REND(painter->rend, line_2d, painter, p1_win, p2_win);
+    render_line_2d(painter->rend, painter, p1_win, p2_win);
     return 0;
 }
 
