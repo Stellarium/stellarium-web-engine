@@ -37,9 +37,6 @@ void render_points_2d(renderer_t *rend, const painter_t *painter,
 void render_quad(renderer_t *rend, const painter_t *painter,
                  int frame, int grid_size, const uv_map_t *map);
 
-void render_quad_wireframe(renderer_t *rend, const painter_t *painter,
-                           int frame, int grid_size, const uv_map_t *map);
-
 void render_texture(renderer_t *rend, const texture_t  *tex,
                     double uv[4][2], const double pos[2], double size,
                     const double color[4], double angle);

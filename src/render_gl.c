@@ -89,7 +89,6 @@ enum {
     ITEM_VG_RECT,
     ITEM_VG_LINE,
     ITEM_TEXT,
-    ITEM_QUAD_WIREFRAME,
     ITEM_GLTF,
 };
 
@@ -656,53 +655,6 @@ void render_quad(renderer_t *rend, const painter_t *painter,
                       ofs + (INDICES[k][1] + i) * n + (INDICES[k][0] + j));
             gl_buf_next(&item->indices);
         }
-    }
-    DL_APPEND(rend->items, item);
-}
-
-void render_quad_wireframe(renderer_t *rend, const painter_t *painter,
-                           int frame, int grid_size, const uv_map_t *map)
-{
-    int n, i, j;
-    item_t *item;
-    n = grid_size + 1;
-    double p[4], ndc_p[4];
-    const double (*grid)[4] = NULL;
-    bool should_delete_grid;
-
-    item = calloc(1, sizeof(*item));
-    item->type = ITEM_QUAD_WIREFRAME;
-    gl_buf_alloc(&item->buf, &TEXTURE_BUF, n * n);
-    gl_buf_alloc(&item->indices, &INDICES_BUF, grid_size * n * 4);
-    vec4_to_float(VEC(1, 0, 0, 0.25), item->color);
-
-    // Generate grid position.
-    grid = get_grid(rend, map, grid_size, &should_delete_grid);
-    for (i = 0; i < n; i++)
-    for (j = 0; j < n; j++) {
-        gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, 0.5, 0.5);
-        vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
-        convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project(painter->proj, 0, ndc_p, ndc_p);
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
-        gl_buf_next(&item->buf);
-    }
-    if (should_delete_grid) free(grid);
-
-    /* Set the index buffer.
-     * We render a set of horizontal and vertical lines.  */
-    for (i = 0; i < n; i++)
-    for (j = 0; j < grid_size; j++) {
-        // Vertical.
-        gl_buf_1i(&item->indices, -1, 0, (j + 0) * n + i);
-        gl_buf_next(&item->indices);
-        gl_buf_1i(&item->indices, -1, 0, (j + 1) * n + i);
-        gl_buf_next(&item->indices);
-        // Horizontal.
-        gl_buf_1i(&item->indices, -1, 0, i * n + j + 0);
-        gl_buf_next(&item->indices);
-        gl_buf_1i(&item->indices, -1, 0, i * n + j + 1);
-        gl_buf_next(&item->indices);
     }
     DL_APPEND(rend->items, item);
 }
@@ -1337,24 +1289,6 @@ static void item_texture_render(renderer_t *rend, const item_t *item)
     GL(glCullFace(GL_BACK));
 }
 
-static void item_quad_wireframe_render(renderer_t *rend, const item_t *item)
-{
-    gl_shader_t *shader;
-
-    shader = shader_get("blit", NULL, ATTR_NAMES, init_shader);
-    GL(glUseProgram(shader->prog));
-
-    gl_update_uniform(shader, "u_color", item->color);
-    GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, rend->white_tex->id));
-    GL(glDisable(GL_DEPTH_TEST));
-    GL(glEnable(GL_BLEND));
-    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
-                           GL_ZERO, GL_ONE));
-
-    draw_buffer(&item->buf, &item->indices, GL_LINES);
-}
-
 static void item_planet_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
@@ -1517,9 +1451,6 @@ static void rend_flush(renderer_t *rend)
             break;
         case ITEM_TEXT:
             item_text_render(rend, item);
-            break;
-        case ITEM_QUAD_WIREFRAME:
-            item_quad_wireframe_render(rend, item);
             break;
         case ITEM_GLTF:
             item_gltf_render(rend, item);
