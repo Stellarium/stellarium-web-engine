@@ -80,18 +80,15 @@ bool project(const projection_t *proj, int flags,
     return visible;
 }
 
-bool unproject(const projection_t *proj, int flags,
+bool unproject(const projection_t *proj,
                const double v[3], double out[3])
 {
     double p[4] = {0, 0, 0, 1};
     vec2_copy(v, p);
-    assert(flags & PROJ_FROM_WINDOW_SPACE);
-    if (flags & PROJ_FROM_WINDOW_SPACE) {
-        p[0] = p[0] / proj->window_size[0] * 2 - 1;
-        p[1] = 1 - p[1] / proj->window_size[1] * 2;
-    }
+    p[0] = p[0] / proj->window_size[0] * 2 - 1;
+    p[1] = 1 - p[1] / proj->window_size[1] * 2;
     if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
     if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
     assert(proj->klass->backward);
-    return proj->klass->backward(proj, flags, p, out);
+    return proj->klass->backward(proj, 0, p, out);
 }

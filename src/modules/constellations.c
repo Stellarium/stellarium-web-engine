@@ -619,7 +619,7 @@ static bool constellation_is_pointed(const constellation_t *con,
         for (i = 0; i < 4; i++) {
             vec4_set(p, proj->window_size[0] / 2 + (i % 2 - 0.5) * d,
                         proj->window_size[1] / 2 + (i / 2 - 0.5) * d, 0, 0);
-            unproject(proj, PROJ_FROM_WINDOW_SPACE, p, p);
+            unproject(proj, p, p);
             convert_frame(obs, FRAME_VIEW, FRAME_ICRF, true, p, p);
             find_constellation_at(p, cst[i]);
         }

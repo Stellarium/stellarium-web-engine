@@ -28,7 +28,7 @@ static void screen_to_mount(
         const double screen_pos[2], double p[3])
 {
     double pos[4] = {screen_pos[0], screen_pos[1]};
-    unproject(proj, PROJ_FROM_WINDOW_SPACE, pos, pos);
+    unproject(proj, pos, pos);
     convert_frame(obs, FRAME_VIEW, FRAME_MOUNT, true, pos, p);
 }
 

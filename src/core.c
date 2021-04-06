@@ -492,7 +492,7 @@ static void win_to_observed(double x, double y, double p[3])
     double pos[4] = {x, y};
 
     core_get_proj(&proj);
-    unproject(&proj, PROJ_FROM_WINDOW_SPACE, pos, pos);
+    unproject(&proj, pos, pos);
     convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
 }
 
@@ -515,7 +515,7 @@ static void render_proj_markers(const painter_t *painter_)
         project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
         paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(2, 2), NULL);
 
-        unproject(painter.proj, PROJ_FROM_WINDOW_SPACE, p_win, p);
+        unproject(painter.proj, p_win, p);
         project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
         paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(4, 4), NULL);
     }

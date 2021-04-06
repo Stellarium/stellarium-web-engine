@@ -898,7 +898,7 @@ bool painter_unproject(const painter_t *painter, int frame,
                      const double win_pos[2], double pos[3]) {
     double p[4] = {win_pos[0], win_pos[1], 0};
     bool ret;
-    ret = unproject(painter->proj, PROJ_FROM_WINDOW_SPACE, p, p);
+    ret = unproject(painter->proj, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
     return ret;
 }
