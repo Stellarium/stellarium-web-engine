@@ -81,7 +81,7 @@ bool project(const projection_t *proj, int flags,
 }
 
 bool unproject(const projection_t *proj, int flags,
-               const double v[4], double out[4])
+               const double v[3], double out[3])
 {
     double p[4] = {0, 0, 0, 1};
     vec2_copy(v, p);
