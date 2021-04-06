@@ -615,7 +615,9 @@ keep_going:
 static void get_azalt_fov(const painter_t *painter, int frame,
                           double *azfov, double *altfov)
 {
-    double p[4] = {0, 0, 0, 0};
+    double w = painter->proj->window_size[0];
+    double h = painter->proj->window_size[1];
+    double p[4] = {w / 2, h / 2, 0, 0};
     double theta0, phi0, theta, phi;
     double theta_max = 0, theta_min = 0;
     double phi_max = 0, phi_min = 0;
@@ -627,14 +629,14 @@ static void get_azalt_fov(const painter_t *painter, int frame,
      * into the frame and testing the maximum and minimum distance to the
      * central point for each of them.
      */
-    unproject(painter->proj, 0, p, p);
+    unproject(painter->proj, PROJ_FROM_WINDOW_SPACE, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
     eraC2s(p, &theta0, &phi0);
 
     for (i = 0; i < N * N; i++) {
-        p[0] = 2 * ((i % N) / (double)(N - 1) - 0.5);
-        p[1] = 2 * ((i / N) / (double)(N - 1) - 0.5);
-        unproject(painter->proj, 0, p, p);
+        p[0] = (i % N) / (double)(N - 1) * w;
+        p[1] = (i / N) / (double)(N - 1) * h;
+        unproject(painter->proj, PROJ_FROM_WINDOW_SPACE, p, p);
         convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
         eraC2s(p, &theta, &phi);
 

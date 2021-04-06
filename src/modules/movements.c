@@ -28,12 +28,7 @@ static void screen_to_mount(
         const double screen_pos[2], double p[3])
 {
     double pos[4] = {screen_pos[0], screen_pos[1]};
-
-    // Convert to NDC coordinates.
-    // Could be done in the projector?
-    pos[0] = pos[0] / proj->window_size[0] * 2 - 1;
-    pos[1] = -1 * (pos[1] / proj->window_size[1] * 2 - 1);
-    unproject(proj, 0, pos, pos);
+    unproject(proj, PROJ_FROM_WINDOW_SPACE, pos, pos);
     convert_frame(obs, FRAME_VIEW, FRAME_MOUNT, true, pos, p);
 }
 

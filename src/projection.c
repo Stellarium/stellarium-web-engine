@@ -85,6 +85,7 @@ bool unproject(const projection_t *proj, int flags,
 {
     double p[4] = {0, 0, 0, 1};
     vec2_copy(v, p);
+    assert(flags & PROJ_FROM_WINDOW_SPACE);
     if (flags & PROJ_FROM_WINDOW_SPACE) {
         p[0] = p[0] / proj->window_size[0] * 2 - 1;
         p[1] = 1 - p[1] / proj->window_size[1] * 2;
