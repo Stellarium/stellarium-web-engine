@@ -841,8 +841,7 @@ static void planet_render_hips(const planet_t *planet,
 
     // Compute the required split order, based on the size of the planet
     // on screen.
-    pixel_size = angle * painter.proj->window_size[0] /
-                 painter.proj->scaling[0] / 2;
+    pixel_size = core_get_point_for_apparent_angle(painter.proj, angle);
     split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
 
     hips_render_traverse(hips, &painter, mat, angle, split_order,
@@ -976,7 +975,7 @@ static void planet_render_label(
 
     // Radius on screen in pixel.
     radius = planet->radius_m / DAU / vec3_norm(pvo[0]);
-    radius *= painter->proj->window_size[0] / painter->proj->scaling[0] / 2;
+    radius = core_get_point_for_apparent_angle(painter->proj, radius);
     radius *= scale;
 
     s = point_size * 0.9;
