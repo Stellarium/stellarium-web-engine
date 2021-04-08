@@ -52,6 +52,8 @@ static double kepler(double m, double de, double precision)
  * Compute position and speed from orbit elements.
  *
  * Parameters:
+ *   precision - Precision for the kepler equation in rad.
+ *               set to 0.0 to use a faster non looping algorithm.
  *   mjd    - Time of the position (MJD).
  *   pos    - Get the computed position.
  *   speed  - Get the computed speed (can be NULL).

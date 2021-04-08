@@ -222,7 +222,7 @@ int find_constellation_at(const double pos[3], char id[5]);
  *
  * Parameters:
  *   precision - Precision for the kepler equation in rad.
- *               set to 0.0 for a faster slow algo.
+ *               set to 0.0 to use a faster non looping algorithm.
  *   mjd    - Time of the position (MJD).
  *   pos    - Get the computed position.
  *   speed  - Get the computed speed (can be NULL).
