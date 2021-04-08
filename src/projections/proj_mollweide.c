@@ -91,17 +91,6 @@ static void proj_mollweide_compute_fov(int id, double fov, double aspect,
     *fovy = fov / aspect;
 }
 
-static inline double smoothstep(double edge0, double edge1, double x)
-{
-    x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return x * x * (3.0 - 2.0 * x);
-}
-
-static inline double mix(double x, double y, double t)
-{
-    return x * (1.0 - t) + y * t;
-}
-
 void proj_mollweide_init(projection_t *p, double fovy, double aspect)
 {
     p->scaling[1]                = fovy / M_PI * sqrt(2);
