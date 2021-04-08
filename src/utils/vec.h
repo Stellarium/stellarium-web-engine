@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <float.h>
 
 #ifndef VEC_INLINE
 #   define VEC_INLINE 1
@@ -160,6 +161,8 @@ DEF void mat4_mul_vec3_dir(const double mat[S 4][4], const double v[S 3],
 DEF void mat4_copy(const double src[S 4][4], double out[S 4][4]);
 DEF void mat4_perspective(double mat[S 4][4], double fovy, double aspect,
                           double nearval, double farval);
+DEF void mat4_inf_perspective(double mat[S 4][4], double fovy, double aspect,
+                              double nearval)
 DEF void mat4_ortho(double mat[S 4][4], double left, double right,
                     double bottom, double top, double nearval, double farval);
 DEF void mat4_to_float(const double mat[S 4][4], float out[S 16]);
@@ -536,6 +539,25 @@ DEF void mat4_perspective(double mat[S 4][4], double fovy, double aspect,
         {0., f, 0., 0.},
         {0., 0., (farval + nearval) / (nearval - farval), -1},
         {0., 0., 2. * farval * nearval / (nearval - farval), 0}
+    };
+    mat4_copy(ret, mat);
+}
+
+/*
+ * Perspective projection matrix that puts the far clip at infinity.
+ * Idea from 'Projection Matrix Tricks', by Eric Lengyel.
+ */
+DEF void mat4_inf_perspective(double mat[S 4][4], double fovy, double aspect,
+                              double nearval)
+{
+    double radian = fovy * M_PI / 180;
+    double f = 1. / tan(radian / 2.);
+    const double eps = FLT_EPSILON;
+    double ret[4][4] = {
+        {f / aspect, 0., 0., 0.},
+        {0., f, 0., 0.},
+        {0., 0., eps - 1, -1},
+        {0., 0., (eps - 2) * nearval, 0}
     };
     mat4_copy(ret, mat);
 }
