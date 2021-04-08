@@ -88,10 +88,6 @@ struct projection_klass
      */
     bool (*project2)(const projection_t *proj,
                     const double v[S 3], double out[S 3]);
-
-    // Deprecated.
-    void (*project)(const projection_t *proj, int flags,
-                    const double v[S 4], double out[S 4]);
     bool (*backward)(const projection_t *proj,
                      const double v[S 3], double out[S 3]);
     void (*compute_fovs)(int proj_type, double fov, double aspect,
@@ -163,24 +159,6 @@ bool project_to_win_xy(const projection_t *proj, const double input[S 4],
  */
 bool project_to_clip(const projection_t *proj, const double input[S 3],
                      double out[S 4]);
-
-/* Function: project
- * Apply a projection to coordinates
- *
- * If we project forward (without the PROJ_BACKWARD) flag, the projection
- * expects a 4d input, and return the coordinates in the plane clipping space.
- * To get windows coordinates, we can use the
- * PROJ_TO_WINDOWS_SPACE flag.
- *
- * Parameters:
- *  proj    - A projection.
- *  flags   - Union of <PROJ_FLAGS> values, to modify the behavior of the
- *            function.
- *  v       - Input coordinates as homogenous coordinates.
- *  out     - Output coordinates.
- */
-bool project(const projection_t *proj, int flags,
-             const double v[S 4], double out[S 4]);
 
 /*
  * Function: unproject

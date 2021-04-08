@@ -48,40 +48,6 @@ static bool proj_mollweide_project2(
     return true;
 }
 
-static void proj_mollweide_project(
-        const projection_t *proj, int flags, const double v[4], double out[4])
-{
-    double phi, lambda, theta, d, k;
-    int i;
-    const int MAX_ITER = 10;
-    const double PRECISION = 1e-7;
-
-    // Computation using algo from wikipedia:
-    // https://en.wikipedia.org/wiki/Mollweide_projection
-    lambda = atan2(v[0], -v[2]);
-    phi = atan2(v[1], sqrt(v[0] * v[0] + v[2] * v[2]));
-
-    // We could optimize the iteration by computing 2 * theta instead.
-    k = M_PI * sin(phi);
-    theta = phi;
-    for (i = 0; i < MAX_ITER; i++) {
-        d = 2 + 2 * cos(2 * theta);
-        if (fabs(d) < PRECISION) break;
-        d = (2 * theta + sin(2 * theta) - k) / d;
-        theta -= d;
-        if (fabs(d) < PRECISION) break;
-    }
-
-    out[0] = 2 * sqrt(2) / M_PI * lambda * cos(theta);
-    out[1] = sqrt(2) * sin(theta);
-
-    out[0] /= proj->scaling[0];
-    out[1] /= proj->scaling[1];
-
-    out[2] = 0;
-    out[3] = 1;
-}
-
 static double clamp(double x, double a, double b)
 {
     return x < a ? a : x > b ? b : x;
@@ -140,7 +106,6 @@ static const projection_klass_t proj_mollweide_klass = {
     .max_fov                = 360 * DD2R,
     .max_ui_fov             = 360 * DD2R,
     .init                   = proj_mollweide_init,
-    .project                = proj_mollweide_project,
     .project2               = proj_mollweide_project2,
     .backward               = proj_mollweide_backward,
     .compute_fovs           = proj_mollweide_compute_fov,

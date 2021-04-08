@@ -24,13 +24,6 @@ static bool proj_perspective_project2(
     return true;
 }
 
-static void proj_perspective_project(
-        const projection_t *proj, int flags, const double *v, double *out)
-{
-    double v4[4] = {v[0], v[1], v[2], 1};
-    mat4_mul_vec4((void*)proj->mat, v4, out);
-}
-
 static bool proj_perspective_backward(const projection_t *proj,
         const double v[3], double out[3])
 {
@@ -64,7 +57,6 @@ static const projection_klass_t proj_perspective_klass = {
     .max_fov        = 180. * DD2R,
     .max_ui_fov     = 120. * DD2R,
     .init           = proj_perspective_init,
-    .project        = proj_perspective_project,
     .project2       = proj_perspective_project2,
     .backward       = proj_perspective_backward,
     .compute_fovs   = proj_perspective_compute_fov,

@@ -84,40 +84,6 @@ bool project_to_win_xy(const projection_t *proj, const double input[4],
     return ret;
 }
 
-bool project(const projection_t *proj, int flags,
-             const double v[static 4],
-             double out[static 4])
-{
-    double p[4] = {0, 0, 0, 1};
-    bool visible;
-
-    assert(proj->klass->project);
-    vec3_copy(v, p);
-    if (flags & PROJ_ALREADY_NORMALIZED)
-        assert(vec3_is_normalized(p));
-    proj->klass->project(proj, flags, v, p);
-    if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
-    if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
-
-    if (!(flags & PROJ_TO_WINDOW_SPACE)) {
-        memcpy(out, p, 4 * sizeof(double));
-        return true;
-    }
-    visible = (p[0] >= -p[3] && p[0] < +p[3] &&
-               p[1] >= -p[3] && p[1] < +p[3] &&
-               p[2] >= -p[3] && p[2] < +p[3]);
-    if (p[3])
-        vec3_mul(1.0 / p[3], p, p);
-    p[3] = visible ? 1.0 : 0.0; // Not sure this is proper...
-    if (flags & PROJ_TO_WINDOW_SPACE) {
-        p[0] = (+p[0] + 1) / 2 * proj->window_size[0];
-        p[1] = (-p[1] + 1) / 2 * proj->window_size[1];
-        p[2] = -v[2]; // Z get the distance in view space.
-    }
-    memcpy(out, p, 4 * sizeof(double));
-    return visible;
-}
-
 bool unproject(const projection_t *proj,
                const double v[3], double out[3])
 {

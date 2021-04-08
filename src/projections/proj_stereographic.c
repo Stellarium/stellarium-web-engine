@@ -58,24 +58,6 @@ static bool proj_stereographic_project2(
     return true;
 }
 
-static void proj_stereographic_project(
-        const projection_t *proj, int flags, const double v[4], double out[4])
-{
-    double one_over_h;
-    vec3_copy(v, out);
-    if (!(flags & PROJ_ALREADY_NORMALIZED)) vec3_normalize(out, out);
-    // Discountinuity case.
-    if (out[2] == 1.0) {
-        memset(out, 0, 4 * sizeof(double));
-        return;
-    }
-    one_over_h = 1.0 / (0.5 * (1.0 - out[2]));
-    out[0] *= one_over_h / proj->scaling[0];
-    out[1] *= one_over_h / proj->scaling[1];
-    out[2] = 0.0; // Z = 0 => Center in the clipping space.
-    out[3] = 1.0; // w value.
-}
-
 static bool proj_stereographic_backward(const projection_t *proj,
                                         const double v[3], double out[3])
 {
@@ -115,7 +97,6 @@ static const projection_klass_t proj_stereographic_klass = {
     .max_fov        = 360. * DD2R,
     .max_ui_fov     = 185. * DD2R,
     .init           = proj_stereographic_init,
-    .project        = proj_stereographic_project,
     .project2       = proj_stereographic_project2,
     .backward       = proj_stereographic_backward,
     .compute_fovs   = proj_stereographic_compute_fov,

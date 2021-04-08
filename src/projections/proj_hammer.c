@@ -13,17 +13,18 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-static void proj_hammer_project(
-        const projection_t *proj, int flags, const double v[4], double out[4])
+static bool proj_hammer_project2(
+        const projection_t *proj, const double v[3], double out[3])
 {
     double r = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     double alpha = atan2(v[0], -v[2]);
     double cos_delta = sqrt(1 - v[1] * v[1] / (r * r));
     double z = sqrt(1 + cos_delta * cos(alpha / 2));
-    out[0] = 2 * sqrt(2) * cos_delta * sin(alpha / 2) / z / proj->scaling[0];
-    out[1] = sqrt(2) * v[1] / r / z / proj->scaling[1];
-    out[2] = 0;
-    out[3] = 1;
+    out[0] = 2 * sqrt(2) * cos_delta * sin(alpha / 2) / z;
+    out[1] = sqrt(2) * v[1] / r / z;
+    out[2] = -1;
+    vec3_mul(r, out, out);
+    return true;
 }
 
 static bool proj_hammer_backward(const projection_t *proj,
@@ -58,7 +59,7 @@ static const projection_klass_t proj_hammer_klass = {
     .max_fov                = 360 * DD2R,
     .max_ui_fov             = 360 * DD2R,
     .init                   = proj_hammer_init,
-    .project                = proj_hammer_project,
+    .project2               = proj_hammer_project2,
     .backward               = proj_hammer_backward,
 };
 PROJECTION_REGISTER(proj_hammer_klass);
