@@ -442,8 +442,8 @@ static void compute_tangent(const double uv[2], const uv_map_t *map,
     vec2_copy(uv, uv1);
     vec2_copy(uv, uv2);
     uv2[0] += delta;
-    project(tex_proj, PROJ_BACKWARD, 4, uv1, p1);
-    project(tex_proj, PROJ_BACKWARD, 4, uv2, p2);
+    unproject(tex_proj, uv1, p1);
+    unproject(tex_proj, uv2, p2);
     vec3_sub(p2, p1, tangent);
     vec3_normalize(tangent, out);
     */
@@ -542,7 +542,7 @@ static void quad_planet(
         // Rendering position (with scaling applied).
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
         z = p[2];
-        project(painter->proj, 0, p, p);
+        project_to_clip(painter->proj, p, p);
         if (painter->depth_range) {
             vec2_to_float(*painter->depth_range, item->depth_range);
             p[2] = -z;
@@ -630,7 +630,7 @@ void render_quad(renderer_t *rend, const painter_t *painter,
 
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project(painter->proj, 0, ndc_p, ndc_p);
+        project_to_clip(painter->proj, ndc_p, ndc_p);
         gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
         // For atmosphere shader, in the first pass we do not compute the
         // luminance yet, only if the point is visible.
@@ -1596,7 +1596,7 @@ void render_mesh(renderer_t *rend, const painter_t *painter,
             vec3_normalize(pos, pos);
             convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
             pos[3] = 0.0;
-            project(painter->proj, PROJ_ALREADY_NORMALIZED, pos, pos);
+            project_to_clip(painter->proj, pos, pos);
             gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
             gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(color));
             gl_buf_next(&item->buf);

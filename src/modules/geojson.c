@@ -406,8 +406,7 @@ static bool mesh_intersects_box(const mesh_t *mesh_, const painter_t *painter,
     for (i = 0; i < mesh->vertices_count; i++) {
         vec3_normalize(mesh->vertices[i], p);
         convert_frame(painter->obs, FRAME_ICRF, FRAME_VIEW, true, p, p);
-        project(painter->proj, PROJ_ALREADY_NORMALIZED | PROJ_TO_WINDOW_SPACE,
-                p, p);
+        project_to_win(painter->proj, p, p);
         vec2_copy(p, mesh->vertices[i]);
     }
     ret = mesh_intersects_2d_box(mesh, box);

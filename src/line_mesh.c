@@ -116,9 +116,9 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[4]),
     func(user, t1, p1);
     func(user, tm, pm);
 
-    project(proj, PROJ_TO_WINDOW_SPACE, p0, p0);
-    project(proj, PROJ_TO_WINDOW_SPACE, p1, p1);
-    project(proj, PROJ_TO_WINDOW_SPACE, pm, pm);
+    project_to_win(proj, p0, p0);
+    project_to_win(proj, p1, p1);
+    project_to_win(proj, pm, pm);
 
     if (level > max_level || line_point_dist(p0, p1, pm) < max_dist) {
         line_push_point(out, p1, size, allocated);
@@ -143,12 +143,12 @@ int line_tesselate(void (*func)(void *user, double t, double pos[4]),
         *out = calloc(size, sizeof(**out));
         for (i = 0; i < size; i++) {
             func(user, (double)i / split, p);
-            project(proj, PROJ_TO_WINDOW_SPACE, p, p);
+            project_to_win(proj, p, p);
             vec3_copy(p, (*out)[i]);
         }
     } else {
         func(user, 0, p);
-        project(proj, PROJ_TO_WINDOW_SPACE, p, p);
+        project_to_win(proj, p, p);
         line_push_point(out, p, &size, &allocated);
         line_tesselate_(func, proj, user, 0, 1, out, 0, &size, &allocated);
     }

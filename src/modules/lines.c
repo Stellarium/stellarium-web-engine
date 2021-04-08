@@ -166,7 +166,7 @@ struct line {
 };
 
 // Test if a shape in clipping coordinates is clipped or not.
-static bool is_clipped(const double pos[4][4], double clip[4][4])
+static bool is_clipped(const double pos[4][3], double clip[4][4])
 {
     // The six planes equations:
     const int P[6][4] = {
@@ -205,6 +205,16 @@ static bool is_clipped(const double pos[4][4], double clip[4][4])
         if (pos[i][2] < 0) return false;
     }
     return true;
+}
+
+/*
+ * Check if a position in windows coordinates is visible or not.
+ */
+static bool is_visible_win(const double pos[3], const double win_size[2])
+{
+    return pos[0] >= 0 && pos[0] < win_size[0] &&
+           pos[1] >= 0 && pos[1] < win_size[1] &&
+           pos[2] >= 0 && pos[2] <= 1;
 }
 
 static int lines_init(obj_t *obj, json_value *args)
@@ -363,8 +373,11 @@ static bool check_borders(const double a[3], const double b[3],
     bool visible[2];
     int border;
     const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
-    visible[0] = project(proj, PROJ_TO_WINDOW_SPACE, a, pos[0]);
-    visible[1] = project(proj, PROJ_TO_WINDOW_SPACE, b, pos[1]);
+    project_to_win(proj, a, pos[0]);
+    project_to_win(proj, b, pos[1]);
+    visible[0] = is_visible_win(pos[0], proj->window_size);
+    visible[1] = is_visible_win(pos[1], proj->window_size);
+
     if (visible[0] != visible[1]) {
         win_to_ndc(proj, pos[0], pos[0]);
         win_to_ndc(proj, pos[1], pos[1]);
@@ -383,7 +396,7 @@ static bool check_borders(const double a[3], const double b[3],
 
 
 static void spherical_project(
-        const uv_map_t *map, const double v[2], double out[4])
+        const uv_map_t *map, const double v[2], double out[3])
 {
     const double (*rot)[3][3] = map->user;
     double az, al;
@@ -391,7 +404,6 @@ static void spherical_project(
     al = (v[1] - 0.5) * 180 * DD2R;
     eraS2c(az, al, out);
     mat3_mul_vec3(*rot, out, out);
-    out[3] = 0; // Project to infinity.
 }
 
 /*
@@ -519,7 +531,7 @@ static void render_recursion(
     int i, j, dir;
     int split_az, split_al, new_splits[2], new_pos[2];
     double p[4], lines[4][4] = {}, u[2], v[2];
-    double pos_view[4][4], pos_clip[4][4];
+    double pos_view[4][3], pos_clip[4][4];
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
     double mat[3][3] = MAT3_IDENTITY;
     uv_map_t map = {
@@ -535,10 +547,9 @@ static void render_recursion(
     for (i = 0; i < 4; i++) {
         mat3_mul_vec2(mat, uv[i], p);
         spherical_project(&map, p, p);
-        convert_framev4(painter->obs, line->frame, FRAME_VIEW, p, p);
-        vec4_copy(p, pos_view[i]);
-        project(painter->proj, 0, p, p);
-        vec4_copy(p, pos_clip[i]);
+        convert_frame(painter->obs, line->frame, FRAME_VIEW, true, p, p);
+        vec3_copy(p, pos_view[i]);
+        project_to_clip(painter->proj, pos_view[i], pos_clip[i]);
     }
     // If the quad is clipped we stop the recursion.
     // We only start to test after a certain level to prevent distortion

@@ -523,7 +523,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
         vec3_copy(corners[i], quad[i]);
         quad[i][3] = 1.0;
         convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
-        project(painter->proj, 0, quad[i], p[i]);
+        project_to_clip(painter->proj, quad[i], p[i]);
         assert(!isnan(p[i][0]));
     }
     if (is_clipped(4, p)) return true;
@@ -833,7 +833,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_ry(-de, mat, mat);
     mat3_mul_vec3(mat, p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, c);
+    project_to_win(painter->proj, p, c);
 
     // Point ellipse.
     if (size_x == 0) {
@@ -854,7 +854,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, a);
+    project_to_win(painter->proj, p, a);
 
     // 3. Semi minor.
     vec4_set(p, 1, 0, 0, 0);
@@ -868,7 +868,7 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     mat3_mul_vec3(mat, p, p);
     vec3_normalize(p, p);
     convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
-    project(painter->proj, PROJ_TO_WINDOW_SPACE, p, b);
+    project_to_win(painter->proj, p, b);
 
     vec2_copy(c, win_pos);
     vec2_sub(a, c, a);
@@ -878,20 +878,29 @@ void painter_project_ellipse(const painter_t *painter, int frame,
     win_size[1] = 2 * vec2_norm(b);
 }
 
+/*
+ * Check if a position in windows coordinates is visible or not.
+ */
+static bool is_visible_win(const double pos[3], const double win_size[2])
+{
+    return pos[0] >= 0 && pos[0] < win_size[0] &&
+           pos[1] >= 0 && pos[1] < win_size[1] &&
+           pos[2] >= 0 && pos[2] <= 1;
+}
+
 bool painter_project(const painter_t *painter, int frame,
                      const double pos[3], bool at_inf, bool clip_first,
                      double win_pos[2]) {
-    double v[4];
-    bool ret;
+    double v[3];
     if (clip_first) {
         if (painter_is_point_clipped_fast(painter, frame, pos, at_inf))
             return false;
     }
     convert_frame(painter->obs, frame, FRAME_VIEW, at_inf, pos, v);
-    ret = project(painter->proj, (at_inf ? PROJ_ALREADY_NORMALIZED : 0) |
-                  PROJ_TO_WINDOW_SPACE, v, v);
+    if (!project_to_win(painter->proj, v, v))
+        return false;
     vec2_copy(v, win_pos);
-    return ret;
+    return is_visible_win(v, painter->proj->window_size);
 }
 
 bool painter_unproject(const painter_t *painter, int frame,

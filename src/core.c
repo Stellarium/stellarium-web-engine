@@ -512,11 +512,11 @@ static void render_proj_markers(const painter_t *painter_)
         eraS2c(lon * DD2R, lat * DD2R, p);
         p[3] = 0;
         mat4_mul_vec4(r, p, p);
-        project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
+        project_to_win(painter.proj, p, p_win);
         paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(2, 2), NULL);
 
         unproject(painter.proj, p_win, p);
-        project(painter.proj, PROJ_TO_WINDOW_SPACE, p, p_win);
+        project_to_win(painter.proj, p, p_win);
         paint_2d_ellipse(&painter, NULL, 0, p_win, VEC(4, 4), NULL);
     }
 }

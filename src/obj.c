@@ -629,7 +629,7 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     obj_get_pvo(obj, obs, pvo);
     vec3_normalize(pvo[0], pvo[0]);
     convert_frame(obs, FRAME_ICRF, FRAME_VIEW, true, pvo[0], p);
-    project(proj, PROJ_TO_WINDOW_SPACE, p, p);
+    project_to_win(proj, p, p);
     vec2_copy(p, win_pos);
 
     // Empirical formula to compute the pointer size.
