@@ -32,6 +32,9 @@
 /* Astronomical unit (m) */
 #define DAU     ERFA_DAU
 
+#define DM2AU  (1. / ERFA_DAU)
+#define DAU2M  ERFA_DAU
+
 /* Seconds of time to radians */
 #define DS2R    ERFA_DS2R
 
