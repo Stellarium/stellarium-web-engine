@@ -92,8 +92,8 @@ struct projection_klass
     // Deprecated.
     void (*project)(const projection_t *proj, int flags,
                     const double v[S 4], double out[S 4]);
-    bool (*backward)(const projection_t *proj, int flags,
-                     const double v[S 2], double out[4]);
+    bool (*backward)(const projection_t *proj,
+                     const double v[S 3], double out[S 3]);
     void (*compute_fovs)(int proj_type, double fov, double aspect,
                          double *fovx, double *fovy);
 };

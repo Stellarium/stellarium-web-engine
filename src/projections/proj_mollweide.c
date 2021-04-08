@@ -87,13 +87,13 @@ static double clamp(double x, double a, double b)
     return x < a ? a : x > b ? b : x;
 }
 
-static bool proj_mollweide_backward(const projection_t *proj, int flags,
-            const double v[2], double out[4])
+static bool proj_mollweide_backward(const projection_t *proj,
+            const double v[3], double out[3])
 {
     double x, y, theta, phi, lambda, cp;
     bool ret = true;
-    x = v[0] * proj->scaling[0];
-    y = v[1] * proj->scaling[1];
+    x = v[0];
+    y = v[1];
 
     if (fabs(y) > sqrt(2)) {
         ret = false;
@@ -114,7 +114,6 @@ static bool proj_mollweide_backward(const projection_t *proj, int flags,
     out[0] = cp * sin(lambda);
     out[1] = sin(phi);
     out[2] = -cp * cos(lambda);
-    out[3] = 0;
     return ret;
 }
 

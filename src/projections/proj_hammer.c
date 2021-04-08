@@ -26,14 +26,12 @@ static void proj_hammer_project(
     out[3] = 1;
 }
 
-static bool proj_hammer_backward(const projection_t *proj, int flags,
-            const double v[2], double out[4])
+static bool proj_hammer_backward(const projection_t *proj,
+            const double v[3], double out[3])
 {
     double p[3] = {0}, zsq, z, alpha, delta, cd;
     bool ret;
     vec2_copy(v, p);
-    p[0] *= proj->scaling[0];
-    p[1] *= proj->scaling[1];
     zsq = 1 - 0.25 * 0.25 * p[0] * p[0] - 0.5 * 0.5 * p[1] * p[1];
     ret = 0.25*p[0]*p[0]+p[1]*p[1] < 2.0;
     z = zsq < 0 ? 0 : sqrt(zsq);
@@ -43,7 +41,6 @@ static bool proj_hammer_backward(const projection_t *proj, int flags,
     out[0] = cd * sin(alpha);
     out[1] = p[1] * z;
     out[2] = -cd * cos(alpha);
-    out[3] = 0;
     return ret;
 }
 
@@ -52,6 +49,7 @@ void proj_hammer_init(projection_t *p, double fov, double aspect)
     p->scaling[0] = aspect < 1 ? fov / 2 : fov / aspect / 2;
     p->scaling[1] = p->scaling[0] / aspect;
     p->flags = PROJ_HAS_DISCONTINUITY;
+    // XXX: set the projection matrix!
 }
 
 static const projection_klass_t proj_hammer_klass = {

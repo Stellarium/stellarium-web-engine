@@ -121,12 +121,13 @@ bool project(const projection_t *proj, int flags,
 bool unproject(const projection_t *proj,
                const double v[3], double out[3])
 {
-    double p[4] = {0, 0, 0, 1};
-    vec2_copy(v, p);
-    p[0] = p[0] / proj->window_size[0] * 2 - 1;
-    p[1] = 1 - p[1] / proj->window_size[1] * 2;
-    if (proj->flags & PROJ_FLIP_HORIZONTAL) p[0] = -p[0];
-    if (proj->flags & PROJ_FLIP_VERTICAL)   p[1] = -p[1];
+    double p[4], inv[4][4];
     assert(proj->klass->backward);
-    return proj->klass->backward(proj, 0, p, out);
+    p[0] = v[0] / proj->window_size[0] * 2 - 1;
+    p[1] = 1 - v[1] / proj->window_size[1] * 2;
+    p[2] = 2 * v[2] - 1;
+    p[3] = 1;
+    if (!mat4_invert(proj->mat, inv)) assert(false);
+    mat4_mul_vec4(inv, p, p);
+    return proj->klass->backward(proj, p, out);
 }

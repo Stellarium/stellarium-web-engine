@@ -34,16 +34,13 @@ static void proj_mercator_project(
     out[3] = 1.0;
 }
 
-static bool proj_mercator_backward(const projection_t *proj, int flags,
-            const double *v, double *out)
+static bool proj_mercator_backward(const projection_t *proj,
+            const double v[3], double out[3])
 {
     double e, h, h1, sin_delta, cos_delta;
     double p[3];
     bool ret;
     vec3_copy(v, p);
-
-    p[0] *= proj->scaling[0];
-    p[1] *= proj->scaling[1];
 
     ret = p[1] < M_PI_2 && p[1] > -M_PI_2 && p[0] > -M_PI && p[0] < M_PI;
 
@@ -64,6 +61,7 @@ void proj_mercator_init(projection_t *p, double fov, double aspect)
     p->scaling[0] = fov / 2;
     p->scaling[1] = p->scaling[0] / aspect;
     p->flags = PROJ_HAS_DISCONTINUITY;
+    // XXX: set the projection matrix.
 }
 
 static const projection_klass_t proj_mercator_klass = {
