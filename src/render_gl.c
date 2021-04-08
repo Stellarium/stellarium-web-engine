@@ -247,6 +247,8 @@ static const gl_buf_info_t FOG_BUF = {
 };
 
 struct renderer {
+
+    projection_t proj;
     int     fb_size[2];
     double  scale;
     bool    cull_flipped;
@@ -292,6 +294,13 @@ static void init_shader(gl_shader_t *shader)
 static bool color_is_white(const float c[4])
 {
     return c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f;
+}
+
+static void proj_set_depth_range(projection_t *proj,
+                                 double nearval, double farval)
+{
+    proj->mat[2][2] = (farval + nearval) / (nearval - farval);
+    proj->mat[3][2] = 2. * farval * nearval / (nearval - farval);
 }
 
 static void window_to_ndc(renderer_t *rend,
@@ -1380,7 +1389,7 @@ static void item_gltf_render(renderer_t *rend, const item_t *item)
                 proj, item->gltf.light_dir, item->gltf.args);
 }
 
-static void rend_flush(renderer_t *rend)
+static void rend_flush(renderer_t *rend, const projection_t *proj)
 {
     item_t *item, *tmp;
 
@@ -1399,6 +1408,9 @@ static void rend_flush(renderer_t *rend)
         rend->depth_range[0] = 0;
         rend->depth_range[1] = 1;
     }
+    rend->depth_range[0] = max(rend->depth_range[0], 100 * DM2AU);
+    rend->proj = *proj;
+    proj_set_depth_range(&rend->proj, VEC2_SPLIT(rend->depth_range));
 
     // Set default OpenGL state.
     // Make sure we clear everything.
@@ -1474,9 +1486,9 @@ static void rend_flush(renderer_t *rend)
     GL(glColorMask(true, true, true, true));
 }
 
-void render_finish(renderer_t *rend)
+void render_finish(renderer_t *rend, const projection_t *proj)
 {
-    rend_flush(rend);
+    rend_flush(rend, proj);
 }
 
 void render_line(renderer_t *rend, const painter_t *painter,

@@ -143,7 +143,7 @@ int paint_prepare(painter_t *painter, double win_w, double win_h,
 
 int paint_finish(const painter_t *painter)
 {
-    render_finish(painter->rend);
+    render_finish(painter->rend, painter->proj);
     return 0;
 }
 
