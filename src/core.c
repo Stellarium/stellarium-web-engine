@@ -106,7 +106,7 @@ void core_get_proj(projection_t *proj)
     double fovx, fovy;
     double aspect = core->win_size[0] / core->win_size[1];
     projection_compute_fovs(core->proj, core->fov, aspect, &fovx, &fovy);
-    projection_init(proj, core->proj, fovx,
+    projection_init(proj, core->proj, fovy,
                     core->win_size[0], core->win_size[1]);
     if (core->flip_view_vertical)
         proj->flags |= PROJ_FLIP_VERTICAL;

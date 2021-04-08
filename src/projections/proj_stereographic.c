@@ -83,10 +83,10 @@ static void proj_stereographic_compute_fov(int id, double fov, double aspect,
     }
 }
 
-static void proj_stereographic_init(projection_t *p, double fovx, double aspect)
+static void proj_stereographic_init(projection_t *p, double fovy, double aspect)
 {
-    p->scaling[0] = 2 * tan(fovx / 4);
-    p->scaling[1] = p->scaling[0] / aspect;
+    p->scaling[1] = 2 * tan(fovy / 4);
+    p->scaling[0] = p->scaling[1] * aspect;
 }
 
 static const projection_klass_t proj_stereographic_klass = {

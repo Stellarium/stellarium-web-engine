@@ -66,7 +66,7 @@ struct projection
 {
     projection_klass_t *klass;
     double scaling[2];
-    double fovx;
+    double fovy;
     int flags;
 
     // Matrices used by some projections.
@@ -83,7 +83,7 @@ struct projection_klass
     double max_fov;
     // Maximum FOV that looks good for the UI.
     double max_ui_fov;
-    void (*init)(projection_t *proj, double fovx, double aspect);
+    void (*init)(projection_t *proj, double fovy, double aspect);
     void (*project)(const projection_t *proj, int flags,
                     const double v[S 4], double out[S 4]);
     bool (*backward)(const projection_t *proj, int flags,
@@ -121,11 +121,11 @@ void projection_compute_fovs(int proj_type, double fov, double aspect,
  *
  * Parameters:
  *   type   - One of the <PROJ_TYPE> value.
- *   fovx   - The fov in x direction (rad).
+ *   fovy   - The fov in Y direction (rad).
  *   win_w  - Window size in X (not framebuffer size).
  *   win_h  - Window size in Y (not framebuffer size).
  */
-void projection_init(projection_t *proj, int type, double fovx,
+void projection_init(projection_t *proj, int type, double fovy,
                      double win_w, double win_h);
 
 /* Function: project

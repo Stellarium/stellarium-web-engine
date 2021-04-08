@@ -102,20 +102,20 @@ static inline double mix(double x, double y, double t)
     return x * (1.0 - t) + y * t;
 }
 
-void proj_mollweide_init(projection_t *p, double fovx, double aspect)
+void proj_mollweide_init(projection_t *p, double fovy, double aspect)
 {
-    p->scaling[0]                = fovx / M_PI * sqrt(2);
-    p->scaling[1]                = p->scaling[0] / aspect;
+    p->scaling[1]                = fovy / M_PI * sqrt(2);
+    p->scaling[0]                = p->scaling[1] * aspect;
     p->flags                     = PROJ_HAS_DISCONTINUITY;
 }
 
-void proj_mollweide_adaptive_init(projection_t *p, double fovx, double aspect)
+void proj_mollweide_adaptive_init(projection_t *p, double fovy, double aspect)
 {
     // μ ellipse ratio such that the scale at the equator equals one.
     // http://master.grad.hr/hdgg/kog_stranica/kog15/2Lapaine-KoG15.pdf
     double mu = M_PI * M_PI / 4;
-    double scale = smoothstep(180, 360, fovx * DR2D);
-    proj_mollweide_init(p, fovx, aspect);
+    double scale = smoothstep(180, 360, fovy * DR2D);
+    proj_mollweide_init(p, fovy, aspect);
     p->scaling[1] *= mix(mu / 2, 1, scale);
 }
 

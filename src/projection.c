@@ -34,16 +34,16 @@ void projection_compute_fovs(int type, double fov, double aspect,
     g_klasses[type]->compute_fovs(type, fov, aspect, fovx, fovy);
 }
 
-void projection_init(projection_t *p, int type, double fov,
+void projection_init(projection_t *p, int type, double fovy,
                      double w, double h)
 {
     double aspect = w / h;
     memset(p, 0, sizeof(*p));
     p->window_size[0] = w;
     p->window_size[1] = h;
-    p->fovx = fov;
+    p->fovy = fovy;
     p->klass = g_klasses[type];
-    p->klass->init(p, fov, aspect);
+    p->klass->init(p, fovy, aspect);
 }
 
 bool project(const projection_t *proj, int flags,

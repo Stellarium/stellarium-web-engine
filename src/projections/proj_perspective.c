@@ -12,6 +12,8 @@
 
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
+/* Radians to degrees */
+#define DR2D (57.29577951308232087679815)
 
 static void proj_perspective_project(
         const projection_t *proj, int flags, const double *v, double *out)
@@ -44,13 +46,12 @@ static void proj_perspective_compute_fov(int id, double fov, double aspect,
     }
 }
 
-void proj_perspective_init(projection_t *p, double fov, double aspect)
+void proj_perspective_init(projection_t *p, double fovy, double aspect)
 {
-    double fovy, clip_near = 0.1, clip_far = 256;
-    fovy = atan(tan(fov / 2) / aspect) * 2;
-    mat4_perspective(p->mat, fovy / DD2R, aspect, clip_near, clip_far);
-    p->scaling[0] = tan(fov / 2);
-    p->scaling[1] = p->scaling[0] / aspect;
+    double clip_near = 0.1, clip_far = 256;
+    mat4_perspective(p->mat, fovy * DR2D, aspect, clip_near, clip_far);
+    p->scaling[1] = tan(fovy/ 2);
+    p->scaling[0] = p->scaling[1] * aspect;
 }
 
 static const projection_klass_t proj_perspective_klass = {
