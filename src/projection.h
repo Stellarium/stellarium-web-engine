@@ -32,9 +32,6 @@ enum {
     PROJ_MERCATOR,
     PROJ_HAMMER,
     PROJ_MOLLWEIDE,
-    // Same as Mollweide but auto set the vertical scale to remove the
-    // distortion as we zoom in.
-    PROJ_MOLLWEIDE_ADAPTIVE,
     PROJ_COUNT,
 };
 

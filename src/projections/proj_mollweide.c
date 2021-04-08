@@ -109,16 +109,6 @@ void proj_mollweide_init(projection_t *p, double fovy, double aspect)
     p->flags                     = PROJ_HAS_DISCONTINUITY;
 }
 
-void proj_mollweide_adaptive_init(projection_t *p, double fovy, double aspect)
-{
-    // μ ellipse ratio such that the scale at the equator equals one.
-    // http://master.grad.hr/hdgg/kog_stranica/kog15/2Lapaine-KoG15.pdf
-    double mu = M_PI * M_PI / 4;
-    double scale = smoothstep(180, 360, fovy * DR2D);
-    proj_mollweide_init(p, fovy, aspect);
-    p->scaling[1] *= mix(mu / 2, 1, scale);
-}
-
 static const projection_klass_t proj_mollweide_klass = {
     .name                   = "mollweide",
     .id                     = PROJ_MOLLWEIDE,
@@ -130,15 +120,3 @@ static const projection_klass_t proj_mollweide_klass = {
     .compute_fovs           = proj_mollweide_compute_fov,
 };
 PROJECTION_REGISTER(proj_mollweide_klass);
-
-static const projection_klass_t proj_mollweide_adaptive_klass = {
-    .name                   = "mollweide_adaptive",
-    .id                     = PROJ_MOLLWEIDE_ADAPTIVE,
-    .max_fov                = 360 * DD2R,
-    .max_ui_fov             = 360 * DD2R,
-    .init                   = proj_mollweide_adaptive_init,
-    .project                = proj_mollweide_project,
-    .backward               = proj_mollweide_backward,
-    .compute_fovs           = proj_mollweide_compute_fov,
-};
-PROJECTION_REGISTER(proj_mollweide_adaptive_klass);
