@@ -155,14 +155,14 @@ DEF void mat3_to_float4(const double mat[S 3][3], float out[S 16]);
 DEF void mat4_mul_vec4(const double mat[S 4][4], const double v[S 4],
                        double out[S 4]);
 DEF void mat4_mul_vec3(const double mat[S 4][4], const double v[S 3],
-                       bool at_inf, double out[S 3]);
-DEF void mat4_mul_vec3_dir(const double mat[S 4][4], const double v[S 3],
-                           double out[S 3]);
+                       double out[S 3]);
+DEF void mat4_mul_dir3(const double mat[S 4][4], const double v[S 3],
+                       double out[S 3]);
 DEF void mat4_copy(const double src[S 4][4], double out[S 4][4]);
 DEF void mat4_perspective(double mat[S 4][4], double fovy, double aspect,
                           double nearval, double farval);
 DEF void mat4_inf_perspective(double mat[S 4][4], double fovy, double aspect,
-                              double nearval)
+                              double nearval);
 DEF void mat4_ortho(double mat[S 4][4], double left, double right,
                     double bottom, double top, double nearval, double farval);
 DEF void mat4_to_float(const double mat[S 4][4], float out[S 16]);
@@ -491,18 +491,21 @@ DEF void mat4_mul_vec4(const double mat[S 4][4], const double v[S 4],
 }
 
 DEF void mat4_mul_vec3(const double mat[S 4][4], const double v[S 3],
-                       bool at_inf, double out[S 3])
+                       double out[S 3])
 {
-    double tmp[4] = {v[0], v[1], v[2], at_inf ? 0.0 : 1.0};
+    double tmp[4] = {v[0], v[1], v[2], 1.0};
     double ret[4];
     mat4_mul_vec4(mat, tmp, ret);
     vec3_copy(ret, out);
 }
 
-DEF void mat4_mul_vec3_dir(const double mat[S 4][4], const double v[S 3],
-                           double out[S 3])
+DEF void mat4_mul_dir3(const double mat[S 4][4], const double v[S 3],
+                       double out[S 3])
 {
-    return mat4_mul_vec3(mat, v, true, out);
+    double tmp[4] = {v[0], v[1], v[2], 0.0};
+    double ret[4];
+    mat4_mul_vec4(mat, tmp, ret);
+    vec3_copy(ret, out);
 }
 
 DEF bool mat2_invert(const double mat[S 2][2], double out[S 2][2])

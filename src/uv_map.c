@@ -22,7 +22,7 @@ void uv_map(const uv_map_t *map, const double v[2], double out[4],
     if (normal) vec3_copy(out, normal);
     if (map->transf) {
         mat4_mul_vec4(*map->transf, out, out);
-        if (normal) mat4_mul_vec3(*map->transf, normal, true, normal);
+        if (normal) mat4_mul_dir3(*map->transf, normal, normal);
     }
     if (normal) vec3_normalize(normal, normal);
 }
