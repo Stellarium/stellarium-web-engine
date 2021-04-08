@@ -218,14 +218,14 @@ static const gl_buf_info_t TEXTURE_BUF = {
 };
 
 static const gl_buf_info_t PLANET_BUF = {
-    .size = 68,
+    .size = 60,
     .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
-        [ATTR_MPOS]     = {GL_FLOAT, 4, false, 16},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 32},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 40},
-        [ATTR_NORMAL]   = {GL_FLOAT, 3, false, 44},
-        [ATTR_TANGENT]  = {GL_FLOAT, 3, false, 56},
+        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
+        [ATTR_MPOS]     = {GL_FLOAT, 3, false, 12},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 24},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 32},
+        [ATTR_NORMAL]   = {GL_FLOAT, 3, false, 36},
+        [ATTR_TANGENT]  = {GL_FLOAT, 3, false, 48},
     },
 };
 
@@ -301,6 +301,16 @@ static void proj_set_depth_range(projection_t *proj,
 {
     proj->mat[2][2] = (farval + nearval) / (nearval - farval);
     proj->mat[3][2] = 2. * farval * nearval / (nearval - farval);
+}
+
+static double proj_get_depth(const projection_t *proj,
+                             const double p[3])
+{
+    if (proj->klass->id == PROJ_PERSPECTIVE) {
+        return -p[2];
+    } else {
+        return vec3_norm(p);
+    }
 }
 
 static void window_to_ndc(renderer_t *rend,
@@ -471,7 +481,7 @@ static void quad_planet(
 {
     item_t *item;
     int n, i, j, k;
-    double p[4], mpos[4], normal[4] = {0}, tangent[4] = {0}, z, mv[4][4];
+    double p[4], mpos[4], normal[4] = {0}, tangent[4] = {0}, mv[4][4], depth;
 
     // Positions of the triangles in the quads.
     const int INDICES[6][2] = { {0, 0}, {0, 1}, {1, 0},
@@ -525,6 +535,8 @@ static void quad_planet(
     assert(item->tex->w == item->tex->tex_w &&
            item->tex->h == item->tex->tex_h);
 
+    item->depth_range[0] = +FLT_MAX;
+    item->depth_range[1] = -FLT_MAX;
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
@@ -546,17 +558,16 @@ static void quad_planet(
         vec3_sub(mpos, (*map->transf)[3], mpos);
         vec3_mul(1.0 / painter->planet.scale, mpos, mpos);
         vec3_add(mpos, (*map->transf)[3], mpos);
-        gl_buf_4f(&item->buf, -1, ATTR_MPOS, VEC4_SPLIT(mpos));
+        gl_buf_3f(&item->buf, -1, ATTR_MPOS, VEC3_SPLIT(mpos));
 
         // Rendering position (with scaling applied).
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
-        z = p[2];
-        project_to_clip(painter->proj, p, p);
-        if (painter->depth_range) {
-            vec2_to_float(*painter->depth_range, item->depth_range);
-            p[2] = -z;
-        }
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(p));
+
+        depth = proj_get_depth(painter->proj, p);
+        item->depth_range[0] = min(item->depth_range[0], depth);
+        item->depth_range[1] = max(item->depth_range[1], depth);
+
+        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
         gl_buf_next(&item->buf);
     }
@@ -1302,9 +1313,9 @@ static void item_planet_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     bool is_moon;
-    const float depth_range[] = {rend->depth_range[0], rend->depth_range[1]};
     shader_define_t defines[] = {
         {"HAS_SHADOW", item->planet.shadow_spheres_nb > 0},
+        {"PROJ", rend->proj.klass->id},
         {}
     };
     shader = shader_get("planet", defines, ATTR_NAMES, init_shader);
@@ -1344,6 +1355,7 @@ static void item_planet_render(renderer_t *rend, const item_t *item)
         GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                                GL_ZERO, GL_ONE));
     }
+    assert(item->depth_range[0]);
     if (item->depth_range[0] || item->depth_range[1]) {
         GL(glEnable(GL_DEPTH_TEST));
         GL(glDepthMask(GL_TRUE));
@@ -1364,7 +1376,10 @@ static void item_planet_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_tex_transf", item->planet.tex_transf);
     gl_update_uniform(shader, "u_normal_tex_transf",
                       item->planet.normal_tex_transf);
-    gl_update_uniform(shader, "u_depth_range", depth_range);
+
+    float matf[16];
+    mat4_to_float(rend->proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));

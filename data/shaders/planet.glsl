@@ -14,7 +14,6 @@ precision mediump float;
 #endif
 
 uniform lowp    vec4      u_color;
-uniform lowp    vec2      u_depth_range;
 uniform mediump sampler2D u_tex;
 uniform mediump sampler2D u_normal_tex;
 uniform mediump mat3      u_tex_transf;
@@ -45,8 +44,10 @@ varying highp   vec3 v_bitangent;
 
 #ifdef VERTEX_SHADER
 
-attribute highp   vec4 a_pos;     // Projected position (with fake scaling).
-attribute highp   vec4 a_mpos;    // Model position (without fake scaling).
+#includes "projections.glsl"
+
+attribute highp   vec3 a_pos;     // View position (with fake scaling).
+attribute highp   vec3 a_mpos;    // Model position (without fake scaling).
 attribute mediump vec2 a_tex_pos;
 attribute lowp    vec3 a_color;
 attribute highp   vec3 a_normal;
@@ -54,10 +55,9 @@ attribute highp   vec3 a_tangent;
 
 void main()
 {
-    gl_Position = a_pos;
-    gl_Position.z = (gl_Position.z - u_depth_range[0]) /
-                    (u_depth_range[1] - u_depth_range[0]);
-    v_mpos = a_mpos.xyz;
+    gl_Position = proj(a_pos);
+
+    v_mpos = a_mpos;
     v_tex_pos = (u_tex_transf * vec3(a_tex_pos, 1.0)).xy;
     v_normal_tex_pos = (u_normal_tex_transf * vec3(a_tex_pos, 1.0)).xy;
     v_color = vec4(a_color, 1.0) * u_color;
