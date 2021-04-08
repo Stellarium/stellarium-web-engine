@@ -13,7 +13,7 @@
 
 typedef struct {
     const char  *name;
-    bool        set;
+    int         val;
 } shader_define_t;
 
 /*
