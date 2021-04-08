@@ -569,12 +569,8 @@ bool hips_is_ready(hips_t *hips)
 int hips_get_render_order(const hips_t *hips, const painter_t *painter,
                           double angle)
 {
-    double pix_per_rad;
     double w, px; // Size in pixel of the total survey.
-
-    // XXX: is that the proper way to compute it??
-    pix_per_rad = painter->fb_size[0] / atan(painter->proj->scaling[0]) / 2;
-    px = pix_per_rad * angle;
+    px = core_get_point_for_apparent_angle(painter->proj, angle);
     w = hips->tile_width ?: 256;
     return round(log2(px / (4.0 * sqrt(2.0) * w)));
 }

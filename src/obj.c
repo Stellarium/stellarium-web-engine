@@ -639,7 +639,7 @@ void obj_get_2d_ellipse(obj_t *obj,  const observer_t *obs,
     }
 
     if (obj_get_info(obj, obs, INFO_RADIUS, &radius) == 0) {
-        radius = radius / 2.0 * proj->window_size[0] / proj->scaling[0];
+        radius = core_get_point_for_apparent_angle(proj, radius);
         s = max(s, radius);
     }
 
