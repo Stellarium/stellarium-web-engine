@@ -13,6 +13,40 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 #define DR2D (57.29577951308232087679815)
+#define DAU (149597870.7e3)
+#define DM2AU  (1. / DAU)
+
+static bool proj_mollweide_project2(
+        const projection_t *proj, const double v[3], double out[3])
+{
+    double phi, lambda, theta, d, k, length;
+    int i;
+    const int MAX_ITER = 10;
+    const double PRECISION = 1e-7;
+
+    length = vec3_norm(v);
+    // Computation using algo from wikipedia:
+    // https://en.wikipedia.org/wiki/Mollweide_projection
+    lambda = atan2(v[0], -v[2]);
+    phi = atan2(v[1], sqrt(v[0] * v[0] + v[2] * v[2]));
+
+    // We could optimize the iteration by computing 2 * theta instead.
+    k = M_PI * sin(phi);
+    theta = phi;
+    for (i = 0; i < MAX_ITER; i++) {
+        d = 2 + 2 * cos(2 * theta);
+        if (fabs(d) < PRECISION) break;
+        d = (2 * theta + sin(2 * theta) - k) / d;
+        theta -= d;
+        if (fabs(d) < PRECISION) break;
+    }
+
+    out[0] = 2 * sqrt(2) / M_PI * lambda * cos(theta);
+    out[1] = sqrt(2) * sin(theta);
+    out[2] = -1;
+    vec3_mul(length, out, out);
+    return true;
+}
 
 static void proj_mollweide_project(
         const projection_t *proj, int flags, const double v[4], double out[4])
@@ -96,6 +130,9 @@ void proj_mollweide_init(projection_t *p, double fovy, double aspect)
     p->scaling[1]                = fovy / M_PI * sqrt(2);
     p->scaling[0]                = p->scaling[1] * aspect;
     p->flags                     = PROJ_HAS_DISCONTINUITY;
+    double fovy2 = 2 * atan(fovy / M_PI * sqrt(2));
+    const double clip_near = 5 * DM2AU;
+    mat4_inf_perspective(p->mat, fovy2 * DR2D, aspect, clip_near);
 }
 
 static const projection_klass_t proj_mollweide_klass = {
@@ -105,6 +142,7 @@ static const projection_klass_t proj_mollweide_klass = {
     .max_ui_fov             = 360 * DD2R,
     .init                   = proj_mollweide_init,
     .project                = proj_mollweide_project,
+    .project2               = proj_mollweide_project2,
     .backward               = proj_mollweide_backward,
     .compute_fovs           = proj_mollweide_compute_fov,
 };

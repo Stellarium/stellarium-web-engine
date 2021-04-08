@@ -15,6 +15,13 @@
 /* Radians to degrees */
 #define DR2D (57.29577951308232087679815)
 
+static bool proj_perspective_project2(
+        const projection_t *proj, const double v[3], double out[3])
+{
+    vec3_copy(v, out);
+    return true;
+}
+
 static void proj_perspective_project(
         const projection_t *proj, int flags, const double *v, double *out)
 {
@@ -61,6 +68,7 @@ static const projection_klass_t proj_perspective_klass = {
     .max_ui_fov     = 120. * DD2R,
     .init           = proj_perspective_init,
     .project        = proj_perspective_project,
+    .project2       = proj_perspective_project2,
     .backward       = proj_perspective_backward,
     .compute_fovs   = proj_perspective_compute_fov,
 };

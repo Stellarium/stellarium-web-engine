@@ -38,6 +38,26 @@
  * totally sure about the best way to do that.
  */
 
+static bool proj_stereographic_project2(
+        const projection_t *proj, const double v[3], double out[3])
+{
+    double d, one_over_h;
+
+    d = vec3_norm(v);
+    vec3_mul(1. / d, v, out);
+    // Discountinuity case.
+    if (out[2] == 1.0) {
+        memset(out, 0, 4 * sizeof(double));
+        return false;
+    }
+    one_over_h = 1.0 / (0.5 * (1.0 - out[2]));
+    out[0] *= one_over_h;
+    out[1] *= one_over_h;
+    out[2] = -1;
+    vec3_mul(d, out, out);
+    return true;
+}
+
 static void proj_stereographic_project(
         const projection_t *proj, int flags, const double v[4], double out[4])
 {
@@ -87,6 +107,9 @@ static void proj_stereographic_init(projection_t *p, double fovy, double aspect)
 {
     p->scaling[1] = 2 * tan(fovy / 4);
     p->scaling[0] = p->scaling[1] * aspect;
+    double fovy2 = 2 * atan(2 * tan(fovy / 4));
+    const double clip_near = 5 * DM2AU;
+    mat4_inf_perspective(p->mat, fovy2 * DR2D, aspect, clip_near);
 }
 
 static const projection_klass_t proj_stereographic_klass = {
@@ -96,6 +119,7 @@ static const projection_klass_t proj_stereographic_klass = {
     .max_ui_fov     = 185. * DD2R,
     .init           = proj_stereographic_init,
     .project        = proj_stereographic_project,
+    .project2       = proj_stereographic_project2,
     .backward       = proj_stereographic_backward,
     .compute_fovs   = proj_stereographic_compute_fov,
 };

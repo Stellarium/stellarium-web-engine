@@ -46,6 +46,44 @@ void projection_init(projection_t *p, int type, double fovy,
     p->klass->init(p, fovy, aspect);
 }
 
+bool project_to_clip(const projection_t *proj, const double input[3],
+                     double out[4])
+{
+    double p[4];
+    bool ret;
+    ret = proj->klass->project2(proj, input, p);
+    p[3] = 1.0;
+    mat4_mul_vec4(proj->mat, p, out);
+    return ret;
+}
+
+bool project_to_win(const projection_t *proj, const double input[3],
+                    double out[3])
+{
+    double p[4];
+    vec3_copy(input, p);
+    proj->klass->project2(proj, p, p);
+    p[3] = 1.0;
+    mat4_mul_vec4(proj->mat, p, p);
+    if (!p[3]) return false;
+    vec3_mul(1.0 / p[3], p, p);
+    out[0] = (+p[0] + 1) / 2 * proj->window_size[0];
+    out[1] = (-p[1] + 1) / 2 * proj->window_size[1];
+    out[2] = (p[2] + 1) / 2;
+    return true;
+}
+
+bool project_to_win_xy(const projection_t *proj, const double input[4],
+                       double out[2])
+{
+    double win[3];
+    bool ret;
+    ret = project_to_win(proj, input, win);
+    out[0] = win[0];
+    out[1] = win[1];
+    return ret;
+}
+
 bool project(const projection_t *proj, int flags,
              const double v[static 4],
              double out[static 4])

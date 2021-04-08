@@ -81,6 +81,15 @@ struct projection_klass
     // Maximum FOV that looks good for the UI.
     double max_ui_fov;
     void (*init)(projection_t *proj, double fovy, double aspect);
+
+    /*
+     * The project function projects into a vec3 that will then be multiplied
+     * by the projection 4x4 matrix to get the clipping space coordinates.
+     */
+    bool (*project2)(const projection_t *proj,
+                    const double v[S 3], double out[S 3]);
+
+    // Deprecated.
     void (*project)(const projection_t *proj, int flags,
                     const double v[S 4], double out[S 4]);
     bool (*backward)(const projection_t *proj, int flags,
@@ -125,6 +134,36 @@ void projection_compute_fovs(int proj_type, double fov, double aspect,
 void projection_init(projection_t *proj, int type, double fovy,
                      double win_w, double win_h);
 
+/*
+ * Function: project_to_win
+ * Project from view coordinates to windows coordinates.
+ *
+ * Compared to project, this function properly sets the z output value
+ * in the range [0, 1], depending on the projection depth range.  The
+ * behavior is more aligned to what OpenGL does.
+ *
+ * Return false in case of error.  We return true even if the point is
+ * not visible.
+ */
+bool project_to_win(const projection_t *proj, const double input[S 3],
+                    double out[S 3]);
+
+/*
+ * Function: project_to_win_xy
+ * Similar to project_to_win, but only returns the x and y coordinates.
+ */
+bool project_to_win_xy(const projection_t *proj, const double input[S 4],
+                       double out[S 2]);
+/*
+ * Function: project_to_clip
+ * Project from view coordinates to clip space.
+ *
+ * Return false in case of error.  Note: we return true even if the point is
+ * not visible.
+ */
+bool project_to_clip(const projection_t *proj, const double input[S 3],
+                     double out[S 4]);
+
 /* Function: project
  * Apply a projection to coordinates
  *
@@ -146,6 +185,8 @@ bool project(const projection_t *proj, int flags,
 /*
  * Function: unproject
  * Compute a backward projection
+ *
+ * Deprecated.
  *
  * Parameters:
  *   proj   - A projection.
