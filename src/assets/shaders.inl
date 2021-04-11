@@ -639,7 +639,7 @@ static const unsigned char DATA_shaders_points_glsl[1185] __attribute__((aligned
 
 ASSET_REGISTER(shaders_points_glsl, "shaders/points.glsl", DATA_shaders_points_glsl, false)
 
-static const unsigned char DATA_shaders_projections_glsl[1784] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_projections_glsl[1788] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2021 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -675,7 +675,7 @@ static const unsigned char DATA_shaders_projections_glsl[1784] __attribute__((al
     "    highp float dist = length(pos);\n"
     "    highp vec3 p = pos / dist;\n"
     "    p.xy /= 0.5 * (1.0 - p.z);\n"
-    "    p.z = -1;\n"
+    "    p.z = -1.0;\n"
     "    p *= dist;\n"
     "    return u_proj_mat * vec4(p, 1.0);\n"
     "}\n"
@@ -709,7 +709,7 @@ static const unsigned char DATA_shaders_projections_glsl[1784] __attribute__((al
     "\n"
     "    highp vec3 p;\n"
     "    p.xy = vec2(2.0 * SQRT2 / PI * lambda * cos(theta), SQRT2 * sin(theta));\n"
-    "    p.z = -1;\n"
+    "    p.z = -1.0;\n"
     "    p *= dist;\n"
     "    vec4 ret = u_proj_mat * vec4(p, 1.0);\n"
     "    ret.z = 0.0;\n"

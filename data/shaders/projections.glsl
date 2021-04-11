@@ -33,7 +33,7 @@ highp vec4 proj(highp vec3 pos) {
     highp float dist = length(pos);
     highp vec3 p = pos / dist;
     p.xy /= 0.5 * (1.0 - p.z);
-    p.z = -1;
+    p.z = -1.0;
     p *= dist;
     return u_proj_mat * vec4(p, 1.0);
 }
@@ -67,7 +67,7 @@ highp vec4 proj(highp vec3 v)
 
     highp vec3 p;
     p.xy = vec2(2.0 * SQRT2 / PI * lambda * cos(theta), SQRT2 * sin(theta));
-    p.z = -1;
+    p.z = -1.0;
     p *= dist;
     vec4 ret = u_proj_mat * vec4(p, 1.0);
     ret.z = 0.0;
