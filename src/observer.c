@@ -144,13 +144,19 @@ void observer_update(observer_t *obs, bool fast)
 
     observer_compute_hash(obs, &hash_partial, &hash);
     // Check if we have computed accurate positions already
-    if (hash == obs->hash_accurate)
+    if (hash == obs->hash)
         return;
+
     // Check if we have computed 'fast' positions already
-    if (fast && hash == obs->hash)
-        return;
-    fast = fast && hash_partial == obs->hash_partial &&
-            fabs(obs->last_accurate_update - obs->tt) < 1.0;
+    if (fast) {
+        // Add one to the hash for the fast update hash value.
+        hash++;
+        if (hash == obs->hash)
+            return;
+        if (    hash_partial != obs->hash_partial ||
+                fabs(obs->last_accurate_update - obs->tt) >= 1.0)
+            fast = false;
+    }
 
     // Compute UT1 and UTC time.
     if (obs->last_update != obs->tt) {
@@ -221,7 +227,6 @@ void observer_update(observer_t *obs, bool fast)
     obs->hash_partial = hash_partial;
     obs->hash = hash;
     if (!fast) {
-        obs->hash_accurate = hash;
         obs->last_accurate_update = obs->tt;
     }
 }
@@ -230,8 +235,7 @@ static int observer_init(obj_t *obj, json_value *args)
 {
     observer_t*  obs = (observer_t*)obj;
     quat_set_identity(obs->mount_quat);
-    observer_compute_hash(obs, &obs->hash_partial, &obs->hash_accurate);
-    obs->hash = obs->hash_accurate;
+    observer_compute_hash(obs, &obs->hash_partial, &obs->hash);
     return 0;
 }
 
@@ -267,8 +271,8 @@ bool observer_is_uptodate(const observer_t *obs, bool fast)
 {
     uint64_t hash, hash_partial;
     observer_compute_hash(obs, &hash_partial, &hash);
-    if (hash == obs->hash_accurate) return true;
-    if (fast && hash == obs->hash) return true;
+    if (hash == obs->hash) return true;
+    if (fast && (hash + 1 == obs->hash)) return true;
     return false;
 }
 

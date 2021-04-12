@@ -48,18 +48,13 @@ struct observer
     double last_update;
     double last_accurate_update;
 
-    // Hash value that represents a given observer state for which the accurate
-    // values have been computed. Used to prevent updating object data several
-    // times with the same observer.
-    uint64_t hash_accurate;
-
     // Hash value that represents the last observer state for which the
     // values have been computed. Used to prevent updating object data several
     // times with the same observer.
     uint64_t hash;
 
-    // Hash of a partial state of the observer. If it is unchanged, it is
-    // safe to use make fast update.
+    // Hash of a partial state of the observer. If it has changed, it is
+    // not safe to perform a fast update.
     uint64_t hash_partial;
 
     // Different times, all in MJD.
