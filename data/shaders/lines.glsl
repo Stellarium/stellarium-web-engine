@@ -12,10 +12,6 @@ uniform   lowp      float   u_line_width;
 uniform   lowp      float   u_line_glow;
 uniform   lowp      vec4    u_color;
 
-#ifdef USE_DEPTH
-uniform   lowp      vec2    u_depth_range;
-#endif
-
 #ifdef DASH
 // Dash effect defined as a total length (dash and space, in uv unit),
 // and the ratio of the dash dot to the length.
@@ -33,21 +29,21 @@ varying   mediump   vec2    v_uv;
 
 #ifdef VERTEX_SHADER
 
+#includes "projections.glsl"
+
 attribute highp     vec3    a_pos;
+attribute highp     vec2    a_wpos;
 attribute highp     vec2    a_tex_pos;
 
 void main()
 {
-    gl_Position = vec4((a_pos.xy / u_win_size - 0.5) * vec2(2.0, -2.0),
-                       a_pos.z, 1.0);
-#ifdef USE_DEPTH
-    gl_Position.z = (gl_Position.z - u_depth_range[0]) /
-                    (u_depth_range[1] - u_depth_range[0]);
-#endif
+    gl_Position = proj(a_pos);
+    gl_Position.xy = (a_wpos / u_win_size - 0.5) * vec2(2.0, -2.0);
+    gl_Position.xy *= gl_Position.w;
     v_uv = a_tex_pos;
 
 #ifdef FADE
-    v_alpha = smoothstep(u_fade_dist_max, u_fade_dist_min, a_pos.z);
+    v_alpha = smoothstep(u_fade_dist_max, u_fade_dist_min, -a_pos.z);
 #endif
 }
 
@@ -58,7 +54,7 @@ void main()
 {
     mediump float dist = abs(v_uv.y); // Distance to line in pixel.
     // Use smooth step on 2.4px to emulate an anti-aliased line
-    mediump float base = 1.0 - smoothstep(u_line_width / 2.0 - 1.2, u_line_width / 2.0 + 1.2, dist);
+    mediump float base = smoothstep(u_line_width / 2.0 + 1.2, u_line_width / 2.0 - 1.2, dist);
     // Generate a glow with 5px radius
     mediump float glow = (1.0 - dist / 5.0) * u_line_glow;
     // Only use the most visible of both to avoid changing brightness

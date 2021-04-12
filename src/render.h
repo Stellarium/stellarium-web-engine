@@ -49,7 +49,7 @@ void render_text(renderer_t *rend, const painter_t *painter,
                  double bounds[4]);
 
 void render_line(renderer_t *rend, const painter_t *painter,
-                 const double (*line)[3], int size);
+                 const double (*pos)[3], const double (*win)[3], int size);
 
 void render_mesh(renderer_t *rend, const painter_t *painter,
                  int frame, int mode, int verts_count,

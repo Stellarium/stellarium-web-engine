@@ -38,7 +38,9 @@ static void line_get_normal(const double (*line)[3], int size, int i,
         vec2_normalize(n, n);
 }
 
-line_mesh_t *line_to_mesh(const double (*line)[3], int size, double width)
+line_mesh_t *line_to_mesh(const double (*line)[3],
+                          const double (*win)[3],
+                          int size, double width)
 {
     int i, k;
     double n[2], v[2], length = 0;
@@ -53,14 +55,14 @@ line_mesh_t *line_to_mesh(const double (*line)[3], int size, double width)
 
     // Compute all vertices.
     for (i = 0; i < size; i++) {
-        if (i > 0) length += vec2_dist(line[i - 1], line[i]);
-        line_get_normal(line, size, i, n);
-        vec2_addk(line[i], n, -width / 2, v);
-        vec2_to_float(v, mesh->verts[i * 2 + 0].pos);
-        vec2_addk(line[i], n, width / 2, v);
-        vec2_to_float(v, mesh->verts[i * 2 + 1].pos);
-        mesh->verts[i * 2 + 0].pos[2] = line[i][2];
-        mesh->verts[i * 2 + 1].pos[2] = line[i][2];
+        if (i > 0) length += vec2_dist(win[i - 1], win[i]);
+        line_get_normal(win, size, i, n);
+        vec2_addk(win[i], n, -width / 2, v);
+        vec2_to_float(v, mesh->verts[i * 2 + 0].win);
+        vec2_addk(win[i], n, width / 2, v);
+        vec2_to_float(v, mesh->verts[i * 2 + 1].win);
+        vec3_to_float(line[i], mesh->verts[i * 2 + 0].pos);
+        vec3_to_float(line[i], mesh->verts[i * 2 + 1].pos);
         vec2_set(mesh->verts[i * 2 + 0].uv, length, -width / 2);
         vec2_set(mesh->verts[i * 2 + 1].uv, length, +width / 2);
     }
@@ -91,23 +93,28 @@ static double line_point_dist(const double a[2], const double b[2],
     return vec2_cross(ap, u) / vec2_norm(u);
 }
 
-static void line_push_point(double (**line)[3], const double p[3],
+static void line_push_point(double (**pos)[3], double (**win)[3],
+                            const double p[3], const double w[3],
                             int *size, int *allocated)
 {
     if (*size <= *allocated) {
         *allocated += 4;
-        *line = realloc(*line, *allocated * sizeof(**line));
+        *pos = realloc(*pos, *allocated * sizeof(**pos));
+        *win = realloc(*win, *allocated * sizeof(**win));
     }
-    memcpy((*line)[(*size)++], p, sizeof(**line));
+    memcpy((*pos)[*size], p, sizeof(**pos));
+    memcpy((*win)[*size], p, sizeof(**win));
+    (*size)++;
 }
 
-static void line_tesselate_(void (*func)(void *user, double t, double pos[4]),
+static void line_tesselate_(void (*func)(void *user, double t, double pos[3]),
                             const projection_t *proj,
                             void *user, double t0, double t1,
-                            double (**out)[3],
+                            double (**out_pos)[3],
+                            double (**out_win)[3],
                             int level, int *size, int *allocated)
 {
-    double p0[4], p1[4], pm[4], tm;
+    double p0[3], p1[3], pm[3], w0[3], w1[3], wm[3], tm;
     const double max_dist = 1.0;
     const int max_level = 4;
     tm = (t0 + t1) / 2;
@@ -116,41 +123,49 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[4]),
     func(user, t1, p1);
     func(user, tm, pm);
 
-    project_to_win(proj, p0, p0);
-    project_to_win(proj, p1, p1);
-    project_to_win(proj, pm, pm);
+    project_to_win(proj, p0, w0);
+    project_to_win(proj, p1, w1);
+    project_to_win(proj, pm, wm);
 
-    if (level > max_level || line_point_dist(p0, p1, pm) < max_dist) {
-        line_push_point(out, p1, size, allocated);
+    if (level > max_level || line_point_dist(w0, w1, wm) < max_dist) {
+        line_push_point(out_pos, out_win, p1, w1, size, allocated);
         return;
     }
 
-    line_tesselate_(func, proj, user, t0, tm, out, level + 1, size, allocated);
-    line_tesselate_(func, proj, user, tm, t1, out, level + 1, size, allocated);
+    line_tesselate_(func, proj, user, t0, tm, out_pos, out_win, level + 1,
+                    size, allocated);
+    line_tesselate_(func, proj, user, tm, t1, out_pos, out_win, level + 1,
+                    size, allocated);
 }
 
 
-int line_tesselate(void (*func)(void *user, double t, double pos[4]),
+int line_tesselate(void (*func)(void *user, double t, double pos[3]),
                    const projection_t *proj,
-                   void *user, int split, double (**out)[3])
+                   void *user, int split,
+                   double (**out_pos)[3],
+                   double (**out_win)[3])
 {
     int i, allocated = 0, size = 0;
-    *out = NULL;
-    double p[4];
+    double pos[3], win[3];
+    *out_pos = NULL;
+    *out_win = NULL;
 
     if (split) {
         size = split + 1;
-        *out = calloc(size, sizeof(**out));
+        *out_pos = calloc(size, sizeof(**out_pos));
+        *out_win = calloc(size, sizeof(**out_win));
         for (i = 0; i < size; i++) {
-            func(user, (double)i / split, p);
-            project_to_win(proj, p, p);
-            vec3_copy(p, (*out)[i]);
+            func(user, (double)i / split, pos);
+            project_to_win(proj, pos, win);
+            vec3_copy(pos, (*out_pos)[i]);
+            vec3_copy(win, (*out_win)[i]);
         }
     } else {
-        func(user, 0, p);
-        project_to_win(proj, p, p);
-        line_push_point(out, p, &size, &allocated);
-        line_tesselate_(func, proj, user, 0, 1, out, 0, &size, &allocated);
+        func(user, 0, pos);
+        project_to_win(proj, pos, win);
+        line_push_point(out_pos, out_win, pos, win, &size, &allocated);
+        line_tesselate_(func, proj, user, 0, 1, out_pos, out_win, 0,
+                        &size, &allocated);
     }
     return size;
 }

@@ -229,7 +229,7 @@ int paint_texture(const painter_t *painter,
 }
 
 
-static void line_func(void *user, double t, double out[4])
+static void line_func(void *user, double t, double out[3])
 {
     double pos[4];
     const painter_t *painter = USER_GET(user, 0);
@@ -239,7 +239,8 @@ static void line_func(void *user, double t, double out[4])
 
     vec4_mix(line[0], line[1], t, pos);
     if (map) uv_map(map, pos, pos, NULL);
-    convert_framev4(painter->obs, frame, FRAME_VIEW, pos, out);
+    convert_framev4(painter->obs, frame, FRAME_VIEW, pos, pos);
+    vec3_copy(pos, out);
 }
 
 /*
@@ -290,6 +291,7 @@ int paint_line(const painter_t *painter,
     int i, size;
     double view_pos[2][4];
     double (*win_line)[3] = NULL;
+    double (*pos_line)[3] = NULL;
     bool discontinuous = false;
     double splits[2][2][4];
 
@@ -314,10 +316,11 @@ int paint_line(const painter_t *painter,
 
     size = line_tesselate(line_func, painter->proj,
                           USER_PASS(painter, &frame, line, map),
-                          split, &win_line);
+                          split, &pos_line, &win_line);
     if (size < 0) goto split;
-    render_line(painter->rend, painter, win_line, size);
+    render_line(painter->rend, painter, pos_line, win_line, size);
     free(win_line);
+    free(pos_line);
     return 0;
 
 split:

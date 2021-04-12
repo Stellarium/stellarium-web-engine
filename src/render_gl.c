@@ -47,6 +47,7 @@ enum {
     ATTR_SKY_POS,
     ATTR_LUMINANCE,
     ATTR_SIZE,
+    ATTR_WPOS,
 };
 
 static const char *ATTR_NAMES[] = {
@@ -59,6 +60,7 @@ static const char *ATTR_NAMES[] = {
     [ATTR_SKY_POS]      = "a_sky_pos",
     [ATTR_LUMINANCE]    = "a_luminance",
     [ATTR_SIZE]         = "a_size",
+    [ATTR_WPOS]         = "a_wpos",
     NULL,
 };
 
@@ -193,10 +195,11 @@ static const gl_buf_info_t MESH_BUF = {
 };
 
 static const gl_buf_info_t LINES_BUF = {
-    .size = 20,
+    .size = 28,
     .attrs = {
         [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 12},
+        [ATTR_WPOS]     = {GL_FLOAT, 2, false, 12},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 20},
     },
 };
 
@@ -1110,13 +1113,14 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
     gl_shader_t *shader;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
+    float matf[16];
     const float depth_range[] = {rend->depth_range[0], rend->depth_range[1]};
-    bool use_depth = item->depth_range[0] || item->depth_range[1];
+    projection_t proj;
 
     shader_define_t defines[] = {
         {"DASH", item->lines.dash_length && (item->lines.dash_ratio < 1.0)},
-        {"USE_DEPTH", use_depth},
         {"FADE", item->lines.fade_dist_min},
+        {"PROJ", rend->proj.klass->id},
         {}
     };
     shader = shader_get("lines", defines, ATTR_NAMES, init_shader);
@@ -1125,7 +1129,7 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                            GL_ZERO, GL_ONE));
-    if (use_depth)
+    if (item->flags & PAINTER_ENABLE_DEPTH)
         GL(glEnable(GL_DEPTH_TEST));
 
     gl_update_uniform(shader, "u_line_width", item->lines.width);
@@ -1141,6 +1145,10 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
         gl_update_uniform(shader, "u_fade_dist_min", item->lines.fade_dist_min);
         gl_update_uniform(shader, "u_fade_dist_max", item->lines.fade_dist_max);
     }
+
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glDisable(GL_DEPTH_TEST));
@@ -1534,16 +1542,17 @@ void render_finish(renderer_t *rend, const projection_t *proj)
 }
 
 void render_line(renderer_t *rend, const painter_t *painter,
-                 const double (*line)[3], int size)
+                 const double (*line)[3], const double (*win)[3], int size)
 {
     line_mesh_t *mesh;
     int i, ofs;
     float color[4];
+    double depth;
     item_t *item;
 
     assert(painter->lines.glow); // Only glowing lines supported for now.
     vec4_to_float(painter->color, color);
-    mesh = line_to_mesh(line, size, 10);
+    mesh = line_to_mesh(line, win, size, 10);
 
     if (mesh->indices_count >= 1024 || mesh->verts_count >= 1024) {
         LOG_W("Too many points in lines! (size: %d)", size);
@@ -1560,11 +1569,14 @@ void render_line(renderer_t *rend, const painter_t *painter,
         item = NULL;
     if (item && item->lines.width != painter->lines.width)
         item = NULL;
+    if (item && item->flags != painter->flags)
+        item = NULL;
 
 
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_LINES;
+        item->flags = painter->flags;
         gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
         item->lines.width = painter->lines.width;
@@ -1573,16 +1585,26 @@ void render_line(renderer_t *rend, const painter_t *painter,
         item->lines.dash_ratio = painter->lines.dash_ratio;
         item->lines.fade_dist_min = painter->lines.fade_dist_min;
         item->lines.fade_dist_max = painter->lines.fade_dist_max;
+        item->depth_range[0] = +FLT_MAX;
+        item->depth_range[1] = -FLT_MAX;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
-    if (painter->depth_range)
-        vec2_to_float(*painter->depth_range, item->depth_range);
+
+    if (item->flags & PAINTER_ENABLE_DEPTH) {
+        // Compute the depth range.
+        for (i = 0; i < size; i++) {
+            depth = proj_get_depth(painter->proj, line[i]);
+            item->depth_range[0] = min(item->depth_range[0], depth);
+            item->depth_range[1] = max(item->depth_range[1], depth);
+        }
+    }
 
     // Append the mesh to the buffer.
     ofs = item->buf.nb;
     for (i = 0; i < mesh->verts_count; i++) {
         gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(mesh->verts[i].pos));
+        gl_buf_2f(&item->buf, -1, ATTR_WPOS, VEC2_SPLIT(mesh->verts[i].win));
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, VEC2_SPLIT(mesh->verts[i].uv));
         gl_buf_next(&item->buf);
     }
