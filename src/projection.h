@@ -36,14 +36,8 @@ enum {
 };
 
 /* Enum: PROJ_FLAG
- * Modify the behavior of the <project> function.
  */
 enum {
-    PROJ_TO_WINDOW_SPACE    = 1 << 3,
-    PROJ_FROM_WINDOW_SPACE  = 1 << 3,
-
-    PROJ_ALREADY_NORMALIZED = 1 << 4,
-
     // Set in the projection flags to flip the rendering.
     PROJ_FLIP_VERTICAL      = 1 << 5,
     PROJ_FLIP_HORIZONTAL    = 1 << 6,
