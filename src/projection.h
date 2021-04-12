@@ -59,7 +59,7 @@ struct projection
     double fovy;
     int flags;
 
-    // Matrices used by some projections.
+    // Perspective projection part of the projection.
     double mat[4][4];
     // Window size (screen size / screen density).
     double window_size[2];
@@ -79,7 +79,7 @@ struct projection_klass
      * The project function projects into a vec3 that will then be multiplied
      * by the projection 4x4 matrix to get the clipping space coordinates.
      */
-    bool (*project2)(const projection_t *proj,
+    bool (*project)(const projection_t *proj,
                     const double v[S 3], double out[S 3]);
     bool (*backward)(const projection_t *proj,
                      const double v[S 3], double out[S 3]);
@@ -156,8 +156,6 @@ bool project_to_clip(const projection_t *proj, const double input[S 3],
 /*
  * Function: unproject
  * Compute a backward projection
- *
- * Deprecated.
  *
  * Parameters:
  *   proj   - A projection.

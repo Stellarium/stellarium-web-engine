@@ -13,7 +13,7 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-static bool proj_hammer_project2(
+static bool proj_hammer_project(
         const projection_t *proj, const double v[3], double out[3])
 {
     double r = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -57,7 +57,7 @@ static const projection_klass_t proj_hammer_klass = {
     .max_fov                = 360 * DD2R,
     .max_ui_fov             = 360 * DD2R,
     .init                   = proj_hammer_init,
-    .project2               = proj_hammer_project2,
+    .project                = proj_hammer_project,
     .backward               = proj_hammer_backward,
 };
 PROJECTION_REGISTER(proj_hammer_klass);

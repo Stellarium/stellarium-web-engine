@@ -38,7 +38,7 @@
  * totally sure about the best way to do that.
  */
 
-static bool proj_stereographic_project2(
+static bool proj_stereographic_project(
         const projection_t *proj, const double v[3], double out[3])
 {
     double d, one_over_h;
@@ -95,7 +95,7 @@ static const projection_klass_t proj_stereographic_klass = {
     .max_fov        = 360. * DD2R,
     .max_ui_fov     = 185. * DD2R,
     .init           = proj_stereographic_init,
-    .project2       = proj_stereographic_project2,
+    .project        = proj_stereographic_project,
     .backward       = proj_stereographic_backward,
     .compute_fovs   = proj_stereographic_compute_fov,
 };

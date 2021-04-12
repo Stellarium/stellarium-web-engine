@@ -16,7 +16,7 @@
 #define DAU (149597870.7e3)
 #define DM2AU  (1. / DAU)
 
-static bool proj_mollweide_project2(
+static bool proj_mollweide_project(
         const projection_t *proj, const double v[3], double out[3])
 {
     double phi, lambda, theta, d, k, length;
@@ -104,7 +104,7 @@ static const projection_klass_t proj_mollweide_klass = {
     .max_fov                = 360 * DD2R,
     .max_ui_fov             = 360 * DD2R,
     .init                   = proj_mollweide_init,
-    .project2               = proj_mollweide_project2,
+    .project                = proj_mollweide_project,
     .backward               = proj_mollweide_backward,
     .compute_fovs           = proj_mollweide_compute_fov,
 };

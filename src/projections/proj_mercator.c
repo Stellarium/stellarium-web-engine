@@ -13,7 +13,7 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-static bool proj_mercator_project2(
+static bool proj_mercator_project(
         const projection_t *proj, const double v[3], double out[3])
 {
     double s, r, p[3];
@@ -68,7 +68,7 @@ static const projection_klass_t proj_mercator_klass = {
     .max_fov                = 360 * DD2R,
     .max_ui_fov             = 175.0 * DD2R,
     .init                   = proj_mercator_init,
-    .project2               = proj_mercator_project2,
+    .project                = proj_mercator_project,
     .backward               = proj_mercator_backward,
 };
 PROJECTION_REGISTER(proj_mercator_klass);

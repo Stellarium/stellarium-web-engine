@@ -17,7 +17,7 @@
 #define DAU (149597870.7e3)
 #define DM2AU  (1. / DAU)
 
-static bool proj_perspective_project2(
+static bool proj_perspective_project(
         const projection_t *proj, const double v[3], double out[3])
 {
     vec3_copy(v, out);
@@ -55,7 +55,7 @@ static const projection_klass_t proj_perspective_klass = {
     .max_fov        = 180. * DD2R,
     .max_ui_fov     = 120. * DD2R,
     .init           = proj_perspective_init,
-    .project2       = proj_perspective_project2,
+    .project        = proj_perspective_project,
     .backward       = proj_perspective_backward,
     .compute_fovs   = proj_perspective_compute_fov,
 };

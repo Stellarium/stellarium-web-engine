@@ -51,7 +51,7 @@ bool project_to_clip(const projection_t *proj, const double input[3],
 {
     double p[4];
     bool ret;
-    ret = proj->klass->project2(proj, input, p);
+    ret = proj->klass->project(proj, input, p);
     p[3] = 1.0;
     mat4_mul_vec4(proj->mat, p, out);
     return ret;
@@ -62,7 +62,7 @@ bool project_to_win(const projection_t *proj, const double input[3],
 {
     double p[4];
     vec3_copy(input, p);
-    proj->klass->project2(proj, p, p);
+    proj->klass->project(proj, p, p);
     p[3] = 1.0;
     mat4_mul_vec4(proj->mat, p, p);
     if (!p[3]) return false;
