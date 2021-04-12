@@ -14,7 +14,9 @@ varying highp   vec2        v_tex_pos;
 
 #ifdef VERTEX_SHADER
 
+#ifdef PROJ
 #includes "projections.glsl"
+#endif
 
 attribute highp     vec3    a_pos;
 attribute mediump   vec2    a_tex_pos;

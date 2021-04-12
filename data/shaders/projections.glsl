@@ -19,6 +19,10 @@
 #define PROJ_STEROGRAPHIC       2
 #define PROJ_MOLLWEIDE          5
 
+#ifndef PROJ
+#error PROJ undefined
+#endif
+
 uniform highp mat4 u_proj_mat;
 
 #if (PROJ == PROJ_PERSPECTIVE)

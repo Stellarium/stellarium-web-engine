@@ -121,7 +121,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[3770] __attribute__((ali
 
 ASSET_REGISTER(shaders_atmosphere_glsl, "shaders/atmosphere.glsl", DATA_shaders_atmosphere_glsl, false)
 
-static const unsigned char DATA_shaders_blit_glsl[965] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_glsl[984] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -138,7 +138,9 @@ static const unsigned char DATA_shaders_blit_glsl[965] __attribute__((aligned(4)
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
+    "#ifdef PROJ\n"
     "#includes \"projections.glsl\"\n"
+    "#endif\n"
     "\n"
     "attribute highp     vec3    a_pos;\n"
     "attribute mediump   vec2    a_tex_pos;\n"
@@ -607,7 +609,7 @@ static const unsigned char DATA_shaders_points_glsl[1185] __attribute__((aligned
 
 ASSET_REGISTER(shaders_points_glsl, "shaders/points.glsl", DATA_shaders_points_glsl, false)
 
-static const unsigned char DATA_shaders_projections_glsl[1788] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_projections_glsl[1831] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2021 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -628,6 +630,10 @@ static const unsigned char DATA_shaders_projections_glsl[1788] __attribute__((al
     "#define PROJ_PERSPECTIVE        1\n"
     "#define PROJ_STEROGRAPHIC       2\n"
     "#define PROJ_MOLLWEIDE          5\n"
+    "\n"
+    "#ifndef PROJ\n"
+    "#error PROJ undefined\n"
+    "#endif\n"
     "\n"
     "uniform highp mat4 u_proj_mat;\n"
     "\n"
