@@ -85,11 +85,12 @@ enum {
     PAINTER_IS_MOON             = 1 << 6, // Only for moon texture!
     PAINTER_ATMOSPHERE_SHADER   = 1 << 8,
     PAINTER_FOG_SHADER          = 1 << 9,
+    PAINTER_ENABLE_DEPTH        = 1 << 10,
 
     // Passed to paint_lines.
-    PAINTER_SKIP_DISCONTINUOUS  = 1 << 10,
+    PAINTER_SKIP_DISCONTINUOUS  = 1 << 14,
     // Allow the renderer to reorder this item for batch optimiziation.
-    PAINTER_ALLOW_REORDER       = 1 << 11,
+    PAINTER_ALLOW_REORDER       = 1 << 15,
 };
 
 enum {

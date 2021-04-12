@@ -185,10 +185,10 @@ static const gl_buf_info_t INDICES_BUF = {
 };
 
 static const gl_buf_info_t MESH_BUF = {
-    .size = 20,
+    .size = 16,
     .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
-        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 16},
+        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 12},
     },
 };
 
@@ -311,6 +311,24 @@ static double proj_get_depth(const projection_t *proj,
     } else {
         return vec3_norm(p);
     }
+}
+
+/*
+ * Return the current flush projection, with depth range sets to infinity
+ * if we did not enable the depth
+ */
+static projection_t rend_get_proj(const renderer_t *rend, int flags)
+{
+    const double eps = FLT_EPSILON;
+    const double nearval = 5 * DM2AU;
+    projection_t proj = rend->proj;
+    if (!(flags & PAINTER_ENABLE_DEPTH)) {
+        // Infinite zfar projection matrix.
+        // from 'Projection Matrix Tricks', by Eric Lengyel.
+        proj.mat[2][2] = eps - 1;
+        proj.mat[3][2] = (eps - 2) * nearval;
+    }
+    return proj;
 }
 
 static void window_to_ndc(renderer_t *rend,
@@ -1035,15 +1053,17 @@ static void item_mesh_render(renderer_t *rend, const item_t *item)
     // XXX: almost the same as item_lines_render.
     gl_shader_t *shader;
     int gl_mode;
+    float matf[16];
     float fbo_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
+    projection_t proj;
 
     gl_mode = item->mesh.mode == 0 ? GL_TRIANGLES :
               item->mesh.mode == 1 ? GL_LINES :
               item->mesh.mode == 2 ? GL_POINTS : 0;
 
     shader_define_t defines[] = {
-        {"PROJ_MOLLWEIDE", item->mesh.proj == PROJ_MOLLWEIDE},
+        {"PROJ", rend->proj.klass->id},
         {}
     };
     shader = shader_get("mesh", defines, ATTR_NAMES, init_shader);
@@ -1071,6 +1091,10 @@ static void item_mesh_render(renderer_t *rend, const item_t *item)
 
     gl_update_uniform(shader, "u_fbo_size", fbo_size);
     gl_update_uniform(shader, "u_proj_scaling", item->mesh.proj_scaling);
+
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
 
     draw_buffer(&item->buf, &item->indices, gl_mode);
 
@@ -1578,7 +1602,6 @@ void render_mesh(renderer_t *rend, const painter_t *painter,
 {
     int i, ofs;
     double pos[4] = {};
-    double rot[3][3];
     uint8_t color[4];
     item_t *item;
 
@@ -1605,32 +1628,15 @@ void render_mesh(renderer_t *rend, const painter_t *painter,
     }
 
     ofs = item->buf.nb;
-    // Project the vertices.
 
-    // Special cas for Mollweide projection when the frame convertion can
-    // be expressed as a single matrix rotation.
-    if ((painter->proj->klass->id == PROJ_MOLLWEIDE) &&
-            frame_get_rotation(painter->obs, frame, FRAME_VIEW, rot)) {
-        item->mesh.proj = PROJ_MOLLWEIDE;
-        vec2_to_float(painter->proj->scaling, item->mesh.proj_scaling);
-        for (i = 0; i < verts_count; i++) {
-            mat3_mul_vec3(rot, verts[i], pos);
-            gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
-            gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(color));
-            gl_buf_next(&item->buf);
-        }
-    } else {
-        for (i = 0; i < verts_count; i++) {
-            vec3_copy(verts[i], pos);
-            pos[3] = 0.0;
-            vec3_normalize(pos, pos);
-            convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
-            pos[3] = 0.0;
-            project_to_clip(painter->proj, pos, pos);
-            gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(pos));
-            gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(color));
-            gl_buf_next(&item->buf);
-        }
+    for (i = 0; i < verts_count; i++) {
+        vec3_copy(verts[i], pos);
+        pos[3] = 0.0;
+        vec3_normalize(pos, pos);
+        convert_frame(painter->obs, frame, FRAME_VIEW, true, pos, pos);
+        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(pos));
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(color));
+        gl_buf_next(&item->buf);
     }
 
     // Fill the indice buffer.
