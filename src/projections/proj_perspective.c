@@ -47,8 +47,6 @@ void proj_perspective_init(projection_t *p, double fovy, double aspect)
 {
     const double clip_near = 5 * DM2AU;
     mat4_inf_perspective(p->mat, fovy * DR2D, aspect, clip_near);
-    p->scaling[1] = tan(fovy/ 2);
-    p->scaling[0] = p->scaling[1] * aspect;
 }
 
 static const projection_klass_t proj_perspective_klass = {

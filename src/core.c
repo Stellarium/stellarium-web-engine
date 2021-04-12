@@ -251,15 +251,24 @@ void core_release(void)
     }
 }
 
+/*
+ * Get a projection scaling factor in the Y direction.
+ */
+static double proj_get_scaling_y(const projection_t *proj)
+{
+    return 1 / proj->mat[1][1];
+}
+
 EMSCRIPTEN_KEEPALIVE
 void core_set_view_offset(double center_y_offset)
 {
-    double pix_angular_size;
+    double pix_angular_size, scaling_y;
     projection_t proj;
 
     core_get_proj(&proj);
     assert(proj.window_size[1]);
-    pix_angular_size = 1.0 * proj.scaling[1] / proj.window_size[1] * 2;
+    scaling_y = proj_get_scaling_y(&proj);
+    pix_angular_size = 1.0 * scaling_y / proj.window_size[1] * 2;
     core->observer->view_offset_alt = -center_y_offset * pix_angular_size;
 }
 
@@ -802,8 +811,9 @@ double core_mag_to_lum_apparent(double mag, double surf)
  */
 double core_get_apparent_angle_for_point(const projection_t *proj, double r)
 {
-    const double win_w = proj->window_size[0];
-    return r * proj->scaling[0] / win_w * 2;
+    const double win_h = proj->window_size[1];
+    const double scaling_y = proj_get_scaling_y(proj);
+    return r * scaling_y / win_h * 2;
 }
 
 /*
@@ -822,8 +832,9 @@ double core_get_apparent_angle_for_point(const projection_t *proj, double r)
 double core_get_point_for_apparent_angle(const projection_t *proj,
                                          double angle)
 {
-    const double win_w = proj->window_size[0];
-    return angle / proj->scaling[0] * win_w / 2;
+    const double win_h = proj->window_size[1];
+    const double scaling_y = proj_get_scaling_y(proj);
+    return angle / scaling_y * win_h / 2;
 }
 
 /*

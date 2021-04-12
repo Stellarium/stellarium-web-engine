@@ -84,8 +84,6 @@ static void proj_stereographic_compute_fov(int id, double fov, double aspect,
 
 static void proj_stereographic_init(projection_t *p, double fovy, double aspect)
 {
-    p->scaling[1] = 2 * tan(fovy / 4);
-    p->scaling[0] = p->scaling[1] * aspect;
     double fovy2 = 2 * atan(2 * tan(fovy / 4));
     const double clip_near = 5 * DM2AU;
     mat4_inf_perspective(p->mat, fovy2 * DR2D, aspect, clip_near);

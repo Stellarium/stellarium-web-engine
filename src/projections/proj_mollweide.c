@@ -92,9 +92,7 @@ static void proj_mollweide_compute_fov(int id, double fov, double aspect,
 
 void proj_mollweide_init(projection_t *p, double fovy, double aspect)
 {
-    p->scaling[1]                = fovy / M_PI * sqrt(2);
-    p->scaling[0]                = p->scaling[1] * aspect;
-    p->flags                     = PROJ_HAS_DISCONTINUITY;
+    p->flags = PROJ_HAS_DISCONTINUITY;
     double fovy2 = 2 * atan(fovy / M_PI * sqrt(2));
     const double clip_near = 5 * DM2AU;
     mat4_inf_perspective(p->mat, fovy2 * DR2D, aspect, clip_near);

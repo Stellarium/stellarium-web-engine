@@ -56,7 +56,6 @@ enum {
 struct projection
 {
     projection_klass_t *klass;
-    double scaling[2];
     double fovy;
     int flags;
 

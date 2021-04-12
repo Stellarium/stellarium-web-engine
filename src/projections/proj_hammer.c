@@ -47,8 +47,6 @@ static bool proj_hammer_backward(const projection_t *proj,
 
 void proj_hammer_init(projection_t *p, double fov, double aspect)
 {
-    p->scaling[0] = aspect < 1 ? fov / 2 : fov / aspect / 2;
-    p->scaling[1] = p->scaling[0] / aspect;
     p->flags = PROJ_HAS_DISCONTINUITY;
     // XXX: set the projection matrix!
 }
