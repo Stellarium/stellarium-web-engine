@@ -15,12 +15,14 @@ varying lowp    vec4        v_color;
 
 #ifdef VERTEX_SHADER
 
+#includes "projections.glsl"
+
 attribute highp   vec4       a_pos;
 attribute highp   vec3       a_sky_pos;
 
 void main()
 {
-    gl_Position = a_pos;
+    gl_Position = proj(a_pos.xyz);
     const lowp float height = 0.2;
     const lowp float alpha = 0.15;
     lowp float d = smoothstep(height, 0.0, abs(a_sky_pos.z));

@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_shaders_atmosphere_glsl[3730] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_atmosphere_glsl[3770] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -21,6 +21,8 @@ static const unsigned char DATA_shaders_atmosphere_glsl[3730] __attribute__((ali
     "varying lowp    vec4        v_color;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
+    "\n"
+    "#includes \"projections.glsl\"\n"
     "\n"
     "attribute highp   vec4       a_pos;\n"
     "attribute highp   vec3       a_sky_pos;\n"
@@ -51,7 +53,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[3730] __attribute__((ali
     "    highp float cos_gamma, cos_gamma2, gamma, cos_theta;\n"
     "    highp vec3 p = a_sky_pos;\n"
     "\n"
-    "    gl_Position = a_pos;\n"
+    "    gl_Position = proj(a_pos.xyz);\n"
     "\n"
     "    // First compute the xy color component (chromaticity) from Preetham model\n"
     "    // and re-inject a_luminance for Y component (luminance).\n"
@@ -119,7 +121,7 @@ static const unsigned char DATA_shaders_atmosphere_glsl[3730] __attribute__((ali
 
 ASSET_REGISTER(shaders_atmosphere_glsl, "shaders/atmosphere.glsl", DATA_shaders_atmosphere_glsl, false)
 
-static const unsigned char DATA_shaders_blit_glsl[868] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_blit_glsl[965] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -136,12 +138,18 @@ static const unsigned char DATA_shaders_blit_glsl[868] __attribute__((aligned(4)
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
-    "attribute highp     vec4    a_pos;\n"
+    "#includes \"projections.glsl\"\n"
+    "\n"
+    "attribute highp     vec3    a_pos;\n"
     "attribute mediump   vec2    a_tex_pos;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = a_pos;\n"
+    "#ifdef PROJ\n"
+    "    gl_Position = proj(a_pos);\n"
+    "#else\n"
+    "    gl_Position = vec4(a_pos, 1.0);\n"
+    "#endif\n"
     "    v_tex_pos = a_tex_pos;\n"
     "}\n"
     "\n"
@@ -164,7 +172,7 @@ static const unsigned char DATA_shaders_blit_glsl[868] __attribute__((aligned(4)
 
 ASSET_REGISTER(shaders_blit_glsl, "shaders/blit.glsl", DATA_shaders_blit_glsl, false)
 
-static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_fog_glsl[812] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -182,12 +190,14 @@ static const unsigned char DATA_shaders_fog_glsl[772] __attribute__((aligned(4))
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
+    "#includes \"projections.glsl\"\n"
+    "\n"
     "attribute highp   vec4       a_pos;\n"
     "attribute highp   vec3       a_sky_pos;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = a_pos;\n"
+    "    gl_Position = proj(a_pos.xyz);\n"
     "    const lowp float height = 0.2;\n"
     "    const lowp float alpha = 0.15;\n"
     "    lowp float d = smoothstep(height, 0.0, abs(a_sky_pos.z));\n"

@@ -84,6 +84,7 @@ enum {
     ITEM_MESH,
     ITEM_POINTS,
     ITEM_TEXTURE,
+    ITEM_TEXTURE_2D,
     ITEM_ATMOSPHERE,
     ITEM_FOG,
     ITEM_PLANET,
@@ -213,10 +214,10 @@ static const gl_buf_info_t POINTS_BUF = {
 };
 
 static const gl_buf_info_t TEXTURE_BUF = {
-    .size = 24,
+    .size = 20,
     .attrs = {
-        [ATTR_POS]      = {GL_FLOAT, 4, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 16},
+        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 12},
     },
 };
 
@@ -233,19 +234,19 @@ static const gl_buf_info_t PLANET_BUF = {
 };
 
 static const gl_buf_info_t ATMOSPHERE_BUF = {
-    .size = 32,
+    .size = 28,
     .attrs = {
-        [ATTR_POS]       = {GL_FLOAT, 4, false, 0},
-        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 16},
-        [ATTR_LUMINANCE] = {GL_FLOAT, 1, false, 28},
+        [ATTR_POS]       = {GL_FLOAT, 3, false, 0},
+        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 12},
+        [ATTR_LUMINANCE] = {GL_FLOAT, 1, false, 24},
     },
 };
 
 static const gl_buf_info_t FOG_BUF = {
-    .size = 28,
+    .size = 24,
     .attrs = {
-        [ATTR_POS]       = {GL_FLOAT, 4, false, 0},
-        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 16},
+        [ATTR_POS]       = {GL_FLOAT, 3, false, 0},
+        [ATTR_SKY_POS]   = {GL_FLOAT, 3, false, 12},
     },
 };
 
@@ -509,6 +510,7 @@ static void quad_planet(
                                 {1, 1}, {1, 0}, {0, 1} };
     n = grid_size + 1;
 
+    assert(painter->flags & PAINTER_ENABLE_DEPTH);
     item = calloc(1, sizeof(*item));
     item->type = ITEM_PLANET;
     gl_buf_alloc(&item->buf, &PLANET_BUF, n * n * 4);
@@ -671,8 +673,7 @@ void render_quad(renderer_t *rend, const painter_t *painter,
 
         vec4_set(p, VEC4_SPLIT(grid[i * n + j]));
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, ndc_p);
-        project_to_clip(painter->proj, ndc_p, ndc_p);
-        gl_buf_4f(&item->buf, -1, ATTR_POS, VEC4_SPLIT(ndc_p));
+        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(ndc_p));
         // For atmosphere shader, in the first pass we do not compute the
         // luminance yet, only if the point is visible.
         if (painter->flags & PAINTER_ATMOSPHERE_SHADER) {
@@ -710,12 +711,12 @@ static void texture2(renderer_t *rend, texture_t *tex,
     float color[4];
 
     vec4_to_float(color_, color);
-    item = get_item(rend, ITEM_TEXTURE, 4, 6, tex);
+    item = get_item(rend, ITEM_TEXTURE_2D, 4, 6, tex);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_TEXTURE;
+        item->type = ITEM_TEXTURE_2D;
         item->flags = flags;
         gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
@@ -728,7 +729,7 @@ static void texture2(renderer_t *rend, texture_t *tex,
     ofs = item->buf.nb;
 
     for (i = 0; i < 4; i++) {
-        gl_buf_4f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1], 0.0, 1.0);
+        gl_buf_3f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1], 0.0);
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, uv[i][0], uv[i][1]);
         gl_buf_next(&item->buf);
     }
@@ -1248,7 +1249,14 @@ static void item_text_render(renderer_t *rend, const item_t *item)
 static void item_fog_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
-    shader = shader_get("fog", NULL, ATTR_NAMES, init_shader);
+    float matf[16];
+    projection_t proj;
+
+    shader_define_t defines[] = {
+        {"PROJ", rend->proj.klass->id},
+        {}
+    };
+    shader = shader_get("fog", defines, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
     GL(glEnable(GL_CULL_FACE));
     GL(glCullFace(rend->cull_flipped ? GL_FRONT : GL_BACK));
@@ -1256,6 +1264,11 @@ static void item_fog_render(renderer_t *rend, const item_t *item)
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                            GL_ZERO, GL_ONE));
     GL(glDisable(GL_DEPTH_TEST));
+
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
+
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
 }
@@ -1264,8 +1277,14 @@ static void item_atmosphere_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     float tm[3];
+    float matf[16];
+    projection_t proj;
 
-    shader = shader_get("atmosphere", NULL, ATTR_NAMES, init_shader);
+    shader_define_t defines[] = {
+        {"PROJ", rend->proj.klass->id},
+        {}
+    };
+    shader = shader_get("atmosphere", defines, ATTR_NAMES, init_shader);
     GL(glUseProgram(shader->prog));
 
     GL(glActiveTexture(GL_TEXTURE0));
@@ -1292,6 +1311,11 @@ static void item_atmosphere_render(renderer_t *rend, const item_t *item)
     tm[1] = core->tonemapper.lwmax;
     tm[2] = core->tonemapper.exposure;
     gl_update_uniform(shader, "u_tm", tm);
+
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
+
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
 }
@@ -1299,10 +1323,13 @@ static void item_atmosphere_render(renderer_t *rend, const item_t *item)
 static void item_texture_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
+    float matf[16];
+    projection_t proj;
 
     shader_define_t defines[] = {
         {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE &&
                               !(item->flags & PAINTER_ADD)},
+        {"PROJ", item->type == ITEM_TEXTURE ? rend->proj.klass->id : 0},
         {}
     };
     shader = shader_get("blit", defines, ATTR_NAMES, init_shader);
@@ -1337,6 +1364,10 @@ static void item_texture_render(renderer_t *rend, const item_t *item)
     }
 
     gl_update_uniform(shader, "u_color", item->color);
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
+
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
 }
@@ -1495,6 +1526,7 @@ static void rend_flush(renderer_t *rend, const projection_t *proj)
             item_points_render(rend, item);
             break;
         case ITEM_TEXTURE:
+        case ITEM_TEXTURE_2D:
             item_texture_render(rend, item);
             break;
         case ITEM_ATMOSPHERE:

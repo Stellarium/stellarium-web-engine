@@ -14,12 +14,18 @@ varying highp   vec2        v_tex_pos;
 
 #ifdef VERTEX_SHADER
 
-attribute highp     vec4    a_pos;
+#includes "projections.glsl"
+
+attribute highp     vec3    a_pos;
 attribute mediump   vec2    a_tex_pos;
 
 void main()
 {
-    gl_Position = a_pos;
+#ifdef PROJ
+    gl_Position = proj(a_pos);
+#else
+    gl_Position = vec4(a_pos, 1.0);
+#endif
     v_tex_pos = a_tex_pos;
 }
 

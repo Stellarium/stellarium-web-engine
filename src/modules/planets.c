@@ -867,6 +867,7 @@ static void planet_render_model(const planet_t *planet,
     double dist, depth_range[2];
     painter_t painter = *painter_;
 
+    painter.flags |= PAINTER_ENABLE_DEPTH;
     ((planet_t*)planet)->no_model = planet->no_model ||
         painter_get_3d_model_bounds(&painter, planet->name, bounds);
 

@@ -19,6 +19,8 @@ varying lowp    vec4        v_color;
 
 #ifdef VERTEX_SHADER
 
+#includes "projections.glsl"
+
 attribute highp   vec4       a_pos;
 attribute highp   vec3       a_sky_pos;
 attribute highp   float      a_luminance;
@@ -48,7 +50,7 @@ void main()
     highp float cos_gamma, cos_gamma2, gamma, cos_theta;
     highp vec3 p = a_sky_pos;
 
-    gl_Position = a_pos;
+    gl_Position = proj(a_pos.xyz);
 
     // First compute the xy color component (chromaticity) from Preetham model
     // and re-inject a_luminance for Y component (luminance).
