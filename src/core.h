@@ -407,7 +407,7 @@ double core_get_apparent_angle_for_point(const projection_t *proj, double r);
  *
  * Parameters:
  *   proj   - The projection used.
- *   angle  - Apparent angle (rad).
+ *   angle  - Apparent diameter angle (rad).
  *
  * Return:
  *   Point radius in window pixel.
