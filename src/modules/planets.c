@@ -791,7 +791,7 @@ static void planet_render_hips(const planet_t *planet,
     assert(hips);
 
     planet_get_pvo(planet, painter.obs, pvo);
-    angle = 2 * radius * r_scale / vec2_norm(pvo[0]);
+    angle = 2 * radius * r_scale / vec3_norm(pvo[0]);
 
     memset(&painter.planet, 0, sizeof(painter.planet));
     // Get potential shadow casting spheres.
@@ -840,7 +840,7 @@ static void planet_render_hips(const planet_t *planet,
     painter.depth_range = &depth_range;
 
     // Compute the required split order, based on the size of the planet
-    // on screen.
+    // on screen.  Note: could we redo that properly?
     pixel_size = core_get_point_for_apparent_angle(painter.proj, angle);
     split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
 
