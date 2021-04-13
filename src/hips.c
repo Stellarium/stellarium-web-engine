@@ -568,10 +568,21 @@ bool hips_is_ready(hips_t *hips)
 
 int hips_get_render_order(const hips_t *hips, const painter_t *painter)
 {
-    double w, px; // Size in pixel of the total survey.
-    px = core_get_point_for_apparent_angle(painter->proj, 2 * M_PI);
-    w = hips->tile_width ?: 256;
-    return round(log2(px / (4.0 * sqrt(2.0) * w)));
+    /*
+     * Formula based on the fact that the number of pixels of the survey
+     * covering a small angle 'a' is:
+     * px1 = a * w * 4 * sqrt(2) * 2^order
+     * with w the pixel width of a tile.
+     *
+     * We also know that the number of pixels on screen in the segment 'a' is:
+     * px2 = a * f * win_h / 2
+     *
+     * solving px1 = px2 gives us the formula.
+     */
+    double w = hips->tile_width ?: 256;
+    double win_h = painter->proj->window_size[1];
+    double f = painter->proj->mat[1][1];
+    return round(log2(M_PI * f * win_h / (4.0 * sqrt(2.0) * w)));
 }
 
 int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
