@@ -566,8 +566,16 @@ bool hips_is_ready(hips_t *hips)
     return hips_update(hips);
 }
 
-int hips_get_render_order(const hips_t *hips, const painter_t *painter,
-                          double angle)
+int hips_get_render_order(const hips_t *hips, const painter_t *painter)
+{
+    double w, px; // Size in pixel of the total survey.
+    px = core_get_point_for_apparent_angle(painter->proj, 2 * M_PI);
+    w = hips->tile_width ?: 256;
+    return round(log2(px / (4.0 * sqrt(2.0) * w)));
+}
+
+int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
+                                 double angle)
 {
     double w, px; // Size in pixel of the total survey.
     px = core_get_point_for_apparent_angle(painter->proj, angle);
@@ -593,11 +601,15 @@ int hips_render_traverse(
     uv_map_t map;
 
     hips_update(hips);
-    render_order = hips_get_render_order(hips, painter, angle);
+
     if (angle < 2.0 * M_PI) {
         flags |= HIPS_PLANET;
         outside = false;
+        render_order = hips_get_render_order_planet(hips, painter, angle);
+    } else {
+        render_order = hips_get_render_order(hips, painter);
     }
+
     assert(split_order >= 0);
 
     // For extrem low resolution force using the allsky if available so that

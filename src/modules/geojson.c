@@ -496,7 +496,7 @@ static bool survey_iter_visible_tiles(
     int render_order;
     hips_t *hips = survey->hips;
 
-    render_order = hips_get_render_order(hips, painter, 2 * M_PI);
+    render_order = hips_get_render_order(hips, painter);
     render_order = clamp(render_order, hips->order_min, hips->order);
 
     while (true) {
