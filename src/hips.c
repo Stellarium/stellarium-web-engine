@@ -578,9 +578,9 @@ int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
                                  double angle)
 {
     double w, px; // Size in pixel of the total survey.
-    px = core_get_point_for_apparent_angle(painter->proj, angle);
+    px = 2 * core_get_point_for_apparent_angle(painter->proj, angle);
     w = hips->tile_width ?: 256;
-    return round(log2(px / (4.0 * sqrt(2.0) * w)));
+    return ceil(log2(px / (4.0 * sqrt(2.0) * w)));
 }
 
 // Similar to hips_render, but instead of actually rendering the tiles
