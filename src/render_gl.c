@@ -1486,7 +1486,9 @@ static void rend_flush(renderer_t *rend, const projection_t *proj)
         rend->depth_range[0] = 0;
         rend->depth_range[1] = 1;
     }
-    rend->depth_range[0] = max(rend->depth_range[0], 100 * DM2AU);
+
+    // Limit near depth range to 10 meters.  Is that always OK?
+    rend->depth_range[0] = max(rend->depth_range[0], 10 * DM2AU);
     // Add a small margin.
     rend->depth_range[0] *= 0.99;
     rend->depth_range[1] *= 1.01;
