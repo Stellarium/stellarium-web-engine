@@ -441,11 +441,9 @@ texture_t *hips_get_tile_texture(
 
 static int render_visitor(hips_t *hips, const painter_t *painter_,
                           const double transf[4][4],
-                          int order, int pix, int split, int flags,
-                          void *user)
+                          int order, int pix, int split,
+                          int *nb_tot, int *nb_loaded)
 {
-    int *nb_tot = USER_GET(user, 0);
-    int *nb_loaded = USER_GET(user, 1);
     painter_t painter = *painter_;
     texture_t *tex;
     uv_map_t map;
@@ -454,8 +452,8 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     // UV transfo mat with swapped x and y.
     const double uv_swap[3][3] = {{0, 1, 0}, {1, 0, 0}, {0, 0, 1}};
     double uv[3][3] = MAT3_IDENTITY;
+    int flags = HIPS_LOAD_IN_THREAD;
 
-    flags |= HIPS_LOAD_IN_THREAD;
     (*nb_tot)++;
     tex = hips_get_tile_texture(hips, order, pix, flags, uv, &fade, &loaded);
     mat3_mul(uv, uv_swap, uv);
@@ -470,34 +468,18 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     return 0;
 }
 
-// Similar to hips_render, but instead of actually rendering the tiles
-// we call a callback function.  This can be used when we need better
-// control on the rendering.
-// XXX: to remove.
-static int hips_render_traverse(
-        hips_t *hips, const painter_t *painter,
-        const double transf[4][4],
-        int split_order, void *user,
-        int (*callback)(hips_t *hips, const painter_t *painter,
-                        const double transf[4][4],
-                        int order, int pix, int split, int flags, void *user))
+int hips_render(hips_t *hips, const painter_t *painter,
+                const double transf[4][4], int split_order)
 {
+    int nb_tot = 0, nb_loaded = 0;
     int render_order, order, pix, split;
-    int flags = 0;
     hips_iterator_t iter;
-    bool outside = true;
     uv_map_t map;
 
-    hips_update(hips);
+    if (painter->color[3] == 0.0) return 0;
+    if (!hips_is_ready(hips)) return 0;
+
     render_order = hips_get_render_order(hips, painter);
-
-    assert(split_order >= 0);
-
-    // For extrem low resolution force using the allsky if available so that
-    // we don't download too much data.
-    if (render_order < -5 && hips->allsky.data)
-        flags |= HIPS_FORCE_USE_ALLSKY;
-
     // Clamp the render order into physically possible range.
     render_order = clamp(render_order, hips->order_min, hips->order);
     render_order = min(render_order, 9); // Hard limit.
@@ -511,29 +493,17 @@ static int hips_render_traverse(
         // Early exit if the tile is clipped.
         uv_map_init_healpix(&map, order, pix, false, false);
         map.transf = (void*)transf;
-        if (painter_is_quad_clipped(painter, hips->frame, &map, outside))
+        if (painter_is_quad_clipped(painter, hips->frame, &map, true))
             continue;
         if (order < render_order) { // Keep going.
             hips_iter_push_children(&iter, order, pix);
             continue;
         }
         split = 1 << (split_order - render_order);
-        callback(hips, painter, transf, order, pix, split, flags, user);
+        render_visitor(hips, painter, transf, order, pix, split,
+                       &nb_tot, &nb_loaded);
     }
-    return 0;
-}
 
-
-int hips_render(hips_t *hips, const painter_t *painter_,
-                const double transf[4][4], int split_order)
-{
-    int nb_tot = 0, nb_loaded = 0;
-    painter_t painter = *painter_;
-    if (painter.color[3] == 0.0) return 0;
-    if (!hips_is_ready(hips)) return 0;
-    hips_render_traverse(hips, &painter, transf, split_order,
-                         USER_PASS(&nb_tot, &nb_loaded),
-                         render_visitor);
     progressbar_report(hips->url, hips->label, nb_loaded, nb_tot, -1);
     return 0;
 }
