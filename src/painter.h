@@ -363,7 +363,6 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 //  frame     - One of the <FRAME> enum frame.
 //  order     - Healpix order.
 //  pix       - Healpix pix.
-//  outside   - Set whether the tile is an outside (not planet) tile.
 //
 // Returns:
 //  True if the tile is clipped, false otherwise.
@@ -372,7 +371,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 //  that a non visible tile is clipped.  So this function can return false
 //  even though a tile is not actually visible.
 bool painter_is_healpix_clipped(const painter_t *painter, int frame,
-                                int order, int pix, bool outside);
+                                int order, int pix);
 
 /*
  * Function: painter_is_planet_healpix_clipped

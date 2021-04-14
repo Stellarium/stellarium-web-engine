@@ -652,7 +652,7 @@ static int render_visitor(int order, int pix, void *user)
     bool selected;
 
     // Early exit if the tile is clipped.
-    if (painter_is_healpix_clipped(&painter, FRAME_ASTROM, order, pix, true))
+    if (painter_is_healpix_clipped(&painter, FRAME_ASTROM, order, pix))
         return 0;
     if (order < survey->min_order) return 1;
 

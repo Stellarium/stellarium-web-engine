@@ -326,7 +326,7 @@ static void test_clipping(void)
     // Check that all the healpix tiles are not clipped from the max order down
     // to the order zero.
     for (; order >= 0; order--) {
-        r = painter_is_healpix_clipped(&painter, FRAME_ICRF, order, pix, true);
+        r = painter_is_healpix_clipped(&painter, FRAME_ICRF, order, pix);
         if (r) LOG_E("Clipping error %d %d", order, pix);
         assert(!r);
         pix /= 4;

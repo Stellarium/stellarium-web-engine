@@ -211,7 +211,7 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
     int split, i;
     uv_map_t map;
 
-    if (painter_is_healpix_clipped(painter, FRAME_OBSERVED, order, pix, true))
+    if (painter_is_healpix_clipped(painter, FRAME_OBSERVED, order, pix))
         return;
     if (order < 1) {
         for (i = 0; i < 4; i++)

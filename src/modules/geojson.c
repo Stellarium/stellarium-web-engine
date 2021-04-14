@@ -501,8 +501,7 @@ static bool survey_iter_visible_tiles(
 
     while (true) {
         if (!hips_iter_next(iter, order, pix)) return false;
-        if (painter_is_healpix_clipped(
-                    painter, hips->frame, *order, *pix, true))
+        if (painter_is_healpix_clipped(painter, hips->frame, *order, *pix))
             continue;
         if (*order < render_order) {
             hips_iter_push_children(iter, *order, *pix);

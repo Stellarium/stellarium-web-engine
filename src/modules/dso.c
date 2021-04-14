@@ -608,7 +608,7 @@ static int render_visitor(int order, int pix, void *user)
     uint64_t hint;
 
     // Early exit if the tile is clipped.
-    if (painter_is_healpix_clipped(&painter, FRAME_ICRF, order, pix, true))
+    if (painter_is_healpix_clipped(&painter, FRAME_ICRF, order, pix))
         return 0;
 
     (*nb_tot)++;

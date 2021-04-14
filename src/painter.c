@@ -560,11 +560,11 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 }
 
 bool painter_is_healpix_clipped(const painter_t *painter, int frame,
-                                int order, int pix, bool outside)
+                                int order, int pix)
 {
     uv_map_t map;
     uv_map_init_healpix(&map, order, pix, false, false);
-    return painter_is_quad_clipped(painter, frame, &map, outside);
+    return painter_is_quad_clipped(painter, frame, &map, true);
 }
 
 bool painter_is_planet_healpix_clipped(const painter_t *painter,
