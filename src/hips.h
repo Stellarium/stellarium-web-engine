@@ -297,10 +297,10 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter);
  * Parameters:
  *   hips    - A hips survey.
  *   painter - The painter used to render.
- *   angle   - The visible angular diameter of the planet.
+ *   mat     - 4x4 transformation matrix of the planet position / scale.
  */
 int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
-                                 double angle);
+                                 const double mat[4][4]);
 
 /*
  * Function: hips_render

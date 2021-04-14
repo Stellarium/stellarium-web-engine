@@ -837,8 +837,7 @@ static void planet_render_hips(const planet_t *planet,
     pixel_size = core_get_point_for_apparent_angle(painter.proj, angle);
     split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
 
-    render_order = hips_get_render_order_planet(hips, &painter, angle);
-
+    render_order = hips_get_render_order_planet(hips, &painter, mat);
     // For extrem low resolution force using the allsky if available so that
     // we don't download too much data.
     if (render_order < -5 && hips->allsky.data)

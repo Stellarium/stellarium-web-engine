@@ -609,12 +609,35 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter)
 }
 
 int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
-                                 double angle)
+                                 const double mat[4][4])
 {
-    double w, px; // Size in pixel of the total survey.
-    px = core_get_point_for_apparent_angle(painter->proj, angle);
-    w = hips->tile_width ?: 256;
-    return ceil(log2(px / (4.0 * sqrt(2.0) * w)));
+    /*
+     * To come up with this formula, considering a small view angle 'a',
+     * we know this map on screen to a pixel number:
+     *
+     *   px1 = a * f * winh / 2
+     *
+     * We also know this angle covers a segment of the planet of length:
+     *
+     *   x = (d - r) * a
+     *
+     * A planet meridian of length 2πr has '4 * sqrt(2) * w * 2^order' pixels,
+     * so the segment x has:
+     *
+     *   px2 = 4 * sqrt(2) * w * 2^order / (2 pi r) * (d - r) * a
+     *
+     * Solving px1 = px2 gives us the formula.
+     */
+    double w = hips->tile_width ?: 256;
+    double win_h = painter->proj->window_size[1];
+    double f = painter->proj->mat[1][1];
+    double r = mat[0][0];
+    double d = vec3_norm(mat[3]);
+    double order;
+    order = log2(f * win_h * M_PI * r / (4.0 * sqrt(2.0) * w * (d - r)));
+    // Note: I add 1 to make sure the planets look sharp.  Note sure why
+    // this is needed (because of the interpolation?)
+    return ceil(order + 1);
 }
 
 int hips_parse_hipslist(
