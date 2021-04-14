@@ -567,6 +567,17 @@ bool painter_is_healpix_clipped(const painter_t *painter, int frame,
     return painter_is_quad_clipped(painter, frame, &map, outside);
 }
 
+bool painter_is_planet_healpix_clipped(const painter_t *painter,
+                                       const double transf[4][4],
+                                       int order, int pix)
+{
+    uv_map_t map;
+    uv_map_init_healpix(&map, order, pix, false, false);
+    map.transf = (void*)transf;
+    return painter_is_quad_clipped(painter, FRAME_ICRF, &map, false);
+}
+
+
 /* Draw the contour lines of a shape.
  *
  * borders_mask is a 4 bits mask to decide what side of the uv rect has to be

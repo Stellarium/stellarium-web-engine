@@ -514,7 +514,7 @@ static int load_allsky_worker(worker_t *worker)
     return 0;
 }
 
-static bool hips_update(hips_t *hips)
+bool hips_update(hips_t *hips)
 {
     int code, err, size;
     char url[1024];

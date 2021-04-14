@@ -141,6 +141,9 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
  */
 bool hips_is_ready(hips_t *hips);
 
+// Same as hips_is_ready.
+bool hips_update(hips_t *hips);
+
 /*
  * Function: hips_traverse
  * Breadth first traversal of healpix grid.

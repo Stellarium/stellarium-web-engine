@@ -374,6 +374,23 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
 bool painter_is_healpix_clipped(const painter_t *painter, int frame,
                                 int order, int pix, bool outside);
 
+/*
+ * Function: painter_is_planet_healpix_clipped
+ * Check if a healpix pixel on the surface of a planet is clipped.
+ *
+ * Parameters:
+ *   painter    - A painter.
+ *   transf     - 4x4 matrix providing the planet position / scale.
+ *   order      - Healpix order.
+ *   pix        - Healpix pix.
+ *
+ * Return:
+ *   True if the pixel is guarantied to be clipped.
+ */
+bool painter_is_planet_healpix_clipped(const painter_t *painter,
+                                       const double transf[4][4],
+                                       int order, int pix);
+
 // Function: painter_is_point_clipped_fast
 //
 // Convenience function that checks if a 3D point is visible.

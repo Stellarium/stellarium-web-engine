@@ -578,11 +578,9 @@ static void planet_get_designations(
 
 static int on_render_tile(hips_t *hips, const painter_t *painter_,
                           const double transf[4][4],
-                          int order, int pix, int split, int flags, void *user)
+                          int order, int pix, int split, int flags,
+                          planet_t *planet, int *nb_tot, int *nb_loaded)
 {
-    planet_t *planet = USER_GET(user, 0);
-    int *nb_tot = USER_GET(user, 1);
-    int *nb_loaded = USER_GET(user, 2);
     painter_t painter = *painter_;
     texture_t *tex, *normalmap = NULL;
     uv_map_t map;
@@ -786,6 +784,10 @@ static void planet_render_hips(const planet_t *planet,
     double shadow_spheres[4][4];
     double pixel_size;
     int split_order;
+    int render_order;
+    int flags = 0;
+    int order, pix, split;
+    hips_iterator_t iter;
 
     if (!hips) hips = planet->hips;
     assert(hips);
@@ -844,9 +846,36 @@ static void planet_render_hips(const planet_t *planet,
     pixel_size = core_get_point_for_apparent_angle(painter.proj, angle);
     split_order = ceil(mix(2, 5, smoothstep(100, 600, pixel_size)));
 
-    hips_render_traverse(hips, &painter, mat, angle, split_order,
-                         USER_PASS(planet, &nb_tot, &nb_loaded),
-                         on_render_tile);
+    render_order = hips_get_render_order_planet(hips, &painter, angle);
+
+    // For extrem low resolution force using the allsky if available so that
+    // we don't download too much data.
+    if (render_order < -5 && hips->allsky.data)
+        flags |= HIPS_FORCE_USE_ALLSKY;
+
+    // Clamp the render order into physically possible range.
+    // XXX: should be done in hips_get_render_order_planet I guess.
+    render_order = clamp(render_order, hips->order_min, hips->order);
+    render_order = min(render_order, 9); // Hard limit.
+
+    // Can't split less than the rendering order.
+    split_order = max(split_order, render_order);
+
+    // Iter the HiPS pixels and render them.
+    hips_update(hips);
+    hips_iter_init(&iter);
+    while (hips_iter_next(&iter, &order, &pix)) {
+        if (painter_is_planet_healpix_clipped(&painter, mat, order, pix))
+            continue;
+        if (order < render_order) { // Keep going.
+            hips_iter_push_children(&iter, order, pix);
+            continue;
+        }
+        split = 1 << (split_order - render_order);
+        on_render_tile(hips, &painter, mat, order, pix, split, flags,
+                       planet, &nb_tot, &nb_loaded);
+    }
+
     if (planet->rings.tex)
         render_rings(planet, &painter, mat);
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
