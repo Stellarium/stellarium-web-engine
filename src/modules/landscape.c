@@ -173,7 +173,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
 
     if (ls->hips && hips_is_ready(ls->hips)) {
         vec3_mul(brightness, painter.color, painter.color);
-        hips_render(ls->hips, &painter, rg2h, 2 * M_PI, split_order);
+        hips_render(ls->hips, &painter, rg2h, split_order);
     }
     if (ls->shape) {
         obj_render(ls->shape, &painter);

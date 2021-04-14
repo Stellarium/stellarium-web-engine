@@ -82,7 +82,7 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     render_order = hips_get_render_order(dss->hips, painter);
     split_order = min(split_order, render_order + 3);
 
-    hips_render(dss->hips, &painter2, NULL, 2 * M_PI, split_order);
+    hips_render(dss->hips, &painter2, NULL, split_order);
     return 0;
 }
 

@@ -58,7 +58,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
     if (painter.color[3] < 1./255)
         return 0;
 
-    hips_render(mw->hips, &painter, NULL, 2 * M_PI, split_order);
+    hips_render(mw->hips, &painter, NULL, split_order);
     return 0;
 }
 

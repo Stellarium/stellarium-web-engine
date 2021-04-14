@@ -312,29 +312,12 @@ int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
  *   painter - The painter used to render.
  *   transf  - Transformation applied to the unit sphere to set the position
  *             in the sky.  Can be set to NULL for identity.
- *   angle   - Visible angle the survey has in the sky.
- *             (2 * PI for full sky surveys).
  *   split_order - The requested order of the final quad divisions.
  *                 The actual split order could be higher if the rendering
  *                 order is too high for this value.
  */
 int hips_render(hips_t *hips, const painter_t *painter,
-                const double transf[4][4], double angle,
-                int split_order);
-
-/*
- * Function: hips_render_traverse
- * Similar to hips_render, but instead of actually rendering the tiles
- *  we call a callback function.  This can be used when we need better
- *  control on the rendering.
- */
-int hips_render_traverse(hips_t *hips, const painter_t *painter,
-                         const double transf[4][4],
-                         double angle, int split_order, void *user,
-                         int callback(hips_t *hips, const painter_t *painter,
-                                      const double transf[4][4],
-                                      int order, int pix, int split,
-                                      int flags, void *user));
+                const double transf[4][4], int split_order);
 
 /*
  * Function: hips_parse_date
