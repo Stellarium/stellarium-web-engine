@@ -772,7 +772,6 @@ static void planet_render_hips(const planet_t *planet,
     // XXX: cleanup this function.  It is getting too big.
     double mat[4][4];
     double tmp_mat[4][4];
-    double dist;
     double full_emit[3] = {1.0, 1.0, 1.0};
     double pvo[2][3];
     double angle;
@@ -780,7 +779,6 @@ static void planet_render_hips(const planet_t *planet,
     double sun_pos[4] = {0, 0, 0, 1};
     planets_t *planets = (planets_t*)planet->obj.parent;
     painter_t painter = *painter_;
-    double depth_range[2];
     double shadow_spheres[4][4];
     double pixel_size;
     int split_order;
@@ -833,13 +831,6 @@ static void planet_render_hips(const planet_t *planet,
         painter.planet.shadow_color_tex = planets->earth_shadow_tex;
     // Lower current moon texture contrast.
     if (planet->id == MOON) painter.contrast = 0.6;
-
-    // Set the min required depth range needed with some margins for the
-    // actual planet size and the rings.
-    dist = vec3_norm(pvo[0]);
-    depth_range[0] = dist * 0.5;
-    depth_range[1] = dist * 2;
-    painter.depth_range = &depth_range;
 
     // Compute the required split order, based on the size of the planet
     // on screen.  Note: could we redo that properly?
