@@ -631,7 +631,7 @@ int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
     double w = hips->tile_width ?: 256;
     double win_h = painter->proj->window_size[1];
     double f = painter->proj->mat[1][1];
-    double r = mat[0][0];
+    double r = vec3_norm(mat[0]);
     double d = vec3_norm(mat[3]);
     double order;
     order = log2(f * win_h * M_PI * r / (4.0 * sqrt(2.0) * w * (d - r)));
