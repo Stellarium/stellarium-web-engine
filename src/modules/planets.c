@@ -840,7 +840,7 @@ static void planet_render_hips(const planet_t *planet,
     render_order = hips_get_render_order_planet(hips, &painter, mat);
     // For extrem low resolution force using the allsky if available so that
     // we don't download too much data.
-    if (render_order < -5 && hips->allsky.data)
+    if (render_order < -4 && hips->allsky.data)
         flags |= HIPS_FORCE_USE_ALLSKY;
 
     // Clamp the render order into physically possible range.
