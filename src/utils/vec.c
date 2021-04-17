@@ -10,11 +10,6 @@
 #include "vec.h"
 #include "tests.h"
 
-#if !VEC_INLINE
-    #define VEC_IMPLEMENTATION
-    #include "vec.h"
-#endif
-
 #define S static
 
 static double min(double x, double y)
