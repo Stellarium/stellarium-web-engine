@@ -762,16 +762,40 @@ static double planet_get_rotation(const planet_t *planet, double tt)
     return (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
 }
 
+static void planet_get_mat(const planet_t *planet, const observer_t *obs,
+                           double mat[4][4])
+{
+    double radius = planet->radius_m * DM2AU;
+    double pvo[2][3];
+    double tmp_mat[4][4];
+
+    mat4_set_identity(mat);
+    planet_get_pvo(planet, obs, pvo);
+    mat4_itranslate(mat, pvo[0][0], pvo[0][1], pvo[0][2]);
+    mat4_iscale(mat, radius, radius, radius);
+
+    // Apply the rotation.
+    // Use pole ra/de position if available, else try with obliquity.
+    // XXX: Probably need to remove obliquity.
+    if (planet->rot.pole_ra || planet->rot.pole_de) {
+        mat4_rz(planet->rot.pole_ra, mat, mat);
+        mat4_ry(M_PI / 2 - planet->rot.pole_de, mat, mat);
+    } else {
+        mat3_to_mat4(obs->re2i, tmp_mat);
+        mat4_mul(mat, tmp_mat, mat);
+        mat4_rx(-planet->rot.obliquity, mat, mat);
+    }
+    mat4_rz(planet_get_rotation(planet, obs->tt), mat, mat);
+}
+
 static void planet_render_hips(const planet_t *planet,
                                const hips_t *hips,
-                               double radius,
                                double r_scale,
                                double alpha,
                                const painter_t *painter_)
 {
     // XXX: cleanup this function.  It is getting too big.
     double mat[4][4];
-    double tmp_mat[4][4];
     double full_emit[3] = {1.0, 1.0, 1.0};
     double pvo[2][3];
     double angle;
@@ -786,6 +810,7 @@ static void planet_render_hips(const planet_t *planet,
     int flags = 0;
     int order, pix, split;
     hips_iterator_t iter;
+    double radius = planet->radius_m * DM2AU; // Radius in AU.
 
     if (!hips) hips = planet->hips;
     assert(hips);
@@ -802,28 +827,14 @@ static void planet_render_hips(const planet_t *planet,
     painter.color[3] *= alpha;
     painter.flags |= PAINTER_PLANET_SHADER;
 
-    mat4_set_identity(mat);
-    mat4_itranslate(mat, pvo[0][0], pvo[0][1], pvo[0][2]);
-    mat4_iscale(mat, radius * r_scale, radius * r_scale, radius * r_scale);
+    planet_get_mat(planet, painter.obs, mat);
+    mat4_iscale(mat, r_scale, r_scale, r_scale);
     painter.planet.scale = r_scale;
 
     // Compute sun position.
     vec3_copy(painter.obs->sun_pvo[0], sun_pos);
     sun_pos[3] = planets->sun->radius_m / DAU;
     painter.planet.sun = &sun_pos;
-
-    // Apply the rotation.
-    // Use pole ra/de position if available, else try with obliquity.
-    // XXX: Probably need to remove obliquity.
-    if (planet->rot.pole_ra || planet->rot.pole_de) {
-        mat4_rz(planet->rot.pole_ra, mat, mat);
-        mat4_ry(M_PI / 2 - planet->rot.pole_de, mat, mat);
-    } else {
-        mat3_to_mat4(painter.obs->re2i, tmp_mat);
-        mat4_mul(mat, tmp_mat, mat);
-        mat4_rx(-planet->rot.obliquity, mat, mat);
-    }
-    mat4_rz(planet_get_rotation(planet, painter.obs->tt), mat, mat);
 
     if (planet->id == SUN)
         painter.planet.light_emit = &full_emit;
@@ -875,7 +886,6 @@ static void planet_render_hips(const planet_t *planet,
  * Render either the glTF 3d model, either the hips survey
  */
 static void planet_render_model(const planet_t *planet,
-                                double radius,
                                 double r_scale,
                                 double alpha,
                                 const painter_t *painter_)
@@ -893,7 +903,7 @@ static void planet_render_model(const planet_t *planet,
     if (planet->no_model) { // Use hips.
         hips = planet->hips ?: g_planets->default_hips;
         if (hips)
-            planet_render_hips(planet, hips, radius, r_scale, alpha, &painter);
+            planet_render_hips(planet, hips, r_scale, alpha, &painter);
         return;
     }
 
@@ -1125,8 +1135,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     if (model_alpha > 0) {
-        planet_render_model(planet, planet->radius_m / DAU, r_scale,
-                            model_alpha, &painter);
+        planet_render_model(planet, r_scale, model_alpha, &painter);
     }
 
     // Note: I force rendering the label if the model is visible for the
