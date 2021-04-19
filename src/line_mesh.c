@@ -103,7 +103,7 @@ static void line_push_point(double (**pos)[3], double (**win)[3],
         *win = realloc(*win, *allocated * sizeof(**win));
     }
     memcpy((*pos)[*size], p, sizeof(**pos));
-    memcpy((*win)[*size], p, sizeof(**win));
+    memcpy((*win)[*size], w, sizeof(**win));
     (*size)++;
 }
 
