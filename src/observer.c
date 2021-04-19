@@ -40,18 +40,22 @@ static void update_matrices(observer_t *obs)
     double re2i[3][3];  // Eclipic to Equatorial J2000 (ICRF).
     double rc2v[3][3];
     double view_rot[3][3];
+    // r2gl changes the coordinate from z up to y up orthonomal.
+    const double r2gl[3][3] = {{0, 0,-1},
+                               {1, 0, 0},
+                               {0, 1, 0}};
 
     quat_to_mat3(obs->mount_quat, ro2m);
+
+    // Compute mount to view rotation (in Y up coordinates).
     mat3_set_identity(rm2v);
-    // r2gl changes the coordinate from z up to y up orthonomal.
-    double r2gl[3][3] = {{0, 0,-1},
-                         {1, 0, 0},
-                         {0, 1, 0}};
     mat3_rz(obs->roll, rm2v, rm2v);
     mat3_rx(-obs->pitch, rm2v, rm2v);
     mat3_ry(obs->yaw, rm2v, rm2v);
-    mat3_mul(rm2v, r2gl, rm2v);
-    mat3_mul(rm2v, ro2m, ro2v);
+
+    // Compute observed to view rotation.
+    mat3_mul(rm2v, r2gl, ro2v);
+    mat3_mul(ro2v, ro2m, ro2v);
 
     // Extra rotation for screen center offset.
     assert(!isnan(obs->view_offset_alt));
