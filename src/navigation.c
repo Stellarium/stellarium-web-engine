@@ -129,16 +129,13 @@ void core_update_mount(double dt)
     observer_t *obs = core->observer;
     int frame = core->mount_frame;
     double ro2m[3][3] = MAT3_IDENTITY;
-    const double FLIP_Y_AXIS_MAT[3][3] = {{1, 0, 0},
-                                          {0, -1, 0},
-                                          {0, 0, 1}};
 
     switch (frame) {
     case FRAME_OBSERVED:
         mat3_set_identity(ro2m);
         break;
     case FRAME_ICRF:
-        mat3_mul(FLIP_Y_AXIS_MAT, obs->rh2i, ro2m);
+        mat3_copy(obs->rh2i, ro2m);
         break;
     default:
         assert(false);

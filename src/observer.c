@@ -30,7 +30,7 @@ static void update_matrices(observer_t *obs)
 {
     eraASTROM *astrom = &obs->astrom;
     // We work with 3x3 matrices, so that we can use the erfa functions.
-    double rm2v[3][3];  // Rotate from mount to view.
+    double rdir[3][3];
     double ro2v[3][3];  // Rotate from observed to view.
     double ri2h[3][3];  // Equatorial J2000 (ICRF) to horizontal.
     double rh2i[3][3];  // Horizontal to Equatorial J2000 (ICRF).
@@ -40,19 +40,23 @@ static void update_matrices(observer_t *obs)
     double rc2v[3][3];
     double view_rot[3][3];
     // r2gl changes the coordinate from z up to y up orthonomal.
-    const double r2gl[3][3] = {{0, 0,-1},
-                               {1, 0, 0},
-                               {0, 1, 0}};
+    const double r2gl[3][3] = {{ 0, 0, -1},
+                               {-1, 0,  0},
+                               { 0, 1,  0}};
 
-    // Compute mount to view rotation (in Y up coordinates).
-    mat3_set_identity(rm2v);
-    mat3_rz(obs->roll, rm2v, rm2v);
-    mat3_rx(-obs->pitch, rm2v, rm2v);
-    mat3_ry(obs->yaw, rm2v, rm2v);
+    const double flip_y[3][3] = {{1,  0, 0},
+                                 {0, -1, 0},
+                                 {0,  0, 1}};
 
-    // Compute observed to view rotation.
-    mat3_mul(rm2v, r2gl, ro2v);
-    mat3_mul(ro2v, obs->ro2m, ro2v);
+    mat3_set_identity(rdir);
+    mat3_rx(obs->roll, rdir, rdir);
+    mat3_ry(obs->pitch, rdir, rdir);
+    mat3_rz(-obs->yaw, rdir, rdir);
+
+    if (mat3_det(obs->ro2m) > 0)
+        mat3_product(ro2v, 4, r2gl, flip_y, rdir, obs->ro2m);
+    else
+        mat3_product(ro2v, 3, r2gl, rdir, obs->ro2m);
 
     // Extra rotation for screen center offset.
     assert(!isnan(obs->view_offset_alt));
