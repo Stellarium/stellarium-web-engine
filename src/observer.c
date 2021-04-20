@@ -31,7 +31,6 @@ static void update_matrices(observer_t *obs)
     eraASTROM *astrom = &obs->astrom;
     // We work with 3x3 matrices, so that we can use the erfa functions.
     double rm2v[3][3];  // Rotate from mount to view.
-    double ro2m[3][3];  // Rotate from observed to mount.
     double ro2v[3][3];  // Rotate from observed to view.
     double ri2h[3][3];  // Equatorial J2000 (ICRF) to horizontal.
     double rh2i[3][3];  // Horizontal to Equatorial J2000 (ICRF).
@@ -45,8 +44,6 @@ static void update_matrices(observer_t *obs)
                                {1, 0, 0},
                                {0, 1, 0}};
 
-    quat_to_mat3(obs->mount_quat, ro2m);
-
     // Compute mount to view rotation (in Y up coordinates).
     mat3_set_identity(rm2v);
     mat3_rz(obs->roll, rm2v, rm2v);
@@ -55,7 +52,7 @@ static void update_matrices(observer_t *obs)
 
     // Compute observed to view rotation.
     mat3_mul(rm2v, r2gl, ro2v);
-    mat3_mul(ro2v, ro2m, ro2v);
+    mat3_mul(ro2v, obs->ro2m, ro2v);
 
     // Extra rotation for screen center offset.
     assert(!isnan(obs->view_offset_alt));
@@ -92,7 +89,6 @@ static void update_matrices(observer_t *obs)
     mat3_mul(ro2v, rc2v, rc2v);
 
     // Copy all
-    mat3_copy(ro2m, obs->ro2m);
     mat3_copy(ro2v, obs->ro2v);
     mat3_invert(obs->ro2v, obs->rv2o);
     mat3_copy(ri2h, obs->ri2h);
@@ -114,7 +110,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(horizon);
     H(pressure);
     *hash_partial = v;
-    H(mount_quat);
+    H(ro2m);
     H(pitch);
     H(yaw);
     H(roll);
@@ -257,7 +253,7 @@ void observer_update(observer_t *obs, bool fast)
 static int observer_init(obj_t *obj, json_value *args)
 {
     observer_t*  obs = (observer_t*)obj;
-    quat_set_identity(obs->mount_quat);
+    mat3_set_identity(obs->ro2m);
     observer_compute_hash(obs, &obs->hash_partial, &obs->hash);
     return 0;
 }

@@ -128,35 +128,24 @@ void core_update_mount(double dt)
 {
     observer_t *obs = core->observer;
     int frame = core->mount_frame;
-    double quat[4], mat[3][3];
-    const double speed = 4;
+    double ro2m[3][3] = MAT3_IDENTITY;
     const double FLIP_Y_AXIS_MAT[3][3] = {{1, 0, 0},
                                           {0, -1, 0},
                                           {0, 0, 1}};
 
     switch (frame) {
     case FRAME_OBSERVED:
-        quat_set_identity(quat);
+        mat3_set_identity(ro2m);
         break;
     case FRAME_ICRF:
-        mat3_copy(obs->rh2i, mat);
-        mat3_mul(FLIP_Y_AXIS_MAT, mat, mat);
-        mat3_to_quat(mat, quat);
-        break;
-    case FRAME_ECLIPTIC:
-        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(1, 0, 0), mat[0]);
-        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 1, 0), mat[1]);
-        convert_frame(obs, FRAME_OBSERVED, frame, true, VEC(0, 0, 1), mat[2]);
-        mat3_mul(FLIP_Y_AXIS_MAT, mat, mat); // Could we avoid this?
-        mat3_to_quat(mat, quat);
-        quat_normalize(quat, quat);
+        mat3_mul(FLIP_Y_AXIS_MAT, obs->rh2i, ro2m);
         break;
     default:
         assert(false);
     }
 
-    if (vec4_equal(quat, obs->mount_quat)) return;
-    quat_rotate_towards(obs->mount_quat, quat, dt * speed, obs->mount_quat);
+    if (memcmp(ro2m, obs->ro2m, sizeof(ro2m)) == 0) return;
+    mat3_copy(ro2m, obs->ro2m);
     observer_update(core->observer, true);
 }
 

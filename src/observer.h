@@ -28,10 +28,10 @@ struct observer
 
     double pressure;    // Control the refraction.  Zero for no refraction.
 
-    // Quaternion representing the mount orientation with respect to the
-    // observed (az/alt) referential.  Set to the identity quaternion by
-    // default for an az/alt mount.
-    double mount_quat[4];
+    /* Mount orientation rotation.
+     * Set to the identity (default) for an az/alt mount.
+     * Set to rh2i for an equatorial mount. */
+    double ro2m[3][3];
 
     // Rotations relative to the mount referential.  Pitch and yaw
     // correspond to azimuth and altitude when using an alt/az mount.
@@ -93,7 +93,6 @@ struct observer
     // e: Ecliptic (right handed).
     // m: Mount (observed + mount rotation).
     // v: View (Mount + view direction).
-    double ro2m[3][3];  // Rotate from observed to mount.
     double ro2v[3][3];  // Rotate from observed to view.
     double rv2o[3][3];  // Rotate from view to observed.
     double ri2h[3][3];  // CIRF to horizontal.
