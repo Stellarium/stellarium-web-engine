@@ -83,6 +83,31 @@ void mat3_to_quat(const double m[3][3], double quat[4])
     vec4_mul(0.5 / sqrt(t), quat, quat);
 }
 
+void mat3_product(double out[S 3][3], int n, ...)
+{
+    int i;
+    va_list ap;
+    double (*m)[3];
+
+    mat3_set_identity(out);
+    va_start(ap, n);
+    for (i = 0; i < n; i++) {
+        m = va_arg(ap, double (*)[3]);
+        mat3_mul(out, m, out);
+    }
+    va_end(ap);
+}
+
+double mat3_det(const double m[S 3][3])
+{
+    return + m[0][0] * m[1][1] * m[2][2]
+           + m[0][1] * m[1][2] * m[2][0]
+           + m[0][2] * m[1][0] * m[2][1]
+           - m[0][0] * m[1][2] * m[2][1]
+           - m[0][1] * m[1][0] * m[2][2]
+           - m[0][2] * m[1][1] * m[2][0];
+}
+
 double quat_sep(const double a[4], const double b[4])
 {
     double f = vec4_dot(a, b);

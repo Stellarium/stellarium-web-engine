@@ -127,6 +127,16 @@ INL void mat3_copy(const double src[S 3][3], double out[S 3][3]);
 INL void mat3_set_identity(double mat[S 3][3]);
 INL void mat3_mul(const double a[3][3], const double b[S 3][3],
                   double out[S 3][3]);
+
+/*
+ * Function: mat3_product
+ * Compute the product of a list of 3x3 matrices.
+ *
+ * This is a conveniance function that chains calls to mat3_mul.
+ * mat3_product(out, 3, a, b, c) is equivalent to 'out = a * b * c'.
+ */
+void mat3_product(double out[S 3][3], int n, ...);
+
 INL void mat3_mul_vec3(const double mat[S 3][3], const double v[S 3],
                        double out[S 3]);
 INL void mat3_mul_vec3_transposed(const double mat[S 3][3], const double v[S 3],
@@ -144,6 +154,12 @@ INL void mat3_to_mat4(const double mat[S 3][3], double out[S 4][4]);
 INL void mat3_to_float(const double mat[S 3][3], float out[S 9]);
 INL void mat3_to_float4(const double mat[S 3][3], float out[S 16]);
     void mat3_to_quat(const double mat[S 3][3], double quat[S 4]);
+
+/*
+ * Function: mat3_det
+ * Compute the determinant of a 3x3 matrix
+ */
+double mat3_det(const double mat[S 3][3]);
 
 INL void mat4_mul_vec4(const double mat[S 4][4], const double v[S 4],
                        double out[S 4]);
