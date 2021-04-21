@@ -71,7 +71,14 @@ gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
         if (strcmp(s->key, key) == 0)
             return s->shader;
     }
-    assert(i < ARRAY_SIZE(g_shaders));
+
+    if (i >= ARRAY_SIZE(g_shaders)) {
+        LOG_E("Too many shaders!");
+        for (i = 0; i < ARRAY_SIZE(g_shaders); i++) {
+            LOG_W("%s", g_shaders[i].key);
+        }
+        assert(false);
+    }
     strcpy(s->key, key);
 
     snprintf(path, sizeof(path), "asset://shaders/%s.glsl", name);

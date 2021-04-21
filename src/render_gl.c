@@ -1120,7 +1120,7 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
 
     shader_define_t defines[] = {
         {"DASH", item->lines.dash_length && (item->lines.dash_ratio < 1.0)},
-        {"FADE", item->lines.fade_dist_min},
+        {"FADE", item->lines.fade_dist_min ? 1 : 0},
         {"PROJ", rend->proj.klass->id},
         {}
     };
