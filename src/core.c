@@ -493,25 +493,6 @@ static double compute_vmag_for_radius(double target_r)
     return m;
 }
 
-/*
- * Function: win_to_observed
- * Convert a window 2D position to a 3D azalt direction.
- *
- * Parameters:
- *   x    - The window x position.
- *   y    - The window y position.
- *   p    - Corresponding 3D unit vector in azalt (after refraction).
- */
-static void win_to_observed(double x, double y, double p[3])
-{
-    projection_t proj;
-    double pos[4] = {x, y};
-
-    core_get_proj(&proj);
-    unproject(&proj, pos, pos);
-    convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
-}
-
 // Debug function to check for errors in the projections.
 static void render_proj_markers(const painter_t *painter_)
 {
@@ -701,31 +682,15 @@ void core_on_char(uint32_t c)
 }
 
 EMSCRIPTEN_KEEPALIVE
-void core_on_zoom(double k, double x, double y) __attribute__((weak));
 void core_on_zoom(double k, double x, double y)
 {
-    double fov, pos_start[3], pos_end[3];
-    double sal, saz, dal, daz;
-    projection_t proj;
-
-    core_get_proj(&proj);
-    win_to_observed(x, y, pos_start);
-    obj_get_attr(&core->obj, "fov", &fov);
-    fov /= k;
-    fov = clamp(fov, CORE_MIN_FOV, proj.klass->max_ui_fov);
-    obj_set_attr(&core->obj, "fov", fov);
-    win_to_observed(x, y, pos_end);
-
-    // Adjust lat/az to keep the mouse point at the same position.
-    eraC2s(pos_start, &saz, &sal);
-    eraC2s(pos_end, &daz, &dal);
-    core->observer->yaw += (saz - daz);
-    core->observer->pitch += (sal - dal);
-    core->observer->pitch = clamp(core->observer->pitch, -M_PI / 2, +M_PI / 2);
-
-    // Notify the changes.
-    module_changed(&core->observer->obj, "pitch");
-    module_changed(&core->observer->obj, "yaw");
+    obj_t *module;
+    DL_FOREACH(core->obj.children, module) {
+        if (module->klass->on_zoom) {
+            if (module->klass->on_zoom(module, k, x, y) == 0)
+                return;
+        };
+    }
 }
 
 double core_mag_to_illuminance(double vmag)

@@ -120,6 +120,7 @@ struct obj_klass
     // For modules objects.
     int (*on_mouse)(obj_t *obj, int id, int state, double x, double y,
                     int buttons);
+    int (*on_zoom)(obj_t *obj, double k, double x, double y);
     int (*on_pinch)(obj_t *obj, int state, double x, double y, double scale,
                     int points_count);
 
