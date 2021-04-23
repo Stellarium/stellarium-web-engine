@@ -353,6 +353,108 @@ bool cap_intersects_segment(const double cap[S 4], const double p0[S 3],
     return cap_contains_vec3(cap, p0) || cap_contains_vec3(cap, p1);
 }
 
+static const int EUL_ORDERS[][4] = {
+    // i, j, k, n
+    {0, 1, 2, 0}, // XYZ
+    {0, 2, 1, 1}, // XZY
+    {1, 0, 2, 1}, // YXZ
+    {1, 2, 0, 0}, // YZX
+    {2, 0, 1, 0}, // ZXY
+    {2, 1, 0, 1}  // ZYX
+};
+
+void eul_to_quat(const double e[S 3], int order, double q[S 4])
+{
+    const int *r = EUL_ORDERS[order];
+    int i = r[0], j = r[1], k = r[2];
+    int parity = r[3];
+    double a[3];
+    double ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
+
+    ti = e[i] * 0.5f;
+    tj = e[j] * (parity ? -0.5f : 0.5f);
+    th = e[k] * 0.5f;
+    ci = cos(ti);
+    cj = cos(tj);
+    ch = cos(th);
+    si = sin(ti);
+    sj = sin(tj);
+    sh = sin(th);
+    cc = ci * ch;
+    cs = ci * sh;
+    sc = si * ch;
+    ss = si * sh;
+
+    a[i] = cj * sc - sj * cs;
+    a[j] = cj * ss + sj * cc;
+    a[k] = cj * cs - sj * sc;
+
+    q[0] = cj * cc + sj * ss;
+    q[1] = a[0];
+    q[2] = a[1];
+    q[3] = a[2];
+
+    if (parity) q[j + 1] = -q[j + 1];
+}
+
+void quat_to_eul(const double q[S 4], int order, double e[S 3])
+{
+    double m[3][3];
+    quat_to_mat3(q, m);
+    mat3_to_eul(m, order, e);
+}
+
+void mat3_normalize_(const double m[S 3][3], double out[S 3][3])
+{
+    int i;
+    for (i = 0; i < 3; i++)
+        vec3_normalize(m[i], out[i]);
+}
+
+void mat3_to_eul2(const double m[3][3], int order, double e1[3], double e2[3])
+{
+
+    const int *r = EUL_ORDERS[order];
+    int i = r[0], j = r[1], k = r[2];
+    int parity = r[3];
+    double cy = hypot(m[i][i], m[i][j]);
+    double n[3][3];
+
+    mat3_normalize_(m, n);
+    if (cy > 16.0f * DBL_EPSILON) {
+        e1[i] = atan2(m[j][k], m[k][k]);
+        e1[j] = atan2(-m[i][k], cy);
+        e1[k] = atan2(m[i][j], m[i][i]);
+        e2[i] = atan2(-m[j][k], -m[k][k]);
+        e2[j] = atan2(-m[i][k], -cy);
+        e2[k] = atan2(-m[i][j], -m[i][i]);
+    } else {
+        e1[i] = atan2(-m[k][j], m[j][j]);
+        e1[j] = atan2(-m[i][k], cy);
+        e1[k] = 0.0;
+        vec3_copy(e1, e2);
+    }
+    if (parity) {
+        vec3_mul(-1, e1, e1);
+        vec3_mul(-1, e2, e2);
+    }
+}
+
+void mat3_to_eul(const double m[3][3], int order, double e[3])
+{
+    double e1[3], e2[3];
+    mat3_to_eul2(m, order, e1, e2);
+
+    // Pick best.
+    if (    fabs(e1[0]) + fabs(e1[1]) + fabs(e1[2]) >
+            fabs(e2[0]) + fabs(e2[1]) + fabs(e2[2])) {
+        vec3_copy(e2, e);
+    } else {
+        vec3_copy(e1, e);
+    }
+}
+
+
 
 /******** TESTS ***********************************************************/
 

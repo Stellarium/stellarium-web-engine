@@ -52,6 +52,8 @@ static const double mat4_identity[4][4] = {
                        {0, 0, 1, 0}, \
                        {0, 0, 0, 1}}
 
+#define QUAT_IDENTITY {1, 0, 0, 0}
+
 /*
  * Some common functions defined as macro so that they work with both
  * double and float (for both arguments).
@@ -221,6 +223,21 @@ bool cap_intersects_segment(const double cap[S 4], const double p0[S 3],
                             const double p1[S 3]);
 void cap_great_circle_closest_point(const double cap[S 4],
                                     const double u[S 3], double out[S 3]);
+
+enum  {
+    EULER_ORDER_DEFAULT = 0, // XYZ.
+    EULER_ORDER_XYZ = 0,
+    EULER_ORDER_XZY,
+    EULER_ORDER_YXZ,
+    EULER_ORDER_YZX,
+    EULER_ORDER_ZXY,
+    EULER_ORDER_ZYX
+};
+
+void eul_to_quat(const double e[S 3], int order, double out[S 4]);
+void quat_to_eul(const double quat[S 4], int order, double e[S 3]);
+void mat3_to_eul(const double m[S 3][3], int order, double e[S 3]);
+
 
 
 // ********* Implementation of inline functions *************************//
