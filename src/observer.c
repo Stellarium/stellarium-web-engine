@@ -113,6 +113,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(hm);
     H(horizon);
     H(pressure);
+    H(space);
     *hash_partial = v;
     H(ro2m);
     H(pitch);
@@ -120,6 +121,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
     H(roll);
     H(view_offset_alt);
     H(tt);
+    if (obs->space) H(obs_pvg);
     #undef H
     *hash = v;
 }
@@ -142,7 +144,7 @@ static void update_nutation_precession_mat(observer_t *obs)
 
 static void observer_update_fast(observer_t *obs)
 {
-    double dut1, theta;
+    double dut1, theta, pvg[2][3];
 
     // Compute UT1 and UTC time.
     if (obs->last_update == obs->tt) goto end;
@@ -150,22 +152,30 @@ static void observer_update_fast(observer_t *obs)
     obs->utc = tt2utc(obs->tt, &dut1);
     obs->ut1 = obs->utc + dut1 / ERFA_DAYSEC;
 
-    eraAper13(DJM0, obs->ut1, &obs->astrom);
+    if (!obs->space)
+        eraAper13(DJM0, obs->ut1, &obs->astrom);
     eraPvu(obs->tt - obs->last_update, obs->earth_pvh, obs->earth_pvh);
     eraPvu(obs->tt - obs->last_update, obs->earth_pvb, obs->earth_pvb);
 
-    // Update observer geocentric position obs_pvg. We can't use eraPvu here
-    // as the movement is a rotation about the earth center and can't
-    // be approximated by a linear velocity  on a 24h time span
-    theta = eraEra00(DJM0, obs->ut1);
-    eraPvtob(obs->elong, obs->phi, obs->hm, 0, 0, 0, theta, obs->obs_pvg);
-    // Rotate from CIRS to ICRF
-    eraTrxp(obs->astrom.bpn, obs->obs_pvg[0], obs->obs_pvg[0]);
-    eraTrxp(obs->astrom.bpn, obs->obs_pvg[1], obs->obs_pvg[1]);
-    // Set pos back in AU
-    eraSxp(1. / DAU, obs->obs_pvg[0], obs->obs_pvg[0]);
-    // Set speed back in AU / day
-    eraSxp(ERFA_DAYSEC / DAU, obs->obs_pvg[1], obs->obs_pvg[1]);
+    if (!obs->space) {
+        // Update observer geocentric position obs_pvg. We can't use eraPvu
+        // here as the movement is a rotation about the earth center and can't
+        // be approximated by a linear velocity  on a 24h time span
+        theta = eraEra00(DJM0, obs->ut1);
+        eraPvtob(obs->elong, obs->phi, obs->hm, 0, 0, 0, theta, obs->obs_pvg);
+        // Rotate from CIRS to ICRF
+        eraTrxp(obs->astrom.bpn, obs->obs_pvg[0], obs->obs_pvg[0]);
+        eraTrxp(obs->astrom.bpn, obs->obs_pvg[1], obs->obs_pvg[1]);
+        // Set pos back in AU
+        eraSxp(1. / DAU, obs->obs_pvg[0], obs->obs_pvg[0]);
+        // Set speed back in AU / day
+        eraSxp(ERFA_DAYSEC / DAU, obs->obs_pvg[1], obs->obs_pvg[1]);
+    } else {
+        vec3_mul(DAU, obs->obs_pvg[0], pvg[0]);
+        vec3_mul(DAU / ERFA_DAYSEC, obs->obs_pvg[1], pvg[1]);
+        eraApcs(DJM0, obs->tt, pvg, obs->earth_pvb, obs->earth_pvh[0],
+                &obs->astrom);
+    }
 
     // Compute the observer's barycentric position
     eraPvppv(obs->earth_pvb, obs->obs_pvg, obs->obs_pvb);
@@ -181,7 +191,7 @@ end:
 
 static void observer_update_full(observer_t *obs)
 {
-    double dut1, r[3][3], x, y, theta, s, sp;
+    double dut1, r[3][3], x, y, theta, s, sp, pvg[2][3];
 
     // Compute UT1 and UTC time.
     if (obs->last_update != obs->tt) {
@@ -200,15 +210,24 @@ static void observer_update_full(observer_t *obs)
     sp = eraSp00(DJM0, obs->tt); // TIO locator s'.
 
     eraEpv00(DJM0, obs->tt, obs->earth_pvh, obs->earth_pvb);
-    eraApco(DJM0, obs->tt, obs->earth_pvb, obs->earth_pvh[0], x, y, s,
-            theta, obs->elong, obs->phi, obs->hm, 0, 0, sp, 0, 0,
-            &obs->astrom);
+
+    if (!obs->space) {
+        eraApco(DJM0, obs->tt, obs->earth_pvb, obs->earth_pvh[0], x, y, s,
+                theta, obs->elong, obs->phi, obs->hm, 0, 0, sp, 0, 0,
+                &obs->astrom);
+    } else {
+        vec3_mul(DAU, obs->obs_pvg[0], pvg[0]);
+        vec3_mul(DAU / ERFA_DAYSEC, obs->obs_pvg[1], pvg[1]);
+        eraApcs(DJM0, obs->tt, pvg, obs->earth_pvb, obs->earth_pvh[0],
+                &obs->astrom);
+    }
     obs->eo = eraEors(r, s); // Equation of origins.
 
     // Update earth position.
     eraCp(obs->astrom.eb, obs->obs_pvb[0]);
     vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
-    eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
+    if (!obs->space)
+        eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);
     // Update refraction constants.
     refraction_prepare(obs->pressure, 15, 0.5, &obs->refa, &obs->refb);
     update_nutation_precession_mat(obs);
@@ -330,6 +349,7 @@ static obj_klass_t observer_klass = {
         PROPERTY(view_offset_alt, TYPE_ANGLE,
                  MEMBER(observer_t, view_offset_alt)),
         PROPERTY(azalt, TYPE_V3, .fn = observer_get_azalt),
+        PROPERTY(space, TYPE_BOOL, MEMBER(observer_t, space)),
         {}
     },
 };

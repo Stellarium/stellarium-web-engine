@@ -39,6 +39,10 @@ struct observer
     double yaw;
     double roll;
 
+    // If space is true, then the obs_pvg value stays fix instead of being
+    // automatically updated.
+    bool space;
+
     // Extra rotations applied to the view matrix in altitude.
     // Set this to have the centered objet not located at screen center
     // but somewhere else.
