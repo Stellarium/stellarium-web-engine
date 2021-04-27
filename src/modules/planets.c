@@ -1043,6 +1043,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double point_r;          // Size (rad) and luminance if the planet is seen
     double point_luminance;  // as a point source (like a star).
     double radius_m;
+    double dist;
     double r_scale = 1.0;    // Artificial size scale.
     double diam;                // Angular diameter (rad).
     double model_alpha = 0;
@@ -1053,7 +1054,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     bool selected = core->selection && &planet->obj == core->selection;
     double cap[4];
     bool has_model;
-    double pvo[2][3];
+    double pvo[2][3], dir[3];
+    double phy_angular_radius;
 
     if (planet->id == EARTH) return;
 
@@ -1077,19 +1079,23 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Compute planet's pos and bounding cap in ICRF
     planet_get_pvo(planet, painter.obs, pvo);
-    vec3_copy(pvo[0], pos);
-    vec3_normalize(pos, pos);
-    vec3_copy(pos, cap);
-    cap[3] = cos(max(radius_m / DAU / vec3_norm(pvo[0]), point_r));
+    dist = vec3_norm(pvo[0]);
+    vec3_normalize(pvo[0], dir);
 
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
-        return;
+    // Return if the planet is clipped.
+    if (radius_m * DM2AU < dist) {
+        phy_angular_radius = asin(radius_m * DM2AU / dist);
+        vec3_copy(dir, cap);
+        cap[3] = cos(max(phy_angular_radius, point_r));
+        if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
+            return;
+    }
 
     // Planet apparent diameter in rad
-    diam = 2.0 * planet->radius_m / DAU / vec3_norm(pvo[0]);
+    diam = 2.0 * planet->radius_m * DM2AU / dist;
 
     // Project planet's center
-    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, pos, pos);
+    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, dir, pos);
     project_to_win(painter.proj, pos, p_win);
 
     // At least 1 px of the planet is visible, report it for tonemapping
