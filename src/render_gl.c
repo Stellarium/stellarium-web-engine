@@ -105,7 +105,6 @@ struct item
     gl_buf_t    indices;
     texture_t   *tex;
     int         flags;
-    float       depth_range[2];
 
     union {
         struct {
@@ -354,6 +353,9 @@ void render_prepare(renderer_t *rend, double win_w, double win_h,
 
     DL_FOREACH(rend->tex_cache, ctex)
         ctex->in_use = false;
+
+    rend->depth_range[0] = DBL_MAX;
+    rend->depth_range[1] = DBL_MIN;
 }
 
 /*
@@ -558,8 +560,6 @@ static void quad_planet(
     assert(item->tex->w == item->tex->tex_w &&
            item->tex->h == item->tex->tex_h);
 
-    item->depth_range[0] = +FLT_MAX;
-    item->depth_range[1] = -FLT_MAX;
     for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
         vec3_set(p, (double)j / grid_size, (double)i / grid_size, 1.0);
@@ -587,8 +587,8 @@ static void quad_planet(
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
 
         depth = proj_get_depth(painter->proj, p);
-        item->depth_range[0] = min(item->depth_range[0], depth);
-        item->depth_range[1] = max(item->depth_range[1], depth);
+        rend->depth_range[0] = min(rend->depth_range[0], depth);
+        rend->depth_range[1] = max(rend->depth_range[1], depth);
 
         gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
@@ -1418,11 +1418,8 @@ static void item_planet_render(renderer_t *rend, const item_t *item)
         GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                                GL_ZERO, GL_ONE));
     }
-    assert(item->depth_range[0]);
-    if (item->depth_range[0] || item->depth_range[1]) {
-        GL(glEnable(GL_DEPTH_TEST));
-        GL(glDepthMask(GL_TRUE));
-    }
+    GL(glEnable(GL_DEPTH_TEST));
+    GL(glDepthMask(GL_TRUE));
 
     // Set all uniforms.
     is_moon = item->flags & PAINTER_IS_MOON;
@@ -1455,8 +1452,8 @@ static void item_gltf_render(renderer_t *rend, const item_t *item)
     double proj[4][4], nearval, farval;
     mat4_copy(item->gltf.proj_mat, proj);
 
-    if (item->depth_range[0]) {
-        // Fix the depth range of the projection to the current frame values.
+    // Fix the depth range of the projection to the current frame values.
+    if (item->flags & PAINTER_ENABLE_DEPTH) {
         nearval = rend->depth_range[0] * DAU;
         farval = rend->depth_range[1] * DAU;
         proj[2][2] = (farval + nearval) / (nearval - farval);
@@ -1472,21 +1469,10 @@ static void rend_flush(renderer_t *rend, const projection_t *proj)
     item_t *item, *tmp;
 
     // Compute depth range.
-    rend->depth_range[0] = DBL_MAX;
-    rend->depth_range[1] = DBL_MIN;
-    DL_FOREACH(rend->items, item) {
-        if (item->depth_range[0] || item->depth_range[1]) {
-            rend->depth_range[0] = min(rend->depth_range[0],
-                                       item->depth_range[0]);
-            rend->depth_range[1] = max(rend->depth_range[1],
-                                       item->depth_range[1]);
-        }
-    }
     if (rend->depth_range[0] == DBL_MAX) {
         rend->depth_range[0] = 0;
         rend->depth_range[1] = 1;
     }
-
     // Limit near depth range to 10 meters.  Is that always OK?
     rend->depth_range[0] = max(rend->depth_range[0], 10 * DM2AU);
     // Add a small margin.
@@ -1619,8 +1605,6 @@ void render_line(renderer_t *rend, const painter_t *painter,
         item->lines.dash_ratio = painter->lines.dash_ratio;
         item->lines.fade_dist_min = painter->lines.fade_dist_min;
         item->lines.fade_dist_max = painter->lines.fade_dist_max;
-        item->depth_range[0] = +FLT_MAX;
-        item->depth_range[1] = -FLT_MAX;
         memcpy(item->color, color, sizeof(color));
         DL_APPEND(rend->items, item);
     }
@@ -1629,8 +1613,8 @@ void render_line(renderer_t *rend, const painter_t *painter,
         // Compute the depth range.
         for (i = 0; i < size; i++) {
             depth = proj_get_depth(painter->proj, line[i]);
-            item->depth_range[0] = min(item->depth_range[0], depth);
-            item->depth_range[1] = max(item->depth_range[1], depth);
+            rend->depth_range[0] = min(rend->depth_range[0], depth);
+            rend->depth_range[1] = max(rend->depth_range[1], depth);
         }
     }
 
@@ -1755,12 +1739,20 @@ void render_model_3d(renderer_t *rend, const painter_t *painter,
     item = calloc(1, sizeof(*item));
     item->type = ITEM_GLTF;
     item->gltf.model = model;
+    item->flags = painter->flags;
     mat4_copy(model_mat, item->gltf.model_mat);
     mat4_copy(view_mat, item->gltf.view_mat);
     mat4_copy(proj_mat, item->gltf.proj_mat);
     vec3_copy(light_dir, item->gltf.light_dir);
-    if (painter->depth_range)
-        vec2_to_float(*painter->depth_range, item->depth_range);
+
+    // XXX: use the model bounding box instead.
+    if (painter->depth_range) {
+        item->flags |= PAINTER_ENABLE_DEPTH;
+        rend->depth_range[0] =
+            min(rend->depth_range[0], (*painter->depth_range)[0]);
+        rend->depth_range[1] =
+            max(rend->depth_range[1], (*painter->depth_range)[1]);
+    }
     if (args) item->gltf.args = json_copy(args);
     DL_APPEND(rend->items, item);
 }
