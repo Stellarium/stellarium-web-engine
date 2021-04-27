@@ -273,6 +273,11 @@ struct renderer {
 
 };
 
+static double sign(double x)
+{
+    return x > 0 ? +1 : x < 0 ? -1 : 0;
+}
+
 // Weak linking, so that we can put the implementation in a module.
 __attribute__((weak))
 int gltf_render(const char *url,
@@ -1458,8 +1463,10 @@ static void item_gltf_render(renderer_t *rend, const item_t *item)
     if (item->flags & PAINTER_ENABLE_DEPTH) {
         nearval = rend->depth_range[0] * DAU;
         farval = rend->depth_range[1] * DAU;
-        proj[2][2] = (farval + nearval) / (nearval - farval);
-        proj[3][2] = 2. * farval * nearval / (nearval - farval);
+        proj[2][2] = sign(proj[2][2]) *
+            (farval + nearval) / (nearval - farval);
+        proj[3][2] = sign(proj[3][2]) *
+            2. * farval * nearval / (nearval - farval);
     }
 
     gltf_render(item->gltf.model, item->gltf.model_mat, item->gltf.view_mat,
