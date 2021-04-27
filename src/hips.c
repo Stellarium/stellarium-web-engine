@@ -476,6 +476,7 @@ int hips_render(hips_t *hips, const painter_t *painter,
     hips_iterator_t iter;
     uv_map_t map;
 
+    assert(split_order >= 0);
     if (painter->color[3] == 0.0) return 0;
     if (!hips_is_ready(hips)) return 0;
 
@@ -604,7 +605,7 @@ int hips_get_render_order(const hips_t *hips, const painter_t *painter)
      */
     double w = hips->tile_width ?: 256;
     double win_h = painter->proj->window_size[1];
-    double f = painter->proj->mat[1][1];
+    double f = fabs(painter->proj->mat[1][1]);
     return round(log2(M_PI * f * win_h / (4.0 * sqrt(2.0) * w)));
 }
 
