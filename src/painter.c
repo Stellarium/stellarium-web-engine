@@ -137,13 +137,14 @@ int paint_prepare(painter_t *painter, double win_w, double win_h,
 
     cull_flipped = (bool)(painter->proj->flags & PROJ_FLIP_HORIZONTAL) !=
                    (bool)(painter->proj->flags & PROJ_FLIP_VERTICAL);
-    render_prepare(painter->rend, win_w, win_h, scale, cull_flipped);
+    render_prepare(painter->rend, painter->proj,
+                   win_w, win_h, scale, cull_flipped);
     return 0;
 }
 
 int paint_finish(const painter_t *painter)
 {
-    render_finish(painter->rend, painter->proj);
+    render_finish(painter->rend);
     return 0;
 }
 

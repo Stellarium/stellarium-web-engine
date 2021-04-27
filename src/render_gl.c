@@ -341,7 +341,8 @@ static void window_to_ndc(renderer_t *rend,
     ndc[1] = 1 - (win[1] * rend->scale / rend->fb_size[1]) * 2;
 }
 
-void render_prepare(renderer_t *rend, double win_w, double win_h,
+void render_prepare(renderer_t *rend, const projection_t *proj,
+                    double win_w, double win_h,
                     double scale, bool cull_flipped)
 {
     tex_cache_t *ctex;
@@ -350,6 +351,7 @@ void render_prepare(renderer_t *rend, double win_w, double win_h,
     rend->fb_size[1] = win_h * scale;
     rend->scale = scale;
     rend->cull_flipped = cull_flipped;
+    rend->proj = *proj;
 
     DL_FOREACH(rend->tex_cache, ctex)
         ctex->in_use = false;
@@ -1464,7 +1466,7 @@ static void item_gltf_render(renderer_t *rend, const item_t *item)
                 proj, item->gltf.light_dir, item->gltf.args);
 }
 
-static void rend_flush(renderer_t *rend, const projection_t *proj)
+static void rend_flush(renderer_t *rend)
 {
     item_t *item, *tmp;
 
@@ -1478,7 +1480,6 @@ static void rend_flush(renderer_t *rend, const projection_t *proj)
     // Add a small margin.
     rend->depth_range[0] *= 0.99;
     rend->depth_range[1] *= 1.01;
-    rend->proj = *proj;
     proj_set_depth_range(&rend->proj, VEC2_SPLIT(rend->depth_range));
 
     // Set default OpenGL state.
@@ -1556,9 +1557,9 @@ static void rend_flush(renderer_t *rend, const projection_t *proj)
     GL(glColorMask(true, true, true, true));
 }
 
-void render_finish(renderer_t *rend, const projection_t *proj)
+void render_finish(renderer_t *rend)
 {
-    rend_flush(rend, proj);
+    rend_flush(rend);
 }
 
 void render_line(renderer_t *rend, const painter_t *painter,

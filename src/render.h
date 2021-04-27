@@ -27,10 +27,11 @@ typedef struct projection projection_t;
 renderer_t* render_create(void);
 
 void render_prepare(renderer_t *rend,
+                    const projection_t *proj,
                     double win_w, double win_h, double scale,
                     bool cull_flipped);
 
-void render_finish(renderer_t *rend, const projection_t *proj);
+void render_finish(renderer_t *rend);
 
 void render_points_2d(renderer_t *rend, const painter_t *painter,
                       int n, const point_t *points);
