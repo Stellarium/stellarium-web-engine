@@ -256,7 +256,7 @@ void core_release(void)
  */
 static double proj_get_scaling_y(const projection_t *proj)
 {
-    return 1 / proj->mat[1][1];
+    return 1 / fabs(proj->mat[1][1]);
 }
 
 EMSCRIPTEN_KEEPALIVE
