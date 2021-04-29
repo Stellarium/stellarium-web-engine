@@ -147,7 +147,7 @@ static void observer_update_fast(observer_t *obs)
     double dut1, theta, pvg[2][3];
 
     // Compute UT1 and UTC time.
-    if (obs->last_update == obs->tt) goto end;
+    if (!obs->space && obs->last_update == obs->tt) goto end;
 
     obs->utc = tt2utc(obs->tt, &dut1);
     obs->ut1 = obs->utc + dut1 / ERFA_DAYSEC;
