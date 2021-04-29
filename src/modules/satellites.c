@@ -529,7 +529,7 @@ static void get_lvlh_rot(const observer_t *obs, const double pvo[2][3],
      * Y Points overheard, away from Earth.
      */
     vec3_normalize(pvo[1], out[0]);
-    vec3_sub(obs->obs_pvg[0], pvo[0], out[1]);
+    vec3_add(obs->obs_pvg[0], pvo[0], out[1]);
     vec3_normalize(out[1], out[1]);
     vec3_cross(out[0], out[1], out[2]);
     vec3_normalize(out[2], out[2]);
