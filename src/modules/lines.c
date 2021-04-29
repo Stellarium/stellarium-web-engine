@@ -152,6 +152,7 @@ static struct {
 typedef struct lines lines_t;
 struct lines {
     obj_t       obj;
+    bool        visible;
 };
 
 typedef struct line line_t;
@@ -219,12 +220,13 @@ static bool is_visible_win(const double pos[3], const double win_size[2])
 
 static int lines_init(obj_t *obj, json_value *args)
 {
-    obj_t *lines = obj;
+    lines_t *lines = (void*)obj;
     int i;
     line_t *line;
 
+    lines->visible = true;
     for (i = 0; i < ARRAY_SIZE(LINES); i++) {
-        line = (line_t*)module_add_new(lines, "line", NULL);
+        line = (line_t*)module_add_new(&lines->obj, "line", NULL);
         line->obj.id = LINES[i].id;
         line->frame = LINES[i].frame;
         line->grid = LINES[i].grid;
@@ -247,8 +249,10 @@ static int lines_update(obj_t *obj, double dt)
 
 static int lines_render(const obj_t *obj, const painter_t *painter)
 {
+    lines_t *lines = (void*)obj;
     obj_t *line;
-    MODULE_ITER(obj, line, "line")
+    if (!lines->visible) return 0;
+    MODULE_ITER(lines, line, "line")
         line->klass->render(line, painter);
     return 0;
 }
@@ -815,5 +819,9 @@ static obj_klass_t lines_klass = {
     .render = lines_render,
     .gui = lines_gui,
     .render_order = 35, // just before landscape.
+    .attributes = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(lines_t, visible)),
+        {}
+    },
 };
 OBJ_REGISTER(lines_klass)
