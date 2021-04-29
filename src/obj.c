@@ -558,6 +558,24 @@ int obj_get_attr(const obj_t *obj, const char *name, ...)
     return 0;
 }
 
+int obj_get_attr2(const obj_t *obj, const char *name, int type, ...)
+{
+    json_value *ret;
+    const attribute_t *attr;
+    va_list ap;
+
+    assert(obj);
+    attr = obj_get_attr_(obj, name);
+    if (attr->type != type) return -1;
+    va_start(ap, type);
+    ret = obj_call_json(obj, name, NULL);
+    assert(ret);
+    args_vget(ret, attr->type, &ap);
+    json_builder_free(ret);
+    va_end(ap);
+    return 0;
+}
+
 int obj_set_attr(const obj_t *obj, const char *name, ...)
 {
     json_value *arg, *ret;
@@ -673,6 +691,69 @@ int obj_info_from_str(const char *str)
 #undef X
     LOG_E("No such info name: %s", str);
     return -1;
+}
+
+static json_value *json_extract_attr(json_value *val, const char *attr)
+{
+    int i;
+    json_value *ret = NULL;
+    for (i = 0; i < val->u.object.length; i++) {
+        if (strcmp(attr, val->u.object.values[i].name) != 0) continue;
+        ret = val->u.object.values[i].value;
+        val->u.object.values[i].value = NULL;
+        break;
+    }
+    return ret;
+}
+
+void obj_set_attrs_json(const obj_t *obj, const char *json, char **restore)
+{
+    json_value *doc, *value, *restore_doc = NULL, *tmp;
+    const char *key, *id;
+    char buf[128];
+    obj_t *o, *child;
+    int i, len;
+    json_serialize_opts opts = {
+        .mode = json_serialize_mode_multiline,
+        .indent_size = 4,
+    };
+
+    doc = json_parse(json, strlen(json));
+    assert(doc && doc->type == json_object);
+    if (restore) restore_doc = json_object_new(0);
+
+    for (i = 0; i < doc->u.object.length; i++) {
+        o = obj;
+        key = doc->u.object.values[i].name;
+        while (strchr(key, '.')) {
+            id = key;
+            len = strchr(id, '.') - id;
+            key = id + len + 1;
+            snprintf(buf, sizeof(buf), "%.*s", len, id);
+            child = module_get_child(o, buf);
+            if (!child)
+                obj_get_attr2(o, buf, TYPE_OBJ, &child);
+            if (!child) LOG_W("Cannot find key %s", buf);
+            assert(child);
+            o = child;
+        }
+        if (restore_doc) {
+            tmp = obj_call_json(o, key, NULL);
+            value = json_extract_attr(tmp, "v");
+            json_builder_free(tmp);
+            json_object_push(restore_doc, doc->u.object.values[i].name, value);
+        }
+        value = doc->u.object.values[i].value;
+        obj_call_json(o, key, value);
+    }
+    json_value_free(doc);
+
+    if (restore) {
+        len = json_measure_ex(restore_doc, opts);
+        *restore = calloc(1, len);
+        json_serialize_ex(*restore, restore_doc, opts);
+        json_builder_free(restore_doc);
+    }
 }
 
 /******** TESTS ***********************************************************/

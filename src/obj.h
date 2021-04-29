@@ -469,6 +469,16 @@ char *obj_call_json_str(obj_t *obj, const char *attr, const char *args);
  */
 const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr);
 
+/*
+ * Function: obj_set_attrs_json
+ * Set several attributes in a single call from a json object
+ *
+ * This is experimental.  The optional restore parameter will be set to
+ * a json string that can be used to restore the settings to their original
+ * values.
+ */
+void obj_set_attrs_json(const obj_t *obj, const char *json, char **restore);
+
 
 // Register an object klass, so that we can create instances dynamically
 #define OBJ_REGISTER(klass) \
