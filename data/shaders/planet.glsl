@@ -19,6 +19,7 @@ uniform mediump sampler2D u_normal_tex;
 uniform mediump mat3      u_tex_transf;
 uniform mediump mat3      u_normal_tex_transf;
 uniform lowp    vec3      u_light_emit;
+uniform lowp    float     u_min_brightness;
 uniform mediump mat4      u_mv;  // Model view matrix.
 uniform lowp    int       u_has_normal_tex;
 uniform lowp    int       u_material; // 0: Oren Nayar, 1: generic, 2: ring
@@ -172,8 +173,8 @@ void main()
         n = +n.x * v_tangent - n.y * v_bitangent + n.z * v_normal;
     }
     n = normalize(n);
-    gl_FragColor = texture2D(u_tex, v_tex_pos) * v_color;
-    gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * u_contrast + 0.5;
+    vec4 base_color = texture2D(u_tex, v_tex_pos) * v_color;
+    vec3 color = (base_color.rgb - 0.5) * u_contrast + 0.5;
 
     if (u_material == 0) { // oren_nayar.
         float power = oren_nayar_diffuse(light_dir,
@@ -185,27 +186,30 @@ void main()
         power *= illu;
         #endif
 
-        gl_FragColor.rgb *= power;
+        power = max(power, u_min_brightness);
+        color *= power;
 
         // Earth shadow effect on the moon.
         #ifdef HAS_SHADOW
         if (u_is_moon == 1 && illu < 0.99) {
             vec4 shadow_col = texture2D(u_shadow_color_tex, vec2(illu, 0.5));
-            gl_FragColor.rgb = mix(
-                gl_FragColor.rgb, shadow_col.rgb, shadow_col.a);
+            color = mix(color, shadow_col.rgb, shadow_col.a);
         }
         #endif
 
     } else if (u_material == 1) { // basic
-        vec3 light = vec3(0.0, 0.0, 0.0);
-        light += max(0.0, dot(n, light_dir));
-        light += u_light_emit;
-        gl_FragColor.rgb *= light;
+        float light = max(0.0, dot(n, light_dir));
+        light = max(light, u_min_brightness);
+        color *= light;
+        color += u_light_emit;
 
     } else if (u_material == 2) { // ring
         lowp float illu = illumination(v_mpos);
-        gl_FragColor.rgb *= illu;
+        illu = max(illu, u_min_brightness);
+        color *= illu;
     }
+
+    gl_FragColor = vec4(color, base_color.a);
 }
 
 #endif

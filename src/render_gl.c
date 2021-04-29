@@ -132,6 +132,7 @@ struct item
             int   material;
             float tex_transf[9];
             float normal_tex_transf[9];
+            float min_brightness;
         } planet;
 
         struct {
@@ -523,6 +524,7 @@ static void quad_planet(
     item->flags = painter->flags;
     item->planet.shadow_color_tex = painter->planet.shadow_color_tex;
     item->planet.contrast = painter->contrast;
+    item->planet.min_brightness = painter->planet.min_brightness;
     item->planet.shadow_spheres_nb = painter->planet.shadow_spheres_nb;
     for (i = 0; i < painter->planet.shadow_spheres_nb; i++) {
         vec4_to_float(painter->planet.shadow_spheres[i],
@@ -1429,6 +1431,7 @@ static void item_planet_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_contrast", item->planet.contrast);
     gl_update_uniform(shader, "u_sun", item->planet.sun);
     gl_update_uniform(shader, "u_light_emit", item->planet.light_emit);
+    gl_update_uniform(shader, "u_min_brightness", item->planet.min_brightness);
     gl_update_uniform(shader, "u_material", item->planet.material);
     gl_update_uniform(shader, "u_is_moon", is_moon ? 1 : 0);
     gl_update_uniform(shader, "u_mv", item->planet.mv);

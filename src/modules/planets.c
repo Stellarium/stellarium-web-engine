@@ -900,11 +900,21 @@ static void planet_render_model(const planet_t *planet,
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
     double dist, depth_range[2];
+    double radius = planet->radius_m * DM2AU; // Radius in AU.
     painter_t painter = *painter_;
 
     painter.flags |= PAINTER_ENABLE_DEPTH;
     ((planet_t*)planet)->no_model = planet->no_model ||
         painter_get_3d_model_bounds(&painter, planet->name, bounds);
+
+    // Make sure the planets attributes are not set (since this is a union!)
+    memset(&painter.planet, 0, sizeof(painter.planet));
+
+    // Adjust the min brightness to hide the shadow as we get closer.
+    planet_get_pvo(planet, painter.obs, pvo);
+    dist = vec3_norm(pvo[0]);
+    painter.planet.min_brightness =
+        min(0.2, smoothstep(2, 0, log(dist / radius)));
 
     if (planet->no_model) { // Use hips.
         hips = planet->hips ?: g_planets->default_hips;
@@ -913,16 +923,13 @@ static void planet_render_model(const planet_t *planet,
         return;
     }
 
-    // Assume the model is in km.
-    planet_get_pvo(planet, painter.obs, pvo);
-
     // Set the min required depth range needed.
     // XXX: could be computed properly.
-    dist = vec3_norm(pvo[0]);
     depth_range[0] = dist * 0.5;
     depth_range[1] = dist * 2;
     painter.depth_range = &depth_range;
 
+    // Assume the model is in km.
     mat4_itranslate(model_mat, VEC3_SPLIT(pvo[0]));
     mat4_iscale(model_mat, 1000 * DM2AU, 1000 * DM2AU, 1000 * DM2AU);
     paint_3d_model(&painter, planet->name, model_mat, NULL);
