@@ -29,10 +29,9 @@
 /* Radians to degrees */
 #define DR2D    ERFA_DR2D
 
-/* Astronomical unit (m) */
-#define DAU     ERFA_DAU
-
+/* Meter to Astronomical unit */
 #define DM2AU  (1. / ERFA_DAU)
+/* Astronomical unit to Meter */
 #define DAU2M  ERFA_DAU
 
 /* Seconds of time to radians */
