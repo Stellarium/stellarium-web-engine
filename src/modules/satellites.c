@@ -207,9 +207,9 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
     const double EARTH_RADIUS = 6371000; // (m).
 
 
-    vec3_mul(-DAU, sat->pvg[0], e_pos);
+    vec3_mul(-DAU2M, sat->pvg[0], e_pos);
     vec3_add(obs->earth_pvh[0], sat->pvg[0], s_pos);
-    vec3_mul(-DAU, s_pos, s_pos);
+    vec3_mul(-DAU2M, s_pos, s_pos);
     elong = eraSepp(e_pos, s_pos);
     e_r = asin(EARTH_RADIUS / vec3_norm(e_pos));
     s_r = asin(SUN_RADIUS / vec3_norm(s_pos));
@@ -248,7 +248,7 @@ static double satellite_compute_vmag(const satellite_t *sat,
     vec3_sub(sat->pvo[0], obs->sun_pvo[0], ph);
     phase_angle = eraSepp(sat->pvo[0], ph);
     fracil = 0.5 * cos(phase_angle) + 0.5;
-    range = vec3_norm(sat->pvo[0]) * DAU / 1000; // Distance in km.
+    range = vec3_norm(sat->pvo[0]) * DAU2M / 1000; // Distance in km.
 
     // If we have a std mag value,
     // We use the formula:
@@ -416,8 +416,8 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     }
     assert(!isnan(pv[0][0]) && !isnan(pv[0][1]));
 
-    vec3_mul(1000.0 / DAU, pv[0], pv[0]);
-    vec3_mul(1000.0 / DAU * 60 * 60 * 24, pv[1], pv[1]);
+    vec3_mul(1000.0 * DM2AU, pv[0], pv[0]);
+    vec3_mul(1000.0 * DM2AU * 60 * 60 * 24, pv[1], pv[1]);
     true_equator_to_j2000(obs, pv, pv);
 
     vec3_copy(pv[0], sat->pvg[0]);
@@ -456,7 +456,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
         if (painter_get_3d_model_bounds(NULL, sat->model, bounds) == 0) {
             radius = max3(bounds[1][0] - bounds[0][0],
                           bounds[1][1] - bounds[0][1],
-                          bounds[1][2] - bounds[0][2]) / 2 / DAU;
+                          bounds[1][2] - bounds[0][2]) / 2 * DM2AU;
             *(double*)out = radius / vec3_norm(sat->pvo[0]);
             return 0;
         }
@@ -549,14 +549,14 @@ static void satellite_render_model(const satellite_t *sat,
     if (!painter_project(&painter, FRAME_ICRF, sat->pvo[0], false, true, p_win))
         return;
     mat4_itranslate(model_mat, sat->pvo[0][0], sat->pvo[0][1], sat->pvo[0][2]);
-    mat4_iscale(model_mat, 1.0 / DAU, 1.0 / DAU, 1.0 / DAU);
+    mat4_iscale(model_mat, DM2AU, DM2AU, DM2AU);
 
     get_lvlh_rot(painter.obs, sat->pvo, lvlh_rot);
     mat4_mul_mat3(model_mat, lvlh_rot, model_mat);
 
     dist = vec3_norm(sat->pvo[0]);
-    depth_range[0] = dist - 500 / DAU;
-    depth_range[1] = dist + 500 / DAU;
+    depth_range[0] = dist - 500 * DM2AU;
+    depth_range[1] = dist + 500 * DM2AU;
     painter.depth_range = &depth_range;
 
     args = json_object_new(0);
@@ -571,7 +571,7 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
                               double *model_size)
 {
     double bounds[2][3], dim_au, angle, point_size;
-    const double max_dim_au = 110 / DAU; // No sat is larger than that.
+    const double max_dim_au = 110 * DM2AU; // No sat is larger than that.
 
     if (!sat->model) return 0;
 
@@ -585,7 +585,7 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
         return 0;
     dim_au = max3(bounds[1][0] - bounds[0][0],
                   bounds[1][1] - bounds[0][1],
-                  bounds[1][2] - bounds[0][2]) / DAU;
+                  bounds[1][2] - bounds[0][2]) * DM2AU;
     angle = dim_au / vec3_norm(sat->pvo[0]);
     point_size = core_get_point_for_apparent_angle(painter->proj, angle);
     *model_size = point_size;
@@ -733,14 +733,14 @@ int satellite_get_altitude(const obj_t *obj, const observer_t *obs,
 
     r = sgp4(sat->elsetrec, obs->utc, pos, speed);
     if (r != 0) return -1;
-    vec3_mul(1000.0 / DAU, pos, pos);
+    vec3_mul(1000.0 * DM2AU, pos, pos);
 
     // True equator to j2000.
     // Why do we need that?
     mat3_mul_vec3(obs->rnp, pos, pos);
 
     eraGd2gc(1, obs->elong, obs->phi, obs->hm, obs_pos);
-    vec3_mul(1.0 / DAU, obs_pos, obs_pos);
+    vec3_mul(DM2AU, obs_pos, obs_pos);
     theta = eraEra00(DJM0, obs->ut1);
     vec2_rotate(theta, obs_pos, obs_pos);
     vec3_sub(pos, obs_pos, pos);
@@ -823,7 +823,7 @@ static void check_sat(
     obj_get_info(obj, &obs, INFO_VMAG, &vmag);
     assert(fabs(alt * DR2D - ha_alt) < alt_err);
     assert(fabs(az * DR2D - ha_az) < az_err);
-    assert(fabs(dist * DAU / 1000 - ha_dist) < dist_err);
+    assert(fabs(dist * DAU2M / 1000 - ha_dist) < dist_err);
     assert(fabs(ha_vmag - vmag) < vmag_err);
 
     satellite_get_altitude(obj, &obs, &alt);

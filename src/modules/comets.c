@@ -223,8 +223,8 @@ static void compute_tail_size(double H, double K, double r,
     Do = pow(10, -0.0033 * mhelio * mhelio - 0.07 * mhelio + 3.25);
     D = Do * (1 - pow(10, -2 * r)) * (1 - pow(10, -r));
     // Convert all in AU.
-    *out_l = L * 1000000 * 1000 / DAU;
-    *out_d = D * 1000 * 1000 / DAU;
+    *out_l = L * 1000000 * 1000 * DM2AU;
+    *out_d = D * 1000 * 1000 * DM2AU;
 }
 
 // Rotate a matrix to make the Y axis point toward a given position.

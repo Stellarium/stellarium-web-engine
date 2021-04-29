@@ -10,7 +10,7 @@
 #include "swe.h"
 
 static void correct_speed_of_light(double pv[2][3]) {
-    double ldt = vec3_norm(pv[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
+    double ldt = vec3_norm(pv[0]) * DAU2M / LIGHT_YEAR_IN_METER * DJY;
     vec3_addk(pv[0], pv[1], -ldt, pv[0]);
 }
 

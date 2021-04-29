@@ -127,7 +127,7 @@ static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
 }
 
 static void correct_speed_of_light(double pv[2][3]) {
-    double ldt = vec3_norm(pv[0]) * DAU / LIGHT_YEAR_IN_METER * DJY;
+    double ldt = vec3_norm(pv[0]) * DAU2M / LIGHT_YEAR_IN_METER * DJY;
     vec3_addk(pv[0], pv[1], -ldt, pv[0]);
 }
 
@@ -167,12 +167,12 @@ static void observer_update_fast(observer_t *obs)
         eraTrxp(obs->astrom.bpn, obs->obs_pvg[0], obs->obs_pvg[0]);
         eraTrxp(obs->astrom.bpn, obs->obs_pvg[1], obs->obs_pvg[1]);
         // Set pos back in AU
-        eraSxp(1. / DAU, obs->obs_pvg[0], obs->obs_pvg[0]);
+        eraSxp(DM2AU, obs->obs_pvg[0], obs->obs_pvg[0]);
         // Set speed back in AU / day
-        eraSxp(ERFA_DAYSEC / DAU, obs->obs_pvg[1], obs->obs_pvg[1]);
+        eraSxp(ERFA_DAYSEC * DM2AU, obs->obs_pvg[1], obs->obs_pvg[1]);
     } else {
-        vec3_mul(DAU, obs->obs_pvg[0], pvg[0]);
-        vec3_mul(DAU / ERFA_DAYSEC, obs->obs_pvg[1], pvg[1]);
+        vec3_mul(DAU2M, obs->obs_pvg[0], pvg[0]);
+        vec3_mul(DAU2M / ERFA_DAYSEC, obs->obs_pvg[1], pvg[1]);
         eraApcs(DJM0, obs->tt, pvg, obs->earth_pvb, obs->earth_pvh[0],
                 &obs->astrom);
     }
@@ -216,8 +216,8 @@ static void observer_update_full(observer_t *obs)
                 theta, obs->elong, obs->phi, obs->hm, 0, 0, sp, 0, 0,
                 &obs->astrom);
     } else {
-        vec3_mul(DAU, obs->obs_pvg[0], pvg[0]);
-        vec3_mul(DAU / ERFA_DAYSEC, obs->obs_pvg[1], pvg[1]);
+        vec3_mul(DAU2M, obs->obs_pvg[0], pvg[0]);
+        vec3_mul(DAU2M / ERFA_DAYSEC, obs->obs_pvg[1], pvg[1]);
         eraApcs(DJM0, obs->tt, pvg, obs->earth_pvb, obs->earth_pvh[0],
                 &obs->astrom);
     }

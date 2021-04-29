@@ -64,7 +64,7 @@ static meteor_t *meteor_create(void)
     meteor_t *m = calloc(1, sizeof(*m));
 
     // Give the meteor a random position and speed.
-    z = (EARTH_RADIUS + MAX_ALTITUDE) * 1000 / DAU;
+    z = (EARTH_RADIUS + MAX_ALTITUDE) * 1000 * DM2AU;
     mat3_set_identity(mat);
     mat3_rz(frand(0, 360 * DD2R), mat, mat);
     mat3_ry(frand(-90 * DD2R, +90 * DD2R), mat, mat);

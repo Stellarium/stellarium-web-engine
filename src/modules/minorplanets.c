@@ -257,7 +257,7 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
         if (!mp->no_model) {
             radius = mean3(bounds[1][0] - bounds[0][0],
                            bounds[1][1] - bounds[0][1],
-                           bounds[1][2] - bounds[0][2]) * 1000 / 2 / DAU;
+                           bounds[1][2] - bounds[0][2]) * 1000 / 2 * DM2AU;
             *(double*)out = radius / vec3_norm(mp->pvo[0]);
             return 0;
         }
@@ -270,7 +270,7 @@ static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter)
 {
     double model_mat[4][4] = MAT4_IDENTITY;
     mat4_itranslate(model_mat, VEC3_SPLIT(mplanet->pvo[0]));
-    mat4_iscale(model_mat, 1000 / DAU, 1000 / DAU, 1000 / DAU);
+    mat4_iscale(model_mat, 1000 * DM2AU, 1000 * DM2AU, 1000 * DM2AU);
     paint_3d_model(painter, mplanet->model, model_mat, NULL);
     return 0;
 }
@@ -310,7 +310,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
         radius_m = mean3(bounds[1][0] - bounds[0][0],
                          bounds[1][1] - bounds[0][1],
                          bounds[1][2] - bounds[0][2]) / 2 * 1000;
-        model_r = radius_m / DAU / vec3_norm(mplanet->pvo[0]);
+        model_r = radius_m * DM2AU / vec3_norm(mplanet->pvo[0]);
         model_size = core_get_point_for_apparent_angle(
                 painter->proj, model_r);
         model_alpha = smoothstep(0.5, 1.0, model_size / size);

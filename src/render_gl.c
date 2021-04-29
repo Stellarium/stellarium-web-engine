@@ -1456,8 +1456,8 @@ static void item_gltf_render(renderer_t *rend, const item_t *item)
 
     // Fix the depth range of the projection to the current frame values.
     if (item->flags & PAINTER_ENABLE_DEPTH) {
-        nearval = rend->depth_range[0] * DAU;
-        farval = rend->depth_range[1] * DAU;
+        nearval = rend->depth_range[0] * DAU2M;
+        farval = rend->depth_range[1] * DAU2M;
         proj[2][2] = (farval + nearval) / (nearval - farval);
         proj[3][2] = 2. * farval * nearval / (nearval - farval);
     }
