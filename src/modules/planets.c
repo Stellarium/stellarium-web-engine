@@ -99,6 +99,9 @@ typedef struct planets {
     double hints_mag_offset;
     bool   hints_visible;
     bool   scale_moon;
+    // Orbit render mode:
+    // 0: No orbit.  1: Render selection children orbits.
+    int    orbits_mode;
 } planets_t;
 
 // Static instance.
@@ -1209,42 +1212,22 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     return cmp(eraPm(bpvo[0]), eraPm(apvo[0]));
 }
 
-static double planet_get_pixel_radius(const planet_t *p,
-                                      const painter_t *painter)
-{
-    double vmag, angle, pvo[2][3], radius_physical, radius_vmag;
-
-    planet_get_pvo(p, painter->obs, pvo);
-    angle = p->radius_m * DM2AU / vec3_norm(pvo[0]);
-    radius_physical = core_get_point_for_apparent_angle(painter->proj, angle);
-    vmag = planet_get_vmag(p, painter->obs);
-    core_get_point_for_mag(vmag, &radius_vmag, NULL);
-    return max(radius_physical, radius_vmag);
-}
 
 /*
 * Heuristic to decide if we should render the orbit of a planet.
 */
 static bool should_render_orbit(const planet_t *p, const painter_t *painter)
 {
-
-    // Only consider planets moons.
-    if (!core->selection) return false;
-    if (!p->parent) return false;
-    if (p->id == SUN) return false;
-    if (p->parent->id == SUN) return false;
-
-    // If the moon is selected, always render the orbit.
-    if (&p->obj == core->selection) return true;
-
-    // If the parent is not selected, don't render.
-    if (&p->parent->obj != core->selection) return false;
-
-    // Only render the orbit if the visible radius on screen is larger than
-    // a threshold value.
-    if (planet_get_pixel_radius(p, painter) < 1.5) return false;
-
-    return true;
+    switch (g_planets->orbits_mode) {
+    case 0:
+        return false;
+    case 1:
+        if (!core->selection) return false;
+        if (&p->parent->obj != core->selection) return false;
+        return true;
+    default:
+        return false;
+    }
 }
 
 static int planets_render(const obj_t *obj, const painter_t *painter)
@@ -1264,12 +1247,12 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
 
     // Render orbits after the planets for proper depth buffer.
     // Note: the renderer could sort it itself?
-    // Still disabled by default for the moment.
-    if ((0)) // Disabled for the moment
-    PLANETS_ITER(planets, p) {
-        p->orbit_visible.target = should_render_orbit(p, painter);
-        if (p->orbit_visible.value)
-            planet_render_orbit(p, 0.6 * p->orbit_visible.value, painter);
+    if (planets->orbits_mode) {
+        PLANETS_ITER(planets, p) {
+            p->orbit_visible.target = should_render_orbit(p, painter);
+            if (p->orbit_visible.value)
+                planet_render_orbit(p, 0.6 * p->orbit_visible.value, painter);
+        }
     }
     return 0;
 }
@@ -1558,6 +1541,7 @@ static obj_klass_t planets_klass = {
                  MEMBER(planets_t, hints_mag_offset)),
         PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
         PROPERTY(scale_moon, TYPE_BOOL, MEMBER(planets_t, scale_moon)),
+        PROPERTY(orbits_mode, TYPE_ENUM, MEMBER(planets_t, orbits_mode)),
         {}
     },
 };
