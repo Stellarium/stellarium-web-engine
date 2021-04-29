@@ -461,6 +461,9 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
             return 0;
         }
         return 1;
+    case INFO_POLE:
+        vec3_normalize(sat->pvg[0], (double*)out);
+        return 0;
     }
     return 1;
 }

@@ -72,6 +72,7 @@ int obj_info_from_str(const char *str);
     X(PVO,          pvo,        V4X2,   11) \
     X(LHA,          lha,        ANGLE,  12) \
     X(NEXT_PEAK,    next_peak,  MJD,    13) \
+    X(POLE,         pole,       V3,     15) \
 
 /*
  * Enum of all the info.

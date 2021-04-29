@@ -542,11 +542,55 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
     }
 }
 
+/*
+ * Compute the rotation of a planet along its axis.
+ *
+ * Parameters:
+ *   planet     - A planet.
+ *   tt         - TT time (MJD).
+ *
+ * Return:
+ *   The rotation angle in radian.
+ */
+static double planet_get_rotation(const planet_t *planet, double tt)
+{
+    if (!planet->rot.period) return 0;
+    return (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
+}
+
+static void planet_get_mat(const planet_t *planet, const observer_t *obs,
+                           double mat[4][4])
+{
+    double radius = planet->radius_m * DM2AU;
+    double pvo[2][3];
+    double tmp_mat[4][4];
+
+    mat4_set_identity(mat);
+    planet_get_pvo(planet, obs, pvo);
+    mat4_itranslate(mat, pvo[0][0], pvo[0][1], pvo[0][2]);
+    mat4_iscale(mat, radius, radius, radius);
+
+    // Apply the rotation.
+    // Use pole ra/de position if available, else try with obliquity.
+    // XXX: Probably need to remove obliquity.
+    if (planet->rot.pole_ra || planet->rot.pole_de) {
+        mat4_rz(planet->rot.pole_ra, mat, mat);
+        mat4_ry(M_PI / 2 - planet->rot.pole_de, mat, mat);
+    } else {
+        mat3_to_mat4(obs->re2i, tmp_mat);
+        mat4_mul(mat, tmp_mat, mat);
+        mat4_rx(-planet->rot.obliquity, mat, mat);
+    }
+    mat4_rz(planet_get_rotation(planet, obs->tt), mat, mat);
+}
+
+
 static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
                            void *out)
 {
     planet_t *planet = (planet_t*)obj;
     double pvo[2][3];
+    double mat[4][4];
 
     switch (info) {
     case INFO_PVO:
@@ -561,6 +605,10 @@ static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
     case INFO_RADIUS:
         planet_get_pvo(planet, obs, pvo);
         *(double*)out = planet->radius_m * DM2AU / vec3_norm(pvo[0]);
+        return 0;
+    case INFO_POLE:
+        planet_get_mat(planet, obs, mat);
+        vec3_copy(mat[2], (double*)out);
         return 0;
     default:
         return 1;
@@ -744,48 +792,6 @@ static int get_shadow_candidates(const planet_t *planet,
         }
     }
     return nb;
-}
-
-/*
- * Compute the rotation of a planet along its axis.
- *
- * Parameters:
- *   planet     - A planet.
- *   tt         - TT time (MJD).
- *
- * Return:
- *   The rotation angle in radian.
- */
-static double planet_get_rotation(const planet_t *planet, double tt)
-{
-    if (!planet->rot.period) return 0;
-    return (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
-}
-
-static void planet_get_mat(const planet_t *planet, const observer_t *obs,
-                           double mat[4][4])
-{
-    double radius = planet->radius_m * DM2AU;
-    double pvo[2][3];
-    double tmp_mat[4][4];
-
-    mat4_set_identity(mat);
-    planet_get_pvo(planet, obs, pvo);
-    mat4_itranslate(mat, pvo[0][0], pvo[0][1], pvo[0][2]);
-    mat4_iscale(mat, radius, radius, radius);
-
-    // Apply the rotation.
-    // Use pole ra/de position if available, else try with obliquity.
-    // XXX: Probably need to remove obliquity.
-    if (planet->rot.pole_ra || planet->rot.pole_de) {
-        mat4_rz(planet->rot.pole_ra, mat, mat);
-        mat4_ry(M_PI / 2 - planet->rot.pole_de, mat, mat);
-    } else {
-        mat3_to_mat4(obs->re2i, tmp_mat);
-        mat4_mul(mat, tmp_mat, mat);
-        mat4_rx(-planet->rot.obliquity, mat, mat);
-    }
-    mat4_rz(planet_get_rotation(planet, obs->tt), mat, mat);
 }
 
 static void planet_render_hips(const planet_t *planet,
