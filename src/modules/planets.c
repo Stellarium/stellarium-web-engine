@@ -825,7 +825,6 @@ static void planet_render_hips(const planet_t *planet,
     planet_get_pvo(planet, painter.obs, pvo);
     angle = 2 * radius * r_scale / vec3_norm(pvo[0]);
 
-    memset(&painter.planet, 0, sizeof(painter.planet));
     // Get potential shadow casting spheres.
     painter.planet.shadow_spheres_nb =
         get_shadow_candidates(planet, painter.obs, 4, shadow_spheres);
