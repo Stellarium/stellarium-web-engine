@@ -1090,7 +1090,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double pvo[2][3], dir[3];
     double phy_angular_radius;
 
-    if (planet->id == EARTH) return;
+    if (!painter.obs->space && planet->id == EARTH) return;
 
     vmag = planet_get_vmag(planet, painter.obs);
     if (planet->id != MOON && vmag > painter.stars_limit_mag) return;
