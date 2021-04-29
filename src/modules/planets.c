@@ -1018,7 +1018,7 @@ static void planet_render_label(
     vec3_normalize(pos, pos);
 
     // Radius on screen in pixel.
-    radius = planet->radius_m * DM2AU / vec3_norm(pvo[0]);
+    radius = asin(planet->radius_m * DM2AU / vec3_norm(pvo[0]));
     radius = core_get_point_for_apparent_angle(painter->proj, radius);
     radius *= scale;
 
