@@ -98,6 +98,7 @@ typedef struct planets {
     // Hints/labels magnitude offset
     double hints_mag_offset;
     bool   hints_visible;
+    bool   scale_moon;
 } planets_t;
 
 // Static instance.
@@ -1047,6 +1048,26 @@ static bool planet_is_occulted(const planet_t *planet, const painter_t *painter)
     return sep < r1 + r2;
 }
 
+static double get_artificial_scale(const planets_t *planets,
+                                   const planet_t *planet)
+{
+    double pvo[2][3], angular_diameter, scale;
+    const double MOON_ANGULAR_DIAMETER_FROM_EARTH = 0.55 * DD2R;
+
+    if (planet->id != MOON) return 1;
+    if (!planets->scale_moon) return 1;
+
+    // XXX: we should probably simplify this: just use a linear function
+    // of the size in pixel.
+    planet_get_pvo(planet, core->observer, pvo);
+    angular_diameter = 2.0 * planet->radius_m * DM2AU / vec3_norm(pvo[0]);
+    scale = core->fov / (20 * DD2R);
+    scale /= (angular_diameter / MOON_ANGULAR_DIAMETER_FROM_EARTH);
+    scale /= core->star_scale_screen_factor;
+
+    return max(1.0, scale);
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], p_win[4];
@@ -1077,11 +1098,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Artificially increase the moon size when we are zoomed out, so that
     // we can render it as a hips survey.
-    if (planet->id == MOON) {
-        model_k = 4.0;
-        r_scale = max(1.0, core->fov / (20.0 * core->star_scale_screen_factor
-                                        * DD2R));
-    }
+    r_scale = get_artificial_scale(planets, planet);
+    if (planet->id == MOON) model_k = 4.0;
 
     core_get_point_for_mag(vmag, &point_size, &point_luminance);
     point_r = core_get_apparent_angle_for_point(painter.proj, point_size * 2.0);
@@ -1422,6 +1440,7 @@ static int planets_init(obj_t *obj, json_value *args)
     g_planets = planets;
     fader_init(&planets->visible, true);
     planets->hints_visible = true;
+    planets->scale_moon = true;
 
     data = asset_get_data("asset://planets.ini", NULL, NULL);
     ini_parse_string(data, planets_ini_handler, planets);
@@ -1539,6 +1558,7 @@ static obj_klass_t planets_klass = {
         PROPERTY(hints_mag_offset, TYPE_FLOAT,
                  MEMBER(planets_t, hints_mag_offset)),
         PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
+        PROPERTY(scale_moon, TYPE_BOOL, MEMBER(planets_t, scale_moon)),
         {}
     },
 };
