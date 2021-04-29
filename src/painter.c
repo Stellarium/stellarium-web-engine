@@ -924,6 +924,7 @@ bool painter_unproject(const painter_t *painter, int frame,
     double p[4] = {win_pos[0], win_pos[1], 0};
     bool ret;
     ret = unproject(painter->proj, p, p);
+    vec3_normalize(p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, pos);
     return ret;
 }
