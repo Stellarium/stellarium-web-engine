@@ -606,10 +606,11 @@ EMSCRIPTEN_KEEPALIVE
 void core_on_mouse(int id, int state, double x, double y, int buttons)
 {
     obj_t *module;
+    int r;
     DL_FOREACH(core->obj.children, module) {
-        if (module->klass->on_mouse) {
-            module->klass->on_mouse(module, id, state, x, y, buttons);
-        };
+        if (!module->klass->on_mouse) continue;
+        r = module->klass->on_mouse(module, id, state, x, y, buttons);
+        if (r == 0) return;
     }
 }
 
@@ -618,10 +619,11 @@ void core_on_pinch(int state, double x, double y, double scale,
                    int points_count)
 {
     obj_t *module;
+    int r;
     DL_FOREACH(core->obj.children, module) {
-        if (module->klass->on_pinch) {
-            module->klass->on_pinch(module, state, x, y, scale, points_count);
-        };
+        if (!module->klass->on_pinch) continue;
+        r = module->klass->on_pinch(module, state, x, y, scale, points_count);
+        if (r == 0) return;
     }
 }
 
