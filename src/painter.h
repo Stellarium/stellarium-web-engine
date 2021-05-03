@@ -294,7 +294,8 @@ int paint_mesh(const painter_t *painter, int frame, int mode,
 
 
 int paint_text_bounds(const painter_t *painter, const char *text,
-                      const double pos[2], int align, int effects,
+                      const double win_pos[2],
+                      int align, int effects,
                       double size, double bounds[4]);
 
 /*
@@ -303,14 +304,16 @@ int paint_text_bounds(const painter_t *painter, const char *text,
  *
  * Parameters:
  *   text       - The text to render.
- *   pos        - Text position in window coordinates.
+ *   win_pos    - Text position in window coordinates.
+ *   view_pos   - Optional text position in view coordinates (for depth).
  *   align      - Union of <ALIGN_FLAGS>.
  *   effects    - Union of <TEXT_EFFECT_FLAGS>.
  *   size       - Text size in window unit.
  *   angle      - Angle in radian.
  */
 int paint_text(const painter_t *painter,
-               const char *text, const double pos[2], int align,
+               const char *text, const double win_pos[2],
+               const double view_pos[3], int align,
                int effects, double size, double angle);
 
 /*

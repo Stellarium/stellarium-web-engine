@@ -329,7 +329,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                 vec2_copy(feature->text_offset, ofs);
                 vec2_rotate(feature->text_rotate, ofs, ofs);
                 vec2_add(pos, ofs, pos);
-                paint_text(&painter, feature->title, pos, feature->text_anchor,
+                paint_text(&painter, feature->title, pos, NULL,
+                           feature->text_anchor,
                            0, FONT_SIZE_BASE, feature->text_rotate);
             }
         }

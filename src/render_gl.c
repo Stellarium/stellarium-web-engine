@@ -222,10 +222,11 @@ static const gl_buf_info_t TEXTURE_BUF = {
 };
 
 static const gl_buf_info_t TEXTURE_2D_BUF = {
-    .size = 16,
+    .size = 28,
     .attrs = {
-        [ATTR_WPOS]     = {GL_FLOAT, 2, false, 0},
-        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 8},
+        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
+        [ATTR_WPOS]     = {GL_FLOAT, 2, false, 12},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 20},
     },
 };
 
@@ -715,13 +716,16 @@ void render_quad(renderer_t *rend, const painter_t *painter,
 
 static void texture_2d(renderer_t *rend, texture_t *tex,
                        double uv[4][2], double win_pos[4][2],
+                       const double view_pos[3],
                        const double color_[4], int flags)
 {
     int i, ofs;
     item_t *item;
     const int16_t INDICES[6] = {0, 1, 2, 3, 2, 1 };
+    double depth;
     float color[4];
 
+    assert((bool)view_pos == (bool)(flags & PAINTER_ENABLE_DEPTH));
     vec4_to_float(color_, color);
     item = get_item(rend, ITEM_TEXTURE_2D, 4, 6, tex);
     if (item && memcmp(item->color, color, sizeof(color))) item = NULL;
@@ -738,10 +742,17 @@ static void texture_2d(renderer_t *rend, texture_t *tex,
         DL_APPEND(rend->items, item);
     }
 
-    ofs = item->buf.nb;
+    if (flags & PAINTER_ENABLE_DEPTH) {
+        depth = proj_get_depth(&rend->proj, view_pos);
+        rend->depth_range[0] = min(rend->depth_range[0], depth);
+        rend->depth_range[1] = max(rend->depth_range[1], depth);
+    }
 
+    ofs = item->buf.nb;
     for (i = 0; i < 4; i++) {
         gl_buf_2f(&item->buf, -1, ATTR_WPOS, win_pos[i][0], win_pos[i][1]);
+        if (view_pos)
+            gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(view_pos));
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, uv[i][0], uv[i][1]);
         gl_buf_next(&item->buf);
     }
@@ -766,7 +777,7 @@ void render_texture(renderer_t *rend, const texture_t  *tex,
         verts[i][0] = pos[0] + verts[i][0];
         verts[i][1] = pos[1] + verts[i][1];
     }
-    texture_2d(rend, tex, uv, verts, color, 0);
+    texture_2d(rend, tex, uv, verts, NULL, color, 0);
 }
 
 static uint8_t img_get(const uint8_t *img, int w, int h, int x, int y)
@@ -825,7 +836,8 @@ static void text_shadow_effect(const uint8_t *src, uint8_t *dst,
 // Render text using a system bakend generated texture.
 static void text_using_texture(renderer_t *rend,
                                const painter_t *painter,
-                               const char *text, const double pos[2],
+                               const char *text, const double win_pos[2],
+                               const double view_pos[3],
                                int align, int effects, double size,
                                const double color[4], double angle,
                                double out_bounds[4])
@@ -875,8 +887,8 @@ static void text_using_texture(renderer_t *rend,
     if (align & ALIGN_RIGHT)    ofs[0] = -s[0] / 2;
     if (align & ALIGN_TOP)      ofs[1] = +s[1] / 2;
     if (align & ALIGN_BOTTOM)   ofs[1] = -s[1] / 2;
-    bounds[0] = pos[0] - s[0] / 2 + ofs[0] + ctex->xoff / scale;
-    bounds[1] = pos[1] - s[1] / 2 + ofs[1] + ctex->yoff / scale;
+    bounds[0] = win_pos[0] - s[0] / 2 + ofs[0] + ctex->xoff / scale;
+    bounds[1] = win_pos[1] - s[1] / 2 + ofs[1] + ctex->yoff / scale;
 
     // Round the position to the nearest pixel.  We add a small delta to
     // fix a bug when we are exactly in between two pixels, which can happen
@@ -912,7 +924,7 @@ static void text_using_texture(renderer_t *rend,
     }
 
     flags = painter->flags;
-    texture_2d(rend, tex, uv, verts, VEC(1, 1, 1, color[3]), flags);
+    texture_2d(rend, tex, uv, verts, view_pos, VEC(1, 1, 1, color[3]), flags);
 }
 
 // Render text using nanovg.
@@ -969,30 +981,31 @@ static void text_using_nanovg(renderer_t *rend,
 }
 
 void render_text(renderer_t *rend, const painter_t *painter,
-                 const char *text, const double pos[2],
+                 const char *text, const double win_pos[2],
+                 const double view_pos[3],
                  int align, int effects, double size,
                  const double color[4], double angle,
                  double bounds[4])
 {
-    assert(pos);
+    assert(win_pos);
     assert(size);
 
     // Prevent overflow in nvg.
-    if (fabs(pos[0]) > 100000 || fabs(pos[1]) > 100000) {
+    if (fabs(win_pos[0]) > 100000 || fabs(win_pos[1]) > 100000) {
         LOG_W_ONCE("Render text far outside screen: %s, %f %f",
-                   text, pos[0], pos[1]);
+                   text, win_pos[0], win_pos[1]);
         if (bounds) {
-            bounds[0] = pos[0];
-            bounds[1] = pos[1];
+            bounds[0] = win_pos[0];
+            bounds[1] = win_pos[1];
         }
         return;
     }
 
     if (sys_callbacks.render_text) {
-        text_using_texture(rend, painter, text, pos, align, effects, size,
-                           color, angle, bounds);
+        text_using_texture(rend, painter, text, win_pos, view_pos, align,
+                           effects, size, color, angle, bounds);
     } else {
-        text_using_nanovg(rend, painter, text, pos, align, effects, size,
+        text_using_nanovg(rend, painter, text, win_pos, align, effects, size,
                           color, angle, bounds);
     }
 
@@ -1378,11 +1391,15 @@ static void item_texture_render(renderer_t *rend, const item_t *item)
 static void item_texture_2d_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
+    float matf[16];
+    projection_t proj;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
     shader_define_t defines[] = {
         {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE &&
                               !(item->flags & PAINTER_ADD)},
+        {"HAS_VIEW_POS", (bool)(item->flags & PAINTER_ENABLE_DEPTH)},
+        {"PROJ", rend->proj.klass->id},
         {}
     };
     shader = shader_get("texture_2d", defines, ATTR_NAMES, init_shader);
@@ -1396,10 +1413,15 @@ static void item_texture_2d_render(renderer_t *rend, const item_t *item)
         GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
                                GL_ZERO, GL_ONE));
     }
-    GL(glDisable(GL_DEPTH_TEST));
+    if (item->flags & PAINTER_ENABLE_DEPTH)
+        GL(glEnable(GL_DEPTH_TEST));
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_win_size", win_size);
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
+    GL(glDisable(GL_DEPTH_TEST));
 }
 
 static void item_planet_render(renderer_t *rend, const item_t *item)

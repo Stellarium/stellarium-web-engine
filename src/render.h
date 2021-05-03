@@ -44,7 +44,8 @@ void render_texture(renderer_t *rend, const texture_t  *tex,
                     const double color[4], double angle);
 
 void render_text(renderer_t *rend, const painter_t *painter,
-                 const char *text, const double pos[2],
+                 const char *text, const double win_pos[2],
+                 const double view_pos[3],
                  int align, int effects, double size,
                  const double color[4], double angle,
                  double bounds[4]);

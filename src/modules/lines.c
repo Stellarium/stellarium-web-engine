@@ -509,7 +509,7 @@ static void render_label(const double p[2], const double u[2],
     pos[0] += n3[0] * size[1] / 2;
     pos[1] += n3[1] * size[1] / 2;
 
-    paint_text(&painter, buf, pos, ALIGN_CENTER | ALIGN_MIDDLE, 0,
+    paint_text(&painter, buf, pos, NULL, ALIGN_CENTER | ALIGN_MIDDLE, 0,
                text_size, label_angle);
 }
 

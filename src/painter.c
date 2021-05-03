@@ -196,17 +196,18 @@ int paint_text_bounds(const painter_t *painter, const char *text,
                       const double pos[2], int align, int effects,
                       double size, double bounds[4])
 {
-    render_text(painter->rend, painter, text, pos, align, effects, size,
-         painter->color, 0, bounds);
+    render_text(painter->rend, painter, text, pos, NULL, align, effects, size,
+                painter->color, 0, bounds);
     return 0;
 }
 
 int paint_text(const painter_t *painter, const char *text,
-               const double pos[2], int align, int effects, double size,
+               const double win_pos[2], const double view_pos[3],
+               int align, int effects, double size,
                double angle)
 {
-    render_text(painter->rend, painter, text, pos, align, effects, size,
-         painter->color, angle, NULL);
+    render_text(painter->rend, painter, text, win_pos, view_pos, align, effects,
+                size, painter->color, angle, NULL);
     return 0;
 }
 

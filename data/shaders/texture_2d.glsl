@@ -15,13 +15,23 @@ varying highp   vec2        v_tex_pos;
 
 #ifdef VERTEX_SHADER
 
+#ifdef HAS_VIEW_POS
+    attribute highp vec3 a_pos;
+    #includes "projections.glsl"
+#endif
+
 attribute highp     vec2    a_wpos;
 attribute mediump   vec2    a_tex_pos;
 
 void main()
 {
+    #ifdef HAS_VIEW_POS
+        gl_Position = proj(a_pos);
+    #else
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+    #endif
     gl_Position.xy = (a_wpos / u_win_size - 0.5) * vec2(2.0, -2.0);
-    gl_Position.zw = vec2(0.0, 1.0);
+    gl_Position.xy *= gl_Position.w;
     v_tex_pos = a_tex_pos;
 }
 

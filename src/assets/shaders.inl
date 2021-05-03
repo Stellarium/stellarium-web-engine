@@ -700,7 +700,7 @@ static const unsigned char DATA_shaders_projections_glsl[1831] __attribute__((al
 
 ASSET_REGISTER(shaders_projections_glsl, "shaders/projections.glsl", DATA_shaders_projections_glsl, false)
 
-static const unsigned char DATA_shaders_texture_2d_glsl[989] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_texture_2d_glsl[1210] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2021 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -718,13 +718,23 @@ static const unsigned char DATA_shaders_texture_2d_glsl[989] __attribute__((alig
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
+    "#ifdef HAS_VIEW_POS\n"
+    "    attribute highp vec3 a_pos;\n"
+    "    #includes \"projections.glsl\"\n"
+    "#endif\n"
+    "\n"
     "attribute highp     vec2    a_wpos;\n"
     "attribute mediump   vec2    a_tex_pos;\n"
     "\n"
     "void main()\n"
     "{\n"
+    "    #ifdef HAS_VIEW_POS\n"
+    "        gl_Position = proj(a_pos);\n"
+    "    #else\n"
+    "        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);\n"
+    "    #endif\n"
     "    gl_Position.xy = (a_wpos / u_win_size - 0.5) * vec2(2.0, -2.0);\n"
-    "    gl_Position.zw = vec2(0.0, 1.0);\n"
+    "    gl_Position.xy *= gl_Position.w;\n"
     "    v_tex_pos = a_tex_pos;\n"
     "}\n"
     "\n"
