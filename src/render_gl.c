@@ -1526,10 +1526,7 @@ static void rend_flush(renderer_t *rend)
         rend->depth_range[0] = 0;
         rend->depth_range[1] = 1;
     }
-    // Limit near depth range to keep a proper resolution, assuming
-    // a 24 bits depth buffer.
-    rend->depth_range[0] = max(rend->depth_range[0],
-                               rend->depth_range[1] / (1 << 24));
+    rend->depth_range[0] = max(rend->depth_range[0], 10 * DM2AU);
 
     // Add a small margin.
     rend->depth_range[0] *= 0.99;
@@ -1549,6 +1546,7 @@ static void rend_flush(renderer_t *rend)
     GL(glViewport(0, 0, rend->fb_size[0], rend->fb_size[1]));
     GL(glDepthMask(GL_FALSE));
     GL(glDisable(GL_DEPTH_TEST));
+    GL(glDepthFunc(GL_LEQUAL));
     GL(glColorMask(true, true, true, false)); // Do not change the alpha.
 
     // On OpenGL Desktop, we have to enable point sprite support.
