@@ -912,7 +912,6 @@ static void text_using_texture(renderer_t *rend,
     }
 
     flags = painter->flags;
-    if (effects & TEXT_BLEND_ADD) flags |= PAINTER_ADD;
     texture_2d(rend, tex, uv, verts, VEC(1, 1, 1, color[3]), flags);
 }
 
@@ -1213,8 +1212,6 @@ static void item_text_render(renderer_t *rend, const item_t *item)
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
-    if (item->text.effects & TEXT_BLEND_ADD)
-        nvgGlobalCompositeBlendFunc(rend->vg, NVG_ONE, NVG_ONE);
     nvgTranslate(rend->vg, item->text.pos[0], item->text.pos[1]);
     nvgRotate(rend->vg, item->text.angle);
 
