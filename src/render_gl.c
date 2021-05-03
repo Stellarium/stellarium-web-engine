@@ -221,6 +221,14 @@ static const gl_buf_info_t TEXTURE_BUF = {
     },
 };
 
+static const gl_buf_info_t TEXTURE_2D_BUF = {
+    .size = 16,
+    .attrs = {
+        [ATTR_WPOS]     = {GL_FLOAT, 2, false, 0},
+        [ATTR_TEX_POS]  = {GL_FLOAT, 2, false, 8},
+    },
+};
+
 static const gl_buf_info_t PLANET_BUF = {
     .size = 60,
     .attrs = {
@@ -705,9 +713,9 @@ void render_quad(renderer_t *rend, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
-static void texture2(renderer_t *rend, texture_t *tex,
-                     double uv[4][2], double pos[4][2],
-                     const double color_[4], int flags, bool swap_indices)
+static void texture_2d(renderer_t *rend, texture_t *tex,
+                       double uv[4][2], double win_pos[4][2],
+                       const double color_[4], int flags)
 {
     int i, ofs;
     item_t *item;
@@ -722,7 +730,7 @@ static void texture2(renderer_t *rend, texture_t *tex,
         item = calloc(1, sizeof(*item));
         item->type = ITEM_TEXTURE_2D;
         item->flags = flags;
-        gl_buf_alloc(&item->buf, &TEXTURE_BUF, 64 * 4);
+        gl_buf_alloc(&item->buf, &TEXTURE_2D_BUF, 64 * 4);
         gl_buf_alloc(&item->indices, &INDICES_BUF, 64 * 6);
         item->tex = tex;
         item->tex->ref++;
@@ -733,15 +741,12 @@ static void texture2(renderer_t *rend, texture_t *tex,
     ofs = item->buf.nb;
 
     for (i = 0; i < 4; i++) {
-        gl_buf_3f(&item->buf, -1, ATTR_POS, pos[i][0], pos[i][1], 0.0);
+        gl_buf_2f(&item->buf, -1, ATTR_WPOS, win_pos[i][0], win_pos[i][1]);
         gl_buf_2f(&item->buf, -1, ATTR_TEX_POS, uv[i][0], uv[i][1]);
         gl_buf_next(&item->buf);
     }
     for (i = 0; i < 6; i++) {
-        if (swap_indices)
-            gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[5 - i]);
-        else
-            gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[i]);
+        gl_buf_1i(&item->indices, -1, 0, ofs + INDICES[i]);
         gl_buf_next(&item->indices);
     }
 }
@@ -760,9 +765,8 @@ void render_texture(renderer_t *rend, const texture_t  *tex,
         if (angle != 0.0) vec2_rotate(-angle, verts[i], verts[i]);
         verts[i][0] = pos[0] + verts[i][0];
         verts[i][1] = pos[1] + verts[i][1];
-        window_to_ndc(rend, verts[i], verts[i]);
     }
-    texture2(rend, tex, uv, verts, color, 0, false);
+    texture_2d(rend, tex, uv, verts, color, 0);
 }
 
 static uint8_t img_get(const uint8_t *img, int w, int h, int x, int y)
@@ -905,13 +909,11 @@ static void text_using_texture(renderer_t *rend,
         verts[i][1] -= ofs[1];
         verts[i][0] += (bounds[0] + bounds[2]) / 2;
         verts[i][1] += (bounds[1] + bounds[3]) / 2;
-        window_to_ndc(rend, verts[i], verts[i]);
     }
 
     flags = painter->flags;
     if (effects & TEXT_BLEND_ADD) flags |= PAINTER_ADD;
-    texture2(rend, tex, uv, verts, VEC(1, 1, 1, color[3]), flags,
-             rend->cull_flipped);
+    texture_2d(rend, tex, uv, verts, VEC(1, 1, 1, color[3]), flags);
 }
 
 // Render text using nanovg.
@@ -1376,6 +1378,33 @@ static void item_texture_render(renderer_t *rend, const item_t *item)
     GL(glCullFace(GL_BACK));
 }
 
+static void item_texture_2d_render(renderer_t *rend, const item_t *item)
+{
+    gl_shader_t *shader;
+    float win_size[2] = {rend->fb_size[0] / rend->scale,
+                         rend->fb_size[1] / rend->scale};
+    shader_define_t defines[] = {
+        {"TEXTURE_LUMINANCE", item->tex->format == GL_LUMINANCE &&
+                              !(item->flags & PAINTER_ADD)},
+        {}
+    };
+    shader = shader_get("texture_2d", defines, ATTR_NAMES, init_shader);
+    GL(glUseProgram(shader->prog));
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, item->tex->id));
+    if (item->tex->format == GL_RGB && item->color[3] == 1.0) {
+        GL(glDisable(GL_BLEND));
+    } else {
+        GL(glEnable(GL_BLEND));
+        GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                               GL_ZERO, GL_ONE));
+    }
+    GL(glDisable(GL_DEPTH_TEST));
+    gl_update_uniform(shader, "u_color", item->color);
+    gl_update_uniform(shader, "u_win_size", win_size);
+    draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
+}
+
 static void item_planet_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
@@ -1521,8 +1550,10 @@ static void rend_flush(renderer_t *rend)
             item_points_render(rend, item);
             break;
         case ITEM_TEXTURE:
-        case ITEM_TEXTURE_2D:
             item_texture_render(rend, item);
+            break;
+        case ITEM_TEXTURE_2D:
+            item_texture_2d_render(rend, item);
             break;
         case ITEM_ATMOSPHERE:
             item_atmosphere_render(rend, item);
