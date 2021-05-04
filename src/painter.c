@@ -491,34 +491,49 @@ bool painter_is_2d_circle_clipped(const painter_t *painter, const double p[2],
 }
 
 bool painter_is_quad_clipped(const painter_t *painter, int frame,
-                             const uv_map_t *map, bool outside)
+                             const uv_map_t *map)
+{
+    double corners[4][4];
+    double quad[4][4], normals[4][3];
+    double p[4][4];
+    double bounding_cap[4];
+    int i;
+    int order = map->order;
+
+    uv_map_get_bounding_cap(map, bounding_cap);
+    assert(vec3_is_normalized(bounding_cap));
+    if (painter_is_cap_clipped(painter, frame, bounding_cap))
+        return true;
+    if (order < 2)
+        return false;
+
+    uv_map_grid(map, 1, corners, normals);
+    for (i = 0; i < 4; i++) {
+        vec3_copy(corners[i], quad[i]);
+        quad[i][3] = 1.0;
+        convert_framev4(painter->obs, frame, FRAME_VIEW, quad[i], quad[i]);
+        project_to_clip(painter->proj, quad[i], p[i]);
+        assert(!isnan(p[i][0]));
+    }
+    return is_clipped(4, p);
+}
+
+static bool painter_is_planet_quad_clipped(const painter_t *painter, int frame,
+                                           const uv_map_t *map)
 {
     double corners[4][4];
     double quad[4][4], normals[4][3], normal[4];
     double p[4][4], direction[3];
-    double bounding_cap[4];
     uv_map_t children[4];
     int i;
     int order = map->order;
 
-    if (outside) {
-        uv_map_get_bounding_cap(map, bounding_cap);
-        assert(vec3_is_normalized(bounding_cap));
-        if (painter_is_cap_clipped(painter, frame, bounding_cap))
-            return true;
-        if (order < 2)
-            return false;
-    }
-
     // At too low orders, the tiles are too distorted which can give false
     // positive, so we check the children in that case.
     if (order < 2) {
-        // Planet case only
-        assert(!outside);
         uv_map_subdivide(map, children);
         for (i = 0; i < 4; i++) {
-            if (!painter_is_quad_clipped(
-                        painter, frame, &children[i], outside))
+            if (!painter_is_planet_quad_clipped(painter, frame, &children[i]))
                 return false;
         }
         return true;
@@ -543,7 +558,7 @@ bool painter_is_quad_clipped(const painter_t *painter, int frame,
      * the view z value, but with the dot product of the normal and the
      * direction vector to the middle of the planet.
      */
-    if (!outside && order > 1) {
+    if (order > 1) {
         vec3_copy((*map->transf)[3], direction);
         vec3_normalize(direction, direction);
         convert_frame(painter->obs, frame, FRAME_VIEW, true,
@@ -567,7 +582,7 @@ bool painter_is_healpix_clipped(const painter_t *painter, int frame,
 {
     uv_map_t map;
     uv_map_init_healpix(&map, order, pix, false, false);
-    return painter_is_quad_clipped(painter, frame, &map, true);
+    return painter_is_quad_clipped(painter, frame, &map);
 }
 
 bool painter_is_planet_healpix_clipped(const painter_t *painter,
@@ -577,7 +592,7 @@ bool painter_is_planet_healpix_clipped(const painter_t *painter,
     uv_map_t map;
     uv_map_init_healpix(&map, order, pix, false, false);
     map.transf = (void*)transf;
-    return painter_is_quad_clipped(painter, FRAME_ICRF, &map, false);
+    return painter_is_planet_quad_clipped(painter, FRAME_ICRF, &map);
 }
 
 

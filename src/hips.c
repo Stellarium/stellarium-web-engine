@@ -494,7 +494,7 @@ int hips_render(hips_t *hips, const painter_t *painter,
         // Early exit if the tile is clipped.
         uv_map_init_healpix(&map, order, pix, false, false);
         map.transf = (void*)transf;
-        if (painter_is_quad_clipped(painter, hips->frame, &map, true))
+        if (painter_is_quad_clipped(painter, hips->frame, &map))
             continue;
         if (order < render_order) { // Keep going.
             hips_iter_push_children(&iter, order, pix);

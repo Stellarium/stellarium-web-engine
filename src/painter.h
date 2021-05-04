@@ -344,7 +344,6 @@ void paint_debug(bool value);
  *   painter    - A painter.
  *   frame      - One of the <FRAME> enum frame.
  *   map        - The mapping function from UV to the 3D space.
- *   outside    - Set whether the quad is an outside (not planet) tile.
  *
  * Returns:
  *   True if the quad is clipped, false otherwise.
@@ -354,7 +353,7 @@ void paint_debug(bool value);
  *   even though a quad is not actually visible.
  */
 bool painter_is_quad_clipped(const painter_t *painter, int frame,
-                             const uv_map_t *map, bool outside);
+                             const uv_map_t *map);
 
 
 // Function: painter_is_healpix_clipped
