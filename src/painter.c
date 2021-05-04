@@ -255,9 +255,8 @@ static bool segment_intersects_discontinuity_line(
     const double a[3], const double b[3])
 {
     double x0, x1;
-    const double EPS = 0.00001;
     if (a[2] < 0 && b[2] < 0) return false; // Both in front of us.
-    if (a[0] * b[0] > EPS) return false; // Both on same side of the line.
+    if (a[0] * b[0] > 0) return false; // Both on same side of the line.
     if (a[2] > 0 && b[2] > 0) return true;
     x0 = atan2(a[0], -a[2]);
     x1 = atan2(b[0], -b[2]);
