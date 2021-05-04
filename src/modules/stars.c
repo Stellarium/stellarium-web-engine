@@ -634,14 +634,13 @@ static tile_t *get_tile(stars_t *stars, survey_t *survey, int order, int pix,
     return tile;
 }
 
-static int render_visitor(int order, int pix, void *user)
+static int render_visitor(stars_t *stars, const survey_t *survey,
+                          int order, int pix,
+                          const painter_t *painter_,
+                          int *nb_tot, int *nb_loaded,
+                          double *illuminance)
 {
-    stars_t *stars = USER_GET(user, 0);
-    const survey_t *survey = (void*)USER_GET(user, 1);
-    painter_t painter = *(const painter_t*)USER_GET(user, 2);
-    int *nb_tot = USER_GET(user, 3);
-    int *nb_loaded = USER_GET(user, 4);
-    double *illuminance = USER_GET(user, 5);
+    painter_t painter = *painter_;
     tile_t *tile;
     int i, n = 0, code;
     star_t *s;
@@ -713,10 +712,11 @@ end:
 static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
     stars_t *stars = (stars_t*)obj;
-    int nb_tot = 0, nb_loaded = 0;
+    int nb_tot = 0, nb_loaded = 0, order, pix, r;
     double illuminance = 0; // Totall illuminance
     painter_t painter = *painter_;
     survey_t *survey;
+    hips_iterator_t iter;
 
     if (!stars->visible) return 0;
 
@@ -725,9 +725,12 @@ static int stars_render(const obj_t *obj, const painter_t *painter_)
         // the max visible vmag.
         if (survey->min_vmag > painter.stars_limit_mag)
             continue;
-        hips_traverse(USER_PASS(stars, survey, &painter,
-                      &nb_tot, &nb_loaded, &illuminance),
-                      render_visitor);
+        hips_iter_init(&iter);
+        while (hips_iter_next(&iter, &order, &pix)) {
+            r = render_visitor(stars, survey, order, pix, &painter,
+                               &nb_tot, &nb_loaded, &illuminance);
+            if (r == 1) hips_iter_push_children(&iter, order, pix);
+        }
     }
 
     /* Get the global stars luminance */
