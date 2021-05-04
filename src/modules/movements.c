@@ -142,6 +142,53 @@ static int movements_on_mouse(obj_t *obj, int id, int state,
     return 0;
 }
 
+/*
+ * Function: win_to_observed
+ * Convert a window 2D position to a 3D azalt direction.
+ *
+ * Parameters:
+ *   x    - The window x position.
+ *   y    - The window y position.
+ *   p    - Corresponding 3D unit vector in azalt (after refraction).
+ */
+static void win_to_observed(double x, double y, double p[3])
+{
+    projection_t proj;
+    double pos[4] = {x, y};
+
+    core_get_proj(&proj);
+    unproject(&proj, pos, pos);
+    vec3_normalize(pos, pos);
+    convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true, pos, p);
+}
+
+static int movements_on_zoom(obj_t *obj, double k, double x, double y)
+{
+    double fov, pos_start[3], pos_end[3];
+    double sal, saz, dal, daz;
+    projection_t proj;
+
+    core_get_proj(&proj);
+    win_to_observed(x, y, pos_start);
+    obj_get_attr(&core->obj, "fov", &fov);
+    fov /= k;
+    fov = clamp(fov, CORE_MIN_FOV, proj.klass->max_ui_fov);
+    obj_set_attr(&core->obj, "fov", fov);
+    win_to_observed(x, y, pos_end);
+
+    // Adjust lat/az to keep the mouse point at the same position.
+    eraC2s(pos_start, &saz, &sal);
+    eraC2s(pos_end, &daz, &dal);
+    core->observer->yaw += (saz - daz);
+    core->observer->pitch += (sal - dal);
+    core->observer->pitch = clamp(core->observer->pitch, -M_PI / 2, +M_PI / 2);
+
+    // Notify the changes.
+    module_changed(&core->observer->obj, "pitch");
+    module_changed(&core->observer->obj, "yaw");
+    return 0;
+}
+
 static int movements_update(obj_t *obj, double dt)
 {
     const double ZOOM_FACTOR = 1.05;
@@ -171,6 +218,7 @@ static obj_klass_t movements_klass = {
     .flags          = OBJ_IN_JSON_TREE | OBJ_MODULE,
     .init           = movements_init,
     .on_mouse       = movements_on_mouse,
+    .on_zoom        = movements_on_zoom,
     .update         = movements_update,
     .render_order   = -1,
 };
