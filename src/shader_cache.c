@@ -61,6 +61,8 @@ gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
     strcpy(key, name);
     for (define = defines; define && define->name; define++) {
         if (!define->val) continue;
+        // Prevent passing a pointer by accident.
+        assert(define->val >= 0 && define->val <= 100);
         snprintf(buf, sizeof(buf), "_%s:%d", define->name, define->val);
         strcat(key, buf);
     }
