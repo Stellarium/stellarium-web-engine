@@ -332,7 +332,7 @@ static double proj_get_depth(const projection_t *proj,
  */
 static projection_t rend_get_proj(const renderer_t *rend, int flags)
 {
-    const double eps = FLT_EPSILON;
+    const double eps = 0.000001;
     const double nearval = 5 * DM2AU;
     projection_t proj = rend->proj;
     if (!(flags & PAINTER_ENABLE_DEPTH)) {
