@@ -228,6 +228,25 @@ static int dso_cmp(const void *a, const void *b)
                ((const dso_t*)b)->display_vmag);
 }
 
+/*
+ * Function: apply_errata
+ * Small fixes to the data when we don't want to rebuild the sources.
+ * Note: For the moment I hardcode it here, but it should probably be a user
+ * function, since it depends on the data source.
+ */
+static void apply_errata(dso_t *s)
+{
+    const double DAM2R = DD2R / 60.0; // arcmin to rad.
+    // Fix Markarian's chain position.
+    if (s->de == 0x1.9ea266p-4 &&
+            s->names && strcmp(s->names, "NAME Markarian's Chain") == 0) {
+        s->ra = 186.75 * DD2R;
+        s->de = 13.30 * DD2R;
+        s->smin = 70 * DAM2R;
+        s->angle = 60 * DD2R;
+    }
+}
+
 static int on_file_tile_loaded(const char type[4],
                                const void *data, int size,
                                const json_value *json,
@@ -302,10 +321,6 @@ static int on_file_tile_loaded(const char type[4],
             s->angle = NAN;
         }
 
-        // Compute the cap containing this DSO
-        s->bounding_cap[3] = cosf(max(s->smin, s->smax));
-        eraS2c(s->ra, s->de, s->bounding_cap);
-
         s->vmag = temp_mag;
         // For the moment use bmag as fallback vmag value
         if (isnan(s->vmag)) s->vmag = bmag;
@@ -323,6 +338,11 @@ static int on_file_tile_loaded(const char type[4],
             for (j = 0; ids[j]; j++)
                 s->names[j] = ids[j] != '|' ? ids[j] : '\0';
         }
+
+        apply_errata(s);
+        // Compute the cap containing this DSO
+        s->bounding_cap[3] = cosf(max(s->smin, s->smax));
+        eraS2c(s->ra, s->de, s->bounding_cap);
     }
     free(tile_data);
 
