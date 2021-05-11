@@ -91,6 +91,7 @@ void *eph_read_compressed_block(const void *data, int data_size,
     *data_ofs += 8 + comp_size;
     if (uncompress(ret, &lsize, data + 8, comp_size) != Z_OK) {
         LOG_E("Cannot uncompress data");
+        free(ret);
         return NULL;
     }
     return ret;

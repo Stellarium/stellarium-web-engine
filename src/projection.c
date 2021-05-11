@@ -77,11 +77,10 @@ bool project_to_win_xy(const projection_t *proj, const double input[4],
                        double out[2])
 {
     double win[3];
-    bool ret;
-    ret = project_to_win(proj, input, win);
+    if (!project_to_win(proj, input, win)) return false;
     out[0] = win[0];
     out[1] = win[1];
-    return ret;
+    return true;
 }
 
 bool unproject(const projection_t *proj,
