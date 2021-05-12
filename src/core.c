@@ -1024,7 +1024,6 @@ static obj_klass_t core_klass = {
         PROPERTY(progressbars, TYPE_JSON, .fn = core_fn_progressbars),
         PROPERTY(fps, TYPE_INT, MEMBER(core_t, fps.avg)),
         PROPERTY(clicks, TYPE_INT, MEMBER(core_t, clicks)),
-        PROPERTY(ignore_clicks, TYPE_BOOL, MEMBER(core_t, ignore_clicks)),
         PROPERTY(zoom, TYPE_FLOAT, MEMBER(core_t, zoom)),
         PROPERTY(test, TYPE_BOOL, MEMBER(core_t, test)),
         PROPERTY(exposure_scale, TYPE_FLOAT, MEMBER(core_t, exposure_scale)),

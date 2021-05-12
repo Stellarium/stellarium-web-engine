@@ -63,15 +63,13 @@ static int on_click(const gesture_t *gest, void *user)
 {
     obj_t *obj;
     bool r = false;
-    if (!core->ignore_clicks) {
-        if (core->on_click)
-            r = core->on_click(gest->pos[0], gest->pos[1]);
-        // Default behavior: select an object.
-        if (!r) {
-            obj = core_get_obj_at(gest->pos[0], gest->pos[1], 18);
-            obj_set_attr(&core->obj, "selection", obj);
-            obj_release(obj);
-        }
+    if (core->on_click)
+        r = core->on_click(gest->pos[0], gest->pos[1]);
+    // Default behavior: select an object.
+    if (!r) {
+        obj = core_get_obj_at(gest->pos[0], gest->pos[1], 18);
+        obj_set_attr(&core->obj, "selection", obj);
+        obj_release(obj);
     }
     core->clicks++;
     module_changed((obj_t*)core, "clicks");

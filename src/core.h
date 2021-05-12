@@ -104,7 +104,6 @@ struct core
     // Number of clicks so far.  This is just so that we can wait for clicks
     // from the ui.
     int clicks;
-    bool ignore_clicks; // Don't select on click.
 
     struct {
         struct {
