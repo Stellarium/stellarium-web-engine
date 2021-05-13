@@ -235,7 +235,7 @@ const swh = {
   getShareLink: function (context) {
     let link = 'https://stellarium-web.org/'
     if (context.$store.state.selectedObject) {
-      link += 'skysource/' + this.cleanupOneSkySourceName(context.$store.state.selectedObject.names[0], 5)
+      link += 'skysource/' + this.cleanupOneSkySourceName(context.$store.state.selectedObject.names[0], 5).replace(/\s+/g, '')
     }
     link += '?'
     link += 'fov=' + (context.$store.state.stel.fov * 180 / Math.PI).toPrecision(5)
