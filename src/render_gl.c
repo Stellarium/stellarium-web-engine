@@ -1785,12 +1785,56 @@ void render_line_2d(renderer_t *rend, const painter_t *painter,
     DL_APPEND(rend->items, item);
 }
 
+static void get_model_depth_range(
+        const painter_t *painter, const char *model,
+        const double model_mat[4][4], const double view_mat[4][4],
+        double out_range[2])
+{
+    /*
+     * Note: in theory this should just be the range of depth computed on
+     * the eight corners of the bounding box, but since the depth function
+     * of most projection is the distance (and not just -z) this doesn't work
+     * well in practice.
+     *
+     * Here we first compute the largest diagonal of the model, then add
+     * and subscract if from the center position to get the min and max
+     * depth.
+     */
+    double bounds[2][3];
+    int i, r;
+    double size, dist, p[3], p2[3];
+    r = painter_get_3d_model_bounds(painter, model, bounds);
+    (void)r;
+    assert(r == 0);
+
+    size = 0;
+    for (i = 0; i < 8; i++) {
+        p[0] = bounds[(i >> 0) & 1][0];
+        p[1] = bounds[(i >> 1) & 1][1];
+        p[2] = bounds[(i >> 2) & 1][2];
+        mat4_mul_dir3(model_mat, p, p);
+        size = max(size, vec3_norm2(p));
+    }
+    size = sqrt(size);
+
+    mat4_mul_vec3(model_mat, VEC(0, 0, 0), p);
+    mat4_mul_vec3(view_mat, p, p);
+    dist = vec3_norm(p);
+
+    vec3_mul((dist - size) / dist, p, p2);
+    out_range[0] = proj_get_depth(painter->proj, p2) * DM2AU;
+    vec3_mul((dist + size) / dist, p, p2);
+    out_range[1] = proj_get_depth(painter->proj, p2) * DM2AU;
+}
+
 void render_model_3d(renderer_t *rend, const painter_t *painter,
                      const char *model, const double model_mat[4][4],
                      const double view_mat[4][4], const double proj_mat[4][4],
                      const double light_dir[3], json_value *args)
 {
     item_t *item;
+    double depth_range[2];
+
     item = calloc(1, sizeof(*item));
     item->type = ITEM_GLTF;
     item->gltf.model = model;
@@ -1800,14 +1844,11 @@ void render_model_3d(renderer_t *rend, const painter_t *painter,
     mat4_copy(proj_mat, item->gltf.proj_mat);
     vec3_copy(light_dir, item->gltf.light_dir);
 
-    // XXX: use the model bounding box instead.
-    if (painter->depth_range) {
-        item->flags |= PAINTER_ENABLE_DEPTH;
-        rend->depth_range[0] =
-            min(rend->depth_range[0], (*painter->depth_range)[0]);
-        rend->depth_range[1] =
-            max(rend->depth_range[1], (*painter->depth_range)[1]);
-    }
+    item->flags |= PAINTER_ENABLE_DEPTH;
+    get_model_depth_range(painter, model, model_mat, view_mat, depth_range);
+    rend->depth_range[0] = min(rend->depth_range[0], depth_range[0]);
+    rend->depth_range[1] = max(rend->depth_range[1], depth_range[1]);
+
     if (args) item->gltf.args = json_copy(args);
     DL_APPEND(rend->items, item);
 }
