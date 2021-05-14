@@ -9,7 +9,7 @@
 
 #include "shader_cache.h"
 
-#define MAX_NB_SHADERS 16
+#define MAX_NB_SHADERS 32
 
 typedef struct {
     char key[256];
