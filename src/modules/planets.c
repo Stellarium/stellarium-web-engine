@@ -1154,6 +1154,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
                   color[3] * 255},
         .obj = &planet->obj,
     };
+    painter.flags |= PAINTER_ENABLE_DEPTH;
     paint_2d_points(&painter, 1, &point);
 
     if (model_alpha > 0) {

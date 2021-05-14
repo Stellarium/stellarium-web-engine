@@ -419,9 +419,13 @@ void render_points_2d(renderer_t *rend, const painter_t *painter,
     item = get_item(rend, ITEM_POINTS, n, 0, NULL);
     if (item && item->points.halo != painter->points_halo)
         item = NULL;
+    if (item && item->flags != painter->flags)
+        item = NULL;
+
     if (!item) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_POINTS;
+        item->flags = painter->flags;
         gl_buf_alloc(&item->buf, &POINTS_BUF, MAX_POINTS);
         vec4_to_float(painter->color, item->color);
         item->points.halo = painter->points_halo;
@@ -1027,7 +1031,11 @@ static void item_points_render(renderer_t *rend, const item_t *item)
 
     GL(glEnable(GL_BLEND));
     GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_ONE));
-    GL(glDisable(GL_DEPTH_TEST));
+
+    if (item->flags & PAINTER_ENABLE_DEPTH)
+        GL(glEnable(GL_DEPTH_TEST));
+    else
+        GL(glDisable(GL_DEPTH_TEST));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
@@ -1043,6 +1051,7 @@ static void item_points_render(renderer_t *rend, const item_t *item)
     gl_buf_disable(&item->buf);
 
     GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDisable(GL_DEPTH_TEST));
 }
 
 static void draw_buffer(const gl_buf_t *buf, const gl_buf_t *indices,

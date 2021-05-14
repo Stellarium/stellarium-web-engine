@@ -585,7 +585,7 @@ static const unsigned char DATA_shaders_points_glsl[1185] __attribute__((aligned
     "\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+    "    gl_Position = vec4(a_pos, 1.0, 1.0);\n"
     "    gl_PointSize = a_size * 2.0 / u_core_size;\n"
     "    v_color = a_color * u_color;\n"
     "}\n"

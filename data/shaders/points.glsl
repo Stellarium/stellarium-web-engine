@@ -24,7 +24,7 @@ attribute mediump float a_size;
 
 void main()
 {
-    gl_Position = vec4(a_pos, 0.0, 1.0);
+    gl_Position = vec4(a_pos, 1.0, 1.0);
     gl_PointSize = a_size * 2.0 / u_core_size;
     v_color = a_color * u_color;
 }
