@@ -1053,6 +1053,23 @@ static double get_artificial_scale(const planets_t *planets,
     return max(1.0, scale);
 }
 
+/*
+* Heuristic to decide if we should render the orbit of a planet.
+*/
+static bool should_render_orbit(const planet_t *p, const painter_t *painter)
+{
+    switch (g_planets->orbits_mode) {
+    case 0:
+        return false;
+    case 1:
+        if (!core->selection) return false;
+        if (&p->parent->obj != core->selection) return false;
+        return true;
+    default:
+        return false;
+    }
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], p_win[4];
@@ -1075,11 +1092,16 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     bool has_model;
     double pvo[2][3], dir[3];
     double phy_angular_radius;
+    bool orbit_visible;
 
     if (!painter.obs->space && planet->id == EARTH) return;
 
     vmag = planet_get_vmag(planet, painter.obs);
-    if (planet->id != MOON && vmag > painter.stars_limit_mag) return;
+    orbit_visible = should_render_orbit(planet, &painter);
+
+    if (    planet->id != MOON && !orbit_visible &&
+            vmag > painter.stars_limit_mag)
+        return;
 
     // Artificially increase the moon size when we are zoomed out, so that
     // we can render it as a hips survey.
@@ -1168,7 +1190,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // XXX: cleanup this line.
     if (selected || (planets->hints_visible && (
         vmag <= painter.hints_limit_mag + 2.4 + planets->hints_mag_offset ||
-        model_alpha > 0)))
+        model_alpha > 0 || orbit_visible)))
     {
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
     }
@@ -1193,24 +1215,6 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     planet_get_pvo(pa, obs, apvo);
     planet_get_pvo(pb, obs, bpvo);
     return cmp(eraPm(bpvo[0]), eraPm(apvo[0]));
-}
-
-
-/*
-* Heuristic to decide if we should render the orbit of a planet.
-*/
-static bool should_render_orbit(const planet_t *p, const painter_t *painter)
-{
-    switch (g_planets->orbits_mode) {
-    case 0:
-        return false;
-    case 1:
-        if (!core->selection) return false;
-        if (&p->parent->obj != core->selection) return false;
-        return true;
-    default:
-        return false;
-    }
 }
 
 static int planets_render(const obj_t *obj, const painter_t *painter)
