@@ -295,7 +295,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
     double radius_m, model_r, model_size, bounds[2][3], model_alpha = 0;
-    double radius, cap[4];
+    double max_radius, radius, cap[4];
 
     mplanet_update(mplanet, painter->obs);
     vmag = mplanet->vmag;
@@ -313,8 +313,12 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
     painter_project(painter, FRAME_ICRF, pvo[0], false, false, win_pos);
     core_get_point_for_mag(vmag, &size, &luminance);
 
+    // Max possible model radius (using Ceres radius).
+    max_radius = core_get_point_for_apparent_angle(painter->proj,
+            500000 * DM2AU / vec3_norm(pvo[0]));
+
     // Render 3d model if possible.
-    if ((size > 5) &&
+    if ((max_radius > size) &&
         painter_get_3d_model_bounds(painter, mplanet->model, bounds) == 0)
     {
         radius_m = mean3(bounds[1][0] - bounds[0][0],
