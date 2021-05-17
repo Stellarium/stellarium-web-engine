@@ -15,8 +15,15 @@
 
 typedef struct pointer {
     obj_t           obj;
+    bool            visible;
 } pointer_t;
 
+static int pointer_init(obj_t *obj, json_value *args)
+{
+    pointer_t *pointer = (void*)obj;
+    pointer->visible = true;
+    return 0;
+}
 
 static int pointer_render(const obj_t *obj, const painter_t *painter_)
 {
@@ -25,8 +32,11 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     const double T = 2.0;    // Animation period.
     double r, transf[3][3];
     bool skip_top_bar = false;
+    pointer_t *pointer = (void*)obj;
     obj_t *selection = core->selection;
     painter_t painter = *painter_;
+
+    if (!pointer->visible) return 0;
     vec4_set(painter.color, 1, 1, 1, 1);
     if (!selection) return 0;
 
@@ -68,8 +78,13 @@ static obj_klass_t pointer_klass = {
     .id = "pointer",
     .size = sizeof(pointer_t),
     .flags = OBJ_IN_JSON_TREE | OBJ_MODULE,
+    .init = pointer_init,
     .render = pointer_render,
     .render_order = 199, // Just before the ui.
+    .attributes = (attribute_t[]) {
+        PROPERTY(visible, TYPE_BOOL, MEMBER(pointer_t, visible)),
+        {}
+    },
 };
 
 OBJ_REGISTER(pointer_klass)
