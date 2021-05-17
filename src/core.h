@@ -92,6 +92,8 @@ struct core
     bool            flip_view_horizontal;
     double          y_offset; // Rendering view Y offset (in windows unit).
 
+    bool            hide_selection_label; // Used by the labels module.
+
     renderer_t      *rend;
     int             proj;
     double          win_size[2];

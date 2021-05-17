@@ -161,6 +161,11 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
 
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
+
+        if (core->selection && core->hide_selection_label &&
+                label->obj == core->selection)
+            continue;
+
         vec4_copy(label->color, painter.color);
         painter.color[3] *= label->fader.value;
         // Re-project label on screen
