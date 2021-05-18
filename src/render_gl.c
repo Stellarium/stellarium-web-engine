@@ -1633,12 +1633,13 @@ void render_line(renderer_t *rend, const painter_t *painter,
     float color[4];
     double depth;
     item_t *item;
+    const int SIZE = 2048;
 
     assert(painter->lines.glow); // Only glowing lines supported for now.
     vec4_to_float(painter->color, color);
     mesh = line_to_mesh(line, win, size, 10);
 
-    if (mesh->indices_count >= 1024 || mesh->verts_count >= 1024) {
+    if (mesh->indices_count >= SIZE || mesh->verts_count >= SIZE) {
         LOG_W("Too many points in lines! (size: %d)", size);
         goto end;
     }
@@ -1664,8 +1665,8 @@ void render_line(renderer_t *rend, const painter_t *painter,
         item = calloc(1, sizeof(*item));
         item->type = ITEM_LINES;
         item->flags = painter->flags;
-        gl_buf_alloc(&item->buf, &LINES_BUF, 1024);
-        gl_buf_alloc(&item->indices, &INDICES_BUF, 1024);
+        gl_buf_alloc(&item->buf, &LINES_BUF, SIZE);
+        gl_buf_alloc(&item->indices, &INDICES_BUF, SIZE);
         item->lines.width = painter->lines.width;
         item->lines.glow = painter->lines.glow;
         item->lines.dash_length = painter->lines.dash_length;
