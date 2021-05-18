@@ -90,7 +90,7 @@ static double line_point_dist(const double a[2], const double b[2],
     double ap[2], u[2];
     vec2_sub(p, a, ap);
     vec2_sub(b, a, u);
-    return vec2_cross(ap, u) / vec2_norm(u);
+    return fabs(vec2_cross(ap, u)) / vec2_norm(u);
 }
 
 static void line_push_point(double (**pos)[3], double (**win)[3],
