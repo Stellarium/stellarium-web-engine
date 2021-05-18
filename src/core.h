@@ -23,6 +23,7 @@
 #include "tonemapper.h"
 
 #include "utils/fps.h"
+#include "utils/fader.h"
 
 #define CORE_MIN_FOV (1./3600 * DD2R)
 

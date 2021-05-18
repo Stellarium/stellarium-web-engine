@@ -16,6 +16,9 @@
  * as we want, until it returns a non zero value.
  */
 
+#ifndef WORKER_H
+#define WORKER_H
+
 #include <stdbool.h>
 
 typedef struct worker worker_t;
@@ -55,3 +58,5 @@ int worker_iter(worker_t *worker);
  * Return whether a worker is currently running.
  */
 bool worker_is_running(worker_t *worker);
+
+#endif // WORKER_H

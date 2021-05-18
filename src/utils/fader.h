@@ -9,6 +9,9 @@
 
 #include <stdbool.h>
 
+#ifndef FADER_H
+#define FADER_H
+
 #define FADER_DEFAULT_DURATION 0.3
 
 /*
@@ -62,3 +65,5 @@ void fader_init2(fader_t *f, bool v, double duration);
  *   true if the fader value has changed.
  */
 bool fader_update(fader_t *f, double dt);
+
+#endif // FADER_H

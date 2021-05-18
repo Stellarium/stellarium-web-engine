@@ -11,6 +11,7 @@
 #define HIPS_H
 
 #include "painter.h"
+#include "utils/worker.h"
 
 /*
  * File: hips.h
