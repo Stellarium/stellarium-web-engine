@@ -1655,7 +1655,10 @@ void render_line(renderer_t *rend, const painter_t *painter,
         item = NULL;
     if (item && item->flags != painter->flags)
         item = NULL;
-
+    if (item && painter->lines.fade_dist_min != item->lines.fade_dist_min)
+        item = NULL;
+    if (item && painter->lines.fade_dist_max != item->lines.fade_dist_max)
+        item = NULL;
 
     if (!item) {
         item = calloc(1, sizeof(*item));
