@@ -117,7 +117,7 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[3]),
 {
     double p0[3], p1[3], pm[3], w0[3], w1[3], wm[3], tm;
     const double max_dist = 0.5;
-    const int max_level = 4 + min_level;
+    const int max_level = 5 + min_level;
     tm = (t0 + t1) / 2;
 
     if (level < min_level) goto split;
