@@ -70,8 +70,9 @@ void line_mesh_delete(line_mesh_t *mesh);
  *            Return a 3d position in view coordinates.
  *   proj   - Screen projection.
  *   user   - User data passed to the function.
- *   split  - Number of segments requested in the output.  If set to 0 use
- *            an adaptive algorithm.
+ *   split  - Number of segments requested in the output.  If < 0 use
+ *            an adaptive algorithm, where -split is the minimum level
+ *            of split.
  *   out_pos - Allocated out line points in view coordinates.
  *   out_win - Allocated out line points in windows coordinates.
  *

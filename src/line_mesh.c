@@ -112,12 +112,15 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[3]),
                             void *user, double t0, double t1,
                             double (**out_pos)[3],
                             double (**out_win)[3],
-                            int level, int *size, int *allocated)
+                            int level, int min_level,
+                            int *size, int *allocated)
 {
     double p0[3], p1[3], pm[3], w0[3], w1[3], wm[3], tm;
-    const double max_dist = 1.0;
-    const int max_level = 4;
+    const double max_dist = 0.5;
+    const int max_level = 4 + min_level;
     tm = (t0 + t1) / 2;
+
+    if (level < min_level) goto split;
 
     func(user, t0, p0);
     func(user, t1, p1);
@@ -132,10 +135,11 @@ static void line_tesselate_(void (*func)(void *user, double t, double pos[3]),
         return;
     }
 
+split:
     line_tesselate_(func, proj, user, t0, tm, out_pos, out_win, level + 1,
-                    size, allocated);
+                    min_level, size, allocated);
     line_tesselate_(func, proj, user, tm, t1, out_pos, out_win, level + 1,
-                    size, allocated);
+                    min_level, size, allocated);
 }
 
 
@@ -145,12 +149,12 @@ int line_tesselate(void (*func)(void *user, double t, double pos[3]),
                    double (**out_pos)[3],
                    double (**out_win)[3])
 {
-    int i, allocated = 0, size = 0;
+    int i, allocated = 0, size = 0, min_level;
     double pos[3], win[3];
     *out_pos = NULL;
     *out_win = NULL;
 
-    if (split) {
+    if (split > 0) {
         size = split + 1;
         *out_pos = calloc(size, sizeof(**out_pos));
         *out_win = calloc(size, sizeof(**out_win));
@@ -161,11 +165,12 @@ int line_tesselate(void (*func)(void *user, double t, double pos[3]),
             vec3_copy(win, (*out_win)[i]);
         }
     } else {
+        min_level = -split;
         func(user, 0, pos);
         project_to_win(proj, pos, win);
         line_push_point(out_pos, out_win, pos, win, &size, &allocated);
         line_tesselate_(func, proj, user, 0, 1, out_pos, out_win, 0,
-                        &size, &allocated);
+                        min_level, &size, &allocated);
     }
     return size;
 }
