@@ -1072,7 +1072,7 @@ static bool should_render_orbit(const planet_t *p, const painter_t *painter)
 
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
-    double pos[4], p_win[4];
+    double pos[4], p_view[3], p_win[4];
     double color[4];
     double vmag;             // Observed magnitude.
     double point_size;       // Radius size of point (pixel).
@@ -1084,7 +1084,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     double diam;                // Angular diameter (rad).
     double model_alpha = 0;
     painter_t painter = *painter_;
-    point_t point;
+    point_3d_t point;
     double model_k = 2.0; // How soon we switch to the 3d model.
     planets_t *planets = (planets_t*)planet->obj.parent;
     bool selected = core->selection && &planet->obj == core->selection;
@@ -1133,11 +1133,11 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     diam = 2.0 * planet->radius_m * DM2AU / dist;
 
     // Project planet's center
-    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, true, dir, pos);
-    project_to_win(painter.proj, pos, p_win);
+    convert_frame(painter.obs, FRAME_ICRF, FRAME_VIEW, false, pvo[0], p_view);
+    project_to_win(painter.proj, p_view, p_win);
 
     // At least 1 px of the planet is visible, report it for tonemapping
-    convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, true, pos, pos);
+    convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, false, p_view, pos);
     // Exclude the sun because it is already taken into account by the
     // atmosphere luminance feedack
     if (planet->id != SUN) {
@@ -1169,15 +1169,15 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // (Mostly for the Sun, but also affect planets at large fov).
     painter.points_halo *= mix(1.0, 0.25,
                                smoothstep(0.5, 3.0, point_r * DR2D));
-    point = (point_t) {
-        .pos = {p_win[0], p_win[1]},
+    point = (point_3d_t) {
+        .pos = {p_view[0], p_view[1], p_view[2]},
         .size = point_size,
         .color = {color[0] * 255, color[1] * 255, color[2] * 255,
                   color[3] * 255},
         .obj = &planet->obj,
     };
     painter.flags |= PAINTER_ENABLE_DEPTH;
-    paint_2d_points(&painter, 1, &point);
+    paint_3d_points(&painter, 1, &point);
 
     if (model_alpha > 0) {
         planet_render_model(planet, r_scale, model_alpha, &painter);

@@ -558,7 +558,7 @@ static const unsigned char DATA_shaders_planet_glsl[7270] __attribute__((aligned
 
 ASSET_REGISTER(shaders_planet_glsl, "shaders/planet.glsl", DATA_shaders_planet_glsl, false)
 
-static const unsigned char DATA_shaders_points_glsl[1185] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_points_glsl[1361] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -579,13 +579,24 @@ static const unsigned char DATA_shaders_points_glsl[1185] __attribute__((aligned
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
-    "attribute highp   vec2  a_pos;\n"
     "attribute lowp    vec4  a_color;\n"
     "attribute mediump float a_size;\n"
     "\n"
+    "#ifdef IS_3D\n"
+    "    #include \"projections.glsl\"\n"
+    "    attribute highp   vec3  a_pos;\n"
+    "#else\n"
+    "    attribute highp   vec2  a_pos;\n"
+    "#endif\n"
+    "\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = vec4(a_pos, 1.0, 1.0);\n"
+    "    #ifdef IS_3D\n"
+    "        gl_Position = proj(a_pos);\n"
+    "    #else\n"
+    "        gl_Position = vec4(a_pos, 1.0, 1.0);\n"
+    "    #endif\n"
+    "\n"
     "    gl_PointSize = a_size * 2.0 / u_core_size;\n"
     "    v_color = a_color * u_color;\n"
     "}\n"

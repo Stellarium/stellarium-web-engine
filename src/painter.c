@@ -175,6 +175,12 @@ int paint_2d_points(const painter_t *painter, int n, const point_t *points)
     return 0;
 }
 
+int paint_3d_points(const painter_t *painter, int n, const point_3d_t *points)
+{
+    render_points_3d(painter->rend, painter, n, points);
+    return 0;
+}
+
 int paint_quad(const painter_t *painter,
                int frame,
                const uv_map_t *map,

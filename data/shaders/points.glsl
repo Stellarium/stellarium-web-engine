@@ -18,13 +18,24 @@ varying lowp    vec4 v_color;
 
 #ifdef VERTEX_SHADER
 
-attribute highp   vec2  a_pos;
 attribute lowp    vec4  a_color;
 attribute mediump float a_size;
 
+#ifdef IS_3D
+    #include "projections.glsl"
+    attribute highp   vec3  a_pos;
+#else
+    attribute highp   vec2  a_pos;
+#endif
+
 void main()
 {
-    gl_Position = vec4(a_pos, 1.0, 1.0);
+    #ifdef IS_3D
+        gl_Position = proj(a_pos);
+    #else
+        gl_Position = vec4(a_pos, 1.0, 1.0);
+    #endif
+
     gl_PointSize = a_size * 2.0 / u_core_size;
     v_color = a_color * u_color;
 }

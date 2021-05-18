@@ -21,6 +21,7 @@ typedef struct obj obj_t;
 typedef struct observer observer_t;
 typedef struct painter painter_t;
 typedef struct point point_t;
+typedef struct point_3d point_3d_t;
 typedef struct texture texture_t;
 typedef struct renderer renderer_t;
 
@@ -70,6 +71,14 @@ enum {
 struct point
 {
     double  pos[2];
+    double  size;       // Radius in window pixel (pixel with density scale).
+    uint8_t color[4];
+    obj_t   *obj;
+};
+
+struct point_3d
+{
+    double  pos[3];     // View position
     double  size;       // Radius in window pixel (pixel with density scale).
     uint8_t color[4];
     obj_t   *obj;
@@ -207,6 +216,8 @@ void painter_set_texture(painter_t *painter, int slot, texture_t *tex,
  *  points        - The array of points to draw.
  */
 int paint_2d_points(const painter_t *painter, int n, const point_t *points);
+
+int paint_3d_points(const painter_t *painter, int n, const point_3d_t *points);
 
 /*
  * Function: paint_quad

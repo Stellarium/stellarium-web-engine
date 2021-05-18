@@ -83,6 +83,7 @@ enum {
     ITEM_LINES = 1,
     ITEM_MESH,
     ITEM_POINTS,
+    ITEM_POINTS_3D,
     ITEM_TEXTURE,
     ITEM_TEXTURE_2D,
     ITEM_ATMOSPHERE,
@@ -210,6 +211,15 @@ static const gl_buf_info_t POINTS_BUF = {
         [ATTR_POS]      = {GL_FLOAT, 2, false, 0},
         [ATTR_SIZE]     = {GL_FLOAT, 1, false, 8},
         [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 12},
+    },
+};
+
+static const gl_buf_info_t POINTS_3D_BUF = {
+    .size = 20,
+    .attrs = {
+        [ATTR_POS]      = {GL_FLOAT, 3, false, 0},
+        [ATTR_SIZE]     = {GL_FLOAT, 1, false, 12},
+        [ATTR_COLOR]    = {GL_UNSIGNED_BYTE, 4, true, 16},
     },
 };
 
@@ -447,6 +457,56 @@ void render_points_2d(renderer_t *rend, const painter_t *painter,
             p.pos[0] = (+p.pos[0] + 1) / 2 * core->win_size[0];
             p.pos[1] = (-p.pos[1] + 1) / 2 * core->win_size[1];
             areas_add_circle(core->areas, p.pos, p.size, p.obj);
+        }
+    }
+}
+
+void render_points_3d(renderer_t *rend, const painter_t *painter,
+                      int n, const point_3d_t *points)
+{
+    item_t *item;
+    int i;
+    const int MAX_POINTS = 4096;
+    double win_xy[2], depth;
+    point_3d_t p;
+
+    if (n > MAX_POINTS) {
+        LOG_E("Try to render more than %d points: %d", MAX_POINTS, n);
+        n = MAX_POINTS;
+    }
+
+    item = get_item(rend, ITEM_POINTS_3D, n, 0, NULL);
+    if (item && item->points.halo != painter->points_halo)
+        item = NULL;
+    if (item && item->flags != painter->flags)
+        item = NULL;
+
+    if (!item) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_POINTS_3D;
+        item->flags = painter->flags;
+        gl_buf_alloc(&item->buf, &POINTS_3D_BUF, MAX_POINTS);
+        vec4_to_float(painter->color, item->color);
+        item->points.halo = painter->points_halo;
+        DL_APPEND(rend->items, item);
+    }
+
+    for (i = 0; i < n; i++) {
+        p = points[i];
+        gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p.pos));
+        gl_buf_1f(&item->buf, -1, ATTR_SIZE, p.size * rend->scale);
+        gl_buf_4i(&item->buf, -1, ATTR_COLOR, VEC4_SPLIT(p.color));
+        gl_buf_next(&item->buf);
+
+        depth = proj_get_depth(painter->proj, p.pos);
+        rend->depth_range[0] = min(rend->depth_range[0], depth);
+        rend->depth_range[1] = max(rend->depth_range[1], depth);
+
+        // Add the point int the global list of rendered points.
+        // XXX: could be done in the painter.
+        if (p.obj) {
+            project_to_win_xy(painter->proj, p.pos, win_xy);
+            areas_add_circle(core->areas, win_xy, p.size, p.obj);
         }
     }
 }
@@ -1054,6 +1114,55 @@ static void item_points_render(renderer_t *rend, const item_t *item)
     GL(glDisable(GL_DEPTH_TEST));
 }
 
+static void item_points_3d_render(renderer_t *rend, const item_t *item)
+{
+    gl_shader_t *shader;
+    GLuint  array_buffer;
+    double core_size;
+    projection_t proj;
+    float matf[16];
+
+    if (item->buf.nb <= 0)
+        return;
+
+    shader_define_t defines[] = {
+        {"IS_3D", true},
+        {"PROJ", rend->proj.klass->id},
+        {}
+    };
+
+    shader = shader_get("points", defines, ATTR_NAMES, init_shader);
+    GL(glUseProgram(shader->prog));
+
+    GL(glEnable(GL_BLEND));
+    GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_ONE));
+
+    if (item->flags & PAINTER_ENABLE_DEPTH)
+        GL(glEnable(GL_DEPTH_TEST));
+    else
+        GL(glDisable(GL_DEPTH_TEST));
+
+    GL(glGenBuffers(1, &array_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, item->buf.nb * item->buf.info->size,
+                    item->buf.data, GL_DYNAMIC_DRAW));
+
+    gl_update_uniform(shader, "u_color", item->color);
+    core_size = 1.0 / item->points.halo;
+    gl_update_uniform(shader, "u_core_size", core_size);
+
+    proj = rend_get_proj(rend, item->flags);
+    mat4_to_float(proj.mat, matf);
+    gl_update_uniform(shader, "u_proj_mat", matf);
+
+    gl_buf_enable(&item->buf);
+    GL(glDrawArrays(GL_POINTS, 0, item->buf.nb));
+    gl_buf_disable(&item->buf);
+
+    GL(glDeleteBuffers(1, &array_buffer));
+    GL(glDisable(GL_DEPTH_TEST));
+}
+
 static void draw_buffer(const gl_buf_t *buf, const gl_buf_t *indices,
                         GLuint gl_mode)
 {
@@ -1574,6 +1683,9 @@ static void rend_flush(renderer_t *rend)
             break;
         case ITEM_POINTS:
             item_points_render(rend, item);
+            break;
+        case ITEM_POINTS_3D:
+            item_points_3d_render(rend, item);
             break;
         case ITEM_TEXTURE:
             item_texture_render(rend, item);
