@@ -274,12 +274,6 @@ static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter_)
     painter.flags |= PAINTER_ENABLE_DEPTH;
     mat4_itranslate(model_mat, VEC3_SPLIT(mplanet->pvo[0]));
 
-    double dist, depth_range[2];
-    dist = vec3_norm(mplanet->pvo[0]);
-    depth_range[0] = dist * 0.5;
-    depth_range[1] = dist * 2;
-    painter.depth_range = &depth_range;
-
     mat4_iscale(model_mat, 1000 * DM2AU, 1000 * DM2AU, 1000 * DM2AU);
     paint_3d_model(&painter, mplanet->model, model_mat, NULL);
     return 0;

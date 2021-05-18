@@ -902,7 +902,7 @@ static void planet_render_model(const planet_t *planet,
     const hips_t *hips;
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
-    double dist, depth_range[2];
+    double dist;
     double radius = planet->radius_m * DM2AU; // Radius in AU.
     painter_t painter = *painter_;
 
@@ -925,12 +925,6 @@ static void planet_render_model(const planet_t *planet,
             planet_render_hips(planet, hips, r_scale, alpha, &painter);
         return;
     }
-
-    // Set the min required depth range needed.
-    // XXX: could be computed properly.
-    depth_range[0] = dist * 0.5;
-    depth_range[1] = dist * 2;
-    painter.depth_range = &depth_range;
 
     // Assume the model is in km.
     mat4_itranslate(model_mat, VEC3_SPLIT(pvo[0]));
@@ -974,7 +968,6 @@ static void planet_render_orbit(const planet_t *planet,
 {
     painter_t painter = *painter_;
     double mat[4][4] = MAT4_IDENTITY, parent_pvo[2][3];
-    double dist, depth_range[2];
     double in, om, w, a, n, ec, ma;
 
     if (planet->color[3]) vec3_copy(planet->color, painter.color);
@@ -986,12 +979,6 @@ static void planet_render_orbit(const planet_t *planet,
     // Center the rendering on the parent planet.
     planet_get_pvo(planet->parent, painter.obs, parent_pvo);
     mat4_itranslate(mat, parent_pvo[0][0], parent_pvo[0][1], parent_pvo[0][2]);
-
-    // Set the depth range same as the parent!!!!
-    dist = vec3_norm(parent_pvo[0]);
-    depth_range[0] = dist * 0.5;
-    depth_range[1] = dist * 2;
-    painter.depth_range = &depth_range;
 
     painter.lines.width = 1;
     paint_orbit(&painter, FRAME_ICRF, mat, painter.obs->tt,

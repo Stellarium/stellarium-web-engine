@@ -544,7 +544,6 @@ static void satellite_render_model(const satellite_t *sat,
 {
     double p_win[4], model_mat[4][4] = MAT4_IDENTITY;
     double lvlh_rot[3][3];
-    double dist, depth_range[2];
     painter_t painter = *painter_;
     json_value *args, *uniforms;
 
@@ -556,11 +555,6 @@ static void satellite_render_model(const satellite_t *sat,
 
     get_lvlh_rot(painter.obs, sat->pvo, lvlh_rot);
     mat4_mul_mat3(model_mat, lvlh_rot, model_mat);
-
-    dist = vec3_norm(sat->pvo[0]);
-    depth_range[0] = dist - 500 * DM2AU;
-    depth_range[1] = dist + 500 * DM2AU;
-    painter.depth_range = &depth_range;
 
     args = json_object_new(0);
     uniforms = json_object_push(args, "uniforms", json_object_new(0));

@@ -129,7 +129,6 @@ struct painter
 
     // Point halo / core ratio (zero for no halo).
     double          points_halo;
-    double          (*depth_range)[2]; // If set use depth test.
 
     struct {
         int type;
