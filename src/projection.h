@@ -141,7 +141,7 @@ bool project_to_win(const projection_t *proj, const double input[S 3],
  * Function: project_to_win_xy
  * Similar to project_to_win, but only returns the x and y coordinates.
  */
-bool project_to_win_xy(const projection_t *proj, const double input[S 4],
+bool project_to_win_xy(const projection_t *proj, const double input[S 3],
                        double out[S 2]);
 /*
  * Function: project_to_clip

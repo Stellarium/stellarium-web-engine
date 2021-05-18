@@ -73,7 +73,7 @@ bool project_to_win(const projection_t *proj, const double input[3],
     return true;
 }
 
-bool project_to_win_xy(const projection_t *proj, const double input[4],
+bool project_to_win_xy(const projection_t *proj, const double input[3],
                        double out[2])
 {
     double win[3];
