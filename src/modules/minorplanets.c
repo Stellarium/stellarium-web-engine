@@ -321,7 +321,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
         model_r = radius_m * DM2AU / vec3_norm(mplanet->pvo[0]);
         model_size = core_get_point_for_apparent_angle(
                 painter->proj, model_r);
-        model_alpha = smoothstep(0.5, 1.0, model_size / size);
+        model_alpha = smoothstep(0.5, 1.0, size ? model_size / size : 1);
         if (model_alpha > 0)
             render_3d_model(mplanet, painter);
     }
