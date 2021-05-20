@@ -1257,7 +1257,6 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
     float matf[16];
-    const float depth_range[] = {rend->depth_min, rend->depth_max};
     projection_t proj;
 
     shader_define_t defines[] = {
@@ -1279,7 +1278,6 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_line_glow", item->lines.glow);
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_win_size", win_size);
-    gl_update_uniform(shader, "u_depth_range", depth_range);
 
     gl_update_uniform(shader, "u_dash_length", item->lines.dash_length);
     gl_update_uniform(shader, "u_dash_ratio", item->lines.dash_ratio);
