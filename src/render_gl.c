@@ -324,8 +324,12 @@ static bool color_is_white(const float c[4])
 static void proj_set_depth_range(projection_t *proj,
                                  double nearval, double farval)
 {
-    proj->mat[2][2] = (farval + nearval) / (nearval - farval);
-    proj->mat[3][2] = 2. * farval * nearval / (nearval - farval);
+    // Infinite zfar projection matrix.
+    // from 'Projection Matrix Tricks', by Eric Lengyel.
+    // That is: we ignore the farval.
+    const double eps = 0.000001;
+    proj->mat[2][2] = eps - 1;
+    proj->mat[3][2] = (eps - 2) * nearval;
 }
 
 static double proj_get_depth(const projection_t *proj,
