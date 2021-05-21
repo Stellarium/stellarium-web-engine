@@ -1646,9 +1646,11 @@ static void rend_flush(renderer_t *rend)
     }
     rend->depth_min = max(rend->depth_min, 10 * DM2AU);
 
-    // Add a small margin.
+    // Add a small margin.  Note: we increase the max depth a lot since this
+    // doesn't affect the precision that much and it fixes some errors with
+    // far away points.
     rend->depth_min *= 0.99;
-    rend->depth_max *= 1.01;
+    rend->depth_max *= 2.00;
     proj_set_depth_range(&rend->proj, rend->depth_min, rend->depth_max);
 
     // Set default OpenGL state.
