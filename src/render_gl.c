@@ -1629,8 +1629,8 @@ static void item_gltf_render(renderer_t *rend, const item_t *item)
 
     // Fix the depth range of the projection to the current frame values.
     if (item->flags & PAINTER_ENABLE_DEPTH) {
-        nearval = rend->depth_min * DAU2M;
-        farval = rend->depth_max * DAU2M;
+        nearval = rend->depth_min;
+        farval = rend->depth_max;
         proj[2][2] = (farval + nearval) / (nearval - farval);
         proj[3][2] = 2. * farval * nearval / (nearval - farval);
     }
@@ -1951,9 +1951,9 @@ static void get_model_depth_range(
     dist = vec3_norm(p);
 
     vec3_mul((dist - size) / dist, p, p2);
-    out_range[0] = proj_get_depth(painter->proj, p2) * DM2AU;
+    out_range[0] = proj_get_depth(painter->proj, p2);
     vec3_mul((dist + size) / dist, p, p2);
-    out_range[1] = proj_get_depth(painter->proj, p2) * DM2AU;
+    out_range[1] = proj_get_depth(painter->proj, p2);
 }
 
 void render_model_3d(renderer_t *rend, const painter_t *painter,
