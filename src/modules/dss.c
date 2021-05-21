@@ -71,14 +71,16 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
      * 11).  We also limit the split so that we don't split a single quad
      * too much, or the rendering would be too slow.
      *
-     * Note that this could be done in hips.c, but for the moment we only
+     * Note 1: this could be done in hips.c, but for the moment we only
      * need to do this for the DSS survey.
+     * Note 2: instead of this heuristic we should compute the exact healpix
+     * distortion at a given position.
      */
     sep = min(eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, +1)),
               eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, -1)));
-    split_order = mix(11, 4, smoothstep(0, 10 * DD2R, sep));
+    split_order = mix(12, 4, smoothstep(0, 30 * DD2R, sep));
     render_order = hips_get_render_order(dss->hips, painter);
     split_order = min(split_order, render_order + 3);
 
