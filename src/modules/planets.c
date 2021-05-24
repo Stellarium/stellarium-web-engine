@@ -133,6 +133,8 @@ enum {
     TITAN = 606,
     HYPERION = 607,
     IAPETUS = 608,
+    ATLAS = 615,
+    PAN = 618,
     SATURN = 699,
 
     ARIEL = 701,
@@ -1052,7 +1054,13 @@ static bool should_render_orbit(const planet_t *p, const painter_t *painter)
     case 1:
         if (!core->selection) return false;
         if (&p->parent->obj != core->selection) return false;
-        return true;
+        switch (p->id) {
+            case ATLAS:
+            case PAN:
+                return false;
+            default:
+                return true;
+        }
     default:
         return false;
     }
