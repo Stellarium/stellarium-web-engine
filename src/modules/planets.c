@@ -1009,6 +1009,7 @@ static void planet_render_label(
     radius = asin(planet->radius_m * DM2AU / vec3_norm(pvo[0]));
     radius = core_get_point_for_apparent_angle(painter->proj, radius);
     radius *= scale;
+    radius *= 1.05; // Compensate for projection distortion.
 
     s = point_size * 0.9;
     s = max(s, radius);
