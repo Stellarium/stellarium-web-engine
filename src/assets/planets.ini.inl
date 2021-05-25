@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[25884] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[26028] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -106,6 +106,9 @@ static const unsigned char DATA_planets_ini[25884] __attribute__((aligned(4))) =
     "orbit = plan94:7\n"
     "albedo = 0.51\n"
     "mass = 8.68103e+25 kg\n"
+    "rot_period = -17.24 h\n"
+    "rot_pole_ra = 257.311 deg\n"
+    "rot_pole_de = -15.175 deg\n"
     "\n"
     "[neptune]\n"
     "type = Pla\n"
@@ -118,6 +121,9 @@ static const unsigned char DATA_planets_ini[25884] __attribute__((aligned(4))) =
     "orbit = plan94:8\n"
     "albedo = 0.41\n"
     "mass = 1.0241e+26 kg\n"
+    "rot_period = 16.11 h\n"
+    "rot_pole_ra = 299.3 deg\n"
+    "rot_pole_de = 42.950 deg\n"
     "\n"
     "[pluto]\n"
     "horizons_id = 999\n"
