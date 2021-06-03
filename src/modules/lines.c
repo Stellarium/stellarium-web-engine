@@ -804,6 +804,7 @@ static obj_klass_t line_klass = {
     .render = line_render,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(line_t, visible.target)),
+        PROPERTY(color, TYPE_V4, MEMBER(line_t, color)),
         {}
     },
 };
