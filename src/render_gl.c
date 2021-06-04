@@ -725,6 +725,7 @@ void render_quad(renderer_t *rend, const painter_t *painter,
         if (!item) {
             item = calloc(1, sizeof(*item));
             item->type = ITEM_FOG;
+            vec4_copy(painter->color, item->color);
             gl_buf_alloc(&item->buf, &FOG_BUF, 256);
             gl_buf_alloc(&item->indices, &INDICES_BUF, 256 * 6);
         }
@@ -1402,6 +1403,7 @@ static void item_fog_render(renderer_t *rend, const item_t *item)
     proj = rend_get_proj(rend, item->flags);
     mat4_to_float(proj.mat, matf);
     gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform(shader, "u_color", item->color);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));

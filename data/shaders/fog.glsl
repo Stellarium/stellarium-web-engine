@@ -11,6 +11,8 @@
 precision mediump float;
 #endif
 
+uniform lowp    vec4        u_color;
+
 varying lowp    vec4        v_color;
 
 #ifdef VERTEX_SHADER
@@ -26,7 +28,8 @@ void main()
     const lowp float height = 0.2;
     const lowp float alpha = 0.15;
     lowp float d = smoothstep(height, 0.0, abs(a_sky_pos.z));
-    v_color = vec4(1.0, 1.0, 1.0, alpha * d);
+    v_color = u_color;
+    v_color.a *= alpha * d;
 }
 
 #endif
