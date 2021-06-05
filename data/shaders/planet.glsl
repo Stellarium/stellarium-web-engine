@@ -200,8 +200,7 @@ void main()
     } else if (u_material == 1) { // basic
         float light = max(0.0, dot(n, light_dir));
         light = max(light, u_min_brightness);
-        color *= light;
-        color += u_light_emit;
+        color *= vec3(light) + u_light_emit;
 
     } else if (u_material == 2) { // ring
         lowp float illu = illumination(v_mpos);

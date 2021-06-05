@@ -341,7 +341,7 @@ static const unsigned char DATA_shaders_mesh_glsl[588] __attribute__((aligned(4)
 
 ASSET_REGISTER(shaders_mesh_glsl, "shaders/mesh.glsl", DATA_shaders_mesh_glsl, false)
 
-static const unsigned char DATA_shaders_planet_glsl[7270] __attribute__((aligned(4))) =
+static const unsigned char DATA_shaders_planet_glsl[7260] __attribute__((aligned(4))) =
     "/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd\n"
     " *\n"
     " * This program is licensed under the terms of the GNU AGPL v3, or\n"
@@ -544,8 +544,7 @@ static const unsigned char DATA_shaders_planet_glsl[7270] __attribute__((aligned
     "    } else if (u_material == 1) { // basic\n"
     "        float light = max(0.0, dot(n, light_dir));\n"
     "        light = max(light, u_min_brightness);\n"
-    "        color *= light;\n"
-    "        color += u_light_emit;\n"
+    "        color *= vec3(light) + u_light_emit;\n"
     "\n"
     "    } else if (u_material == 2) { // ring\n"
     "        lowp float illu = illumination(v_mpos);\n"
