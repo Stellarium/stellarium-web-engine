@@ -80,7 +80,8 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
                       VEC(0, 0, +1)),
               eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, -1)));
-    split_order = mix(12, 4, smoothstep(0, 30 * DD2R, sep));
+    split_order = mix(12, 4, clamp(sep / (40 * DD2R), 0, 1));
+
     render_order = hips_get_render_order(dss->hips, painter);
     split_order = min(split_order, render_order + 3);
 
