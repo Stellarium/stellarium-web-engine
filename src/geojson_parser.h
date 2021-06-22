@@ -94,6 +94,7 @@ typedef struct geojson_feature_properties
     char *title;
     int text_anchor;
     float text_rotate;
+    int text_size;
     float text_offset[2];
 } geojson_feature_properties_t;
 

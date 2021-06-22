@@ -26,6 +26,7 @@ struct feature {
     float       stroke_width;
     char        *title;
     int         text_anchor;
+    int         text_size;
     float       text_rotate;
     float       text_offset[2];
     bool        hidden;
@@ -149,6 +150,7 @@ static void add_geojson_feature(image_t *image,
     if (geo_feature->properties.title)
         feature->title = strdup(geo_feature->properties.title);
     feature->text_anchor = geo_feature->properties.text_anchor;
+    feature->text_size = geo_feature->properties.text_size;
     feature->text_rotate = geo_feature->properties.text_rotate;
     vec2_copy(geo_feature->properties.text_offset, feature->text_offset);
 
@@ -331,7 +333,9 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
                 vec2_add(pos, ofs, pos);
                 paint_text(&painter, feature->title, pos, NULL,
                            feature->text_anchor,
-                           0, FONT_SIZE_BASE, feature->text_rotate);
+                           0, feature->text_size > 0 ? feature->text_size :
+                                                       FONT_SIZE_BASE,
+                           feature->text_rotate);
             }
         }
     }
