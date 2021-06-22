@@ -293,6 +293,7 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     double pos[2], ofs[2];
     int frame = image->frame, mode;
     const mesh_t *mesh;
+    double c[4];
 
     /*
      * For the moment, we render all the filled shapes first, then
@@ -302,7 +303,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
      */
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->hidden || feature->fill_color[3] == 0) continue;
-        vec4_copy(feature->fill_color, painter.color);
+        vec4_copy(feature->fill_color, c);
+        vec4_emul(c, painter_->color, painter.color);
         if (feature->blink)
             painter.color[3] *= blink();
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
@@ -313,7 +315,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
 
     for (feature = image->features; feature; feature = feature->next) {
         if (feature->hidden || feature->stroke_color[3] == 0) continue;
-        vec4_copy(feature->stroke_color, painter.color);
+        vec4_copy(feature->stroke_color, c);
+        vec4_emul(c, painter_->color, painter.color);
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (mesh->points_count) continue;
             painter.lines.width = feature->stroke_width;
@@ -325,7 +328,8 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         if (feature->hidden) continue;
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (feature->title) {
-                vec4_copy(feature->stroke_color, painter.color);
+                vec4_copy(feature->stroke_color, c);
+                vec4_emul(c, painter_->color, painter.color);
                 painter_project(&painter, frame, mesh->bounding_cap,
                                 true, false, pos);
                 vec2_copy(feature->text_offset, ofs);
