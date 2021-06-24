@@ -1751,6 +1751,7 @@ void render_line(renderer_t *rend, const painter_t *painter,
     item_t *item;
     const int SIZE = 2048;
 
+    if (size <= 1) return;
     assert(painter->lines.glow); // Only glowing lines supported for now.
     vec4_to_float(painter->color, color);
     mesh = line_to_mesh(line, win, size, 10);
