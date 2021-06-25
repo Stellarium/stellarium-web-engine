@@ -306,7 +306,7 @@ static json_value *landscapes_current_id_fn(
             }
         }
     }
-    if (!lss->current) return json_null_new();
+    if (!lss->current) return args_value_new(TYPE_STRING, "");
     return args_value_new(TYPE_STRING, lss->current->key);
 }
 
