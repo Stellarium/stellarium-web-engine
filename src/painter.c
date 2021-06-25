@@ -344,6 +344,28 @@ split:
     return 0;
 }
 
+static int paint_mesh_lines_glow(const painter_t *painter, int frame,
+                                 const mesh_t *mesh)
+{
+    // XXX: not very good, because we render a list of segments as if they
+    //      were a single line!  Need to redo that somehow.
+    double (*win_line)[3];
+    double (*pos_line)[3];
+    int size = mesh->lines_count;
+    int i;
+    win_line = calloc(size, sizeof(*win_line));
+    pos_line = calloc(size, sizeof(*pos_line));
+    for (i = 0; i < mesh->lines_count; i++) {
+        convert_frame(painter->obs, frame, FRAME_VIEW, true,
+                mesh->vertices[mesh->lines[i]], pos_line[i]);
+        project_to_win(painter->proj, pos_line[i], win_line[i]);
+    }
+    render_line(painter->rend, painter, pos_line, win_line, size);
+    free(win_line);
+    free(pos_line);
+    return 0;
+}
+
 /*
  * Function: paint_mesh
  * Render a 3d mesh
@@ -384,9 +406,13 @@ int paint_mesh(const painter_t *painter_, int frame, int mode,
              mesh->triangles_count, mesh->triangles, use_stencil);
         break;
     case MODE_LINES:
-        render_mesh(painter.rend, &painter, frame, mode,
-             mesh->vertices_count, mesh->vertices,
-             mesh->lines_count, mesh->lines, false);
+        if (painter.flags & PAINTER_MESH_LINES_GLOW) {
+            paint_mesh_lines_glow(&painter, frame, mesh);
+        } else {
+            render_mesh(painter.rend, &painter, frame, mode,
+                 mesh->vertices_count, mesh->vertices,
+                 mesh->lines_count, mesh->lines, false);
+        }
         break;
     case MODE_POINTS:
         render_mesh(painter.rend, &painter, frame, mode,
@@ -415,9 +441,13 @@ subdivide:
                  mesh2->triangles_count, mesh2->triangles, use_stencil);
         break;
     case MODE_LINES:
-        render_mesh(painter.rend, &painter, FRAME_VIEW, mode,
-                 mesh2->vertices_count, mesh2->vertices,
-                 mesh2->lines_count, mesh2->lines, false);
+        if (painter.flags & PAINTER_MESH_LINES_GLOW) {
+            paint_mesh_lines_glow(&painter, frame, mesh);
+        } else {
+            render_mesh(painter.rend, &painter, FRAME_VIEW, mode,
+                     mesh2->vertices_count, mesh2->vertices,
+                     mesh2->lines_count, mesh2->lines, false);
+        }
         break;
     }
 

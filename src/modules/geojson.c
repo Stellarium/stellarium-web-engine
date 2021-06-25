@@ -52,6 +52,7 @@ struct image {
     filter_fn_t filter;
     int         filter_idx;
     double      z;      // For sorting inside a layer.
+    bool        lines_glow;
 };
 
 
@@ -294,6 +295,9 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     int frame = image->frame, mode;
     const mesh_t *mesh;
     double c[4];
+
+    if (image->lines_glow)
+        painter.flags |= PAINTER_MESH_LINES_GLOW;
 
     /*
      * For the moment, we render all the filled shapes first, then
@@ -770,6 +774,7 @@ static obj_klass_t image_klass = {
         PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),
         PROPERTY(filter, TYPE_FUNC, .fn = filter_fn),
         PROPERTY(z, TYPE_FLOAT, MEMBER(image_t, z)),
+        PROPERTY(lines_glow, TYPE_BOOL, MEMBER(image_t, lines_glow)),
         {}
     },
 };
