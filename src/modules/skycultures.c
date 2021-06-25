@@ -1015,7 +1015,7 @@ static json_value *skycultures_current_id_fn(
             }
         }
     }
-    if (!cults->current) return json_null_new();
+    if (!cults->current) return args_value_new(TYPE_STRING, "");
     return args_value_new(TYPE_STRING, cults->current->key);
 }
 
