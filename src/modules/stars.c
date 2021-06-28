@@ -546,6 +546,14 @@ static int on_file_tile_loaded(const char type[4],
             s->sp_type = strdup(sp_type);
         }
 
+        // If we didn't get any ids, but an HIP number, use it.
+        if (!s->names && s->hip) {
+            // Add a log this this probably means a problem in the data.
+            if (s->vmag < 4) LOG_W_ONCE("HIP %d didn't have any ids", s->hip);
+            s->names = calloc(1, 16);
+            snprintf(s->names, 15, "HIP %d", s->hip);
+        }
+
         compute_pv(ra, de, pra, pde, plx, epoch, s);
         s->illuminance = core_mag_to_illuminance(vmag);
 
