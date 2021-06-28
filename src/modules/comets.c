@@ -285,13 +285,13 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 
     // Translate to put the orgin in the middle of the coma.
     mat4_itranslate(model_mat, 0, -0.0001, 0);
+    mat4_iscale(model_mat, d / 2, l, d / 2);
 
     args = json_object_new(0);
     json_object_push(args, "shader", json_string_new("comet"));
     json_object_push(args, "blend_mode", json_string_new("ADD"));
     uniforms = json_object_push(args, "uniforms", json_object_new(0));
     json_object_push(uniforms, "u_length", json_double_new(l));
-    json_object_push(uniforms, "u_coma_radius", json_double_new(d / 2));
     json_object_push(uniforms, "u_curvature", json_double_new(curvature));
     json_object_push(uniforms, "u_color", json_vector_new(4, color));
 
