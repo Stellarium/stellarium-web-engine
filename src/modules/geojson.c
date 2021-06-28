@@ -16,14 +16,21 @@
 typedef struct feature feature_t;
 typedef struct image image_t;
 
+typedef struct {
+    int size;
+    double (*points)[3];
+} linestring_t;
+
 struct feature {
     obj_t       obj;
     feature_t   *next, *prev;
     mesh_t      *meshes;
+    linestring_t linestring; // Only support a single linestring for the moment.
     int         frame;
     float       fill_color[4];
     float       stroke_color[4];
     float       stroke_width;
+    bool        stroke_glow;
     char        *title;
     int         text_anchor;
     int         text_size;
@@ -52,7 +59,6 @@ struct image {
     filter_fn_t filter;
     int         filter_idx;
     double      z;      // For sorting inside a layer.
-    bool        lines_glow;
 };
 
 
@@ -80,7 +86,25 @@ static int image_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
+static void lonlat2c(const double lonlat[2], double c[3])
+{
+    eraS2c(lonlat[0] * ERFA_DD2R, lonlat[1] * ERFA_DD2R, c);
+}
+
+/* Parse a geojson linestring into the feature linestring in cartesian
+ * coordinates.  Note: maybe should directly be done by the geojson parser.  */
+static void linestring2c(const geojson_linestring_t *ls, feature_t *feature)
+{
+    int i;
+    feature->linestring.size = ls->size;
+    feature->linestring.points =
+        calloc(ls->size, sizeof(*feature->linestring.points));
+    for (i = 0; i < ls->size; i++)
+        lonlat2c(ls->coordinates[i], feature->linestring.points[i]);
+}
+
+static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo,
+                            bool save_linestring)
 {
     const double (*coordinates)[2];
     int *rings_size;
@@ -96,6 +120,10 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         mesh = calloc(1, sizeof(*mesh));
         mesh_add_line_lonlat(mesh, size, coordinates, false);
         DL_APPEND(feature->meshes, mesh);
+        if (save_linestring && !feature->linestring.size && size) {
+            LOG_D("XXXXXX");
+            linestring2c(&geo->linestring, feature);
+        }
         break;
 
     case GEOJSON_POLYGON:
@@ -124,7 +152,7 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo)
         for (i = 0; i < geo->multipolygon.size; i++) {
             poly.type = GEOJSON_POLYGON;
             poly.polygon = geo->multipolygon.polygons[i];
-            feature_add_geo(feature, &poly);
+            feature_add_geo(feature, &poly, false);
         }
         break;
 
@@ -148,6 +176,7 @@ static void add_geojson_feature(image_t *image,
     feature->fill_color[3] = geo_feature->properties.fill_opacity;
     feature->stroke_color[3] = geo_feature->properties.stroke_opacity;
     feature->stroke_width = geo_feature->properties.stroke_width;
+    feature->stroke_glow = geo_feature->properties.stroke_glow;
     if (geo_feature->properties.title)
         feature->title = strdup(geo_feature->properties.title);
     feature->text_anchor = geo_feature->properties.text_anchor;
@@ -155,7 +184,7 @@ static void add_geojson_feature(image_t *image,
     feature->text_rotate = geo_feature->properties.text_rotate;
     vec2_copy(geo_feature->properties.text_offset, feature->text_offset);
 
-    feature_add_geo(feature, &geo_feature->geometry);
+    feature_add_geo(feature, &geo_feature->geometry, feature->stroke_glow);
     DL_APPEND(image->features, feature);
 }
 
@@ -169,6 +198,7 @@ static void feature_del(obj_t *obj)
         DL_DELETE(feature->meshes, mesh);
         mesh_delete(mesh);
     }
+    free(feature->linestring.points);
     free(feature->title);
 }
 
@@ -296,9 +326,6 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
     const mesh_t *mesh;
     double c[4];
 
-    if (image->lines_glow)
-        painter.flags |= PAINTER_MESH_LINES_GLOW;
-
     /*
      * For the moment, we render all the filled shapes first, then
      * all the lines, and then all the titles.  This allows the renderer
@@ -324,7 +351,12 @@ static int image_render(const obj_t *obj, const painter_t *painter_)
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (mesh->points_count) continue;
             painter.lines.width = feature->stroke_width;
-            paint_mesh(&painter, frame, MODE_LINES, mesh);
+            if (feature->linestring.size) {
+                paint_linestring(&painter, frame, feature->linestring.size,
+                                 feature->linestring.points);
+            } else {
+                paint_mesh(&painter, frame, MODE_LINES, mesh);
+            }
         }
     }
 
@@ -774,7 +806,6 @@ static obj_klass_t image_klass = {
         PROPERTY(frame, TYPE_ENUM, MEMBER(image_t, frame)),
         PROPERTY(filter, TYPE_FUNC, .fn = filter_fn),
         PROPERTY(z, TYPE_FLOAT, MEMBER(image_t, z)),
-        PROPERTY(lines_glow, TYPE_BOOL, MEMBER(image_t, lines_glow)),
         {}
     },
 };

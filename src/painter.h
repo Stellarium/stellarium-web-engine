@@ -94,8 +94,6 @@ enum {
     PAINTER_ATMOSPHERE_SHADER   = 1 << 8,
     PAINTER_FOG_SHADER          = 1 << 9,
     PAINTER_ENABLE_DEPTH        = 1 << 10,
-    // Mesh lines are rendered with glow.
-    PAINTER_MESH_LINES_GLOW     = 1 << 11,
 
     // Passed to paint_lines.
     PAINTER_SKIP_DISCONTINUOUS  = 1 << 14,
@@ -290,6 +288,9 @@ int paint_line(const painter_t *painter,
                int frame,
                double line[2][4], const uv_map_t *map,
                int split, int flags);
+
+int paint_linestring(const painter_t *painter, int frame,
+                     int size, const double (*points)[3]);
 
 /*
  * Function: paint_mesh

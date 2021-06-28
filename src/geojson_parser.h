@@ -12,6 +12,8 @@
 
 #include "json.h"
 
+#include <stdbool.h>
+
 /*
  * Simple geojson parser.
  *
@@ -89,6 +91,7 @@ typedef struct geojson_feature_properties
     float stroke[3];
     float stroke_width;
     float stroke_opacity;
+    bool stroke_glow; // to remove?
     float fill[3];
     float fill_opacity;
     char *title;
