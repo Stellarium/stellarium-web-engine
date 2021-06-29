@@ -228,6 +228,8 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
         obj_get_pvo(obj, obs, pvo);
         *(double*)out = pvo[0][3] ? vec3_norm(pvo[0]) : NAN;
         return 0;
+    case INFO_SEARCH_VMAG:
+        return obj_get_info(obj, obs, INFO_VMAG, out);
     default:
         break;
     }
