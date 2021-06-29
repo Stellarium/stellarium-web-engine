@@ -121,7 +121,6 @@ static void feature_add_geo(feature_t *feature, const geojson_geometry_t *geo,
         mesh_add_line_lonlat(mesh, size, coordinates, false);
         DL_APPEND(feature->meshes, mesh);
         if (save_linestring && !feature->linestring.size && size) {
-            LOG_D("XXXXXX");
             linestring2c(&geo->linestring, feature);
         }
         break;
