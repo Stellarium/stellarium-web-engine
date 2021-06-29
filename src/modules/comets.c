@@ -46,7 +46,15 @@ typedef struct {
     orbit_t     orbit;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
     bool        on_screen;  // Set once the object has been visible.
-    double      peak_vmag;  // If set, brightest observed historical mag.
+
+    // Optional historical data.
+    struct {
+        double      time; // TT MJD.
+        double      duration; // days.
+        double      h;
+        double      g;
+        double      peak_vmag;  // If set, brightest observed historical mag.
+    } history;
 
     // Cached values.
     double      vmag;
@@ -72,6 +80,12 @@ typedef struct {
 // Static instance.
 static comets_t *g_comets = NULL;
 
+static double date2mjd(int year, int month, int day)
+{
+    double djm0, djm;
+    eraCal2jd(year, month, day, &djm0, &djm);
+    return djm0 - DJM0 + djm;
+}
 
 static const char *orbit_type_to_otype(char o)
 {
@@ -123,9 +137,17 @@ static void load_data(comets_t *comets, const char *data, int size)
         comet->pvo[0][0] = NAN;
         last_epoch = max(epoch, last_epoch);
 
-        // Check for historical comets.
-        if (strcmp(desgn, "C/2020 F3 (NEOWISE)") == 0)
-            comet->peak_vmag = 1;
+        // Check for historical comets, where we change the h and g values
+        // around a peak date.  Only support Neowise for the moment.
+        if (strcmp(desgn, "C/2020 F3 (NEOWISE)") == 0) {
+            comet->history = (typeof(comet->history)) {
+                .time = date2mjd(2020, 7, 3),
+                .duration = 30,
+                .peak_vmag = 1,
+                .h = 7.5,
+                .g = 5.2,
+            };
+        }
     }
 
     if (nb_err) {
@@ -136,9 +158,23 @@ static void load_data(comets_t *comets, const char *data, int size)
           format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
 }
 
+static void comet_get_h_g(const comet_t *comet, double tt, double *h, double *g)
+{
+    double dt, k;
+    if (!comet->history.time) {
+        *h = comet->h;
+        *g = comet->g;
+        return;
+    }
+    dt = fabs(tt - comet->history.time);
+    k = smoothstep(comet->history.duration * 1.5, comet->history.duration, dt);
+    *h = mix(comet->h, comet->history.h, k);
+    *g = mix(comet->g, comet->history.g, k);
+}
+
 static int comet_update(comet_t *comet, const observer_t *obs)
 {
-    double a, p, n, ph[2][3], pv[2][3], or, sr, b, v, w, r, o, u, i;
+    double a, p, n, ph[2][3], pv[2][3], or, sr, b, v, w, r, o, u, i, h, g;
     const double K = 0.01720209895; // AU, day
 
     // Position algo for elliptical comets.
@@ -188,8 +224,8 @@ static int comet_update(comet_t *comet, const observer_t *obs)
     // XXX: probably better to switch to the same model as for asteroids.
     sr = vec3_norm(ph[0]);
     or = vec3_norm(comet->pvo[0]);
-    comet->vmag = comet->h + 5 * log10(or) +
-                      2.5 * comet->g * log10(sr);
+    comet_get_h_g(comet, obs->tt, &h, &g);
+    comet->vmag = h + 5 * log10(or) + 2.5 * g * log10(sr);
     return 0;
 }
 
@@ -206,7 +242,7 @@ static int comet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = comet->vmag;
         return 0;
     case INFO_SEARCH_VMAG:
-        *(double*)out = min(comet->vmag, comet->peak_vmag ?: DBL_MAX);
+        *(double*)out = min(comet->vmag, comet->history.peak_vmag ?: DBL_MAX);
         return 0;
     }
     return 1;
@@ -250,13 +286,14 @@ static void mat_rotate_y_toward(double mat[4][4], double dir[3])
 static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 {
     double model_mat[4][4] = MAT4_IDENTITY;
-    double ph[3], rh, l, d, angle, point, dir[3], curvature = 0;
+    double ph[3], rh, l, d, angle, point, dir[3], curvature = 0, h, g;
     double color[4], lum_apparent, ld;
     json_value *args, *uniforms;
 
     vec3_sub(comet->pvo[0], painter->obs->sun_pvo[0], ph);
     rh = vec3_norm(ph);
-    compute_tail_size(comet->h, comet->g, rh, &l, &d);
+    comet_get_h_g(comet, painter->obs->tt, &h, &g);
+    compute_tail_size(h, g, rh, &l, &d);
     mat4_itranslate(model_mat, VEC3_SPLIT(comet->pvo[0]));
 
     switch (tail) {
