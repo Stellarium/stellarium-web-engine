@@ -46,6 +46,7 @@ typedef struct {
     orbit_t     orbit;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
     bool        on_screen;  // Set once the object has been visible.
+    double      peak_vmag;  // If set, brightest observed historical mag.
 
     // Cached values.
     double      vmag;
@@ -121,6 +122,10 @@ static void load_data(comets_t *comets, const char *data, int size)
         snprintf(comet->name, sizeof(comet->name), "%s", desgn);
         comet->pvo[0][0] = NAN;
         last_epoch = max(epoch, last_epoch);
+
+        // Check for historical comets.
+        if (strcmp(desgn, "C/2020 F3 (NEOWISE)") == 0)
+            comet->peak_vmag = 1;
     }
 
     if (nb_err) {
@@ -199,6 +204,9 @@ static int comet_get_info(const obj_t *obj, const observer_t *obs, int info,
         return 0;
     case INFO_VMAG:
         *(double*)out = comet->vmag;
+        return 0;
+    case INFO_SEARCH_VMAG:
+        *(double*)out = min(comet->vmag, comet->peak_vmag ?: DBL_MAX);
         return 0;
     }
     return 1;
