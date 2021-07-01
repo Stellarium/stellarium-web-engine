@@ -38,14 +38,14 @@ typedef struct orbit_t {
  * Type: comet_t
  * Object that represents a single comet
  */
-typedef struct {
+typedef struct comet comet_t;
+struct comet {
     obj_t       obj;
     int         num;
     double      h;  // Absolute magnitude.
     double      g;  // Slope parameter.
     orbit_t     orbit;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
-    bool        on_screen;  // Set once the object has been visible.
 
     // Optional historical data.
     struct {
@@ -59,7 +59,10 @@ typedef struct {
     // Cached values.
     double      vmag;
     double      pvo[2][4];
-} comet_t;
+
+    // Linked list of currently visible.
+    comet_t     *visible_next, *visible_prev;
+};
 
 /*
  * Type: comet_t
@@ -69,12 +72,14 @@ typedef struct {
     obj_t   obj;
     char    *source_url;
     bool    parsed; // Set to true once the data has been parsed.
-    int     update_pos; // Index of the position for iterative update.
     regex_t search_reg;
     bool    visible;
     // Hints/labels magnitude offset
     double hints_mag_offset;
     bool   hints_visible;
+
+    comet_t *render_current;
+    comet_t *visibles; // Linked list of currently visible comets.
 } comets_t;
 
 // Static instance.
@@ -345,6 +350,7 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 }
 
 
+// Note: return 1 if the comet is actually visible on screen.
 static int comet_render(const obj_t *obj, const painter_t *painter)
 {
     double win_pos[2], vmag, size, luminance;
@@ -369,7 +375,6 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
         return 0;
 
     painter_project(painter, FRAME_ICRF, comet->pvo[0], false, false, win_pos);
-    comet->on_screen = true;
     core_get_point_for_mag(vmag, &size, &luminance);
 
     point = (point_t) {
@@ -396,7 +401,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
         render_tail(comet, painter, TAIL_GAS);
         render_tail(comet, painter, TAIL_DUST);
     }
-    return 0;
+    return 1;
 }
 
 static int comets_init(obj_t *obj, json_value *args)
@@ -419,12 +424,6 @@ static int comets_add_data_source(
     if (strcmp(key, "mpc_comets") != 0) return -1;
     comets->source_url = strdup(url);
     return 0;
-}
-
-static bool range_contains(int range_start, int range_size, int nb, int i)
-{
-    if (i < range_start) i += nb;
-    return i >= range_start && i < range_start + range_size;
 }
 
 static int comets_update(obj_t *obj, double dt)
@@ -453,29 +452,45 @@ static int comets_update(obj_t *obj, double dt)
     return 0;
 }
 
+static void add_to_visible(comets_t *comets, comet_t *comet)
+{
+    if (comet->visible_prev) return;
+    DL_APPEND2(comets->visibles, comet, visible_prev, visible_next);
+}
+
 static int comets_render(const obj_t *obj, const painter_t *painter)
 {
     comets_t *comets = (void*)obj;
-    comet_t *child;
-    obj_t *tmp;
+    int i, r;
     const int update_nb = 32;
-    int nb, i;
+    comet_t *child, *tmp;
 
     if (!comets->visible) return 0;
-    /* To prevent spending too much time computing position of comets that
-     * are not visible, we only render a small number of them at each
-     * frame, using a moving range.  The comets who have been flagged as
-     * on screen get rendered no matter what.  */
-    DL_COUNT(obj->children, tmp, nb);
-    i = 0;
-    MODULE_ITER(obj, child, "mpc_comet") {
-        if (child->on_screen ||
-                range_contains(comets->update_pos, update_nb, nb, i)) {
-            obj_render(&child->obj, painter);
-        }
-        i++;
+
+    // If the current selection is a comet, make sure it is flagged
+    // as visible.
+    if (core->selection && core->selection->parent == obj) {
+        add_to_visible(comets, (void*)core->selection);
     }
-    comets->update_pos = nb ? (comets->update_pos + update_nb) % nb : 0;
+
+    // Render all the flagged visible minor planets, remove those that are
+    // no longer visible.
+    DL_FOREACH_SAFE2(comets->visibles, child, tmp, visible_next) {
+        r = comet_render(&child->obj, painter);
+        if (r == 0 && &child->obj != core->selection) {
+            DL_DELETE2(comets->visibles, child, visible_prev, visible_next);
+            child->visible_prev = NULL;
+        }
+    }
+
+    // Then iter part of the full list as well.
+    child = comets->render_current ?: (void*)comets->obj.children;
+    for (i = 0; child && i < update_nb; i++, child = (void*)child->obj.next) {
+        if (child->visible_prev) continue; // Was already rendered.
+        r = comet_render(&child->obj, painter);
+        if (r == 1) add_to_visible(comets, child);
+    }
+    comets->render_current = child;
 
     return 0;
 }
