@@ -51,8 +51,8 @@
     <bottom-button :label="$t('Equatorial Grid')"
                 :img="require('@/assets/images/btn-equatorial-grid.svg')"
                 img_alt="Equatorial Grid Button"
-                :toggled="$store.state.stel.lines.equatorial.visible"
-                @clicked="(b) => { $stel.core.lines.equatorial.visible = b }">
+                :toggled="$store.state.stel.lines.equatorial_jnow.visible"
+                @clicked="(b) => { $stel.core.lines.equatorial_jnow.visible = b }">
     </bottom-button>
     <bottom-button :label="$t('Deep Sky Objects')"
                 :img="require('@/assets/images/btn-nebulae.svg')"
