@@ -166,46 +166,22 @@ struct line {
     double          color[4];
 };
 
-// Test if a shape in clipping coordinates is clipped or not.
-static bool is_clipped(const double pos[4][3], double clip[4][4])
+// Compute cap from a quad.
+static void compute_rect_cap(const double pos[4][3], double out[4])
 {
-    // The six planes equations:
-    const int P[6][4] = {
-        {-1, 0, 0, -1}, {1, 0, 0, -1},
-        {0, -1, 0, -1}, {0, 1, 0, -1},
-        {0, 0, -1, -1}, {0, 0, 1, -1}
-    };
-    int i, p;
-    for (p = 0; p < 6; p++) {
-        for (i = 0; i < 4; i++) {
-            if (    P[p][0] * clip[i][0] +
-                    P[p][1] * clip[i][1] +
-                    P[p][2] * clip[i][2] +
-                    P[p][3] * clip[i][3] <= 0) {
-                break;
-            }
-        }
-        if (i == 4) // All the points are outside a clipping plane.
-            return true;
-    }
+    int i;
+    double d, cap[4] = {0, 0, 0, 1};
 
-    /*
-     * Special case: if all the points are behind us and none are visible
-     * on screen, we assume the tile is clipped.  This fix the problem
-     * that some projections as defined at the moment don't make the clipping
-     * test very accurate.
-     *
-     * This is the same trick used in painter.c to check if an healpix tile
-     * is clipped or not.
-     */
     for (i = 0; i < 4; i++) {
-        if (clip[i][0] >= -clip[i][3] && clip[i][0] <= +clip[i][3] &&
-            clip[i][1] >= -clip[i][3] && clip[i][1] <= +clip[i][3] &&
-            clip[i][2] >= -clip[i][3] && clip[i][2] <= +clip[i][3])
-                return false;
-        if (pos[i][2] < 0) return false;
+        vec3_add(cap, pos[i], cap);
     }
-    return true;
+    vec3_normalize(cap, cap);
+    for (i = 0; i < 4; i++) {
+        d = vec3_dot(cap, pos[i]);
+        if (d < cap[3])
+            cap[3] = d;
+    }
+    vec4_copy(cap, out);
 }
 
 /*
@@ -535,7 +511,7 @@ static void render_recursion(
     int i, j, dir;
     int split_az, split_al, new_splits[2], new_pos[2];
     double p[4], lines[4][4] = {}, u[2], v[2];
-    double pos_view[4][3], pos_clip[4][4];
+    double pos_view[4][3], cap[4];
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
     double mat[3][3] = MAT3_IDENTITY;
     uv_map_t map = {
@@ -553,13 +529,15 @@ static void render_recursion(
         spherical_project(&map, p, p);
         convert_frame(painter->obs, line->frame, FRAME_VIEW, true, p, p);
         vec3_copy(p, pos_view[i]);
-        project_to_clip(painter->proj, pos_view[i], pos_clip[i]);
     }
     // If the quad is clipped we stop the recursion.
     // We only start to test after a certain level to prevent distortion
     // error with big quads at low levels.
-    if (level > 2 && is_clipped(pos_view, pos_clip))
-        return;
+    if (level > 2) {
+        compute_rect_cap(pos_view, cap);
+        if (painter_is_cap_clipped(painter, FRAME_VIEW, cap))
+            return;
+    }
 
     // Nothing to render yet.
     if (level < steps[0]->level || level < steps[1]->level)
