@@ -173,6 +173,8 @@ typedef struct
     double latitude;
     double ra;
     double dec;
+    double cirs_ra;
+    double cirs_dec;
     double alt;
     double az;
     double pos[3]; // ICRF, observer centric.
@@ -189,12 +191,14 @@ static void test_pos(pos_test_t t)
 {
     obj_t *obj;
     observer_t obs;
-    double ra, dec, az, alt;
+    double ra, dec, az, alt, cirs_ra, cirs_dec;
     double sep, pvo[2][4], p[4];
 
     // Convert the coordinates angles in the test to radian.
     t.ra *= DD2R;
     t.dec *= DD2R;
+    t.cirs_ra *= DD2R;
+    t.cirs_dec *= DD2R;
     t.alt *= DD2R;
     t.az *= DD2R;
 
@@ -221,11 +225,25 @@ static void test_pos(pos_test_t t)
         assert(false);
     }
 
+    convert_framev4(&obs, FRAME_ICRF, FRAME_CIRS, pvo[0], p);
+    eraC2s(p, &cirs_ra, &cirs_dec);
+
     convert_framev4(&obs, FRAME_ICRF, FRAME_JNOW, pvo[0], p);
     eraC2s(p, &ra, &dec);
 
     convert_framev4(&obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], p);
     eraC2s(p, &az, &alt);
+
+    sep = eraSeps(cirs_ra, cirs_dec, t.cirs_ra, t.cirs_dec) * DR2D * 3600;
+    if (t.cirs_ra && sep > t.precision_radec) {
+        LOG_E("Error: %s", t.name);
+        LOG_E("Apparent radec CIRS error: %.5f arcsec", sep);
+        LOG_E("Ref ra: %f°, dec: %f°",
+              eraAnp(t.cirs_ra) * DR2D, eraAnpm(t.cirs_dec) * DR2D);
+        LOG_E("Tst ra: %f°, dec: %f°",
+              eraAnp(cirs_ra) * DR2D, eraAnpm(cirs_dec) * DR2D);
+        assert(false);
+    }
 
     sep = eraSeps(ra, dec, t.ra, t.dec) * DR2D * 3600;
     if (sep > t.precision_radec) {
