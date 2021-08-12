@@ -640,6 +640,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     uv_map_t map;
     double fade, uv[3][3] = MAT3_IDENTITY, normal_uv[3][3] = MAT3_IDENTITY;
     bool loaded;
+    double saturation = 1.0;
 
     (*nb_tot)++;
     flags |= HIPS_LOAD_IN_THREAD;
@@ -661,9 +662,12 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     if (planet->id == MOON) painter.flags |= PAINTER_IS_MOON;
 
     // Hardcoded increase of the luminosity of the moon for the moment!
-    // This should be specified in the survey itsefl I guess.
-    if (planet->id == MOON)
-        vec3_mul(3.8, painter.color, painter.color);
+    // This should be an effect of tonemapping instead.
+    if (planet->id == MOON && !painter.obs->space)
+        saturation = 3.8;
+    if (planet->id == MOON && painter.obs->space)
+        saturation = 1.5;
+    vec3_mul(saturation, painter.color, painter.color);
 
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
