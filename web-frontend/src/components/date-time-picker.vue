@@ -223,7 +223,6 @@ export default {
     })
     window.addEventListener('touchend', function (event) {
       that.stopIncTime()
-      event.preventDefault()
     })
   },
   watch: {
