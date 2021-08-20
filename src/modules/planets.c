@@ -612,6 +612,9 @@ static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
         planet_get_pvo(planet, obs, pvo);
         *(double*)out = planet->radius_m * DM2AU / vec3_norm(pvo[0]);
         return 0;
+    case INFO_MAT:
+        planet_get_mat(planet, obs, (void*)out);
+        return 0;
     case INFO_POLE:
         planet_get_mat(planet, obs, mat);
         vec3_copy(mat[2], (double*)out);
