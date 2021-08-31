@@ -59,7 +59,8 @@ enum {
     // can be changed dynamically to avoid collisions.
     TEXT_FLOAT     = 1 << 5,
     TEXT_SPACED    = 1 << 6,
-    TEXT_SEMI_SPACED = 1 << 7
+    TEXT_SEMI_SPACED = 1 << 7,
+    TEXT_MULTILINES  = 1 << 8,
 };
 
 enum {
