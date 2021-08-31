@@ -73,3 +73,10 @@ bool labels_has_obj(const obj_t *obj);
  * Need to call obj_release on the returned object.
  */
 obj_t *labels_get_obj_at(const double pos[2], double max_dist);
+
+/*
+ * Set an object whose label will be ignored.
+ * Used for orbit mode where we don't want to show the object label in the
+ * sky.  Pass NULL to reset.
+ */
+void labels_hide_label_for(const obj_t *obj);

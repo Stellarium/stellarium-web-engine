@@ -37,6 +37,7 @@ struct label
 typedef struct labels {
     obj_t obj;
     label_t *labels;
+    obj_t *hidden_obj;
 } labels_t;
 
 static labels_t *g_labels = NULL;
@@ -162,8 +163,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
 
-        if (core->selection && core->hide_selection_label &&
-                label->obj == core->selection)
+        if (g_labels->hidden_obj && label->obj == g_labels->hidden_obj)
             continue;
 
         vec4_copy(label->color, painter.color);
@@ -289,6 +289,11 @@ obj_t *labels_get_obj_at(const double pos[2], double max_dist)
         }
     }
     return 0;
+}
+
+void labels_hide_label_for(const obj_t *obj)
+{
+    g_labels->hidden_obj = obj;
 }
 
 /*

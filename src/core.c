@@ -1048,8 +1048,6 @@ static obj_klass_t core_klass = {
                  MEMBER(core_t, time_animation.dst_utc)),
         PROPERTY(time_speed, TYPE_FLOAT, MEMBER(core_t, time_speed)),
         PROPERTY(y_offset, TYPE_FLOAT, MEMBER(core_t, y_offset)),
-        PROPERTY(hide_selection_label, TYPE_BOOL,
-                 MEMBER(core_t, hide_selection_label)),
         {}
     }
 };
