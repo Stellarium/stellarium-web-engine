@@ -102,6 +102,7 @@ typedef struct planets {
     // Orbit render mode:
     // 0: No orbit.  1: Render selection children orbits.
     int    orbits_mode;
+    bool   features_visible;
 } planets_t;
 
 // Static instance.
@@ -177,6 +178,12 @@ static const double VIS_ELEMENTS[][5] = {
             p; \
             p = (planet_t*)p->obj.next)
 
+
+__attribute__((weak))
+void planetary_features_render(const painter_t *painter,
+                               int target, const double mat[4][4])
+{
+}
 
 /*
  * Function: moon_icrf_geocentric
@@ -897,6 +904,10 @@ static void planet_render_hips(const planet_t *planet,
 
     if (planet->rings.tex)
         render_rings(planet, &painter, mat);
+
+    if (planets->features_visible)
+        planetary_features_render(&painter, planet->id, mat);
+
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
 
@@ -1532,6 +1543,8 @@ static obj_klass_t planets_klass = {
         PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
         PROPERTY(scale_moon, TYPE_BOOL, MEMBER(planets_t, scale_moon)),
         PROPERTY(orbits_mode, TYPE_ENUM, MEMBER(planets_t, orbits_mode)),
+        PROPERTY(features_visible, TYPE_BOOL, MEMBER(planets_t,
+                 features_visible)),
         {}
     },
 };
