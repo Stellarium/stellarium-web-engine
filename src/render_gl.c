@@ -887,6 +887,7 @@ static void text_shadow_effect(const uint8_t *src, uint8_t *dst,
             s += img_get(src, w - 2, h - 2, j + dj - 1, i + di - 1) / 255.;
         }
         s /= 9;
+        s = sqrt(s); // Increase shadow effect strength.
         vec4_set(frag, color[0] / 8, color[1] / 8, color[2] / 8, s);
         // Blend real color on top of shadow.
         vec4_set(text_col, color[0], color[1], color[2],
