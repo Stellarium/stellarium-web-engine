@@ -393,6 +393,16 @@ T(17, 2, 0, 0, "Ast",   N_("Asterism"))
 // Extra fields for Coordinates.
 T(18, 0, 0, 0, "Coo", N_("Coordinates"))
 
+// Extra fields for Planetary Features.
+T(19, 0, 0, 0, "PlF", N_("Planetary Feature"))
+T(19, 1, 0, 0, "Cra", N_("Crater"))
+T(19, 2, 0, 0, "LMa", N_("Lunar Mare"))
+T(19, 3, 0, 0, "LaS", N_("Landing Site"))
+T(19, 3, 1, 0, "HLS",   N_("Human Landing Site"))
+T(19, 3, 2, 0, "RLS",   N_("Robotic Landing Site"))
+T(19, 4, 0, 0, "FPl", N_("Plain"))
+T(19, 5, 0, 0, "Vol", N_("Volcano"))
+
 {}
 };
 
@@ -400,6 +410,10 @@ T(18, 0, 0, 0, "Coo", N_("Coordinates"))
 
 #include "tests.h"
 
+/*
+ * Test that the hash has properly been computed.  If this fails we need to
+ * re-run ./tool/make-otypes-hash.py.
+ */
 static void test_otypes_hash(void)
 {
     int i;
