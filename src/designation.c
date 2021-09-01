@@ -348,7 +348,8 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
 {
     int cst;
     int i, g, nb;
-    const char *remove[] = {"NAME ", "* ", "Cl ", "Cl* ", "** ", "MPC "};
+    const char *remove[] = {"NAME ", "* ", "Cl ", "Cl* ", "** ", "MPC ",
+                            "LATIN "};
     const char *greek;
     const char *cstname;
     const char *suffix;
