@@ -99,10 +99,10 @@ typedef struct planets {
     double hints_mag_offset;
     bool   hints_visible;
     bool   scale_moon;
-    // Orbit render mode:
-    // 0: No orbit.  1: Render selection children orbits.
-    int    orbits_mode;
     bool   features_visible;
+
+    // If set, we render the orbits of the children of this planet.
+    const obj_t  *show_orbits;
 } planets_t;
 
 // Static instance.
@@ -1066,22 +1066,20 @@ static double get_artificial_scale(const planets_t *planets,
 */
 static bool should_render_orbit(const planet_t *p, const painter_t *painter)
 {
-    switch (g_planets->orbits_mode) {
-    case 0:
+    if (!g_planets->show_orbits)
         return false;
-    case 1:
-        if (!core->selection) return false;
-        if (&p->parent->obj != core->selection) return false;
-        switch (p->id) {
-            case ATLAS:
-            case PAN:
-                return false;
-            default:
-                return true;
-        }
+    if (&p->parent->obj != g_planets->show_orbits)
+        return false;
+
+    // Remove Atlas and Pan because they don't look nice (for now).
+    switch (p->id) {
+    case ATLAS:
+    case PAN:
+        return false;
     default:
-        return false;
+        return true;
     }
+
 }
 
 static void planet_render(const planet_t *planet, const painter_t *painter_)
@@ -1248,7 +1246,7 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
 
     // Render orbits after the planets for proper depth buffer.
     // Note: the renderer could sort it itself?
-    if (planets->orbits_mode) {
+    if (planets->show_orbits) {
         PLANETS_ITER(planets, p) {
             p->orbit_visible.target = should_render_orbit(p, painter);
             if (p->orbit_visible.value)
@@ -1542,7 +1540,7 @@ static obj_klass_t planets_klass = {
                  MEMBER(planets_t, hints_mag_offset)),
         PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
         PROPERTY(scale_moon, TYPE_BOOL, MEMBER(planets_t, scale_moon)),
-        PROPERTY(orbits_mode, TYPE_ENUM, MEMBER(planets_t, orbits_mode)),
+        PROPERTY(show_orbits, TYPE_OBJ, MEMBER(planets_t, show_orbits)),
         PROPERTY(features_visible, TYPE_BOOL, MEMBER(planets_t,
                  features_visible)),
         {}
