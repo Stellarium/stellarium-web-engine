@@ -122,6 +122,11 @@ static double bounds_dist_point(const double rect[4], const double p[2])
     return sqrt(dx * dx + dy * dy);
 }
 
+/*
+ * Compute the overlap between a label and any other label on screen.
+ * We define the overlap as the minimum length in X or Y of the
+ * overlapping rectangle area of the label.
+ */
 static double test_label_overlaps(const label_t *label)
 {
     label_t *other;
@@ -134,7 +139,7 @@ static double test_label_overlaps(const label_t *label)
         if (other->fader.target == false) continue;
         if (!bounds_intersection(label->bounds, other->bounds, inter))
             continue;
-        overlap = max(inter[2] - inter[0], inter[3] - inter[1]);
+        overlap = min(inter[2] - inter[0], inter[3] - inter[1]);
         if (overlap > ret)
             ret = overlap;
     }
