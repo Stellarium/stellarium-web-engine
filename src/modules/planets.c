@@ -937,7 +937,7 @@ static void planet_render_model(const planet_t *planet,
     planet_get_pvo(planet, painter.obs, pvo);
     dist = vec3_norm(pvo[0]);
     painter.planet.min_brightness =
-        min(0.2, smoothstep(2, 0, log(dist / radius)));
+        min(0.5, smoothstep(2, 0, log(dist / radius)));
 
     if (planet->no_model) { // Use hips.
         hips = planet->hips ?: g_planets->default_hips;
