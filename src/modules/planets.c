@@ -99,10 +99,12 @@ typedef struct planets {
     double hints_mag_offset;
     bool   hints_visible;
     bool   scale_moon;
-    bool   features_visible;
 
     // If set, we render the orbits of the children of this planet.
-    const obj_t  *show_orbits;
+    const obj_t *show_orbits;
+    // If set, we render the features of this planet.
+    const obj_t *show_features;
+
 } planets_t;
 
 // Static instance.
@@ -905,7 +907,7 @@ static void planet_render_hips(const planet_t *planet,
     if (planet->rings.tex)
         render_rings(planet, &painter, mat);
 
-    if (planets->features_visible)
+    if (planets->show_features == &planet->obj)
         planetary_features_render(&painter, planet->id, mat);
 
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
@@ -1541,8 +1543,7 @@ static obj_klass_t planets_klass = {
         PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
         PROPERTY(scale_moon, TYPE_BOOL, MEMBER(planets_t, scale_moon)),
         PROPERTY(show_orbits, TYPE_OBJ, MEMBER(planets_t, show_orbits)),
-        PROPERTY(features_visible, TYPE_BOOL, MEMBER(planets_t,
-                 features_visible)),
+        PROPERTY(show_features, TYPE_OBJ, MEMBER(planets_t, show_features)),
         {}
     },
 };
