@@ -471,9 +471,11 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
 static json_value *satellite_get_json_data(const obj_t *obj)
 {
     satellite_t *sat = (satellite_t*)obj;
-    if (sat->data)
-        return json_copy(sat->data);
-    return json_object_new(0);
+    json_value *ret;
+    ret = sat->data ? json_copy(sat->data) : json_object_new(0);
+    if (painter_3d_model_exists(sat->model))
+        json_object_push(ret, "can_orbit", json_boolean_new(true));
+    return ret;
 }
 
 /*

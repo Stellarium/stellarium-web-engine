@@ -378,6 +378,15 @@ void mplanet_get_designations(
     }
 }
 
+static json_value *mplanet_get_json_data(const obj_t *obj)
+{
+    const mplanet_t *mp = (mplanet_t*)obj;
+    json_value *ret = json_object_new(0);
+    if (painter_3d_model_exists(mp->model))
+        json_object_push(ret, "can_orbit", json_boolean_new(true));
+    return ret;
+}
+
 static int mplanets_init(obj_t *obj, json_value *args)
 {
     mplanets_t *mps = (void*)obj;
@@ -464,6 +473,7 @@ static obj_klass_t mplanet_klass = {
     .get_info   = mplanet_get_info,
     .render     = mplanet_render,
     .get_designations = mplanet_get_designations,
+    .get_json_data = mplanet_get_json_data,
 };
 OBJ_REGISTER(mplanet_klass)
 

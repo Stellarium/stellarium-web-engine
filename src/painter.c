@@ -853,6 +853,12 @@ void paint_cap(const painter_t *painter, int frame, double cap[4])
 }
 
 __attribute__((weak))
+bool painter_3d_model_exists(const char *model)
+{
+    return false;
+}
+
+__attribute__((weak))
 int painter_get_3d_model_bounds(const painter_t *painter, const char *model,
                                 double bounds[2][3])
 {

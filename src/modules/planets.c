@@ -1509,6 +1509,8 @@ static json_value *planet_get_json_data(const obj_t *obj)
     json_value *ret = json_object_new(0);
     json_value *md = json_object_push(ret, "model_data", json_object_new(0));
     json_object_push(md, "horizons_id", json_double_new(planet->id));
+    if (planet->hips || painter_3d_model_exists(planet->name))
+        json_object_push(ret, "can_orbit", json_boolean_new(true));
     return ret;
 }
 

@@ -566,6 +566,8 @@ int paint_2d_line(const painter_t *painter, const double transf[3][3],
  */
 void paint_cap(const painter_t *painter, int frame, double cap[4]);
 
+bool painter_3d_model_exists(const char *model);
+
 int painter_get_3d_model_bounds(const painter_t *painter, const char *model,
                                 double bounds[2][3]);
 
