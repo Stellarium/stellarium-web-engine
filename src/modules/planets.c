@@ -586,7 +586,7 @@ static void planet_get_mat(const planet_t *planet, const observer_t *obs,
     // speed.
     if (planet->rot.period) {
         ldt = vec3_norm(pvo[0]) * DAU2M / LIGHT_YEAR_IN_METER * DJY;
-        tt = obs-> tt - ldt;
+        tt = obs->tt - ldt;
         a = (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
         mat4_rz(a, mat, mat);
     }
