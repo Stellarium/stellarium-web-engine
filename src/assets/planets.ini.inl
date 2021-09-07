@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[26028] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[26036] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -57,7 +57,7 @@ static const unsigned char DATA_planets_ini[26028] __attribute__((aligned(4))) =
     "rot_pole_ra = 317.681 deg\n"
     "rot_pole_de = 52.886 deg\n"
     "# Empirically determined\n"
-    "rot_offset = 80 deg\n"
+    "rot_offset = 84 deg\n"
     "\n"
     "[jupiter]\n"
     "type = Pla\n"
@@ -71,8 +71,8 @@ static const unsigned char DATA_planets_ini[26028] __attribute__((aligned(4))) =
     "albedo = 0.52\n"
     "rot_obliquity = 3.13 deg\n"
     "# Set so that the GRS position is correct.\n"
-    "rot_period = 9.9289013 h\n"
-    "rot_offset = 240 deg\n"
+    "rot_period = 9.928618899233326 h\n"
+    "rot_offset = 100 deg\n"
     "rot_pole_ra = 268.057 deg\n"
     "rot_pole_de = 64.495 deg\n"
     "mass = 1.89813e+27 kg\n"

@@ -557,28 +557,13 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
     }
 }
 
-/*
- * Compute the rotation of a planet along its axis.
- *
- * Parameters:
- *   planet     - A planet.
- *   tt         - TT time (MJD).
- *
- * Return:
- *   The rotation angle in radian.
- */
-static double planet_get_rotation(const planet_t *planet, double tt)
-{
-    if (!planet->rot.period) return 0;
-    return (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
-}
-
 static void planet_get_mat(const planet_t *planet, const observer_t *obs,
                            double mat[4][4])
 {
     double radius = planet->radius_m * DM2AU;
     double pvo[2][3];
     double tmp_mat[4][4];
+    double tt, ldt, a;
 
     mat4_set_identity(mat);
     planet_get_pvo(planet, obs, pvo);
@@ -596,7 +581,15 @@ static void planet_get_mat(const planet_t *planet, const observer_t *obs,
         mat4_mul(mat, tmp_mat, mat);
         mat4_rx(-planet->rot.obliquity, mat, mat);
     }
-    mat4_rz(planet_get_rotation(planet, obs->tt), mat, mat);
+
+    // Apply the rotation, making sure to take into account the light
+    // speed.
+    if (planet->rot.period) {
+        ldt = vec3_norm(pvo[0]) * DAU2M / LIGHT_YEAR_IN_METER * DJY;
+        tt = obs-> tt - ldt;
+        a = (tt - DJM00) / planet->rot.period * 2 * M_PI + planet->rot.offset;
+        mat4_rz(a, mat, mat);
+    }
 }
 
 
