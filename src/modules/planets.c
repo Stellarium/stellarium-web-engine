@@ -100,10 +100,19 @@ typedef struct planets {
     bool   hints_visible;
     bool   scale_moon;
 
-    // If set, we render the orbits of the children of this planet.
-    const obj_t *show_orbits;
-    // If set, we render the features of this planet.
-    const obj_t *show_features;
+    // Define a planet for which the rendering will be altered depending
+    // on the srt_* variables below.
+    const obj_t *special_render_target;
+
+    // If set, render the orbits of the children of the special_render_target.
+    bool srt_show_orbits;
+
+    // If set, render the planetary features of the special_render_target.
+    bool srt_show_features;
+
+    // The amount of ambient lighting that would be used for rendering the
+    // special_render_target if defined.
+    fader_t srt_full_brightness;
 
 } planets_t;
 
@@ -900,8 +909,10 @@ static void planet_render_hips(const planet_t *planet,
     if (planet->rings.tex)
         render_rings(planet, &painter, mat);
 
-    if (planets->show_features == &planet->obj)
+    if (planets->special_render_target == &planet->obj &&
+            planets->srt_show_features) {
         planetary_features_render(&painter, planet->id, mat);
+    }
 
     progressbar_report(planet->name, planet->name, nb_loaded, nb_tot, -1);
 }
@@ -917,8 +928,6 @@ static void planet_render_model(const planet_t *planet,
     const hips_t *hips;
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
-    double dist;
-    double radius = planet->radius_m * DM2AU; // Radius in AU.
     painter_t painter = *painter_;
 
     painter.flags |= PAINTER_ENABLE_DEPTH;
@@ -929,10 +938,9 @@ static void planet_render_model(const planet_t *planet,
     memset(&painter.planet, 0, sizeof(painter.planet));
 
     // Adjust the min brightness to hide the shadow as we get closer.
-    planet_get_pvo(planet, painter.obs, pvo);
-    dist = vec3_norm(pvo[0]);
-    painter.planet.min_brightness =
-        min(0.5, smoothstep(2, 0, log(dist / radius)));
+    if (g_planets->special_render_target == &planet->obj) {
+          painter.planet.min_brightness = g_planets->srt_full_brightness.value;
+    }
 
     if (planet->no_model) { // Use hips.
         hips = planet->hips ?: g_planets->default_hips;
@@ -1061,9 +1069,9 @@ static double get_artificial_scale(const planets_t *planets,
 */
 static bool should_render_orbit(const planet_t *p, const painter_t *painter)
 {
-    if (!g_planets->show_orbits)
+    if (!g_planets->srt_show_orbits)
         return false;
-    if (&p->parent->obj != g_planets->show_orbits)
+    if (&p->parent->obj != g_planets->special_render_target)
         return false;
 
     // Remove Atlas and Pan because they don't look nice (for now).
@@ -1241,7 +1249,7 @@ static int planets_render(const obj_t *obj, const painter_t *painter)
 
     // Render orbits after the planets for proper depth buffer.
     // Note: the renderer could sort it itself?
-    if (planets->show_orbits) {
+    if (planets->srt_show_orbits) {
         PLANETS_ITER(planets, p) {
             p->orbit_visible.target = should_render_orbit(p, painter);
             if (p->orbit_visible.value)
@@ -1415,6 +1423,7 @@ static int planets_init(obj_t *obj, json_value *args)
 
     g_planets = planets;
     fader_init(&planets->visible, true);
+    fader_init(&planets->srt_full_brightness, false);
     planets->hints_visible = true;
     planets->scale_moon = true;
 
@@ -1461,6 +1470,7 @@ static int planets_update(obj_t *obj, double dt)
     planet_t *p;
 
     fader_update(&planets->visible, dt);
+    fader_update(&planets->srt_full_brightness, dt);
     PLANETS_ITER(obj, p) {
         fader_update(&p->orbit_visible, dt);
     }
@@ -1537,8 +1547,14 @@ static obj_klass_t planets_klass = {
                  MEMBER(planets_t, hints_mag_offset)),
         PROPERTY(hints_visible, TYPE_BOOL, MEMBER(planets_t, hints_visible)),
         PROPERTY(scale_moon, TYPE_BOOL, MEMBER(planets_t, scale_moon)),
-        PROPERTY(show_orbits, TYPE_OBJ, MEMBER(planets_t, show_orbits)),
-        PROPERTY(show_features, TYPE_OBJ, MEMBER(planets_t, show_features)),
+        PROPERTY(special_render_target, TYPE_OBJ,
+                 MEMBER(planets_t, special_render_target)),
+        PROPERTY(srt_show_orbits, TYPE_BOOL,
+                 MEMBER(planets_t, srt_show_orbits)),
+        PROPERTY(srt_show_features, TYPE_BOOL,
+                 MEMBER(planets_t, srt_show_features)),
+        PROPERTY(srt_full_brightness, TYPE_BOOL,
+                 MEMBER(planets_t, srt_full_brightness.target)),
         {}
     },
 };
