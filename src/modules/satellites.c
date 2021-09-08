@@ -431,6 +431,40 @@ static int satellite_update(satellite_t *sat, const observer_t *obs)
     return 0;
 }
 
+/*
+ * Compute the rotation from ICRF to Local Vertical Local Horizontal
+ * for 3d models rendering.
+ */
+static void get_lvlh_rot(const observer_t *obs, const double pvo[2][3],
+                         double out[3][3])
+{
+    /*
+     * X Point forward
+     * Y Points overheard, away from Earth.
+     */
+    vec3_normalize(pvo[1], out[0]);
+    vec3_add(obs->obs_pvg[0], pvo[0], out[1]);
+    vec3_normalize(out[1], out[1]);
+    vec3_cross(out[0], out[1], out[2]);
+    vec3_normalize(out[2], out[2]);
+    vec3_cross(out[2], out[0], out[1]);
+}
+
+
+static void satellite_get_mat(const satellite_t *sat, const observer_t *obs,
+                              double out[4][4])
+{
+    double mat[4][4] = MAT4_IDENTITY;
+    double lvlh_rot[3][3];
+    const double zup[3][3] = {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}};
+    mat4_itranslate(mat, sat->pvo[0][0], sat->pvo[0][1], sat->pvo[0][2]);
+    mat4_iscale(mat, DM2AU, DM2AU, DM2AU);
+    get_lvlh_rot(obs, sat->pvo, lvlh_rot);
+    mat3_mul(lvlh_rot, zup, lvlh_rot);
+    mat4_mul_mat3(mat, lvlh_rot, mat);
+    mat4_copy(mat, out);
+}
+
 static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
                               void *out)
 {
@@ -461,6 +495,9 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
             return 0;
         }
         return 1;
+    case INFO_MAT:
+        satellite_get_mat(sat, obs, (void*)out);
+        return 0;
     case INFO_POLE:
         vec3_normalize(sat->pvg[0], (double*)out);
         return 0;
@@ -520,25 +557,6 @@ use_first_dsgn:
     name = jnames->u.array.values[0]->u.string.ptr;
     designation_cleanup(name, out, size, DSGN_TRANSLATE);
     return true;
-}
-
-/*
- * Compute the rotation from ICRF to Local Vertical Local Horizontal
- * for 3d models rendering.
- */
-static void get_lvlh_rot(const observer_t *obs, const double pvo[2][3],
-                         double out[3][3])
-{
-    /*
-     * X Point forward
-     * Y Points overheard, away from Earth.
-     */
-    vec3_normalize(pvo[1], out[0]);
-    vec3_add(obs->obs_pvg[0], pvo[0], out[1]);
-    vec3_normalize(out[1], out[1]);
-    vec3_cross(out[0], out[1], out[2]);
-    vec3_normalize(out[2], out[2]);
-    vec3_cross(out[2], out[0], out[1]);
 }
 
 static void satellite_render_model(const satellite_t *sat,
