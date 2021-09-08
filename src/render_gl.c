@@ -535,7 +535,7 @@ static const double (*get_grid(renderer_t *rend,
     *should_delete = !can_cache;
     if (can_cache) {
         if (!rend->grid_cache)
-            rend->grid_cache = cache_create(GRID_CACHE_SIZE);
+            rend->grid_cache = cache_create(GRID_CACHE_SIZE, 1);
         grid = cache_get(rend->grid_cache, &key, sizeof(key));
         if (grid)
             return grid;

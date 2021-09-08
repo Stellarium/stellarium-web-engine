@@ -33,11 +33,14 @@ typedef struct cache cache_t;
  * Parameters:
  *   size - Maximum cache size.  The unit can be anything, as long as it
  *          stays consistent with the cost argument given in cache_add.
+ *   grace_period_sec - Period during which a used item cannot be evicted
+ *                      from the cache, even if the size got over the
+ *                      maximum.  In second.
  *
  * Return:
  *   A new cache object.
  */
-cache_t *cache_create(int size);
+cache_t *cache_create(int size, double grace_period_sec);
 
 /*
  * Function: cache_add

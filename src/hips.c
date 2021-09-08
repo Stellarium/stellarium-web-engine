@@ -710,7 +710,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     assert(order >= 0);
     *code = 0;
 
-    if (!g_cache) g_cache = cache_create(CACHE_SIZE);
+    if (!g_cache) g_cache = cache_create(CACHE_SIZE, 1);
     tile = cache_get(g_cache, &key, sizeof(key));
 
     // Got a tile but it is still loading.

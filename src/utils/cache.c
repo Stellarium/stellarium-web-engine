@@ -10,6 +10,7 @@
 #include "cache.h"
 #include "uthash.h"
 #include <assert.h>
+#include <sys/time.h>
 
 typedef struct item item_t;
 struct item {
@@ -17,30 +18,48 @@ struct item {
     char            key[256];
     void            *data;
     int             cost;
-    uint64_t        last_used;
     int             (*delfunc)(void *data);
+    // Used to give a grace period before we remove an item from the cache.
+    double          grace_time;
 };
 
 struct cache {
     item_t *items;
-    uint64_t clock;
     int size;
     int max_size;
+    double grace_period;
 };
 
-cache_t *cache_create(int size)
+static double get_unix_time(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + tv.tv_usec / 1000. / 1000.;
+}
+
+cache_t *cache_create(int size, double grace_period_sec)
 {
     cache_t *cache = calloc(1, sizeof(*cache));
     cache->max_size = size;
+    cache->grace_period = grace_period_sec;
     return cache;
 }
 
 static void cleanup(cache_t *cache)
 {
     item_t *item, *tmp;
+    double time = get_unix_time();
     HASH_ITER(hh, cache->items, item, tmp) {
-        if (item->delfunc && item->delfunc(item->data) == CACHE_KEEP)
+        if (!item->grace_time) {
+            item->grace_time = time;
             continue;
+        }
+        if (time - item->grace_time < cache->grace_period) continue;
+
+        if (item->delfunc && item->delfunc(item->data) == CACHE_KEEP) {
+            item->grace_time = 0;
+            continue;
+        }
         HASH_DEL(cache->items, item);
         assert(item != cache->items);
         cache->size -= item->cost;
@@ -60,7 +79,6 @@ void cache_add(cache_t *cache, const void *key, int len, void *data,
     memcpy(item->key, key, len);
     item->data = data;
     item->cost = cost;
-    item->last_used = cache->clock++;
     item->delfunc = delfunc;
     HASH_ADD(hh, cache->items, key, len, item);
 }
@@ -70,7 +88,7 @@ void *cache_get(cache_t *cache, const void *key, int keylen)
     item_t *item;
     HASH_FIND(hh, cache->items, key, keylen, item);
     if (!item) return NULL;
-    item->last_used = cache->clock++;
+    item->grace_time = 0;
     // Reinsert item on top of the hash list so that it stays sorted.
     HASH_DEL(cache->items, item);
     HASH_ADD(hh, cache->items, key, keylen, item);
