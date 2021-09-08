@@ -938,6 +938,7 @@ static void planet_render_model(const planet_t *planet,
     memset(&painter.planet, 0, sizeof(painter.planet));
 
     // Adjust the min brightness to hide the shadow as we get closer.
+    planet_get_pvo(planet, painter.obs, pvo);
     if (g_planets->special_render_target == &planet->obj) {
           painter.planet.min_brightness = g_planets->srt_full_brightness.value;
     }
