@@ -186,16 +186,37 @@ void mat4_ortho(double mat[S 4][4], double left, double right,
 INL void mat4_to_float(const double mat[S 4][4], float out[S 16]);
 INL void mat4_set_identity(double mat[S 4][4]);
 INL bool mat4_is_identity(const double mat[S 4][4]);
+
+/*
+ * 4x4 matrix multiplication.
+ * mat4_mul(a, b, out)  =>  out = a * b  (using glsl matrix order).
+ */
 INL void mat4_mul(const double a[S 4][4], const double b[S 4][4],
                   double out[S 4][4]);
+
 INL void mat4_mul_mat3(const double a[S 4][4], const double b[S 3][3],
                        double out[S 4][4]);
 
+/*
+ * 4x4 matrix rotations.
+ * mat4_rx(a, m, out)  =>  out = m * Rx(a)  (using glsl matrix order).
+ */
 INL void mat4_rx(double a, const double mat[S 4][4], double out[S 4][4]);
 INL void mat4_ry(double a, const double mat[S 4][4], double out[S 4][4]);
 INL void mat4_rz(double a, const double mat[S 4][4], double out[S 4][4]);
+
+/*
+ * 4x4 matrix translation.
+ * mat4_itranslate(m, x, y, z)  =>  out = m * Tr(x, y, z)
+ */
 INL void mat4_itranslate(double m[S 4][4], double x, double y, double z);
+
+/*
+ * 4x4 matrix scale.
+ * mat4_iscale(m, x, y, z)  =>  out = m * S(x, y, z)
+ */
 INL void mat4_iscale(double m[S 4][4], double x, double y, double z);
+
 bool mat4_invert(const double mat[S 4][4], double out[S 4][4]);
 INL void mat4_transpose(const double mat[S 4][4], double out[S 4][4]);
 
