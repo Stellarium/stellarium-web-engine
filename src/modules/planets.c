@@ -1086,6 +1086,30 @@ static bool should_render_orbit(const planet_t *p, const painter_t *painter)
 
 }
 
+static bool should_render_label(
+        const planet_t *planet, const painter_t *painter,
+        bool selected, double vmag, double model_alpha, bool orbit_visible,
+        double angle)
+{
+    planets_t *planets = (planets_t*)planet->obj.parent;
+
+    if (selected)
+        return true;
+    if (orbit_visible)
+        return true;
+
+    // Hack because the label position is wrong when we see the Earth from
+    // low orbit.
+    if (planet->id == EARTH && angle > 20 * DD2R)
+        return false;
+
+    if (vmag <= painter->hints_limit_mag + 2.4 + planets->hints_mag_offset)
+        return true;
+    if (model_alpha > 0)
+        return true;
+    return false;
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], p_view[3], p_win[4];
@@ -1199,14 +1223,8 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
         planet_render_model(planet, r_scale, model_alpha, &painter);
     }
 
-    // Note: I force rendering the label if the model is visible for the
-    // moment because the vmag is not a good measure for planets: if the
-    // planet is big on the screen, we should see the label, no matter the
-    // vmag.
-    // XXX: cleanup this line.
-    if (selected || (planets->hints_visible && (
-        vmag <= painter.hints_limit_mag + 2.4 + planets->hints_mag_offset ||
-        model_alpha > 0 || orbit_visible)))
+    if (should_render_label(planet, &painter, selected, vmag, model_alpha,
+                            orbit_visible, diam))
     {
         planet_render_label(planet, &painter, vmag, r_scale, point_size);
     }
