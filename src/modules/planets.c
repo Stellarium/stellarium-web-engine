@@ -1442,7 +1442,7 @@ static int planets_init(obj_t *obj, json_value *args)
 
     g_planets = planets;
     fader_init(&planets->visible, true);
-    fader_init(&planets->srt_full_brightness, false);
+    fader_init2(&planets->srt_full_brightness, false, 0.6);
     planets->hints_visible = true;
     planets->scale_moon = true;
 
