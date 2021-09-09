@@ -961,9 +961,9 @@ static void planet_render_model(const planet_t *planet,
     if (g_planets->special_render_target == &planet->obj) {
         brightness = g_planets->srt_full_brightness.value;
         json_object_push(args, "light_ambient",
-                         json_double_new(mix(0.2, 1.0, brightness)));
+                         json_double_new(mix(0.0, 0.2, brightness)));
         json_object_push(args, "light_intensity",
-                         json_double_new(mix(4.0, 0.0, brightness)));
+                         json_double_new(mix(4.0, 2.0, brightness)));
     }
 
     paint_3d_model(&painter, planet->name, model_mat, args);
