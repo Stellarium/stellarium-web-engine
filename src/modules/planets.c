@@ -928,9 +928,7 @@ static void planet_render_model(const planet_t *planet,
     const hips_t *hips;
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
-    double brightness;
     painter_t painter = *painter_;
-    json_value *args;
 
     painter.flags |= PAINTER_ENABLE_DEPTH;
     ((planet_t*)planet)->no_model = planet->no_model ||
@@ -955,19 +953,7 @@ static void planet_render_model(const planet_t *planet,
     // Assume the model is in km.
     mat4_itranslate(model_mat, VEC3_SPLIT(pvo[0]));
     mat4_iscale(model_mat, 1000 * DM2AU, 1000 * DM2AU, 1000 * DM2AU);
-    args = json_object_new(0);
-
-    // Adjust the min brightness to hide the shadow as we get closer.
-    if (g_planets->special_render_target == &planet->obj) {
-        brightness = g_planets->srt_full_brightness.value;
-        json_object_push(args, "light_ambient",
-                         json_double_new(mix(0.0, 0.2, brightness)));
-        json_object_push(args, "light_intensity",
-                         json_double_new(mix(4.0, 2.0, brightness)));
-    }
-
-    paint_3d_model(&painter, planet->name, model_mat, args);
-    json_builder_free(args);
+    paint_3d_model(&painter, planet->name, model_mat, NULL);
 }
 
 
