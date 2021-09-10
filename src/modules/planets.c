@@ -114,6 +114,9 @@ typedef struct planets {
     // special_render_target if defined.
     fader_t srt_full_brightness;
 
+    // A multiplicator for srt_full_brightness.
+    double srt_full_brightness_coef;
+
 } planets_t;
 
 // Static instance.
@@ -942,7 +945,8 @@ static void planet_render_model(const planet_t *planet,
     // Adjust the min brightness to hide the shadow as we get closer.
     planet_get_pvo(planet, painter.obs, pvo);
     if (g_planets->special_render_target == &planet->obj) {
-          painter.planet.min_brightness = g_planets->srt_full_brightness.value;
+          painter.planet.min_brightness = g_planets->srt_full_brightness.value *
+                  g_planets->srt_full_brightness_coef;
     }
 
     if (planet->no_model) { // Use hips.
@@ -1484,6 +1488,7 @@ static int planets_init(obj_t *obj, json_value *args)
     planets->halo_tex =
         texture_from_url("asset://textures/halo.png", TF_LAZY_LOAD);
 
+    planets->srt_full_brightness_coef = 1;
 
     // Some data check.
     PLANETS_ITER(obj, p) {
@@ -1588,6 +1593,8 @@ static obj_klass_t planets_klass = {
                  MEMBER(planets_t, srt_show_features)),
         PROPERTY(srt_full_brightness, TYPE_BOOL,
                  MEMBER(planets_t, srt_full_brightness.target)),
+        PROPERTY(srt_full_brightness_coef, TYPE_FLOAT,
+                 MEMBER(planets_t, srt_full_brightness_coef)),
         {}
     },
 };
