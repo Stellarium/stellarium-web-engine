@@ -1958,7 +1958,7 @@ static void get_model_depth_range(
     out_range[1] = proj_get_depth(painter->proj, p2) * DM2AU;
 
     // Correction for case where the model crosses the camera.
-    if (size < dist) out_range[0] = 0;
+    if (size > dist) out_range[0] = 0;
 }
 
 void render_model_3d(renderer_t *rend, const painter_t *painter,
