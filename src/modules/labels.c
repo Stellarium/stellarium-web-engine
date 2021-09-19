@@ -135,7 +135,8 @@ static double test_label_overlaps(const label_t *label)
 
     if (!(label->effects & TEXT_FLOAT)) return 0.0;
     DL_FOREACH(g_labels->labels, other) {
-        if (other == label) break;
+        if (other->priority < label->priority) continue;
+        if (other == label) continue;
         if (other->fader.target == false) continue;
         if (!bounds_intersection(label->bounds, other->bounds, inter))
             continue;
@@ -146,9 +147,11 @@ static double test_label_overlaps(const label_t *label)
     return ret;
 }
 
-static int label_cmp(void *a, void *b)
+static int label_cmp(void *a_, void *b_)
 {
-    return cmp(((label_t*)b)->priority, ((label_t*)a)->priority);
+    const label_t *a = a_;
+    const label_t *b = b_;
+    return -cmp(vec3_norm2(a->pos), vec3_norm2(b->pos));
 }
 
 static int labels_init(obj_t *obj, json_value *args)
@@ -165,6 +168,7 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
     painter_t painter = *painter_;
     bool use_depth;
 
+    // Order labels to render them from far to near.
     DL_SORT(g_labels->labels, label_cmp);
     DL_FOREACH(g_labels->labels, label) {
 
