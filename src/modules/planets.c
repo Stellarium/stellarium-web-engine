@@ -1112,6 +1112,7 @@ static bool should_render_label(
         double angle)
 {
     planets_t *planets = (planets_t*)planet->obj.parent;
+    double moffset;
 
     if (selected)
         return true;
@@ -1127,7 +1128,10 @@ static bool should_render_label(
     if (planet->id == EARTH && angle > 20 * DD2R)
         return false;
 
-    if (vmag <= painter->hints_limit_mag + 2.4 + planets->hints_mag_offset)
+    // Use a specific offset to avoid crowding jupiter & saturn field of view
+    // with the labels of their natural satellites
+    moffset = planet->parent && planet->parent->id != SUN ? -7.0 : 2.4;
+    if (vmag <= painter->hints_limit_mag + moffset + planets->hints_mag_offset)
         return true;
     if (model_alpha > 0)
         return true;
@@ -1203,7 +1207,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     // At least 1 px of the planet is visible, report it for tonemapping
     convert_frame(painter.obs, FRAME_VIEW, FRAME_OBSERVED, false, p_view, pos);
     // Exclude the sun because it is already taken into account by the
-    // atmosphere luminance feedack
+    // atmosphere luminance feedback
     if (planet->id != SUN) {
         // Ignore planets below ground
         if (core->fov < 30 * DD2R || pos[2] > 0)
