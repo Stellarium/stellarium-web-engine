@@ -1115,6 +1115,10 @@ static bool should_render_label(
 
     if (selected)
         return true;
+
+    if (!planets->hints_visible)
+        return false;
+
     if (orbit_visible)
         return true;
 
