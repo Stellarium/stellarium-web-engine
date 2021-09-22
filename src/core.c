@@ -93,6 +93,17 @@ static int modules_sort_cmp(void *a, void *b)
     return cmp(module_get_render_order(at), module_get_render_order(bt));
 }
 
+bool core_is_point_occulted(const double pos[3], bool at_inf,
+                            const observer_t *obs, const obj_t *ignore)
+{
+    obj_t *module;
+    DL_FOREACH(core->obj.children, module) {
+        if (!module->klass->is_point_occulted) continue;
+        if (module->klass->is_point_occulted(module, pos, at_inf, obs, ignore))
+            return true;
+    }
+    return false;
+}
 
 /*
  * Function: core_get_proj

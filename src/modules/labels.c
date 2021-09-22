@@ -160,10 +160,6 @@ static int labels_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-// Defined in planets.c.
-bool planets_is_point_occulted(const double pos[3], bool at_inf,
-                               const observer_t *obs, const obj_t *obj);
-
 static int labels_render(const obj_t *obj, const painter_t *painter_)
 {
     label_t *label;
@@ -192,8 +188,8 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
                                 (test_label_overlaps(label) <= max_overlap);
 
         if (label->frame != -1 &&
-                planets_is_point_occulted(label->pos, label->at_inf,
-                                          painter.obs, label->obj)) {
+                core_is_point_occulted(label->pos, label->at_inf,
+                                       painter.obs, label->obj)) {
             label->fader.target = false;
         }
 

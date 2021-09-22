@@ -136,6 +136,10 @@ struct obj_klass
     // The caller takes the ownership of the returned json object.
     json_value *(*get_json_data)(const obj_t *obj);
 
+    bool (*is_point_occulted)(const obj_t *obj,
+                              const double pos[3], bool at_inf,
+                              const observer_t *obs, const obj_t *ignore);
+
     void (*gui)(obj_t *obj, int location);
 
     obj_t* (*clone)(const obj_t *obj);

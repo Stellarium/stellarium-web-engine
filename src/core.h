@@ -264,6 +264,9 @@ obj_t *core_get_obj_at(double x, double y, double max_dist);
  */
 obj_t *core_get_module(const char *id);
 
+bool core_is_point_occulted(const double pos[3], bool at_inf,
+                            const observer_t *obs, const obj_t *ignore);
+
 /*
  * Function: core_report_vmag_in_fov
  * Inform the core that an object with a given vmag is visible.

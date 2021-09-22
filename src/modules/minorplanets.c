@@ -237,11 +237,23 @@ static int mplanet_update(mplanet_t *mp, const observer_t *obs)
     return 0;
 }
 
+static double mplanet_get_radius(const mplanet_t *mp)
+{
+    double bounds[2][3], radius;
+    ((mplanet_t*)mp)->no_model = mp->no_model ||
+        painter_get_3d_model_bounds(NULL, mp->model, bounds);
+    if (mp->no_model) return 0;
+    radius = mean3(bounds[1][0] - bounds[0][0],
+                   bounds[1][1] - bounds[0][1],
+                   bounds[1][2] - bounds[0][2]) * 1000 / 2 * DM2AU;
+    return radius;
+}
+
 static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
                             void *out)
 {
     mplanet_t *mp = (mplanet_t*)obj;
-    double bounds[2][3], radius;
+    double radius;
 
     mplanet_update(mp, obs);
     switch (info) {
@@ -252,16 +264,10 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = mp->vmag;
         return 0;
     case INFO_RADIUS:
-        mp->no_model = mp->no_model ||
-            painter_get_3d_model_bounds(NULL, mp->model, bounds);
-        if (!mp->no_model) {
-            radius = mean3(bounds[1][0] - bounds[0][0],
-                           bounds[1][1] - bounds[0][1],
-                           bounds[1][2] - bounds[0][2]) * 1000 / 2 * DM2AU;
-            *(double*)out = radius / vec3_norm(mp->pvo[0]);
-            return 0;
-        }
-        return 1;
+        radius = mplanet_get_radius(mp);
+        if (radius == 0) return 1;
+        *(double*)out = radius / vec3_norm(mp->pvo[0]);
+        return 0;
     }
     return 1;
 }
@@ -461,6 +467,32 @@ static int mplanets_render(const obj_t *obj, const painter_t *painter)
     return 0;
 }
 
+static bool mplanets_is_point_occulted(
+        const obj_t *module, const double pos[3], bool at_inf,
+        const observer_t *obs, const obj_t *ignore)
+{
+    mplanet_t *child;
+    mplanets_t *mps = (void*)module;
+    double p[3], d, r, dir[3], t, l2, d2;
+
+    d = vec3_norm(pos);
+    vec3_normalize(pos, dir);
+    DL_FOREACH2(mps->visibles, child, visible_next) {
+        if (&child->obj == ignore) continue;
+        mplanet_update(child, obs);
+        vec3_copy(child->pvo[0], p);
+        t = vec3_dot(dir, p);
+        if (t < 0) continue;
+        l2 = vec3_norm2(p);
+        if (!at_inf && d * d < l2) continue;
+        r = mplanet_get_radius(child);
+        if (r == 0) continue;
+        d2 = l2 - t * t;
+        if (d2 < r * r) return true;
+    }
+    return false;
+}
+
 /*
  * Meta class declarations.
  */
@@ -485,6 +517,7 @@ static obj_klass_t mplanets_klass = {
     .add_data_source    = mplanets_add_data_source,
     .update         = mplanets_update,
     .render         = mplanets_render,
+    .is_point_occulted = mplanets_is_point_occulted,
     .render_order   = 20,
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(mplanets_t, visible)),
