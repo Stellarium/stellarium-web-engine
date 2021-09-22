@@ -1145,6 +1145,7 @@ static void item_points_3d_render(renderer_t *rend, const item_t *item)
         GL(glEnable(GL_DEPTH_TEST));
     else
         GL(glDisable(GL_DEPTH_TEST));
+    GL(glDepthMask(GL_FALSE));
 
     GL(glGenBuffers(1, &array_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, array_buffer));
