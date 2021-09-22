@@ -1130,7 +1130,7 @@ static bool should_render_label(
 
     // Use a specific offset to avoid crowding jupiter & saturn field of view
     // with the labels of their natural satellites
-    moffset = planet->parent && planet->parent->id != SUN ? -7.0 : 2.4;
+    moffset = planet->parent && planet->parent->id != SUN ? -5.0 : 2.4;
     if (vmag <= painter->hints_limit_mag + moffset + planets->hints_mag_offset)
         return true;
     if (model_alpha > 0)
