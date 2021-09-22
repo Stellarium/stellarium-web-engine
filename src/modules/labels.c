@@ -160,13 +160,16 @@ static int labels_init(obj_t *obj, json_value *args)
     return 0;
 }
 
+// Defined in planets.c.
+bool planets_is_point_occulted(const double pos[3], bool at_inf,
+                               const observer_t *obs, const obj_t *obj);
+
 static int labels_render(const obj_t *obj, const painter_t *painter_)
 {
     label_t *label;
-    double win_pos[2], view_pos[3];
+    double win_pos[2];
     const double max_overlap = 8;
     painter_t painter = *painter_;
-    bool use_depth;
 
     // Order labels to render them from far to near.
     DL_SORT(g_labels->labels, label_cmp);
@@ -182,22 +185,21 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
             painter_project(&painter, label->frame, label->pos, label->at_inf,
                             false, label->win_pos);
         }
-        use_depth = false;
         painter.flags &= ~PAINTER_ENABLE_DEPTH;
-        if (label->frame != -1 && !label->at_inf) {
-            convert_frame(painter.obs, label->frame, FRAME_VIEW,
-                          label->at_inf, label->pos, view_pos);
-            use_depth = true;
-            painter.flags |= PAINTER_ENABLE_DEPTH;
-        }
         label_get_bounds(&painter, label, label->align, label->effects,
                          label->bounds);
         label->fader.target = label->active &&
                                 (test_label_overlaps(label) <= max_overlap);
+
+        if (label->frame != -1 &&
+                planets_is_point_occulted(label->pos, label->at_inf,
+                                          painter.obs, label->obj)) {
+            label->fader.target = false;
+        }
+
         win_pos[0] = label->bounds[0];
         win_pos[1] = label->bounds[1];
-        paint_text(&painter, label->render_text, win_pos,
-                   use_depth ? view_pos : NULL,
+        paint_text(&painter, label->render_text, win_pos, NULL,
                    ALIGN_LEFT | ALIGN_TOP, label->effects, label->size,
                    label->angle);
     }

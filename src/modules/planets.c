@@ -1138,6 +1138,32 @@ static bool should_render_label(
     return false;
 }
 
+/*
+ * Test if a point in ICRF coordinates is occulted by any planet.
+ * This is used by the labels module to hide labels.
+ */
+bool planets_is_point_occulted(const double pos[3], bool at_inf,
+                               const observer_t *obs, const obj_t *obj)
+{
+    const planet_t *p;
+    double pvo[2][3], d, r, dir[3], t, l2, d2;
+    d = vec3_norm(pos);
+    vec3_normalize(pos, dir);
+    PLANETS_ITER(g_planets, p) {
+        if (!obs->space && p->id == EARTH) continue;
+        if (&p->obj == obj) continue;
+        planet_get_pvo(p, obs, pvo);
+        t = vec3_dot(dir, pvo[0]);
+        if (t < 0) continue;
+        l2 = vec3_norm2(pvo[0]);
+        if (!at_inf && d * d < l2) continue;
+        d2 = l2 - t * t;
+        r = p->radius_m * DM2AU;
+        if (d2 < r * r) return true;
+    }
+    return false;
+}
+
 static void planet_render(const planet_t *planet, const painter_t *painter_)
 {
     double pos[4], p_view[3], p_win[4];
