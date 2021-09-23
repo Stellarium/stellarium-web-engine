@@ -205,16 +205,6 @@ void core_release(void);
  */
 int core_update(void);
 
-/*
- * Function: core_set_view_offset
- * Update the view center vertical offset.
- *
- * Call this e.g. when a panel use the bottom or upper part of the screen,
- * and you want to have the zoom center at the center of the remaining sky
- * screen space.
- */
-void core_set_view_offset(double center_y_offset);
-
 int core_render(double win_w, double win_h, double pixel_scale);
 // x and y in screen coordinates.
 void core_on_mouse(int id, int state, double x, double y, int buttons);

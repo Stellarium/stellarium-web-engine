@@ -259,19 +259,6 @@ static double proj_get_scaling_y(const projection_t *proj)
     return 1 / fabs(proj->mat[1][1]);
 }
 
-EMSCRIPTEN_KEEPALIVE
-void core_set_view_offset(double center_y_offset)
-{
-    double pix_angular_size, scaling_y;
-    projection_t proj;
-
-    core_get_proj(&proj);
-    assert(proj.window_size[1]);
-    scaling_y = proj_get_scaling_y(&proj);
-    pix_angular_size = 1.0 * scaling_y / proj.window_size[1] * 2;
-    core->observer->view_offset_alt = -center_y_offset * pix_angular_size;
-}
-
 // Smoothly update the observer pressure for refraction effect.
 static void update_refraction(double dt, bool on)
 {
