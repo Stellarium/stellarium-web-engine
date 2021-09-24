@@ -2343,12 +2343,33 @@ static bool test_cst(const struct cst *cst, double ra, double dec)
     return n % 2 == 1;
 }
 
+static bool cache_contains(const int cache[4], int value)
+{
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (cache[i] == -1) return false;
+        if (cache[i] == value) return true;
+    }
+    return false;
+}
+
+static void add_to_cache(int cache[4], int value)
+{
+    int i;
+    if (cache_contains(cache, value)) return;
+    for (i = 3; i > 0; i--)
+        cache[i] = cache[i - 1];
+    cache[0] = value;
+}
+
 int find_constellation_at(const double pos[3], char id[5])
 {
     const struct cst *cst;
-    int i;
+    int i, ret;
     double pos_b1875[3];
     double ra, dec;
+    // Cache of last results for faster computation.
+    static int cache[4] = {-1, -1, -1, -1};
 
     // Rotation matrix from J2000 to 1875.0.  Computed with erfa:
     //     eraEpb2jd(1875.0, &djm0, &djm);
@@ -2361,10 +2382,24 @@ int find_constellation_at(const double pos[3], char id[5])
     eraRxp(rnpb, pos, pos_b1875);
     eraC2s(pos_b1875, &ra, &dec);
 
+    // Test the last cached values first.
+    for (i = 0; i < 4; i++) {
+        if (cache[i] == -1) break;
+        if (test_cst(&CSTS[cache[i]], ra, dec)) {
+            ret = cache[i];
+            if (id) memcpy(id, CSTS[ret].id, 5);
+            add_to_cache(cache, ret);
+            return ret;
+        }
+    }
+
     for (i = 0; ((cst = &CSTS[i]))->id[0]; i++) {
+        if (cache_contains(cache, i)) continue;
         if (test_cst(cst, ra, dec)) {
+            ret = i;
+            add_to_cache(cache, ret);
             if (id) memcpy(id, cst->id, 5);
-            return i;
+            return ret;
         }
     }
     memcpy(id, "???", 4);
