@@ -358,17 +358,15 @@ static bool check_borders(const double a[3], const double b[3],
     visible[0] = is_visible_win(pos[0], proj->window_size);
     visible[1] = is_visible_win(pos[1], proj->window_size);
 
-    if (visible[0] != visible[1]) {
-        win_to_ndc(proj, pos[0], pos[0]);
-        win_to_ndc(proj, pos[1], pos[1]);
-        *t = segment_viewport_intersection(pos[0], pos[1], &border);
-        if (*t == DBL_MAX) return false;
-        vec2_mix(pos[0], pos[1], *t, p);
-        ndc_to_win(proj, p, p);
-        vec2_copy(VS[border], v);
-        return true;
-    }
-    return false;
+    if (visible[0] == visible[1]) return false;
+    win_to_ndc(proj, pos[0], pos[0]);
+    win_to_ndc(proj, pos[1], pos[1]);
+    *t = segment_viewport_intersection(pos[0], pos[1], &border);
+    if (*t == DBL_MAX) return false;
+    vec2_mix(pos[0], pos[1], *t, p);
+    ndc_to_win(proj, p, p);
+    vec2_copy(VS[border], v);
+    return true;
 }
 
 
@@ -410,11 +408,11 @@ static void compute_line_tangent_win(
  *
  * Parameters:
  *   p      - Position of the border intersection.
- *   u      - Direction of the line.
+ *   n      - Direction of the line.
  *   v      - Normal of the window border inward.
  *   dir    - 0: alt, 1: az
  */
-static void render_label(const double p[2], const double u[2],
+static void render_label(const double p[2], const double n[2],
                          const double v[2], const double uv[2],
                          int dir, line_t *line, int step,
                          const painter_t *painter_)
@@ -424,13 +422,11 @@ static void render_label(const double p[2], const double u[2],
     double a, label_angle;
     char s;
     int h[4];
-    double n[2];
     double bounds[4], size[2];
     const double text_size = 12;
     painter_t painter = *painter_;
 
     painter.color[3] = line->visible.value;
-    vec2_normalize(u, n);
 
     // Give up if angle with screen is too acute.
     if (fabs(vec2_dot(n, v)) < 0.25) return;
@@ -439,11 +435,10 @@ static void render_label(const double p[2], const double u[2],
     painter.flags |= PAINTER_ALLOW_REORDER;
 
     if (vec2_dot(n, v) < 0) {
-        vec2_mul(-1, u, u);
         vec2_mul(-1, n, n);
     }
 
-    label_angle = atan2(u[1], u[0]);
+    label_angle = atan2(n[1], n[0]);
     if (fabs(label_angle) > M_PI / 2) label_angle -= M_PI;
 
     if (dir == 0) a = mix(-90, +90 , uv[1]) * DD2R;
@@ -489,7 +484,6 @@ static void render_label(const double p[2], const double u[2],
     size[0] = bounds[2] - bounds[0];
     size[1] = bounds[3] - bounds[1];
 
-    vec2_normalize(u, n);
     double h_offset = size[0] / 2;
     if ((fabs(v[1]) < 0.001 && n[1] < 0) || fabs(v[1]) > 0.999)
         h_offset += max(0, size[1] * tan(acos(vec2_dot(n, v))));
@@ -514,7 +508,7 @@ static void render_label(const double p[2], const double u[2],
  * Parameters:
  *   splits     - Represents the size of the quad in U and V as number of
  *                splits from the full 360° circle.
- *   pos        - Position of the quad as split index in U and V.
+ *   uv_i       - Position of the quad as split index in U and V.
  *   steps      - The target steps for the line rendering.
  */
 static void render_recursion(
@@ -522,7 +516,7 @@ static void render_recursion(
         const double rot[3][3],
         int level,
         const int splits[2],
-        const int pos[2],
+        const int uv_i[2],
         const step_t *steps[2],
         bool skip_half)
 {
@@ -539,7 +533,7 @@ static void render_recursion(
 
     // Compute transformation matrix from full sphere uv to the quad uv.
     mat3_iscale(mat, 1. / splits[0], 1. / splits[1], 0);
-    mat3_itranslate(mat, pos[0], pos[1]);
+    mat3_itranslate(mat, uv_i[0], uv_i[1]);
 
     // Compute quad corners in clipping space.
     for (i = 0; i < 4; i++) {
@@ -573,17 +567,17 @@ static void render_recursion(
     for (dir = 0; dir < 2; dir++) {
         // Single line are just grid with most segments masked.
         if (!line->grid && dir == 0) continue;
-        if (!line->grid && pos[1] != splits[1] / 2 - 1) continue;
+        if (!line->grid && uv_i[1] != splits[1] / 2 - 1) continue;
 
         // Don't render last latitude, zero diameter circle at the north pole.
-        if (dir == 1 && pos[1] == splits[1] - 1) continue;
+        if (dir == 1 && uv_i[1] == splits[1] - 1) continue;
         // Skip every other lines of Az if required.
-        if (dir == 1 && skip_half && (pos[1] % 2)) continue;
+        if (dir == 1 && skip_half && (uv_i[1] % 2)) continue;
 
         // Limit to 4 meridian lines around the poles.
         if (    line->grid && dir == 0 &&
-                (pos[0] % (splits[0] / 4) != 0) &&
-                (pos[1] == 0 || pos[1] == splits[1] - 1))
+                (uv_i[0] % (splits[0] / 4) != 0) &&
+                (uv_i[1] == 0 || uv_i[1] == splits[1] - 1))
             continue;
 
         paint_line(painter, line->frame, lines + dir * 2, &map, 8, 0);
@@ -608,8 +602,8 @@ keep_going:
 
     for (i = 0; i < split_al; i++)
     for (j = 0; j < split_az; j++) {
-        new_pos[0] = pos[0] * split_az + j;
-        new_pos[1] = pos[1] * split_al + i;
+        new_pos[0] = uv_i[0] * split_az + j;
+        new_pos[1] = uv_i[1] * split_al + i;
         render_recursion(line, painter, rot, level + 1, new_splits, new_pos,
                          steps, skip_half);
     }
