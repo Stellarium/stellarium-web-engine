@@ -339,17 +339,17 @@ static double segment_viewport_intersection(
  *   b      - Segment pos B in view coordinates.
  *   proj   - The view projection.
  *   p      - Output of intersection in windows coordinates.
- *   u      - Output direction of the line at the intersection.
  *   v      - Output of the normal of the window border at the intersection.
+ *   t      - Output Interpolated position [0, 1] of the intersection.
  *
  */
 static bool check_borders(const double a[3], const double b[3],
                           const projection_t *proj,
                           double p[2], // Window pos on the border.
-                          double u[2], // Window direction of the line.
-                          double v[2]) // Window Norm of the border.
+                          double v[2],
+                          double *t)
 {
-    double pos[2][4], q;
+    double pos[2][4];
     bool visible[2];
     int border;
     const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
@@ -361,13 +361,10 @@ static bool check_borders(const double a[3], const double b[3],
     if (visible[0] != visible[1]) {
         win_to_ndc(proj, pos[0], pos[0]);
         win_to_ndc(proj, pos[1], pos[1]);
-        q = segment_viewport_intersection(pos[0], pos[1], &border);
-        if (q == DBL_MAX) return false;
-        vec2_mix(pos[0], pos[1], q, p);
+        *t = segment_viewport_intersection(pos[0], pos[1], &border);
+        if (*t == DBL_MAX) return false;
+        vec2_mix(pos[0], pos[1], *t, p);
         ndc_to_win(proj, p, p);
-        ndc_to_win(proj, pos[0], pos[0]);
-        ndc_to_win(proj, pos[1], pos[1]);
-        vec2_sub(pos[1], pos[0], u);
         vec2_copy(VS[border], v);
         return true;
     }
@@ -385,6 +382,27 @@ static void spherical_project(
     eraS2c(az, al, out);
     mat3_mul_vec3(*rot, out, out);
 }
+
+static void compute_line_tangent_win(
+        const painter_t *painter, int frame, const double uv[2],
+        const uv_map_t *map, int dir, double out[2])
+{
+    double p1[4], p2[4], uv2[2];
+    const double epsilon = 0.000000001; // What value to use?
+    uv_map(map, uv, p1, NULL);
+    convert_frame(painter->obs, frame, FRAME_VIEW, true, p1, p1);
+    project_to_win(painter->proj, p1, p1);
+
+    vec2_copy(uv, uv2);
+    uv2[dir] += epsilon;
+    uv_map(map, uv2, p2, NULL);
+    convert_frame(painter->obs, frame, FRAME_VIEW, true, p2, p2);
+    project_to_win(painter->proj, p2, p2);
+
+    vec2_sub(p2, p1, out);
+    vec2_normalize(out, out);
+}
+
 
 /*
  * Function: render_label
@@ -510,7 +528,7 @@ static void render_recursion(
 {
     int i, j, dir;
     int split_az, split_al, new_splits[2], new_pos[2];
-    double p[4], lines[4][4] = {}, u[2], v[2];
+    double p[4], lines[4][4] = {}, u[2], v[2], t, uv_border[2];
     double pos_view[4][3], cap[4];
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
     double mat[3][3] = MAT3_IDENTITY;
@@ -571,7 +589,10 @@ static void render_recursion(
         paint_line(painter, line->frame, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
         if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
-                          p, u, v)) {
+                          p, v, &t)) {
+            vec2_mix(uv[0], uv[2 - dir], t, uv_border);
+            compute_line_tangent_win(painter, line->frame, uv_border, &map,
+                                     1 - dir, u);
             render_label(p, u, v, uv[0], 1 - dir, line,
                          splits[dir] * (dir + 1), painter);
         }
