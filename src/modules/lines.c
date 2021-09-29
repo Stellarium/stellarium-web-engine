@@ -259,114 +259,60 @@ static int line_update(obj_t *obj, double dt)
     return changed ? 1 : 0;
 }
 
-static void win_to_ndc(const projection_t *proj, const double win[2],
-                       double ndc[2])
+static bool get_line_screen_intersection(
+        const painter_t *painter, int frame, const double line[2][4],
+        const uv_map_t *map, double out_pos[2], double out_dir[2],
+        double border_dir[2])
 {
-    ndc[0] = win[0] / proj->window_size[0] * 2 - 1;
-    ndc[1] = 1 - win[1] / proj->window_size[1] * 2;
-}
+    double p[4], win[2][3];
+    int i;
+    double mid[4], line2[2][4];
+    const double ws[2] = {painter->proj->window_size[0],
+                          painter->proj->window_size[1]};
 
-static void ndc_to_win(const projection_t *proj, const double ndc[2],
-                       double win[2])
-{
-    win[0] = (+ndc[0] + 1) / 2 * proj->window_size[0];
-    win[1] = (-ndc[1] + 1) / 2 * proj->window_size[1];
-}
-
-/*
- * Function: segment_viewport_intersection
- * Compute the intersection between a segment and the viewport.
- *
- * Parameters:
- *   a      - Segment point A, in ndc coordinates (-1 to +1).
- *   b      - Segment point B, in ndc coordinates (-1 to +1).
- *   border - Output of the viewport border index, from 0 to 3.
- *
- * Returns:
- *   The intersection position within the segment:
- *   P = A + ret * (AB)
- *   If there are no intersection, returns DBL_MAX.
- *
- */
-static double segment_viewport_intersection(
-        const double a[2], const double b[2], int *border)
-{
-    // We use the common 'slab' algo for AABB/seg intersection.
-    // With some care to make sure we never use infinite values.
-    double idx, idy,
-           tx1 = -DBL_MAX, tx2 = +DBL_MAX,
-           ty1 = -DBL_MAX, ty2 = +DBL_MAX,
-           txmin = -DBL_MAX, txmax = +DBL_MAX,
-           tymin = -DBL_MAX, tymax = +DBL_MAX,
-           ret = DBL_MAX, vmin, vmax;
-    if (a[0] != b[0]) {
-        idx = 1.0 / (b[0] - a[0]);
-        tx1 = (-1 == a[0] ? -DBL_MAX : (-1 - a[0]) * idx);
-        tx2 = (+1 == a[0] ?  DBL_MAX : (+1 - a[0]) * idx);
-        txmin = min(tx1, tx2);
-        txmax = max(tx1, tx2);
+    for (i = 0; i < 2; i++) {
+        uv_map(map, line[i], p, NULL);
+        convert_frame(painter->obs, frame, FRAME_VIEW, true, p, p);
+        project_to_win(painter->proj, p, win[i]);
     }
-    if (a[1] != b[1]) {
-        idy = 1.0 / (b[1] - a[1]);
-        ty1 = (-1 == a[1] ? -DBL_MAX : (-1 - a[1]) * idy);
-        ty2 = (+1 == a[1] ?  DBL_MAX : (+1 - a[1]) * idy);
-        tymin = min(ty1, ty2);
-        tymax = max(ty1, ty2);
+    if (    is_visible_win(win[0], painter->proj->window_size) ==
+            is_visible_win(win[1], painter->proj->window_size))
+        return false;
+
+    if (vec2_dist2(win[0], win[1]) < 0.5) {
+        vec2_mix(win[0], win[1], 0.5, out_pos);
+        vec2_sub(win[1], win[0], out_dir);
+        vec2_normalize(out_dir, out_dir);
+        if (    (win[0][0] < 0 && win[1][0] >= 0) ||
+                (win[1][0] < 0 && win[0][0] >= 0))
+            vec2_set(border_dir, 1, 0);
+        else if ((win[0][0] < ws[0] && win[1][0] >= ws[0]) ||
+                 (win[1][0] < ws[0] && win[0][0] >= ws[0]))
+            vec2_set(border_dir, -1, 0);
+        else if ((win[0][1] < 0 && win[1][1] >= 0) ||
+                 (win[1][1] < 0 && win[0][1] >= 0))
+            vec2_set(border_dir, 0, 1);
+        else if ((win[0][1] < ws[1] && win[1][1] >= ws[1]) ||
+                 (win[1][1] < ws[1] && win[0][1] >= ws[1]))
+            vec2_set(border_dir, 0, -1);
+        return true;
     }
-    ret = DBL_MAX;
-    if (tymin <= txmax && txmin <= tymax) {
-        vmin = max(txmin, tymin);
-        vmax = min(txmax, tymax);
-        if (0.0 <= vmax && vmin <= 1.0) {
-            ret = vmin >= 0 ? vmin : vmax;
-        }
-    }
-    *border = (ret == tx1) ? 0 :
-              (ret == tx2) ? 1 :
-              (ret == ty1) ? 2 :
-                             3;
 
-    return ret;
-}
+    vec2_mix(line[0], line[1], 0.5, mid);
+    vec2_copy(line[0], line2[0]);
+    vec2_copy(mid, line2[1]);
+    if (get_line_screen_intersection(
+                painter, frame, line2, map, out_pos, out_dir, border_dir))
+        return true;
 
-/*
- * Function: check_borders
- *
- * Test if a segment intersects the window viewport.
- *
- * Parameters:
- *   a      - Segment pos A in view coordinates.
- *   b      - Segment pos B in view coordinates.
- *   proj   - The view projection.
- *   p      - Output of intersection in windows coordinates.
- *   v      - Output of the normal of the window border at the intersection.
- *   t      - Output Interpolated position [0, 1] of the intersection.
- *
- */
-static bool check_borders(const double a[3], const double b[3],
-                          const projection_t *proj,
-                          double p[2], // Window pos on the border.
-                          double v[2],
-                          double *t)
-{
-    double pos[2][4];
-    bool visible[2];
-    int border;
-    const double VS[4][2] = {{+1, 0}, {-1, 0}, {0, -1}, {0, +1}};
-    project_to_win(proj, a, pos[0]);
-    project_to_win(proj, b, pos[1]);
-    visible[0] = is_visible_win(pos[0], proj->window_size);
-    visible[1] = is_visible_win(pos[1], proj->window_size);
+    vec2_copy(mid, line2[0]);
+    vec2_copy(line[1], line2[1]);
+    if (get_line_screen_intersection(
+                painter, frame, line2, map, out_pos, out_dir, border_dir))
+        return true;
 
-    if (visible[0] == visible[1]) return false;
-    win_to_ndc(proj, pos[0], pos[0]);
-    win_to_ndc(proj, pos[1], pos[1]);
-    *t = segment_viewport_intersection(pos[0], pos[1], &border);
-    if (*t == DBL_MAX) return false;
-    vec2_mix(pos[0], pos[1], *t, p);
-    ndc_to_win(proj, p, p);
-    vec2_copy(VS[border], v);
-    return true;
+    LOG_D("FAIL");
+    return false;
 }
 
 
@@ -380,27 +326,6 @@ static void spherical_project(
     eraS2c(az, al, out);
     mat3_mul_vec3(*rot, out, out);
 }
-
-static void compute_line_tangent_win(
-        const painter_t *painter, int frame, const double uv[2],
-        const uv_map_t *map, int dir, double out[2])
-{
-    double p1[4], p2[4], uv2[2];
-    const double epsilon = 0.000000001; // What value to use?
-    uv_map(map, uv, p1, NULL);
-    convert_frame(painter->obs, frame, FRAME_VIEW, true, p1, p1);
-    project_to_win(painter->proj, p1, p1);
-
-    vec2_copy(uv, uv2);
-    uv2[dir] += epsilon;
-    uv_map(map, uv2, p2, NULL);
-    convert_frame(painter->obs, frame, FRAME_VIEW, true, p2, p2);
-    project_to_win(painter->proj, p2, p2);
-
-    vec2_sub(p2, p1, out);
-    vec2_normalize(out, out);
-}
-
 
 /*
  * Function: render_label
@@ -522,7 +447,7 @@ static void render_recursion(
 {
     int i, j, dir;
     int split_az, split_al, new_splits[2], new_pos[2];
-    double p[4], lines[4][4] = {}, u[2], v[2], t, uv_border[2];
+    double p[4], lines[4][4] = {}, u[2], v[2];
     double pos_view[4][3], cap[4];
     double uv[4][2] = {{0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0}};
     double mat[3][3] = MAT3_IDENTITY;
@@ -582,11 +507,8 @@ static void render_recursion(
 
         paint_line(painter, line->frame, lines + dir * 2, &map, 8, 0);
         if (!line->format) continue;
-        if (check_borders(pos_view[0], pos_view[2 - dir], painter->proj,
-                          p, v, &t)) {
-            vec2_mix(uv[0], uv[2 - dir], t, uv_border);
-            compute_line_tangent_win(painter, line->frame, uv_border, &map,
-                                     1 - dir, u);
+        if (get_line_screen_intersection(
+                    painter, line->frame, lines + dir * 2, &map, p, u, v)) {
             render_label(p, u, v, uv[0], 1 - dir, line,
                          splits[dir] * (dir + 1), painter);
         }
