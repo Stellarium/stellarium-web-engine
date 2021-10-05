@@ -33,19 +33,10 @@
 
 #define ARRAY_SIZE(x) ((int)(sizeof(x) / sizeof((x)[0])))
 
-#define min(a, b) ({ \
-      __typeof__ (a) _a = (a); \
-      __typeof__ (b) _b = (b); \
-      _a < _b ? _a : _b; \
-      })
-
-#define max(a, b) ({ \
-      __typeof__ (a) _a = (a); \
-      __typeof__ (b) _b = (b); \
-      _a > _b ? _a : _b; \
-      })
-
-#define clamp(x, a, b) (min(max(x, a), b))
+static inline double clamp(double x, double a, double b)
+{
+    return fmin(fmax(x, a), b);
+}
 
 #define cmp(a, b) ({ \
     __typeof__ (a) _a = (a); \

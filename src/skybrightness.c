@@ -107,8 +107,8 @@ float skybrightness_get_luminance(
         float cos_moon_dist, float cos_sun_dist, float cos_zenith_dist)
 {
     // This avoid issues in the algo
-    cos_moon_dist = min(cos_moon_dist, cosf(1.f * D2R));
-    cos_sun_dist  = min(cos_sun_dist, cosf(1.f * D2R));
+    cos_moon_dist = fmin(cos_moon_dist, cosf(1.f * D2R));
+    cos_sun_dist  = fmin(cos_sun_dist, cosf(1.f * D2R));
 
     const float moon_dist = acosf(cos_moon_dist);
     const float sun_dist = acosf(cos_sun_dist);

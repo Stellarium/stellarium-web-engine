@@ -48,7 +48,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
 
     obj_get_2d_ellipse(selection, painter.obs, painter.proj,
                        win_pos, win_size, &angle);
-    r = max(win_size[0], win_size[1]);
+    r = fmax(win_size[0], win_size[1]);
     r += 5;
 
     // Draw four strokes around the object.
@@ -57,7 +57,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
 
     for (i = 0; i < 4; i++) {
         if (skip_top_bar && i == 3) continue;
-        r = max(r, 8);
+        r = fmax(r, 8);
         r += 0.4 * (sin(sys_get_unix_time() / T * 2 * M_PI) + 1.1);
         mat3_set_identity(transf);
         mat3_itranslate(transf, win_pos[0], win_pos[1]);

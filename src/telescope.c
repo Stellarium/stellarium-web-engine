@@ -80,18 +80,18 @@ void telescope_auto(telescope_t *tel, double fov)
     // http://www.rocketmime.com/astronomy/Telescope/MinimumMagnification.html
     // [FC]: this one doesn't make sense really, for high magnifications
     // we need to adjust the exposure time rather than get huge mirror size
-    tel->diameter = min(10000000, Deye * tel->magnification);
+    tel->diameter = fmin(10000000, Deye * tel->magnification);
 
     // For FOV < 10 deg we start to slowly increase the exposure time
     // This is ad-hoc but required to match more closely what a user
     // expects when zooming when transitioning from visual observation
     // to photograpic exposure.
-    tel->exposure = pow(max(1, 5.0 * M_PI / 180 / fov), 0.07);
+    tel->exposure = pow(fmax(1, 5.0 * M_PI / 180 / fov), 0.07);
 
     tel->light_grasp = pow(tel->diameter / Deye, 2) * tel->exposure;
     // Make sure we never simulate a too small eye pupil. This allows to remove
     // a number of hacks in different parts of the code
-    tel->light_grasp = max(0.4, tel->light_grasp);
+    tel->light_grasp = fmax(0.4, tel->light_grasp);
     tel->gain_mag = 2.5 * log10(tel->light_grasp);
     tel->limiting_mag = 2 + 5 * log10(tel->diameter);
 }

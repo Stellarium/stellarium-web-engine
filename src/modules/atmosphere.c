@@ -127,7 +127,7 @@ static render_data_t prepare_render_data(
     // I am using an ad-hoc formula to make it look OK here.
     data.eclipse_factor = pow(10, (base_sun_vmag - sun_vmag) / 2.512 * 1.1);
 
-    data.light_pollution_lum = max(0., 0.0004 * pow(bortle_index - 1, 2.1));
+    data.light_pollution_lum = fmax(0., 0.0004 * pow(bortle_index - 1, 2.1));
     return data;
 }
 
@@ -179,8 +179,8 @@ static float compute_lum(void *user, const float pos[3])
     // Our formula does not work below the horizon.
     p[2] = fabs(p[2]);
     lum = skybrightness_get_luminance(&d->skybrightness,
-                min(vec3_dot(p, d->moon_pos), d->cos_grid_angular_step),
-                min(vec3_dot(p, d->sun_pos), d->cos_grid_angular_step),
+                fmin(vec3_dot(p, d->moon_pos), d->cos_grid_angular_step),
+                fmin(vec3_dot(p, d->sun_pos), d->cos_grid_angular_step),
                 vec3_dot(p, zenith));
     lum *= d->eclipse_factor;
 
@@ -191,10 +191,10 @@ static float compute_lum(void *user, const float pos[3])
     if (pos[2] > 0) {
         d->sum_lum += lum;
         d->nb_lum++;
-        d->max_lum = max(d->max_lum, lum);
+        d->max_lum = fmax(d->max_lum, lum);
     }
     else {
-        d->max_lum = max(d->max_lum, d->landscape_lum);
+        d->max_lum = fmax(d->max_lum, d->landscape_lum);
     }
     return lum;
 }

@@ -411,7 +411,7 @@ static void render_label(const double p[2], const double n[2],
 
     double h_offset = size[0] / 2;
     if ((fabs(v[1]) < 0.001 && n[1] < 0) || fabs(v[1]) > 0.999)
-        h_offset += max(0, size[1] * tan(acos(vec2_dot(n, v))));
+        h_offset += fmax(0, size[1] * tan(acos(vec2_dot(n, v))));
     pos[0] = p[0] + n[0] * h_offset;
     pos[1] = p[1] + n[1] * h_offset;
 
@@ -571,12 +571,12 @@ static void get_azalt_fov(const painter_t *painter, int frame,
         eraC2s(p, &theta, &phi);
 
         theta = eraAnpm(theta - theta0);
-        theta_max = max(theta_max, theta);
-        theta_min = min(theta_min, theta);
+        theta_max = fmax(theta_max, theta);
+        theta_min = fmin(theta_min, theta);
 
         phi = eraAnpm(phi - phi0);
-        phi_max = max(phi_max, phi);
-        phi_min = min(phi_min, phi);
+        phi_max = fmax(phi_max, phi);
+        phi_min = fmin(phi_min, phi);
     }
     *azfov = theta_max - theta_min;
     *altfov = phi_max - phi_min;
@@ -613,7 +613,7 @@ static void get_steps(char type, int frame,
 
     // First step.
     a = azfov / NB_DIVS;
-    a = min(a, MAX_SEP);
+    a = fmin(a, MAX_SEP);
     if (type == 'd') {
         steps[0] = steps_lookup(STEPS_AZ, ARRAY_SIZE(STEPS_AZ), a);
     } else {
@@ -622,7 +622,7 @@ static void get_steps(char type, int frame,
 
     // Second step.
     a = altfov / NB_DIVS;
-    a = min(a, MAX_SEP);
+    a = fmin(a, MAX_SEP);
     if (type == 'd') {
         steps[1] = steps_lookup(STEPS_ALT, ARRAY_SIZE(STEPS_ALT), a);
     } else {

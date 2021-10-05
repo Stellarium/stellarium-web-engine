@@ -110,7 +110,7 @@ static int circle_render(const obj_t *obj, const painter_t *painter_)
     if (circle->label[0]) {
         if (selected)
             label_effects = TEXT_BOLD;
-        radius = min(win_size[0], win_size[1]) +
+        radius = fmin(win_size[0], win_size[1]) +
                  fabs(cos(win_angle - M_PI_4)) *
                  fabs(win_size[0] - win_size[1]);
         labels_add_3d(circle->label, circle->frame, circle->pos, true, radius,

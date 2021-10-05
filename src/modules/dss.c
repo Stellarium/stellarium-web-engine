@@ -48,9 +48,9 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
     c = tonemapper_map(&core->tonemapper, lum);
     // Ad-hoc integration of the Bortle scale
     c *= 1.0 / (6.0 / 8.0) * (9.0 - core->bortle_index) / 8.0;
-    c = max(0, c);
+    c = fmax(0, c);
     c *= visibility;
-    c = min(c, 1.2);
+    c = fmin(c, 1.2);
 
     // limit mag = 4 -> no dss
     // limit mag > 14 -> 100% dss
@@ -76,14 +76,14 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
      * Note 2: instead of this heuristic we should compute the exact healpix
      * distortion at a given position.
      */
-    sep = min(eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
+    sep = fmin(eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, +1)),
-              eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
+               eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, -1)));
     split_order = mix(12, 4, clamp(sep / (40 * DD2R), 0, 1));
 
     render_order = hips_get_render_order(dss->hips, painter);
-    split_order = min(split_order, render_order + 3);
+    split_order = fmin(split_order, render_order + 3);
 
     hips_render(dss->hips, &painter2, NULL, split_order);
     return 0;

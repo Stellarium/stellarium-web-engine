@@ -344,9 +344,9 @@ static void star_render_name(const painter_t *painter, const star_t *s,
 
     // Fallback to international common names/bayer names
     if (first_name && !buf[0]) {
-        if (selected || s->vmag < max(3, lim_mag2)) {
+        if (selected || s->vmag < fmax(3, lim_mag2)) {
             // The star is quite bright or selected, displat a name
-            if (selected || s->vmag < max(3, lim_mag3)) {
+            if (selected || s->vmag < fmax(3, lim_mag3)) {
                 // Use long version of bayer name for very bright stars
                 flags |= BAYER_LATIN_LONG | BAYER_CONST_LONG;
             }
@@ -558,8 +558,8 @@ static int on_file_tile_loaded(const char type[4],
         s->illuminance = core_mag_to_illuminance(vmag);
 
         tile->illuminance += s->illuminance;
-        tile->mag_min = min(tile->mag_min, vmag);
-        tile->mag_max = max(tile->mag_max, vmag);
+        tile->mag_min = fmin(tile->mag_min, vmag);
+        tile->mag_max = fmax(tile->mag_max, vmag);
         tile->nb++;
     }
 
@@ -655,7 +655,7 @@ static int render_visitor(stars_t *stars, const survey_t *survey,
     double p_win[4], size = 0, luminance = 0, vmag = -DBL_MAX;
     double color[3];
     double v[3];
-    double limit_mag = min(painter.stars_limit_mag, painter.hard_limit_mag);
+    double limit_mag = fmin(painter.stars_limit_mag, painter.hard_limit_mag);
     bool selected;
 
     // Early exit if the tile is clipped.
@@ -912,7 +912,7 @@ static int stars_add_data_source(obj_t *obj, const char *url, const char *key)
     if (gaia) {
         DL_FOREACH(stars->surveys, survey) {
             if (!survey->is_gaia && !isnan(survey->max_vmag)) {
-                gaia->min_vmag = max(gaia->min_vmag, survey->max_vmag);
+                gaia->min_vmag = fmax(gaia->min_vmag, survey->max_vmag);
             }
         }
     }

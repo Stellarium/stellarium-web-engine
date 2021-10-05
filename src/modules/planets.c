@@ -474,7 +474,7 @@ static double sun_get_vmag(const planet_t *sun, const observer_t *obs)
     // Compute the apparent magnitude for the absolute mag (V: 4.83) and
     // observer's distance
     dist_pc = vec3_norm(obs->earth_pvh[0]) * (M_PI / 648000);
-    eclipse_factor = max(compute_sun_eclipse_factor(sun, obs), 0.000128);
+    eclipse_factor = fmax(compute_sun_eclipse_factor(sun, obs), 0.000128);
     return 4.83 + 5.0 * (log10(dist_pc) - 1.0) - 2.5 * (log10(eclipse_factor));
 }
 
@@ -889,10 +889,10 @@ static void planet_render_hips(const planet_t *planet,
     // Clamp the render order into physically possible range.
     // XXX: should be done in hips_get_render_order_planet I guess.
     render_order = clamp(render_order, hips->order_min, hips->order);
-    render_order = min(render_order, 9); // Hard limit.
+    render_order = fmin(render_order, 9); // Hard limit.
 
     // Can't split less than the rendering order.
-    split_order = max(split_order, render_order);
+    split_order = fmax(split_order, render_order);
 
     // Iter the HiPS pixels and render them.
     hips_update(hips);
@@ -1056,7 +1056,7 @@ static void planet_render_label(
     radius *= 1.05; // Compensate for projection distortion.
 
     s = point_size * 0.9;
-    s = max(s, radius);
+    s = fmax(s, radius);
 
     labels_add_3d(name, FRAME_ICRF, pos,
                   false, s + 4, FONT_SIZE_BASE,
@@ -1082,7 +1082,7 @@ static double get_artificial_scale(const planets_t *planets,
     scale /= (angular_diameter / MOON_ANGULAR_DIAMETER_FROM_EARTH);
     scale /= core->star_scale_screen_factor;
 
-    return max(1.0, scale);
+    return fmax(1.0, scale);
 }
 
 /*
@@ -1208,7 +1208,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
 
     // Compute max radius of the planet, taking into account the
     // ring and the point size if it is bigger than the planet.
-    radius_m = max(planet->radius_m, planet->rings.outer_radius) * r_scale;
+    radius_m = fmax(planet->radius_m, planet->rings.outer_radius) * r_scale;
 
     // Compute planet's pos and bounding cap in ICRF
     planet_get_pvo(planet, painter.obs, pvo);
@@ -1219,7 +1219,7 @@ static void planet_render(const planet_t *planet, const painter_t *painter_)
     if (radius_m * DM2AU < dist) {
         phy_angular_radius = asin(radius_m * DM2AU / dist);
         vec3_copy(dir, cap);
-        cap[3] = cos(max(phy_angular_radius, point_r));
+        cap[3] = cos(fmax(phy_angular_radius, point_r));
         if (painter_is_cap_clipped(&painter, FRAME_ICRF, cap))
             return;
     }

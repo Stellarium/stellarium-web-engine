@@ -54,7 +54,8 @@ void dolog(int level, const char *msg,
     if (DEFINED(LOG_TIME))
         snprintf(time_str, sizeof(time_str), "%f: ", get_log_time());
 
-    file = file + max(0, (int)strlen(file) - 20); // Truncate file path.
+    if (strlen(file) > 20)
+        file += strlen(file) - 20; // Truncate file path.
     asprintf(&full_msg, format, time_str, msg_formatted, func, file, line);
     sys_log(full_msg);
 

@@ -140,7 +140,7 @@ static void load_data(comets_t *comets, const char *data, int size)
         strncpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
         snprintf(comet->name, sizeof(comet->name), "%s", desgn);
         comet->pvo[0][0] = NAN;
-        last_epoch = max(epoch, last_epoch);
+        last_epoch = fmax(epoch, last_epoch);
 
         // Check for historical comets, where we change the h and g values
         // around a peak date.  Only support Neowise for the moment.
@@ -247,7 +247,7 @@ static int comet_get_info(const obj_t *obj, const observer_t *obs, int info,
         *(double*)out = comet->vmag;
         return 0;
     case INFO_SEARCH_VMAG:
-        *(double*)out = min(comet->vmag, comet->history.peak_vmag ?: DBL_MAX);
+        *(double*)out = fmin(comet->vmag, comet->history.peak_vmag ?: DBL_MAX);
         return 0;
     }
     return 1;

@@ -326,8 +326,8 @@ static int on_file_tile_loaded(const char type[4],
         if (isnan(s->vmag)) s->vmag = bmag;
         if (memchr(s->obj.type, ' ', 4)) LOG_W_ONCE("Malformated otype");
         s->display_vmag = isnan(s->vmag) ? DSO_DEFAULT_VMAG : s->vmag;
-        tile->mag_min = min(tile->mag_min, s->display_vmag);
-        tile->mag_max = max(tile->mag_max, s->display_vmag);
+        tile->mag_min = fmin(tile->mag_min, s->display_vmag);
+        tile->mag_max = fmax(tile->mag_max, s->display_vmag);
 
         if (*morpho) s->morpho = strdup(morpho);
         s->symbol = symbols_get_for_otype(s->obj.type);
@@ -341,7 +341,7 @@ static int on_file_tile_loaded(const char type[4],
 
         apply_errata(s);
         // Compute the cap containing this DSO
-        s->bounding_cap[3] = cosf(max(s->smin, s->smax));
+        s->bounding_cap[3] = cosf(fmax(s->smin, s->smax));
         eraS2c(s->ra, s->de, s->bounding_cap);
     }
     free(tile_data);
@@ -413,8 +413,8 @@ static void compute_hint_transformation(
     painter_project_ellipse(painter, FRAME_ASTROM, ra, de, angle,
                             size_x, size_y, win_pos, win_size, win_angle);
 
-    win_size[0] = max(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
-    win_size[1] = max(win_size[1], 12);
+    win_size[0] = fmax(win_size[0], symbol == SYMBOL_GALAXY ? 6 : 12);
+    win_size[1] = fmax(win_size[1], 12);
 }
 
 
@@ -491,9 +491,9 @@ static void dso_render_label(const dso_t *s,
     } else {
         vec4_set(color, 0.83, 0.83, 1, 0.7);
     }
-    radius = min(win_size[0] / 2, win_size[1] / 2) +
-                 fabs(cos(win_angle)) *
-                 fabs(win_size[0] / 2 - win_size[1] / 2);
+    radius = fmin(win_size[0] / 2, win_size[1] / 2) +
+                  fabs(cos(win_angle)) *
+                  fabs(win_size[0] / 2 - win_size[1] / 2);
     radius += 1;
     dso_get_short_name(s, buf, sizeof(buf));
     if (buf[0]) {
@@ -553,7 +553,7 @@ static int dso_render_from_data(const dso_t *s,
 
     // Skip if 2D circle is outside screen (TODO intersect 2D ellipse instead)
     if (painter_is_2d_circle_clipped(painter, win_pos,
-                                     max(win_size[0], win_size[1]) / 2))
+                                     fmax(win_size[0], win_size[1]) / 2))
         return 0;
 
     areas_add_ellipse(core->areas, win_pos, win_angle,
@@ -574,14 +574,14 @@ static int dso_render_from_data(const dso_t *s,
         if (selected) {
             // Smooth fade out when it's getting large, even when selected
             // for performance reasons
-            opacity = smoothstep(800, 240, max(win_size[0], win_size[1]));
+            opacity = smoothstep(800, 240, fmax(win_size[0], win_size[1]));
             vec4_set(color, 1, 1, 1, opacity);
         } else {
             // Smooth fade in when zooming
             opacity = smoothstep(hints_limit_mag + 0.5,
                                  hints_limit_mag - 0.5, vmag);
             // Smooth fade out when it's getting large
-            opacity *= smoothstep(400, 120, max(win_size[0], win_size[1]));
+            opacity *= smoothstep(400, 120, fmax(win_size[0], win_size[1]));
             vec4_set(color, 0.45, 0.83, 1, 0.5* opacity);
         }
         if (color[3] > 0.05) {

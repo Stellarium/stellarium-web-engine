@@ -45,10 +45,10 @@ static int on_pan(const gesture_t *gest, void *user)
     case GESTURE_END:
         module->active = false;
         if (core->on_rect) {
-            x1 = min(module->start_pos[0], gest->pos[0]);
-            y1 = min(module->start_pos[1], gest->pos[1]);
-            x2 = max(module->start_pos[0], gest->pos[0]);
-            y2 = max(module->start_pos[1], gest->pos[1]);
+            x1 = fmin(module->start_pos[0], gest->pos[0]);
+            y1 = fmin(module->start_pos[1], gest->pos[1]);
+            x2 = fmax(module->start_pos[0], gest->pos[0]);
+            y2 = fmax(module->start_pos[1], gest->pos[1]);
             core->on_rect(x1, y1, x2, y2);
         }
         break;

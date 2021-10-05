@@ -501,8 +501,8 @@ void render_points_3d(renderer_t *rend, const painter_t *painter,
         gl_buf_next(&item->buf);
 
         depth = proj_get_depth(painter->proj, p.pos);
-        rend->depth_min = min(rend->depth_min, depth);
-        rend->depth_max = max(rend->depth_max, depth);
+        rend->depth_min = fmin(rend->depth_min, depth);
+        rend->depth_max = fmax(rend->depth_max, depth);
 
         // Add the point int the global list of rendered points.
         // XXX: could be done in the painter.
@@ -666,8 +666,8 @@ static void quad_planet(
         convert_framev4(painter->obs, frame, FRAME_VIEW, p, p);
 
         depth = proj_get_depth(painter->proj, p);
-        rend->depth_min = min(rend->depth_min, depth);
-        rend->depth_max = max(rend->depth_max, depth);
+        rend->depth_min = fmin(rend->depth_min, depth);
+        rend->depth_max = fmax(rend->depth_max, depth);
 
         gl_buf_3f(&item->buf, -1, ATTR_POS, VEC3_SPLIT(p));
         gl_buf_4i(&item->buf, -1, ATTR_COLOR, 255, 255, 255, 255);
@@ -811,8 +811,8 @@ static void texture_2d(renderer_t *rend, texture_t *tex,
 
     if (flags & PAINTER_ENABLE_DEPTH) {
         depth = proj_get_depth(&rend->proj, view_pos);
-        rend->depth_min = min(rend->depth_min, depth);
-        rend->depth_max = max(rend->depth_max, depth);
+        rend->depth_min = fmin(rend->depth_min, depth);
+        rend->depth_max = fmax(rend->depth_max, depth);
     }
 
     ofs = item->buf.nb;
@@ -1632,7 +1632,7 @@ static void rend_flush(renderer_t *rend)
         rend->depth_min = 0;
         rend->depth_max = 1;
     }
-    rend->depth_min = max(rend->depth_min, 10 * DM2AU);
+    rend->depth_min = fmax(rend->depth_min, 10 * DM2AU);
 
     // Add a small margin.  Note: we increase the max depth a lot since this
     // doesn't affect the precision that much and it fixes some errors with
@@ -1740,7 +1740,7 @@ void render_line(renderer_t *rend, const painter_t *painter,
     if (size <= 1) return;
     assert(painter->lines.glow); // Only glowing lines supported for now.
     vec4_to_float(painter->color, color);
-    mesh = line_to_mesh(line, win, size, max(10, painter->lines.width + 2));
+    mesh = line_to_mesh(line, win, size, fmax(10, painter->lines.width + 2));
 
     if (mesh->indices_count >= SIZE || mesh->verts_count >= SIZE) {
         LOG_W("Too many points in lines! (size: %d)", size);
@@ -1784,8 +1784,8 @@ void render_line(renderer_t *rend, const painter_t *painter,
         // Compute the depth range.
         for (i = 0; i < size; i++) {
             depth = proj_get_depth(painter->proj, line[i]);
-            rend->depth_min = min(rend->depth_min, depth);
-            rend->depth_max = max(rend->depth_max, depth);
+            rend->depth_min = fmin(rend->depth_min, depth);
+            rend->depth_max = fmax(rend->depth_max, depth);
         }
     }
 
@@ -1833,8 +1833,8 @@ void render_mesh(renderer_t *rend, const painter_t *painter,
         item->mesh.mode = mode;
         item->mesh.stroke_width = painter->lines.width;
         item->mesh.use_stencil = use_stencil;
-        gl_buf_alloc(&item->buf, &MESH_BUF, max(verts_count, 1024));
-        gl_buf_alloc(&item->indices, &INDICES_BUF, max(indices_count, 1024));
+        gl_buf_alloc(&item->buf, &MESH_BUF, fmax(verts_count, 1024));
+        gl_buf_alloc(&item->indices, &INDICES_BUF, fmax(indices_count, 1024));
         DL_APPEND(rend->items, item);
     }
 
@@ -1929,7 +1929,7 @@ static void get_model_depth_range(
         p[1] = bounds[(i >> 1) & 1][1];
         p[2] = bounds[(i >> 2) & 1][2];
         mat4_mul_dir3(model_mat, p, p);
-        size = max(size, vec3_norm2(p));
+        size = fmax(size, vec3_norm2(p));
     }
     size = sqrt(size);
 
@@ -1965,8 +1965,8 @@ void render_model_3d(renderer_t *rend, const painter_t *painter,
 
     item->flags |= PAINTER_ENABLE_DEPTH;
     get_model_depth_range(painter, model, model_mat, view_mat, depth_range);
-    rend->depth_min = min(rend->depth_min, depth_range[0]);
-    rend->depth_max = max(rend->depth_max, depth_range[1]);
+    rend->depth_min = fmin(rend->depth_min, depth_range[0]);
+    rend->depth_max = fmax(rend->depth_max, depth_range[1]);
 
     if (args) item->gltf.args = json_copy(args);
     DL_APPEND(rend->items, item);

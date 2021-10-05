@@ -62,7 +62,7 @@ static satellites_t *g_satellites = NULL;
 
 static double max3(double x, double y, double z)
 {
-    return max(x, max(y, z));
+    return fmax(x, fmax(y, z));
 }
 
 static int satellites_init(obj_t *obj, json_value *args)
@@ -112,7 +112,7 @@ static int load_jsonl_data(satellites_t *sats, const char *data, int size,
         sat = (void*)module_add_new(&sats->obj, "tle_satellite", json);
         json_value_free(json);
         if (!sat) goto error;
-        *last_epoch = max(*last_epoch, sgp4_get_satepoch(sat->elsetrec));
+        *last_epoch = fmax(*last_epoch, sgp4_get_satepoch(sat->elsetrec));
         nb++;
         continue;
 error:
@@ -668,7 +668,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     paint_2d_points(&painter, 1, &point);
 
     // Render name if needed.
-    size = max(8, size);
+    size = fmax(8, size);
 
     if (g_satellites->hints_visible &&
         (selected || vmag <= hints_limit_mag - 1.5)) {
@@ -676,7 +676,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
         // Use actual pixel radius on screen.
         if (satellite_get_info(obj, painter.obs, INFO_RADIUS, &radius) == 0) {
             radius = core_get_point_for_apparent_angle(painter.proj, radius);
-            size = max(size, radius);
+            size = fmax(size, radius);
         }
 
         if (satellite_get_short_name(sat, selected, buf, sizeof(buf))) {

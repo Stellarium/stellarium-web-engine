@@ -140,7 +140,7 @@ static int meteor_render(const meteor_t *m, const painter_t *painter_)
     painter_t painter = *painter_;
 
     // Very basic fade out.
-    painter.color[3] *= max(0.0, 1.0 - m->time / m->duration);
+    painter.color[3] *= fmax(0.0, 1.0 - m->time / m->duration);
 
     vec4_copy(m->pvo[0], p1);
     vec3_addk(p1, m->pvo[1], -2, p2);

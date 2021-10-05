@@ -348,7 +348,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
         // Use actual pixel radius on screen.
         if (mplanet_get_info(obj, painter->obs, INFO_RADIUS, &radius) == 0) {
             radius = core_get_point_for_apparent_angle(painter->proj, radius);
-            size = max(size, radius);
+            size = fmax(size, radius);
         }
 
         if (selected)

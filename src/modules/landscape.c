@@ -91,7 +91,7 @@ static double get_global_brightness(void)
     sun = core_get_planet(PLANET_SUN);
     obj_get_pos(sun, core->observer, FRAME_OBSERVED, pos);
     vec3_normalize(pos, pos);
-    sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
+    sin_angle = sin(fmin(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
     if (sin_angle > -0.1 / 1.5 )
         brightness += 1.5 * (sin_angle + 0.1 / 1.5);
 
@@ -99,11 +99,11 @@ static double get_global_brightness(void)
     obj_get_pos(moon, core->observer, FRAME_OBSERVED, pos);
     obj_get_info(moon, core->observer, INFO_PHASE, &moon_phase);
     vec3_normalize(pos, pos);
-    sin_angle = sin(min(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
+    sin_angle = sin(fmin(M_PI/ 2, asin(pos[2]) + 8. * DD2R));
     if (sin_angle > -0.1 / 1.5 )
         brightness += moon_phase * 0.2 * (sin_angle + 0.1 / 1.5);
 
-    return min(brightness * 1.2, 1.0);
+    return fmin(brightness * 1.2, 1.0);
 }
 
 /*

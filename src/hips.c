@@ -483,10 +483,10 @@ int hips_render(hips_t *hips, const painter_t *painter,
     render_order = hips_get_render_order(hips, painter);
     // Clamp the render order into physically possible range.
     render_order = clamp(render_order, hips->order_min, hips->order);
-    render_order = min(render_order, 9); // Hard limit.
+    render_order = fmin(render_order, 9); // Hard limit.
 
     // Can't split less than the rendering order.
-    split_order = max(split_order, render_order);
+    split_order = fmax(split_order, render_order);
 
     // Breath first traversal of all the tiles.
     hips_iter_init(&iter);

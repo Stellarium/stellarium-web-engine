@@ -293,7 +293,7 @@ int core_update(void)
 
     now = sys_get_unix_time();
     dt = now - core->clock;
-    dt = max(dt, 0.001); // Prevent bug in case the clock goes backward.
+    dt = fmax(dt, 0.001); // Prevent bug in case the clock goes backward.
     core->clock = now;
 
     atm = core_get_module("atmosphere");
@@ -312,7 +312,7 @@ int core_update(void)
     } else {
         lwmax = exp(logf(core->tonemapper.lwmax) +
                     (logf(core->lwmax) - logf(core->tonemapper.lwmax)) *
-                    min(0.16 * dt / 0.01666, 0.5));
+                    fmin(0.16 * dt / 0.01666, 0.5));
     }
 
     tonemapper_update(&core->tonemapper, core->tonemapper_p, -1,
@@ -321,9 +321,9 @@ int core_update(void)
 
     // Adjust star linear scale in function of screen pixel size
     // It ranges from 0.7 for a small screen to 1.5 for large screens
-    double screen_s = min(core->win_size[0], core->win_size[1]);
+    double screen_s = fmin(core->win_size[0], core->win_size[1]);
     double fact = screen_s / 600;
-    core->star_scale_screen_factor = min(max(0.7, fact), 1.5);
+    core->star_scale_screen_factor = fmin(fmax(0.7, fact), 1.5);
 
     // Defined in navigation.c
     core_update_observer(dt);
@@ -432,7 +432,7 @@ bool core_get_point_for_mag(double mag, double *radius, double *luminance)
     ld = pow(ld, 1 / 2.2); // Gama correction.
     // Saturate radius after a certain point.
     // XXX: make it smooth.
-    r = min(r, core->max_point_radius);
+    r = fmin(r, core->max_point_radius);
     *radius = r;
     if (luminance) *luminance = clamp(ld, 0, 1);
     return true;
@@ -735,7 +735,7 @@ double core_illuminance_to_lum_apparent(double illum, double surf)
     const double pr = 2.5 / 60 * DD2R;
     const double min_point_area = M_PI * pr * pr;
 
-    surf = max(surf, min_point_area);
+    surf = fmax(surf, min_point_area);
 
     /*
      * Compute luminance
@@ -833,7 +833,7 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
 
     // Make sure the observed radius can't be smaller as point source radius
     // assumed to be 2.5 arcmin (see formula in above function)
-    r2 = max(r2, 2.5 / 60 * DD2R);
+    r2 = fmax(r2, 2.5 / 60 * DD2R);
 
     // The following 3 lines are 100% ad-hoc formulas adjusted so that:
     // - the moon should render all but bright stars invisible
@@ -845,7 +845,7 @@ void core_report_vmag_in_fov(double vmag, double r, double sep)
     lum = pow(lum, 0.33);
     lum /= 300;
 
-    lum *= smoothstep(core->fov * 0.75, 0, max(0, sep - r));
+    lum *= smoothstep(core->fov * 0.75, 0, fmax(0, sep - r));
     core_report_luminance_in_fov(lum * 7.0, false);
 }
 

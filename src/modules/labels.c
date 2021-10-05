@@ -98,10 +98,10 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
 static bool bounds_intersection(const double a[4], const double b[4],
                                 double out[4])
 {
-    out[0] = max(a[0], b[0]);
-    out[1] = max(a[1], b[1]);
-    out[2] = min(a[2], b[2]);
-    out[3] = min(a[3], b[3]);
+    out[0] = fmax(a[0], b[0]);
+    out[1] = fmax(a[1], b[1]);
+    out[2] = fmin(a[2], b[2]);
+    out[3] = fmin(a[3], b[3]);
 
     if (out[0] >= out[2] || out[1] >= out[3]) {
         memset(out, 0, 4 * sizeof(double));
@@ -117,8 +117,8 @@ static double bounds_dist_point(const double rect[4], const double p[2])
     double y = (rect[1] + rect[3]) / 2;
     double w = rect[2] - rect[0];
     double h = rect[3] - rect[1];
-    double dx = max(fabs(p[0] - x) - w / 2, 0);
-    double dy = max(fabs(p[1] - y) - h / 2, 0);
+    double dx = fmax(fabs(p[0] - x) - w / 2, 0);
+    double dy = fmax(fabs(p[1] - y) - h / 2, 0);
     return sqrt(dx * dx + dy * dy);
 }
 
@@ -140,7 +140,7 @@ static double test_label_overlaps(const label_t *label)
         if (other->fader.target == false) continue;
         if (!bounds_intersection(label->bounds, other->bounds, inter))
             continue;
-        overlap = min(inter[2] - inter[0], inter[3] - inter[1]);
+        overlap = fmin(inter[2] - inter[0], inter[3] - inter[1]);
         if (overlap > ret)
             ret = overlap;
     }

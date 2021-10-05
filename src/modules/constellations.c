@@ -206,7 +206,7 @@ static void cap_extends(double cap[4], double p[static 3])
 {
     double n[3];
     vec3_normalize(p, n);
-    cap[3] = min(cap[3], vec3_dot(cap, n));
+    cap[3] = fmin(cap[3], vec3_dot(cap, n));
 }
 
 // Compute the cap of an image from its 3d mat.
@@ -449,8 +449,8 @@ static bool constellation_lines_in_view(const constellation_t *con,
     // Compute margins in NDC.
     mx = m * painter->pixel_scale / painter->fb_size[0] * 2;
     my = m * painter->pixel_scale / painter->fb_size[1] * 2;
-    mx = min(mx, 0.5);
-    my = min(my, 0.5);
+    mx = fmin(mx, 0.5);
+    my = fmin(my, 0.5);
 
     ret = !is_clipped(con->count, pos, mx, my);
     free(pos);
@@ -494,8 +494,8 @@ static bool constellation_image_in_view(const constellation_t *con,
     // Compute margins in NDC.
     mx = m * painter->pixel_scale / painter->fb_size[0] * 2;
     my = m * painter->pixel_scale / painter->fb_size[1] * 2;
-    mx = min(mx, 0.5);
-    my = min(my, 0.5);
+    mx = fmin(mx, 0.5);
+    my = fmin(my, 0.5);
 
     ret = !is_clipped(4, pos, mx, my);
     return ret;
