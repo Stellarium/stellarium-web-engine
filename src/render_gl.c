@@ -1124,7 +1124,6 @@ static void item_points_3d_render(renderer_t *rend, const item_t *item)
     GLuint  array_buffer;
     double core_size;
     projection_t proj;
-    float matf[16];
 
     if (item->buf.nb <= 0)
         return;
@@ -1157,8 +1156,7 @@ static void item_points_3d_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_core_size", core_size);
 
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
 
     gl_buf_enable(&item->buf);
     GL(glDrawArrays(GL_POINTS, 0, item->buf.nb));
@@ -1198,7 +1196,6 @@ static void item_mesh_render(renderer_t *rend, const item_t *item)
     // XXX: almost the same as item_lines_render.
     gl_shader_t *shader;
     int gl_mode;
-    float matf[16];
     float fbo_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
     projection_t proj;
@@ -1238,8 +1235,7 @@ static void item_mesh_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_proj_scaling", item->mesh.proj_scaling);
 
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
 
     draw_buffer(&item->buf, &item->indices, gl_mode);
 
@@ -1255,7 +1251,6 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
     gl_shader_t *shader;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
-    float matf[16];
     projection_t proj;
 
     shader_define_t defines[] = {
@@ -1287,8 +1282,7 @@ static void item_lines_render(renderer_t *rend, const item_t *item)
     }
 
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glDisable(GL_DEPTH_TEST));
@@ -1386,7 +1380,6 @@ static void item_text_render(renderer_t *rend, const item_t *item)
 static void item_fog_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
-    float matf[16];
     projection_t proj;
 
     shader_define_t defines[] = {
@@ -1403,8 +1396,7 @@ static void item_fog_render(renderer_t *rend, const item_t *item)
     GL(glDisable(GL_DEPTH_TEST));
 
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
     gl_update_uniform(shader, "u_color", item->color);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
@@ -1415,7 +1407,6 @@ static void item_atmosphere_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
     float tm[3];
-    float matf[16];
     projection_t proj;
 
     shader_define_t defines[] = {
@@ -1451,8 +1442,7 @@ static void item_atmosphere_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_tm", tm);
 
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
@@ -1461,7 +1451,6 @@ static void item_atmosphere_render(renderer_t *rend, const item_t *item)
 static void item_texture_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
-    float matf[16];
     projection_t proj;
 
     shader_define_t defines[] = {
@@ -1503,8 +1492,7 @@ static void item_texture_render(renderer_t *rend, const item_t *item)
 
     gl_update_uniform(shader, "u_color", item->color);
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));
@@ -1513,7 +1501,6 @@ static void item_texture_render(renderer_t *rend, const item_t *item)
 static void item_texture_2d_render(renderer_t *rend, const item_t *item)
 {
     gl_shader_t *shader;
-    float matf[16];
     projection_t proj;
     float win_size[2] = {rend->fb_size[0] / rend->scale,
                          rend->fb_size[1] / rend->scale};
@@ -1540,8 +1527,7 @@ static void item_texture_2d_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_color", item->color);
     gl_update_uniform(shader, "u_win_size", win_size);
     proj = rend_get_proj(rend, item->flags);
-    mat4_to_float(proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", proj.mat);
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glDisable(GL_DEPTH_TEST));
 }
@@ -1612,9 +1598,7 @@ static void item_planet_render(renderer_t *rend, const item_t *item)
     gl_update_uniform(shader, "u_normal_tex_transf",
                       item->planet.normal_tex_transf);
 
-    float matf[16];
-    mat4_to_float(rend->proj.mat, matf);
-    gl_update_uniform(shader, "u_proj_mat", matf);
+    gl_update_uniform_mat4(shader, "u_proj_mat", rend->proj.mat);
 
     draw_buffer(&item->buf, &item->indices, GL_TRIANGLES);
     GL(glCullFace(GL_BACK));

@@ -292,13 +292,63 @@ void gl_buf_disable(const gl_buf_t *buf)
     }
 }
 
-bool gl_has_uniform(gl_shader_t *shader, const char *name)
+static const gl_uniform_t *get_uniform(const gl_shader_t *shader,
+                                       const char *name)
 {
     gl_uniform_t *uni;
     for (uni = &shader->uniforms[0]; uni->size; uni++) {
-        if (strcmp(uni->name, name) == 0) return true;
+        if (strcmp(uni->name, name) == 0) return uni;
     }
-    return false;
+    return NULL;
+}
+
+bool gl_has_uniform(gl_shader_t *shader, const char *name)
+{
+    return get_uniform(shader, name) != NULL;
+}
+
+void gl_update_uniform_vec3(gl_shader_t *shader, const char *name,
+                            const double v[3])
+{
+    float vf[3];
+    int i;
+    gl_uniform_t *uni;
+
+    uni = get_uniform(shader, name);
+    if (!uni) return;
+    assert(uni->type == GL_FLOAT_VEC3);
+    for (i = 0; i < 3; i++) vf[i] = v[i];
+    GL(glUniform3fv(uni->loc, 1, vf));
+}
+
+void gl_update_uniform_mat3(gl_shader_t *shader, const char *name,
+                            const double v[3][3])
+{
+    float vf[9];
+    int i, j;
+    gl_uniform_t *uni;
+
+    uni = get_uniform(shader, name);
+    if (!uni) return;
+    assert(uni->type == GL_FLOAT_MAT3);
+    for (i = 0; i < 3; i++) for (j = 0; j < 3; j++)
+        vf[i * 3 + j] = v[i][j];
+    GL(glUniformMatrix4fv(uni->loc, 1, 0, vf));
+}
+
+void gl_update_uniform_mat4(gl_shader_t *shader, const char *name,
+                            const double v[4][4])
+{
+    float vf[16];
+    int i, j;
+    gl_uniform_t *uni;
+
+    uni = get_uniform(shader, name);
+    if (!uni) return;
+    assert(uni->type == GL_FLOAT_MAT4);
+    for (i = 0; i < 4; i++) for (j = 0; j < 4; j++)
+        vf[i * 4 + j] = v[i][j];
+    GL(glUniformMatrix4fv(uni->loc, 1, 0, vf));
 }
 
 void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
@@ -306,10 +356,8 @@ void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
     gl_uniform_t *uni;
     va_list args;
 
-    for (uni = &shader->uniforms[0]; uni->size; uni++) {
-        if (strcmp(uni->name, name) == 0) break;
-    }
-    if (!uni->size) return; // No such uniform.
+    uni = get_uniform(shader, name);
+    if (!uni) return;
 
     va_start(args, name);
     switch (uni->type) {

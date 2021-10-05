@@ -183,7 +183,26 @@ gl_shader_t *gl_shader_create(const char *vert, const char *frag,
 
 void gl_shader_delete(gl_shader_t *shader);
 
+/*
+ * Helper function to set uniforms.
+ */
 bool gl_has_uniform(gl_shader_t *shader, const char *name);
+/*
+ * Generic update uniform, the last argument should match the type of the
+ * uniform.
+ */
 void gl_update_uniform(gl_shader_t *shader, const char *name, ...);
+
+/*
+ * Special versions for the common case of vectors and matrix.
+ * Automatically converts the values to float, and ensure the uniform type
+ * is correct.
+ */
+void gl_update_uniform_vec3(gl_shader_t *shader, const char *name,
+                            const double v[3]);
+void gl_update_uniform_mat4(gl_shader_t *shader, const char *name,
+                            const double v[4][4]);
+void gl_update_uniform_mat3(gl_shader_t *shader, const char *name,
+                            const double v[3][3]);
 
 #endif // GL_H
