@@ -61,6 +61,8 @@ typedef struct skyculture {
     char            *references;   // references if any (html)
     char            *authors;      // authors (html)
     char            *licence;      // licence (html)
+    char            *thumbnail;    // thumbnail (image path)
+    double    thumbnail_bscale;    // brightess correction for thumbnail
 } skyculture_t;
 
 /*
@@ -407,9 +409,11 @@ static int skyculture_update(obj_t *obj, double dt)
     json_value *doc;
     const json_value *names = NULL, *features = NULL,
                      *tour = NULL, *edges = NULL,
-                     *langs_use_native_names = NULL;
+                     *langs_use_native_names = NULL,
+                     *thumbnail_bscale = NULL;
     const char *description = NULL, *introduction = NULL,
-               *references = NULL, *authors = NULL, *licence = NULL;
+               *references = NULL, *authors = NULL, *licence = NULL,
+               *thumbnail = NULL;
     const char* langname;
 
     constellation_infos_t *cst_info;
@@ -453,6 +457,8 @@ static int skyculture_update(obj_t *obj, double dt)
         "?licence", JCON_STR(licence),
         "?edges", JCON_VAL(edges),
         "?tour", JCON_VAL(tour),
+        "?thumbnail", JCON_STR(thumbnail),
+        "?thumbnail_bscale", JCON_VAL(thumbnail_bscale),
     "}");
     if (r) {
         LOG_E("Cannot parse skyculture json (%s)", path);
@@ -475,6 +481,8 @@ static int skyculture_update(obj_t *obj, double dt)
         cult->authors = strdup(authors);
     if (licence)
         cult->licence = strdup(licence);
+    if (thumbnail)
+        cult->thumbnail = strdup(thumbnail);
     if (names) cult->names = skyculture_parse_names_json(names);
     if (tour) cult->tour = json_copy(tour);
 
@@ -505,6 +513,14 @@ static int skyculture_update(obj_t *obj, double dt)
     if (edges) {
         skyculture_parse_edges(edges, cult->constellations,
                                cult->nb_constellations);
+    }
+
+    cult->thumbnail_bscale = 1;
+    if (thumbnail_bscale) {
+        assert(thumbnail_bscale->type == json_integer ||
+               thumbnail_bscale->type == json_double);
+        cult->thumbnail_bscale = thumbnail_bscale->type == json_integer ?
+                    thumbnail_bscale->u.integer : thumbnail_bscale->u.dbl;
     }
 
 end:
@@ -1041,6 +1057,9 @@ static obj_klass_t skyculture_klass = {
         PROPERTY(licence, TYPE_STRING_PTR, MEMBER(skyculture_t, licence)),
         PROPERTY(url, TYPE_STRING_PTR, MEMBER(skyculture_t, uri)),
         PROPERTY(tour, TYPE_JSON, MEMBER(skyculture_t, tour)),
+        PROPERTY(thumbnail, TYPE_STRING_PTR, MEMBER(skyculture_t, thumbnail)),
+        PROPERTY(thumbnail_bscale, TYPE_FLOAT,
+                 MEMBER(skyculture_t, thumbnail_bscale)),
         {}
     },
 };
