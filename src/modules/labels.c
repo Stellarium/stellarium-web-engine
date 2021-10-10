@@ -151,6 +151,7 @@ static int label_cmp(void *a_, void *b_)
 {
     const label_t *a = a_;
     const label_t *b = b_;
+    if (a->at_inf && b->at_inf) return 0;
     return -cmp(vec3_norm2(a->pos), vec3_norm2(b->pos));
 }
 
