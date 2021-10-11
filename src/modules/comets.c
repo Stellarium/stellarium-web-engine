@@ -45,6 +45,7 @@ struct comet {
     double      h;  // Absolute magnitude.
     double      g;  // Slope parameter.
     orbit_t     orbit;
+    double      epoch;
     char        name[64]; // e.g 'C/1995 O1 (Hale-Bopp)'
 
     // Optional historical data.
@@ -85,11 +86,13 @@ typedef struct {
 // Static instance.
 static comets_t *g_comets = NULL;
 
-static double date2mjd(int year, int month, int day)
+static double date2mjd(int year, int month, double day)
 {
     double djm0, djm;
-    eraCal2jd(year, month, day, &djm0, &djm);
-    return djm0 - DJM0 + djm;
+    int iday = (int)day;
+    double fract = day - iday;
+    eraCal2jd(year, month, iday, &djm0, &djm);
+    return djm0 - DJM0 + djm + fract;
 }
 
 static const char *orbit_type_to_otype(char o)
@@ -105,16 +108,67 @@ static const char *orbit_type_to_otype(char o)
     }
 }
 
-static void load_data(comets_t *comets, const char *data, int size)
+static int comet_init(obj_t *obj, json_value *args)
+{
+    // Support creating a comet using noctuasky model data json values.
+    comet_t *comet = (void*)obj;
+    const json_value *types = NULL;
+    const char *desgn = NULL;
+    const char *orbit_type;
+    int peri_y, peri_m, r, epoch_y, epoch_m, epoch_d;
+    double peri_d, peri_dist, e, h, g, i, peri, node;
+
+    if (args) {
+        r = jcon_parse(args, "{",
+            "?types", JCON_VAL(types),
+            "model_data", "{",
+                "Orbit_type", JCON_STR(orbit_type),
+                "Year_of_perihelion", JCON_INT(peri_y, 0),
+                "Month_of_perihelion", JCON_INT(peri_m, 0),
+                "Day_of_perihelion", JCON_DOUBLE(peri_d, 0),
+                "Perihelion_dist", JCON_DOUBLE(peri_dist, 0),
+                "?Epoch_year", JCON_INT(epoch_y, 0),
+                "?Epoch_month", JCON_INT(epoch_m, 0),
+                "?Epoch_day", JCON_INT(epoch_d, 0),
+                "e", JCON_DOUBLE(e, 0),
+                "Peri", JCON_DOUBLE(peri, 0),
+                "Node", JCON_DOUBLE(node, 0),
+                "i", JCON_DOUBLE(i, 0),
+                "H", JCON_DOUBLE(h, NAN),
+                "G", JCON_DOUBLE(g, NAN),
+                "Designation_and_name", JCON_STR(desgn),
+            "}",
+        "}");
+        if (r) {
+            LOG_E("Cannot parse comet json data.");
+            assert(false);
+            return -1;
+        }
+        comet->epoch = date2mjd(epoch_y, epoch_m, epoch_d);
+        comet->h = h;
+        comet->g = g;
+        comet->orbit.d = date2mjd(peri_y, peri_m, peri_d);
+        comet->orbit.i = i * DD2R;
+        comet->orbit.o = node * DD2R;
+        comet->orbit.w = peri * DD2R;
+        comet->orbit.q = peri_dist;
+        comet->orbit.e = e;
+        strncpy(comet->obj.type, orbit_type_to_otype(*orbit_type), 4);
+        snprintf(comet->name, sizeof(comet->name), "%s", desgn);
+        comet->pvo[0][0] = NAN;
+    }
+    return 0;
+}
+
+static int load_data_mpc(comets_t *comets, const char *data, int size,
+                         double *last_epoch)
 {
     comet_t *comet;
     int num, nb_err = 0, len, line_idx = 0, r, nb;
     double peri_time, peri_dist, e, peri, node, i, epoch, h, g;
-    double last_epoch = 0;
     const char *line = NULL;
     char orbit_type;
     char desgn[64];
-    char buf[128];
     obj_t *tmp;
 
     while (iter_lines(data, size, &line, &len)) {
@@ -140,7 +194,7 @@ static void load_data(comets_t *comets, const char *data, int size)
         strncpy(comet->obj.type, orbit_type_to_otype(orbit_type), 4);
         snprintf(comet->name, sizeof(comet->name), "%s", desgn);
         comet->pvo[0][0] = NAN;
-        last_epoch = fmax(epoch, last_epoch);
+        *last_epoch = fmax(epoch, *last_epoch);
 
         // Check for historical comets, where we change the h and g values
         // around a peak date.  Only support Neowise for the moment.
@@ -156,11 +210,57 @@ static void load_data(comets_t *comets, const char *data, int size)
     }
 
     if (nb_err) {
-        LOG_W("Comet planet data got %d error lines.", nb_err);
+        LOG_W("Comet data got %d error lines.", nb_err);
     }
     DL_COUNT(comets->obj.children, tmp, nb);
-    LOG_I("Parsed %d comets (latest epoch: %s)", nb,
-          format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
+    return nb;
+}
+
+static int load_data_stel_jsonl(
+        const char *url, comets_t *comets, const char *data, int size,
+        double *last_epoch)
+{
+    const char *line = NULL;
+    char *uncompressed_data;
+    comet_t *comet;
+    int len, line_idx = 0, nb = 0;
+    json_value *json;
+
+    uncompressed_data = z_uncompress_gz(data, size, &size);
+    if (!uncompressed_data) {
+        LOG_E("Cannot uncompress gz file: %s", url);
+        return -1;
+    }
+    data = uncompressed_data;
+    *last_epoch = 0;
+    while (iter_lines(data, size, &line, &len)) {
+        line_idx++;
+        json = json_parse(line, len);
+        if (!json) goto error;
+        comet = (void*)module_add_new(&comets->obj, "mpc_comet", json);
+        json_value_free(json);
+        if (!comet) goto error;
+        *last_epoch = fmax(*last_epoch, comet->epoch);
+        nb++;
+
+        // Check for historical comets, where we change the h and g values
+        // around a peak date.  Only support Neowise for the moment.
+        if (strcmp(comet->name, "C/2020 F3 (NEOWISE)") == 0) {
+            comet->history = (typeof(comet->history)) {
+                .time = date2mjd(2020, 7, 3),
+                .duration = 30,
+                .peak_vmag = 1,
+                .h = 7.5,
+                .g = 5.2,
+            };
+        }
+
+        continue;
+error:
+        LOG_E("Cannot create comet from %s:%d", url, line_idx);
+    }
+    free(uncompressed_data);
+    return nb;
 }
 
 static void comet_get_h_g(const comet_t *comet, double tt, double *h, double *g)
@@ -428,9 +528,11 @@ static int comets_add_data_source(
 
 static int comets_update(obj_t *obj, double dt)
 {
-    int size, code;
+    int size, code, nb;
     const char *data;
     comets_t *comets = (void*)obj;
+    double last_epoch = 0;
+    char buf[128];
 
     if (comets->parsed || !comets->source_url)
         return 0;
@@ -442,7 +544,17 @@ static int comets_update(obj_t *obj, double dt)
         LOG_E("Cannot load comets data: %s (%d)", comets->source_url, code);
         return 0;
     }
-    load_data(comets, data, size);
+
+    if (strstr(comets->source_url, ".txt"))
+        nb = load_data_mpc(comets, data, size, &last_epoch);
+    else
+        nb = load_data_stel_jsonl(comets->source_url, comets, data, size,
+                                  &last_epoch);
+
+    LOG_I("Parsed %d comets (latest epoch: %s)", nb,
+          format_time(buf, last_epoch, 0, "YYYY-MM-DD"));
+    if (last_epoch < unix_to_mjd(sys_get_unix_time()) - 4)
+        LOG_W("Warning: comets data seems outdated.");
 
     // Make sure the search work.
     obj = core_search("NAME C/1995 O1 (Hale-Bopp)");
@@ -502,6 +614,7 @@ static int comets_render(const obj_t *obj, const painter_t *painter)
 static obj_klass_t comet_klass = {
     .id         = "mpc_comet",
     .size       = sizeof(comet_t),
+    .init       = comet_init,
     .get_info   = comet_get_info,
     .render     = comet_render,
     .get_designations = comet_get_designations,
