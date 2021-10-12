@@ -63,6 +63,7 @@ typedef struct skyculture {
     char            *licence;      // licence (html)
     char            *thumbnail;    // thumbnail (image path)
     double    thumbnail_bscale;    // brightess correction for thumbnail
+    char            *highlight;    // highlight (constellation designation)
 } skyculture_t;
 
 /*
@@ -413,7 +414,7 @@ static int skyculture_update(obj_t *obj, double dt)
                      *thumbnail_bscale = NULL;
     const char *description = NULL, *introduction = NULL,
                *references = NULL, *authors = NULL, *licence = NULL,
-               *thumbnail = NULL;
+               *thumbnail = NULL, *highlight = NULL;
     const char* langname;
 
     constellation_infos_t *cst_info;
@@ -459,6 +460,7 @@ static int skyculture_update(obj_t *obj, double dt)
         "?tour", JCON_VAL(tour),
         "?thumbnail", JCON_STR(thumbnail),
         "?thumbnail_bscale", JCON_VAL(thumbnail_bscale),
+        "?highlight", JCON_STR(highlight),
     "}");
     if (r) {
         LOG_E("Cannot parse skyculture json (%s)", path);
@@ -483,6 +485,8 @@ static int skyculture_update(obj_t *obj, double dt)
         cult->licence = strdup(licence);
     if (thumbnail)
         cult->thumbnail = strdup(thumbnail);
+    if (highlight)
+        cult->highlight = strdup(highlight);
     if (names) cult->names = skyculture_parse_names_json(names);
     if (tour) cult->tour = json_copy(tour);
 
@@ -1060,6 +1064,7 @@ static obj_klass_t skyculture_klass = {
         PROPERTY(thumbnail, TYPE_STRING_PTR, MEMBER(skyculture_t, thumbnail)),
         PROPERTY(thumbnail_bscale, TYPE_FLOAT,
                  MEMBER(skyculture_t, thumbnail_bscale)),
+        PROPERTY(highlight, TYPE_STRING_PTR, MEMBER(skyculture_t, highlight)),
         {}
     },
 };
