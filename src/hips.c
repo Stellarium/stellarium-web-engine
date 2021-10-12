@@ -130,19 +130,20 @@ void hips_set_frame(hips_t *hips, int frame)
 
 // Get the url for a given file in the survey.
 // Automatically add ?v=<release_date> for online surveys.
-static const char *get_url_for(const hips_t *hips, char *buf,
+static const char *get_url_for(const hips_t *hips, char *buf, int len,
                                const char *format, ...)
-    __attribute__((format(printf, 3, 4)));
+    __attribute__((format(printf, 4, 5)));
 
-static const char *get_url_for(const hips_t *hips, char *buf,
+static const char *get_url_for(const hips_t *hips, char *buf, int len,
                                const char *format, ...)
 {
     va_list ap;
     char *p = buf;
+    char *p_end = buf + len;
 
     va_start(ap, format);
-    p += sprintf(p, "%s/", hips->service_url);
-    p += vsprintf(p, format, ap);
+    p += snprintf(p, p_end - p, "%s/", hips->service_url);
+    p += vsnprintf(p, p_end - p, format, ap);
     va_end(ap);
 
     // If we are using http, add the release date parameter for better
@@ -150,7 +151,7 @@ static const char *get_url_for(const hips_t *hips, char *buf,
     if (    hips->release_date &&
             (strncmp(hips->service_url, "http://", 7) == 0 ||
              strncmp(hips->service_url, "https://", 8) == 0)) {
-        sprintf(p, "?v=%d", (int)hips->release_date);
+        snprintf(p, p_end - p, "?v=%d", (int)hips->release_date);
     }
     return buf;
 }
@@ -209,7 +210,7 @@ static int parse_properties(hips_t *hips)
     const char *data;
     char url[URL_MAX_SIZE];
     int code;
-    get_url_for(hips, url, "properties");
+    get_url_for(hips, url, sizeof(url), "properties");
     data = asset_get_data2(url, ASSET_USED_ONCE, NULL, &code);
     if (!data && code) {
         LOG_E("Cannot get hips properties file at '%s': %d", url, code);
@@ -745,7 +746,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
             return NULL;
         }
     }
-    get_url_for(hips, url, "Norder%d/Dir%d/Npix%d.%s",
+    get_url_for(hips, url, sizeof(url), "Norder%d/Dir%d/Npix%d.%s",
                 order, (pix / 10000) * 10000, pix, hips->ext);
     asset_flags = ASSET_ACCEPT_404;
     if (order > 0 && !(flags & HIPS_NO_DELAY))
