@@ -164,6 +164,9 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
     case INFO_PVO:
         memcpy(out, con->pvo, sizeof(con->pvo));
         return vec3_norm2(con->pvo[0]) ? 0 : 1;
+    case INFO_RADIUS:
+        *(double*)out = acos(con->lines_cap[3]);
+        return 0;
     default:
         return 1;
     }
