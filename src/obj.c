@@ -215,9 +215,9 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
     // Some fallback values.
     switch (info) {
     case INFO_RADEC: // First component of the PVO info.
-        obj_get_info(obj, obs, INFO_PVO, pvo);
+        ret = obj_get_info(obj, obs, INFO_PVO, pvo);
         memcpy(out, pvo[0], sizeof(pvo[0]));
-        return 0;
+        return ret;
     case INFO_LHA:
         obj_get_info(obj, obs, INFO_PVO, pvo);
         convert_frame(obs, FRAME_ICRF, FRAME_CIRS, 0, pvo[0], pos);
