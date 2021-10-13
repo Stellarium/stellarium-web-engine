@@ -205,11 +205,13 @@ still_loading:
 }
 
 // Extends a cap to include a given point, without changing the cap direction.
-static void cap_extends(double cap[4], double p[static 3])
+static bool cap_extends(double cap[4], double p[static 3])
 {
     double n[3];
+    const int old_acos = cap[3];
     vec3_normalize(p, n);
     cap[3] = fmin(cap[3], vec3_dot(cap, n));
+    return old_acos != cap[3];
 }
 
 // Compute the cap of an image from its 3d mat.
@@ -304,6 +306,51 @@ static void line_animation_effect(double pos[2][4], double k)
     vec3_normalize(p, pos[1]);
 }
 
+static void constellation_compute_best_cap(constellation_t *con,
+                                          const observer_t *obs) {
+    int outermost_star = -1, opposite_star = -1;
+    double v[3], vv[3];
+    double cap2[4];
+    double max_d = -1;
+    int i;
+
+    // Compute bounding cap, and the outermost star
+    vec3_copy(con->pvo[0], con->lines_cap);
+    con->lines_cap[3] = 1.0;
+    for (i = 0; i < con->count; i++) {
+        if (!con->stars[i]) continue;
+        if (cap_extends(con->lines_cap, con->stars_pos[i])) {
+            outermost_star = i;
+        }
+    }
+    // Use the outermost and the star at the extrem opposit to attempt
+    // to find a better cap (cap2)
+    if (outermost_star == -1) return;
+    vec3_sub(con->lines_cap, con->stars_pos[outermost_star], v);
+    vec3_normalize(v, v);
+    for (i = 0; i < con->count; i++) {
+        if (!con->stars[i]) continue;
+        vec3_sub(con->stars_pos[i], con->lines_cap, vv);
+        const double d = vec3_dot(v, vv);
+        if (d > max_d) {
+            opposite_star = i;
+            max_d = d;
+        }
+    }
+    assert(opposite_star != -1);
+    vec3_copy(con->stars_pos[outermost_star], v);
+    vec3_add(con->stars_pos[opposite_star], v, v);
+    vec3_normalize(v, cap2);
+    cap2[3] = 1.0;
+    for (i = 0; i < con->count; i++) {
+        if (!con->stars[i]) continue;
+        cap_extends(cap2, con->stars_pos[i]);
+    }
+    // If cap2 is better than the base cap, use it instead
+    if (cap2[3] > con->lines_cap[3])
+        vec4_copy(cap2, con->lines_cap);
+}
+
 /*
  * Load the stars and the image matrix.
  * Return 0 if we are ready to render.
@@ -338,14 +385,9 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     con->pvo[0][3] = 0; // At infinity.
     vec4_set(con->pvo[1], 0, 0, 0, 0);
 
-    // Compute bounding cap
-    vec3_copy(pos, con->lines_cap);
-    con->lines_cap[3] = 1.0;
-
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
-        cap_extends(con->lines_cap, con->stars_pos[i]);
-    }
+    constellation_compute_best_cap(con, obs);
+    // Use the new cap center as constellation position
+    vec3_copy(con->lines_cap, con->pvo[0]);
 
 end:
     update_image_mat(con);
