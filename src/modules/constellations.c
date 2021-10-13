@@ -439,7 +439,7 @@ static int render_bounds(const constellation_t *con,
     if (selected)
         vec4_set(painter.color, 1.0, 0.84, 0.84, 0.5 * painter.color[3]);
     else
-        vec4_set(painter.color, 0.8, 0.34, 0.34, 0.2 * painter.color[3]);
+        vec4_set(painter.color, 0.8, 0.34, 0.34, 0.4 * painter.color[3]);
     painter.lines.dash_ratio = 0.85;
     painter.lines.dash_length = 8;
     info = &con->info;
