@@ -34,25 +34,37 @@ typedef struct {
 typedef struct constellation {
     obj_t       obj;
     constellation_infos_t info;
-    int         count;
     fader_t     visible;
     fader_t     image_loaded_fader;
-    obj_t       **stars;
+
+    struct {
+        int         nb_stars;
+        obj_t       **stars;
+        double      (*stars_pos)[3]; // ICRF/observer pos for all stars.
+        double      cap[4];  // Bounding cap of the lines (ICRF).
+    } lines;
 
     // Texture and associated transformation matrix.
     struct {
         texture_t   *tex;
         anchor_t    anchors[3];
+        obj_t       *anchors_stars[3];
         double      mat[3][3];
         double      cap[4]; // Bounding cap of the image (ICRF)
     } img;
 
-    int         error; // Set if we couldn't parse the stars.
+    bool error; // Set if we couldn't parse the stars.
 
     double last_update; // Last update time in TT
-    double (*stars_pos)[3]; // ICRF/observer pos for all stars.
-    double lines_cap[4]; // Bounding cap of the lines (ICRF). zero if no stars.
+
     double pvo[2][4];
+    // Radius of the constellation, i.e. the one used when fitting zoom
+    double radius;
+
+    // True once all the data for this constellation have been lazily loaded
+    // There is no valid pvo, radius, cap etc.. for this object until
+    // first_update_complete is true
+    bool first_update_complete;
 } constellation_t;
 
 /*
@@ -160,12 +172,15 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
 {
     constellation_t *con = (constellation_t*)obj;
     constellation_update(con, obs);
+    if (!con->first_update_complete) return 1;
     switch (info) {
     case INFO_PVO:
         memcpy(out, con->pvo, sizeof(con->pvo));
-        return vec3_norm2(con->pvo[0]) ? 0 : 1;
+        assert(vec3_norm2(con->pvo[0]) > 0);
+        return 0;
     case INFO_RADIUS:
-        *(double*)out = acos(con->lines_cap[3]);
+        *(double*)out = con->radius;
+        assert(con->radius > 0);
         return 0;
     default:
         return 1;
@@ -177,30 +192,57 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
 static int constellation_create_stars(constellation_t *cons)
 {
     int i, nb_err = 0, hip, code;
-    if (cons->stars) return 0; // Already created.
-    cons->count = cons->info.nb_lines * 2;
-    cons->stars = calloc(cons->info.nb_lines * 2, sizeof(*cons->stars));
+    assert(cons->lines.stars == NULL);
+
+    // Fetch all the stars used in the constellation lines
+    cons->lines.nb_stars = cons->info.nb_lines * 2;
+    cons->lines.stars = calloc(cons->info.nb_lines * 2, sizeof(obj_t*));
     for (i = 0; i < cons->info.nb_lines * 2; i++) {
         hip = cons->info.lines[i / 2].hip[i % 2];
         assert(hip);
-        cons->stars[i] = obj_get_by_hip(hip, &code);
+        cons->lines.stars[i] = obj_get_by_hip(hip, &code);
         if (code == 0) goto still_loading;
-        if (!cons->stars[i]) nb_err++;
+        if (!cons->lines.stars[i]) {
+            LOG_W("Cannot find line star HIP %d, code=%d", hip, code);
+            nb_err++;
+        }
     }
-    cons->stars_pos = calloc(cons->count, sizeof(*cons->stars_pos));
+    cons->lines.stars_pos = calloc(cons->lines.nb_stars,
+                                   sizeof(*cons->lines.stars_pos));
+
+    // Also fetch the 3 stars for the image anchors if there is an illustration
+    if (!cons->img.tex) return 0;
+
+    for (i = 0; i < 3; i++) {
+        hip = cons->img.anchors[i].hip;
+        assert(cons->img.anchors_stars[i] == NULL);
+        cons->img.anchors_stars[i] = obj_get_by_hip(hip, &code);
+        if (code == 0) goto still_loading;
+        if (!cons->img.anchors_stars[i]) {
+            LOG_W("Cannot find anchor star HIP %d, code=%d", hip, code);
+            nb_err++;
+        }
+    }
+
     if (nb_err) {
         LOG_W("%d stars not found in constellation %s",
               nb_err, cons->info.id);
     }
+
     return 0;
 
 still_loading:
     // Release everything.
     for (i = 0; i < cons->info.nb_lines * 2; i++)
-        obj_release(cons->stars[i]);
-    free(cons->stars);
-    cons->stars = NULL;
-    cons->count = 0;
+        obj_release(cons->lines.stars[i]);
+    free(cons->lines.stars);
+    cons->lines.stars = NULL;
+    cons->lines.nb_stars = 0;
+    for (i = 0; i < 3; i++) {
+        obj_release(cons->img.anchors_stars[i]);
+        cons->img.anchors_stars[i] = NULL;
+    }
+
     return 1;
 }
 
@@ -233,28 +275,21 @@ static void compute_image_cap(const double mat[3][3], double cap[4])
 
 static void update_image_mat(constellation_t *cons)
 {
-    int i, r, code;
+    int i, r;
     double pos[3][3];
     double uvs[3][3];
     double tmp[3][3];
     double pvo[2][4];
     obj_t *star;
 
-    if (!cons->img.tex || cons->img.mat[2][2]) return;
+    if (!cons->img.tex) return;
     for (i = 0; i < 3; i++) {
         vec2_copy(cons->img.anchors[i].uv, uvs[i]);
         uvs[i][2] = 1.0;
-        star = obj_get_by_hip(cons->img.anchors[i].hip, &code);
-        if (code == 0) return; // Still loading.
-        if (!star) {
-            LOG_W("Cannot find star HIP %d", cons->img.anchors[i].hip);
-            goto error;
-        }
-        // XXX: instead we should get the star g_ra and g_dec, since they
-        // shouldn't change.
+        star = cons->img.anchors_stars[i];
+        assert(star);
         obj_get_pvo(star, core->observer, pvo);
         vec3_normalize(pvo[0], pos[i]);
-        obj_release(star);
     }
     // Compute the transformation matrix M from uv to ICRS:
     // M . uv = pos  =>   M = pos * inv(uv)
@@ -315,22 +350,22 @@ static void constellation_compute_best_cap(constellation_t *con,
     int i;
 
     // Compute bounding cap, and the outermost star
-    vec3_copy(con->pvo[0], con->lines_cap);
-    con->lines_cap[3] = 1.0;
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
-        if (cap_extends(con->lines_cap, con->stars_pos[i])) {
+    vec3_copy(con->pvo[0], con->lines.cap);
+    con->lines.cap[3] = 1.0;
+    for (i = 0; i < con->lines.nb_stars; i++) {
+        if (!con->lines.stars[i]) continue;
+        if (cap_extends(con->lines.cap, con->lines.stars_pos[i])) {
             outermost_star = i;
         }
     }
     // Use the outermost and the star at the extrem opposit to attempt
     // to find a better cap (cap2)
     if (outermost_star == -1) return;
-    vec3_sub(con->lines_cap, con->stars_pos[outermost_star], v);
+    vec3_sub(con->lines.cap, con->lines.stars_pos[outermost_star], v);
     vec3_normalize(v, v);
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
-        vec3_sub(con->stars_pos[i], con->lines_cap, vv);
+    for (i = 0; i < con->lines.nb_stars; i++) {
+        if (!con->lines.stars[i]) continue;
+        vec3_sub(con->lines.stars_pos[i], con->lines.cap, vv);
         const double d = vec3_dot(v, vv);
         if (d > max_d) {
             opposite_star = i;
@@ -338,17 +373,17 @@ static void constellation_compute_best_cap(constellation_t *con,
         }
     }
     assert(opposite_star != -1);
-    vec3_copy(con->stars_pos[outermost_star], v);
-    vec3_add(con->stars_pos[opposite_star], v, v);
+    vec3_copy(con->lines.stars_pos[outermost_star], v);
+    vec3_add(con->lines.stars_pos[opposite_star], v, v);
     vec3_normalize(v, cap2);
     cap2[3] = 1.0;
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
-        cap_extends(cap2, con->stars_pos[i]);
+    for (i = 0; i < con->lines.nb_stars; i++) {
+        if (!con->lines.stars[i]) continue;
+        cap_extends(cap2, con->lines.stars_pos[i]);
     }
     // If cap2 is better than the base cap, use it instead
-    if (cap2[3] > con->lines_cap[3])
-        vec4_copy(cap2, con->lines_cap);
+    if (cap2[3] > con->lines.cap[3])
+        vec4_copy(cap2, con->lines.cap);
 }
 
 /*
@@ -362,35 +397,62 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
     int i;
     if (con->error) return -1;
 
-    if (constellation_create_stars(con)) return 1;
-    if (con->count == 0) return 1;
-
-    if (fabs(obs->tt - con->last_update) < 1.0) {
+    if (con->first_update_complete &&
+            fabs(obs->tt - con->last_update) < 365.0) {
         // Constellation shape change cannot be seen over the course of
-        // one day
-        goto end;
+        // one year
+        return 0;
     }
-    con->last_update = obs->tt;
-
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
-        obj_get_pvo(con->stars[i], obs, pvo);
-        vec3_normalize(pvo[0], con->stars_pos[i]);
-        vec3_add(pos, con->stars_pos[i], pos);
+    if (!con->first_update_complete) {
+        if (constellation_create_stars(con)) {
+            return 1;
+        }
     }
-    if (vec3_norm2(pos) == 0) return 1; // No stars loaded yet.
 
-    vec3_normalize(pos, pos);
-    vec3_copy(pos, con->pvo[0]);
+    if (con->lines.nb_stars > 0) {
+        for (i = 0; i < con->lines.nb_stars; i++) {
+            if (!con->lines.stars[i]) continue;
+            obj_get_pvo(con->lines.stars[i], obs, pvo);
+            vec3_normalize(pvo[0], con->lines.stars_pos[i]);
+            vec3_add(pos, con->lines.stars_pos[i], pos);
+        }
+        if (!vec3_norm2(pos)) {
+            // We couldn't load any star, so we won't be able to determine
+            // a proper direction, just give up with this constellation..
+            LOG_E("Could not load constellation %s.", con->info.id);
+            con->error = true;
+            return -1;
+        }
+        vec3_normalize(pos, pos);
+        vec3_copy(pos, con->pvo[0]);
+
+        constellation_compute_best_cap(con, obs);
+
+        if (con->lines.cap[3] >= 1) {
+            // Lines for this constellation have no proper segments, it's
+            // probably a single star constellation, in this case we use a
+            // default cap radius of 1 deg
+            con->lines.cap[3] = cos(1. * DD2R);
+            assert(vec3_norm2(con->lines.cap) > 0);
+        }
+    }
+
+    update_image_mat(con);
+    if (con->lines.nb_stars == 0) {
+        // If the constellation has no lines, use the image cap as a
+        // substitute for the lines cap
+        vec4_copy(con->img.cap, con->lines.cap);
+    }
+
+    // Use the new cap center as constellation position
+    vec3_copy(con->lines.cap, con->pvo[0]);
     con->pvo[0][3] = 0; // At infinity.
     vec4_set(con->pvo[1], 0, 0, 0, 0);
+    con->radius = acos(con->lines.cap[3]);
+    assert(con->radius > 0);
 
-    constellation_compute_best_cap(con, obs);
-    // Use the new cap center as constellation position
-    vec3_copy(con->lines_cap, con->pvo[0]);
-
-end:
-    update_image_mat(con);
+    con->last_update = obs->tt;
+    con->first_update_complete = true;
     return 0;
 }
 
@@ -432,8 +494,8 @@ static int render_bounds(const constellation_t *con,
         painter.color[3] *= cons->bounds_visible.value * con->visible.value;
     }
     if (!painter.color[3]) return 0;
-    if (vec3_norm2(con->lines_cap) == 0) return 0;
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+    if (vec3_norm2(con->lines.cap) == 0) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines.cap))
         return 0;
 
     if (selected)
@@ -474,16 +536,16 @@ static bool constellation_lines_in_view(const constellation_t *con,
 
     // First fast tests for the case when the constellation is not in the
     // screen at all.
-    if (vec3_norm2(con->lines_cap) == 0) return false;
-    if (painter_is_cap_clipped(painter, FRAME_ICRF, con->lines_cap))
+    if (vec3_norm2(con->lines.cap) == 0) return false;
+    if (painter_is_cap_clipped(painter, FRAME_ICRF, con->lines.cap))
         return false;
 
     // Clipping test.
-    pos = calloc(con->count, sizeof(*pos));
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
+    pos = calloc(con->lines.nb_stars, sizeof(*pos));
+    for (i = 0; i < con->lines.nb_stars; i++) {
+        if (!con->lines.stars[i]) continue;
         convert_frame(painter->obs, FRAME_ICRF, FRAME_VIEW, true,
-                      con->stars_pos[i], pos[nb]);
+                      con->lines.stars_pos[i], pos[nb]);
         project_to_clip(painter->proj, pos[nb], pos[nb]);
         nb++;
     }
@@ -497,7 +559,7 @@ static bool constellation_lines_in_view(const constellation_t *con,
     mx = fmin(mx, 0.5);
     my = fmin(my, 0.5);
 
-    ret = !is_clipped(con->count, pos, mx, my);
+    ret = !is_clipped(con->lines.nb_stars, pos, mx, my);
     free(pos);
     return ret;
 }
@@ -563,24 +625,24 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
         painter.lines.width *= 2;
     }
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
-    if (vec3_norm2(con->lines_cap) == 0) return 0;
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+    if (vec3_norm2(con->lines.cap) == 0) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines.cap))
         return 0;
 
     vec4_set(lines_color, 0.65, 1.0, 1.0, 0.4);
     vec4_emul(lines_color, painter.color, painter.color);
 
-    lines = calloc(con->count, sizeof(*lines));
-    for (i = 0; i < con->count; i++) {
-        if (!con->stars[i]) continue;
-        vec3_copy(con->stars_pos[i], lines[i]);
+    lines = calloc(con->lines.nb_stars, sizeof(*lines));
+    for (i = 0; i < con->lines.nb_stars; i++) {
+        if (!con->lines.stars[i]) continue;
+        vec3_copy(con->lines.stars_pos[i], lines[i]);
         lines[i][3] = 0; // To infinity.
     }
 
-    for (i = 0; i < con->count; i += 2) {
-        if (!con->stars[i + 0] || !con->stars[i + 1]) continue;
-        obj_get_info(con->stars[i + 0], obs, INFO_VMAG, &mag[0]);
-        obj_get_info(con->stars[i + 1], obs, INFO_VMAG, &mag[1]);
+    for (i = 0; i < con->lines.nb_stars; i += 2) {
+        if (!con->lines.stars[i + 0] || !con->lines.stars[i + 1]) continue;
+        obj_get_info(con->lines.stars[i + 0], obs, INFO_VMAG, &mag[0]);
+        obj_get_info(con->lines.stars[i + 1], obs, INFO_VMAG, &mag[1]);
         core_get_point_for_mag(mag[0], &radius[0], NULL);
         core_get_point_for_mag(mag[1], &radius[1], NULL);
         radius[0] = core_get_apparent_angle_for_point(painter.proj, radius[0]);
@@ -593,8 +655,8 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     }
 
     opacity = painter.color[3];
-    for (i = 0; i < con->count; i += 2) {
-        if (!con->stars[i + 0] || !con->stars[i + 1]) continue;
+    for (i = 0; i < con->lines.nb_stars; i += 2) {
+        if (!con->lines.stars[i + 0] || !con->lines.stars[i + 1]) continue;
         painter.color[3] = opacity;
         if (con->info.lines[i / 2].line_weight == LINE_WEIGHT_THIN)
             painter.color[3] *= 0.25;
@@ -605,6 +667,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     }
 
     free(lines);
+
     return 0;
 }
 
@@ -710,7 +773,7 @@ static bool should_render_label(
 
     // Don't render the label if its center is not visible.
     if (painter_is_point_clipped_fast(
-                painter, FRAME_ICRF, con->lines_cap, true)) {
+                painter, FRAME_ICRF, con->lines.cap, true)) {
         return false;
     }
 
@@ -718,16 +781,16 @@ static bool should_render_label(
     // entirely into the line bounding cap.
     // Add an exception for constellation with a single point line: in
     // that case always render the label (see Kamilaroi sky culture).
-    if (con->lines_cap[3] == 1) return true;
-    painter_project(painter, FRAME_ICRF, con->lines_cap, true, false, win_pos);
+    if (con->lines.cap[3] == 1) return true;
+    painter_project(painter, FRAME_ICRF, con->lines.cap, true, false, win_pos);
     win_pos[0] += 1;
     painter_unproject(painter, FRAME_ICRF, win_pos, p);
-    pixel_angular_resolution = acos(vec3_dot(con->lines_cap, p));
+    pixel_angular_resolution = acos(vec3_dot(con->lines.cap, p));
     label_pixel_length = 0.5 * FONT_SIZE_BASE * 1.4 * strlen(label);
-    vec3_copy(con->lines_cap, label_cap);
+    vec3_copy(con->lines.cap, label_cap);
     label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
 
-    if (!cap_contains_cap(con->lines_cap, label_cap))
+    if (!cap_contains_cap(con->lines.cap, label_cap))
         return false;
 
     return true;
@@ -746,8 +809,8 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         painter.color[3] *= cons->labels_visible.value * con->visible.value;
     }
     if (painter.color[3] == 0.0) return 0;
-    if (vec3_norm2(con->lines_cap) == 0) return 0;
-    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines_cap))
+    if (vec3_norm2(con->lines.cap) == 0) return 0;
+    if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines.cap))
         return 0;
 
     res = skycultures_get_label(con->info.id, label, sizeof(label));
@@ -764,7 +827,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
 
     labels_add_3d(label, FRAME_ICRF,
-                  con->lines_cap, true, 0, FONT_SIZE_BASE,
+                  con->lines.cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
                   TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
                   0, &con->obj);
@@ -838,11 +901,11 @@ static void constellation_del(obj_t *obj)
     int i;
     constellation_t *con = (constellation_t*)obj;
     texture_release(con->img.tex);
-    for (i = 0; i < con->count; i++) {
-        obj_release(con->stars[i]);
+    for (i = 0; i < con->lines.nb_stars; i++) {
+        obj_release(con->lines.stars[i]);
     }
-    free(con->stars);
-    free(con->stars_pos);
+    free(con->lines.stars);
+    free(con->lines.stars_pos);
 }
 
 static void constellation_get_2d_ellipse(const obj_t *obj,
@@ -857,8 +920,8 @@ static void constellation_get_2d_ellipse(const obj_t *obj,
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
-    eraC2s(con->lines_cap, &ra, &de);
-    double size_x = acos(con->lines_cap[3]) * 2;
+    eraC2s(con->lines.cap, &ra, &de);
+    double size_x = acos(con->lines.cap[3]) * 2;
     painter_project_ellipse(&tmp_painter, FRAME_ICRF, ra, de, 0,
                             size_x, size_x, win_pos, win_size, win_angle);
     win_size[0] /= 2.0;
