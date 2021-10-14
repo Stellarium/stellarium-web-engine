@@ -50,6 +50,9 @@ typedef struct skyculture {
     bool english_use_native_names;
     // True if we should display native names first for the current language.
     bool prefer_native_names;
+    // True if the sky culture has boundaries (currently only western
+    // constellations do)
+    bool has_boundaries;
 
 
     // The following strings are all english text, with a matching translation
@@ -515,6 +518,7 @@ static int skyculture_update(obj_t *obj, double dt)
     }
 
     if (edges) {
+        cult->has_boundaries = true;
         skyculture_parse_edges(edges, cult->constellations,
                                cult->nb_constellations);
     }
@@ -1065,6 +1069,8 @@ static obj_klass_t skyculture_klass = {
         PROPERTY(thumbnail_bscale, TYPE_FLOAT,
                  MEMBER(skyculture_t, thumbnail_bscale)),
         PROPERTY(highlight, TYPE_STRING_PTR, MEMBER(skyculture_t, highlight)),
+        PROPERTY(has_boundaries, TYPE_BOOL,
+                 MEMBER(skyculture_t, has_boundaries)),
         {}
     },
 };
