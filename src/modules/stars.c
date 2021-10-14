@@ -937,8 +937,8 @@ obj_t *obj_get_by_hip(int hip, int *code)
         for (survey = stars->surveys; survey; survey = survey->next) {
             if (survey->is_gaia) continue;
             tile = get_tile(stars, survey, order, pix, true, code);
-            if (code == 0) return NULL; // Still loading.
-            if (!tile) return NULL;
+            if (*code == 0) return NULL; // Still loading.
+            if (!tile) continue;
             for (i = 0; i < tile->nb; i++) {
                 if (tile->sources[i].hip == hip) {
                     return obj_retain(&tile->sources[i].obj);
