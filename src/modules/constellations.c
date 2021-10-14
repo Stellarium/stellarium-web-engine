@@ -625,7 +625,8 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
     // Fade out image as we zoom in.
-    painter.color[3] *= smoothstep(5, 20, core->fov * DR2D);
+    double diam = acos(con->img.cap[3]) * DR2D * 2;
+    painter.color[3] *= smoothstep(diam / 5, diam / 2, core->fov * DR2D);
     if (!selected) {
         painter.color[3] *= cons->images_visible.value * con->visible.value;
     }
