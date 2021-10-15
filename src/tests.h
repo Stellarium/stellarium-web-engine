@@ -9,6 +9,8 @@
 
 #if COMPILE_TESTS
 
+#include <stdbool.h>
+
 enum {
     TEST_AUTO = 1 << 0,
 };
