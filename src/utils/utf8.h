@@ -45,3 +45,15 @@ void u8_remove_accents(char *dst, const char *str, int n);
  * Return the number of characters in a utf-8 string.
  */
 int u8_len(const char *str);
+
+/*
+ * Function: u8_split_line
+ * Split a single utf-8 string into several lines.
+ *
+ * Parameters:
+ *   dst        - destination buffer, can be equal to src for in-place work
+ *   len        - size of the destination buffer
+ *   src        - source string
+ *   min_chars  - minimum number of charaters of a line
+ */
+void u8_split_line(char *dst, int len, const char *src, int min_chars);

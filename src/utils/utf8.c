@@ -154,3 +154,20 @@ void u8_remove_accents(char *dst, const char *str, int n)
     }
     *dst = '\0';
 }
+
+
+void u8_split_line(char *dst, int len, const char *src, int min_chars)
+{
+    int n = 0, word_len;
+    char *p, *next;
+    if (dst != src) snprintf(dst, len, "%s", src);
+    for (p = dst; *p; p += u8_char_len(p), n++) {
+        if (*p != ' ') continue;
+        next = strchr(p + 1, ' ');
+        word_len = next ? next - p + 1 : strlen(p + 1);
+        if (n + word_len > min_chars) {
+            n = 0;
+            *p = '\n';
+        }
+    }
+}
