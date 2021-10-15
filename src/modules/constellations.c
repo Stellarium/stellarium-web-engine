@@ -761,7 +761,7 @@ static bool constellation_is_pointed(const constellation_t *con,
 
 // Extra tests to avoid rendering too many labels.
 static bool should_render_label(
-        const constellation_t *con, const char *label,
+        const constellation_t *con, int label_len,
         const painter_t *painter, bool selected)
 {
     const constellations_t *cons = (constellations_t*)con->obj.parent;
@@ -788,7 +788,7 @@ static bool should_render_label(
     win_pos[0] += 1;
     painter_unproject(painter, FRAME_ICRF, win_pos, p);
     pixel_angular_resolution = acos(vec3_dot(con->lines.cap, p));
-    label_pixel_length = 0.5 * FONT_SIZE_BASE * 1.4 * strlen(label);
+    label_pixel_length = 0.5 * FONT_SIZE_BASE * 1.4 * label_len;
     vec3_copy(con->lines.cap, label_cap);
     label_cap[3] = cos(label_pixel_length / 2 * pixel_angular_resolution);
 
@@ -806,6 +806,7 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     char label[256];
     const char* res;
     constellations_t *cons = (constellations_t*)con->obj.parent;
+    int max_label_len;
 
     if (!selected) {
         painter.color[3] *= cons->labels_visible.value * con->visible.value;
@@ -820,7 +821,9 @@ static int render_label(constellation_t *con, const painter_t *painter_,
         snprintf(label, sizeof(label), "%s", con->info.id);
     }
 
-    if (!should_render_label(con, label, &painter, selected))
+    max_label_len = u8_split_line(label, sizeof(label), label, 15);
+
+    if (!should_render_label(con, max_label_len, &painter, selected))
         return 0;
 
     if (!selected)
@@ -828,7 +831,6 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     else
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
 
-    u8_split_line(label, sizeof(label), label, 16);
     labels_add_3d(label, FRAME_ICRF,
                   con->lines.cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
