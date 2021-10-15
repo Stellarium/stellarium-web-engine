@@ -79,6 +79,7 @@ typedef struct constellations {
     fader_t     labels_visible;
     bool        lines_animation;
     bool        show_only_pointed;
+    double      illustrations_bscale;
 } constellations_t;
 
 static int constellation_update(constellation_t *con, const observer_t *obs);
@@ -693,6 +694,7 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     if (!selected) {
         painter.color[3] *= cons->images_visible.value * con->visible.value;
     }
+    painter.color[3] *= cons->illustrations_bscale;
     if (!painter.color[3]) return 0;
     // Skip if not ready yet.
     if (!con->img.tex || !texture_load(con->img.tex, NULL)) return 0;
@@ -943,6 +945,7 @@ static int constellations_init(obj_t *obj, json_value *args)
     constellations_t *conss = (void*)obj;
     conss->lines_animation = true;
     conss->show_only_pointed = true;
+    conss->illustrations_bscale = 1.0;
     fader_init(&conss->lines_visible, false);
     fader_init(&conss->labels_visible, false);
     fader_init(&conss->images_visible, false);
@@ -1045,6 +1048,8 @@ static obj_klass_t constellations_klass = {
                  MEMBER(constellations_t, lines_animation)),
         PROPERTY(show_only_pointed, TYPE_BOOL,
                  MEMBER(constellations_t, show_only_pointed)),
+        PROPERTY(illustrations_bscale, TYPE_FLOAT,
+                 MEMBER(constellations_t, illustrations_bscale)),
         {}
     },
 };

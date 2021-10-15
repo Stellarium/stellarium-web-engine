@@ -1,4 +1,4 @@
-/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+﻿/* Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
  *
  * This program is licensed under the terms of the GNU AGPL v3, or
  * alternatively under a commercial licence.
@@ -54,6 +54,10 @@ typedef struct skyculture {
     // constellations do)
     bool has_boundaries;
 
+    char             *thumbnail;   // thumbnail (image path)
+    double     thumbnail_bscale;   // brightness correction for thumbnail
+    char             *highlight;   // highlight (constellation designation)
+    double illustrations_bscale;   // brightness correction for illustrations
 
     // The following strings are all english text, with a matching translation
     // in the associated sky culture translations files.
@@ -64,9 +68,6 @@ typedef struct skyculture {
     char            *references;   // references if any (html)
     char            *authors;      // authors (html)
     char            *licence;      // licence (html)
-    char            *thumbnail;    // thumbnail (image path)
-    double    thumbnail_bscale;    // brightess correction for thumbnail
-    char            *highlight;    // highlight (constellation designation)
 } skyculture_t;
 
 /*
@@ -142,6 +143,8 @@ static void skyculture_activate(skyculture_t *cult)
         json_builder_free(args);
     }
 
+    obj_set_attr(constellations, "illustrations_bscale",
+                 cult->illustrations_bscale),
     // Set the current attribute of the skycultures manager object.
     obj_set_attr(cult->obj.parent, "current", cult);
     module_changed(cult->obj.parent, "current_id");
@@ -414,7 +417,7 @@ static int skyculture_update(obj_t *obj, double dt)
     const json_value *names = NULL, *features = NULL,
                      *tour = NULL, *edges = NULL,
                      *langs_use_native_names = NULL,
-                     *thumbnail_bscale = NULL;
+                     *thumbnail_bscale = NULL, *illustrations_bscale = NULL;
     const char *description = NULL, *introduction = NULL,
                *references = NULL, *authors = NULL, *licence = NULL,
                *thumbnail = NULL, *highlight = NULL;
@@ -463,6 +466,7 @@ static int skyculture_update(obj_t *obj, double dt)
         "?tour", JCON_VAL(tour),
         "?thumbnail", JCON_STR(thumbnail),
         "?thumbnail_bscale", JCON_VAL(thumbnail_bscale),
+        "?illustrations_bscale", JCON_VAL(illustrations_bscale),
         "?highlight", JCON_STR(highlight),
     "}");
     if (r) {
@@ -529,6 +533,15 @@ static int skyculture_update(obj_t *obj, double dt)
                thumbnail_bscale->type == json_double);
         cult->thumbnail_bscale = thumbnail_bscale->type == json_integer ?
                     thumbnail_bscale->u.integer : thumbnail_bscale->u.dbl;
+    }
+
+    cult->illustrations_bscale = 1;
+    if (illustrations_bscale) {
+        assert(illustrations_bscale->type == json_integer ||
+               illustrations_bscale->type == json_double);
+        cult->illustrations_bscale =
+            illustrations_bscale->type == json_integer ?
+            illustrations_bscale->u.integer : illustrations_bscale->u.dbl;
     }
 
 end:
