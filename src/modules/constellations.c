@@ -828,10 +828,12 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     else
         vec4_set(names_color, 1.0, 1.0, 1.0, 1.0);
 
+    u8_split_line(label, sizeof(label), label, 16);
     labels_add_3d(label, FRAME_ICRF,
                   con->lines.cap, true, 0, FONT_SIZE_BASE,
                   names_color, 0, ALIGN_CENTER | ALIGN_MIDDLE,
-                  TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0),
+                  TEXT_UPPERCASE | TEXT_SPACED | (selected ? TEXT_BOLD : 0) |
+                  TEXT_MULTILINES,
                   0, &con->obj);
 
     return 0;
