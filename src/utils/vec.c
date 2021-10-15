@@ -12,11 +12,6 @@
 
 #define S static
 
-static double min(double x, double y)
-{
-    return x < y ? x : y;
-}
-
 void vec3_get_ortho(const double v_[3], double out[3])
 {
     int axis;
@@ -111,7 +106,7 @@ double mat3_det(const double m[S 3][3])
 double quat_sep(const double a[4], const double b[4])
 {
     double f = vec4_dot(a, b);
-    return acos(min(fabs(f), 1.0)) * 2.0;
+    return acos(fmin(fabs(f), 1.0)) * 2.0;
 }
 
 void quat_rotate_towards(const double a[4], const double b[4],
@@ -120,7 +115,7 @@ void quat_rotate_towards(const double a[4], const double b[4],
     double t, sep;
     sep = quat_sep(a, b);
     if (sep == 0) return;
-    t = min(1.0, max_angle / sep);
+    t = fmin(1.0, max_angle / sep);
     quat_slerp(a, b, t, out);
 }
 
