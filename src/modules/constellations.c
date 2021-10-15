@@ -298,6 +298,7 @@ static void update_image_mat(constellation_t *cons)
     if (!r) goto error;
     mat3_mul(pos, tmp, cons->img.mat);
     compute_image_cap(cons->img.mat, cons->img.cap);
+    assert(cons->img.mat[2][2]);
     return;
 
 error:
@@ -385,6 +386,7 @@ static void constellation_compute_best_cap(constellation_t *con,
     // If cap2 is better than the base cap, use it instead
     if (cap2[3] > con->lines.cap[3])
         vec4_copy(cap2, con->lines.cap);
+    assert(vec3_norm2(con->lines.cap) > 0);
 }
 
 /*
@@ -434,15 +436,24 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
             // probably a single star constellation, in this case we use a
             // default cap radius of 1 deg
             con->lines.cap[3] = cos(1. * DD2R);
-            assert(vec3_norm2(con->lines.cap) > 0);
         }
     }
 
+    // If the constellation has no lines, it must have an illustration
+    if (con->lines.nb_stars == 0 && !con->img.tex) {
+        con->error = true;
+        LOG_E("Invalid constellation %s has no lines and no illustration",
+              con->info.id);
+        return -1;
+    }
+
     update_image_mat(con);
+
     if (con->lines.nb_stars == 0) {
         // If the constellation has no lines, use the image cap as a
         // substitute for the lines cap
         vec4_copy(con->img.cap, con->lines.cap);
+        assert(vec3_norm2(con->lines.cap) > 0);
     }
 
     // Use the new cap center as constellation position
@@ -454,6 +465,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
 
     con->last_update = obs->tt;
     con->first_update_complete = true;
+    assert(vec3_norm2(con->lines.cap) > 0);
     return 0;
 }
 
@@ -491,11 +503,13 @@ static int render_bounds(const constellation_t *con,
         .map = spherical_project,
     };
 
+    assert(con->first_update_complete);
+
     if (!selected) {
         painter.color[3] *= cons->bounds_visible.value * con->visible.value;
     }
     if (!painter.color[3]) return 0;
-    if (vec3_norm2(con->lines.cap) == 0) return 0;
+    assert(vec3_norm2(con->lines.cap) > 0);
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines.cap))
         return 0;
 
@@ -535,9 +549,11 @@ static bool constellation_lines_in_view(const constellation_t *con,
     bool ret;
     const double m = 100; // Border margins (windows unit).
 
+    assert(con->first_update_complete);
+
     // First fast tests for the case when the constellation is not in the
     // screen at all.
-    if (vec3_norm2(con->lines.cap) == 0) return false;
+    assert(vec3_norm2(con->lines.cap) > 0);
     if (painter_is_cap_clipped(painter, FRAME_ICRF, con->lines.cap))
         return false;
 
@@ -581,9 +597,10 @@ static bool constellation_image_in_view(const constellation_t *con,
     const double m = 100; // Border margins (windows unit).
     const observer_t *obs = painter->obs;
 
+    assert(con->first_update_complete);
+
     // Check that the texture matrix is computed.
     if (!con->img.tex) return false;
-    if (!con->img.mat[2][2]) return false;
 
     // First fast tests for the case when the constellation is not in the
     // screen at all.
@@ -620,13 +637,15 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
+    assert(con->first_update_complete);
+
     visible = cons->lines_visible.value * con->visible.value;
     if (selected) {
         visible = 1;
         painter.lines.width *= 2;
     }
     if (painter.color[3] == 0.0 || visible == 0.0) return 0;
-    if (vec3_norm2(con->lines.cap) == 0) return 0;
+    assert(vec3_norm2(con->lines.cap) > 0);
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines.cap))
         return 0;
 
@@ -690,6 +709,9 @@ static int render_img(constellation_t *con, const painter_t *painter_,
 
     // Fade out image as we zoom in.
     double diam = acos(con->img.cap[3]) * DR2D * 2;
+
+    assert(con->first_update_complete);
+
     painter.color[3] *= smoothstep(diam / 5, diam / 2, core->fov * DR2D);
     if (!selected) {
         painter.color[3] *= cons->images_visible.value * con->visible.value;
@@ -698,7 +720,6 @@ static int render_img(constellation_t *con, const painter_t *painter_,
     if (!painter.color[3]) return 0;
     // Skip if not ready yet.
     if (!con->img.tex || !texture_load(con->img.tex, NULL)) return 0;
-    if (!con->img.mat[2][2]) return 0;
 
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->img.cap))
         return 0;
@@ -808,11 +829,12 @@ static int render_label(constellation_t *con, const painter_t *painter_,
     constellations_t *cons = (constellations_t*)con->obj.parent;
     int max_label_len;
 
+    assert(con->first_update_complete);
     if (!selected) {
         painter.color[3] *= cons->labels_visible.value * con->visible.value;
     }
     if (painter.color[3] == 0.0) return 0;
-    if (vec3_norm2(con->lines.cap) == 0) return 0;
+    assert(vec3_norm2(con->lines.cap) > 0);
     if (painter_is_cap_clipped(&painter, FRAME_ICRF, con->lines.cap))
         return 0;
 
@@ -846,6 +868,8 @@ static bool constellation_is_visible(const constellation_t *con,
 {
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
+    if (!con->first_update_complete) return false;
+
     // Show selected constellation no matter what.
     if (core->selection && &con->obj == core->selection)
         return true;
@@ -874,6 +898,8 @@ static int constellation_render(const obj_t *obj, const painter_t *_painter)
         return 0;
     if (con->error)
         return 0;
+
+    assert(con->first_update_complete);
 
     // Early exit if nothing should be rendered.
     if (    !selected
