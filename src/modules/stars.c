@@ -366,9 +366,10 @@ static void star_render_name(const painter_t *painter, const star_t *s,
     }
     radius += LABEL_SPACING;
 
+    u8_split_line(buf, sizeof(buf), buf, 16);
     labels_add_3d(buf, frame, pos, true,
                  radius, FONT_SIZE_BASE, label_color, 0, 0,
-                 effects, -s->vmag, &s->obj);
+                 effects | TEXT_MULTILINES, -s->vmag, &s->obj);
 }
 
 // Render a single star.
