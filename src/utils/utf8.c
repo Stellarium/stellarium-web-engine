@@ -8,8 +8,8 @@
  */
 
 #include "utf8.h"
-
 #include <string.h>
+#include <assert.h>
 
 static const char LEN_TABLE[256] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -156,18 +156,50 @@ void u8_remove_accents(char *dst, const char *str, int n)
 }
 
 
-void u8_split_line(char *dst, int len, const char *src, int min_chars)
+int u8_split_line(char *dst, int len, const char *src, int min_chars)
 {
-    int n = 0, word_len;
+    int n = 1, word_len, max_len = 0;
     char *p, *next;
     if (dst != src) snprintf(dst, len, "%s", src);
     for (p = dst; *p; p += u8_char_len(p), n++) {
         if (*p != ' ') continue;
         next = strchr(p + 1, ' ');
-        word_len = next ? next - p + 1 : strlen(p + 1);
+        word_len = next ? next - p + 1 : u8_len(p + 1);
         if (n + word_len > min_chars) {
+            if (n - 1 > max_len) max_len = n - 1;
             n = 0;
             *p = '\n';
         }
     }
+    if (n - 1 > max_len) max_len = n - 1;
+    return max_len;
 }
+
+
+/******** TESTS ***********************************************************/
+
+#if COMPILE_TESTS
+
+#include "tests.h"
+
+static void test_u8_split_line(void)
+{
+    char* s = "coucou coucou cou";
+    char buf[128];
+    assert(u8_split_line(buf, sizeof(buf), s, 8) == 6);
+    assert(u8_split_line(buf, sizeof(buf), s, 30) == 17);
+
+    s = "cc coucoucou c";
+    assert(u8_split_line(buf, sizeof(buf), s, 8) == 9);
+
+    s = "这是一份非 常间单的说明书";
+    assert(u8_split_line(buf, sizeof(buf), s, 8) == 7);
+    assert(u8_split_line(buf, sizeof(buf), s, 30) == 13);
+    assert(u8_split_line(buf, sizeof(buf), s, 13) == 13);
+    s = "这是 一份 明书";
+    assert(u8_split_line(buf, sizeof(buf), s, 5) == 5);
+}
+
+TEST_REGISTER(NULL, test_u8_split_line, TEST_AUTO);
+
+#endif

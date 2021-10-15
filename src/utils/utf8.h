@@ -50,10 +50,12 @@ int u8_len(const char *str);
  * Function: u8_split_line
  * Split a single utf-8 string into several lines.
  *
+ * Return the (visual) length of the longest line.
+ *
  * Parameters:
  *   dst        - destination buffer, can be equal to src for in-place work
  *   len        - size of the destination buffer
  *   src        - source string
  *   min_chars  - minimum number of charaters of a line
  */
-void u8_split_line(char *dst, int len, const char *src, int min_chars);
+int u8_split_line(char *dst, int len, const char *src, int min_chars);
