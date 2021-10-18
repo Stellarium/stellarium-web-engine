@@ -81,14 +81,16 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
 
     // Adjust the border if we are on a diagonal.
     if (    (align & (ALIGN_LEFT | ALIGN_RIGHT)) &&
-            (align & (ALIGN_TOP | ALIGN_BOTTOM))) {
+            (align & (ALIGN_TOP | ALIGN_BOTTOM) ||
+             align & (ALIGN_TOP | ALIGN_BASELINE))) {
         border /= sqrt(2.0);
     }
 
-    if (align & ALIGN_LEFT)    pos[0] += border;
-    if (align & ALIGN_RIGHT)   pos[0] -= border;
-    if (align & ALIGN_BOTTOM)  pos[1] -= border;
-    if (align & ALIGN_TOP)     pos[1] += border;
+    if (align & ALIGN_LEFT)     pos[0] += border;
+    if (align & ALIGN_RIGHT)    pos[0] -= border;
+    if (align & ALIGN_BOTTOM)   pos[1] -= border;
+    if (align & ALIGN_BASELINE) pos[1] -= border;
+    if (align & ALIGN_TOP)      pos[1] += border;
     paint_text_bounds(painter, label->render_text, pos, align, effects,
                       label->size, bounds);
 }

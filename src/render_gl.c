@@ -955,8 +955,13 @@ static void text_using_texture(renderer_t *rend,
     if (align & ALIGN_RIGHT)    ofs[0] = -s[0] / 2;
     if (align & ALIGN_TOP)      ofs[1] = +s[1] / 2;
     if (align & ALIGN_BOTTOM)   ofs[1] = -s[1] / 2;
-    bounds[0] = win_pos[0] - s[0] / 2 + ofs[0] + ctex->xoff / scale;
-    bounds[1] = win_pos[1] - s[1] / 2 + ofs[1] + ctex->yoff / scale;
+    if (align & ALIGN_BASELINE) ofs[1] = -s[1] / 2;
+    bounds[0] = win_pos[0] - s[0] / 2 + ofs[0];
+    bounds[1] = win_pos[1] - s[1] / 2 + ofs[1];
+    if (align & ALIGN_BASELINE) {
+        bounds[0] += (ctex->xoff + 1) / scale;
+        bounds[1] += (ctex->yoff + 1) / scale;
+    }
 
     // Round the position to the nearest pixel.  We add a small delta to
     // fix a bug when we are exactly in between two pixels, which can happen
