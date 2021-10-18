@@ -108,17 +108,21 @@ bool sys_lang_supports_spacing();
  * Render text into a texture buffer.
  *
  * Parameters:
- *   txt     - A utf string.
- *   height  - The height of the font.
- *   flags   - Only accepted flag is LABEL_BOLD.
- *   w       - Output width of the buffer.
- *   h       - Output height of the buffer.
- *   xoffset - X offset to apply to the texture relative to the text pos.
- *   yoffset - Y offset to apply to the texture relative to the text pos.
+ *   txt      - A utf string.
+ *   size     - The font size.
+ *   effects  - The effects to apply to the text, such as TEXT_UPPERCASE.
+ *   align    - The text horizontal alignment within the texture. Must be one
+ *              of ALIGN_LEFT, ALIGN_RIGHT, ALIGN_CENTER.
+ *   w        - Output width of the buffer.
+ *   h        - Output height of the buffer.
+ *   xoffset  - the distance form the left of the buffer to the first letter.
+ *   yoffset  - the distance form the bottom of the buffer to the first letter.
+ *              It is normally equivalent to the font descent.
+ *
  * Returns:
  *   An allocated buffer of one byte per pixel texture.
  */
-char *sys_render_text(const char *txt, float height, int flags,
+char *sys_render_text(const char *txt, float size, int effects, int align,
                       int *w, int *h, int* xoffset, int* yoffset);
 
 /*
@@ -136,8 +140,8 @@ typedef struct {
                         double *alt, double *accuracy);
     const char *(*translate)(void *user, const char *domain, const char *str);
     const char *(*get_lang)();
-    char *(*render_text)(void *user, const char *txt, float height, int flags,
-                         int *w, int *h, int *xoffset, int *yoffset);
+    char *(*render_text)(void *user, const char *txt, float size, int effects,
+                         int align, int *w, int *h, int *xoffset, int *yoffset);
     int (*list_dir)(void *user, const char *dir, void *cuser,
                     int (*f)(void *user, const char *path, int is_dir));
 } sys_callbacks_t;

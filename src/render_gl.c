@@ -926,7 +926,7 @@ static void text_using_texture(renderer_t *rend,
     }
 
     if (!ctex) {
-        img = (void*)sys_render_text(text, size * scale, effects, &w, &h,
+        img = (void*)sys_render_text(text, size * scale, effects, align, &w, &h,
                                      &xoff, &yoff);
         // Shadow effect, into a texture with one pixel extra border.
         w += 2;

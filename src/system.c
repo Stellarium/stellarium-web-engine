@@ -127,26 +127,12 @@ bool sys_lang_supports_spacing()
     return lang_has_spacing;
 }
 
-/*
- * Function: sys_render_text
- * Render text into a texture buffer.
- *
- * Parameters:
- *   txt    - A utf string.
- *   height - The height of the font.
- *   flags  - Only accepted flag is LABEL_BOLD.
- *   w      - Output width of the buffer.
- *   h      - Output height of the buffer.
- *
- * Returns:
- *   An allocated buffer of one byte per pixel texture.
- */
-char *sys_render_text(const char *txt, float height, int flags,
+char *sys_render_text(const char *txt, float size, int effects, int align,
                       int *w, int *h, int* xoffset, int* yoffset)
 {
     assert(sys_callbacks.render_text);
-    return sys_callbacks.render_text(
-            sys_callbacks.user, txt, height, flags, w, h, xoffset, yoffset);
+    return sys_callbacks.render_text(sys_callbacks.user, txt, size, effects,
+                                     align, w, h, xoffset, yoffset);
 }
 
 EMSCRIPTEN_KEEPALIVE
