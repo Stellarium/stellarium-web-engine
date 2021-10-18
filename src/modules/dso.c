@@ -461,14 +461,14 @@ static bool dso_get_short_name(const dso_t *s, char *out, int size)
         }
         if (len < best_name_len) {
             best_name_len = len;
-            strncpy(best_name, out, size);
+            strncpy(best_name, out, size - 1);
         }
         if (strncmp(names, "NAME ", 5) != 0) {
             break;
         }
         names += strlen(names) + 1;
     }
-    strncpy(out, best_name, size);
+    strncpy(out, best_name, size - 1);
     return true;
 
 }
