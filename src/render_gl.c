@@ -1000,6 +1000,44 @@ static void text_using_texture(renderer_t *rend,
     texture_2d(rend, tex, uv, verts, view_pos, VEC(1, 1, 1, color[3]), flags);
 }
 
+static void get_nvg_bounds(renderer_t *rend, int font, float size,
+                           int effects, const char* text, int align,
+                           const double pos[2], float fbounds[4]) {
+    float w, h, dummy, descender;
+    nvgFontFaceId(rend->vg, rend->fonts[font].id);
+    nvgFontSize(rend->vg, size * rend->fonts[font].scale);
+    nvgTextLetterSpacing(rend->vg, size * rend->fonts[font].scale * 0.01);
+    if (sys_lang_supports_spacing() && effects & TEXT_SPACED)
+        nvgTextLetterSpacing(rend->vg, size * rend->fonts[font].scale * 0.308);
+    if (sys_lang_supports_spacing() && effects & TEXT_SEMI_SPACED)
+        nvgTextLetterSpacing(rend->vg, size * rend->fonts[font].scale * 0.075);
+
+    // First determine the actual text block width
+    nvgTextAlign(rend->vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
+    nvgTextBoxBounds(rend->vg, 0, 0, 10000, text, NULL, fbounds);
+
+    // Compute bounds taking alignment into account.
+    fbounds[0] = floor(fbounds[0]);
+    fbounds[1] = floor(fbounds[1]);
+    fbounds[2] = ceil(fbounds[2]);
+    fbounds[3] = ceil(fbounds[3]);
+    w = fbounds[2] - fbounds[0] + 1;
+    h = fbounds[3] - fbounds[1];
+    if (align & ALIGN_RIGHT)    fbounds[0] += -w;
+    if (align & ALIGN_CENTER)   fbounds[0] += -w / 2;
+    if (align & ALIGN_BOTTOM)   fbounds[1] += -h;
+    if (align & ALIGN_MIDDLE)   fbounds[1] += -h / 2;
+    if (align & ALIGN_BASELINE) fbounds[1] += -h;
+    if (align & ALIGN_BASELINE) {
+        nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
+        fbounds[1] -= descender * rend->fonts[font].scale;
+    }
+    fbounds[0] = floor(fbounds[0] + pos[0]);
+    fbounds[1] = floor(fbounds[1] + pos[1]);
+    fbounds[2] = fbounds[0] + w;
+    fbounds[3] = fbounds[1] + h;
+}
+
 // Render text using nanovg.
 static void text_using_nanovg(renderer_t *rend,
                               const painter_t *painter,
@@ -1011,6 +1049,7 @@ static void text_using_nanovg(renderer_t *rend,
     item_t *item;
     float fbounds[4];
     int font = (effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
+    char buf[128];
 
     if (strlen(text) >= sizeof(item->text.text)) {
         LOG_W("Text too large: %s", text);
@@ -1035,21 +1074,33 @@ static void text_using_nanovg(renderer_t *rend,
             // Emulate Small Cap effect by doing regular capitalize
             u8_upper(item->text.text, text, sizeof(item->text.text) - 1);
         } else {
-            strcpy(item->text.text, text);
+            strncpy(item->text.text, text, sizeof(item->text.text) - 1);
         }
         DL_APPEND(rend->items, item);
     }
     if (bounds) {
+        if (effects & TEXT_UPPERCASE || effects & TEXT_SMALL_CAP) {
+            // Emulate Small Cap effect by doing regular capitalize
+            u8_upper(buf, text, sizeof(buf) - 1);
+        } else {
+            strncpy(buf, text, sizeof(buf) - 1);
+        }
+
         nvgSave(rend->vg);
-        nvgFontFaceId(rend->vg, rend->fonts[font].id);
-        nvgFontSize(rend->vg, size * rend->fonts[font].scale);
-        nvgTextAlign(rend->vg, align);
-        nvgTextBounds(rend->vg, pos[0], pos[1], text, NULL, fbounds);
-        bounds[0] = fbounds[0];
-        bounds[1] = fbounds[1];
-        bounds[2] = fbounds[2];
-        bounds[3] = fbounds[3];
+        get_nvg_bounds(rend, font, size, effects, buf, align, pos, fbounds);
         nvgRestore(rend->vg);
+
+        // Uncomment to see labels bounding box
+        if ((0)) {
+            float w = fbounds[2] - fbounds[0];
+            float h = fbounds[3] - fbounds[1];
+            nvgSave(rend->vg);
+            nvgBeginPath(rend->vg);
+            nvgRect(rend->vg, bounds[0], bounds[1], w, h);
+            nvgStrokeColor(rend->vg, nvgRGBA(255, 255, 255, 255));
+            nvgStroke(rend->vg);
+            nvgRestore(rend->vg);
+        }
     }
 }
 
@@ -1342,35 +1393,36 @@ static void item_vg_render(renderer_t *rend, const item_t *item)
 static void item_text_render(renderer_t *rend, const item_t *item)
 {
     int font = (item->text.effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
+    double pos[2] = {0, 0};
+    float fbounds[4];
+    float w;
+
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
-    nvgTranslate(rend->vg, item->text.pos[0], item->text.pos[1]);
+    nvgTranslate(rend->vg, round(item->text.pos[0]), round(item->text.pos[1]));
     nvgRotate(rend->vg, item->text.angle);
-
-    nvgFontFaceId(rend->vg, rend->fonts[font].id);
-
-    if (sys_lang_supports_spacing() && item->text.effects & TEXT_SPACED)
-        nvgTextLetterSpacing(rend->vg, round(item->text.size *
-                             rend->fonts[font].scale * 0.2));
-    if (sys_lang_supports_spacing() && item->text.effects & TEXT_SEMI_SPACED)
-        nvgTextLetterSpacing(rend->vg, round(item->text.size *
-                             rend->fonts[font].scale * 0.05));
-    nvgFontSize(rend->vg, item->text.size * rend->fonts[font].scale);
     nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                    item->color[1] * 255,
                                    item->color[2] * 255,
                                    item->color[3] * 255));
-    nvgTextAlign(rend->vg, item->text.align);
-    nvgText(rend->vg, 0, 0, item->text.text, NULL);
+
+    get_nvg_bounds(rend, font, item->text.size, item->text.effects,
+                   item->text.text, item->text.align, pos, fbounds);
+    w = fbounds[2] - fbounds[0];
+
+    nvgTextAlign(rend->vg, NVG_ALIGN_TOP |
+                 (item->text.align & (NVG_ALIGN_LEFT | NVG_ALIGN_RIGHT |
+                                      NVG_ALIGN_CENTER)));
+
+    // Render in multi-line using the previously computed line width
+    nvgTextBox(rend->vg, fbounds[0], fbounds[1], w, item->text.text, NULL);
 
     // Uncomment to see labels bounding box
     if ((0)) {
-        float bounds[4];
-        nvgTextBounds(rend->vg, 0, 0, item->text.text, NULL, bounds);
+        float h = fbounds[3] - fbounds[1];
         nvgBeginPath(rend->vg);
-        nvgRect(rend->vg, bounds[0],bounds[1], bounds[2]-bounds[0],
-                bounds[3]-bounds[1]);
+        nvgRect(rend->vg, fbounds[0], fbounds[1], w, h);
         nvgStrokeColor(rend->vg, nvgRGBA(item->color[0] * 255,
                        item->color[1] * 255,
                        item->color[2] * 255,
@@ -2023,11 +2075,11 @@ void core_add_font(renderer_t *rend, const char *name,
 
 static void set_default_fonts(renderer_t *rend)
 {
-    const float scale = 1.38;
+    const float scale = 1.365;
     core_add_font(rend, "regular", "asset://font/NotoSans-Regular.ttf",
                   NULL, 0, scale);
     core_add_font(rend, "bold", "asset://font/NotoSans-Bold.ttf",
-                  NULL, 0, scale);
+                  NULL, 0, 1.34);
     rend->fonts[FONT_REGULAR].is_default_font = true;
     rend->fonts[FONT_BOLD].is_default_font = true;
 }
