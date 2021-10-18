@@ -71,13 +71,11 @@ static label_t *label_get(label_t *list, const char *txt, double size,
     return NULL;
 }
 
-static void label_get_bounds(const painter_t *painter, const label_t *label,
-                             int align, int effects, double bounds[4])
+static void label_apply_radius_offset(const label_t *label, double win_pos[2])
 {
-    double border;
-    double pos[2];
-    vec2_copy(label->win_pos, pos);
-    border = label->radius;
+    double border = label->radius;
+    vec2_copy(label->win_pos, win_pos);
+    int align = label->align;
 
     // Adjust the border if we are on a diagonal.
     if (    (align & (ALIGN_LEFT | ALIGN_RIGHT)) &&
@@ -86,13 +84,11 @@ static void label_get_bounds(const painter_t *painter, const label_t *label,
         border /= sqrt(2.0);
     }
 
-    if (align & ALIGN_LEFT)     pos[0] += border;
-    if (align & ALIGN_RIGHT)    pos[0] -= border;
-    if (align & ALIGN_BOTTOM)   pos[1] -= border;
-    if (align & ALIGN_BASELINE) pos[1] -= border;
-    if (align & ALIGN_TOP)      pos[1] += border;
-    paint_text_bounds(painter, label->render_text, pos, align, effects,
-                      label->size, bounds);
+    if (align & ALIGN_LEFT)     win_pos[0] += border;
+    if (align & ALIGN_RIGHT)    win_pos[0] -= border;
+    if (align & ALIGN_BOTTOM)   win_pos[1] -= border;
+    if (align & ALIGN_BASELINE) win_pos[1] -= border;
+    if (align & ALIGN_TOP)      win_pos[1] += border;
 }
 
 // Compute the intersection of two bounding box.
@@ -166,7 +162,7 @@ static int labels_init(obj_t *obj, json_value *args)
 static int labels_render(const obj_t *obj, const painter_t *painter_)
 {
     label_t *label;
-    double win_pos[2];
+    double pos[2];
     const double max_overlap = 8;
     painter_t painter = *painter_;
 
@@ -185,8 +181,9 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
                             false, label->win_pos);
         }
         painter.flags &= ~PAINTER_ENABLE_DEPTH;
-        label_get_bounds(&painter, label, label->align, label->effects,
-                         label->bounds);
+        label_apply_radius_offset(label, pos);
+        paint_text_bounds(&painter, label->render_text, pos, label->align,
+                          label->effects, label->size, label->bounds);
         label->fader.target = label->active &&
                                 (test_label_overlaps(label) <= max_overlap);
 
@@ -195,11 +192,8 @@ static int labels_render(const obj_t *obj, const painter_t *painter_)
                                        painter.obs, label->obj)) {
             label->fader.target = false;
         }
-
-        win_pos[0] = label->bounds[0];
-        win_pos[1] = label->bounds[1];
-        paint_text(&painter, label->render_text, win_pos, NULL,
-                   ALIGN_LEFT | ALIGN_TOP, label->effects, label->size,
+        paint_text(&painter, label->render_text, pos, NULL,
+                   label->align, label->effects, label->size,
                    label->angle);
     }
     return 0;
