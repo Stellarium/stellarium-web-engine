@@ -341,7 +341,7 @@ static int on_file_tile_loaded(const char type[4],
 
         apply_errata(s);
         // Compute the cap containing this DSO
-        s->bounding_cap[3] = cosf(fmax(s->smin, s->smax));
+        s->bounding_cap[3] = cosf(fmaxf(s->smin, s->smax));
         eraS2c(s->ra, s->de, s->bounding_cap);
     }
     free(tile_data);

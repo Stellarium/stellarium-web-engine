@@ -14,7 +14,7 @@
 
 core_t *core;   // The global core object.
 
-#define exp10(x) exp((x) * log(10.f))
+#define exp10(x) exp((x) * log(10.))
 
 static void core_on_fov_changed(obj_t *obj, const attribute_t *attr)
 {

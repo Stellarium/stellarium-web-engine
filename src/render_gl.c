@@ -1016,10 +1016,10 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
     nvgTextBoxBounds(rend->vg, 0, 0, 10000, text, NULL, fbounds);
 
     // Compute bounds taking alignment into account.
-    fbounds[0] = floor(fbounds[0]);
-    fbounds[1] = floor(fbounds[1]);
-    fbounds[2] = ceil(fbounds[2]);
-    fbounds[3] = ceil(fbounds[3]);
+    fbounds[0] = floorf(fbounds[0]);
+    fbounds[1] = floorf(fbounds[1]);
+    fbounds[2] = ceilf(fbounds[2]);
+    fbounds[3] = ceilf(fbounds[3]);
     w = fbounds[2] - fbounds[0] + 1;
     h = fbounds[3] - fbounds[1];
     if (align & ALIGN_RIGHT)    fbounds[0] += -w;
@@ -1404,7 +1404,8 @@ static void item_text_render(renderer_t *rend, const item_t *item)
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
     nvgSave(rend->vg);
-    nvgTranslate(rend->vg, round(item->text.pos[0]), round(item->text.pos[1]));
+    nvgTranslate(rend->vg, roundf(item->text.pos[0]),
+                           roundf(item->text.pos[1]));
     nvgRotate(rend->vg, item->text.angle);
     nvgFillColor(rend->vg, nvgRGBA(item->color[0] * 255,
                                    item->color[1] * 255,
