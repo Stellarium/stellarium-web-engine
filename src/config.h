@@ -16,14 +16,6 @@
 extern "C" {
 #endif
 
-// Allow to use strncpy with gcc.
-// We could try to remove at some point.
-#ifndef __clang__
-   #if __GNUC__ >= 9
-      #pragma GCC diagnostic ignored "-Wstringop-truncation"
-   #endif
-#endif
-
 // Do not issue warnings when passing const values to non const functions.
 // This is so that we can use erfa libraries.
 #ifndef __cplusplus
