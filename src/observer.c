@@ -21,7 +21,7 @@ static uint32_t hash_xor(uint32_t v, const char *data, int len)
     assert(len == 1 || len % 4 == 0);
     if (len == 1) return v ^ *data;
     for (i = 0; i < len; i += 4) {
-        v ^= *(uint32_t*)(data + i);
+        v ^= *(uint32_t*)(__builtin_assume_aligned(data, 4) + i);
     }
     return v;
 }

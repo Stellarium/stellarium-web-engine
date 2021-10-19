@@ -125,7 +125,7 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
     d += strlen((const char*)d) + 1;
     // XXX: this might break with js!
     memcpy(footer, (src + src_size - 8), 8);
-    isize = *((uint32_t*)(footer + 4));
+    isize = *((uint32_t*)(__builtin_assume_aligned(footer, 8) + 4));
     *out_size = isize;
     ret = malloc(isize + 1);
 
