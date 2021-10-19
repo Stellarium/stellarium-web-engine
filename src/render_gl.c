@@ -1090,6 +1090,11 @@ static void text_using_nanovg(renderer_t *rend,
         get_nvg_bounds(rend, font, size, effects, buf, align, pos, fbounds);
         nvgRestore(rend->vg);
 
+        bounds[0] = fbounds[0];
+        bounds[1] = fbounds[1];
+        bounds[2] = fbounds[2];
+        bounds[3] = fbounds[3];
+
         // Uncomment to see labels bounding box
         if ((0)) {
             float w = fbounds[2] - fbounds[0];
