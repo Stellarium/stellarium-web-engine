@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# coding: utf-8
+#!/usr/bin/python3
 
 # Stellarium Web Engine - Copyright (c) 2019 - Noctua Software Ltd
 #
@@ -22,15 +21,16 @@ def run():
     for face in ['Regular', 'Bold']:
         path = "/usr/share/fonts/truetype/noto/NotoSans-%s.ttf" % face
         dst = "data/font/NotoSans-%s.ttf" % face
-        chars = (u"abcdefghijklmnopqrstuvwxyz"
-                 u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                 u"0123456789"
-                 u"⁰¹²³⁴⁵⁶⁷⁸⁹"
-                 u" ?!\"#$%&'()*+,-./°¯[]:<>{}"
-                 u"☉☿♀♁♂♃♄⛢♆⚳⚴⚵⚶🍷⚘⚕♇"
-                 u"αβγδεζηθικλμνξοπρςστυφχψω")
+        chars = ("abcdefghijklmnopqrstuvwxyz"
+                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                 "0123456789"
+                 "⁰¹²³⁴⁵⁶⁷⁸⁹"
+                 " ?!\"#$%&'()*+,-./°¯[]:<>{}"
+                 "Öö"
+                 "☉☿♀♁♂♃♄⛢♆⚳⚴⚵⚶🍷⚘⚕♇"
+                 "αβγδεζηθικλμνξοπρςστυφχψω")
         subprocess.call(['pyftsubset', path,
-                         '--text=%s' % chars.encode('utf8'),
+                         '--text=%s' % chars,
                          '--no-hinting', '--output-file=%s' % dst])
 
 if __name__ == '__main__':
