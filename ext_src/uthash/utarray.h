@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2008-2018, Troy D. Hanson   http://troydhanson.github.com/uthash/
+Copyright (c) 2008-2021, Troy D. Hanson   http://troydhanson.github.io/uthash/
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef UTARRAY_H
 #define UTARRAY_H
 
-#define UTARRAY_VERSION 2.1.0
+#define UTARRAY_VERSION 2.3.0
 
 #include <stddef.h>  /* size_t */
 #include <string.h>  /* memset, etc */
@@ -127,7 +127,7 @@ typedef struct {
 #define utarray_len(a) ((a)->i)
 
 #define utarray_eltptr(a,j) (((j) < (a)->i) ? _utarray_eltptr(a,j) : NULL)
-#define _utarray_eltptr(a,j) ((a)->d + ((a)->icd.sz * (j)))
+#define _utarray_eltptr(a,j) ((void*)((a)->d + ((a)->icd.sz * (j))))
 
 #define utarray_insert(a,p,j) do {                                            \
   if ((j) > (a)->i) utarray_resize(a,j);                                      \
@@ -232,8 +232,9 @@ typedef struct {
 
 /* last we pre-define a few icd for common utarrays of ints and strings */
 static void utarray_str_cpy(void *dst, const void *src) {
-  char **_src = (char**)src, **_dst = (char**)dst;
-  *_dst = (*_src == NULL) ? NULL : strdup(*_src);
+  char *const *srcc = (char *const *)src;
+  char **dstc = (char**)dst;
+  *dstc = (*srcc == NULL) ? NULL : strdup(*srcc);
 }
 static void utarray_str_dtor(void *elt) {
   char **eltc = (char**)elt;
