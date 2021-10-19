@@ -437,14 +437,14 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
 static bool dso_get_short_name(const dso_t *s, char *out, int size)
 {
     const char *names = s->names;
+    char best_name[128];
+    int best_name_len = sizeof (best_name) - 1;
+    int len;
+    const char* res = skycultures_get_label(names, out, size);
+
     if (!names)
         return false;
 
-    char best_name[size];
-    int best_name_len = size - 1;
-    int len;
-
-    const char* res = skycultures_get_label(names, out, size);
     if (res)
         return true;
 
