@@ -44,12 +44,13 @@ int u8_char_len(const char *c)
     return LEN_TABLE[(unsigned int)(unsigned char)c[0]] + 1;
 }
 
-void u8_lower(char *dst, const char *str, int n)
+void u8_lower(char *dst, const char *str, int size)
 {
     const char* ptr;
     int len;
-    while (*str && n > 2) {
+    while (*str) {
         len = u8_char_len(str);
+        if (len + 1 > size) break;
         if (len == 1 && *str >= 'A' && *str <= 'Z') {
             *dst = *str - 'A' + 'a';
         } else if (len == 2) {
@@ -65,17 +66,18 @@ void u8_lower(char *dst, const char *str, int n)
         }
         str += len;
         dst += len;
-        n -= len;
+        size -= len;
     }
     *dst = '\0';
 }
 
-void u8_upper(char *dst, const char *str, int n)
+void u8_upper(char *dst, const char *str, int size)
 {
     const char* ptr;
     int len;
-    while (*str && n > 2) {
+    while (*str) { //  && n > 2) {
         len = u8_char_len(str);
+        if (len + 1 > size) break;
         if (len == 1 && *str >= 'a' && *str <= 'z') {
             *dst = *str - 'a' + 'A';
         } else if (len == 2) {
@@ -91,7 +93,7 @@ void u8_upper(char *dst, const char *str, int n)
         }
         str += len;
         dst += len;
-        n -= len;
+        size -= len;
     }
     *dst = '\0';
 }

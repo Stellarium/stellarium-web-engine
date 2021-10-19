@@ -440,6 +440,12 @@ static void test_u8(void)
 
     u8_remove_accents(buf, "Vénus", sizeof(buf));
     assert(strcmp(buf, "Venus") == 0);
+
+    // Make sure u8_upper always NULL terminate the buffer.
+    u8_upper(buf, "abcd", 2);
+    assert(strcmp(buf, "A") == 0);
+    u8_upper(buf, "aā", 2);
+    assert(strcmp(buf, "A") == 0);
 }
 
 TEST_REGISTER(NULL, test_ephemeris, TEST_AUTO);

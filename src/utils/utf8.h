@@ -23,14 +23,26 @@ int u8_char_code(const char *c);
 /*
  * Function: u8_lower
  * Make an utf-8 string lowercase.
+ *
+ * Parameters:
+ *   dst    - destination buffer.
+ *   str    - source string.
+ *   size   - size of the destination buffer.  We always NULL terminate the
+ *            string.
  */
-void u8_lower(char *dst, const char *str, int n);
+void u8_lower(char *dst, const char *str, int size);
 
 /*
  * Function: u8_upper
  * Make an utf-8 string uppercase.
+ *
+ * Parameters:
+ *   dst    - destination buffer.
+ *   str    - source string.
+ *   size   - size of the destination buffer.  We always NULL terminate the
+ *            string.
  */
-void u8_upper(char *dst, const char *str, int n);
+void u8_upper(char *dst, const char *str, int size);
 
 /*
  * Function: u8_remove_accents
