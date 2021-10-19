@@ -448,13 +448,11 @@ Module['on'] = function(eventName, callback) {
  * Parameters:
  *   font   - One of 'regular' or 'bold'
  *   url    - Url to a ttf font.
- *   scale  - User scale to apply to the font, since nanovg seem to change
- *            the size of some fonts.
  *
  * Return:
  *   A promise that can be used to be notified once the font has been loaded.
  */
-Module['setFont'] = function(font, url, scale) {
+Module['setFont'] = function(font, url) {
   return fetch(url).then(function(response) {
     if (!response.ok) throw new Error(`Cannot get ${url}`);
     return response.arrayBuffer();
@@ -464,13 +462,13 @@ Module['setFont'] = function(font, url, scale) {
     Module.writeArrayToMemory(data, ptr);
     Module.ccall('core_add_font', null,
                  ['number', 'string', 'string', 'number', 'number', 'number'],
-                 [0, font, null, ptr, data.length, scale]);
+                 [0, font, null, ptr, data.length]);
 
     // Also add the internal fallback font.
     let url = (font === 'regular') ? 'asset://font/NotoSans-Regular.ttf' :
                                      'asset://font/NotoSans-Bold.ttf';
     Module.ccall('core_add_font', null,
                  ['number', 'string', 'string', 'number', 'number', 'number'],
-                 [0, font, url, 0, 0, scale]);
+                 [0, font, url, 0, 0]);
   });
 }

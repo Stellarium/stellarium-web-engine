@@ -69,6 +69,9 @@ extern "C" {
 // Ini config.
 #define INI_MAX_LINE 512
 
+// Nanovg config.
+#define NVG_NO_STB
+
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 

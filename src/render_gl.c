@@ -286,7 +286,6 @@ struct renderer {
     // Nanovg fonts references for regular and bold.
     struct {
         int   id;
-        float scale;
         bool  is_default_font; // Set only for the original default fonts.
     } fonts[2];
 
@@ -1005,12 +1004,12 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
                            const double pos[2], float fbounds[4]) {
     float w, h, dummy, descender;
     nvgFontFaceId(rend->vg, rend->fonts[font].id);
-    nvgFontSize(rend->vg, size * rend->fonts[font].scale);
-    nvgTextLetterSpacing(rend->vg, size * rend->fonts[font].scale * 0.01);
+    nvgFontSize(rend->vg, size);
+    nvgTextLetterSpacing(rend->vg, size * 0.01);
     if (sys_lang_supports_spacing() && effects & TEXT_SPACED)
-        nvgTextLetterSpacing(rend->vg, size * rend->fonts[font].scale * 0.308);
+        nvgTextLetterSpacing(rend->vg, size * 0.308);
     if (sys_lang_supports_spacing() && effects & TEXT_SEMI_SPACED)
-        nvgTextLetterSpacing(rend->vg, size * rend->fonts[font].scale * 0.075);
+        nvgTextLetterSpacing(rend->vg, size * 0.075);
 
     // First determine the actual text block width
     nvgTextAlign(rend->vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
@@ -1030,7 +1029,7 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
     if (align & ALIGN_BASELINE) fbounds[1] += -h;
     if (align & ALIGN_BASELINE) {
         nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
-        fbounds[1] -= descender * rend->fonts[font].scale;
+        fbounds[1] -= descender;
     }
     fbounds[0] = floor(fbounds[0] + pos[0]);
     fbounds[1] = floor(fbounds[1] + pos[1]);
@@ -2048,7 +2047,7 @@ static texture_t *create_white_texture(int w, int h)
 EMSCRIPTEN_KEEPALIVE
 void core_add_font(renderer_t *rend, const char *name,
                    const char *url, const uint8_t *data,
-                   int size, float scale)
+                   int size)
 {
     int id;
     int font;
@@ -2071,7 +2070,6 @@ void core_add_font(renderer_t *rend, const char *name,
     id = nvgCreateFontMem(rend->vg, name, data, size, 0);
     if (!rend->fonts[font].id || rend->fonts[font].is_default_font) {
         rend->fonts[font].id = id;
-        rend->fonts[font].scale = scale;
         rend->fonts[font].is_default_font = false;
     } else {
         nvgAddFallbackFontId(rend->vg, rend->fonts[font].id, id);
@@ -2080,11 +2078,10 @@ void core_add_font(renderer_t *rend, const char *name,
 
 static void set_default_fonts(renderer_t *rend)
 {
-    const float scale = 1.365;
     core_add_font(rend, "regular", "asset://font/NotoSans-Regular.ttf",
-                  NULL, 0, scale);
+                  NULL, 0);
     core_add_font(rend, "bold", "asset://font/NotoSans-Bold.ttf",
-                  NULL, 0, 1.34);
+                  NULL, 0);
     rend->fonts[FONT_REGULAR].is_default_font = true;
     rend->fonts[FONT_BOLD].is_default_font = true;
 }
