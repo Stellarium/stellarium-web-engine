@@ -103,10 +103,10 @@ int z_uncompress(void *dest, int dest_size, const void *src, int src_size)
 // XXX: need to get a more robust version!
 void *z_uncompress_gz(const void *src, int src_size, int *out_size)
 {
-    int isize, err;
+    int err;
+    uint32_t isize;
     const uint8_t *d = src;
     void *ret = NULL;
-    uint8_t footer[8] __attribute__((aligned(8)));
     uint8_t id1, id2, cm, flg;
     z_stream stream = {};
     assert(src_size >= 10);
@@ -123,9 +123,9 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
 
     d += 6;
     d += strlen((const char*)d) + 1;
-    // XXX: this might break with js!
-    memcpy(footer, (src + src_size - 8), 8);
-    isize = *((uint32_t*)(__builtin_assume_aligned(footer, 8) + 4));
+
+    // Size at position 4 of the 8 bytes footer at the end of file.
+    memcpy(&isize, src + src_size - 4, 4);
     *out_size = isize;
     ret = malloc(isize + 1);
 
