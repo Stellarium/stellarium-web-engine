@@ -218,8 +218,7 @@ static bool header_find(const char *header, const char *re,
     if (r == 0) {
         len = matches[1].rm_eo - matches[1].rm_so;
         if (len < buf_size) {
-            strncpy(buf, header + matches[1].rm_so, len);
-            buf[len] = '\0';
+            snprintf(buf, buf_size, "%.*s", len, header + matches[1].rm_so);
             ret = true;
         }
     }

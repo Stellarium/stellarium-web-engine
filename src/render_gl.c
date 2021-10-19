@@ -1072,18 +1072,18 @@ static void text_using_nanovg(renderer_t *rend,
         item->text.angle = angle;
         if (effects & TEXT_UPPERCASE || effects & TEXT_SMALL_CAP) {
             // Emulate Small Cap effect by doing regular capitalize
-            u8_upper(item->text.text, text, sizeof(item->text.text) - 1);
+            u8_upper(item->text.text, text, sizeof(item->text.text));
         } else {
-            strncpy(item->text.text, text, sizeof(item->text.text) - 1);
+            snprintf(item->text.text, sizeof(item->text.text), "%s", text);
         }
         DL_APPEND(rend->items, item);
     }
     if (bounds) {
         if (effects & TEXT_UPPERCASE || effects & TEXT_SMALL_CAP) {
             // Emulate Small Cap effect by doing regular capitalize
-            u8_upper(buf, text, sizeof(buf) - 1);
+            u8_upper(buf, text, sizeof(buf));
         } else {
-            strncpy(buf, text, sizeof(buf) - 1);
+            snprintf(buf, sizeof(buf), "%s", text);
         }
 
         nvgSave(rend->vg);
