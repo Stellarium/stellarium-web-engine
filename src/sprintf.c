@@ -9,5 +9,16 @@
 
 // Compile the stb sprintf implementation.
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+
 #define STB_SPRINTF_IMPLEMENTATION
 #include "../ext_src/stb/stb_sprintf.h"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
