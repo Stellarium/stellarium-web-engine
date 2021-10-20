@@ -43,6 +43,27 @@ void vec3_get_ortho(const double v_[3], double out[3])
     }
 }
 
+void vec3_to_sphe(const double v[3], double *ra, double *de)
+{
+    double x, y, z, d2;
+    x  = v[0];
+    y  = v[1];
+    z  = v[2];
+    d2 = x*x + y*y;
+    *ra = (d2 == 0.0) ? 0.0 : atan2(y, x);
+    *de = (z == 0.0) ? 0.0 : atan2(z, sqrt(d2));
+}
+
+
+void vec3_from_sphe(double ra, double de, double out[3])
+{
+    double cp;
+    cp = cos(de);
+    out[0] = cos(ra) * cp;
+    out[1] = sin(ra) * cp;
+    out[2] = sin(de);
+}
+
 void mat3_to_quat(const double m[3][3], double quat[4])
 {
     double t;
