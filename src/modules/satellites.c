@@ -210,7 +210,7 @@ static double satellite_compute_earth_shadow(const satellite_t *sat,
     vec3_mul(-DAU2M, sat->pvg[0], e_pos);
     vec3_add(obs->earth_pvh[0], sat->pvg[0], s_pos);
     vec3_mul(-DAU2M, s_pos, s_pos);
-    elong = eraSepp(e_pos, s_pos);
+    elong = vec3_sep(e_pos, s_pos);
     e_r = asin(EARTH_RADIUS / vec3_norm(e_pos));
     s_r = asin(SUN_RADIUS / vec3_norm(s_pos));
 
@@ -246,7 +246,7 @@ static double satellite_compute_vmag(const satellite_t *sat,
     if (isnan(sat->stdmag)) return SATELLITE_DEFAULT_MAG;
 
     vec3_sub(sat->pvo[0], obs->sun_pvo[0], ph);
-    phase_angle = eraSepp(sat->pvo[0], ph);
+    phase_angle = vec3_sep(sat->pvo[0], ph);
     fracil = 0.5 * cos(phase_angle) + 0.5;
     range = vec3_norm(sat->pvo[0]) * DAU2M / 1000; // Distance in km.
 
@@ -761,7 +761,7 @@ int satellite_get_altitude(const obj_t *obj, const observer_t *obs,
     theta = eraEra00(DJM0, obs->ut1);
     vec2_rotate(theta, obs_pos, obs_pos);
     vec3_sub(pos, obs_pos, pos);
-    sep = eraSepp(pos, obs_pos);
+    sep = vec3_sep(pos, obs_pos);
     alt = M_PI / 2 - fabs(sep);
     *out = alt;
     return 0;
@@ -834,7 +834,7 @@ static void check_sat(
     observer_update(&obs, false);
 
     obj_get_pos(obj, &obs, FRAME_OBSERVED, pos);
-    eraC2s(pos, &az, &alt);
+    vec3_to_sphe(pos, &az, &alt);
     az = eraAnp(az);
     obj_get_info(obj, &obs, INFO_DISTANCE, &dist);
     obj_get_info(obj, &obs, INFO_VMAG, &vmag);

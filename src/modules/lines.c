@@ -561,14 +561,14 @@ static void get_azalt_fov(const painter_t *painter, int frame,
      */
     unproject(painter->proj, p, p);
     convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
-    eraC2s(p, &theta0, &phi0);
+    vec3_to_sphe(p, &theta0, &phi0);
 
     for (i = 0; i < N * N; i++) {
         p[0] = (i % N) / (double)(N - 1) * w;
         p[1] = (i / N) / (double)(N - 1) * h;
         unproject(painter->proj, p, p);
         convert_frame(painter->obs, FRAME_VIEW, frame, true, p, p);
-        eraC2s(p, &theta, &phi);
+        vec3_to_sphe(p, &theta, &phi);
 
         theta = eraAnpm(theta - theta0);
         theta_max = fmax(theta_max, theta);

@@ -44,7 +44,7 @@ static void circle_project(const uv_map_t *map,
     theta = v[0] * 2 * M_PI;
     r = v[1] * circle->size[0] / 2.0;
 
-    eraC2s(circle->pos, &ra, &dec);
+    vec3_to_sphe(circle->pos, &ra, &dec);
     mat3_set_identity(mat);
     mat3_rz(ra, mat, mat);
     mat3_ry(-dec, mat, mat);
@@ -75,7 +75,7 @@ static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
-    eraC2s(circle->pos, &ra, &de);
+    vec3_to_sphe(circle->pos, &ra, &de);
     painter_project_ellipse(&tmp_painter, circle->frame, ra, de, 0,
             circle->size[0], circle->size[1], win_pos, win_size, win_angle);
     win_size[0] /= 2.0;

@@ -76,9 +76,9 @@ static int dss_render(const obj_t *obj, const painter_t *painter)
      * Note 2: instead of this heuristic we should compute the exact healpix
      * distortion at a given position.
      */
-    sep = fmin(eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
+    sep = fmin(vec3_sep(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, +1)),
-               eraSepp(painter->clip_info[FRAME_ICRF].bounding_cap,
+               vec3_sep(painter->clip_info[FRAME_ICRF].bounding_cap,
                       VEC(0, 0, -1)));
     split_order = mix(12, 4, clamp(sep / (40 * DD2R), 0, 1));
 

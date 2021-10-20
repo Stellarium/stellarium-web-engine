@@ -448,13 +448,17 @@ static void test_convert_origin(void)
     for (i = 0; i < ARRAY_SIZE(test_pvs); i++) {
         const planet_test_pvs_t* planet = &test_pvs[i];
         double out[2][3];
+        double sep;
         position_to_astrometric(obs, ORIGIN_BARYCENTRIC, planet->pv_bary, out);
-        double sep = eraSepp(planet->pv_geo[0], out[0]) * DR2D;
-        if (sep > precision) {
-            LOG_E("Error: %s", planet->name);
-            LOG_E("Barycentric to Astrometric error: %.5f°", sep);
-            tests_compare_pv(planet->pv_geo, out, 5, 10);
-            assert(false);
+
+        if (strcmp(planet->name, "earth") != 0) {
+            sep = vec3_sep(planet->pv_geo[0], out[0]) * DR2D;
+            if (sep > precision) {
+                LOG_E("Error: %s", planet->name);
+                LOG_E("Barycentric to Astrometric error: %.5f°", sep);
+                tests_compare_pv(planet->pv_geo, out, 5, 10);
+                assert(false);
+            }
         }
 
         position_to_apparent(obs, ORIGIN_BARYCENTRIC, false,
@@ -463,7 +467,7 @@ static void test_convert_origin(void)
 
         eraS2p(planet->altazd[1] * DD2R, planet->altazd[0] * DD2R,
                planet->altazd[2], pref);
-        sep = eraSepp(p, pref) * DR2D;
+        sep = vec3_sep(p, pref) * DR2D;
         if (sep > precision && strcmp(planet->name, "earth")) {
             LOG_E("Error: %s", planet->name);
             LOG_E("Apparent altaz error: %.5f°", sep);

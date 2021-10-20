@@ -952,7 +952,7 @@ static void constellation_get_2d_ellipse(const obj_t *obj,
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
-    eraC2s(con->lines.cap, &ra, &de);
+    vec3_to_sphe(con->lines.cap, &ra, &de);
     double size_x = acos(con->lines.cap[3]) * 2;
     painter_project_ellipse(&tmp_painter, FRAME_ICRF, ra, de, 0,
                             size_x, size_x, win_pos, win_size, win_angle);

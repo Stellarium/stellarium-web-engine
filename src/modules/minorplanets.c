@@ -95,7 +95,7 @@ static double compute_magnitude(double h, double g,
     double phi1, phi2, ha;
     r = vec3_norm(ph);
     delta = vec3_norm(po);
-    alpha = eraSepp(ph, po);
+    alpha = vec3_sep(ph, po);
     phi1 = exp(-3.33 * pow(tan(0.5 * alpha), 0.63));
     phi2 = exp(-1.87 * pow(tan(0.5 * alpha), 1.22));
     ha = h - 2.5 * log10((1 - g) * phi1 + g * phi2);

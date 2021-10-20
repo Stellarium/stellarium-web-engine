@@ -219,21 +219,24 @@ static void test_pos(pos_test_t t)
     assert(obj);
 
     obj_get_pvo(obj, &obs, pvo);
-    sep = eraSepp(pvo[0], t.pos) * DR2D * 3600;
-    if (sep > t.precision_radec) {
-        LOG_E("Error %s", t.name);
-        LOG_E("ICRF (observer) error: %.5f arcsec", sep);
-        assert(false);
+    if (!vec3_is_zero(t.pos)) {
+        // Some test data are missing (it's null)
+        sep = vec3_sep(pvo[0], t.pos) * DR2D * 3600;
+        if (sep > t.precision_radec) {
+            LOG_E("Error %s", t.name);
+            LOG_E("ICRF (observer) error: %.5f arcsec", sep);
+            assert(false);
+        }
     }
 
     convert_framev4(&obs, FRAME_ICRF, FRAME_CIRS, pvo[0], p);
-    eraC2s(p, &cirs_ra, &cirs_dec);
+    vec3_to_sphe(p, &cirs_ra, &cirs_dec);
 
     convert_framev4(&obs, FRAME_ICRF, FRAME_JNOW, pvo[0], p);
-    eraC2s(p, &ra, &dec);
+    vec3_to_sphe(p, &ra, &dec);
 
     convert_framev4(&obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], p);
-    eraC2s(p, &az, &alt);
+    vec3_to_sphe(p, &az, &alt);
 
     sep = eraSeps(cirs_ra, cirs_dec, t.cirs_ra, t.cirs_dec) * DR2D * 3600;
     if (t.cirs_ra && sep > t.precision_radec) {
@@ -298,7 +301,7 @@ static void test_epv00(void)
     double pvh[2][3], pvb[2][3];
     for (i = 0; i < ARRAY_SIZE(DATA); i++) {
         eraEpv00(0, DATA[i].tt, pvh, pvb);
-        assert(eraSepp(pvh[0], DATA[i].pos) < 0.2 * DD2R);
+        assert(vec3_sep(pvh[0], DATA[i].pos) < 0.2 * DD2R);
     }
 }
 
@@ -326,7 +329,7 @@ static void test_clipping(void)
     eraAf2a('+', 30, 44,  2.6, &de);
     eraS2c(ra, de, pos);
     convert_frame(&obs, FRAME_ICRF, FRAME_OBSERVED, true, pos, pos);
-    eraC2s(pos, &az, &alt);
+    vec3_to_sphe(pos, &az, &alt);
     obj_set_attr((obj_t*)&obs, "pitch", alt);
     obj_set_attr((obj_t*)&obs, "yaw", az);
     observer_update(&obs, false);

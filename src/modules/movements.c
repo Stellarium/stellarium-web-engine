@@ -46,8 +46,8 @@ static int on_pan(const gesture_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN)
         vec3_copy(pos, start_pos);
 
-    eraC2s(start_pos, &saz, &sal);
-    eraC2s(pos, &daz, &dal);
+    vec3_to_sphe(start_pos, &saz, &sal);
+    vec3_to_sphe(pos, &daz, &dal);
     core->observer->yaw += (saz - daz);
     core->observer->pitch += (sal - dal);
     core->observer->pitch = clamp(core->observer->pitch, -M_PI / 2, +M_PI / 2);
@@ -157,8 +157,8 @@ static int movements_on_zoom(obj_t *obj, double k, double x, double y)
     screen_to_mount(core->observer, &proj, VEC(x, y), pos_end);
 
     // Adjust lat/az to keep the mouse point at the same position.
-    eraC2s(pos_start, &saz, &sal);
-    eraC2s(pos_end, &daz, &dal);
+    vec3_to_sphe(pos_start, &saz, &sal);
+    vec3_to_sphe(pos_end, &daz, &dal);
     core->observer->yaw += (saz - daz);
     core->observer->pitch += (sal - dal);
     core->observer->pitch = clamp(core->observer->pitch, -M_PI / 2, +M_PI / 2);

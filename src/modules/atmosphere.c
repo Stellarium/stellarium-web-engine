@@ -166,8 +166,8 @@ static void prepare_skybrightness(
                           moon_vmag,
                           obs->phi, obs->hm,
                           15, 40,
-                          eraSepp(moon_pos, zenith),
-                          eraSepp(sun_pos, zenith));
+                          vec3_sep(moon_pos, zenith),
+                          vec3_sep(sun_pos, zenith));
 }
 
 static float compute_lum(void *user, const float pos[3])

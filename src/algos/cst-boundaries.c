@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/vec.h"
 #include "erfa.h"
 
 struct cst {
@@ -2380,7 +2381,7 @@ int find_constellation_at(const double pos[3], char id[5])
         {-0.012159993837296, -0.000131286124061, 0.999926055923052},
     };
     eraRxp(rnpb, pos, pos_b1875);
-    eraC2s(pos_b1875, &ra, &dec);
+    vec3_to_sphe(pos_b1875, &ra, &dec);
 
     // Test the last cached values first.
     for (i = 0; i < 4; i++) {

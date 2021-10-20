@@ -90,7 +90,7 @@ static void compute_viewport_cap(painter_t *painter, int frame)
     // Compute max separation from all corners.
     for (i = 0; i < 4; i++) {
         assert(vec3_is_normalized(p[i]));
-        max_sep = fmax(max_sep, eraSepp(cap, p[i]));
+        max_sep = fmax(max_sep, vec3_sep(cap, p[i]));
     }
     cap[3] = cos(max_sep);
 

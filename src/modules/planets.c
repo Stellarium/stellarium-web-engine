@@ -436,7 +436,7 @@ static double compute_sun_eclipse_factor(const planet_t *sun,
         if (p->id != MOON) continue; // Only consider the Moon.
         planet_get_pvo(p, obs, pvo);
         sph_r = 2.0 * p->radius_m * DM2AU / vec3_norm(pvo[0]);
-        sep = eraSepp(obs->sun_pvo[0], pvo[0]);
+        sep = vec3_sep(obs->sun_pvo[0], pvo[0]);
         // Compute shadow factor.
         // XXX: this should be in algos.
         if (sep >= sun_r + sph_r) return 1.0; // Outside of shadow.
@@ -463,7 +463,7 @@ static double planet_get_phase(const planet_t *planet, const observer_t *obs)
         return NAN;
     planet_get_pvh(planet, obs, pvh);
     planet_get_pvo(planet, obs, pvo);
-    i = eraSepp(pvh[0], pvo[0]);
+    i = vec3_sep(pvh[0], pvo[0]);
     return 0.5 * cos(i) + 0.5;
 }
 
@@ -488,7 +488,7 @@ static double moon_get_vmag(const planet_t *moon, const observer_t *obs)
     planet_get_pvh(moon, obs, pvh);
     planet_get_pvo(moon, obs, pvo);
     dist = vec3_norm(pvo[0]);
-    el = eraSepp(pvo[0], obs->sun_pvo[0]); // Elongation.
+    el = vec3_sep(pvo[0], obs->sun_pvo[0]); // Elongation.
     return -12.7 +
         2.5 * (log10(M_PI) - log10(M_PI / 2.0 * (1.0 + 1.e-6 - cos(el)))) +
         5.0 * log10(dist / .0025);
@@ -509,8 +509,8 @@ static double rings_vmag(const planet_t *planet, const observer_t *obs)
     mat3_mul_vec3(obs->ri2e, pvh[0], hpos);
     mat3_mul_vec3(obs->ri2e, obs->earth_pvh[0], earth_hpos);
 
-    eraC2s(hpos, &hlon, &hlat);
-    eraC2s(earth_hpos, &earth_hlon, &earth_hlat);
+    vec3_to_sphe(hpos, &hlon, &hlat);
+    vec3_to_sphe(earth_hpos, &earth_hlon, &earth_hlat);
     satrings(hlat, hlon, vec3_norm(pvh[0]),
              earth_hlon, vec3_norm(obs->earth_pvh[0]),
              obs->tt + DJM0, &et, &st);
@@ -546,7 +546,7 @@ static double planet_get_vmag(const planet_t *planet, const observer_t *obs)
         planet_get_pvh(planet, obs, pvh);
         planet_get_pvo(planet, obs, pvo);
         n = (planet->id - MERCURY) / 100 + 1;
-        i = eraSepp(pvh[0], pvo[0]);
+        i = vec3_sep(pvh[0], pvo[0]);
         // Compute visual magnitude.
         i *= DR2D / 100;
         rho = vec3_norm(pvh[0]);

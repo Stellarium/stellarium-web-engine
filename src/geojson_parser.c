@@ -292,7 +292,7 @@ static void lonlat2c(const double lonlat[2], double c[3])
 static void c2lonlat(const double c[3], double lonlat[2])
 {
     double lon, lat;
-    eraC2s(c, &lon, &lat);
+    vec3_to_sphe(c, &lon, &lat);
     lonlat[0] = lon * ERFA_DR2D;
     lonlat[1] = lat * ERFA_DR2D;
 }

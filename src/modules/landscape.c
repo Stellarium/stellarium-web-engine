@@ -164,7 +164,7 @@ static int landscape_render(const obj_t *obj, const painter_t *painter_)
     // and when we zoom in.
     convert_frame(core->observer, FRAME_VIEW, FRAME_OBSERVED, true,
                   VEC(0, 0, -1), direction);
-    eraC2s(direction, &az, &alt);
+    vec3_to_sphe(direction, &az, &alt);
     alpha = smoothstep(1, 20, core->fov * DR2D);
     alpha = mix(alpha, alpha / 2, smoothstep(0, -45, alt * DR2D));
     painter.color[3] *= alpha;

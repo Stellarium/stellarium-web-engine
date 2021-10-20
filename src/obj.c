@@ -221,7 +221,7 @@ int obj_get_info(obj_t *obj, observer_t *obs, int info,
     case INFO_LHA:
         obj_get_info(obj, obs, INFO_PVO, pvo);
         convert_frame(obs, FRAME_ICRF, FRAME_CIRS, 0, pvo[0], pos);
-        eraC2s(pos, &ra, &dec);
+        vec3_to_sphe(pos, &ra, &dec);
         *(double*)out = eraAnpm(obs->astrom.eral - ra);
         return 0;
     case INFO_DISTANCE:

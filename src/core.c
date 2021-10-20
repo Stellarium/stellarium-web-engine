@@ -865,7 +865,7 @@ void core_lookat(const double *pos, double duration)
 
     // Direct lookat.
     if (duration == 0.0) {
-        eraC2s(pos, &core->observer->yaw, &core->observer->pitch);
+        vec3_to_sphe(pos, &core->observer->yaw, &core->observer->pitch);
         memset(anim, 0, sizeof(*anim));
         return;
     }
@@ -875,7 +875,7 @@ void core_lookat(const double *pos, double duration)
     quat_rz(core->observer->yaw, anim->src_q, anim->src_q);
     quat_ry(-core->observer->pitch, anim->src_q, anim->src_q);
 
-    eraC2s((double*)pos, &az, &al);
+    vec3_to_sphe(pos, &az, &al);
     quat_set_identity(anim->dst_q);
     quat_rz(az, anim->dst_q, anim->dst_q);
     quat_ry(-al, anim->dst_q, anim->dst_q);

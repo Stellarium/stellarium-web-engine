@@ -92,7 +92,7 @@ void core_update_direction(double dt)
             // We are moving toward a potentially moving target, adjust the
             // destination
             obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, vv);
-            eraC2s((double*)vv, &az, &al);
+            vec3_to_sphe(vv, &az, &al);
             quat_set_identity(anim->dst_q);
             quat_rz(az, anim->dst_q, anim->dst_q);
             quat_ry(-al, anim->dst_q, anim->dst_q);
@@ -100,7 +100,7 @@ void core_update_direction(double dt)
         if (!anim->lock || anim->move_to_lock) {
             quat_slerp(anim->src_q, anim->dst_q, t, q);
             quat_mul_vec3(q, v, v);
-            eraC2s(v, &core->observer->yaw, &core->observer->pitch);
+            vec3_to_sphe(v, &core->observer->yaw, &core->observer->pitch);
         }
         if (t >= 1.0) {
             anim->src_time = 0.0;
@@ -115,7 +115,7 @@ void core_update_direction(double dt)
 
     if (anim->lock && !anim->move_to_lock) {
         obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, v);
-        eraC2s(v, &core->observer->yaw, &core->observer->pitch);
+        vec3_to_sphe(v, &core->observer->yaw, &core->observer->pitch);
         // Notify the changes.
         module_changed(&core->observer->obj, "pitch");
         module_changed(&core->observer->obj, "yaw");

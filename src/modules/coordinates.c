@@ -47,7 +47,7 @@ static void coordinates_get_designations(
     const coordinates_t *coo = (const coordinates_t*)obj;
     char buf_ra[32], buf_de[32], buf[128];
     double ra, de;
-    eraC2s(coo->po, &ra, &de);
+    vec3_to_sphe(coo->po, &ra, &de);
     format_angle(buf_ra, ra, 'h', 1, NULL);
     format_angle(buf_de, de, 'd', 1, NULL);
     snprintf(buf, sizeof(buf), "%s / %s", buf_ra, buf_de);

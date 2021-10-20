@@ -86,7 +86,7 @@ static double rise_dist(double time, void *user)
     observer_update(data->obs, false);
     obj_get_pvo(data->obj, data->obs, pvo);
     convert_framev4(data->obs, FRAME_ICRF, FRAME_OBSERVED, pvo[0], observed);
-    eraC2s(observed, &az, &alt);
+    vec3_to_sphe(observed, &az, &alt);
     az = eraAnp(az);
     obj_get_info(data->obj, data->obs, INFO_RADIUS, &radius);
     return alt + radius - data->obs->horizon;
