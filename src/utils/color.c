@@ -49,7 +49,7 @@ void XYZ_to_rgb(const double XYZ[3], double rgb[3])
         {-1.5372, 1.8758, -0.2040},
         {-0.4986, 0.0415, 1.0570},
     };
-    mat3_mul_vec3((void*)xyz_to_rgb_mat, XYZ, rgb);
+    mat3_mul_vec3((const void*)xyz_to_rgb_mat, XYZ, rgb);
 }
 
 void XYZ_to_srgb(const double XYZ[3], double srgb[3])

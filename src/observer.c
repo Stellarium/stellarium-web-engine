@@ -286,7 +286,7 @@ static obj_t *observer_clone(const obj_t *obj)
     observer_t *ret;
     ret = (observer_t*)obj_create("observer", NULL);
     // Copy all except obj attributes.
-    memcpy(((char*)ret) + sizeof(obj_t), ((char*)obj) + sizeof(obj_t),
+    memcpy(((char*)ret) + sizeof(obj_t), ((const char*)obj) + sizeof(obj_t),
            sizeof(*ret) - sizeof(obj_t));
     return &ret->obj;
 }

@@ -19,7 +19,7 @@ typedef struct layer {
 
 static double layer_get_render_order(const obj_t *obj)
 {
-    layer_t *layer = (void*)obj;
+    const layer_t *layer = (const layer_t*)obj;
     return layer->z;
 }
 
@@ -52,7 +52,7 @@ static int layer_update(obj_t *obj, double dt)
 
 static int layer_render(const obj_t *obj, const painter_t *painter_)
 {
-    layer_t *layer = (layer_t*)obj;
+    const layer_t *layer = (const layer_t*)obj;
     painter_t painter = *painter_;
     obj_t *child;
     painter.color[3] *= layer->visible.value;

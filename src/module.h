@@ -118,7 +118,7 @@ void module_changed(obj_t *module, const char *attr);
  *   klass_ - Children klass type id string, or NULL for no filter.
  */
 #define MODULE_ITER(module, child, klass_) \
-    for (child = (void*)(((obj_t*)module)->children); child; \
+    for (child = (void*)(((const obj_t*)module)->children); child; \
                         child = (void*)(((obj_t*)child)->next)) \
         if (!(klass_) || \
                 ((((obj_t*)child)->klass) && \

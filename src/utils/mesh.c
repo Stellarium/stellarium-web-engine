@@ -133,7 +133,7 @@ void mesh_add_line_lonlat(mesh_t *mesh, int size, const double (*verts)[2],
 void mesh_add_point_lonlat(mesh_t *mesh, const double vert[2])
 {
     int ofs;
-    ofs = mesh_add_vertices_lonlat(mesh, 1, (void*)vert);
+    ofs = mesh_add_vertices_lonlat(mesh, 1, (const void*)vert);
     mesh->points = realloc(mesh->points,
             (mesh->points_count + 1) * sizeof(*mesh->points));
     mesh->points[mesh->points_count] = ofs;
@@ -159,7 +159,7 @@ void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
 {
     int r, i, j, ofs, verts_count, nb_triangles;
     double (*ring)[3];
-    double (*new_verts)[3];
+    const double (*new_verts)[3];
     const int *triangles;
     TESStesselator *tess;
 
@@ -182,7 +182,7 @@ void mesh_add_poly_lonlat(mesh_t *mesh, int nbrings, const int *rings_size,
     }
 
     verts_count = tessGetVertexCount(tess);
-    new_verts = (void*)tessGetVertices(tess);
+    new_verts = (const void*)tessGetVertices(tess);
     nb_triangles = tessGetElementCount(tess);
     triangles = tessGetElements(tess);
 

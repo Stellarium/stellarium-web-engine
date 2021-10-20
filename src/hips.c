@@ -104,7 +104,7 @@ hips_t *hips_create(const char *url, double release_date,
     hips->order_min = 3;
     hips->release_date = release_date;
     hips->frame = FRAME_ASTROM;
-    hips->hash = crc32(0, (void*)url, strlen(url));
+    hips->hash = crc32(0, (const void*)url, strlen(url));
     return hips;
 }
 
@@ -464,7 +464,7 @@ static int render_visitor(hips_t *hips, const painter_t *painter_,
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     uv_map_init_healpix(&map, order, pix, false, true);
     if (transf)
-        map.transf = (void*)transf;
+        map.transf = (const void*)transf;
     paint_quad(&painter, hips->frame, &map, split);
     return 0;
 }
@@ -494,7 +494,7 @@ int hips_render(hips_t *hips, const painter_t *painter,
     while (hips_iter_next(&iter, &order, &pix)) {
         // Early exit if the tile is clipped.
         uv_map_init_healpix(&map, order, pix, false, false);
-        map.transf = (void*)transf;
+        map.transf = (const void*)transf;
         if (painter_is_quad_clipped(painter, hips->frame, &map))
             continue;
         if (order < render_order) { // Keep going.

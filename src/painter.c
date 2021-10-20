@@ -615,7 +615,7 @@ bool painter_is_planet_healpix_clipped(const painter_t *painter,
 {
     uv_map_t map;
     uv_map_init_healpix(&map, order, pix, false, false);
-    map.transf = (void*)transf;
+    map.transf = (const void*)transf;
     return painter_is_planet_quad_clipped(painter, FRAME_ICRF, &map);
 }
 
@@ -707,8 +707,8 @@ int paint_orbit(const painter_t *painter_, int frame,
     const double orbit[8] = {k_jd, k_in, k_om, k_w, k_a, k_n, k_ec, k_ma};
     uv_map_t map = {
         .map        = orbit_map,
-        .transf     = (void*)transf,
-        .user       = (void*)orbit,
+        .transf     = (const void*)transf,
+        .user       = (const void*)orbit,
     };
     double line[2][4] = {{0}, {1}};
     double center[3];
