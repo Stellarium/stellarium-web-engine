@@ -324,7 +324,7 @@ static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
 {
     observer_t *obs = (observer_t*)obj;
     double v[3];
-    eraS2c(obs->yaw, obs->pitch, v);
+    vec3_from_sphe(obs->yaw, obs->pitch, v);
     return args_value_new(TYPE_V3, v);
 }
 

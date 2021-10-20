@@ -83,7 +83,7 @@ void mesh_update_bounding_cap(mesh_t *mesh)
 
 static void lonlat2c(const double lonlat[2], double c[3])
 {
-    eraS2c(lonlat[0] * DD2R, lonlat[1] * DD2R, c);
+    vec3_from_sphe(lonlat[0] * DD2R, lonlat[1] * DD2R, c);
 }
 
 

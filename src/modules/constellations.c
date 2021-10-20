@@ -481,7 +481,7 @@ static void spherical_project(
         {-0.012159993837296, -0.000131286124061, 0.999926055923052},
     };
 
-    eraS2c(v[0], v[1], out);
+    vec3_from_sphe(v[0], v[1], out);
     out[3] = 0.0; // At infinity.
 
     // Since the edges coordinates are in B1875.0, they are not exaclty

@@ -88,7 +88,7 @@ static int image_init(obj_t *obj, json_value *args)
 
 static void lonlat2c(const double lonlat[2], double c[3])
 {
-    eraS2c(lonlat[0] * ERFA_DD2R, lonlat[1] * ERFA_DD2R, c);
+    vec3_from_sphe(lonlat[0] * ERFA_DD2R, lonlat[1] * ERFA_DD2R, c);
 }
 
 /* Parse a geojson linestring into the feature linestring in cartesian

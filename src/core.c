@@ -504,7 +504,7 @@ static void render_proj_markers(const painter_t *painter_)
     for (lon = 0; lon < 360; lon += 10)
     for (lat = -90; lat < 90; lat += 10) {
         painter.color[0] = lon / 360.;
-        eraS2c(lon * DD2R, lat * DD2R, p);
+        vec3_from_sphe(lon * DD2R, lat * DD2R, p);
         p[3] = 0;
         mat4_mul_vec4(r, p, p);
         project_to_win(painter.proj, p, p_win);

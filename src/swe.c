@@ -327,7 +327,7 @@ static void test_clipping(void)
     // Compute aziumth and altitude position.
     eraTf2a('+', 12, 46, 10.6, &ra);
     eraAf2a('+', 30, 44,  2.6, &de);
-    eraS2c(ra, de, pos);
+    vec3_from_sphe(ra, de, pos);
     convert_frame(&obs, FRAME_ICRF, FRAME_OBSERVED, true, pos, pos);
     vec3_to_sphe(pos, &az, &alt);
     obj_set_attr((obj_t*)&obs, "pitch", alt);

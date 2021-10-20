@@ -177,7 +177,7 @@ static int dso_init(obj_t *obj, json_value *args)
     if (model) {
         dso->ra = json_get_attr_f(model, "ra", 0) * DD2R;
         dso->de = json_get_attr_f(model, "de", 0) * DD2R;
-        eraS2c(dso->ra, dso->de, dso->bounding_cap);
+        vec3_from_sphe(dso->ra, dso->de, dso->bounding_cap);
         dso->vmag = json_get_attr_f(model, "Vmag", NAN);
         if (isnan(dso->vmag))
             dso->vmag = json_get_attr_f(model, "Bmag", NAN);
@@ -342,7 +342,7 @@ static int on_file_tile_loaded(const char type[4],
         apply_errata(s);
         // Compute the cap containing this DSO
         s->bounding_cap[3] = cosf(fmaxf(s->smin, s->smax));
-        eraS2c(s->ra, s->de, s->bounding_cap);
+        vec3_from_sphe(s->ra, s->de, s->bounding_cap);
     }
     free(tile_data);
 

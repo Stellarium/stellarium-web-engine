@@ -323,7 +323,7 @@ static void spherical_project(
     double az, al;
     az = v[0] * 360 * DD2R;
     al = (v[1] - 0.5) * 180 * DD2R;
-    eraS2c(az, al, out);
+    vec3_from_sphe(az, al, out);
     mat3_mul_vec3(*rot, out, out);
 }
 
@@ -643,7 +643,7 @@ static void antimeridian_map(const uv_map_t *uv,
     const double epsilon = 0.0001;
     lon += v[1] ? epsilon : -epsilon;
     lat = mix(-90, 90, t) * DD2R;
-    eraS2c(lon, lat, out);
+    vec3_from_sphe(lon, lat, out);
     out[3] = 0;
     mat4_rx(M_PI / 2, r, r);
     mat4_rz(M_PI / 2, r, r);

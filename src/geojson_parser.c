@@ -286,7 +286,7 @@ static int parse_path(const json_value *data, geojson_geometry_t *geo)
 
 static void lonlat2c(const double lonlat[2], double c[3])
 {
-    eraS2c(lonlat[0] * ERFA_DD2R, lonlat[1] * ERFA_DD2R, c);
+    vec3_from_sphe(lonlat[0] * ERFA_DD2R, lonlat[1] * ERFA_DD2R, c);
 }
 
 static void c2lonlat(const double c[3], double lonlat[2])
