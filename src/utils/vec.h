@@ -127,6 +127,8 @@ void vec3_get_ortho(const double v[S 3], double out[S 3]);
 void vec3_to_sphe(const double v[3], double *ra, double *de);
 /* Construct unit vector from spherical coordinates */
 void vec3_from_sphe(double ra, double de, double out[3]);
+/* Angular distance between 2 vectors */
+double vec3_sep(const double a[3], const double b[3]);
 
 INL bool mat2_invert(const double mat[S 2][2], double out[S 2][2]);
 
@@ -497,6 +499,10 @@ INL void vec2_rotate(double angle, const double a[S 2], double out[S 2])
 
 INL bool vec3_is_normalized(const double v[S 3]) {
     return fabs(vec3_norm2(v) - 1.0) <= 0.0000000001;
+}
+
+INL bool vec3_is_zero(const double v[S 3]) {
+    return v[0] == 0 && v[1] == 0 && v[2] == 0;
 }
 
 INL void mat3_to_mat4(const double mat[S 3][3], double out[S 4][4])

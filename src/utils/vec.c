@@ -46,6 +46,7 @@ void vec3_get_ortho(const double v_[3], double out[3])
 void vec3_to_sphe(const double v[3], double *ra, double *de)
 {
     double x, y, z, d2;
+    assert(!vec3_is_zero(v));
     x  = v[0];
     y  = v[1];
     z  = v[2];
@@ -57,11 +58,24 @@ void vec3_to_sphe(const double v[3], double *ra, double *de)
 
 void vec3_from_sphe(double ra, double de, double out[3])
 {
-    double cp;
-    cp = cos(de);
+    const double cp = cos(de);
     out[0] = cos(ra) * cp;
     out[1] = sin(ra) * cp;
     out[2] = sin(de);
+}
+
+/* Algo inspired from erfa library */
+double vec3_sep(const double a[3], const double b[3])
+{
+    double axb[3], ss, cs;
+    assert(!vec3_is_zero(a));
+    assert(!vec3_is_zero(b));
+    // Sine of angle between the vectors, multiplied by the two moduli.
+    vec3_cross(a, b, axb);
+    ss = vec3_norm(axb);
+    // Cosine of the angle, multiplied by the two moduli.
+    cs = vec3_dot(a, b);
+    return ((ss != 0.0) || (cs != 0.0)) ? atan2(ss, cs) : 0.0;
 }
 
 void mat3_to_quat(const double m[3][3], double quat[4])
