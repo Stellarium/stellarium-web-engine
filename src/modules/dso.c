@@ -109,7 +109,7 @@ static void nuniq_to_pix(uint64_t nuniq, int *order, int *pix)
 static int dso_get_info(const obj_t *obj, const observer_t *obs, int info,
                         void *out)
 {
-    dso_t *dso = (dso_t*)obj;
+    const dso_t *dso = (const dso_t*)obj;
     switch (info) {
     case INFO_PVO:
         memset(out, 0, 4 * sizeof(double));
@@ -125,7 +125,7 @@ static int dso_get_info(const obj_t *obj, const observer_t *obs, int info,
 
 static json_value *dso_get_json_data(const obj_t *obj)
 {
-    const dso_t *dso = (dso_t*)obj;
+    const dso_t *dso = (const dso_t*)obj;
     json_value* ret = json_object_new(0);
     json_value* md = json_object_new(0);
     if (!isnan(dso->vmag)) {
@@ -423,7 +423,7 @@ static void dso_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
                                double win_pos[2], double win_size[2],
                                double* win_angle)
 {
-    const dso_t *dso = (dso_t*)obj;
+    const dso_t *dso = (const dso_t*)obj;
     painter_t tmp_painter;
     tmp_painter.obs = obs;
     tmp_painter.proj = proj;
@@ -656,7 +656,7 @@ static int dsos_update(obj_t *obj, double dt)
 
 static int dsos_render(const obj_t *obj, const painter_t *painter_)
 {
-    dsos_t *dsos = (dsos_t*)obj;
+    const dsos_t *dsos = (const dsos_t*)obj;
     int nb_tot = 0, nb_loaded = 0;
     painter_t painter = *painter_;
     survey_t *survey;
@@ -675,7 +675,7 @@ static int dsos_list(const obj_t *obj,
                      void *user, int (*f)(void *user, obj_t *obj))
 {
     int order, pix, i, r, code;
-    dsos_t *dsos = (dsos_t*)obj;
+    const dsos_t *dsos = (const dsos_t*)obj;
     tile_t *tile;
     hips_iterator_t iter;
     survey_t *survey = NULL;

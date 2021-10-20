@@ -53,7 +53,7 @@ static int cardinal_render(const obj_t *obj, const painter_t *painter)
 {
     int i;
     double size = 24;
-    cardinal_t *c = (void*)obj;
+    const cardinal_t *c = (const cardinal_t*)obj;
     double color[4] = {0.8, 0.4, 0.4, 0.8 * c->visible.value};
 
     if (c->visible.value <= 0) return 0;

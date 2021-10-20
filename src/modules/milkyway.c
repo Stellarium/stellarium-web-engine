@@ -34,7 +34,7 @@ static int milkyway_render(const obj_t *obj, const painter_t *painter_)
 {
     double lum, c;
     int split_order = 2;
-    milkyway_t *mw = (milkyway_t*)obj;
+    const milkyway_t *mw = (const milkyway_t*)obj;
     painter_t painter = *painter_;
     double visibility;
 

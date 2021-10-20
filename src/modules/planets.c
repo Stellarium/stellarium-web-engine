@@ -188,7 +188,7 @@ static const double VIS_ELEMENTS[][5] = {
 
 
 #define PLANETS_ITER(o, p) \
-    for (   p = (planet_t*)(((obj_t*)o)->children); \
+    for (   p = (planet_t*)(((const obj_t*)o)->children); \
             p; \
             p = (planet_t*)p->obj.next)
 
@@ -608,7 +608,7 @@ static void planet_get_mat(const planet_t *planet, const observer_t *obs,
 static int planet_get_info(const obj_t *obj, const observer_t *obs, int info,
                            void *out)
 {
-    planet_t *planet = (planet_t*)obj;
+    const planet_t *planet = (const planet_t*)obj;
     double pvo[2][3];
     double mat[4][4];
 
@@ -643,7 +643,7 @@ static void planet_get_designations(
     int (*f)(const obj_t *obj, void *user,
              const char *cat, const char *str))
 {
-    planet_t *planet = (void*)obj;
+    const planet_t *planet = (const planet_t*)obj;
     f(obj, user, "NAME", planet->name);
 }
 
@@ -689,7 +689,7 @@ static int on_render_tile(hips_t *hips, const painter_t *painter_,
     painter_set_texture(&painter, PAINTER_TEX_COLOR, tex, uv);
     painter_set_texture(&painter, PAINTER_TEX_NORMAL, normalmap, normal_uv);
     uv_map_init_healpix(&map, order, pix, true, false);
-    map.transf = (void*)transf;
+    map.transf = (const void*)transf;
     paint_quad(&painter, FRAME_ICRF, &map, split);
     return 0;
 }
@@ -716,7 +716,7 @@ static void render_rings(const planet_t *planet,
     double outer_radius = planet->rings.outer_radius / planet->radius_m;
     uv_map_t map = {
         .map = ring_project,
-        .transf = (void*)transf,
+        .transf = (const void*)transf,
     };
     painter_t painter = *painter_;
     const double radii[2] = {inner_radius, outer_radius};
@@ -1583,7 +1583,7 @@ static int planets_add_data_source(
 
 static json_value *planet_get_json_data(const obj_t *obj)
 {
-    const planet_t *planet = (void*)obj;
+    const planet_t *planet = (const planet_t*)obj;
     json_value *ret = json_object_new(0);
     json_value *md = json_object_push(ret, "model_data", json_object_new(0));
     json_object_push(md, "horizons_id", json_double_new(planet->id));

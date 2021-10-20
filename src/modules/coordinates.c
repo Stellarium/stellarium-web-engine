@@ -28,7 +28,7 @@ static int coordinates_init(obj_t *obj, json_value *args)
 static int coordinates_get_info(const obj_t *obj, const observer_t *obs,
                                 int info, void *out)
 {
-    coordinates_t *coo = (void*)obj;
+    const coordinates_t *coo = (const coordinates_t*)obj;
     double pvo[2][4] = {};
     switch (info) {
     case INFO_PVO:
@@ -44,7 +44,7 @@ static void coordinates_get_designations(
     int (*f)(const obj_t *obj, void *user,
              const char *cat, const char *str))
 {
-    coordinates_t *coo = (void*)obj;
+    const coordinates_t *coo = (const coordinates_t*)obj;
     char buf_ra[32], buf_de[32], buf[128];
     double ra, de;
     eraC2s(coo->po, &ra, &de);

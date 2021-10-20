@@ -252,7 +252,7 @@ static double mplanet_get_radius(const mplanet_t *mp)
 static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
                             void *out)
 {
-    mplanet_t *mp = (mplanet_t*)obj;
+    const mplanet_t *mp = (const mplanet_t*)obj;
     double radius;
 
     mplanet_update(mp, obs);
@@ -290,7 +290,7 @@ static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
     double pvo[2][4], win_pos[2], vmag, size, luminance;
     double label_color[4] = RGBA(223, 223, 255, 255);
-    mplanet_t *mplanet = (mplanet_t*)obj;
+    const mplanet_t *mplanet = (const mplanet_t*)obj;
     point_t point;
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
@@ -365,7 +365,7 @@ void mplanet_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
-    mplanet_t *mp = (mplanet_t*)obj;
+    const mplanet_t *mp = (const mplanet_t*)obj;
     char buf[128];
     // Make sure we sort so that the first designation is the most useful.
     // First name, e.g. 'Ceres'
@@ -386,7 +386,7 @@ void mplanet_get_designations(
 
 static json_value *mplanet_get_json_data(const obj_t *obj)
 {
-    const mplanet_t *mp = (mplanet_t*)obj;
+    const mplanet_t *mp = (const mplanet_t*)obj;
     json_value *ret = json_object_new(0);
     if (painter_3d_model_exists(mp->model))
         json_object_push(ret, "can_orbit", json_boolean_new(true));
@@ -472,7 +472,7 @@ static bool mplanets_is_point_occulted(
         const observer_t *obs, const obj_t *ignore)
 {
     mplanet_t *child;
-    mplanets_t *mps = (void*)module;
+    const mplanets_t *mps = (const void*)module;
     double p[3], d, r, dir[3], t, l2, d2;
 
     d = vec3_norm(pos);

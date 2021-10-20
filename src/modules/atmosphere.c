@@ -225,7 +225,7 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
 
 static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
 {
-    atmosphere_t *atm = (atmosphere_t*)obj;
+    const atmosphere_t *atm = (const atmosphere_t*)obj;
     obj_t *sun, *moon;
     double sun_pos[4], moon_pos[4], sun_vmag, moon_vmag;
     render_data_t data;

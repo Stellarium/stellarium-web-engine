@@ -225,7 +225,7 @@ static int lines_update(obj_t *obj, double dt)
 
 static int lines_render(const obj_t *obj, const painter_t *painter)
 {
-    lines_t *lines = (void*)obj;
+    const lines_t *lines = (const lines_t*)obj;
     obj_t *line;
     if (!lines->visible) return 0;
     MODULE_ITER(lines, line, "line")
@@ -669,7 +669,7 @@ static int render_boundary(const painter_t *painter)
 
 static int line_render(const obj_t *obj, const painter_t *painter_)
 {
-    line_t *line = (line_t*)obj;
+    const line_t *line = (const line_t*)obj;
     double rot[3][3] = MAT3_IDENTITY;
     const step_t *steps[2];
     int splits[2] = {1, 1};

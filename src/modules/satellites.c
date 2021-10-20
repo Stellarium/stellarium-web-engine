@@ -470,7 +470,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
 {
     double pvo[2][4];
     double bounds[2][3], radius;
-    satellite_t *sat = (satellite_t*)obj;
+    const satellite_t *sat = (const satellite_t*)obj;
 
     satellite_update(sat, obs);
     switch (info) {
@@ -507,7 +507,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
 
 static json_value *satellite_get_json_data(const obj_t *obj)
 {
-    satellite_t *sat = (satellite_t*)obj;
+    const satellite_t *sat = (const satellite_t*)obj;
     json_value *ret;
     ret = sat->data ? json_copy(sat->data) : json_object_new(0);
     if (painter_3d_model_exists(sat->model))
@@ -623,7 +623,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     char buf[256];
     const double label_color[4] = RGBA(124, 205, 124, 205);
     const double white[4] = RGBA(255, 255, 255, 255);
-    satellite_t *sat = (satellite_t*)obj;
+    const satellite_t *sat = (const satellite_t*)obj;
     const bool selected = core->selection && obj == core->selection;
     const double hints_limit_mag = painter.hints_limit_mag +
                                    g_satellites->hints_mag_offset - 2.5;
@@ -694,7 +694,7 @@ static void satellite_get_designations(
     int (*f)(const obj_t *obj, void *user,
              const char *cat, const char *str))
 {
-    satellite_t *sat = (void*)obj;
+    const satellite_t *sat = (const satellite_t*)obj;
     json_value *names;
     char *name;
     int i;
@@ -742,7 +742,7 @@ int satellite_get_altitude(const obj_t *obj, const observer_t *obs,
                            double *out)
 {
     double pos[3], obs_pos[3], speed[3], sep, alt, theta;
-    satellite_t *sat = (void*)obj;
+    const satellite_t *sat = (const satellite_t*)obj;
     bool r;
 
     if (sat->error) return -1;

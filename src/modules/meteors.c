@@ -249,7 +249,7 @@ static void shower_get_designations(
         int (*f)(const obj_t *obj, void *user,
                  const char *cat, const char *str))
 {
-    shower_t *s = (void*)obj;
+    const shower_t *s = (const shower_t*)obj;
     f(obj, user, "NAME", s->designation);
 }
 
@@ -273,7 +273,7 @@ static double shower_get_next_peak(const shower_t *s, const observer_t *obs)
 static int shower_get_info(const obj_t *obj, const observer_t *obs, int info,
                            void *out)
 {
-    shower_t *s = (void*)obj;
+    const shower_t *s = (const shower_t*)obj;
     switch (info) {
     case INFO_PVO:
         shower_get_pvo(s, obs, out);
@@ -291,7 +291,7 @@ static int shower_render(const obj_t *obj, const painter_t *painter)
     const double color[4] = {1, 1, 1, 1};
     const double size[2] = {30, 30};
     double win_pos[2];
-    shower_t *s = (void*)obj;
+    const shower_t *s = (const shower_t*)obj;
 
     // Only render if selected.
     if (core->selection != obj) return 0;
@@ -312,7 +312,7 @@ static int shower_render_pointer(const obj_t *obj, const painter_t *painter)
 
 static json_value *shower_get_json_data(const obj_t *obj)
 {
-    const shower_t *s = (void*)obj;
+    const shower_t *s = (const shower_t*)obj;
     json_value *ret = json_object_new(0);
     json_object_push(ret, "model_data", json_copy(s->data));
     return ret;
@@ -349,7 +349,7 @@ static int meteors_update(obj_t *obj, double dt)
 
 static int meteors_render(const obj_t *obj, const painter_t *painter)
 {
-    const meteors_t *meteors = (void*)obj;
+    const meteors_t *meteors = (const meteors_t*)obj;
     obj_t *child;
     meteor_t *m;
 

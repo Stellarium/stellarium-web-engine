@@ -27,7 +27,7 @@ static int dss_init(obj_t *obj, json_value *args)
 static int dss_render(const obj_t *obj, const painter_t *painter)
 {
     double visibility;
-    dss_t *dss = (dss_t*)obj;
+    const dss_t *dss = (const dss_t*)obj;
     painter_t painter2 = *painter;
     double lum, c, sep, ratio;
     int render_order, split_order;

@@ -32,7 +32,7 @@ static int pointer_render(const obj_t *obj, const painter_t *painter_)
     const double T = 2.0;    // Animation period.
     double r, transf[3][3];
     bool skip_top_bar = false;
-    pointer_t *pointer = (void*)obj;
+    const pointer_t *pointer = (const pointer_t*)obj;
     obj_t *selection = core->selection;
     painter_t painter = *painter_;
 

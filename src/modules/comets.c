@@ -337,7 +337,7 @@ static int comet_update(comet_t *comet, const observer_t *obs)
 static int comet_get_info(const obj_t *obj, const observer_t *obs, int info,
                           void *out)
 {
-    comet_t *comet = (comet_t*)obj;
+    const comet_t *comet = (const comet_t*)obj;
     comet_update(comet, obs);
     switch (info) {
     case INFO_PVO:
@@ -357,7 +357,7 @@ void comet_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
-    comet_t *comet = (void*)obj;
+    const comet_t *comet = (const comet_t*)obj;
     f(obj, user, "NAME", comet->name);
 }
 
@@ -454,7 +454,7 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 static int comet_render(const obj_t *obj, const painter_t *painter)
 {
     double win_pos[2], vmag, size, luminance;
-    comet_t *comet = (comet_t*)obj;
+    const comet_t *comet = (const comet_t*)obj;
     point_t point;
     double label_color[4] = RGBA(223, 223, 255, 255);
     const bool selected = core->selection && obj == core->selection;
@@ -572,7 +572,7 @@ static void add_to_visible(comets_t *comets, comet_t *comet)
 
 static int comets_render(const obj_t *obj, const painter_t *painter)
 {
-    comets_t *comets = (void*)obj;
+    comets_t *comets = (const comets_t*)obj;
     int i, r;
     const int update_nb = 32;
     comet_t *child, *tmp;

@@ -69,7 +69,7 @@ static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
                                double win_pos[2], double win_size[2],
                                double* win_angle)
 {
-    const circle_t *circle = (circle_t*)obj;
+    const circle_t *circle = (const circle_t*)obj;
     double ra, de;
 
     painter_t tmp_painter;
@@ -84,7 +84,7 @@ static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
 
 static int circle_render(const obj_t *obj, const painter_t *painter_)
 {
-    circle_t *circle = (circle_t *)obj;
+    const circle_t *circle = (const circle_t *)obj;
     painter_t painter = *painter_;
     uv_map_t map = {
         .map  = circle_project,
@@ -124,7 +124,7 @@ static int circle_get_info(const obj_t *obj, const observer_t *obs,
                            int info, void *out)
 {
     double pvo[2][4];
-    circle_t *circle = (circle_t*)obj;
+    const circle_t *circle = (const circle_t*)obj;
     switch (info) {
     case INFO_PVO:
         vec3_normalize(circle->pos, pvo[0]);

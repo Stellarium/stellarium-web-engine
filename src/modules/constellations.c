@@ -171,7 +171,7 @@ static int constellation_init(obj_t *obj, json_value *args)
 static int constellation_get_info(const obj_t *obj, const observer_t *obs,
                                   int info, void *out)
 {
-    constellation_t *con = (constellation_t*)obj;
+    const constellation_t *con = (const constellation_t*)obj;
     constellation_update(con, obs);
     if (!con->first_update_complete) return 1;
     switch (info) {
@@ -946,7 +946,7 @@ static void constellation_get_2d_ellipse(const obj_t *obj,
                                double win_pos[2], double win_size[2],
                                double* win_angle)
 {
-    const constellation_t *con = (constellation_t*)obj;
+    const constellation_t *con = (const constellation_t*)obj;
     double ra, de;
 
     painter_t tmp_painter;
@@ -964,7 +964,7 @@ static void constellation_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
-    constellation_t *cst = (void*)obj;
+    const constellation_t *cst = (const constellation_t*)obj;
     f(obj, user, "CON", ((const char *)cst->info.id) + 4);
     if (cst->info.iau[0])
         f(obj, user, "NAME", (const char *)cst->info.iau);
@@ -1009,7 +1009,7 @@ static int constellations_update(obj_t *obj, double dt)
 
 static int constellations_render(const obj_t *obj, const painter_t *painter)
 {
-    constellations_t *cons = (constellations_t*)obj;
+    const constellations_t *cons = (const constellations_t*)obj;
     constellation_t *con;
     if (cons->lines_visible.value == 0.0 &&
         cons->labels_visible.value == 0.0 &&
@@ -1026,7 +1026,7 @@ static int constellations_render(const obj_t *obj, const painter_t *painter)
 static json_value *constellation_get_json_data(const obj_t *obj)
 {
     json_value* ret = json_object_new(0);
-    const constellation_t *con = (constellation_t*)obj;
+    const constellation_t *con = (const constellation_t*)obj;
     if (con->info.description) {
         json_object_push(ret, "description",
                          json_string_new(con->info.description));

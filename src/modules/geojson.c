@@ -204,7 +204,7 @@ static void feature_del(obj_t *obj)
 static int feature_get_info(const obj_t *obj, const observer_t *obs,
                             int info, void *out)
 {
-    feature_t *feature = (void*)obj;
+    const feature_t *feature = (const feature_t*)obj;
 
     switch (info) {
     case INFO_PVO:
@@ -317,7 +317,7 @@ static float blink(void)
 
 static int image_render(const obj_t *obj, const painter_t *painter_)
 {
-    const image_t *image = (void*)obj;
+    const image_t *image = (const image_t*)obj;
     painter_t painter = *painter_;
     const feature_t *feature;
     double pos[2], ofs[2];
@@ -492,7 +492,7 @@ EMSCRIPTEN_KEEPALIVE
 int geojson_query_rendered_features(
         const obj_t *obj, double win_pos[2], int max_ret, int *index)
 {
-    const image_t *image = (void*)obj;
+    const image_t *image = (const image_t*)obj;
     painter_t painter;
     int frame = image->frame;
     projection_t proj;
@@ -574,7 +574,7 @@ int geojson_survey_query_rendered_features(
         const obj_t *obj, double box[2][2], int max_ret,
         void **tiles, int *index)
 {
-    const survey_t *survey = (void*)obj;
+    const survey_t *survey = (const survey_t*)obj;
     int i, nb = 0;
     int order, pix, code;
     painter_t painter;
@@ -736,7 +736,7 @@ static void survey_load_allsky(survey_t *survey)
 
 static int survey_render(const obj_t *obj, const painter_t *painter)
 {
-    const survey_t *survey = (void*)obj;
+    survey_t *survey = (survey_t*)obj;
     int nb_tot = 0, nb_loaded = 0;
     int order, pix, code;
     hips_t *hips = survey->hips;
@@ -746,7 +746,7 @@ static int survey_render(const obj_t *obj, const painter_t *painter)
     if (survey->min_fov && core->fov < survey->min_fov) return 0;
     if (survey->max_fov && core->fov >= survey->max_fov) return 0;
 
-    survey_load_allsky((survey_t*)survey);
+    survey_load_allsky(survey);
     if (survey->allsky) {
         image_update_filter(survey->allsky, survey->filter, survey->filter_idx);
         obj_render((obj_t*)survey->allsky, painter);

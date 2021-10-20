@@ -198,7 +198,7 @@ static void star_get_astrom(const star_t *s, const observer_t *obs,
 static int star_get_pvo(const obj_t *obj, const observer_t *obs,
                         double pvo[2][4])
 {
-    star_t *s = (void*)obj;
+    const star_t *s = (const star_t*)obj;
     star_get_astrom(s, obs, pvo[0]);
     convert_frame(obs, FRAME_ASTROM, FRAME_ICRF, true, pvo[0], pvo[0]);
     pvo[0][3] = 0.0;
@@ -209,7 +209,7 @@ static int star_get_pvo(const obj_t *obj, const observer_t *obs,
 static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
                          void *out)
 {
-    star_t *star = (star_t*)obj;
+    const star_t *star = (const star_t*)obj;
     switch (info) {
     case INFO_PVO:
         star_get_pvo(obj, obs, out);
@@ -227,7 +227,7 @@ static int star_get_info(const obj_t *obj, const observer_t *obs, int info,
 
 static json_value *star_get_json_data(const obj_t *obj)
 {
-    const star_t *star = (star_t*)obj;
+    const star_t *star = (const star_t*)obj;
     json_value* ret = json_object_new(0);
     json_value* md = json_object_new(0);
     if (!isnan(star->plx)) {
@@ -377,7 +377,7 @@ static void star_render_name(const painter_t *painter, const star_t *s,
 static int star_render(const obj_t *obj, const painter_t *painter_)
 {
     // XXX: the code is almost the same as the inner loop in stars_render.
-    star_t *star = (star_t*)obj;
+    const star_t *star = (const star_t*)obj;
     double pvo[2][4], p[2], size, luminance;
     double color[3];
     painter_t painter = *painter_;
@@ -409,7 +409,7 @@ void star_get_designations(
     const obj_t *obj, void *user,
     int (*f)(const obj_t *obj, void *user, const char *cat, const char *str))
 {
-    star_t *star = (star_t*)obj;
+    const star_t *star = (const star_t*)obj;
     const char *names = star->names;
     char buf[128];
 
@@ -720,7 +720,7 @@ end:
 
 static int stars_render(const obj_t *obj, const painter_t *painter_)
 {
-    stars_t *stars = (stars_t*)obj;
+    const stars_t *stars = (const stars_t*)obj;
     int nb_tot = 0, nb_loaded = 0, order, pix, r;
     double illuminance = 0; // Totall illuminance
     painter_t painter = *painter_;
@@ -761,7 +761,7 @@ static int stars_list(const obj_t *obj,
 {
     int order, pix, i, r, code;
     tile_t *tile;
-    stars_t *stars = (void*)obj;
+    const stars_t *stars = (const stars_t*)obj;
     hips_iterator_t iter;
     survey_t *survey = NULL;
 
