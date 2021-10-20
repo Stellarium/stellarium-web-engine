@@ -71,7 +71,7 @@ int sgp4(sgp4_elsetrec_t *satrec, double utc_mjd, double r[3], double v[3])
  */
 double sgp4_get_satepoch(const sgp4_elsetrec_t *satrec)
 {
-    elsetrec *elrec = (elsetrec*)satrec;
+    const elsetrec *elrec = (const elsetrec*)satrec;
     return (elrec->jdsatepoch + elrec->jdsatepochF) - 2400000.5;
 }
 

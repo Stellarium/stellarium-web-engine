@@ -985,7 +985,7 @@ static void on_designation(const obj_t *obj, void *user, const char *dsgn)
     obj_t **result = USER_GET(user, 1);
     if (*result) return;
     if (strcasecmp(query, dsgn) == 0) {
-        *result = obj_retain(obj);
+        *result = obj_retain((obj_t*)obj);
     }
 }
 
@@ -1002,7 +1002,7 @@ obj_t *core_search(const char *query)
 {
     obj_t *module, *ret = NULL;
     DL_FOREACH(core->obj.children, module) {
-        module_list_objs(module, NAN, 0, NULL, USER_PASS(query, &ret),
+        module_list_objs(module, NAN, 0, NULL, USER_PASS((void*)query, &ret),
                          on_search);
     }
     return ret;

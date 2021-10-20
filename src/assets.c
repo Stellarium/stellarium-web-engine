@@ -110,7 +110,7 @@ void asset_register(const char *url, const void *data, int size,
     assert(str_startswith(url, "asset://"));
     asset = calloc(1, sizeof(*asset));
     asset->flags = STATIC;
-    asset->url = url;
+    asset->url = (char*)url;
     if (compressed) {
         asset->flags |= COMPRESSED;
         asset->compressed_data = (void*)data;
