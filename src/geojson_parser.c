@@ -12,7 +12,7 @@
 #include "utils/utils_json.h"
 #include "utils/vec.h"
 #include "utlist.h"
-#include "erfa.h"
+#include "erfa_wrap.h"
 
 #include <stdio.h>
 #include <string.h>

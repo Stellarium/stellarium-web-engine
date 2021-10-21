@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "utils/vec.h"
-#include "erfa.h"
+#include "erfa_wrap.h"
 
 struct cst {
     const char id[5];

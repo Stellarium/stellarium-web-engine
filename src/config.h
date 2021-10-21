@@ -72,6 +72,11 @@ extern "C" {
 // Nanovg config.
 #define NVG_NO_STB
 
+// Force using erfa_wrap.h instead of erfa.h
+#if defined(ERFA_WRAP) && !defined(ERFAHDEF)
+#error Please include erfa_wrap.h instead of erfa.h
+#endif
+
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 

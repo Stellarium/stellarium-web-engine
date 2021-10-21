@@ -9,7 +9,6 @@
 
 #include "mesh.h"
 #include "vec.h"
-#include "erfa.h" // XXX: to remove, we barely use it here.
 
 #include "../../ext_src/libtess2/tesselator.h"
 

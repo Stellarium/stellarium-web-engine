@@ -29,7 +29,7 @@
 #include "json.h"
 #include "json-builder.h"
 #include "eph-file.h"
-#include "erfa.h"
+#include "erfa_wrap.h"
 #include "log.h"
 #include "tests.h"
 

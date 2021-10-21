@@ -9,7 +9,7 @@
 
 #include "mpc.h"
 
-#include "erfa.h" // Used for eraDtf2d.
+#include "erfa_wrap.h" // Used for eraDtf2d.
 
 #include <stdint.h>
 #include <stdlib.h>

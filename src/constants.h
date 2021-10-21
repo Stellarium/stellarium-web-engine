@@ -15,7 +15,7 @@
  * automatically get the proper value.
  */
 
-#include "erfa.h"
+#include "erfa_wrap.h"
 
 #define PARSEC_IN_METER 3.08567758e16
 #define LIGHT_YEAR_IN_METER 9.4605284e15

@@ -11,7 +11,7 @@
 #define OBSERVER_H
 
 #include "obj.h"
-#include "erfa.h"
+#include "erfa_wrap.h"
 
 /*
  * Type: observer_t

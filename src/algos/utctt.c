@@ -9,7 +9,7 @@
 
 #include <math.h>
 #include "algos.h"
-#include "erfa.h"
+#include "erfa_wrap.h"
 
 double tt2utc(double tt, double *dut1)
 {

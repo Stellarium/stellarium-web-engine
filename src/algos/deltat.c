@@ -9,7 +9,7 @@
 
 
 #include <stdio.h>
-#include "erfa.h"
+#include "erfa_wrap.h"
 #include "swe.h"
 
 // ut in MJD.
