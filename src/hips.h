@@ -51,7 +51,7 @@ enum {
  *   can set the transparency value, as a four bits bitmask, one bit per child.
  */
 typedef struct hips_settings {
-    const void *(*create_tile)(void *user, int order, int pix, void *data,
+    void *(*create_tile)(void *user, int order, int pix, const void *data,
                                int size, int *cost, int *transparency);
     int (*delete_tile)(void *tile);
     const char *ext; // If set, force the files extension.

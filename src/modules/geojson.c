@@ -631,8 +631,8 @@ int geojson_survey_query_rendered_features(
     return nb;
 }
 
-static const void *survey_create_tile(
-        void *user, int order, int pix, void *data, int size,
+static void *survey_create_tile(
+        void *user, int order, int pix, const void *data, int size,
         int *cost, int *transparency)
 {
     int mask;

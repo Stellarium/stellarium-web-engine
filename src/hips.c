@@ -81,8 +81,8 @@ typedef struct {
 static cache_t *g_cache = NULL;
 
 
-static const void *create_img_tile(
-        void *user, int order, int pix, void *src, int size,
+static void *create_img_tile(
+        void *user, int order, int pix, const void *src, int size,
         int *cost, int *transparency);
 static int delete_img_tile(void *tile);
 
@@ -543,7 +543,7 @@ bool hips_update(hips_t *hips)
 {
     int code, err, size;
     char url[1024];
-    char *data;
+    const char *data;
     if (hips->error) return false;
     if (!hips->properties) {
         err = parse_properties(hips);
@@ -816,8 +816,8 @@ const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
 /*
  * Default tile support for images surveys
  */
-static const void *create_img_tile(
-        void *user, int order, int pix, void *data, int size,
+static void *create_img_tile(
+        void *user, int order, int pix, const void *data, int size,
         int *cost, int *transparency)
 {
     void *img;
