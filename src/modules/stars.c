@@ -619,7 +619,6 @@ static survey_t *get_survey(const stars_t *stars, const char *key)
  * Load and return a tile.
  *
  * Parameters:
- *   stars  - The stars module.
  *   survey - The survey.
  *   order  - Healpix order.
  *   pix    - Healpix pix.
@@ -627,7 +626,7 @@ static survey_t *get_survey(const stars_t *stars, const char *key)
  *            loop so should be avoided.
  *   code   - http return code (0 if still loading).
  */
-static tile_t *get_tile(stars_t *stars, survey_t *survey, int order, int pix,
+static tile_t *get_tile(survey_t *survey, int order, int pix,
                         bool sync, int *code)
 {
     int flags = 0;
@@ -665,7 +664,7 @@ static int render_visitor(stars_t *stars, const survey_t *survey,
     if (order < survey->min_order) return 1;
 
     (*nb_tot)++;
-    tile = get_tile(stars, survey, order, pix, false, &code);
+    tile = get_tile(survey, order, pix, false, &code);
     if (code) (*nb_loaded)++;
 
     if (!tile) goto end;
@@ -781,7 +780,7 @@ static int stars_list(const obj_t *obj,
     if (!hint) {
         hips_iter_init(&iter);
         while (hips_iter_next(&iter, &order, &pix)) {
-            tile = get_tile(stars, survey, order, pix, false, &code);
+            tile = get_tile(survey, order, pix, false, &code);
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
                 if (tile->sources[i].vmag > max_mag) continue;
@@ -796,7 +795,7 @@ static int stars_list(const obj_t *obj,
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    tile = get_tile(stars, survey, order, pix, false, &code);
+    tile = get_tile(survey, order, pix, false, &code);
     if (!tile) {
         if (!code) return MODULE_AGAIN; // Try again later.
         return -1;
@@ -937,7 +936,7 @@ obj_t *obj_get_by_hip(int hip, int *code)
         }
         for (survey = stars->surveys; survey; survey = survey->next) {
             if (survey->is_gaia) continue;
-            tile = get_tile(stars, survey, order, pix, true, code);
+            tile = get_tile(survey, order, pix, true, code);
             if (*code == 0) return NULL; // Still loading.
             if (!tile) continue;
             for (i = 0; i < tile->nb; i++) {

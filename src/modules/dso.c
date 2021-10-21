@@ -390,7 +390,7 @@ static int dsos_init(obj_t *obj, json_value *args)
 }
 
 // Exactly the same that stars.c get_tile function...
-static tile_t *get_tile(dsos_t *dsos, survey_t *survey, int order, int pix,
+static tile_t *get_tile(survey_t *survey, int order, int pix,
                         bool sync, int *code)
 {
     int flags = 0;
@@ -619,11 +619,10 @@ void dso_get_designations(
 
 static int render_visitor(int order, int pix, void *user)
 {
-    dsos_t *dsos = USER_GET(user, 0);
-    painter_t painter = *(const painter_t*)USER_GET(user, 1);
-    int *nb_tot = USER_GET(user, 2);
-    int *nb_loaded = USER_GET(user, 3);
-    survey_t *survey = USER_GET(user, 4);
+    painter_t painter = *(const painter_t*)USER_GET(user, 0);
+    int *nb_tot = USER_GET(user, 1);
+    int *nb_loaded = USER_GET(user, 2);
+    survey_t *survey = USER_GET(user, 3);
     tile_t *tile;
     int i, ret, code;
     uint64_t hint;
@@ -633,7 +632,7 @@ static int render_visitor(int order, int pix, void *user)
         return 0;
 
     (*nb_tot)++;
-    tile = get_tile(dsos, survey, order, pix, false, &code);
+    tile = get_tile(survey, order, pix, false, &code);
     if (code) (*nb_loaded)++;
 
     if (!tile) return 0;
@@ -664,7 +663,7 @@ static int dsos_render(const obj_t *obj, const painter_t *painter_)
 
     painter.color[3] *= dsos->visible.value;
     DL_FOREACH(dsos->surveys, survey) {
-        hips_traverse(USER_PASS(dsos, &painter, &nb_tot, &nb_loaded, survey),
+        hips_traverse(USER_PASS(&painter, &nb_tot, &nb_loaded, survey),
                       render_visitor);
     }
     progressbar_report("DSO", "DSO", nb_loaded, nb_tot, -1);
@@ -698,7 +697,7 @@ static int dsos_list(const obj_t *obj,
     if (!hint) {
         hips_iter_init(&iter);
         while (hips_iter_next(&iter, &order, &pix)) {
-            tile = get_tile(dsos, survey, order, pix, false, &code);
+            tile = get_tile(survey, order, pix, false, &code);
             if (!tile && !code) return MODULE_AGAIN;
             if (!tile || tile->mag_min >= max_mag) continue;
             for (i = 0; i < tile->nb; i++) {
@@ -715,7 +714,7 @@ static int dsos_list(const obj_t *obj,
 
     // Get tile from hint (as nuniq).
     nuniq_to_pix(hint, &order, &pix);
-    tile = get_tile(dsos, survey, order, pix, false, &code);
+    tile = get_tile(survey, order, pix, false, &code);
     if (!tile) {
         if (!code) return MODULE_AGAIN; // Try again later.
         return -1;
