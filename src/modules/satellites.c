@@ -621,8 +621,8 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     double color[4], model_alpha, model_size;
     double radius;
     char buf[256];
-    const double label_color[4] = RGBA(124, 205, 124, 205);
-    const double white[4] = RGBA(255, 255, 255, 255);
+    const double label_color[4] = {0.49, 0.80, 0.49, 0.80};
+    const double white[4] = {1, 1, 1, 1};
     const satellite_t *sat = (const satellite_t*)obj;
     const bool selected = core->selection && obj == core->selection;
     const double hints_limit_mag = painter.hints_limit_mag +

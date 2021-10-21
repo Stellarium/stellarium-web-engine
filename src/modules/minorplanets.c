@@ -289,7 +289,7 @@ static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter_)
 static int mplanet_render(const obj_t *obj, const painter_t *painter)
 {
     double pvo[2][4], win_pos[2], vmag, size, luminance;
-    double label_color[4] = RGBA(223, 223, 255, 255);
+    double label_color[4] = {0.87, 0.87, 1, 1};
     const mplanet_t *mplanet = (const mplanet_t*)obj;
     point_t point;
     const bool selected = core->selection && obj == core->selection;

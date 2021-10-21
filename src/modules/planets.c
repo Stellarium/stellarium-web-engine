@@ -1033,7 +1033,7 @@ static void planet_render_label(
         const planet_t *planet, const painter_t *painter, double vmag,
         double scale, double point_size)
 {
-    const double label_color[4] = RGBA(223, 223, 255, 255);
+    const double label_color[4] = {0.87, 0.87, 1, 1};
     const double white[4] = {1, 1, 1, 1};
     double s, radius;
     double pos[3];

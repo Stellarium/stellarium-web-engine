@@ -166,6 +166,14 @@ struct line {
     double          color[4];
 };
 
+static void hex_to_rgba(uint32_t v, double rgba[4])
+{
+    rgba[0] = ((v >> 24) & 0xff) / 255.0f,
+    rgba[1] = ((v >> 16) & 0xff) / 255.0f,
+    rgba[2] = ((v >>  8) & 0xff) / 255.0f,
+    rgba[3] = ((v >>  0) & 0xff) / 255.0f;
+}
+
 // Compute cap from a quad.
 static void compute_rect_cap(const double pos[4][3], double out[4])
 {

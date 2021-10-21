@@ -41,6 +41,14 @@ static const struct {
     [SYMBOL_METEOR_SHOWER]          = {"MSh" , 0x89ff5f7f, msh_paint},
 };
 
+static void hex_to_rgba(uint32_t v, double rgba[4])
+{
+    rgba[0] = ((v >> 24) & 0xff) / 255.0f,
+    rgba[1] = ((v >> 16) & 0xff) / 255.0f,
+    rgba[2] = ((v >>  8) & 0xff) / 255.0f,
+    rgba[3] = ((v >>  0) & 0xff) / 255.0f;
+}
+
 static texture_t *get_texture(void)
 {
     if (!g_tex) {

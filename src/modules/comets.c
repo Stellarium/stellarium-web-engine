@@ -456,7 +456,7 @@ static int comet_render(const obj_t *obj, const painter_t *painter)
     double win_pos[2], vmag, size, luminance;
     const comet_t *comet = (const comet_t*)obj;
     point_t point;
-    double label_color[4] = RGBA(223, 223, 255, 255);
+    double label_color[4] = {0.87, 0.87, 1, 1};
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_comets->hints_mag_offset;
     double cap[4];
