@@ -11,7 +11,8 @@
 
 #include <math.h>
 
-static void mat3_mul_vec3(double mat[3][3], const double v[3], double out[3])
+static void mat3_mul_vec3(const double mat[3][3], const double v[3],
+                          double out[3])
 {
     double x = v[0];
     double y = v[1];

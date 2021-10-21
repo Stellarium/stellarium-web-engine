@@ -103,7 +103,7 @@ static void update_matrices(observer_t *obs)
     mat3_copy(rc2v, obs->rc2v);
 }
 
-static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
+static void observer_compute_hash(const observer_t *obs, uint64_t* hash_partial,
                                   uint64_t* hash)
 {
     uint32_t v = 1;
@@ -224,7 +224,7 @@ static void observer_update_full(observer_t *obs)
     obs->eo = eraEors(r, s); // Equation of origins.
 
     // Update earth position.
-    eraCp(obs->astrom.eb, obs->obs_pvb[0]);
+    vec3_copy(obs->astrom.eb, obs->obs_pvb[0]);
     vec3_mul(ERFA_DC, obs->astrom.v, obs->obs_pvb[1]);
     if (!obs->space)
         eraPvmpv(obs->obs_pvb, obs->earth_pvb, obs->obs_pvg);

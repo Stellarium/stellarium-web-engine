@@ -295,7 +295,7 @@ void gl_buf_disable(const gl_buf_t *buf)
 static const gl_uniform_t *get_uniform(const gl_shader_t *shader,
                                        const char *name)
 {
-    gl_uniform_t *uni;
+    const gl_uniform_t *uni;
     for (uni = &shader->uniforms[0]; uni->size; uni++) {
         if (strcmp(uni->name, name) == 0) return uni;
     }
@@ -312,7 +312,7 @@ void gl_update_uniform_vec3(gl_shader_t *shader, const char *name,
 {
     float vf[3];
     int i;
-    gl_uniform_t *uni;
+    const gl_uniform_t *uni;
 
     uni = get_uniform(shader, name);
     if (!uni) return;
@@ -326,7 +326,7 @@ void gl_update_uniform_mat3(gl_shader_t *shader, const char *name,
 {
     float vf[9];
     int i, j;
-    gl_uniform_t *uni;
+    const gl_uniform_t *uni;
 
     uni = get_uniform(shader, name);
     if (!uni) return;
@@ -341,7 +341,7 @@ void gl_update_uniform_mat4(gl_shader_t *shader, const char *name,
 {
     float vf[16];
     int i, j;
-    gl_uniform_t *uni;
+    const gl_uniform_t *uni;
 
     uni = get_uniform(shader, name);
     if (!uni) return;
@@ -353,7 +353,7 @@ void gl_update_uniform_mat4(gl_shader_t *shader, const char *name,
 
 void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
 {
-    gl_uniform_t *uni;
+    const gl_uniform_t *uni;
     va_list args;
 
     uni = get_uniform(shader, name);

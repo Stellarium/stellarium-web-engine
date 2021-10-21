@@ -247,16 +247,16 @@ void position_to_astrometric(const observer_t *obs, int origin,
     // add annual aberration at the same time, which we don't want here.
     // It will be added later in astrometric_to_apparent function.
     double tmp[3];
-    eraCp(out[1], tmp);
+    vec3_copy(out[1], tmp);
     eraPpp(out[1], obs->earth_pvb[1], out[1]);
     correct_speed_of_light(out);
-    eraCp(tmp, out[1]);
+    vec3_copy(tmp, out[1]);
 }
 
 void astrometric_to_apparent(const observer_t *obs, const double in[3],
                              bool inf, double out[3])
 {
-    eraCp(in, out);
+    vec3_copy(in, out);
 
     if (inf) {
         assert(vec3_is_normalized(out));
@@ -283,7 +283,7 @@ void apparent_to_astrometric(const observer_t *obs, const double in[3],
     // Currently only implemented for distant objects
     assert(inf);
 
-    eraCp(in, out);
+    vec3_copy(in, out);
     assert(vec3_is_normalized(out));
 
     double delta[3];

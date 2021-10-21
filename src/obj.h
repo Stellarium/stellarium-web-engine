@@ -316,7 +316,7 @@ int obj_render(const obj_t *obj, const painter_t *painter);
  *   0 for success, otherwise an error code, and in that case the position
  *   is undefined.
  */
-int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
+int obj_get_pvo(const obj_t *obj, observer_t *obs, double pvo[S 2][4]);
 
 /*
  * Function: obj_get_pos
@@ -333,7 +333,7 @@ int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[S 2][4]);
  * Return:
  *   0 for success.
  */
-int obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
+int obj_get_pos(const obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
 
 /*
  * Function: obj_get_info
@@ -358,7 +358,7 @@ int obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
  * Return:
  *   0 if the info exists, 1 if not.
  */
-int obj_get_info(obj_t *obj, observer_t *obs, int info, void *out);
+int obj_get_info(const obj_t *obj, observer_t *obs, int info, void *out);
 
 /*
  * Function: obj_get_info_json

@@ -77,6 +77,6 @@ void render_line_2d(renderer_t *rend, const painter_t *painter,
 void render_model_3d(renderer_t *rend, const painter_t *painter,
                      const char *model, const double model_mat[4][4],
                      const double view_mat[4][4], const double proj_mat[4][4],
-                     const double light_dir[3], json_value *args);
+                     const double light_dir[3], const json_value *args);
 
 #endif // RENDER_GL_H

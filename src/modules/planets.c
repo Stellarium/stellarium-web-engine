@@ -357,7 +357,7 @@ static void planet_get_pvh(const planet_t *planet, const observer_t *obs,
     }
 
     // Cache the value for next time.
-    eraCpv(pvh, planet->last_full_pvh);
+    eraCpv(pvh, ((planet_t*)planet)->last_full_pvh);
     ((planet_t*)planet)->last_full_update = obs->tt;
 }
 
@@ -402,7 +402,7 @@ static void planet_get_pvo(const planet_t *planet, const observer_t *obs,
 
     // Copy value into cache to speed up next access.
     ((planet_t*)planet)->pvo_obs_hash = obs->hash;
-    eraCpv(pvo, planet->pvo);
+    eraCpv(pvo, ((planet_t*)planet)->pvo);
 }
 
 // Same as get_pvo, but return homogenous 4d coordinates.

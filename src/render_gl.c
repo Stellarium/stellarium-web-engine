@@ -766,7 +766,7 @@ void render_quad(renderer_t *rend, const painter_t *painter,
         }
         gl_buf_next(&item->buf);
     }
-    if (should_delete_grid) free(grid);
+    if (should_delete_grid) free((void*)grid);
 
     // Set the index buffer.
     for (i = 0; i < grid_size; i++)
@@ -2011,7 +2011,7 @@ static void get_model_depth_range(
 void render_model_3d(renderer_t *rend, const painter_t *painter,
                      const char *model, const double model_mat[4][4],
                      const double view_mat[4][4], const double proj_mat[4][4],
-                     const double light_dir[3], json_value *args)
+                     const double light_dir[3], const json_value *args)
 {
     item_t *item;
     double depth_range[2];
@@ -2068,7 +2068,7 @@ void core_add_font(renderer_t *rend, const char *name,
         return;
     }
 
-    id = nvgCreateFontMem(rend->vg, name, data, size, 0);
+    id = nvgCreateFontMem(rend->vg, name, (unsigned char*)data, size, 0);
     if (!rend->fonts[font].id || rend->fonts[font].is_default_font) {
         rend->fonts[font].id = id;
         rend->fonts[font].is_default_font = false;

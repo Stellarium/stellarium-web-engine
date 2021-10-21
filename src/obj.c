@@ -155,7 +155,7 @@ int obj_render(const obj_t *obj, const painter_t *painter)
  *   0 for success, otherwise an error code, and in that case the position
  *   is undefined.
  */
-int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
+int obj_get_pvo(const obj_t *obj, observer_t *obs, double pvo[2][4])
 {
     char name[64];
     int r;
@@ -183,7 +183,7 @@ int obj_get_pvo(obj_t *obj, observer_t *obs, double pvo[2][4])
  *   frame  - One of the <FRAME> enum values.
  *   pos    - Output position in the given frame, using homogenous coordinates.
  */
-int obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[4])
+int obj_get_pos(const obj_t *obj, observer_t *obs, int frame, double pos[4])
 {
     int r;
     double pvo[2][4];
@@ -197,7 +197,7 @@ int obj_get_pos(obj_t *obj, observer_t *obs, int frame, double pos[4])
     return 0;
 }
 
-int obj_get_info(obj_t *obj, observer_t *obs, int info,
+int obj_get_info(const obj_t *obj, observer_t *obs, int info,
                  void *out)
 {
     double pvo[2][4], pos[3], ra, dec;
@@ -552,7 +552,7 @@ int obj_get_attr(const obj_t *obj, const char *name, ...)
 
     attr = obj_get_attr_(obj, name);
     va_start(ap, name);
-    ret = obj_call_json(obj, name, NULL);
+    ret = obj_call_json((obj_t*)obj, name, NULL);
     assert(ret);
     args_vget(ret, attr->type, &ap);
     json_builder_free(ret);
@@ -570,7 +570,7 @@ int obj_get_attr2(const obj_t *obj, const char *name, int type, ...)
     attr = obj_get_attr_(obj, name);
     if (attr->type != type) return -1;
     va_start(ap, type);
-    ret = obj_call_json(obj, name, NULL);
+    ret = obj_call_json((obj_t*)obj, name, NULL);
     assert(ret);
     args_vget(ret, attr->type, &ap);
     json_builder_free(ret);
