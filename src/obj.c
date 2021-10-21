@@ -578,7 +578,7 @@ int obj_get_attr2(const obj_t *obj, const char *name, int type, ...)
     return 0;
 }
 
-int obj_set_attr(const obj_t *obj, const char *name, ...)
+int obj_set_attr(obj_t *obj, const char *name, ...)
 {
     json_value *arg, *ret;
     va_list ap;
@@ -708,7 +708,7 @@ static json_value *json_extract_attr(json_value *val, const char *attr)
     return ret;
 }
 
-void obj_set_attrs_json(const obj_t *obj, const char *json, char **restore)
+void obj_set_attrs_json(obj_t *obj, const char *json, char **restore)
 {
     json_value *doc, *value, *restore_doc = NULL, *tmp;
     const char *key, *id;

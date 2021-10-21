@@ -443,7 +443,7 @@ int obj_get_attr(const obj_t *obj, const char *attr, ...);
  *   attr   - The name of the attribute.
  *   ...    - Pointer to the new value.
  */
-int obj_set_attr(const obj_t *obj, const char *attr, ...);
+int obj_set_attr(obj_t *obj, const char *attr, ...);
 
 
 /*
@@ -481,7 +481,7 @@ const attribute_t *obj_get_attr_(const obj_t *obj, const char *attr);
  * a json string that can be used to restore the settings to their original
  * values.
  */
-void obj_set_attrs_json(const obj_t *obj, const char *json, char **restore);
+void obj_set_attrs_json(obj_t *obj, const char *json, char **restore);
 
 
 // Register an object klass, so that we can create instances dynamically
