@@ -134,7 +134,7 @@ int json_parse_vector(const json_value *data, int size, double *out)
 }
 
 
-static int jcon_parse_(json_value *v, va_list *ap)
+static int jcon_parse_(const json_value *v, va_list *ap)
 {
     const char *token;
     json_value *child;
@@ -247,7 +247,7 @@ static int jcon_parse_(json_value *v, va_list *ap)
     return -1;
 }
 
-int jcon_parse(json_value *v, ...)
+int jcon_parse(const json_value *v, ...)
 {
     int ret;
     va_list ap;

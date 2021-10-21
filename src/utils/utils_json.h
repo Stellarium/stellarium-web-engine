@@ -97,4 +97,4 @@ int json_parse_vector(const json_value *data, int size, double *out);
 #define JCON_STR(v) "s", &(v)
 #define JCON_VAL(v) "v", &(v)
 
-int jcon_parse(json_value *v, ...) __attribute__((warn_unused_result));
+int jcon_parse(const json_value *v, ...) __attribute__((warn_unused_result));
