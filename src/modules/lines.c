@@ -345,13 +345,14 @@ static void spherical_project(
  *   v      - Normal of the window border inward.
  *   dir    - 0: alt, 1: az
  */
-static void render_label(const double p[2], const double n[2],
+static void render_label(const double p[2], const double u[2],
                          const double v[2], const double uv[2],
-                         int dir, line_t *line, int step,
+                         int dir, const line_t *line, int step,
                          const painter_t *painter_)
 {
     char buf[32];
     double pos[2];
+    double n[2];
     double a, label_angle;
     char s;
     int h[4];
@@ -362,11 +363,12 @@ static void render_label(const double p[2], const double n[2],
     painter.color[3] = line->visible.value;
 
     // Give up if angle with screen is too acute.
-    if (fabs(vec2_dot(n, v)) < 0.25) return;
+    if (fabs(vec2_dot(u, v)) < 0.25) return;
     // Hints the renderer that we can move the labels after the lines to
     // optimize batching.
     painter.flags |= PAINTER_ALLOW_REORDER;
 
+    vec2_copy(u, n);
     if (vec2_dot(n, v) < 0) {
         vec2_mul(-1, n, n);
     }
