@@ -45,7 +45,7 @@ struct tile {
     hips_t      *hips;
     fader_t     fader;
     int         flags;
-    const void  *data;
+    void        *data;
 
     // Loader to parse the image in a thread.
     struct {
@@ -805,8 +805,7 @@ static tile_t *hips_get_tile_(hips_t *hips, int order, int pix, int flags,
     return tile;
 }
 
-const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
-                          int *code)
+void *hips_get_tile(hips_t *hips, int order, int pix, int flags, int *code)
 {
     tile_t *tile = hips_get_tile_(hips, order, pix, flags, code);
     if (*code == 0) assert(!tile);

@@ -128,8 +128,7 @@ void hips_delete(hips_t *hips);
  *   If the tile data is not available yet set code to 0 and return NULL.
  *   In case of error, set code to the error code and return NULL.
  */
-const void *hips_get_tile(hips_t *hips, int order, int pix, int flags,
-                          int *code);
+void *hips_get_tile(hips_t *hips, int order, int pix, int flags, int *code);
 
 /*
  * Function: hips_is_ready
