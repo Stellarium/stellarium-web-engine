@@ -286,7 +286,7 @@ void obj_release(obj_t *obj);
  *
  * Return the object.
  */
-obj_t *obj_retain(obj_t *obj);
+obj_t *obj_retain(const obj_t *obj);
 
 /*
  * Function: obj_clone
