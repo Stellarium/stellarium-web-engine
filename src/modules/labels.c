@@ -212,7 +212,7 @@ static int labels_update(obj_t *obj, double dt)
 void labels_add(const char *text, const double pos[2],
                 double radius, double size, const double color[4],
                 double angle, int align, int effects, double priority,
-                obj_t *obj)
+                const obj_t *obj)
 {
     const double p[3] = {pos[0], pos[1], 0};
     labels_add_3d(text, -1, p, true, radius, size, color, angle, align,
@@ -222,7 +222,7 @@ void labels_add(const char *text, const double pos[2],
 void labels_add_3d(const char *text, int frame, const double pos[3],
                    bool at_inf, double radius, double size,
                    const double color[4], double angle, int align,
-                   int effects, double priority, obj_t *obj)
+                   int effects, double priority, const obj_t *obj)
 {
     if (!align) align = ALIGN_CENTER | ALIGN_BOTTOM;
     if (!(effects & TEXT_FLOAT)) priority = 1024.0; // Use FLT_MAX ?
@@ -297,7 +297,8 @@ obj_t *labels_get_obj_at(const double pos[2], double max_dist)
 
 void labels_hide_label_for(const obj_t *obj)
 {
-    g_labels->hidden_obj = obj;
+    obj_release(g_labels->hidden_obj);
+    g_labels->hidden_obj = obj_retain(obj);
 }
 
 /*

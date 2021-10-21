@@ -33,7 +33,7 @@ void labels_reset(void);
  */
 void labels_add(const char *text, const double pos[2], double radius,
                 double size, const double color[4], double angle,
-                int align, int effects, double priority, obj_t *obj);
+                int align, int effects, double priority, const obj_t *obj);
 
 /*
  * Function: labels_add
@@ -58,7 +58,7 @@ void labels_add(const char *text, const double pos[2], double radius,
 void labels_add_3d(const char *text, int frame, const double pos[3],
                    bool at_inf, double radius, double size,
                    const double color[4], double angle, int align,
-                   int effects, double priority, obj_t *obj);
+                   int effects, double priority, const obj_t *obj);
 
 /*
  * Function: labels_has_obj
