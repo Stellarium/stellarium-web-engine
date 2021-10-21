@@ -428,7 +428,7 @@ static int query_rendered_features_(
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (mesh_contains_vec3(mesh, pos)) {
                 index[nb] = i;
-                if (tiles) tiles[nb] = image;
+                if (tiles) tiles[nb] = (void*)image;
                 nb++;
                 break;
             }
@@ -473,7 +473,7 @@ static int query_rendered_features_box_(
         for (mesh = feature->meshes; mesh; mesh = mesh->next) {
             if (mesh_intersects_box(mesh, painter, box)) {
                 index[nb] = i;
-                if (tiles) tiles[nb] = image;
+                if (tiles) tiles[nb] = (void*)image;
                 nb++;
                 break;
             }
@@ -709,7 +709,7 @@ static int survey_init(obj_t *obj, json_value *args)
 static void survey_load_allsky(survey_t *survey)
 {
     char path[1024];
-    void *data;
+    const void *data;
     int size, code;
     json_value *geojson;
 
