@@ -35,11 +35,11 @@ areas_t *areas_create(void);
  *   obj    - object associated with the area.
  */
 void areas_add_circle(areas_t *areas, const double pos[2], double r,
-                      obj_t *obj);
+                      const obj_t *obj);
 
 void areas_add_ellipse(areas_t *areas, const double pos[2], double angle,
                        double a, double b,
-                       obj_t *obj);
+                       const obj_t *obj);
 
 /*
  * Function: areas_lookup
