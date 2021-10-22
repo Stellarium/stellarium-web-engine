@@ -255,7 +255,7 @@ static int mplanet_get_info(const obj_t *obj, const observer_t *obs, int info,
     const mplanet_t *mp = (const mplanet_t*)obj;
     double radius;
 
-    mplanet_update(mp, obs);
+    mplanet_update((mplanet_t*)mp, obs);
     switch (info) {
     case INFO_PVO:
         memcpy(out, mp->pvo, sizeof(mp->pvo));

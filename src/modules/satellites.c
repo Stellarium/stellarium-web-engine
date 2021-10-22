@@ -472,7 +472,7 @@ static int satellite_get_info(const obj_t *obj, const observer_t *obs, int info,
     double bounds[2][3], radius;
     const satellite_t *sat = (const satellite_t*)obj;
 
-    satellite_update(sat, obs);
+    satellite_update((satellite_t*)sat, obs);
     switch (info) {
     case INFO_PVO:
         vec3_copy(sat->pvo[0], pvo[0]);

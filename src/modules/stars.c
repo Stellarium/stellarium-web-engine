@@ -642,7 +642,7 @@ static tile_t *get_tile(survey_t *survey, int order, int pix,
     return tile;
 }
 
-static int render_visitor(stars_t *stars, const survey_t *survey,
+static int render_visitor(stars_t *stars, survey_t *survey,
                           int order, int pix,
                           const painter_t *painter_,
                           int *nb_tot, int *nb_loaded,

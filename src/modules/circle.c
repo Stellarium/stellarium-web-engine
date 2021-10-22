@@ -36,7 +36,7 @@ static int circle_init(obj_t *obj, json_value *args)
 static void circle_project(const uv_map_t *map,
                            const double v[2], double out[4])
 {
-    circle_t *circle = map->user;
+    const circle_t *circle = map->user;
     double theta, r, mat[3][3], p[4] = {1, 0, 0, 0}, ra, dec;
     bool right_handed = circle->frame != FRAME_OBSERVED &&
                         circle->frame != FRAME_MOUNT;

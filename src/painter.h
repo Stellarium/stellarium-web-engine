@@ -112,7 +112,7 @@ struct painter
     renderer_t      *rend;          // The render used.
     const observer_t *obs;
 
-    projection_t    *proj;          // Project from view to NDC.
+    const projection_t *proj;          // Project from view to NDC.
 
     double          color[4];       // Global color.
     int             fb_size[2];     // Size of the render buffer.

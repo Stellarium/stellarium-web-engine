@@ -338,7 +338,7 @@ static int comet_get_info(const obj_t *obj, const observer_t *obs, int info,
                           void *out)
 {
     const comet_t *comet = (const comet_t*)obj;
-    comet_update(comet, obs);
+    comet_update((comet_t*)comet, obs);
     switch (info) {
     case INFO_PVO:
         memcpy(out, comet->pvo, sizeof(comet->pvo));

@@ -650,7 +650,7 @@ static void planet_get_designations(
 static int on_render_tile(hips_t *hips, const painter_t *painter_,
                           const double transf[4][4],
                           int order, int pix, int split, int flags,
-                          planet_t *planet, int *nb_tot, int *nb_loaded)
+                          const planet_t *planet, int *nb_tot, int *nb_loaded)
 {
     painter_t painter = *painter_;
     texture_t *tex, *normalmap = NULL;
@@ -822,7 +822,7 @@ static int get_shadow_candidates(const planet_t *planet,
 }
 
 static void planet_render_hips(const planet_t *planet,
-                               const hips_t *hips,
+                               hips_t *hips,
                                double r_scale,
                                double alpha,
                                const painter_t *painter_)
@@ -928,7 +928,7 @@ static void planet_render_model(const planet_t *planet,
                                 double alpha,
                                 const painter_t *painter_)
 {
-    const hips_t *hips;
+    hips_t *hips;
     double bounds[2][3], pvo[2][3];
     double model_mat[4][4] = MAT4_IDENTITY;
     double brightness, bcoef;
@@ -1488,7 +1488,8 @@ error:
 static int planets_init(obj_t *obj, json_value *args)
 {
     planets_t *planets = (void*)obj;
-    char *data, name[128];
+    const char *data;
+    char name[128];
     const char *path;
     int r;
     planet_t *p;

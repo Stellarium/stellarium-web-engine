@@ -172,7 +172,7 @@ static int constellation_get_info(const obj_t *obj, const observer_t *obs,
                                   int info, void *out)
 {
     const constellation_t *con = (const constellation_t*)obj;
-    constellation_update(con, obs);
+    constellation_update((constellation_t*)con, obs);
     if (!con->first_update_complete) return 1;
     switch (info) {
     case INFO_PVO:
@@ -634,7 +634,7 @@ static int render_lines(constellation_t *con, const painter_t *_painter,
     double (*lines)[4];
     double lines_color[4];
     double mag[2], radius[2], visible, opacity;
-    observer_t *obs = painter.obs;
+    const observer_t *obs = painter.obs;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
 
     assert(con->first_update_complete);

@@ -232,7 +232,7 @@ static int atmosphere_render(obj_t *obj, const painter_t *painter_)
     int i;
     painter_t painter = *painter_;
     core->lwsky_average = 0.0001;
-    observer_t *obs = painter.obs;
+    const observer_t *obs = painter.obs;
 
     if (atm->visible.value == 0.0) return 0;
     sun = core_get_planet(PLANET_SUN);

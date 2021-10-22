@@ -318,7 +318,7 @@ static void load_constellation_md_data(const char *md, skyculture_t *cult)
 static void add_section(const char *section_name, const char *content,
                         int size, skyculture_t *cult)
 {
-    const char* cst_md_data;
+    char *cst_md_data;
     while (*(content + size - 1) == '\n' && size)
         size--;
     if (strcmp(section_name, "Introduction") == 0) {
