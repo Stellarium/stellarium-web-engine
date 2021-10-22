@@ -197,14 +197,14 @@ int obj_get_pos(const obj_t *obj, observer_t *obs, int frame, double pos[4])
     return 0;
 }
 
-int obj_get_info(const obj_t *obj, observer_t *obs, int info,
+int obj_get_info(const obj_t *obj, const observer_t *obs, int info,
                  void *out)
 {
     double pvo[2][4], pos[3], ra, dec;
     int ret;
 
     assert(obj);
-    observer_update(obs, true);
+    assert(observer_is_uptodate(obs, true));
 
     if (obj->klass->get_info) {
         ret = obj->klass->get_info(obj, obs, info, out);
@@ -238,7 +238,7 @@ int obj_get_info(const obj_t *obj, observer_t *obs, int info,
 }
 
 EMSCRIPTEN_KEEPALIVE
-char *obj_get_info_json(const obj_t *obj, observer_t *obs,
+char *obj_get_info_json(const obj_t *obj, const observer_t *obs,
                         const char *info_str)
 {
     int info = obj_info_from_str(info_str);

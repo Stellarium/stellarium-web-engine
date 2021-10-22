@@ -1100,6 +1100,7 @@ static void test_info(void)
     double vmag;
     obj = core_get_planet(599); // Jupiter.
     assert(obj);
+    observer_update(core->observer, true);
     obj_get_info(obj, core->observer, INFO_VMAG, &vmag);
 }
 

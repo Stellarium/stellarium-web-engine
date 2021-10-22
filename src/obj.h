@@ -350,7 +350,7 @@ int obj_get_pos(const obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
  *
  * Parameters:
  *   obj    - A sky object.
- *   obs    - An observer.
+ *   obs    - An observer.  Must be up to date.
  *   info   - An info enum, as defined in obj_info.h (INFO_VMAG,
  *            INFO_TYPE, INFO_NAME, INFO_DISTANCE, etc).
  *   out    - Pointer to a variable large enough to get the info type.
@@ -358,14 +358,15 @@ int obj_get_pos(const obj_t *obj, observer_t *obs, int frame, double pos[S 4]);
  * Return:
  *   0 if the info exists, 1 if not.
  */
-int obj_get_info(const obj_t *obj, observer_t *obs, int info, void *out);
+int obj_get_info(const obj_t *obj, const observer_t *obs, int info, void *out);
 
 /*
  * Function: obj_get_info_json
  * Same as obj_get_info, but the info as a string, and return the result
  * as a json object
  */
-char *obj_get_info_json(const obj_t *obj, observer_t *obs, const char *info);
+char *obj_get_info_json(const obj_t *obj, const observer_t *obs,
+                        const char *info);
 
 /*
  * Function: obj_get_2d_ellipse
