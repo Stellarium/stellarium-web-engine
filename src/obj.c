@@ -155,7 +155,7 @@ int obj_render(const obj_t *obj, const painter_t *painter)
  *   0 for success, otherwise an error code, and in that case the position
  *   is undefined.
  */
-int obj_get_pvo(const obj_t *obj, observer_t *obs, double pvo[2][4])
+int obj_get_pvo(const obj_t *obj, const observer_t *obs, double pvo[2][4])
 {
     char name[64];
     int r;
@@ -183,7 +183,8 @@ int obj_get_pvo(const obj_t *obj, observer_t *obs, double pvo[2][4])
  *   frame  - One of the <FRAME> enum values.
  *   pos    - Output position in the given frame, using homogenous coordinates.
  */
-int obj_get_pos(const obj_t *obj, observer_t *obs, int frame, double pos[4])
+int obj_get_pos(const obj_t *obj, const observer_t *obs, int frame,
+                double pos[4])
 {
     int r;
     double pvo[2][4];
