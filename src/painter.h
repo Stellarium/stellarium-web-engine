@@ -74,7 +74,7 @@ struct point
     double  pos[2];
     double  size;       // Radius in window pixel (pixel with density scale).
     uint8_t color[4];
-    obj_t   *obj;
+    const obj_t *obj;
 };
 
 struct point_3d
@@ -82,7 +82,7 @@ struct point_3d
     double  pos[3];     // View position
     double  size;       // Radius in window pixel (pixel with density scale).
     uint8_t color[4];
-    obj_t   *obj;
+    const obj_t *obj;
 };
 
 // Painter flags
