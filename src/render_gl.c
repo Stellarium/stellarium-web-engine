@@ -828,7 +828,7 @@ static void texture_2d(renderer_t *rend, texture_t *tex,
     }
 }
 
-void render_texture(renderer_t *rend, const texture_t  *tex,
+void render_texture(renderer_t *rend, texture_t  *tex,
                     double uv[4][2], const double pos[2], double size,
                     const double color[4], double angle)
 {

@@ -45,7 +45,7 @@ static inline double clamp(double x, double a, double b)
 })
 
 // Can be used to pass array as `void *user` argument in callback functions.
-#define USER_PASS(...) ((void*[]){__VA_ARGS__})
+#define USER_PASS(...) ((const void*[]){__VA_ARGS__})
 #define USER_GET(var, n) (((void**)var)[n])
 
 static inline double mix(double x, double y, double t)

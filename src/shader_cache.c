@@ -24,7 +24,7 @@ static char *process_includes(const char *code)
     const char *pos, *end, *include;
     char path[128];
 
-    if (!strstr(code, "#include")) return code;
+    if (!strstr(code, "#include")) return (char*)code;
     utstring_init(&ret);
     while ((pos = strstr(code, "#include"))) {
         utstring_printf(&ret, "%.*s", (int)(pos - code), code);

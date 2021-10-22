@@ -20,9 +20,9 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-static projection_klass_t *g_klasses[PROJ_COUNT];
+static projection_klass_t const *g_klasses[PROJ_COUNT];
 
-void proj_register_(projection_klass_t *klass)
+void proj_register_(const projection_klass_t *klass)
 {
     g_klasses[klass->id] = klass;
 }

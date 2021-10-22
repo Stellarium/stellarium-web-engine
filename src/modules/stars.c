@@ -719,7 +719,7 @@ end:
 
 static int stars_render(obj_t *obj, const painter_t *painter_)
 {
-    const stars_t *stars = (const stars_t*)obj;
+    stars_t *stars = (stars_t*)obj;
     int nb_tot = 0, nb_loaded = 0, order, pix, r;
     double illuminance = 0; // Totall illuminance
     painter_t painter = *painter_;

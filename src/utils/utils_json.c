@@ -205,7 +205,7 @@ static int jcon_parse_(const json_value *v, va_list *ap)
         ptr.v = va_arg(*ap, json_value **);
         *ptr.v = NULL;
         if (!v) return 0;
-        *ptr.v = v;
+        *ptr.v = (json_value*)v;
         return 0;
     }
 

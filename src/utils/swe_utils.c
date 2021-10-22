@@ -130,7 +130,7 @@ void *z_uncompress_gz(const void *src, int src_size, int *out_size)
     *out_size = isize;
     ret = malloc(isize + 1);
 
-    stream.next_in = (const void*)d;
+    stream.next_in = (void*)d;
     stream.avail_in = src_size - 8 - ((const void*)d - src);
     stream.next_out = ret;
     stream.avail_out = isize;

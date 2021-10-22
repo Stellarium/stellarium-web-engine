@@ -55,7 +55,7 @@ enum {
  */
 struct projection
 {
-    projection_klass_t *klass;
+    const projection_klass_t *klass;
     double fovy;
     int flags;
 
@@ -90,7 +90,7 @@ struct projection_klass
 #define PROJECTION_REGISTER(klass) \
     static void proj_register_##klass##_(void) __attribute__((constructor)); \
     static void proj_register_##klass##_(void) { proj_register_(&klass); }
-void proj_register_(projection_klass_t *klass);
+void proj_register_(const projection_klass_t *klass);
 
 
 /*
