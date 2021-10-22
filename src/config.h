@@ -25,7 +25,6 @@ extern "C" {
 #   else
 #       if __GNUC__ >= 5
 #           pragma GCC diagnostic ignored "-Wdiscarded-array-qualifiers"
-#           pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
 #       endif
 #   endif
 #endif
