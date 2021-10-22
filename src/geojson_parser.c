@@ -466,8 +466,8 @@ static int parse_feature(const json_value *data, geojson_feature_t *feature)
     return 0;
 error:
     LOG_W("Error parsing geojson feature: %s", error_msg);
-    json = malloc(json_measure(data));
-    json_serialize(json, data);
+    json = malloc(json_measure((json_value*)data));
+    json_serialize(json, (json_value*)data);
     LOG_W("json:\n%s", json);
     free(json);
     return -1;
