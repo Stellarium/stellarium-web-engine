@@ -159,7 +159,7 @@ static int labels_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int labels_render(const obj_t *obj, const painter_t *painter_)
+static int labels_render(obj_t *obj, const painter_t *painter_)
 {
     label_t *label;
     double pos[2];

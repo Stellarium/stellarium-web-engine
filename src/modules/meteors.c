@@ -286,7 +286,7 @@ static int shower_get_info(const obj_t *obj, const observer_t *obs, int info,
     }
 }
 
-static int shower_render(const obj_t *obj, const painter_t *painter)
+static int shower_render(obj_t *obj, const painter_t *painter)
 {
     const double color[4] = {1, 1, 1, 1};
     const double size[2] = {30, 30};
@@ -347,7 +347,7 @@ static int meteors_update(obj_t *obj, double dt)
     return 0;
 }
 
-static int meteors_render(const obj_t *obj, const painter_t *painter)
+static int meteors_render(obj_t *obj, const painter_t *painter)
 {
     const meteors_t *meteors = (const meteors_t*)obj;
     obj_t *child;

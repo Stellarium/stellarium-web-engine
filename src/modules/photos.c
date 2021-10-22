@@ -85,9 +85,9 @@ static void photo_map(const uv_map_t *map, const double v[2], double out[4])
     vec4_copy(p, out);
 }
 
-static int photo_render(const obj_t *obj, const painter_t *painter)
+static int photo_render(obj_t *obj, const painter_t *painter)
 {
-    const photo_t *photo = (const photo_t*)obj;
+     photo_t *photo = (photo_t*)obj;
     typeof(&photo->calibration) calibration = &photo->calibration;
     uv_map_t map = {};
     painter_t painter2 = *painter;

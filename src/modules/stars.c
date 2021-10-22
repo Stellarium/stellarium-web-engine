@@ -374,7 +374,7 @@ static void star_render_name(const painter_t *painter, const star_t *s,
 
 // Render a single star.
 // This should be used only for stars that have been manually created.
-static int star_render(const obj_t *obj, const painter_t *painter_)
+static int star_render(obj_t *obj, const painter_t *painter_)
 {
     // XXX: the code is almost the same as the inner loop in stars_render.
     const star_t *star = (const star_t*)obj;
@@ -717,7 +717,7 @@ end:
 }
 
 
-static int stars_render(const obj_t *obj, const painter_t *painter_)
+static int stars_render(obj_t *obj, const painter_t *painter_)
 {
     const stars_t *stars = (const stars_t*)obj;
     int nb_tot = 0, nb_loaded = 0, order, pix, r;

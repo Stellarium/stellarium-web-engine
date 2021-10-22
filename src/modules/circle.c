@@ -82,7 +82,7 @@ static void circle_get_2d_ellipse(const obj_t *obj, const observer_t *obs,
     win_size[1] /= 2.0;
 }
 
-static int circle_render(const obj_t *obj, const painter_t *painter_)
+static int circle_render(obj_t *obj, const painter_t *painter_)
 {
     const circle_t *circle = (const circle_t *)obj;
     painter_t painter = *painter_;

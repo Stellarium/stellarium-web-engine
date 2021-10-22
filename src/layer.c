@@ -50,7 +50,7 @@ static int layer_update(obj_t *obj, double dt)
     return 0;
 }
 
-static int layer_render(const obj_t *obj, const painter_t *painter_)
+static int layer_render(obj_t *obj, const painter_t *painter_)
 {
     const layer_t *layer = (const layer_t*)obj;
     painter_t painter = *painter_;

@@ -315,7 +315,7 @@ static float blink(void)
     return mix(0.5f, 1.0f, t);
 }
 
-static int image_render(const obj_t *obj, const painter_t *painter_)
+static int image_render(obj_t *obj, const painter_t *painter_)
 {
     const image_t *image = (const image_t*)obj;
     painter_t painter = *painter_;
@@ -734,7 +734,7 @@ static void survey_load_allsky(survey_t *survey)
     json_value_free(geojson);
 }
 
-static int survey_render(const obj_t *obj, const painter_t *painter)
+static int survey_render(obj_t *obj, const painter_t *painter)
 {
     survey_t *survey = (survey_t*)obj;
     int nb_tot = 0, nb_loaded = 0;

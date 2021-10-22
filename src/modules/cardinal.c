@@ -49,7 +49,7 @@ static int cardinal_update(obj_t *obj, double dt)
     return fader_update(&c->visible, dt);
 }
 
-static int cardinal_render(const obj_t *obj, const painter_t *painter)
+static int cardinal_render(obj_t *obj, const painter_t *painter)
 {
     int i;
     double size = 24;

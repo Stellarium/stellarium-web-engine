@@ -109,8 +109,8 @@ struct obj_klass
     void (*del)(obj_t *obj);
     int (*get_info)(const obj_t *obj, const observer_t *obs, int info,
                     void *out);
-    int (*render)(const obj_t *obj, const painter_t *painter);
-    int (*post_render)(const obj_t *obj, const painter_t *painter);
+    int (*render)(obj_t *obj, const painter_t *painter);
+    int (*post_render)(obj_t *obj, const painter_t *painter);
     int (*render_pointer)(const obj_t *obj, const painter_t *painter);
     void (*get_2d_ellipse)(const obj_t *obj, const observer_t *obs,
                            const projection_t *proj,
@@ -301,7 +301,7 @@ obj_t *obj_clone(const obj_t *obj);
  * Function: obj_render
  * Render an object.
  */
-int obj_render(const obj_t *obj, const painter_t *painter);
+int obj_render(obj_t *obj, const painter_t *painter);
 
 /*
  * Function: obj_get_pvo

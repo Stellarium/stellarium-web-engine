@@ -286,11 +286,11 @@ static int render_3d_model(const mplanet_t *mplanet, const painter_t *painter_)
 }
 
 // Note: return 1 if the planet is actually visible on screen.
-static int mplanet_render(const obj_t *obj, const painter_t *painter)
+static int mplanet_render(obj_t *obj, const painter_t *painter)
 {
     double pvo[2][4], win_pos[2], vmag, size, luminance;
     double label_color[4] = {0.87, 0.87, 1, 1};
-    const mplanet_t *mplanet = (const mplanet_t*)obj;
+    mplanet_t *mplanet = (mplanet_t*)obj;
     point_t point;
     const bool selected = core->selection && obj == core->selection;
     double hints_mag_offset = g_mplanets->hints_mag_offset;
@@ -429,7 +429,7 @@ static void add_to_visible(mplanets_t *mps, mplanet_t *mplanet)
     DL_APPEND2(mps->visibles, mplanet, visible_prev, visible_next);
 }
 
-static int mplanets_render(const obj_t *obj, const painter_t *painter)
+static int mplanets_render(obj_t *obj, const painter_t *painter)
 {
     mplanets_t *mps = (void*)obj;
     int i, r;

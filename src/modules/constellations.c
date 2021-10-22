@@ -886,9 +886,9 @@ static bool constellation_is_visible(const constellation_t *con,
 }
 
 
-static int constellation_render(const obj_t *obj, const painter_t *_painter)
+static int constellation_render(obj_t *obj, const painter_t *_painter)
 {
-    constellation_t *con = (const constellation_t*)obj;
+    constellation_t *con = (constellation_t*)obj;
     painter_t painter = *_painter;
     const bool selected = core->selection && obj == core->selection;
     const constellations_t *cons = (const constellations_t*)con->obj.parent;
@@ -1007,9 +1007,9 @@ static int constellations_update(obj_t *obj, double dt)
     return 0;
 }
 
-static int constellations_render(const obj_t *obj, const painter_t *painter)
+static int constellations_render(obj_t *obj, const painter_t *painter)
 {
-    const constellations_t *cons = (const constellations_t*)obj;
+    constellations_t *cons = (constellations_t*)obj;
     constellation_t *con;
     if (cons->lines_visible.value == 0.0 &&
         cons->labels_visible.value == 0.0 &&

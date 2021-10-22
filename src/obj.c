@@ -134,7 +134,7 @@ const char *obj_get_name(const obj_t *obj, char *buf, int len)
     return buf;
 }
 
-int obj_render(const obj_t *obj, const painter_t *painter)
+int obj_render(obj_t *obj, const painter_t *painter)
 {
     if (obj->klass->render)
         return obj->klass->render(obj, painter);

@@ -30,7 +30,7 @@ static int milkyway_update(obj_t *obj, double dt)
     return fader_update(&mw->visible, dt);
 }
 
-static int milkyway_render(const obj_t *obj, const painter_t *painter_)
+static int milkyway_render(obj_t *obj, const painter_t *painter_)
 {
     double lum, c;
     int split_order = 2;

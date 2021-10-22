@@ -451,10 +451,10 @@ static void render_tail(comet_t *comet, const painter_t *painter, int tail)
 
 
 // Note: return 1 if the comet is actually visible on screen.
-static int comet_render(const obj_t *obj, const painter_t *painter)
+static int comet_render(obj_t *obj, const painter_t *painter)
 {
     double win_pos[2], vmag, size, luminance;
-    const comet_t *comet = (const comet_t*)obj;
+    comet_t *comet = (comet_t*)obj;
     point_t point;
     double label_color[4] = {0.87, 0.87, 1, 1};
     const bool selected = core->selection && obj == core->selection;
@@ -570,9 +570,9 @@ static void add_to_visible(comets_t *comets, comet_t *comet)
     DL_APPEND2(comets->visibles, comet, visible_prev, visible_next);
 }
 
-static int comets_render(const obj_t *obj, const painter_t *painter)
+static int comets_render(obj_t *obj, const painter_t *painter)
 {
-    comets_t *comets = (const comets_t*)obj;
+    comets_t *comets = (comets_t*)obj;
     int i, r;
     const int update_nb = 32;
     comet_t *child, *tmp;

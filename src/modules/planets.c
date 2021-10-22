@@ -1306,7 +1306,7 @@ static int sort_cmp(const obj_t *a, const obj_t *b)
     return cmp(eraPm(bpvo[0]), eraPm(apvo[0]));
 }
 
-static int planets_render(const obj_t *obj, const painter_t *painter)
+static int planets_render(obj_t *obj, const painter_t *painter)
 {
     planets_t *planets = (planets_t*)obj;
     planet_t *p;

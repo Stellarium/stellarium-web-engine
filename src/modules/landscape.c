@@ -133,7 +133,7 @@ static void render_fog(const painter_t *painter_, double alpha)
     }
 }
 
-static int landscape_render(const obj_t *obj, const painter_t *painter_)
+static int landscape_render(obj_t *obj, const painter_t *painter_)
 {
     const landscape_t *ls = (const landscape_t*)obj;
     landscapes_t *lss = (landscapes_t*)obj->parent;
@@ -246,7 +246,7 @@ static int landscapes_update(obj_t *obj, double dt)
     return 0;
 }
 
-static int landscapes_render(const obj_t *obj, const painter_t *painter)
+static int landscapes_render(obj_t *obj, const painter_t *painter)
 {
     obj_t *ls;
     MODULE_ITER(obj, ls, "landscape") {

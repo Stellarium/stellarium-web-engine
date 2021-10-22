@@ -205,7 +205,7 @@ static int atmosphere_update(obj_t *obj, double dt)
     return fader_update(&atm->visible, dt);
 }
 
-static void render_tile(atmosphere_t *atm, const painter_t *painter,
+static void render_tile(const atmosphere_t *atm, const painter_t *painter,
                         int order, int pix)
 {
     int split, i;
@@ -223,7 +223,7 @@ static void render_tile(atmosphere_t *atm, const painter_t *painter,
     paint_quad(painter, FRAME_OBSERVED, &map, split);
 }
 
-static int atmosphere_render(const obj_t *obj, const painter_t *painter_)
+static int atmosphere_render(obj_t *obj, const painter_t *painter_)
 {
     const atmosphere_t *atm = (const atmosphere_t*)obj;
     obj_t *sun, *moon;

@@ -231,7 +231,7 @@ static int lines_update(obj_t *obj, double dt)
     return ret;
 }
 
-static int lines_render(const obj_t *obj, const painter_t *painter)
+static int lines_render(obj_t *obj, const painter_t *painter)
 {
     const lines_t *lines = (const lines_t*)obj;
     obj_t *line;
@@ -677,7 +677,7 @@ static int render_boundary(const painter_t *painter)
 }
 
 
-static int line_render(const obj_t *obj, const painter_t *painter_)
+static int line_render(obj_t *obj, const painter_t *painter_)
 {
     const line_t *line = (const line_t*)obj;
     double rot[3][3] = MAT3_IDENTITY;

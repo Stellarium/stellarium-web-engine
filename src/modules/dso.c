@@ -599,7 +599,7 @@ static int dso_render_from_data(const dso_t *s,
     return 0;
 }
 
-static int dso_render(const obj_t *obj, const painter_t *painter)
+static int dso_render(obj_t *obj, const painter_t *painter)
 {
     const dso_t *dso = (const dso_t*)obj;
     return dso_render_from_data(dso, painter, 0);
@@ -654,7 +654,7 @@ static int dsos_update(obj_t *obj, double dt)
     return fader_update(&dsos->visible, dt);
 }
 
-static int dsos_render(const obj_t *obj, const painter_t *painter_)
+static int dsos_render(obj_t *obj, const painter_t *painter_)
 {
     const dsos_t *dsos = (const dsos_t*)obj;
     int nb_tot = 0, nb_loaded = 0;

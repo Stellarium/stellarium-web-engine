@@ -25,7 +25,7 @@ static int pointer_init(obj_t *obj, json_value *args)
     return 0;
 }
 
-static int pointer_render(const obj_t *obj, const painter_t *painter_)
+static int pointer_render(obj_t *obj, const painter_t *painter_)
 {
     int i;
     double win_pos[2], win_size[2], angle;

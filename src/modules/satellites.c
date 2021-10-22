@@ -152,9 +152,9 @@ static void add_to_visible(satellites_t *sats, satellite_t *sat)
     DL_APPEND2(sats->visibles, sat, visible_prev, visible_next);
 }
 
-static int satellite_render(const obj_t *obj, const painter_t *painter);
+static int satellite_render(obj_t *obj, const painter_t *painter);
 
-static int satellites_render(const obj_t *obj, const painter_t *painter)
+static int satellites_render(obj_t *obj, const painter_t *painter)
 {
     satellites_t *sats = (void*)obj;
     int i, r;
@@ -613,7 +613,7 @@ static double get_model_alpha(const satellite_t *sat, const painter_t *painter,
  * Render an individual satellite.
  * Note: return 1 if the satellite is actually visible on screen.
  */
-static int satellite_render(const obj_t *obj, const painter_t *painter_)
+static int satellite_render(obj_t *obj, const painter_t *painter_)
 {
     double vmag, size, luminance, p_win[4];
     painter_t painter = *painter_;
@@ -623,7 +623,7 @@ static int satellite_render(const obj_t *obj, const painter_t *painter_)
     char buf[256];
     const double label_color[4] = {0.49, 0.80, 0.49, 0.80};
     const double white[4] = {1, 1, 1, 1};
-    const satellite_t *sat = (const satellite_t*)obj;
+    satellite_t *sat = (satellite_t*)obj;
     const bool selected = core->selection && obj == core->selection;
     const double hints_limit_mag = painter.hints_limit_mag +
                                    g_satellites->hints_mag_offset - 2.5;
