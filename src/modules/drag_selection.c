@@ -78,7 +78,7 @@ static int drag_selection_on_mouse(obj_t *obj, int id, int state,
     return 0;
 }
 
-static int drag_selection_render(const obj_t *obj, const painter_t *painter)
+static int drag_selection_render(obj_t *obj, const painter_t *painter)
 {
     double size[2];
     drag_selection_t *module = (void*)obj;
