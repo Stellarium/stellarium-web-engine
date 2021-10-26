@@ -102,7 +102,7 @@ static int mesh_add_vertices_lonlat(mesh_t *mesh, int count,
     return ofs;
 }
 
-int mesh_add_vertices(mesh_t *mesh, int count, double (*verts)[3])
+int mesh_add_vertices(mesh_t *mesh, int count, const double (*verts)[3])
 {
     int ofs;
     ofs = mesh->vertices_count;

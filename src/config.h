@@ -16,19 +16,6 @@
 extern "C" {
 #endif
 
-// Do not issue warnings when passing const values to non const functions.
-// This is so that we can use erfa libraries.
-#ifndef __cplusplus
-#   if __clang__
-#       pragma clang diagnostic ignored \
-                "-Wincompatible-pointer-types-discards-qualifiers"
-#   else
-#       if __GNUC__ >= 5
-#           pragma GCC diagnostic ignored "-Wdiscarded-array-qualifiers"
-#       endif
-#   endif
-#endif
-
 // Set the DEBUG macro if it wasn't done.
 #ifndef DEBUG
 #   if !defined(NDEBUG)

@@ -293,7 +293,7 @@ static bool cap_intersects_discontinuity_line(
 
 int paint_line(const painter_t *painter,
                int frame,
-               double line[2][4], const uv_map_t *map,
+               const double line[2][4], const uv_map_t *map,
                int split, int flags)
 {
     int i, size;

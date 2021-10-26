@@ -45,7 +45,7 @@ void render_quad(renderer_t *rend, const painter_t *painter,
                  int frame, int grid_size, const uv_map_t *map);
 
 void render_texture(renderer_t *rend, texture_t *tex,
-                    double uv[4][2], const double pos[2], double size,
+                    const double uv[4][2], const double pos[2], double size,
                     const double color[4], double angle);
 
 void render_text(renderer_t *rend, const painter_t *painter,

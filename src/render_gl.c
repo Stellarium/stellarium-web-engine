@@ -781,7 +781,7 @@ void render_quad(renderer_t *rend, const painter_t *painter,
 }
 
 static void texture_2d(renderer_t *rend, texture_t *tex,
-                       double uv[4][2], double win_pos[4][2],
+                       const double uv[4][2], double win_pos[4][2],
                        const double view_pos[3],
                        const double color_[4], int flags)
 {
@@ -829,7 +829,7 @@ static void texture_2d(renderer_t *rend, texture_t *tex,
 }
 
 void render_texture(renderer_t *rend, texture_t  *tex,
-                    double uv[4][2], const double pos[2], double size,
+                    const double uv[4][2], const double pos[2], double size,
                     const double color[4], double angle)
 {
     int i;

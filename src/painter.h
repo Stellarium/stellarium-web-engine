@@ -287,7 +287,7 @@ int paint_tile_contour(const painter_t *painter, int frame,
  */
 int paint_line(const painter_t *painter,
                int frame,
-               double line[2][4], const uv_map_t *map,
+               const double line[2][4], const uv_map_t *map,
                int split, int flags);
 
 int paint_linestring(const painter_t *painter, int frame,
