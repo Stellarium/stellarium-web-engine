@@ -173,7 +173,7 @@ int obj_get_pvo(const obj_t *obj, const observer_t *obs, double pvo[2][4])
 
 /*
  * Function: obj_get_pos
- * Conveniance function to compute the position of an object in a given frame.
+ * Convenience function to compute the position of an object in a given frame.
  *
  * This just calls obj_get_pvo followed by convert_frame.
  *

@@ -1384,7 +1384,7 @@ static int parse_orbit(planet_t *p, const char *v)
 }
 
 /*
- * Conveniance function to look for a planet by name
+ * Convenience function to look for a planet by name
  */
 static planet_t *planet_get_by_name(planets_t *planets, const char *name)
 {

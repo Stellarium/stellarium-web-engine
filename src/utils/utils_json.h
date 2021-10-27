@@ -41,7 +41,7 @@ json_value *json_vector_new(int size, const double *values);
 
 /*
  * Function: parse_float_array
- * Conveniance function to parse a json array of the form [x, y, ...]
+ * Convenience function to parse a json array of the form [x, y, ...]
  *
  * Parameters:
  *   data   - A json array.

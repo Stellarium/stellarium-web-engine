@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Conveniance macro that sets the error message and calls goto error.
+// Convenience macro that sets the error message and calls goto error.
 #define ERROR(msg, ...) do { \
     snprintf(error_msg, sizeof(error_msg), msg, ##__VA_ARGS__); \
     goto error; } while (0)
@@ -114,7 +114,7 @@ static void tesselate_bezier(geojson_linestring_t *line,
 
 /*
  * Function: parse_float_array
- * Conveniance function to parse a json array of the form [x, y, ...]
+ * Convenience function to parse a json array of the form [x, y, ...]
  *
  * Parameters:
  *   data   - A json array.

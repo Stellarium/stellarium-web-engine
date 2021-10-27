@@ -141,7 +141,7 @@ INL void mat3_mul(const double a[3][3], const double b[S 3][3],
  * Function: mat3_product
  * Compute the product of a list of 3x3 matrices.
  *
- * This is a conveniance function that chains calls to mat3_mul.
+ * This is a convenience function that chains calls to mat3_mul.
  * mat3_product(out, 3, a, b, c) is equivalent to 'out = a * b * c'.
  */
 void mat3_product(double out[S 3][3], int n, ...);
