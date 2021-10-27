@@ -13,8 +13,7 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-static bool proj_mercator_project(
-        const projection_t *proj, const double v[3], double out[3])
+static bool proj_mercator_project(const double v[3], double out[3])
 {
     double s, r, p[3];
     vec3_copy(v, p);
@@ -34,8 +33,7 @@ static bool proj_mercator_project(
     return true;
 }
 
-static bool proj_mercator_backward(const projection_t *proj,
-            const double v[3], double out[3])
+static bool proj_mercator_backward(const double v[3], double out[3])
 {
     double e, h, h1, sin_delta, cos_delta;
     double p[3];

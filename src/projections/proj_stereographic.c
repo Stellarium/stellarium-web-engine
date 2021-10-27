@@ -38,8 +38,7 @@
  * totally sure about the best way to do that.
  */
 
-static bool proj_stereographic_project(
-        const projection_t *proj, const double v[3], double out[3])
+static bool proj_stereographic_project(const double v[3], double out[3])
 {
     double d, one_over_h;
 
@@ -58,8 +57,7 @@ static bool proj_stereographic_project(
     return true;
 }
 
-static bool proj_stereographic_backward(const projection_t *proj,
-                                        const double v[3], double out[3])
+static bool proj_stereographic_backward(const double v[3], double out[3])
 {
     double lqq;
     double p[3] = {0};

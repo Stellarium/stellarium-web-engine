@@ -13,8 +13,7 @@
 /* Degrees to radians */
 #define DD2R (1.745329251994329576923691e-2)
 
-static bool proj_hammer_project(
-        const projection_t *proj, const double v[3], double out[3])
+static bool proj_hammer_project(const double v[3], double out[3])
 {
     double r = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     double alpha = atan2(v[0], -v[2]);
@@ -27,8 +26,7 @@ static bool proj_hammer_project(
     return true;
 }
 
-static bool proj_hammer_backward(const projection_t *proj,
-            const double v[3], double out[3])
+static bool proj_hammer_backward(const double v[3], double out[3])
 {
     double p[3] = {0}, zsq, z, alpha, delta, cd;
     bool ret;

@@ -17,15 +17,13 @@
 #define DAU (149597870.7e3)
 #define DM2AU  (1. / DAU)
 
-static bool proj_perspective_project(
-        const projection_t *proj, const double v[3], double out[3])
+static bool proj_perspective_project(const double v[3], double out[3])
 {
     vec3_copy(v, out);
     return true;
 }
 
-static bool proj_perspective_backward(const projection_t *proj,
-        const double v[3], double out[3])
+static bool proj_perspective_backward(const double v[3], double out[3])
 {
     vec3_copy(v, out);
     return true;

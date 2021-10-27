@@ -79,10 +79,8 @@ struct projection_klass
      * The project function projects into a vec3 that will then be multiplied
      * by the projection 4x4 matrix to get the clipping space coordinates.
      */
-    bool (*project)(const projection_t *proj,
-                    const double v[S 3], double out[S 3]);
-    bool (*backward)(const projection_t *proj,
-                     const double v[S 3], double out[S 3]);
+    bool (*project)(const double v[S 3], double out[S 3]);
+    bool (*backward)(const double v[S 3], double out[S 3]);
     void (*compute_fovs)(int proj_type, double fov, double aspect,
                          double *fovx, double *fovy);
 };

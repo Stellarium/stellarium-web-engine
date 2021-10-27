@@ -16,8 +16,7 @@
 #define DAU (149597870.7e3)
 #define DM2AU  (1. / DAU)
 
-static bool proj_mollweide_project(
-        const projection_t *proj, const double v[3], double out[3])
+static bool proj_mollweide_project(const double v[3], double out[3])
 {
     double phi, lambda, theta, d, k, length;
     int i;
@@ -53,8 +52,7 @@ static double clamp(double x, double a, double b)
     return x < a ? a : x > b ? b : x;
 }
 
-static bool proj_mollweide_backward(const projection_t *proj,
-            const double v[3], double out[3])
+static bool proj_mollweide_backward(const double v[3], double out[3])
 {
     double x, y, theta, phi, lambda, cp;
     bool ret = true;
