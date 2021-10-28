@@ -195,7 +195,9 @@ struct obj
     char        type[4];
     obj_t       *parent;
     obj_t       *children, *prev, *next;
-};
+}
+// Force alignment so that we can safely cast obj to any sub type.
+ __attribute__((aligned(8)));
 
 /*
  * Type: attribute_t
