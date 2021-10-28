@@ -9,6 +9,8 @@
 
 // Compile all the libtess2 files as a single unit.
 
+#pragma GCC diagnostic ignored "-Wempty-body"
+
 #include "../ext_src/libtess2/bucketalloc.c"
 #include "../ext_src/libtess2/dict.c"
 #include "../ext_src/libtess2/geom.c"

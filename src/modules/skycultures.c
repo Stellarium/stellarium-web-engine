@@ -818,6 +818,7 @@ const char *skycultures_get_label(const char* main_id, char *out, int out_size)
             return out;
         }
         // If not both are present fallback to NAME_NATIVE
+        /* fallthrough */
     case NAME_NATIVE:
         if (entry->name_native) {
             snprintf(out, out_size, "%s", entry->name_native);
