@@ -23,6 +23,12 @@
 #define S
 #endif
 
+#ifndef __clang__
+#define NONSTRING __attribute__((nonstring))
+#else
+#define NONSTRING
+#endif
+
 /*
  * Base class for all the objects in swe (modules, sky objects, etc).
  *
@@ -192,7 +198,7 @@ struct obj
     obj_klass_t *klass;
     int         ref;
     const char  *id;    // To be removed.  Only used for modules.
-    char        type[4];
+    char        type[4]     NONSTRING;
     obj_t       *parent;
     obj_t       *children, *prev, *next;
 }
