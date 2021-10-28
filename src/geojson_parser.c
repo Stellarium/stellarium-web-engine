@@ -172,6 +172,7 @@ static int parse_path_cmd(const json_value *data, geojson_geometry_t *geo,
     switch (cmd) {
     case 'M': // Moveto.
         coordinates_push(line, args, allocated);
+        break;
     case 'L': // Lineto (same for the moment!);
         coordinates_push(line, args, allocated);
         break;
