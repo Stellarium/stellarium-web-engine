@@ -239,6 +239,7 @@ void position_to_astrometric(const observer_t *obs, int origin,
     case ORIGIN_OBSERVERCENTRIC:
         eraPvppv(out, obs->obs_pvb, out);
         eraPvmpv(out, obs->earth_pvb, out);
+        break;
     default:
         assert(0);
     }
