@@ -10,6 +10,9 @@
 // Compile all the libtess2 files as a single unit.
 
 #pragma GCC diagnostic ignored "-Wempty-body"
+#ifndef __clang__
+    #pragma GCC diagnostic ignored "-Wclobbered"
+#endif
 
 #include "../ext_src/libtess2/bucketalloc.c"
 #include "../ext_src/libtess2/dict.c"
