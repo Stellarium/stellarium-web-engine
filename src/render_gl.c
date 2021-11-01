@@ -1002,7 +1002,7 @@ static void text_using_texture(renderer_t *rend,
 static void get_nvg_bounds(renderer_t *rend, int font, float size,
                            int effects, const char* text, int align,
                            const double pos[2], float fbounds[4]) {
-    float w, h, dummy, descender;
+    float w, h, descender;
     nvgFontFaceId(rend->vg, rend->fonts[font].id);
     nvgFontSize(rend->vg, size);
     nvgTextLetterSpacing(rend->vg, size * 0.01);
@@ -1016,7 +1016,7 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
     nvgTextBoxBounds(rend->vg, 0, 0, 10000, text, NULL, fbounds);
 
     // Compute bounds taking alignment into account.
-    nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
+    nvgTextMetrics(rend->vg, NULL, &descender, NULL);
     fbounds[0] = floorf(fbounds[0]);
     // Artificially adds a margin equals to "descender" above the top of the
     // font to get something closer to the Qt renderer.
@@ -1400,7 +1400,7 @@ static void item_text_render(renderer_t *rend, const item_t *item)
 {
     int font = (item->text.effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
     double pos[2] = {0, 0};
-    float fbounds[4], dummy, descender;
+    float fbounds[4], descender;
     float w;
 
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
@@ -1423,7 +1423,7 @@ static void item_text_render(renderer_t *rend, const item_t *item)
                                       NVG_ALIGN_CENTER)));
 
     // Render in multi-line using the previously computed line width
-    nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
+    nvgTextMetrics(rend->vg, NULL, &descender, NULL);
     // Re-add the "descender" extra offset that was applied on the bounding
     // box to simulate an extra space above the font, so that the font is
     // properly aligned.
