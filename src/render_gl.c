@@ -1016,10 +1016,13 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
     nvgTextBoxBounds(rend->vg, 0, 0, 10000, text, NULL, fbounds);
 
     // Compute bounds taking alignment into account.
+    nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
     fbounds[0] = floorf(fbounds[0]);
+    // Artificially adds a margin equals to "descender" above the top of the
+    // font to get something closer to the Qt renderer.
     fbounds[1] = floorf(fbounds[1]);
     fbounds[2] = ceilf(fbounds[2]);
-    fbounds[3] = ceilf(fbounds[3]);
+    fbounds[3] = ceilf(fbounds[3] -  descender);
     w = fbounds[2] - fbounds[0] + 1;
     h = fbounds[3] - fbounds[1];
     if (align & ALIGN_RIGHT)    fbounds[0] += -w;
@@ -1028,7 +1031,6 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
     if (align & ALIGN_MIDDLE)   fbounds[1] += -h / 2;
     if (align & ALIGN_BASELINE) fbounds[1] += -h;
     if (align & ALIGN_BASELINE) {
-        nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
         fbounds[1] -= descender;
     }
     fbounds[0] = floor(fbounds[0] + pos[0]);
@@ -1398,7 +1400,7 @@ static void item_text_render(renderer_t *rend, const item_t *item)
 {
     int font = (item->text.effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
     double pos[2] = {0, 0};
-    float fbounds[4];
+    float fbounds[4], dummy, descender;
     float w;
 
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
@@ -1421,7 +1423,12 @@ static void item_text_render(renderer_t *rend, const item_t *item)
                                       NVG_ALIGN_CENTER)));
 
     // Render in multi-line using the previously computed line width
-    nvgTextBox(rend->vg, fbounds[0], fbounds[1], w, item->text.text, NULL);
+    nvgTextMetrics(rend->vg, &dummy, &descender, &dummy);
+    // Re-add the "descender" extra offset that was applied on the bounding
+    // box to simulate an extra space above the font, so that the font is
+    // properly aligned.
+    nvgTextBox(rend->vg, fbounds[0], roundf(fbounds[1] - descender), w,
+            item->text.text, NULL);
 
     // Uncomment to see labels bounding box
     if ((0)) {
