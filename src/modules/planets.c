@@ -956,9 +956,15 @@ static void planet_render_model(const planet_t *planet,
         return;
     }
 
-    // Assume the model is in km.
-    mat4_itranslate(model_mat, VEC3_SPLIT(pvo[0]));
-    mat4_iscale(model_mat, 1000 * DM2AU, 1000 * DM2AU, 1000 * DM2AU);
+
+    // Assume the model is in km, Y up.
+    // Note: should probably be in meters.
+    planet_get_mat(planet, painter.obs, model_mat);
+    mat4_iscale(model_mat, 1000 / planet->radius_m,
+                           1000 / planet->radius_m,
+                           1000 / planet->radius_m);
+    mat4_rx(90 * DD2R, model_mat, model_mat);
+
     args = json_object_new(0);
 
     // Adjust the min brightness to hide the shadow as we get closer.

@@ -1,6 +1,6 @@
 // Auto generated from tools/makeassets.py
 
-static const unsigned char DATA_planets_ini[26036] __attribute__((aligned(4))) =
+static const unsigned char DATA_planets_ini[26121] __attribute__((aligned(4))) =
     "[sun]\n"
     "type = Sun\n"
     "color = 1.0, 0.98, 0.97\n"
@@ -41,6 +41,8 @@ static const unsigned char DATA_planets_ini[26036] __attribute__((aligned(4))) =
     "shadow_brightness = 0.3\n"
     "horizons_id = 399\n"
     "mass = 5.972e+24 kg\n"
+    "rot_period = 23.935 h\n"
+    "rot_obliquity = 23.44 deg ; Should use rot_pole_ra/de instead.\n"
     "\n"
     "[mars]\n"
     "type = Pla\n"
