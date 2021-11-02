@@ -107,6 +107,7 @@ Module.afterInit(function() {
   SweObj.prototype.getInfo = function(info, obs) {
     if (obs === undefined)
       obs = Module.observer
+    Module._observer_update(obs.v, true)
     var cret = obj_get_info_json(this.v, obs.v, info)
     if (cret === 0)
       return undefined

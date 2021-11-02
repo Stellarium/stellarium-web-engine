@@ -240,9 +240,9 @@ static void observer_update_full(observer_t *obs)
     correct_speed_of_light(obs->sun_pvo);
 }
 
+EMSCRIPTEN_KEEPALIVE
 void observer_update(observer_t *obs, bool fast)
 {
-
     uint64_t hash, hash_partial;
 
     observer_compute_hash(obs, &hash_partial, &hash);
