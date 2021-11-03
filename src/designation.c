@@ -409,6 +409,17 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
         return;
     }
 
+    if (flags & DSGN_EXPAND_CAT) {
+        if (strncmp(dsgn, "M ", 2) == 0) {
+            snprintf(out, size, "Messier %s", dsgn + 2);
+            return;
+        }
+        if (strncmp(dsgn, "C ", 2) == 0) {
+            snprintf(out, size, "Caldwell %s", dsgn + 2);
+            return;
+        }
+    }
+
     for (i = 0; i < ARRAY_SIZE(remove); i++) {
         if (strncmp(dsgn, remove[i], strlen(remove[i])) == 0) {
             snprintf(out, size, "%s", dsgn + strlen(remove[i]));

@@ -30,6 +30,8 @@
  *   BAYER_CONST_LONG   - Append long constellation name, e.g. 'ß Centauri'.
  *                        Default is to display no constellation name.
  *   DSGN_TRANSLATE     - Return locally translated designation for names.
+ *   DSGN_EXPAND_CAT    - Return expanded version of common catalog name, e.g.
+ *                        Messier 31 instead of M 31.
  */
 enum {
     BAYER_LATIN_SHORT       = 1 << 0,
@@ -37,6 +39,7 @@ enum {
     BAYER_CONST_SHORT       = 1 << 2,
     BAYER_CONST_LONG        = 1 << 3,
     DSGN_TRANSLATE          = 1 << 4,
+    DSGN_EXPAND_CAT         = 1 << 5
 };
 
 /*
