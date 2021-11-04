@@ -248,18 +248,6 @@ texture_t *hips_get_tile_texture(
         double transf[3][3], double *fade, bool *loading_complete);
 
 /*
- * Function: hips_parse_hipslist
- * Parse a hipslist file.
- *
- * Return:
- *    >= 0 if list successfully parsed, number of parsed entries.
- *    < 0 if error.
- */
-int hips_parse_hipslist(
-        const char *data, void *user,
-        int callback(void *user, const char *url, double release_date));
-
-/*
  * Function: hips_set_frame
  * Set the frame of a hips survey (if it is not specified in the properties).
  *

@@ -642,48 +642,6 @@ int hips_get_render_order_planet(const hips_t *hips, const painter_t *painter,
     return ceil(order + 1);
 }
 
-int hips_parse_hipslist(
-        const char *data, void *user,
-        int callback(void *user, const char *url, double release_date))
-{
-    int len, nb = 0;
-    char *line, *hips_service_url = NULL, *key, *value, *tmp = NULL;
-    const char *end;
-    double hips_release_date = 0;
-
-    assert(data);
-    while (*data) {
-        end = strchr(data, '\n') ?: data + strlen(data);
-        len = end - data;
-        asprintf(&line, "%.*s", len, data);
-
-        if (*line == '\0' || *line == '#') goto next;
-        key = strtok_r(line, "= ", &tmp);
-        value = strtok_r(NULL, "= ", &tmp);
-        if (strcmp(key, "hips_service_url") == 0) {
-            free(hips_service_url);
-            hips_service_url = strdup(value);
-        }
-        if (strcmp(key, "hips_release_date") == 0)
-            hips_release_date = hips_parse_date(value);
-
-next:
-        free(line);
-        data += len;
-        if (*data) data++;
-
-        // Next survey.
-        if ((*data == '\0' || *data == '\n') && hips_service_url) {
-            callback(user, hips_service_url, hips_release_date);
-            free(hips_service_url);
-            hips_service_url = NULL;
-            hips_release_date = 0;
-            nb++;
-        }
-    }
-    return nb;
-}
-
 static int load_tile_worker(worker_t *worker)
 {
     int transparency = 0;
