@@ -51,6 +51,7 @@ typedef struct {
     meteor_t *meteors;
     char *showers_url;
     bool showers_loaded;
+    bool visible;
 } meteors_t;
 
 static double frand(double from, double to)
@@ -152,6 +153,7 @@ static int meteor_render(const meteor_t *m, const painter_t *painter_)
 static int meteors_init(obj_t *obj, json_value *args)
 {
     meteors_t *ms = (meteors_t*)obj;
+    ms->visible = true;
     ms->zhr = 10; // Normal rate.
     return 0;
 }
@@ -353,6 +355,8 @@ static int meteors_render(obj_t *obj, const painter_t *painter)
     obj_t *child;
     meteor_t *m;
 
+    if (!meteors->visible) return 0;
+
     DL_FOREACH(meteors->meteors, m) {
         meteor_render(m, painter);
     }
@@ -415,6 +419,7 @@ static obj_klass_t meteors_klass = {
     .list           = meteors_list,
     .attributes = (attribute_t[]) {
         PROPERTY(zhr, TYPE_FLOAT, MEMBER(meteors_t, zhr)),
+        PROPERTY(visible, TYPE_BOOL, MEMBER(meteors_t, visible)),
         {}
     },
 };
