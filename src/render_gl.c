@@ -2094,6 +2094,18 @@ static void set_default_fonts(renderer_t *rend)
     rend->fonts[FONT_BOLD].is_default_font = true;
 }
 
+#if DEBUG && defined(GL_DEBUG_OUTPUT)
+static void debug_callback(GLenum source, GLenum type, GLuint id,
+                           GLenum severity, GLsizei length,
+                           const GLchar *message,
+                           const void *user)
+{
+    LOG_D("Source: %s, Type:%s, Severity:%s, Id:%d, Msg:%s",
+          gl_enum_str(source), gl_enum_str(type), gl_enum_str(severity),
+          id, message);
+}
+#endif
+
 renderer_t* render_create(void)
 {
     renderer_t *rend;
@@ -2118,6 +2130,23 @@ renderer_t* render_create(void)
     GL(glGetIntegerv(GL_ALIASED_POINT_SIZE_RANGE, range));
     if (range[1] < 32)
         LOG_W("OpenGL Doesn't support large point size!");
+
+    // Enable GL debug messages.
+    #if DEBUG && defined(GL_DEBUG_OUTPUT)
+    {
+        LOG_D("Enable GL debug output");
+        GL(glEnable(GL_DEBUG_OUTPUT));
+        GL(glDebugMessageCallback(debug_callback, NULL));
+        GL(glDebugMessageControl(
+                GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION,
+                0, NULL, GL_FALSE));
+        // Ignore "Vertex shader in program 16 is being recompiled based on
+        // GL state" messages for now.
+        GL(glDebugMessageControl(
+                GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, GL_DONT_CARE,
+                1, (const GLuint[]){131218}, GL_FALSE));
+    }
+    #endif
 
     return rend;
 }

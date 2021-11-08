@@ -19,20 +19,42 @@
 #   define LOG_E
 #endif
 
-static const char* gl_get_error_text(int code) {
+const char *gl_enum_str(int code)
+{
     switch (code) {
-    case GL_INVALID_ENUM:
-        return "GL_INVALID_ENUM";
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-        return "GL_INVALID_FRAMEBUFFER_OPERATION";
-    case GL_INVALID_VALUE:
-        return "GL_INVALID_VALUE";
-    case GL_INVALID_OPERATION:
-        return "GL_INVALID_OPERATION";
-    case GL_OUT_OF_MEMORY:
-        return "GL_OUT_OF_MEMORY";
+    #define X(v) case v: return #v;
+    X(GL_INVALID_ENUM);
+    X(GL_INVALID_FRAMEBUFFER_OPERATION);
+    X(GL_INVALID_VALUE);
+    X(GL_INVALID_OPERATION);
+    X(GL_OUT_OF_MEMORY);
+
+    #if DEBUG && defined(GL_DEBUG_OUTPUT)
+    X(GL_DEBUG_SOURCE_API);
+    X(GL_DEBUG_SOURCE_WINDOW_SYSTEM);
+    X(GL_DEBUG_SOURCE_SHADER_COMPILER);
+    X(GL_DEBUG_SOURCE_THIRD_PARTY);
+    X(GL_DEBUG_SOURCE_APPLICATION);
+    X(GL_DEBUG_SOURCE_OTHER);
+    X(GL_DEBUG_TYPE_ERROR);
+    X(GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR);
+    X(GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR);
+    X(GL_DEBUG_TYPE_PORTABILITY);
+    X(GL_DEBUG_TYPE_PERFORMANCE);
+    X(GL_DEBUG_TYPE_MARKER);
+    X(GL_DEBUG_TYPE_PUSH_GROUP);
+    X(GL_DEBUG_TYPE_POP_GROUP);
+    X(GL_DEBUG_TYPE_OTHER);
+    X(GL_DEBUG_SEVERITY_LOW);
+    X(GL_DEBUG_SEVERITY_MEDIUM);
+    X(GL_DEBUG_SEVERITY_HIGH);
+    X(GL_DEBUG_SEVERITY_NOTIFICATION);
+    #endif
+
+    #undef X
+
     default:
-        return "undefined error";
+        return NULL;
     }
 }
 
@@ -45,7 +67,7 @@ int gl_check_errors(const char *file, int line)
         if (x == GL_NO_ERROR)
             return errors;
         LOG_E("%s:%d: OpenGL error: %d (%s)\n",
-              file, line, x, gl_get_error_text(x));
+              file, line, x, gl_enum_str(x));
         errors++;
     }
     return errors;

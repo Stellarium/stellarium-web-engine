@@ -55,6 +55,8 @@
 #  define GL(line) line
 #endif
 
+const char *gl_enum_str(int code);
+
 int gl_check_errors(const char *file, int line);
 
 /*
