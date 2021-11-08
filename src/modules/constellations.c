@@ -289,6 +289,7 @@ static void update_image_mat(constellation_t *cons)
         uvs[i][2] = 1.0;
         star = cons->img.anchors_stars[i];
         assert(star);
+        if (!star) goto error;
         obj_get_pvo(star, core->observer, pvo);
         vec3_normalize(pvo[0], pos[i]);
     }
