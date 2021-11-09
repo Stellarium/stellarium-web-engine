@@ -274,7 +274,7 @@ static void compute_image_cap(const double mat[3][3], double cap[4])
     }
 }
 
-static void update_image_mat(constellation_t *cons)
+static void update_image_mat(constellation_t *cons, const observer_t *obs)
 {
     int i, r;
     double pos[3][3];
@@ -290,7 +290,7 @@ static void update_image_mat(constellation_t *cons)
         star = cons->img.anchors_stars[i];
         assert(star);
         if (!star) goto error;
-        obj_get_pvo(star, core->observer, pvo);
+        obj_get_pvo(star, obs, pvo);
         vec3_normalize(pvo[0], pos[i]);
     }
     // Compute the transformation matrix M from uv to ICRS:
@@ -448,7 +448,7 @@ static int constellation_update(constellation_t *con, const observer_t *obs)
         return -1;
     }
 
-    update_image_mat(con);
+    update_image_mat(con, obs);
 
     if (con->lines.nb_stars == 0) {
         // If the constellation has no lines, use the image cap as a
