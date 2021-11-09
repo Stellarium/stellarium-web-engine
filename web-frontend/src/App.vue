@@ -250,7 +250,16 @@ export default {
             // Set all default data sources
             const core = that.$stel.core
             core.stars.addDataSource({ url: process.env.BASE_URL + 'skydata/stars' })
-            core.skycultures.addDataSource({ url: process.env.BASE_URL + 'skydata/skycultures/western', key: 'western' })
+
+            // Allow to specify a custom path for sky culture data
+            if (that.$route.query.sc) {
+              const key = that.$route.query.sc.substring(that.$route.query.sc.lastIndexOf('/') + 1)
+              core.skycultures.addDataSource({ url: that.$route.query.sc, key: key })
+              core.skycultures.current_id = key
+            } else {
+              core.skycultures.addDataSource({ url: process.env.BASE_URL + 'skydata/skycultures/western', key: 'western' })
+            }
+
             core.dsos.addDataSource({ url: process.env.BASE_URL + 'skydata/dso' })
             core.landscapes.addDataSource({ url: process.env.BASE_URL + 'skydata/landscapes/guereins', key: 'guereins' })
             core.milkyway.addDataSource({ url: process.env.BASE_URL + 'skydata/surveys/milkyway' })
