@@ -22,12 +22,6 @@
  */
 typedef struct atmosphere {
     obj_t           obj;
-    // The twelves tile textures of healpix at order 0 and construction bufs.
-    struct {
-        texture_t       *tex;
-        float           (*buf)[3];  // color buffer (in xyY).
-        bool            visible;
-    } tiles[12];
     fader_t         visible;
     double          turbidity;
 } atmosphere_t;
