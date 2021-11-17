@@ -7,41 +7,10 @@
  * repository.
  */
 
-// General struct that can represents any type of item in a GUI menu.
-typedef struct gui_item gui_item_t;
-struct gui_item
-{
-    const char  *id;       // If not set, we use the label.
-    const char  *label;
-    const char  *sub_label;
-    bool        small;
-
-    // If set the item will allow to edit the attribute of the object.
-    obj_t       *obj;
-    const char  *attr;
-
-    // Direct value pointers.
-    // If any of those is set, the item will edit the value.
-    struct      {
-        double  *f;
-        int     *d;
-    } value;
-    // XXX this should be retrieve from the object attr meta data.
-    double      default_value;
-
-    // If set the item will be a navigation button to the menu.
-    void        (*menu)(void *user);
-    void        *user;  // Can be defined by the user.
-
-    // Internal.
-    gui_item_t  *next, *prev, *children;    // Items are stored in a tree.
-};
-
 void gui_same_line(void);
 
 void gui_init(void *user);
 void gui_release(void);
-bool gui_item(const gui_item_t *item);
 void gui_text(const char *label, ...);
 
 // All the basic gui widgets, need to be implemented for both imgui
@@ -73,31 +42,12 @@ bool gui_input(const char *label, char *buffer, int len,
                const char **suggestions);
 bool gui_input_multilines(const char *label, char *buffer, int len);
 
-bool gui_date(double *utc);
 // End of gui widgets.
 // Not sure about the other functions yet.
 
 double gui_panel_begin(const char *name, const double pos[2],
                                          const double size[2]);
 void gui_panel_end(void);
-
-// Stacked widgets.
-// return true if the stack is empty (by default).  Otherwise call the
-// top stack callback and return false.
-bool gui_stack(const char *id, void *user);
-void gui_stack_end(void);
-void gui_stack_push(void (*f)(void *user), void *user);
-void gui_stack_pop(void);
-
-// Should we make this internal?
-void gui_image(const char *url, int w, int h);
-
-// Card widget:
-// +----------+---+
-// | content  |pic|
-// +----------+---+
-void gui_card(const char *label, const char *img);
-bool gui_card_end();
 
 void gui_separator(void);
 void gui_header(const char *label);
