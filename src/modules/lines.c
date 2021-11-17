@@ -245,14 +245,15 @@ static void lines_gui(obj_t *obj, int location)
 {
     int i;
     obj_t *m;
+    bool visible;
+
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Grids")) {
         for (i = 0; i < ARRAY_SIZE(LINES); i++) {
             m = module_get_child(obj, LINES[i].id);
-            gui_item(&(gui_item_t){
-                    .label = LINES[i].name,
-                    .obj = m,
-                    .attr = "visible"});
+            obj_get_attr(m, "visible", &visible);
+            if (gui_toggle(LINES[i].name, &visible))
+                obj_set_attr(m, "visible", visible);
             obj_release(m);
         }
         gui_tab_end();

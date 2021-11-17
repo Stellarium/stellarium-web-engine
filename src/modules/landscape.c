@@ -258,13 +258,14 @@ static int landscapes_render(obj_t *obj, const painter_t *painter)
 static void landscapes_gui(obj_t *obj, int location)
 {
     landscape_t *ls;
+    bool active;
+
     if (!DEFINED(SWE_GUI)) return;
     if (location == 0 && gui_tab("Landscapes")) {
         MODULE_ITER(obj, ls, "landscape") {
-            gui_item(&(gui_item_t){
-                    .label = ls->key,
-                    .obj = (obj_t*)ls,
-                    .attr = "active"});
+            obj_get_attr(&ls->obj, "active", &active);
+            if (gui_toggle(ls->key, &active))
+                obj_set_attr(&ls->obj, "active", active);
         }
         gui_tab_end();
     }
