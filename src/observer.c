@@ -257,7 +257,7 @@ void observer_update(observer_t *obs, bool fast)
         if (hash == obs->hash)
             return;
         if (    hash_partial != obs->hash_partial ||
-                fabs(obs->last_accurate_update - obs->tt) >= 1.0)
+                fabs(obs->last_accurate_update - obs->tt) >= 1.001)
             fast = false;
     }
 
