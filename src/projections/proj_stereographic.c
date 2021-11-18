@@ -46,7 +46,7 @@ static bool proj_stereographic_project(const double v[3], double out[3])
     vec3_mul(1. / d, v, out);
     // Discountinuity case.
     if (out[2] == 1.0) {
-        memset(out, 0, 4 * sizeof(double));
+        memset(out, 0, 3 * sizeof(double));
         return false;
     }
     one_over_h = 1.0 / (0.5 * (1.0 - out[2]));
