@@ -84,12 +84,15 @@ static void convert_frame_forward(const observer_t *obs,
         mat3_mul_vec3(mat, p, p);
     }
 
-    // CIRS to OBSERVED.
-    if (origin < FRAME_OBSERVED && dest >= FRAME_OBSERVED) {
+    // CIRS to OBSERVED_GEOM.
+    if (origin < FRAME_OBSERVED_GEOM && dest >= FRAME_OBSERVED_GEOM) {
         // Precomputed earth rotation and polar motion.
         // Ignores Diurnal aberration for the moment
         mat3_mul_vec3(obs->ri2h, p, p);
+    }
 
+    // OBSERVED_GEOM to OBSERVED (refraction)
+    if (origin < FRAME_OBSERVED && dest >= FRAME_OBSERVED) {
         if (obs->pressure) {
             if (at_inf) {
                 refraction(p, obs->refa, obs->refb, p);
@@ -133,7 +136,7 @@ static void convert_frame_backward(const observer_t *obs,
         return;
     }
 
-    // OBSERVED to CIRS
+    // OBSERVED to OBSERVED_GEOM
     if (origin >= FRAME_OBSERVED && dest < FRAME_OBSERVED) {
         if (obs->pressure){
             if (at_inf) {
@@ -150,8 +153,13 @@ static void convert_frame_backward(const observer_t *obs,
                 vec3_mul(dist, p, p);
             }
         }
+    }
+
+    // OBSERVED_GEOM to CIRS
+    if (origin >= FRAME_OBSERVED_GEOM && dest < FRAME_OBSERVED_GEOM) {
         mat3_mul_vec3(obs->rh2i, p, p);
     }
+
     // JNow to CIRS
     if (origin == FRAME_JNOW && dest < FRAME_JNOW) {
         // The bridge between the classical and CIRS systems is the equation of

@@ -83,10 +83,11 @@ Module['FRAME_ASTROM'] = 0;
 Module['FRAME_ICRF'] = 1;
 Module['FRAME_CIRS'] = 2;
 Module['FRAME_JNOW'] = 3;
-Module['FRAME_OBSERVED'] = 4;
-Module['FRAME_MOUNT'] = 5;
-Module['FRAME_VIEW'] = 6;
-Module['FRAME_ECLIPTIC'] = 7;
+Module['FRAME_OBSERVED_GEOM'] = 4;
+Module['FRAME_OBSERVED'] = 5;
+Module['FRAME_MOUNT'] = 6;
+Module['FRAME_VIEW'] = 7;
+Module['FRAME_ECLIPTIC'] = 8;
 
 Module['MJD2date'] = function(v) {
   return new Date(Math.round((v + 2400000.5 - 2440587.5) * 86400000));
@@ -289,12 +290,13 @@ Module['anpm'] = function(a) {
   return v;
 }
 
-var asFrame = function(f) {
+const asFrame = function(f) {
   if (f === 'ASTROM') return Module.FRAME_ASTROM;
   if (f === 'ICRF') return Module.FRAME_ICRF;
   if (f === 'CIRS') return Module.FRAME_CIRS;
   if (f === 'JNOW') return Module.FRAME_JNOW;
   if (f === 'OBSERVED') return Module.FRAME_OBSERVED;
+  if (f === 'OBSERVED_GEOM') return Module.FRAME_OBSERVED_GEOM;
   if (f === 'MOUNT') return Module.FRAME_MOUNT;
   if (f === 'VIEW') return Module.FRAME_VIEW;
   assert(typeof(f) === 'number');
@@ -319,7 +321,7 @@ var asFrame = function(f) {
  * Parameters:
  *   obs    - The observer.
  *   origin - Origin frame ('ASTROM', 'ICRF', 'CIRS', 'JNOW', 'OBSERVED',
- *            'VIEW').
+ *            'OBSERVED_GEOM', 'VIEW').
  *   dest   - Destination frame (same as origin).
  *   v      - A 4d vector.
  *

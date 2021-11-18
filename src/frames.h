@@ -75,6 +75,8 @@ typedef struct observer observer_t;
  *                  right ascension being the Celestial Intermediate Origin
  *                  (CIO) instead of the true equinox.
  *                  You should not normally need this frame for normal use.
+ * FRAME_OBSERVED_GEOM - Observed geometrical frame (the frame of alt/az).
+ *                  Without atmospheric refraction.
  * FRAME_OBSERVED - Observed frame (the frame of alt/az). Includes atmospheric
  *                  refraction.
  * FRAME_MOUNT    - Frame oriented along the mount rest position.  For
@@ -89,10 +91,11 @@ enum {
     FRAME_ICRF                = 1,
     FRAME_CIRS                = 2,
     FRAME_JNOW                = 3,
-    FRAME_OBSERVED            = 4,
-    FRAME_MOUNT               = 5,
-    FRAME_VIEW                = 6,
-    FRAME_ECLIPTIC            = 7,
+    FRAME_OBSERVED_GEOM       = 4,
+    FRAME_OBSERVED            = 5,
+    FRAME_MOUNT               = 6,
+    FRAME_VIEW                = 7,
+    FRAME_ECLIPTIC            = 8,
 };
 
 #define FRAMES_NB (FRAME_VIEW + 1)
