@@ -999,10 +999,9 @@ static void text_using_texture(renderer_t *rend,
     texture_2d(rend, tex, uv, verts, view_pos, VEC(1, 1, 1, color[3]), flags);
 }
 
-static void get_nvg_bounds(renderer_t *rend, int font, float size,
-                           int effects, const char* text, int align,
-                           const double pos[2], float fbounds[4]) {
-    float w, h, descender;
+static void set_nvg_text_settings(
+        renderer_t *rend, int font, float size, int effects)
+{
     nvgFontFaceId(rend->vg, rend->fonts[font].id);
     nvgFontSize(rend->vg, size);
     nvgTextLetterSpacing(rend->vg, size * 0.01);
@@ -1010,7 +1009,15 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
         nvgTextLetterSpacing(rend->vg, size * 0.308);
     if (sys_lang_supports_spacing() && effects & TEXT_SEMI_SPACED)
         nvgTextLetterSpacing(rend->vg, size * 0.075);
+}
 
+static void get_nvg_text_bounds(
+        renderer_t *rend, const char* text, int align,
+        const double pos[2], double bounds[4])
+{
+    float w, h, descender, fbounds[4];
+
+    nvgSave(rend->vg);
     // First determine the actual text block width
     nvgTextAlign(rend->vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
     nvgTextBoxBounds(rend->vg, 0, 0, 10000, text, NULL, fbounds);
@@ -1029,14 +1036,12 @@ static void get_nvg_bounds(renderer_t *rend, int font, float size,
     if (align & ALIGN_CENTER)   fbounds[0] += -w / 2;
     if (align & ALIGN_BOTTOM)   fbounds[1] += -h;
     if (align & ALIGN_MIDDLE)   fbounds[1] += -h / 2;
-    if (align & ALIGN_BASELINE) fbounds[1] += -h;
-    if (align & ALIGN_BASELINE) {
-        fbounds[1] -= descender;
-    }
-    fbounds[0] = floor(fbounds[0] + pos[0]);
-    fbounds[1] = floor(fbounds[1] + pos[1]);
-    fbounds[2] = fbounds[0] + w;
-    fbounds[3] = fbounds[1] + h;
+    if (align & ALIGN_BASELINE) fbounds[1] += -h - descender;
+    bounds[0] = floor(fbounds[0] + pos[0]);
+    bounds[1] = floor(fbounds[1] + pos[1]);
+    bounds[2] = fbounds[0] + w;
+    bounds[3] = fbounds[1] + h;
+    nvgRestore(rend->vg);
 }
 
 // Render text using nanovg.
@@ -1088,13 +1093,9 @@ static void text_using_nanovg(renderer_t *rend,
         }
 
         nvgSave(rend->vg);
-        get_nvg_bounds(rend, font, size, effects, buf, align, pos, fbounds);
+        set_nvg_text_settings(rend, font, size, effects);
+        get_nvg_text_bounds(rend, buf, align, pos, bounds);
         nvgRestore(rend->vg);
-
-        bounds[0] = fbounds[0];
-        bounds[1] = fbounds[1];
-        bounds[2] = fbounds[2];
-        bounds[3] = fbounds[3];
 
         // Uncomment to see labels bounding box
         if ((0)) {
@@ -1400,8 +1401,9 @@ static void item_text_render(renderer_t *rend, const item_t *item)
 {
     int font = (item->text.effects & TEXT_BOLD) ? FONT_BOLD : FONT_REGULAR;
     double pos[2] = {0, 0};
-    float fbounds[4], descender;
+    float descender;
     float w;
+    double bounds[4];
 
     nvgBeginFrame(rend->vg, rend->fb_size[0] / rend->scale,
                             rend->fb_size[1] / rend->scale, rend->scale);
@@ -1414,9 +1416,9 @@ static void item_text_render(renderer_t *rend, const item_t *item)
                                    item->color[2] * 255,
                                    item->color[3] * 255));
 
-    get_nvg_bounds(rend, font, item->text.size, item->text.effects,
-                   item->text.text, item->text.align, pos, fbounds);
-    w = fbounds[2] - fbounds[0];
+    set_nvg_text_settings(rend, font, item->text.size, item->text.effects);
+    get_nvg_text_bounds(rend, item->text.text, item->text.align, pos, bounds);
+    w = bounds[2] - bounds[0];
 
     nvgTextAlign(rend->vg, NVG_ALIGN_TOP |
                  (item->text.align & (NVG_ALIGN_LEFT | NVG_ALIGN_RIGHT |
@@ -1427,14 +1429,14 @@ static void item_text_render(renderer_t *rend, const item_t *item)
     // Re-add the "descender" extra offset that was applied on the bounding
     // box to simulate an extra space above the font, so that the font is
     // properly aligned.
-    nvgTextBox(rend->vg, fbounds[0], roundf(fbounds[1] - descender), w,
+    nvgTextBox(rend->vg, bounds[0], roundf(bounds[1] - descender), w,
             item->text.text, NULL);
 
     // Uncomment to see labels bounding box
     if ((0)) {
-        float h = fbounds[3] - fbounds[1];
+        float h = bounds[3] - bounds[1];
         nvgBeginPath(rend->vg);
-        nvgRect(rend->vg, fbounds[0], fbounds[1], w, h);
+        nvgRect(rend->vg, bounds[0], bounds[1], w, h);
         nvgStrokeColor(rend->vg, nvgRGBA(item->color[0] * 255,
                        item->color[1] * 255,
                        item->color[2] * 255,
