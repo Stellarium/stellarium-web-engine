@@ -1039,8 +1039,8 @@ static void get_nvg_text_bounds(
     if (align & ALIGN_BASELINE) fbounds[1] += -h - descender;
     bounds[0] = floor(fbounds[0] + pos[0]);
     bounds[1] = floor(fbounds[1] + pos[1]);
-    bounds[2] = fbounds[0] + w;
-    bounds[3] = fbounds[1] + h;
+    bounds[2] = bounds[0] + w;
+    bounds[3] = bounds[1] + h;
     nvgRestore(rend->vg);
 }
 
