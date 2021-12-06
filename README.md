@@ -25,7 +25,7 @@ Features
 Build the javascript version
 ----------------------------
 
-You need to make sure you have both [emscripten](https://emscripten.org/docs/getting_started/downloads.html) and [sconstruct](https://pypi.org/project/SCons/) installed.
+You need to make sure you have both [emscripten](https://emscripten.org/docs/getting_started/downloads.html) 1.40.1 (it does not work with latest version) and [sconstruct](https://pypi.org/project/SCons/) installed.
 
     # Setup emscripten path.
     source $PATH_TO_EMSDK/emsdk_env.sh
