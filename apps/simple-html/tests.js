@@ -317,8 +317,8 @@ var testGeojson = function(stel) {
   }
 }
 
-require('../build/stellarium-web-engine.js')({
-  wasmFile: '../build/stellarium-web-engine.wasm',
+require('../../build/stellarium-web-engine.js')({
+  wasmFile: '../../build/stellarium-web-engine.wasm',
   onReady: function(stel) {
 
     // Create test stars, re-used in several tests

@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 <script src="static/js/polyfill.js"></script>
-<script src="../build/stellarium-web-engine.js"></script>
+<script src="../../build/stellarium-web-engine.js"></script>
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
@@ -180,7 +180,7 @@
       visible: function(val) {
         if (val) {
           this.obj.update()
-            stel.core.lookat(this.obj.azalt)
+            stel.pointAndLock(this.obj)
         }
       }
     },
@@ -281,52 +281,66 @@
 </script>
 
 <script>
-  var stel = StelWebEngine({
-    wasmFile: "../build/stellarium-web-engine.wasm",
-    canvas: document.getElementById('stel-canvas'),
-    onReady: function() {
+  // Return the current page absolute base url.
+  // Used because at the moment emscripten doesn't support relative url
+  // properly.
+  function getBaseUrl() {
+    let url = document.location.href.split('/');
+    url.pop();
+    url = url.join('/');
+    return url + '/';
+  }
 
-    // Add all data sources.
-    var baseUrl = '../data/';
-    let core = stel.core;
-
-    core.stars.addDataSource({ url: baseUrl + 'skydata/stars' })
-    core.skycultures.addDataSource({ url: baseUrl + 'skydata/skycultures/western', key: 'western' })
-    core.dsos.addDataSource({ url: baseUrl + 'skydata/dso' })
-    core.landscapes.addDataSource({ url: baseUrl + 'skydata/landscapes/guereins', key: 'guereins' })
-    core.milkyway.addDataSource({ url: baseUrl + 'skydata/surveys/milkyway' })
-    core.minor_planets.addDataSource({ url: baseUrl + 'skydata/mpcorb.dat', key: 'mpc_asteroids' })
-    core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'moon' })
-    core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/sun', key: 'sun' })
-    core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'default' })
-    core.comets.addDataSource({ url: baseUrl + 'skydata/CometEls.txt', key: 'mpc_comets' })
-    core.satellites.addDataSource({ url: baseUrl + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
-
-      var app = new Vue({
-        el: '#gui',
-        data: { stel: stel },
-        methods: {
-          testAddStar: function() { testAddStar(this.stel) },
-          testAddDSO: function() { testAddDSO(this.stel) },
-          testAddAsteroid: function() { testAddAsteroid(this.stel) },
-          testAddGeojson: function() { testAddGeojson(this.stel) },
-          lockToSelection: function() {
-            stel.core.lock = stel.core.selection
-            // Smooth move to selection.
-            if (stel.core.lock) {
-                stel.core.lock.update()
-                stel.core.lookat(stel.core.lock.azalt, 1.0, 20 * stel.D2R);
-            }
-          }
+  var app = new Vue({
+    el: '#gui',
+    data: { stel: null },
+    methods: {
+      testAddStar: function() { testAddStar(this.stel) },
+      testAddDSO: function() { testAddDSO(this.stel) },
+      testAddAsteroid: function() { testAddAsteroid(this.stel) },
+      testAddGeojson: function() { testAddGeojson(this.stel) },
+      lockToSelection: function() {
+        stel.core.lock = stel.core.selection
+        // Smooth move to selection.
+        if (stel.core.lock) {
+            stel.core.lock.update()
+            stel.pointAndLock(stel.core.lock, 1.0, 20 * stel.D2R);
         }
-      })
+      }
+    },
+    mounted: function() {
+      var that = this;
+      StelWebEngine({
+        wasmFile: "../../build/stellarium-web-engine.wasm",
+        canvas: document.getElementById('stel-canvas'),
+        onReady: function(stel) {
+          that.stel = stel;
+
+          // Add all data sources.
+          var baseUrl = getBaseUrl() + '../test-skydata/';
+          let core = stel.core;
+
+          core.stars.addDataSource({ url: baseUrl + 'stars' })
+          core.skycultures.addDataSource({ url: baseUrl + 'skycultures/western', key: 'western' })
+          core.dsos.addDataSource({ url: baseUrl + 'dso' })
+          core.landscapes.addDataSource({ url: baseUrl + 'landscapes/guereins', key: 'guereins' })
+          core.milkyway.addDataSource({ url: baseUrl + 'surveys/milkyway' })
+          core.minor_planets.addDataSource({ url: baseUrl + 'mpcorb.dat', key: 'mpc_asteroids' })
+          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'moon' })
+          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/sun', key: 'sun' })
+          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'default' })
+          core.comets.addDataSource({ url: baseUrl + 'CometEls.txt', key: 'mpc_comets' })
+          core.satellites.addDataSource({ url: baseUrl + 'tle_satellite.jsonl.gz', key: 'jsonl/sat' })
+        }
+      });
       // Force ui update when there is any change.
       stel.change(function(obj, attr) {
         if (attr !== "hovered")
           app.stel = Object.assign(Object.create(stel), {}, stel)
       })
     }
-  });
+  })
+
 
   var testAddStar = function(stel) {
     console.log("Add a fake star near polaris")
@@ -342,7 +356,7 @@
     star.update()
     layer.add(star)
     stel.core.selection = star
-    stel.core.lookat(star.azalt) // XXX: use radec instead?
+    stel.pointAndLock(star)
   }
 
   var testAddDSO = function(stel) {
@@ -361,7 +375,7 @@
     dso.update()
     layer.add(dso)
     stel.core.selection = dso
-    stel.core.lookat(dso.azalt) // XXX: use radec instead?
+    stel.pointAndLock(dso)
   }
 
   var testAddAsteroid = function(stel) {
@@ -385,7 +399,7 @@
     asteroid.update()
     layer.add(asteroid)
     stel.core.selection = asteroid
-    stel.core.lookat(asteroid.azalt) // XXX: use radec instead?
+    stel.pointAndLock(asteroid)
   }
 
   var testAddGeojson = function(stel) {

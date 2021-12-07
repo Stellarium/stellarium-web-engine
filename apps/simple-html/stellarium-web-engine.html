@@ -137,7 +137,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
 <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
 <script src="https://www.unpkg.com/i18next-xhr-backend/dist/umd/i18nextXHRBackend.min.js"></script>
-<script src="../build/stellarium-web-engine.js"></script>
+<script src="../../build/stellarium-web-engine.js"></script>
 
 <!-- Button component -->
 <script type="text/x-template" id="stel-button-template">
@@ -198,7 +198,7 @@
     mounted: function() {
       var that = this;
       StelWebEngine({
-        wasmFile: '../build/stellarium-web-engine.wasm',
+        wasmFile: '../../build/stellarium-web-engine.wasm',
         canvas: document.getElementById('stel-canvas'),
         translateFn: function(domain, str) {
           return i18next.t(str, {ns: domain});
@@ -206,25 +206,24 @@
         onReady: function(stel) {
           that.stel = stel;
           // Add all data sources.
-          getBaseUrl();
-          var baseUrl = getBaseUrl() + '../data/';
+          var baseUrl = getBaseUrl() + '../test-skydata/';
           let core = stel.core;
 
-          core.stars.addDataSource({ url: baseUrl + 'skydata/stars' })
-          core.skycultures.addDataSource({ url: baseUrl + 'skydata/skycultures/western', key: 'western' })
-          core.dsos.addDataSource({ url: baseUrl + 'skydata/dso' })
-          core.landscapes.addDataSource({ url: baseUrl + 'skydata/landscapes/guereins', key: 'guereins' })
-          core.milkyway.addDataSource({ url: baseUrl + 'skydata/surveys/milkyway' })
-          core.minor_planets.addDataSource({ url: baseUrl + 'skydata/mpcorb.dat', key: 'mpc_asteroids' })
-          core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'moon' })
-          core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/sun', key: 'sun' })
-          core.planets.addDataSource({ url: baseUrl + 'skydata/surveys/sso/moon', key: 'default' })
-          core.comets.addDataSource({ url: baseUrl + 'skydata/CometEls.txt', key: 'mpc_comets' })
-          core.satellites.addDataSource({ url: baseUrl + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
+          core.stars.addDataSource({ url: baseUrl + 'stars' })
+          core.skycultures.addDataSource({ url: baseUrl + 'skycultures/western', key: 'western' })
+          core.dsos.addDataSource({ url: baseUrl + 'dso' })
+          core.landscapes.addDataSource({ url: baseUrl + 'landscapes/guereins', key: 'guereins' })
+          core.milkyway.addDataSource({ url: baseUrl + 'surveys/milkyway' })
+          core.minor_planets.addDataSource({ url: baseUrl + 'mpcorb.dat', key: 'mpc_asteroids' })
+          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'moon' })
+          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/sun', key: 'sun' })
+          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'default' })
+          core.comets.addDataSource({ url: baseUrl + 'CometEls.txt', key: 'mpc_comets' })
+          core.satellites.addDataSource({ url: baseUrl + 'tle_satellite.jsonl.gz', key: 'jsonl/sat' })
 
           // Force ui update when there is any change.
           stel.change(function(obj, attr) {
-            if (attr !== "hovered")
+            if (attr !== "hovered") {
               that.stel = Object.assign(Object.create(stel), {}, stel)
           })
 

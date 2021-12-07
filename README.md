@@ -1,14 +1,11 @@
 Stellarium Web Engine
 =====================
 
-Version 0.1
-
 About
 -----
 
 Stellarium Web Engine is a JavaScript planetarium renderer using
 WebGL that can be embedded into a website.
-
 
 Features
 --------
@@ -34,7 +31,7 @@ You need to make sure you have both emscripten and sconstruct installed.
     # This will also copy the files into html/static/js
     make js
 
-    # Now we can open html/test-page.html in a browser.
+    # Now see apps/simple-html/ to try the library in a browser.
 
 
 Contributing
