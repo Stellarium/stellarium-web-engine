@@ -36,16 +36,16 @@ setup: Dockerfile Dockerfile.jsbuild
 	make update-engine
 	# Build docker image for webpack/node development
 	docker build -t stellarium-web-dev --build-arg USER_UID=${USER_UID} --build-arg USER_GID=${USER_GID} .
-	docker run -it -v "$(PWD):/app" -v "$(PWD)/../../data:/data" stellarium-web-dev yarn install
+	docker run -it -v "$(PWD):/app" -v "$(PWD)/../test-skydata:/skydata"" stellarium-web-dev yarn install
 
 dev:
-	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../../data:/data" stellarium-web-dev yarn run dev
+	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../test-skydata:/skydata" stellarium-web-dev yarn run dev
 
 lint:
-	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../../data:/data" stellarium-web-dev yarn run lint
+	docker run -it -p 8080:8080 -p 8888:8888 -v "$(PWD):/app" -v "$(PWD)/../test-skydata:/skydata" stellarium-web-dev yarn run lint
 
 build:
-	docker run -it -v "$(PWD):/app" -v "$(PWD)/../../data:/data" stellarium-web-dev yarn run build
+	docker run -it -v "$(PWD):/app" -v "$(PWD)/../test-skydata:/skydata"" stellarium-web-dev yarn run build
 
 start:
 	cd dist && python3 -m http.server 8080
