@@ -8,13 +8,19 @@
 # The terms of the AGPL v3 license can be found in the main directory of this
 # repository.
 
-# Generate the default font used in the html version.
+# Generate the default font bundled in the source.
 #
 # We use pyftsubset (that mush be installed on the system) to compress the
 # font keeping only the glyphs we use.
 
+import os
 import subprocess
-from utils import ensure_dir
+
+def ensure_dir(file_path):
+    '''Create a directory for a path if it doesn't exists yet'''
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 def run():
     ensure_dir('data/font/')
