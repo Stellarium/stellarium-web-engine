@@ -47,7 +47,7 @@ lint:
 	docker run -it -p 8080:8080 -p 8888:8888 $(DOCKER_MOUNTS) stellarium-web-dev yarn run lint
 
 build:
-	docker run -it -v $(DOCKER_MOUNTS) stellarium-web-dev yarn run build
+	docker run -it $(DOCKER_MOUNTS) stellarium-web-dev yarn run build
 
 start:
 	cd dist && python3 -m http.server 8080
