@@ -25,7 +25,7 @@ make start
 ```
 
 Note that before you build the web GUI the first time, the JS version of
-the engine also needs to be built by running make setup, you can the update
+the engine also needs to be built by running make setup, you can then update
 the engine at any time by running
 
 ``` bash
