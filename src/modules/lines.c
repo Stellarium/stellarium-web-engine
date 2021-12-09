@@ -745,7 +745,7 @@ static obj_klass_t lines_klass = {
     .update = lines_update,
     .render = lines_render,
     .gui = lines_gui,
-    .render_order = 35, // just before landscape.
+    .render_order = 34, // just before atmosphere.
     .attributes = (attribute_t[]) {
         PROPERTY(visible, TYPE_BOOL, MEMBER(lines_t, visible)),
         {}
