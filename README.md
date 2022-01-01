@@ -45,7 +45,8 @@ web engine for further development.
     # run the web engine in a web server
     docker run -it --rm -p 8080:80 webengine
 
-Once running, browse to http://localhost:8080 to open the web engine
+Once running, browse to http://localhost:8080/simple-html/stellarium-web-engine.html
+to open the web engine
 
 
 Contributing
