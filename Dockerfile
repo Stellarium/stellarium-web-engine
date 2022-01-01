@@ -1,8 +1,4 @@
 FROM python:3
-#RUN apt-get update && \
-#    DEBIAN_FRONTEND=noninteractive apt-get install -q -y curl && \
-#    apt-get clean && \
-#    rm -rf /var/lib/apt/lists/*
 ENV EMSCRIPTEN_VERSION=2.0.34
 RUN pip3 install scons
 WORKDIR /emscripten
