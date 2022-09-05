@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Stellarium Web is an online planetarium that lets you discover the night sky. It's easy to use and beautiful.",
-  "author": "Noctua Software <contact@noctua-software.com>",
+  "author": "Stellarium Labs <contact@stellarium-labs.com>",
   "scripts": {
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",

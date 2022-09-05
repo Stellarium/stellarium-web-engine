@@ -1,4 +1,4 @@
-// Stellarium Web - Copyright (c) 2018 - Noctua Software Ltd
+// Stellarium Web - Copyright (c) 2022 - Stellarium Labs SRL
 //
 // This program is licensed under the terms of the GNU AGPL v3, or
 // alternatively under a commercial licence.
@@ -53,7 +53,7 @@
       <h3>Others</h3>
       <p>Landscape images by Fabien Chereau</p>
       <p>Constellation lines by Fabien Chereau</p>
-      <p>All other graphics by <a href="https://noctua-software.com" target="_blank" rel="noopener">Noctua Software</a></p>
+      <p>All other graphics by <a href="https://stellarium-labs.com" target="_blank" rel="noopener">Stellarium Labs</a></p>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer><v-btn text class="blue--text darken-1" @click.native="$store.state.showDataCreditsDialog = false">Close</v-btn>

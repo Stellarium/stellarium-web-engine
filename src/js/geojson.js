@@ -1,5 +1,5 @@
 /*
- * Stellarium Web Engine - Copyright (c) 2018 - Noctua Software Ltd
+ * Stellarium Web Engine - Copyright (c) 2022 - Stellarium Labs SRL
  *
  * This program is licensed under the terms of the GNU AGPL v3, or
  * alternatively under a commercial licence.

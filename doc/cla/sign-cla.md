@@ -122,7 +122,7 @@ can be found on the Apache website.
 
 This CLA is not a copyright assignment, it is a pure license agreement. You
 keep the full copyright for your contributions, you simply provide an
-irrevocable license to the project maintainer, Noctua Software Ltd to use, modify and
+irrevocable license to the project maintainer, Stellarium Labs SRL to use, modify and
 distribute your contributions without further restrictions.
 
 ## How does it work?
