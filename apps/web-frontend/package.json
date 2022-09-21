@@ -25,7 +25,7 @@
     "vue-jsonp": "^0.1.8",
     "vue-router": "^3.0.3",
     "vue2-leaflet": "^2.6.0",
-    "vuetify": "^2.0.0",
+    "vuetify": "^2.6.10",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
