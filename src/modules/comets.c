@@ -325,7 +325,7 @@ static int comet_update(comet_t *comet, const observer_t *obs)
 
     // Compute vmag.
     // We use the g,k model: m = g + 5*log10(D) + 2.5*k*log10(r)
-    // (http://www.clearskyinstitute.com/xephem/help/xephem.html)
+    // (https://xephem.github.io/XEphem/Site/help/xephem.html)
     // XXX: probably better to switch to the same model as for asteroids.
     sr = vec3_norm(ph[0]);
     or = vec3_norm(comet->pvo[0]);
