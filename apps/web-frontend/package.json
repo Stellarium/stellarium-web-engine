@@ -13,6 +13,7 @@
   "dependencies": {
     "@mdi/font": "^3.6.95",
     "core-js": "^3.4.4",
+    "html2canvas": "^1.4.1",
     "leaflet": "^1.7.1",
     "leaflet-control-geocoder": "^1.13.0",
     "log-symbols": "^4.1.0",
