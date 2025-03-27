@@ -1,0 +1,10 @@
+hips_order            = 0
+hips_order_min        = 0
+hips_tile_width       = 512
+hips_tile_format      = webp
+dataproduct_type      = image
+hips_frame            = equatorial
+obs_title             = milkyway
+hips_release_date     = 2019-02-12T21:42Z
+source_md5            = ddced85111d6ba23d0a3fa8bcaeac488
+obs_description       = Milkyway survey based on Stellarium milkyway texture.

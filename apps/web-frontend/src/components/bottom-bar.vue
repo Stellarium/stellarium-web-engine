@@ -77,6 +77,16 @@
                 :toggled="$store.state.nightmode"
                 @clicked="(b) => { setNightMode(b) }">
     </bottom-button>
+    <!-- //To Do take a screenshot -->
+    <bottom-button
+      :label="$t('Take a screenshot')"
+      v-if="$store.state.showNightmodeButton !== false"
+      :img="require('@/assets/images/screenshot-512.png')"
+      img_alt="Screenshot Button"
+      class="mr-auto"
+      style="margin-left: 8px;"
+      @clicked="captureCanvasScreenshot"
+    />
     <bottom-button :label="$t('Fullscreen')"
                 :img="fullscreenBtnImage"
                 img_alt="Fullscreen Button"
@@ -108,13 +118,16 @@
 import BottomButton from '@/components/bottom-button.vue'
 import DateTimePicker from '@/components/date-time-picker.vue'
 import Moment from 'moment'
+// import html2canvas from 'html2canvas'
 
 export default {
   components: { BottomButton, DateTimePicker },
   data: function () {
     return {
+      gl: null
     }
   },
+
   computed: {
     time: {
       get: function () {
@@ -143,7 +156,53 @@ export default {
       }
     }
   },
+  mounted () {
+    this.initializeWebGL()
+  },
   methods: {
+    initializeWebGL () {
+      const canvas = document.getElementById('stel-canvas')
+      if (!canvas) {
+        console.error('Canvas element not found')
+        return
+      }
+
+      this.gl = canvas.getContext('webgl', { preserveDrawingBuffer: true })
+
+      if (!this.gl) {
+        console.error('WebGL not supported')
+      }
+    },
+
+    captureAfterRender () {
+      requestAnimationFrame(() => {
+        this.captureCanvasScreenshot()
+      })
+    },
+    captureCanvasScreenshot () {
+      requestAnimationFrame(() => {
+        const canvas = document.getElementById('stel-canvas')
+        if (!canvas) {
+          console.error('Canvas not found')
+          return
+        }
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            console.error('Failed to capture screenshot')
+            return
+          }
+
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blob)
+          link.download = 'stelarium_screenshot.png'
+          link.click()
+
+          // Free memory after download
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+        })
+      })
+    },
     // The MomentJS time in local time
     getLocalTime: function () {
       var d = new Date()

@@ -1,0 +1,4 @@
+hips_order_min           = 0
+max_vmag                 = 7.0
+type                     = stars
+hips_tile_format         = eph

@@ -1,316 +1,291 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Stellarium Web Engine Page</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.6.10/dist/vuetify.min.css" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui" />
+  <style>
+    .semi-transparent { opacity: 0.5; }
+    .w-100 { width: 100%; }
+    .h-100 { height: 100%; }
+    .radecVal {
+      display: inline-block;
+      font-family: monospace;
+      padding-right: 2px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .radecUnit { color: #dddddd; font-weight: normal; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <v-app>
+      <v-navigation-drawer absolute temporary clipped v-model="drawer" app>
+        <v-list dense>
+          <v-list-item @click="">
+            <v-list-item-action>
+              <v-icon>settings</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>Settings</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
 
-<!--
- Stellarium Web Engine - Copyright (c) 2022 - Stellarium Labs SRL
+      <v-app-bar class="xsemi-transparent">
+        <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+        <v-toolbar-title>Stellarium<sup>Web Test</sup></v-toolbar-title>
+        <v-spacer></v-spacer>
+        <div v-if="stel && stel.core.progressbars.length">
+          {{getProgress().title}}
+          <v-progress-circular :value="getProgress().value"></v-progress-circular>
+        </div>
+      </v-app-bar>
 
- This program is licensed under the terms of the GNU AGPL v3, or alternatively
- under a commercial licence.
+      <v-footer app fixed class="transparent" style="height: auto">
+        <v-spacer></v-spacer>
+        <stel-button label="Constellations" img="static/imgs/symbols/btn-cst-lines.svg" :obj="stel && stel.core.constellations" attr="lines_visible"></stel-button>
+        <stel-button label="Atmosphere" img="static/imgs/symbols/btn-atmosphere.svg" :obj="stel && stel.core.atmosphere" attr="visible"></stel-button>
+        <stel-button label="Landscape" img="static/imgs/symbols/btn-landscape.svg" :obj="stel && stel.core.landscapes" attr="visible"></stel-button>
+        <stel-button label="Azimuthal Grid" img="static/imgs/symbols/btn-azimuthal-grid.svg" :obj="stel && stel.core.lines.azimuthal" attr="visible"></stel-button>
+        <stel-button label="Equatorial Grid" img="static/imgs/symbols/btn-equatorial-grid.svg" :obj="stel && stel.core.lines.equatorial" attr="visible"></stel-button>
+        <stel-button label="Nebulae" img="static/imgs/symbols/btn-nebulae.svg" :obj="stel && stel.core.dsos" attr="visible"></stel-button>
+        <stel-button label="DSS" img="static/imgs/symbols/btn-nebulae.svg" :obj="stel && stel.core.dss" attr="visible"></stel-button>
+        <v-spacer></v-spacer>
+      </v-footer>
 
- The terms of the AGPL v3 license can be found in the main directory of this
- repository.
--->
-
-<title>Stellarium Web Engine Page</title>
-<meta charset="utf-8">
-
-<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
-
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-
-<style>
-  .semi-transparent {opacity: 0.5;}
-  .w-100 {width: 100%;}
-  .h-100 {height: 100%;}
-
-  .radecVal {
-    display: inline-block;
-    font-family: monospace;
-    padding-right: 2px;
-    font-size: 13px;
-    font-weight: bold;
-  }
-
-  .radecUnit {
-    color: #dddddd;
-    font-weight: normal
-  }
-</style>
-
-<div id="app">
-
-  <v-app>
-
-    <v-navigation-drawer absolute temporary clipped v-model="drawer" app>
-      <v-list dense>
-        <v-list-item @click="">
-          <v-list-item-action>
-            <v-icon>settings</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Settings</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-app-bar class="xsemi-transparent">
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Stellarium<sup>Web</sup></v-toolbar-title>
-      <v-spacer></v-spacer>
-      <div v-if="stel && stel.core.progressbars.length">
-        {{getProgress().title}}
-        <v-progress-circular :value="getProgress().value">
-        </v-progress-circular>
+      <div id="stel" class="w-100 h-100" style="position: relative">
+        <canvas id="stel-canvas" style="position: absolute" class="w-100 h-100"></canvas>
+        <v-card v-if="stel && stel.core.selection" style="position: absolute; top: 64px; width: 430px" class="transparent">
+          <v-card-title primary-title>
+            <h3>{{getTitle(stel.core.selection)}}</h3>
+          </v-card-title>
+          <v-card-text>
+            <v-layout row wrap class="w-100">
+              <template v-for="i in getInfos(stel.core.selection)">
+                <v-flex xs4 style="color: #dddddd">{{i.key}}</v-flex>
+                <v-flex xs8 style="font-weight: 500">
+                  <span v-html="i.value"></span>
+                </v-flex>
+              </template>
+            </v-layout>
+          </v-card-text>
+        </v-card>
       </div>
-    </v-app-bar>
-
-    <v-footer app fixed class="transparent" style="height:auto;">
-      <v-spacer></v-spacer>
-      <stel-button label="Constellations"
-                   img="static/imgs/symbols/btn-cst-lines.svg"
-                   :obj="stel && stel.core.constellations"
-                   attr="lines_visible">
-      </stel-button>
-      <stel-button label="Atmosphere"
-                   img="static/imgs/symbols/btn-atmosphere.svg"
-                   :obj="stel && stel.core.atmosphere"
-                   attr="visible">
-      </stel-button>
-      <stel-button label="Landscape"
-                   img="static/imgs/symbols/btn-landscape.svg"
-                   :obj="stel && stel.core.landscapes"
-                   attr="visible">
-      </stel-button>
-      <stel-button label="Azimuthal Grid"
-                   img="static/imgs/symbols/btn-azimuthal-grid.svg"
-                   :obj="stel && stel.core.lines.azimuthal"
-                   attr="visible">
-      </stel-button>
-      <stel-button label="Equatorial Grid"
-                   img="static/imgs/symbols/btn-equatorial-grid.svg"
-                   :obj="stel && stel.core.lines.equatorial"
-                   attr="visible">
-      </stel-button>
-      <stel-button label="Nebulae"
-                   img="static/imgs/symbols/btn-nebulae.svg"
-                   :obj="stel && stel.core.dsos"
-                   attr="visible">
-      </stel-button>
-      <stel-button label="DSS"
-                   img="static/imgs/symbols/btn-nebulae.svg"
-                   :obj="stel && stel.core.dss"
-                   attr="visible">
-      </stel-button>
-      <v-spacer></v-spacer>
-    </v-footer>
-
-    <div id="stel" class="w-100 h-100" style="position: relative;">
-      <canvas id="stel-canvas" style="position:absolute;"
-              class="w-100 h-100">
-      </canvas>
-      <v-card v-if="stel && stel.core.selection"
-              style="position:absolute; top: 64px; width:430px;"
-              class="transparent">
-        <v-card-title primary-title>
-          <h3>{{getTitle(stel.core.selection)}}</h3>
-        </v-card-title>
-        <v-card-text>
-          <v-layout row wrap class="w-100">
-            <template v-for="i in getInfos(stel.core.selection)">
-              <v-flex xs4 style="color: #dddddd">{{i.key}}</v-flex>
-              <v-flex xs8 style="font-weight: 500">
-                <span v-html="i.value"></span>
-              </v-flex>
-            </template>
-          </v-layout>
-        </v-card-text>
-      </v-card>
-    </div>
-
-  </v-app>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-<script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
-<script src="https://www.unpkg.com/i18next-xhr-backend/dist/umd/i18nextXHRBackend.min.js"></script>
-<script src="../../build/stellarium-web-engine.js"></script>
-
-<!-- Button component -->
-<script type="text/x-template" id="stel-button-template">
-  <div class="stel-button shrink" :class="{'semi-transparent': !value}"
-       style="width:5rem; height:5rem;">
-    <a v-on:click='clicked'>
-      <img :src="img" class="w-100 h-100"/>
-    </a>
+    </v-app>
   </div>
-</script>
-<script>
-  Vue.component('stel-button', {
-    template: '#stel-button-template',
-    props: ['label', 'img', 'obj', 'attr'],
-    computed: {
-      value: function() {
-        return this.obj && this.obj[this.attr]
-      }
-    },
-    methods: {
-      clicked: function() {
-        if (this.obj) this.obj[this.attr] = !this.obj[this.attr];
-      }
-    }
-  })
-</script>
 
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.10/dist/vuetify.min.js"></script>
+  <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+  <script src="https://www.unpkg.com/i18next-xhr-backend/dist/umd/i18nextXHRBackend.min.js"></script>
+  <script src="../../build/stellarium-web-engine.js"></script>
 
-<script>
-
-  // Setup i18next for translations.
-  i18next.use(i18nextXHRBackend).init({
-    lng: 'en',
-    ns: ['gui', 'skyculture'],
-    debug: false,
-    backend: {
-      loadPath: 'https://stellarium.sfo2.cdn.digitaloceanspaces.com/' +
-                'i18n/v1/{{ns}}/{{lng}}.json'
-    }
-  });
-
-  // Return the current page absolute base url.
-  // Used because at the moment emscripten doesn't support relative url
-  // properly.
-  function getBaseUrl() {
-    let url = document.location.href.split('/');
-    url.pop();
-    url = url.join('/');
-    return url + '/';
-  }
-
-  new Vue({
-    vuetify: new Vuetify({
-      theme: {dark: true}
-    }),
-    el: '#app',
-    data: {drawer: false, stel: null},
-    mounted: function() {
-      var that = this;
-      StelWebEngine({
-        wasmFile: '../../build/stellarium-web-engine.wasm',
-        canvas: document.getElementById('stel-canvas'),
-        translateFn: function(domain, str) {
-          return i18next.t(str, {ns: domain});
+  <!-- Button component -->
+  <script type="text/x-template" id="stel-button-template">
+    <div class="stel-button shrink" :class="{'semi-transparent': !value}" style="width:5rem; height:5rem;">
+      <a v-on:click='clicked'>
+        <img :src="img" class="w-100 h-100"/>
+      </a>
+    </div>
+  </script>
+  <script>
+    Vue.component("stel-button", {
+      template: "#stel-button-template",
+      props: ["label", "img", "obj", "attr"],
+      computed: {
+        value: function () {
+          return this.obj && this.obj[this.attr];
         },
-        onReady: function(stel) {
-          that.stel = stel;
-          // Add all data sources.
-          var baseUrl = getBaseUrl() + '../test-skydata/';
-          let core = stel.core;
-
-          core.stars.addDataSource({ url: baseUrl + 'stars' })
-          core.skycultures.addDataSource({ url: baseUrl + 'skycultures/western', key: 'western' })
-          core.dsos.addDataSource({ url: baseUrl + 'dso' })
-          core.landscapes.addDataSource({ url: baseUrl + 'landscapes/guereins', key: 'guereins' })
-          core.milkyway.addDataSource({ url: baseUrl + 'surveys/milkyway' })
-          core.minor_planets.addDataSource({ url: baseUrl + 'mpcorb.dat', key: 'mpc_asteroids' })
-          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'moon' })
-          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/sun', key: 'sun' })
-          core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'default' })
-          core.comets.addDataSource({ url: baseUrl + 'CometEls.txt', key: 'mpc_comets' })
-          core.satellites.addDataSource({ url: baseUrl + 'tle_satellite.jsonl.gz', key: 'jsonl/sat' })
-
-          // Force ui update when there is any change.
-          stel.change(function(obj, attr) {
-            if (attr !== "hovered") {
-              that.stel = Object.assign(Object.create(stel), {}, stel)
-          })
-
-          stel.setFont('regular', 'static/fonts/Roboto-Regular.ttf', 1.38);
-          stel.setFont('bold', 'static/fonts/Roboto-Bold.ttf', 1.38);
-        }
-      })
-    },
-    methods: {
-
-      getTitle: function(obj) {
-        var name = obj.designations()[0];
-        name = name.replace(/^NAME /, '');
-        return name;
       },
-
-      getProgress: function() {
-        var bar = this.stel.core.progressbars[0];
-        return {title: bar.label, value: bar.value / bar.total * 100};
+      methods: {
+        clicked: function () {
+          if (this.obj) this.obj[this.attr] = !this.obj[this.attr];
+        },
       },
+    });
+  </script>
+  <script>
+    // Setup i18next for translations using the proxy endpoint.
+    i18next.use(i18nextXHRBackend).init({
+      lng: "en",
+      ns: ["gui", "skyculture"],
+      debug: false,
+      backend: {
+        // Now loads from your proxy at /i18n instead of directly from the CDN.
+        loadPath: "/i18n/v1/{{ns}}/{{lng}}.json"
+      },
+    });
 
-      getInfos: function(obj) {
-        var stel = this.stel;
-
-        var formatInt = function(num, padLen) {
-          let pad = new Array(1 + padLen).join('0')
-          return (pad + num).slice(-pad.length)
-        }
-
-        var formatRA = function(a) {
-          var raf = stel.a2tf(a, 1);
-          return '<div class="radecVal">' +
-            formatInt(raf.hours, 2) +
-            '<span class="radecUnit">h</span>&nbsp;</div>' +
-            '<div class="radecVal">' +
-            formatInt(raf.minutes, 2) +
-            '<span class="radecUnit">m</span></div>' +
-            '<div class="radecVal">' + formatInt(raf.seconds, 2) +
-            '.' + raf.fraction + '<span class="radecUnit">s</span></div>';
-        }
-
-        var formatDec = function(a) {
-          var raf = stel.a2af(a, 1);
-          return '<div class="radecVal">' +
-            raf.sign + formatInt(raf.degrees, 2) +
-            '<span class="radecUnit">°</span></div><div class="radecVal">' +
-            formatInt(raf.arcminutes, 2) +
-            '<span class="radecUnit">\'</span></div><div class="radecVal">' +
-            formatInt(raf.arcseconds, 2) + '.' + raf.fraction +
-            '<span class="radecUnit">"</span></div>';
-        }
-        var formatAz = function(a) {
-          let raf = stel.a2af(a, 1);
-          return '<div class="radecVal">' +
-            formatInt(raf.degrees < 0 ? raf.degrees + 180 : raf.degrees, 3) +
-            '<span class="radecUnit">°</span></div><div class="radecVal">' +
-            formatInt(raf.arcminutes, 2) +
-            '<span class="radecUnit">\'</span></div><div class="radecVal">' +
-            formatInt(raf.arcseconds, 2) + '.' + raf.fraction +
-            '<span class="radecUnit">"</span></div>';
-        }
-
-        var ret = [];
-        var obs = stel.core.observer;
-        var cirs = stel.convertFrame(obs, 'ICRF', 'CIRS', obj.getInfo('radec'));
-        var radec = stel.c2s(cirs);
-        var ra = stel.anp(radec[0]);
-        var dec = stel.anpm(radec[1]);
-        var observed = stel.convertFrame(obs, 'CIRS', 'OBSERVED', cirs);
-        var azalt = stel.c2s(observed);
-        var az = stel.anp(azalt[0]);
-        var alt = stel.anp(azalt[1]);
-        var vmag = obj.getInfo('vmag');
-        ret.push({
-          key: 'Magnitude',
-          value: vmag === undefined ? 'Unknown' : vmag.toFixed(2)
-        });
-        ret.push({
-          key: 'Ra/Dec',
-          value: formatRA(ra) + '&nbsp;&nbsp;&nbsp;' + formatDec(dec)
-        });
-        ret.push({
-          key: 'Az/Alt',
-          value: formatAz(az) + '&nbsp;&nbsp;&nbsp;' + formatDec(alt)
-        })
-        return ret;
-      }
+    // Return the current page absolute base url.
+    function getBaseUrl() {
+      let url = document.location.href.split("/");
+      url.pop();
+      url = url.join("/");
+      return url + "/";
     }
-  })
-</script>
+
+    new Vue({
+      vuetify: new Vuetify({
+        theme: { dark: true },
+      }),
+      el: "#app",
+      data: { drawer: false, stel: null },
+      mounted: function () {
+        var that = this;
+        StelWebEngine({
+          wasmFile: "../../build/stellarium-web-engine.wasm",
+          canvas: document.getElementById("stel-canvas"),
+          translateFn: function (domain, str) {
+            return i18next.t(str, { ns: domain });
+          },
+          onReady: function (stel) {
+            that.stel = stel;
+            // Add all data sources.
+            var baseUrl = getBaseUrl() + "../test-skydata/";
+            let core = stel.core;
+
+            core.stars.addDataSource({ url: baseUrl + "stars" });
+            core.skycultures.addDataSource({
+              url: baseUrl + "skycultures/western",
+              key: "western",
+            });
+            core.dsos.addDataSource({ url: baseUrl + "dso" });
+            core.landscapes.addDataSource({
+              url: baseUrl + "landscapes/guereins",
+              key: "guereins",
+            });
+            core.milkyway.addDataSource({ url: baseUrl + "surveys/milkyway" });
+            core.minor_planets.addDataSource({
+              url: baseUrl + "mpcorb.dat",
+              key: "mpc_asteroids",
+            });
+            core.planets.addDataSource({
+              url: baseUrl + "surveys/sso/moon",
+              key: "moon",
+            });
+            core.planets.addDataSource({
+              url: baseUrl + "surveys/sso/sun",
+              key: "sun",
+            });
+            core.planets.addDataSource({
+              url: baseUrl + "surveys/sso/moon",
+              key: "default",
+            });
+            core.comets.addDataSource({
+              url: baseUrl + "CometEls.txt",
+              key: "mpc_comets",
+            });
+            core.satellites.addDataSource({
+              url: baseUrl + "tle_satellite.jsonl.gz",
+              key: "jsonl/sat",
+            });
+
+            // Force ui update when there is any change.
+            stel.change(function (obj, attr) {
+              if (attr !== "hovered") {
+                that.stel = Object.assign(Object.create(stel), stel);
+              }
+            });
+
+            stel.setFont("regular", "static/fonts/Roboto-Regular.ttf", 1.38);
+            stel.setFont("bold", "static/fonts/Roboto-Bold.ttf", 1.38);
+          },
+        });
+      },
+      methods: {
+        getTitle: function (obj) {
+          var name = obj.designations()[0];
+          name = name.replace(/^NAME /, "");
+          return name;
+        },
+        getProgress: function () {
+          var bar = this.stel.core.progressbars[0];
+          return { title: bar.label, value: (bar.value / bar.total) * 100 };
+        },
+        getInfos: function (obj) {
+          var stel = this.stel;
+          var formatInt = function (num, padLen) {
+            let pad = new Array(1 + padLen).join("0");
+            return (pad + num).slice(-pad.length);
+          };
+          var formatRA = function (a) {
+            var raf = stel.a2tf(a, 1);
+            return (
+              '<div class="radecVal">' +
+              formatInt(raf.hours, 2) +
+              '<span class="radecUnit">h</span>&nbsp;</div>' +
+              '<div class="radecVal">' +
+              formatInt(raf.minutes, 2) +
+              '<span class="radecUnit">m</span></div>' +
+              '<div class="radecVal">' +
+              formatInt(raf.seconds, 2) +
+              "." +
+              raf.fraction +
+              '<span class="radecUnit">s</span></div>'
+            );
+          };
+          var formatDec = function (a) {
+            var raf = stel.a2af(a, 1);
+            return (
+              '<div class="radecVal">' +
+              raf.sign +
+              formatInt(raf.degrees, 2) +
+              '<span class="radecUnit">°</span></div><div class="radecVal">' +
+              formatInt(raf.arcminutes, 2) +
+              '<span class="radecUnit">\'</span></div><div class="radecVal">' +
+              formatInt(raf.arcseconds, 2) +
+              "." +
+              raf.fraction +
+              '<span class="radecUnit">"</span></div>'
+            );
+          };
+          var formatAz = function (a) {
+            let raf = stel.a2af(a, 1);
+            return (
+              '<div class="radecVal">' +
+              formatInt(raf.degrees < 0 ? raf.degrees + 180 : raf.degrees, 3) +
+              '<span class="radecUnit">°</span></div><div class="radecVal">' +
+              formatInt(raf.arcminutes, 2) +
+              '<span class="radecUnit">\'</span></div><div class="radecVal">' +
+              formatInt(raf.arcseconds, 2) +
+              "." +
+              raf.fraction +
+              '<span class="radecUnit">"</span></div>'
+            );
+          };
+          var ret = [];
+          var obs = stel.core.observer;
+          var cirs = stel.convertFrame(obs, "ICRF", "CIRS", obj.getInfo("radec"));
+          var radec = stel.c2s(cirs);
+          var ra = stel.anp(radec[0]);
+          var dec = stel.anpm(radec[1]);
+          var observed = stel.convertFrame(obs, "CIRS", "OBSERVED", cirs);
+          var azalt = stel.c2s(observed);
+          var az = stel.anp(azalt[0]);
+          var alt = stel.anp(azalt[1]);
+          var vmag = obj.getInfo("vmag");
+          ret.push({
+            key: "Magnitude",
+            value: vmag === undefined ? "Unknown" : vmag.toFixed(2),
+          });
+          ret.push({
+            key: "Ra/Dec",
+            value: formatRA(ra) + "&nbsp;&nbsp;&nbsp;" + formatDec(dec),
+          });
+          ret.push({
+            key: "Az/Alt",
+            value: formatAz(az) + "&nbsp;&nbsp;&nbsp;" + formatDec(alt),
+          });
+          return ret;
+        },
+      },
+    });
+  </script>
+</body>
+</html>

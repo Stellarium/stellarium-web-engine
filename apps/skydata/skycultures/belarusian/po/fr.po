@@ -1,0 +1,209 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Last-Translator: Stellarium's developers\n"
+"Language-Team: French (https://www.transifex.com/stellarium/teams/80998/fr/)\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Sky culture name
+msgid "Belarusian"
+msgstr "Biélorusse"
+
+# Sky culture introduction section in markdown format
+msgid ""
+"Astronomy constellations found in Belarus, a country in Eastern Europe bordered\n"
+"by Russia to the northeast, Ukraine to the south, Poland to the west, and\n"
+"Lithuania and Latvia to the northwest."
+msgstr ""
+"Constellations astronomiques trouvées en Biélorussie, un pays d'Europe de "
+"l'Est bordé par la Russie au nord-est, l'Ukraine au sud, la Pologne à "
+"l'ouest et la Lituanie et la Lettonie au nord-ouest."
+
+# Sky culture description section in markdown format
+msgid ""
+"Belarus is landlocked and contains large tracts of marshy land and thousands of\n"
+"lakes. Forests cover about 40% of the country. Belarus is exceptional in that\n"
+"people in the villages have preserved their traditional knowledge about the\n"
+"stars and related beliefs, right through to the present time. The illustrations\n"
+"are by no means exhaustive. In fact, many asterisms have multiple recorded\n"
+"meanings, ranging from ancient to Christianized."
+msgstr ""
+"La Biélorussie est enclavée et contient de grandes étendues de terres "
+"marécageuses et des milliers de lacs. Les forêts couvrent environ 40% du "
+"pays. La Biélorussie est exceptionnelle dans la mesure où les habitants des "
+"villages ont préservé leurs connaissances traditionnelles sur les étoiles et"
+" leurs croyances, jusqu'à nos jours. Les illustrations ne sont en aucun cas "
+"exhaustives. En fait, de nombreux astérismes ont plusieurs significations "
+"enregistrées, allant de l'ancien au christianisé."
+
+# Sky culture references section in markdown format
+msgid ""
+" - [#1]: Tsimafei Avilin. 2009. [Astronyms in Belarussian folk beliefs](https://www.academia.edu/1586571/Astronyms_in_Belarussian_folk_beliefs). Archaeologia Baltica.\n"
+" - [#2]: Tsimafei Avilin. Belarussian Folk Astronomy. [The author's website, in Belarusian](http://aviti.livejournal.com).\n"
+" - [#3]: [Belarusian Ethnoastronomy](https://www.academia.edu/6901765/Belarusian_Ethnoastronomy).\n"
+" - [#4]: [Ethnoastronomical aspect of traditional belarusian fitonimicon: problem statement](https://www.academia.edu/8787640/Ethnoastronomical_aspect_of_traditional_belarusian_fitonimicon_problem_statement).\n"
+" - [#5]: [Meteor Beliefs Project: East European meteor folk-beliefs](https://www.academia.edu/1586711/Meteor_Beliefs_Project_East_European_meteor_folk-beliefs)."
+msgstr ""
+" - [#1]: Tsimafei Avilin. 2009. [Astronymes dans les croyances populaires biélorusses](https://www.academia.edu/1586571/Astronymes_in_Belarussian_folk_beliefs). Archaeologia Baltica.\n"
+" - [#2]: Tsimafei Avilin. Astronomie populaire biélorusse. [Site Web de l'auteur, en biélorusse](http://aviti.livejournal.com).\n"
+" - [#3]: [Ethnoastronomie biélorusse](https://www.academia.edu/6901765/Belarusian_Ethnoastronomy).\n"
+" - [#4]: [Aspect ethnoastronomique du fitonimicon biélorusse traditionnel: énoncé du problème](https://www.academia.edu/8787640/Ethnoastronomical_aspect_of_traditional_belarusian_fitonimicon_problem_statement).\n"
+" - [#5]: [Projet Meteor Beliefs: croyances populaires des météores d'Europe de l'Est](https://www.academia.edu/1586711/Meteor_Beliefs_Project_East_European_meteor_folk-beliefs)."
+
+# Sky culture authors section in markdown format
+msgid ""
+"Text and data by Alexander Wolf, Tsimafei Avilin and Johan Meuris.\n"
+"\n"
+"Illustrations by Johan Meuris."
+msgstr ""
+"Texte et données par Alexander Wolf, Tsimafei Avilin et Johan Meuris.\n"
+"\n"
+"Illustrations de Johan Meuris."
+
+# Sky culture license section in markdown format
+msgid ""
+"Text and data: TODO\n"
+"\n"
+"Illustrations: Free Art License"
+msgstr ""
+"Texte et données: TODO\n"
+"\n"
+"Illustrations: Licence artistique gratuite"
+
+# Belarusian constellation, pronounce: Illyouo voz
+msgid "Elias's Cart"
+msgstr "Le Chariot d'Elias"
+
+# Description of Belarusian constellation Elias's Cart
+msgid ""
+"The burning cart that is ridden by Elias, the Christianized version of a\n"
+"constellation previously seen as simply a large cart."
+msgstr ""
+"Le chariot en feu qui est monté par Elias, la version christianisée d'une "
+"constellation vue auparavant comme un simple grand chariot."
+
+# Belarusian constellation, pronounce: Niavesta
+msgid "The Bride"
+msgstr "La Mariée"
+
+# Belarusian constellation, pronounce: Kurki
+msgid "The Chicks"
+msgstr "Les Poussins"
+
+# Belarusian constellation, pronounce: Petrou Krest
+msgid "The Cross"
+msgstr "La Croix"
+
+# Description of Belarusian constellation The Cross
+msgid "A Peter’s cross."
+msgstr "Une croix de Pierre."
+
+# Belarusian constellation, pronounce: Karona
+msgid "The Crown"
+msgstr "La Couronne"
+
+# Description of Belarusian constellation The Crown
+msgid "The thorn wreath that was put on Christ’s head."
+msgstr "La couronne d'épines qui a été placée sur la tête du Christ."
+
+# Belarusian constellation, pronounce: Kaza
+msgid "The Goat"
+msgstr "La Chèvre"
+
+# Belarusian constellation, pronounce: Vuzhy
+msgid "The Grass Snakes"
+msgstr "La Couleuvre"
+
+# Belarusian constellation
+msgid "Poland and Lithuania"
+msgstr "Pologne et Lituanie"
+
+# Belarusian constellation, pronounce: Kastsy
+msgid "The Mowers"
+msgstr "Les tondeuses"
+
+# Description of Belarusian constellation The Mowers
+msgid ""
+"These three stars stand one after another in the manner of people mowing the\n"
+"fields."
+msgstr ""
+"Ces trois étoiles se tiennent l'une après l'autre à la manière des gens qui "
+"tondent les champs."
+
+# Belarusian constellation, pronounce: Gvozd
+msgid "The Nail"
+msgstr "L'Ongle"
+
+# Description of Belarusian constellation The Nail
+msgid "The north star is seen as a nail around which the skies revolve."
+msgstr ""
+"L'étoile septentrionale est vue comme un clou autour duquel le ciel tourne."
+
+# Belarusian constellation, pronounce: Rataj
+msgid "The Ploughman"
+msgstr "Le Laboureur"
+
+# Belarusian constellation, pronounce: Grabli
+msgid "The Rake"
+msgstr "Le Râteau"
+
+# Belarusian constellation, pronounce: Baran
+msgid "The Ram"
+msgstr "Le Bélier"
+
+# Belarusian constellation, pronounce: Zmej
+msgid "The Serpent"
+msgstr "Le serpent"
+
+# Description of Belarusian constellation The Serpent
+msgid ""
+"St. Yuri killed this serpent and hung it near the star that always stands in\n"
+"the same place."
+msgstr ""
+"Saint Yuri a tué ce serpent et l'a accroché près de l'étoile qui se tient "
+"toujours au même endroit."
+
+# Belarusian constellation, pronounce: Sito
+msgid "The Sieve"
+msgstr "Le Tamis"
+
+# Description of Belarusian constellation The Sieve
+msgid "It was said that \"God used to sift grains of _zhito_ through it\"."
+msgstr ""
+"Il a été dit que \"Dieu avait l'habitude de tamiser les grains de _zhito_\"."
+
+# Belarusian constellation, pronounce: Maly Vos
+msgid "The Small Cart"
+msgstr "Le petit Chariot"
+
+# Description of Belarusian constellation The Small Cart
+msgid "Ursa Minor resembles the large cart of Ursa Major."
+msgstr "Ursa Minor ressemble au grand chariot d'Ursa Major."
+
+# Belarusian constellation, pronounce: Kreselca Pana Jezusa
+msgid "The Throne"
+msgstr "Le Trône"
+
+# Description of Belarusian constellation The Throne
+msgid "Lord Jesus's chair."
+msgstr "Chaise du Seigneur Jésus."
+
+# Belarusian constellation, pronounce: Blizniuki
+msgid "The Twins"
+msgstr "Les Gémeaux"
+
+# Belarusian constellation, pronounce: Kaziarog
+msgid "The Wild Goat"
+msgstr "La Chèvre sauvage"
+
+# Belarusian constellation, pronounce: Gusina Daroga
+msgid "The Goose's Way"
+msgstr "Le Chemin de l'Oie"
+
+# Name for HIP 24608
+msgid "Kaza"
+msgstr "Kaza"
