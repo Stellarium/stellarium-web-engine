@@ -1,0 +1,13 @@
+hips_order            = 0
+hips_order_min        = 0
+hips_tile_width       = 512
+hips_tile_format      = webp jpeg
+dataproduct_type      = image
+obs_title             = moon
+hips_release_date     = 2019-02-12T15:41Z
+source_md5            = c848d73a35cb88823043a90394309a8a
+type                  = planet
+obs_copyright         = Oleg Pluton a.k.a Helleformer
+hips_frame            = moon
+hips_status           = public mirror clonableOnce
+obs_description       = The texture for the Moon was prepared by Oleg Pluton a.k.a Helleformer under Creative Commons Attribution 4.0 International license (original data for this texture was obtained from NASA website under public domain license).

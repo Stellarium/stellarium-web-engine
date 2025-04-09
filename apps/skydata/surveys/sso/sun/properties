@@ -1,0 +1,13 @@
+hips_order            = 0
+hips_order_min        = 0
+hips_tile_width       = 512
+hips_tile_format      = webp jpeg
+dataproduct_type      = image
+obs_title             = sun
+hips_release_date     = 2019-02-12T23:46Z
+source_md5            = f053fa0d0cce633d3022b770c9a5aa89
+type                  = planet
+obs_copyright         = Stellarium
+hips_frame            = sun
+hips_status           = public mirror clonableOnce
+obs_description       = Original texture from Stellarium.

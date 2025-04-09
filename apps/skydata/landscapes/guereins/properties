@@ -1,0 +1,10 @@
+hips_order            = 0
+hips_order_min        = 0
+hips_tile_width       = 512
+hips_tile_format      = webp
+dataproduct_type      = image
+obs_title             = Guéreins
+hips_service_url      = https://data.stellarium.org/landscapes/guereins
+hips_release_date     = 2019-01-03T14:39Z
+source_md5            = 5da6f7ba5959431584db3a18e4780abd
+type                  = landscape

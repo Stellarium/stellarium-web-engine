@@ -14,9 +14,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Compiled version
-src/assets/js/stellarium-web-engine.js
-src/assets/js/stellarium-web-engine.wasm
+# # Compiled version
+# src/assets/js/stellarium-web-engine.js
+# src/assets/js/stellarium-web-engine.wasm
 
 # Qt creator stuff
 stellarium-web.config
