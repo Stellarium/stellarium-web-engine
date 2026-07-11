@@ -33,6 +33,21 @@ You need to make sure you have both emscripten and sconstruct installed.
 
     # Now see apps/simple-html/ to try the library in a browser.
 
+Build the Docker version
+------------------------
+
+A `Dockerfile` is included that allows you to quickly build a functional
+web engine for further development.
+
+    # compile the current source code
+    docker build -t webengine .
+    
+    # run the web engine in a web server
+    docker run -it --rm -p 8080:80 webengine
+
+Once running, browse to http://localhost:8080/simple-html/stellarium-web-engine.html
+to open the web engine
+
 
 Contributing
 ------------
