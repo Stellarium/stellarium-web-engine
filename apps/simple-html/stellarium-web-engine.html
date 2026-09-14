@@ -223,7 +223,7 @@
 
           // Force ui update when there is any change.
           stel.change(function(obj, attr) {
-            if (attr !== "hovered") {
+            if (attr !== "hovered")
               that.stel = Object.assign(Object.create(stel), {}, stel)
           })
 

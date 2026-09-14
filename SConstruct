@@ -15,9 +15,11 @@ VariantDir('build/ext_src', 'ext_src', duplicate=0)
 env = Environment(variables=vars)
 
 env.Append(CFLAGS= '-Wall -std=gnu11 -Wno-unknown-pragmas -D_GNU_SOURCE '
-                   '-Wno-missing-braces',
+                   '-Wno-missing-braces -Wno-unused-command-line-argument',
            CXXFLAGS='-Wall -std=gnu++11 -Wno-narrowing '
-                    '-Wno-unknown-pragmas -Wno-unused-function')
+                    '-Wno-unknown-pragmas -Wno-unused-function '
+                    '-Wno-unused-command-line-argument '
+                    '-Wno-unused-but-set-variable')
 
 if env['werror']:
     env.Append(CCFLAGS='-Werror')
