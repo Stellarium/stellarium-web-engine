@@ -329,6 +329,7 @@ static int on_name(const obj_t *obj, void *user,
     f = USER_GET(user, 0);
     u = USER_GET(user, 1);
     nb = USER_GET(user, 2);
+    (void)nb; // Tell the compiler not to complain about this unused value
     if (cat && *cat) {
         snprintf(buf, sizeof(buf), "%s %s", cat, value);
         f(obj, u, buf);

@@ -121,16 +121,14 @@ static const char *ORBIT_TYPES[] = {
 static void load_data(mplanets_t *mplanets, const char *data, int size)
 {
     const char *line = NULL;
-    int r, len, line_idx = 0, flags, orbit_type, number, nb_err, nb;
+    int r, len, flags, orbit_type, number, nb_err, nb;
     char desig[24], name[24];
     double h, g, m, w, o, i, e, n, a, epoch;
     mplanet_t *mplanet;
     obj_t *tmp;
 
-    line_idx = 0;
     nb_err = 0;
     while (iter_lines(data, size, &line, &len)) {
-        line_idx++;
         if (len < 160) continue;
         r = mpc_parse_line(line, len, &number, name, desig,
                            &h, &g, &epoch, &m, &w, &o, &i, &e,

@@ -164,7 +164,7 @@ static int load_data_mpc(comets_t *comets, const char *data, int size,
                          double *last_epoch)
 {
     comet_t *comet;
-    int num, nb_err = 0, len, line_idx = 0, r, nb;
+    int num, nb_err = 0, len, r, nb;
     double peri_time, peri_dist, e, peri, node, i, epoch, h, g;
     const char *line = NULL;
     char orbit_type;
@@ -172,7 +172,6 @@ static int load_data_mpc(comets_t *comets, const char *data, int size,
     obj_t *tmp;
 
     while (iter_lines(data, size, &line, &len)) {
-        line_idx++;
         r = mpc_parse_comet_line(
                 line, len, &num, &orbit_type, &peri_time, &peri_dist, &e,
                 &peri, &node, &i, &epoch, &h, &g, desgn);
