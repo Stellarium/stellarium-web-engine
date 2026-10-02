@@ -147,6 +147,7 @@ export default {
 
         this.$stel.core.observer.yaw = this.$route.query.az ? Number(this.$route.query.az) * Math.PI / 180 : 0
         this.$stel.core.observer.pitch = this.$route.query.alt ? Number(this.$route.query.alt) * Math.PI / 180 : 30 * Math.PI / 180
+        this.$stel.core.observer.roll = this.$route.query.roll ? Number(this.$route.query.roll) * Math.PI / 180 : 0
         this.$stel.core.fov = this.$route.query.fov ? Number(this.$route.query.fov) * Math.PI / 180 : 120 * Math.PI / 180
 
         this.initDone = true

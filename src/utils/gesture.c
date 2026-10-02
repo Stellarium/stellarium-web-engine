@@ -71,6 +71,8 @@ static int pinch_on_mouse(gesture_t *g, const inputs_t *in, void *user)
             vec2_copy(in->ts[0].pos, g->start_pos[0]);
             vec2_copy(in->ts[1].pos, g->start_pos[1]);
             g->pinch = 1.0;
+            vec2_copy(in->ts[0].pos, g->touches[0]);
+            vec2_copy(in->ts[1].pos, g->touches[1]);
             vec2_mix(in->ts[0].pos, in->ts[1].pos, 0.5, g->pos);
             g->callback(g, user);
             return 1;
@@ -81,6 +83,8 @@ static int pinch_on_mouse(gesture_t *g, const inputs_t *in, void *user)
         g->state = GESTURE_UPDATE;
         g->pinch = vec2_dist(in->ts[0].pos, in->ts[1].pos) /
                    vec2_dist(g->start_pos[0], g->start_pos[1]);
+        vec2_copy(in->ts[0].pos, g->touches[0]);
+        vec2_copy(in->ts[1].pos, g->touches[1]);
         vec2_mix(in->ts[0].pos, in->ts[1].pos, 0.5, g->pos);
         if (!in->ts[0].down[0] || !in->ts[1].down[0]) {
             g->state = GESTURE_END;
