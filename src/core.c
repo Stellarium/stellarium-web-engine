@@ -587,8 +587,8 @@ int core_render(double win_w, double win_h, double pixel_scale)
     paint_finish(&painter);
 
     assert(bck.obs.tt == core->observer->tt);
-    assert(bck.obs.yaw == core->observer->yaw);
-    assert(bck.obs.pitch == core->observer->pitch);
+    assert(memcmp(bck.obs.view_q, core->observer->view_q,
+                  sizeof(bck.obs.view_q)) == 0);
     assert(bck.fov == core->fov);
 
     // Do post render (e.g. for GUI)
@@ -860,26 +860,23 @@ void core_report_luminance_in_fov(double lum, bool fast_adaptation)
 EMSCRIPTEN_KEEPALIVE
 void core_lookat(const double *pos, double duration)
 {
-    double az, al, now;
+    double az, al, now, q[4];
     typeof(core->target) *anim = &core->target;
+
+    // Point toward the target, keeping the current roll angle.
+    vec3_to_sphe(pos, &az, &al);
+    observer_view_q_from_euler(az, al, core->observer->roll, q);
 
     // Direct lookat.
     if (duration == 0.0) {
-        vec3_to_sphe(pos, &core->observer->yaw, &core->observer->pitch);
+        observer_set_view_q(core->observer, q);
         memset(anim, 0, sizeof(*anim));
         return;
     }
 
     now = sys_get_unix_time();
-    quat_set_identity(anim->src_q);
-    quat_rz(core->observer->yaw, anim->src_q, anim->src_q);
-    quat_ry(-core->observer->pitch, anim->src_q, anim->src_q);
-
-    vec3_to_sphe(pos, &az, &al);
-    quat_set_identity(anim->dst_q);
-    quat_rz(az, anim->dst_q, anim->dst_q);
-    quat_ry(-al, anim->dst_q, anim->dst_q);
-
+    vec4_copy(core->observer->view_q, anim->src_q);
+    vec4_copy(q, anim->dst_q);
     anim->src_time = now;
     anim->dst_time = now + duration;
 }

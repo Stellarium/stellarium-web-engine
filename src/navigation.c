@@ -83,42 +83,36 @@ void core_update_time(double dt)
 
 void core_update_direction(double dt)
 {
-    double v[4] = {1, 0, 0, 0}, q[4], t, az, al, vv[4];
+    double v[4], q[4], t, az, al, yaw, pitch, roll;
     typeof(core->target) *anim = &core->target;
 
     if (anim->src_time) {
         t = smoothstep(anim->src_time, anim->dst_time, core->clock);
         if (anim->lock && anim->move_to_lock) {
             // We are moving toward a potentially moving target, adjust the
-            // destination
-            obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, vv);
-            vec3_to_sphe(vv, &az, &al);
-            quat_set_identity(anim->dst_q);
-            quat_rz(az, anim->dst_q, anim->dst_q);
-            quat_ry(-al, anim->dst_q, anim->dst_q);
+            // destination, keeping the destination roll.
+            obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, v);
+            vec3_to_sphe(v, &az, &al);
+            observer_view_q_to_euler(anim->dst_q, &yaw, &pitch, &roll);
+            observer_view_q_from_euler(az, al, roll, anim->dst_q);
         }
         if (!anim->lock || anim->move_to_lock) {
             quat_slerp(anim->src_q, anim->dst_q, t, q);
-            quat_mul_vec3(q, v, v);
-            vec3_to_sphe(v, &core->observer->yaw, &core->observer->pitch);
+            observer_set_view_q(core->observer, q);
         }
         if (t >= 1.0) {
             anim->src_time = 0.0;
             anim->dst_time = 0.0;
             anim->move_to_lock = false;
         }
-        // Notify the changes.
-        module_changed(&core->observer->obj, "pitch");
-        module_changed(&core->observer->obj, "yaw");
         observer_update(core->observer, true);
     }
 
     if (anim->lock && !anim->move_to_lock) {
         obj_get_pos(anim->lock, core->observer, FRAME_MOUNT, v);
-        vec3_to_sphe(v, &core->observer->yaw, &core->observer->pitch);
-        // Notify the changes.
-        module_changed(&core->observer->obj, "pitch");
-        module_changed(&core->observer->obj, "yaw");
+        vec3_to_sphe(v, &az, &al);
+        observer_view_q_from_euler(az, al, core->observer->roll, q);
+        observer_set_view_q(core->observer, q);
         observer_update(core->observer, true);
     }
 }
