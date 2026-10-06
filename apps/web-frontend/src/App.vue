@@ -76,6 +76,8 @@ import GuiLoader from '@/components/gui-loader.vue'
 import swh from '@/assets/sw_helpers.js'
 import Moment from 'moment'
 
+const PERSISTED_SETTINGS_KEY = 'stellarium-web-settings'
+
 export default {
   data (context) {
     return {
@@ -173,6 +175,133 @@ export default {
           console.log("Couldn't find skysource for name: " + name)
         })
       }
+    },
+    getPersistedSettings: function () {
+      const stel = this.$store.state.stel
+
+      if (!stel) {
+        return null
+      }
+
+      return {
+        milkywayVisible: stel.milkyway.visible,
+        dssVisible: stel.dss.visible,
+        meridianVisible: stel.lines.meridian.visible,
+        eclipticVisible: stel.lines.ecliptic.visible,
+        constellationLines: stel.constellations.lines_visible,
+        constellationArt: stel.constellations.images_visible,
+        atmosphere: stel.atmosphere.visible,
+        landscape: stel.landscapes.visible,
+        azimuthalGrid: stel.lines.azimuthal.visible,
+        equatorialGrid: stel.lines.equatorial.visible,
+        deepSkyObjects: stel.dsos.visible,
+        showNavigationDrawer: this.$store.state.showNavigationDrawer,
+        nightmode: this.$store.state.nightmode
+      }
+    },
+    savePersistedSettings: function () {
+      try {
+        const settings = this.getPersistedSettings()
+
+        if (settings) {
+          window.localStorage.setItem(PERSISTED_SETTINGS_KEY, JSON.stringify(settings))
+        }
+      } catch (e) {
+        console.warn('Could not save Stellarium Web settings:', e)
+      }
+    },
+    restorePersistedSettings: function () {
+      try {
+        const saved = window.localStorage.getItem(PERSISTED_SETTINGS_KEY)
+
+        if (!saved) {
+          return
+        }
+
+        const settings = JSON.parse(saved)
+        const core = this.$stel.core
+
+        if (typeof settings.milkywayVisible === 'boolean') {
+          core.milkyway.visible = settings.milkywayVisible
+        }
+        if (typeof settings.dssVisible === 'boolean') {
+          core.dss.visible = settings.dssVisible
+        }
+        if (typeof settings.meridianVisible === 'boolean') {
+          core.lines.meridian.visible = settings.meridianVisible
+        }
+        if (typeof settings.eclipticVisible === 'boolean') {
+          core.lines.ecliptic.visible = settings.eclipticVisible
+        }
+        if (typeof settings.constellationLines === 'boolean') {
+          core.constellations.lines_visible = settings.constellationLines
+        }
+        if (typeof settings.constellationArt === 'boolean') {
+          core.constellations.images_visible = settings.constellationArt
+        }
+        if (typeof settings.atmosphere === 'boolean') {
+          core.atmosphere.visible = settings.atmosphere
+        }
+        if (typeof settings.landscape === 'boolean') {
+          core.landscapes.visible = settings.landscape
+        }
+        if (typeof settings.azimuthalGrid === 'boolean') {
+          core.lines.azimuthal.visible = settings.azimuthalGrid
+        }
+        if (typeof settings.equatorialGrid === 'boolean') {
+          core.lines.equatorial.visible = settings.equatorialGrid
+        }
+        if (typeof settings.deepSkyObjects === 'boolean') {
+          core.dsos.visible = settings.deepSkyObjects
+        }
+        if (typeof settings.showNavigationDrawer === 'boolean') {
+          this.$store.commit('setValue', {
+            varName: 'showNavigationDrawer',
+            newValue: settings.showNavigationDrawer
+          })
+        }
+        if (typeof settings.nightmode === 'boolean') {
+          this.$store.commit('setValue', {
+            varName: 'nightmode',
+            newValue: settings.nightmode
+          })
+        }
+      } catch (e) {
+        console.warn('Could not restore Stellarium Web settings:', e)
+      }
+    },
+    watchPersistedSettings: function () {
+      this.$watch(
+        function () {
+          const stel = this.$store.state.stel
+
+          if (!stel) {
+            return null
+          }
+
+          return {
+            milkywayVisible: stel.milkyway.visible,
+            dssVisible: stel.dss.visible,
+            meridianVisible: stel.lines.meridian.visible,
+            eclipticVisible: stel.lines.ecliptic.visible,
+            constellationLines: stel.constellations.lines_visible,
+            constellationArt: stel.constellations.images_visible,
+            atmosphere: stel.atmosphere.visible,
+            landscape: stel.landscapes.visible,
+            azimuthalGrid: stel.lines.azimuthal.visible,
+            equatorialGrid: stel.lines.equatorial.visible,
+            deepSkyObjects: stel.dsos.visible,
+            showNavigationDrawer: this.$store.state.showNavigationDrawer,
+            nightmode: this.$store.state.nightmode
+          }
+        }.bind(this),
+        function () {
+          this.savePersistedSettings()
+        }.bind(this),
+        {
+          deep: true
+        }
+      )
     }
   },
   computed: {
@@ -270,6 +399,13 @@ export default {
             core.comets.addDataSource({ url: process.env.BASE_URL + 'skydata/CometEls.txt', key: 'mpc_comets' })
             core.satellites.addDataSource({ url: process.env.BASE_URL + 'skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
           }
+
+          // Restore the user's saved view settings after the engine and its
+          // default data sources have been initialized.
+          that.restorePersistedSettings()
+
+          // Save future changes to the user's view settings.
+          that.watchPersistedSettings()
         })
       } catch (e) {
         this.$store.commit('setValue', { varName: 'wasmSupport', newValue: false })
