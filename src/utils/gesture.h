@@ -52,6 +52,7 @@ struct gesture
     double  pos[2];
     double  start_pos[2][2];
     double  pinch;
+    double  touches[2][2]; // Current position of the two touches (pinch).
     int     (*callback)(const gesture_t *gest, void *user);
 };
 

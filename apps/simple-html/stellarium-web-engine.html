@@ -15,7 +15,7 @@
 
 <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/vuetify@2.7.2/dist/vuetify.min.css" rel="stylesheet">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
@@ -133,10 +133,10 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-<script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
-<script src="https://www.unpkg.com/i18next-xhr-backend/dist/umd/i18nextXHRBackend.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.7.2/dist/vuetify.js"></script>
+<script src="https://unpkg.com/i18next@19.9.2/dist/umd/i18next.min.js"></script>
+<script src="https://unpkg.com/i18next-xhr-backend@3.2.2/dist/umd/i18nextXHRBackend.min.js"></script>
 <script src="../../build/stellarium-web-engine.js"></script>
 
 <!-- Button component -->
@@ -225,6 +225,7 @@
           stel.change(function(obj, attr) {
             if (attr !== "hovered") {
               that.stel = Object.assign(Object.create(stel), {}, stel)
+            }
           })
 
           stel.setFont('regular', 'static/fonts/Roboto-Regular.ttf', 1.38);

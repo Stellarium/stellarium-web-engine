@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 <script src="static/js/polyfill.js"></script>
 <script src="../../build/stellarium-web-engine.js"></script>
-<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/vue@2.7.16/dist/vue.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
 
@@ -25,6 +25,7 @@
     </div>
 
     <div id="gui" class="w-100 h-100 position-relative click-through">
+      <template v-if="stel">
       <div id="bottom-bar"
            class="position-absolute d-flex justify-content-center w-100 get-click"
            style="bottom: 0;">
@@ -120,6 +121,7 @@
         <stel-progressbars :bars="stel.core.progressbars"></stel-progressbars>
 
       </div>
+      </template>
     </div>
 
   </div>
@@ -300,6 +302,7 @@
       testAddAsteroid: function() { testAddAsteroid(this.stel) },
       testAddGeojson: function() { testAddGeojson(this.stel) },
       lockToSelection: function() {
+        var stel = this.stel
         stel.core.lock = stel.core.selection
         // Smooth move to selection.
         if (stel.core.lock) {
@@ -331,13 +334,14 @@
           core.planets.addDataSource({ url: baseUrl + 'surveys/sso/moon', key: 'default' })
           core.comets.addDataSource({ url: baseUrl + 'CometEls.txt', key: 'mpc_comets' })
           core.satellites.addDataSource({ url: baseUrl + 'tle_satellite.jsonl.gz', key: 'jsonl/sat' })
+
+          // Force ui update when there is any change.
+          stel.change(function(obj, attr) {
+            if (attr !== "hovered")
+              that.stel = Object.assign(Object.create(stel), {}, stel)
+          })
         }
       });
-      // Force ui update when there is any change.
-      stel.change(function(obj, attr) {
-        if (attr !== "hovered")
-          app.stel = Object.assign(Object.create(stel), {}, stel)
-      })
     }
   })
 
@@ -471,13 +475,16 @@
   Vue.component('test-shapes', {
     template: '#test-shapes-template',
     data: function() {
+      var stel = this.$root.stel
       return {
+        stel: stel,
         layer: stel.createLayer({id: 'testLayerShape', z: 41, visible: true}),
         shapes: []
       }
     },
     methods: {
       add: function(type) {
+        var stel = this.stel
         var shape = this.layer.add(type, {
           size: [20 * stel.D2R, 20 * stel.D2R],
           frame: stel.FRAME_ICRS
@@ -498,7 +505,7 @@
     props: ['obj'],
     data: function() {
       return {
-        stel: stel
+        stel: this.$root.stel
       }
     },
     methods: {

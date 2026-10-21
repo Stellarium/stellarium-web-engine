@@ -48,10 +48,9 @@ static void update_matrices(observer_t *obs)
                                  {0, -1, 0},
                                  {0,  0, 1}};
 
-    mat3_set_identity(rdir);
-    mat3_rx(obs->roll, rdir, rdir);
-    mat3_ry(obs->pitch, rdir, rdir);
-    mat3_rz(-obs->yaw, rdir, rdir);
+    // Rotation from mount to view direction frame.
+    quat_to_mat3(obs->view_q, rdir);
+    mat3_transpose(rdir, rdir);
 
     if (mat3_det(obs->ro2m) > 0)
         mat3_product(ro2v, 4, r2gl, flip_y, rdir, obs->ro2m);
@@ -116,9 +115,7 @@ static void observer_compute_hash(const observer_t *obs, uint64_t* hash_partial,
     H(space);
     *hash_partial = v;
     H(ro2m);
-    H(pitch);
-    H(yaw);
-    H(roll);
+    H(view_q);
     H(view_offset_alt);
     H(tt);
     if (obs->space) H(obs_pvg);
@@ -277,6 +274,7 @@ static int observer_init(obj_t *obj, json_value *args)
 {
     observer_t*  obs = (observer_t*)obj;
     mat3_set_identity(obs->ro2m);
+    quat_set_identity(obs->view_q);
     observer_compute_hash(obs, &obs->hash_partial, &obs->hash);
     return 0;
 }
@@ -318,6 +316,45 @@ bool observer_is_uptodate(const observer_t *obs, bool fast)
     return false;
 }
 
+void observer_view_q_from_euler(double yaw, double pitch, double roll,
+                                double q[4])
+{
+    quat_set_identity(q);
+    quat_rz(yaw, q, q);
+    quat_ry(-pitch, q, q);
+    quat_rx(-roll, q, q);
+}
+
+void observer_view_q_to_euler(const double q[4],
+                              double *yaw, double *pitch, double *roll)
+{
+    double m[3][3], left[3], up[3];
+    quat_to_mat3(q, m);
+    // m[0] is the view direction, m[2] the view up direction.
+    vec3_to_sphe(m[0], yaw, pitch);
+    // Up and left directions of the view with the same yaw and pitch but
+    // no roll.
+    vec3_set(left, -sin(*yaw), cos(*yaw), 0);
+    vec3_set(up, -sin(*pitch) * cos(*yaw), -sin(*pitch) * sin(*yaw),
+             cos(*pitch));
+    *roll = atan2(vec3_dot(m[2], left), vec3_dot(m[2], up));
+}
+
+void observer_set_view_q(observer_t *obs, const double q[4])
+{
+    quat_normalize(q, obs->view_q);
+    observer_view_q_to_euler(obs->view_q, &obs->yaw, &obs->pitch, &obs->roll);
+    module_changed(&obs->obj, "pitch");
+    module_changed(&obs->obj, "yaw");
+    module_changed(&obs->obj, "roll");
+}
+
+static void on_euler_changed(obj_t *obj, const attribute_t *attr)
+{
+    observer_t *obs = (observer_t*)obj;
+    observer_view_q_from_euler(obs->yaw, obs->pitch, obs->roll, obs->view_q);
+}
+
 // Expose azalt vector to js.
 static json_value *observer_get_azalt(obj_t *obj, const attribute_t *attr,
                                  const json_value *args)
@@ -343,9 +380,12 @@ static obj_klass_t observer_klass = {
                  .on_changed = on_tt_changed),
         PROPERTY(utc, TYPE_MJD, MEMBER(observer_t, utc),
                  .on_changed = on_utc_changed),
-        PROPERTY(pitch, TYPE_ANGLE, MEMBER(observer_t, pitch)),
-        PROPERTY(yaw, TYPE_ANGLE, MEMBER(observer_t, yaw)),
-        PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll)),
+        PROPERTY(pitch, TYPE_ANGLE, MEMBER(observer_t, pitch),
+                 .on_changed = on_euler_changed),
+        PROPERTY(yaw, TYPE_ANGLE, MEMBER(observer_t, yaw),
+                 .on_changed = on_euler_changed),
+        PROPERTY(roll, TYPE_ANGLE, MEMBER(observer_t, roll),
+                 .on_changed = on_euler_changed),
         PROPERTY(view_offset_alt, TYPE_ANGLE,
                  MEMBER(observer_t, view_offset_alt)),
         PROPERTY(azalt, TYPE_V3, .fn = observer_get_azalt),

@@ -447,6 +447,7 @@ subdivide:
 void paint_debug(bool value)
 {
     g_debug = value;
+    (void)g_debug; // Tell the compiler not to complain about this unused value
 }
 
 bool painter_is_cap_clipped(const painter_t *painter, int frame,

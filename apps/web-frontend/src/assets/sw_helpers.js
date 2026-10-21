@@ -248,6 +248,8 @@ const swh = {
     if (!context.$store.state.selectedObject) {
       link += '&az=' + (context.$stel.core.observer.yaw * 180 / Math.PI).toPrecision(5)
       link += '&alt=' + (context.$stel.core.observer.pitch * 180 / Math.PI).toPrecision(5)
+      const roll = context.$stel.core.observer.roll * 180 / Math.PI
+      if (Math.abs(roll) >= 0.01) link += '&roll=' + roll.toPrecision(5)
     }
     return link
   },

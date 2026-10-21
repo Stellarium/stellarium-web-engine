@@ -33,8 +33,17 @@ struct observer
      * Set to rh2i for an equatorial mount. */
     double ro2m[3][3];
 
-    // Rotations relative to the mount referential.  Pitch and yaw
-    // correspond to azimuth and altitude when using an alt/az mount.
+    // Orientation of the view relative to the mount referential.  This
+    // quaternion rotates the view direction frame (x forward, z up) into
+    // the mount frame.  It is the reference value for the view orientation:
+    // it has no singularity, so the view can be rotated freely in any
+    // direction.  Always change it with observer_set_view_q.
+    double view_q[4];
+
+    // Euler angles equivalent to view_q, relative to the mount referential.
+    // Pitch and yaw correspond to azimuth and altitude when using an alt/az
+    // mount.  They are kept in sync with view_q, and setting them as
+    // attributes recomputes view_q.
     double pitch;
     double yaw;
     double roll;
@@ -111,5 +120,26 @@ struct observer
 void observer_update(observer_t *obs, bool fast);
 
 bool observer_is_uptodate(const observer_t *obs, bool fast);
+
+/*
+ * Function: observer_set_view_q
+ * Set the view orientation quaternion and update the yaw, pitch and roll
+ * attributes accordingly.
+ */
+void observer_set_view_q(observer_t *obs, const double q[4]);
+
+/*
+ * Function: observer_view_q_from_euler
+ * Compute a view orientation quaternion from yaw, pitch and roll angles.
+ */
+void observer_view_q_from_euler(double yaw, double pitch, double roll,
+                                double q[4]);
+
+/*
+ * Function: observer_view_q_to_euler
+ * Compute the yaw, pitch and roll angles of a view orientation quaternion.
+ */
+void observer_view_q_to_euler(const double q[4],
+                              double *yaw, double *pitch, double *roll);
 
 #endif // OBSERVER_H
